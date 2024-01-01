@@ -10,6 +10,21 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 None.
 
+### "Outdated" dependencies
+
+Unfortunately, for various reasons, some of the package dependencies that UIBUILDER relies on cannot be updated to their latest versions. These are documented, with the reason, here.
+
+* `execa` - restricted to v5. Author sindresorhus decided that everyone HAS to use ESM even though his packages are widely used and he must know that it is often impossible to move from CommonJS without a complete rewrite. Node-RED is so complex, when would that be possible? Very annoying.
+* `jsdom` - restricted to v21. Later versions require node.js >v14 but Node-RED is still baselined at v14. Requires update to Node-RED to release this.
+* `nanoid` - restricted to v3. Another annoying sindresorhus node.
+
+These are only used for developing UIBUILDER so somwhat less critical.
+
+* `@types/node` - restricted to v14 to match Node-RED's current baseline.
+* ~~`gulp-debug` - restricted to v4. Another annoying sindresorhus node.~~ Removed in v6.8
+
+I will be trying to eliminate packages that have enforced structural changes. The author's arrogance is palpable.
+
 ------------
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.0...main)
