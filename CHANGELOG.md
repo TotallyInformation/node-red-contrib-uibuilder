@@ -8,43 +8,15 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## Issues
 
-* uibuilder node - Issues if user deploys without entering a url
-  
-  To reproduce: [ref](https://discourse.nodered.org/t/uibuilder-new-release-v6-7-new-front-end-router-improvements-to-uib-html-uib-save-and-more/83106/4)
-
-  Pull a uibuilder node in a flow.
-  Press Deploy.
-  The editor complains that the node just dropped isn't configured correctly. Deploy anyway.
-  Open the property editor of the uibuilder node, enter a valid URL ( like uibtest), close the property pane with Done.
-  First observation: The uibuilder node still shows the red triangle - despite correctly configured now.
-  Press Deploy.
-  The editor complains that the node still isn't configured correctly. Deploy anyway.
-  Second observation: The uibuilder node still shows the red triangle - which is definitely unexpected now. Node status displays "Node Initialised" @ blue.
-
-  Looks like it's validateVersion that triggers this red triangle.. [ref](https://discourse.nodered.org/t/uibuilder-new-release-v6-7-new-front-end-router-improvements-to-uib-html-uib-save-and-more/83106/7?u=totallyinformation)
-
-## To Do
-
-* Examples
-  * update the remote-commands example
-  * Add a "FE Router Test" example
-  * Add new low-code example
-  * Add example save current page to file
-
-* uibuilder client
-  * Add `formateDate` standard utility fn. [ref](https://discourse.nodered.org/t/format-date-at-yyyydd-hh-mm-ss/83130/12?u=totallyinformation)
-  * Add uibuilder.tag()
-  * Add client msg filter for URL Hash.
-
-Docs
-  * Update docs for ctrl msgs and msg._uib return data to say that anything set via the socket.io auth can only update when the client reconnects. 
-  * document clientTimeDifference
+None.
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.7.0...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.0...main)
 
-<!-- Nothing currently. -->
+Nothing currently.
+
+## [v6.8.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.7.0...v6.8.0)
 
 ### 📌 Highlights
 
@@ -79,27 +51,31 @@ Docs
 * Front-end commands issued from Node-RED can now take a `quiet` option set to `true` to prevent the return message. e.g. `{"_uib": {"command":"navigate","prop":"#newroute","quiet":true}}`
 * Front-end developers now have full access to the `ui.js` library via the `$ui` global.
 
-### `uib-cache`
+### `uibuilder` node
+
+* **FIXED** Previously, if an editor deployed a uibuilder node with an invalid URL, the node configuration & setup still happened which lead to odd results. Now a missing or invalid URL results in a logged error and the node is not configured. [ref](https://discourse.nodered.org/t/uibuilder-new-release-v6-7-new-front-end-router-improvements-to-uib-html-uib-save-and-more/83106/4)
+
+### `uib-cache` node
 
 * **FIXED** - bug introduced by last version's correction of `connections` count meant that "Only replay cache when client is really new" option resulted in the cache never being sent.
 * Re-worked node's html into latest format with JS in separate resources file.
 
-### `uib-html`
+### `uib-html` node
 
 * Downgrade `jsdom` version to 21.* as that is the last version that supports Node.js v14.
 
-### `uib-save`
+### `uib-save` node
 
 * **FIXED** - usePageName logic.
 * **FIXED** - import - initial deployment does not connect to node - need to clear the entry & mark as invalid. Also, no url = invalid
 * URL (uibuilder instance) drop-down list is now sorted
 * On copy/paste or import, link to uibuilder node is now cleared.
 
-### `uib-tag`
+### `uib-tag` node
 
 * **FIXED** - Allow blanks in some typed input fields.
 
-### `uib-update`
+### `uib-update` node
 
 * **FIXED** - Allow blanks in some typed input fields.
 
@@ -180,6 +156,7 @@ Docs
 
 * Re-organised & renamed examples now there are more of them.
 * **NEW** - "Text Update - Different Methods" example
+* **NEW** - "FE Router Test" example
 
 ### Documentation
 

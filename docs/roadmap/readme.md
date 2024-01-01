@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2023-12-31 15:17:45
+updated: 2024-01-01 13:59:16
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -464,6 +464,8 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
   
 
+* Add client msg filter for URL Hash. To allow sending of data only to a specific router route.
+
 * ??? `uib.setAttr(selector, attr, val)`?  - quick way to set an attribute on an element.
 
 * Consider special variable `managedTags`? where each entry update will automatically update the matching element ID and if the element doesn't yet exist, will watch for it and update as soon as it is added. E.g. setting value on `uib.managedTags.mytag` would update `<xxxx id="mytag"></xxxx>`. ?? Just the slot content? Or attributes as well (perhaps making the value an object).
@@ -490,6 +492,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 * *New Functions* (all to be callable from Node-RED):
 
+  * [ ] `formateDate` - Use INTL std lib, usable as a `<uib-var>` filter function. [ref](https://discourse.nodered.org/t/format-date-at-yyyydd-hh-mm-ss/83130/12?u=totallyinformation)
   * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
   * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
   * [ ] `uibuilder.socketReconnect()` Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
@@ -570,6 +573,9 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 ### Library: `uibrouter.js` (FE router)
 
 * Add option to auto scroll to a css selector on route change.
+* Add a function to auto-rotate routes.
+* Add a function to go to next/previous route.
+* Update "FE Router Test" example with an auto-rotate flow.
 
 ### Web Component: `uib-var` (internal)
 
@@ -611,6 +617,8 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ### Documentation (including videos)
 
+* Update docs for ctrl msgs and `msg._uib` return data to say that anything set via the socket.io auth can only update when the client reconnects. 
+* document clientTimeDifference
 * New doc for using `ui.js` outside of uibuilder.
 * `README.md`: Add more links to the Features section so that each feature points to appropriate documentation. Add a landing-page link to "includes many helper features" to signpost to relavent detailed documentation.
 * Node-specific docs.
