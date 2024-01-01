@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2023-12-30 20:27:21
+updated: 2023-12-31 15:17:45
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -13,31 +13,106 @@ For more information about the future of UIBUILDER, please see the [Futures page
 
 ## In Progress
 
-To see what is currently being developed, please look at the "Unreleased" section of the [Changelog](changelog)
+To see what is currently being developed, please look at the "Unreleased" section of the [Changelog](changelog) for the latest branch. Anything else in this section is work-in-progress.
+
+### Comms
+* Socket.IO rooms. [ref](https://socket.io/docs/v4/rooms/) - Rooms can be used to filter messages for specific destinations (e.g. client or page id) or to create client-to-client comms.
+  * Need a way to join rooms from Node-RED
+  * socket.js
+    * [x] Auto-join `clientId:xxxxxxx` & `pageName:xxxxxxx` rooms
+    * [x] socket.on uib-room-join/-leave-send
+    * [ ] Change send functions to use rooms where clientId/pageName is specified in `msg._uib`
+    * [ ] `socket.on('uib-room-send', ...)` Add option to also send a uibuilder msg.
+    * [ ] Incorporate `msg._uib.roomId` for sending to custom rooms
+    * [ ] ? Allow sending to different uib namespaces? would likely need an option flag for security?
+    * [ ] Allow global as well as NS rooms - allow sending between different uib connected clients. 
+          [ref](https://socket.io/docs/v4/socket-io-protocol/#introduction) - `this.io.of('/').emit('uibuilder:global', 'Hello from the server. NS: "/"')`
+    * [ ] Remove console.log from addNs
+  * client
+    * [x] joinRoom, leaveRoom, sendRoom - allows clients to join/leave/message any arbitrary room
+    * [x] Add additional listener for the default (global) namespace
+    * [ ] Add `globalSend` function
+    * [ ] Add listener when joining a room, remove when leaving
+    * [ ] Document new managed var: `globalMsg`.
+
+### FE Router
+
+* add `rotate` method to auto-rotate through routes. Needs ms and stop/start args.
+* Add 1st show marker to route change to allow client to ask for cache update
+* Update example
+* Make this.config.routes a SET to prevent duplicates. Or possibly an object. Needs some code changes.
+* Methods needed:
+  * Delete route - need to update routeIds
+  * Update/reload route
+  * shutdown - that removes all elements
+  * delete templates - unloads a list of (or all) templates
+  * reload templates - to facilitate updates of a list of (or all) templates
+  * auto-rotation of routes - uib..navigate(nextRoute)
+  * next/prev route navigation
+* Additional options:
+  * Add pre-load option early load of all routes instead of default lazy-load.
+  * unload templates after they are added to the route container. Only if hide=true. `unload: true`
+  * Maybe: options to auto-load js and css files with the same name as a template file.
+
+### Core node
+
+* Add manual entry field to editor config for a URL scheme to open the instanceRoot folder in an editor new window. Pre-fill with vscode entry for localhost. Partially fill with vscode-remote otherwise (or maybe have a button).
+
+### All nodes
+
+* Incorporate ideas from: https://www.htmhell.dev/adventcalendar/2023/2/
+
+* More flexible low-code class attribute handling.
+  * In ui.js
+    * [ ] Update the low-code schema's with add/remove/replace `classes` property
+    * Update all fns to use the extra property
+    
+  * In nodes - update to allow using array of classes and to have add/remove class arrays
+    * In uib-update
+    
+    * In uib-element
+    
+    * In uib-tag
+    
+      
+
+### Node Edit Panel Refactoring
+
+| Refactor / Node:              | uibuilder             | uib-cache | uib-element         | uib-html | uib-save | uib-sender | uib-tag | uib-update | *uib-uplot*                         |
+| ----------------------------- | --------------------- | --------- | ------------------- | -------- | -------- | ---------- | ------- | ---------- | ----------------------------------- |
+| Ref ti-common.js/css          | ✔️                     | ✔️         | ✔️                   |          | ✔️        |            | ✔️       | ✔️          |                                     |
+| Mv src editor.js to resources | ✔️                     | ✔️         | ✔️                   |          | ✔️        |            | ✔️       | ✔️          |                                     |
+| jQ Tooltips                   | ✔️                     | ✔️         | ✔️                   |          | ✔️        |            | ✔️       | ✔️          |                                     |
+| rename template.html          | ✔️                     | ✔️         | ✔️                   |          | ✔️        | ✔️          |         | ✔️          |                                     |
+| jQ TI class not id            | ✔️                     | ✔️         | ✔️                   |          | ✔️        |            |         |            |                                     |
+| Notes                         | class="ti-edit-panel" |           | mv combobox styles? |          |          |            |         |            | check this for other needed updates |
+
+Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId].
+
+### Node Runtime Refactoring
+
+| Refactor / Node:             | uibuilder | uib-cache | uib-element | uib-html | uib-save | uib-sender | uib-tag | uib-update | *uib-uplot*                         |
+| ---------------------------- | --------- | --------- | ----------- | -------- | -------- | ---------- | ------- | ---------- | ----------------------------------- |
+| getSource                    |           |           | ✔️           |          |          |            | ✔️       |            |                                     |
+| Std process for typed inputs |           |           |             |          |          |            |         |            |                                     |
+| fs to std lib                |           |           |             |          |          |            |         |            |                                     |
+| buildUi to std lib           | --        | --        |             |          | --       | --         |         |            | ??                                  |
+| Notes                        |           |           |             |          |          |            |         |            | check this for other needed updates |
 
 ---
 
 ## Next - these are things that need to be done
 
+### Possible New Nodes
+
+* `uib-template` -  New node to take a msg._ui template input and update parts of it belore sending (e.g. parent, id, ...). `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation).
+* `uib-event` - Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance.
+
 ### General changes
 
 * Complete the move of the zero- to low-code translations into the `libs/lowcode.js` library. Move runtime `buildUi` to common library.
-
-  Consider putting each element in its own source js file and using a build process. This will allow their use when converting to web components. Add a master js with all components but allow each to be individually loaded.
+    Consider putting each element in its own source js file and using a build process. This will allow their use when converting to web components. Add a master js with all components but allow each to be individually loaded.
 * Complete the move of all server filing system handling into the `libs/fs.js` library. And remove dependency on `fs-extra`.
-* Node Edit Panel Refactoring:
-
-  | Refactor / Node:              | uibuilder | uib-cache | uib-element | uib-html | uib-save | uib-sender | uib-tag | uib-update | *uib-uplot*                       |
-  | ----------------------------- | --------- | --------- | ----------- | -------- | -------- | ---------- | ------- | ---------- | ----------------------------------- |
-  | Ref ti-common.js/css          | ✔️      | ✔️      |             |          | ✔️     |            | ✔️    | ✔️       |                                     |
-  | Mv src editor.js to resources | ✔️      | ✔️      |             |          | ✔️     |            | ✔️    | ✔️       |                                     |
-  | jQ Tooltips                   | ✔️      | ✔️      |             |          | ✔️     |            | ✔️    | ✔️       |                                     |
-  | rename template.html          |           | ✔️      |             |          | ✔️     | ✔️       |         | ✔️       |                                     |
-  | jQ Tt class not id            | ✔️      |           |             |          |          |            |         |            |                                     |
-  | getSource                     |           |           | ✔️        |          |          |            | ✔️    |            |                                     |
-  | Notes                         |           |           |             |          |          |            |         |            | check this for other needed updates |
-
-  Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId]
 * [Issue #94](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/94) - Detect when Node-RED switches projects and see if the uibRoot folder can be dynamically changed.
 * Allow control of browser html cache from Node-RED. Add an auto-restore on load option. (? Add send updates back to Node-RED option - control msg ?)
 * Editor: Add panel of links to all instances of uibuilder.
@@ -46,10 +121,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * https://github.com/TotallyInformation/nr-uibuilder-uplot
   * probably chart
   * How to pass data through?
-* New node: `uib-template` -  New node to take a msg._ui template input and update parts of it belore sending (e.g. parent, id, ...). `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation).
-* New node: `uib-event` - Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance.
 
-### Updates to `uibuilder` node
+### Node: `uibuilder`
 
 * **FIX NEEDED** Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
 * Allow file uploads
@@ -122,7 +195,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Add template description to display.
 * Add dependency version handling to templates (e.g. vue 2/3)
 * Allow templates to provide example flows via a `uibuilder` Node-RED library plugin - will library update though?
-     
+  
     Check for examples folder, if present load all *.json files to library.
     [saveLibraryEntry](https://nodered.org/docs/api/storage/methods/#storagesavelibraryentrytypenamemetabody)
     ([ref1](https://discourse.nodered.org/t/red-library-without-red-editor/61247), [ref2](https://nodered.org/docs/api/library/), [ref3](https://github.com/node-red/node-red-library-file-store/blob/main/index.js))
@@ -205,7 +278,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
   * ~~Add 4th cookie to record the Node-RED web URL since uibuilder can now use a different server, it is helpful if the front-end knows the location of Node-RED itself.~~ Can't even give the port since the client access might be totally different to the server (e.g. behind a proxy).
 
-### Extensions to `uib-cache` node
+### Node: `uib-cache`
 
 * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
 * Add DELAY and EXPIRY features.
@@ -217,7 +290,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Add empty cache button.
 * Think about impact of a cache clear (affects all connected clients)
 
-### Extensions to the `uib-element` node
+### Node: `uib-element`
 
 * Add width setting
 * Add new element: Layout
@@ -345,26 +418,27 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Pill list, scrollable search - https://www.w3.org/WAI/ARIA/apg/patterns/grid/examples/layout-grids/
 * ??? How to allow EXTERNAL element definitions ??? e.g. Someone else's contributed package.
 
-### Extensions to the `uib-html` node
+### Node: `uib-html`
 
 * Add option to remove the page tags, leaving just the document body fragment.
 * Add options for DOMpurify and Markdown-IT
 * Consider adding an HTML editor for the template?
 
-### `uib-save` node
+### Node: `uib-save`
 
 * Allow msg overrides of input fields
+* Allow URL to be driven by msg or context (just add new options to select, don't bother with typed input)
 
-### `uib-sender` node
+### Node: `uib-sender`
 
 * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
 
-### `uib-tag` node
+### Node: `uib-tag`
 
 * Add input to allow restriction by pageName/clientId/tabId. `_ui.pageName`, `_ui.clientId`, and/or `_ui.tabId`
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
 
-### `uib-update` node
+### Node: `uib-update`
 
 * Add input to allow restriction by pageName/clientId/tabId. `_ui.pageName`, `_ui.clientId`, and/or `_ui.tabId`
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
@@ -373,27 +447,47 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * ?? Consider if worth adding a way to update a front-end javascript variable directly ??
 * New type option "Template" - Replaces the selected element with a template clone. Then applies attribs/slot if required. [Ref](https://developer.mozilla.org/en-US/docs/web/html/element/template)
 
-### Shared Editor Code Library `ti-common.js` and `ti-common.css`
+### Library: `ti-common.js`/`ti-common.css` (Shared Editor Code)
 
 * Add `isNew` flag that indicates if a node instance has not yet been deployed. (e.g. new paste or import or drag from palatte)
 
-### client Library
+### Library: FE Client
 
-* [**STARTED**] Ability to visually show all uibuilder managed variables.
+* [ ] [**STARTED**] Ability to visually show all uibuilder managed variables.
+
+* [ ] [**STARTED**] Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+
+* [ ] [**STARTED**]  Add ability to save the current DOM.
+
+  * [ ] [**STARTED**] To local storage - with option to reload on reload
+  * [ ] [**STARTED**] (manual request is done) Send to Node-RED as a control msg (whole HTML or from a CSS Selector)
+
+  
+
+* ??? `uib.setAttr(selector, attr, val)`?  - quick way to set an attribute on an element.
+
+* Consider special variable `managedTags`? where each entry update will automatically update the matching element ID and if the element doesn't yet exist, will watch for it and update as soon as it is added. E.g. setting value on `uib.managedTags.mytag` would update `<xxxx id="mytag"></xxxx>`. ?? Just the slot content? Or attributes as well (perhaps making the value an object).
+
 * Add client `tag()` function that creates a new HTML element similar to the Node-RED side `uib-tag` node. (See https://redom.js.org for refs)
+
 * A way to show and change uib-brand variables visually?
-* Add extra optional flag to set() to allow saving to localStorage - where set, auto-load on (re)load
-* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+
 * Add Node-RED command to find out if a front-end library is installed.
+
 * Add small button to showStatus output to allow user to turn off the display.
+
 * Make sure that all watch/monitor fns emit custom events
+
 * msgShow - add a message counter (optional?)
+
 * Forms (eventSend):
 
   * Allow for multi-select sending array of selected options.
   * Allow for multi-select pre-selecting array of options.
   * Allow for "selected" `true` on option entries.
+  
 * Get _uib/_ui notify features to use Notification API if available
+
 * *New Functions* (all to be callable from Node-RED):
 
   * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
@@ -401,6 +495,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * [ ] `uibuilder.socketReconnect()` Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
   * [ ] Expand/collapse all details, expand previous/next (with/without collapsing others) buttons. [ref](https://codereview.stackexchange.com/questions/192138/buttons-that-expand-or-collapse-all-the-details-within-the-document)
   * [ ] **HARD - may be impossible?** `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
+  
 * Control from Node-RED. Functions to implement:
 
   * [ ] watchDom(startStop), uiWatch(cssSelector) [add custom event outputs]
@@ -411,40 +506,41 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * [ ] Expand/collapse all details, expand previous/next (with/without collapsing others)
 
   * Add `info` outputs to commands. Allow the fns that commands call to have auto-send & info.
+  
 * Allow file uploads
+
 * Add a `jsonImport` option to the _ui `load` method. The `jsonImport` property being an object where the keys are variable names to load to and the values are the URL's to load the JSON from.
+
 * Add treeview formatting to syntaxHighlight. [ref](https://iamkate.com/code/tree-views/).
+
 * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change). `url` variable already added in preparation.
+
 * Option for a pop-over notification to manually reconnect the websocket.
+
 * Investigate use of [PerformanceNavigationTiming.type](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/type) to detect page load type and inform uibuilder on initial message.
-* _started_ Add ability to save the current DOM.
 
-  * _started_ To local storage - with option to reload on reload
-  * _started_ (manual request is done) Send to Node-RED as a control msg (whole HTML or from a CSS Selector)
-* _UI - improvements to the config-/data-driven UI creation features
-
-  * **Started** Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process - *needs list and wildcard capabilities*.
-  * Content editor capability - to set editable content blocks. [ref 1](https://editorjs.io/)
-  * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special
-    name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
-  * Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
-  * Allow adding to more locations: next/previous sibling
-  * Add click coordinates to return msgs where appropriate. See https://discourse.nodered.org/t/contextmenu-location/22780/51
 * Extend logging functions:
 
   * Report socket.io setup/config issues back to Node-RED using `beaconLog(txtToSend, logLevel)`.
-  * _started_ Add showLog function similar to showMsg - showing log output to the UI instead of the console.
+  * [ ] [**STARTED**]  Add showLog function similar to showMsg - showing log output to the UI instead of the console.
   * Add option to send log events back to node-red via the `navigator.sendBeacon()` method.
 
     * `uibuilder` node will output control msg of type `Client Log` when client sends a beacon.
     * Make optional via flag in Editor with start msg enabling/disabling in client.
     * ? window and document events - make optional via uibuilder fe command.
+  
 * Add a standard tab handler fn to handle tab changes. Are DOM selectors dynamic (do they update with new DOM elements)? If not, will need to include a DOM observer.
+
 * Extend clearHtmlCache, restoreHtmlFromCache, saveHtmlCache fns to allow *sessionCache*.
+
 * Add a [resizeObserver](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to report resize events back to Node-RED as a control msg.
+
 * Look at [`window.prompt`](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt), [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) and [`<dialog>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog) - should _ui implement these?
+
 * Get better control over what control messages can be sent. Centralise the list of control messages in use.
+
 * Add functions for manipulating SVG's.
+
 * Allow for PWA use:
 
   * Check for OFFLINE use and suppress transport errors
@@ -452,26 +548,41 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Auto-generate manifest and sw.js - need icon and to set names/urls/etc
   * https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/web-app-manifests
   * Allow push API interface as well as websocket. https://developer.mozilla.org/en-US/docs/Web/API/Push_API
+  
 * Accessibility
 
   * Need to add a dismiss button to toasts
   * Check all auto-added elements for accessibility
   * Add count of current errors to title
 
-### `ui.js` library
+### Library: `ui.js`
 
-* uib-element/client - allow loading of data to the ROOT to allow for full HTML replacement
+* [ ] uib-element/client - allow loading of data to the ROOT to allow for full HTML replacement
+* [ ] [**Started**] Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process - *needs list and wildcard capabilities*.
+* Filter on `msg._ui.routeId` (If using router).
+* Content editor capability - to set editable content blocks. [ref 1](https://editorjs.io/)
+* Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special
+  name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
+* Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
+* Allow adding to more locations: next/previous sibling
+* Add click coordinates to return msgs where appropriate. See https://discourse.nodered.org/t/contextmenu-location/22780/51
 
-### `uib-var` web component
-
-* Allow no var attrib but instead allow ID to create a new managed variable
-* Add uib.var function as a test of using a proxy to manage vars and work with the uib-var component.
-
-### `uibrouter.js` FE router
+### Library: `uibrouter.js` (FE router)
 
 * Add option to auto scroll to a css selector on route change.
 
-### `uib-brand.css`
+### Web Component: `uib-var` (internal)
+
+* Allow no var attrib but instead allow ID to create a new managed variable.
+* Add uib.var function as a test of using a proxy to manage vars and work with the uib-var component.
+
+### Possible New Web Components
+
+* `<uib-loop>`. [Ref](https://discourse.nodered.org/t/ui/82818/33?u=totallyinformation) - A web component that takes a variable to loop over. Slot content being used as a template and replicated. Need a way to represent loop properties in the template.
+* lamp - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras)
+* gauge - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras).
+
+### Styles: `uib-brand.css`
 
 * Forms:
 
@@ -563,11 +674,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 ### Other changes
 
 * Consider adding a virtual file system to enable uibuilder to work with FlowForge. [ref](https://discourse.nodered.org/t/ui-builder-and-flowforge-device-agent/79373/7)
-
-### Potential Web Components
-
-* lamp - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras)
-* gauge - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras).
 
 ### Ideas
 

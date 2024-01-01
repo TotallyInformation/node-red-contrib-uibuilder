@@ -1,6 +1,8 @@
 ---
 created: 2023-12-30 20:23:50
-updated: 2023-12-30 20:32:27
+updated: 2023-12-31 14:03:25
+title: Possible Future Features
+author: Julian Knight (Totally Information)
 ---
 
 These are some thoughts about possible future direction. They need further thought and design.
