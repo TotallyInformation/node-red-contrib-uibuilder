@@ -222,7 +222,7 @@ function nodeInstance(config) {
     const RED = uib.RED
 
     // If someone deploys but ignored the error about blank URL's - don't set up the node.
-    if (!config.url || config.urlValid === false ) {
+    if (!config.url || config.okToGo === false ) {
         RED.log.error(`[uibuilder] uibuilder node ${config.id} deployed with invalid URL in flow ${config.z} - not configuring`)
         return
     }

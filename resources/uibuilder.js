@@ -1057,16 +1057,19 @@
             // Changed URL not valid: turn off other edits, show errors
             this.urlValid = false
             enableEdit(this.urlErrors, false)
+            this.okToGo = false
         } else {
             // Changed URL valid: turn on other edits
             this.urlValid = true
             enableEdit(this.urlErrors, true)
+            this.okToGo = true
         }
 
         // debugUrl(this, value)
 
         // Add exception if the only error is that the fldr doesn't yet exist
         if ( Object.keys(this.urlErrors).length === 1 &&  this.urlErrors.fldNotExist ) {
+            this.okToGo = true
             return true
         }
 
@@ -1883,7 +1886,7 @@
             name: { value: '' },
             topic: { value: '' },
             url: { required: true, validate: validateUrl },
-            urlValid: {},
+            okToGo: {}, // Set by validateUrl, tells runtime if we are good to configure the node
             fwdInMessages: { value: false },   // Should we send input msg's direct to output as well as the front-end?
             allowScripts: { value: false },    // Should we allow msg's to send JavaScript to the front-end?
             allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?
