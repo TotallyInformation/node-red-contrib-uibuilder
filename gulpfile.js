@@ -1205,6 +1205,7 @@ function notifyOtherVersions(cb) {
 /** Create a new GitHub tag for a release (only if release ver # different to last committed tag) */
 async function createTag(cb) {
     // Get the last committed tag: git describe --tags --abbrev=0
+    // To delete a tag so it can be recreated `git tag -d v6.8.0`
     let lastTag
     try {
         lastTag = (await execa('git', ['describe', '--tags', '--abbrev=0'])).stdout
@@ -1240,3 +1241,4 @@ exports.packfeIIFE  = packfeIIFE
 exports.createTag   = createTag
 exports.setVersion  = series( setPackageVersion, setPackageLockVersion, setFeVersionDev, setFeVersion, setFeVersionMin, notifyOtherVersions )
 // To update branch from main: git pull origin main
+// To publish: npm publish --access public
