@@ -8,7 +8,11 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## Issues
 
-None.
+* uibuilder.send({ payload: pl, topic: tp }, nodename)
+
+  where nodename is defined as:
+  const nodename = '30fb97fcc6154e6c'
+  After the upgrade, this is no more working, no errors in console. It simply doesn't send the message back to the node in NR.
 
 ### "Outdated" dependencies
 
@@ -27,9 +31,15 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.0...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.1...main)
 
 Nothing currently.
+
+## [v6.8.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.0...v6.8.1)
+
+* **FIXED** Regression caused by "fix" for users deploying with an invalid URL. `uibuilder` node's editor and runtime code updated.
+* **FIXED** Regression caused by over-optimising references to the TI event library which stopped msgs with an originator from getting back to the relavent `uib-sender` node. `libs/socket.js` updated.
+* Version numbers bumped to match release.
 
 ## [v6.8.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.7.0...v6.8.0)
 
