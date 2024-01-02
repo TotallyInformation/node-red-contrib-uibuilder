@@ -71,7 +71,7 @@ const stdio = 'inherit'
 // @ts-ignore Find the module version in the package.json
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
-const release = '6.8.1'
+const release = '6.9.0'
 // Wanted node.js version - used for ESBUILD
 const nodeVersion = 'node14.14'
 
@@ -1239,3 +1239,4 @@ exports.packfeModule = packfeModule
 exports.packfeIIFE  = packfeIIFE
 exports.createTag   = createTag
 exports.setVersion  = series( setPackageVersion, setPackageLockVersion, setFeVersionDev, setFeVersion, setFeVersionMin, notifyOtherVersions )
+// To update branch from main: git pull origin main
