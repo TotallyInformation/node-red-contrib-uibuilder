@@ -584,6 +584,23 @@
  * }} uibPackageJson
  */
 
+/** routeDefinition
+ * @typedef {object} routeDefinition Single route configuration
+ * @property {string} id REQUIRED. Route ID
+ * @property {string} src REQUIRED. CSS Selector for template tag routes, url for external routes
+ * @property {"url"|undefined} [type] OPTIONAL. "url" for external routes
+ * @property {string} [title] OPTIONAL. Text to use as a short title for the route
+ * @property {string} [description] OPTIONAL. Text to use as a long description for the route
+ */
+/** UibRouterConfig
+ * @typedef {object} UibRouterConfig Configuration for the UiBRouter class instances
+ * @property {routeDefinition[]} routes REQUIRED. Array of route definitions
+ * @property {string} [defaultRoute] OPTIONAL. If set to a route id, that route will be automatically shown on load
+ * @property {string} [routeContainer] OPTIONAL. CSS Selector for an HTML Element containing routes
+ * @property {boolean} [hide] OPTIONAL. If TRUE, routes will be hidden/shown on change instead of removed/added
+ * @property {boolean} [unload] OPTIONAL. If TRUE, route templates will be unloaded from DOM after access. Only useful with the `hide` option
+ */
+
 /** Props define attributes on a virtual node.
  * @typedef {Object<string, any> | {}} Props
  * @property {object} Props .
