@@ -63,7 +63,7 @@
          * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
          */
         constructor(win, extLog, jsonHighlight) {
-          __publicField(this, "version", "6.8.0-src");
+          __publicField(this, "version", "6.8.1-src");
           // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
           __publicField(this, "sanitiseExtraTags", ["uib-var"]);
           __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -4642,7 +4642,7 @@
   var UibVar = _UibVar;
 
   // src/front-end-module/uibuilder.module.js
-  var version = "6.8.0-iife";
+  var version = "6.8.1-iife";
   var isMinified = !/param/.test(function(param) {
   });
   var logLevel = isMinified ? 0 : 1;

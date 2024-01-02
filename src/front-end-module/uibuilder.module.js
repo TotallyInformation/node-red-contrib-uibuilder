@@ -33,7 +33,7 @@ import Ui from './ui'
 import io from 'socket.io-client'
 import UibVar from '../components/uib-var'
 
-const version = '6.8.0-src'
+const version = '6.8.1-src'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //

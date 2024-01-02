@@ -124,7 +124,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#region ++++++++++ Start of setup ++++++++++ //
 
-        self.version = '6.7.0-old'
+        self.version = '6.8.1-old'
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified
         self.isUnminified = (/param/).test(function(param) {}) // eslint-disable-line no-unused-vars

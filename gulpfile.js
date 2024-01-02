@@ -71,7 +71,7 @@ const stdio = 'inherit'
 // @ts-ignore Find the module version in the package.json
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
-const release = '6.8.0'
+const release = '6.8.1'
 // Wanted node.js version - used for ESBUILD
 const nodeVersion = 'node14.14'
 
@@ -1176,6 +1176,7 @@ function setPackageVersion(cb) {
         src('./package.json')
             .pipe(jeditor({ 'version': release } ) )
             .pipe(dest('.') )
+        console.log(`setPackageVersion: Setting version to ${release}` )
     } else {
         console.log('setPackageVersion: Requested version is same as current version - nothing will change')
     }
@@ -1187,6 +1188,14 @@ function setPackageLockVersion(cb) {
         src('./package-lock.json')
             .pipe(jeditor({ 'version': release } ) )
             .pipe(dest('.') )
+        console.log(`setPackageVersion: Setting version to ${release}` )
+    }
+    cb()
+}
+/** Set uibuilder version in src\front-end-module\ui.js */
+function notifyOtherVersions(cb) {
+    if (version !== release) {
+        console.log(`Updating version to ${release}. Don't forget to run 'gulp watch' then change versions in: src/front-end-module/ui.js, src/components/uib-var.js, src/front-end-module/uibrouter.js. And template package.json files if updated.` )
     }
     cb()
 }
@@ -1229,4 +1238,4 @@ exports.packfe      = packfe
 exports.packfeModule = packfeModule
 exports.packfeIIFE  = packfeIIFE
 exports.createTag   = createTag
-exports.setVersion  = series( setPackageVersion, setPackageLockVersion, setFeVersionDev, setFeVersion, setFeVersionMin )
+exports.setVersion  = series( setPackageVersion, setPackageLockVersion, setFeVersionDev, setFeVersion, setFeVersionMin, notifyOtherVersions )
