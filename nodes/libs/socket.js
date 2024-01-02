@@ -33,7 +33,8 @@ const socketio = require('socket.io')
 const { urlJoin }    = require('./tilib')    // General purpose library (by Totally Information)
 const { setNodeStatus }   = require('./uiblib')   // Utility library for uibuilder
 // const security = require('./sec-lib') // uibuilder security module
-const { emit } = require('@totallyinformation/ti-common-event-handler')
+// const { emit } = require('@totallyinformation/ti-common-event-handler') // NO, don't do this! If you do, the emits don't work
+const tiEvent = require('@totallyinformation/ti-common-event-handler')
 
 /** Get client real ip address - NB: Optional chaining (?.) is node.js v14 not v12
  * @param {socketio.Socket} socket Socket.IO socket object
@@ -396,7 +397,7 @@ class UibSockets {
     sendIt(msg, node) {
         if ( msg._uib && msg._uib.originator && (typeof msg._uib.originator === 'string') ) {
             // const eventName = `node-red-contrib-uibuilder/return/${msg._uib.originator}`
-            emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
+            tiEvent.emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
         } else {
             node.send(msg)
         }
@@ -573,7 +574,7 @@ class UibSockets {
                 that.sendCtrlMsg(ctrlMsg, node)
 
                 // Let other nodes know a client is disconnecting (via custom event manager)
-                emit(`node-red-contrib-uibuilder/${node.url}/clientDisconnect`, ctrlMsg)
+                tiEvent.emit(`node-red-contrib-uibuilder/${node.url}/clientDisconnect`, ctrlMsg)
             }) // --- End of on-connection::on-disconnect() --- //
 
             // Listen for msgs from clients on standard channel
@@ -710,7 +711,7 @@ class UibSockets {
             that.sendCtrlMsg(ctrlMsg, node)
 
             // Let other nodes know a client is connecting (via custom event manager)
-            emit(`node-red-contrib-uibuilder/${node.url}/clientConnect`, ctrlMsg)
+            tiEvent.emit(`node-red-contrib-uibuilder/${node.url}/clientConnect`, ctrlMsg)
 
             //#endregion ---- run when client connects ---- //
 
