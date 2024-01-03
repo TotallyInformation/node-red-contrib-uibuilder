@@ -861,6 +861,7 @@ async function buildUi(msg, node) {
     } else node._ui = []
 
     // If no mode specified, we assume the desire is to update (since a removal attempt with nothing to remove is safe)
+    // ! TODO This should be replace not update
     if ( !msg.mode ) msg.mode = 'update'
 
     // If mode is remove, then simply do that and return
