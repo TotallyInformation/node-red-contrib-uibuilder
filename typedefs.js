@@ -587,18 +587,19 @@
 /** routeDefinition
  * @typedef {object} routeDefinition Single route configuration
  * @property {string} id REQUIRED. Route ID
- * @property {string} src REQUIRED. CSS Selector for template tag routes, url for external routes
- * @property {"url"|undefined} [type] OPTIONAL. "url" for external routes
- * @property {string} [title] OPTIONAL. Text to use as a short title for the route
- * @property {string} [description] OPTIONAL. Text to use as a long description for the route
+ * @property {string} src REQUIRED for external, optional for internal (default=route id). CSS Selector for template tag routes, url for external routes
+ * @property {"url"|undefined} [type] OPTIONAL, default=internal route. "url" for external routes
+ * @property {string} [title] OPTIONAL, default=route id. Text to use as a short title for the route
+ * @property {string} [description] OPTIONAL, default=route id. Text to use as a long description for the route
  */
 /** UibRouterConfig
  * @typedef {object} UibRouterConfig Configuration for the UiBRouter class instances
  * @property {routeDefinition[]} routes REQUIRED. Array of route definitions
- * @property {string} [defaultRoute] OPTIONAL. If set to a route id, that route will be automatically shown on load
- * @property {string} [routeContainer] OPTIONAL. CSS Selector for an HTML Element containing routes
- * @property {boolean} [hide] OPTIONAL. If TRUE, routes will be hidden/shown on change instead of removed/added
- * @property {boolean} [unload] OPTIONAL. If TRUE, route templates will be unloaded from DOM after access. Only useful with the `hide` option
+ * @property {string} [defaultRoute] OPTIONAL, default=1st route. If set to a route id, that route will be automatically shown on load
+ * @property {string} [routeContainer] OPTIONAL, default='#uibroutecontainer'. CSS Selector for an HTML Element containing routes
+ * @property {boolean} [hide] OPTIONAL, default=false. If TRUE, routes will be hidden/shown on change instead of removed/added
+ * @property {boolean} [templateLoadAll] OPTIONAL, default=false. If TRUE, all external route templates will be loaded when the router is instanciated. Default is to lazy-load external templates
+ * @property {boolean} [templateUnload] OPTIONAL, default=true. If TRUE, route templates will be unloaded from DOM after access.
  */
 
 /** Props define attributes on a virtual node.
