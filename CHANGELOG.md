@@ -1,18 +1,42 @@
 ---
 typora-root-url: docs/images
+created: 2017-04-18 16:53:00
+updated: 2024-01-01 17:32:06
 ---
 
 # Changelog
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
+## To Do
+
+* [ ] Add to uib-save example: topic example.
+
+* `uibrouter`
+
+  * [x] If route.src not set, try to use `#${route.id}` - for internal routes only. In keeping with title and description.
+  * [x] Add explicit defaults for `templateLoadAll` (false), & `hide` (false).
+  * [x] Finish `templateLoadAll`=true processing.
+
+  * [ ] [started] Add `templateUnload` flag (default=true) that unloads external templates after use. Allows for massive template collections for things like WIKI's. Also allows for external changes to templates.
+
+  * [ ] Add `defaultRouteOnLoad` flag (default=false) to allow for dynamically added routes to have been pre-selected on page load.
+  * [ ] Update documentation:
+    * [ ] `templateUnload` and `templateLoadAll` flags.
+    * [ ] Remove doc for `unload` flag.
+    * [ ] Document the `unloadTemplate` and `deleteTemplates` methods.
+    * [ ] Make [this](https://discourse.nodered.org/t/urgent-regression/84197/15) into some use-cases.
+  * [ ] Enforce only 1 instance of a router on page (would need to change how uib vars work otherwise).
+  * [ ] Update router example (code changes).
+
+  * If uibuilder:
+    * [x] add ref to router to managed uib var
+    * [ ] add remote command listener
+
 ## Issues
 
-* uibuilder.send({ payload: pl, topic: tp }, nodename)
+* [ ] `uib-save` - list of available uibuilder nodes is not sorted?
 
-  where nodename is defined as:
-  const nodename = '30fb97fcc6154e6c'
-  After the upgrade, this is no more working, no errors in console. It simply doesn't send the message back to the node in NR.
 
 ### "Outdated" dependencies
 
@@ -29,17 +53,49 @@ These are only used for developing UIBUILDER so somwhat less critical.
 
 I will be trying to eliminate packages that have enforced structural changes. The author's arrogance is palpable.
 
+## Ideas
+
+### `uibrouter`
+
+* Consider allowing a route to have a set display parent. That might allow specific routes to be loaded to a different on-page location than the default. This would enable things like menu's to be routes themselves.
+* If uibuilder, send uibuilder control messages back to Node-RED on route changes (including initial load - or build that into uibuilder's standard control msg). Might need an adjustment to be able to differentiate between initial and subsequent changes. Add cache replay property.
+
+### `uib-cache` node
+
+  * Add cache replay filtering. Option flags need adding for control. Filter by:
+    * `routeId`
+    * `clientId`
+    * `pageName`
+
+### Other
+
+* gauge tiles - web component or new element? [ref](https://discourse.nodered.org/t/dashboard-2-beta-development/83550/133?u=totallyinformation)
+
+
+
 ------------
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.1...main)
 
-Nothing currently.
+<!-- Nothing currently. -->
+
+### 📌 Highlights
+
+### `uibrouter` library
+
+Note that, while it has various uibuilder integrations and is only currently published with UIBUILDER, the router library is not dependent on uibuilder and could be used separately if you like. Might be especially useful for Dashboard or http-in/-out flows.
+
+* **FIXED** Default route was always being set on load. Now correctly takes the current URL hash into account first.
+* **FIXED** Routes loaded via script, if pre-selected on page load (e.g. in URL hash), were crashing. Now will automatically revert to the default route and just print an error to the console.
+* **NEW** If using uibuilder, added a new uibuilder managed variable `uibrouterinstance` which has a reference to the router instance. Will alow the uibuilder client library to auto-update things & will allow easier remote control from Node-RED.
 
 ## [v6.8.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.0...v6.8.1)
 
 * **FIXED** Regression caused by "fix" for users deploying with an invalid URL. `uibuilder` node's editor and runtime code updated.
 * **FIXED** Regression caused by over-optimising references to the TI event library which stopped msgs with an originator from getting back to the relavent `uib-sender` node. `libs/socket.js` updated.
 * Version numbers bumped to match release.
+
+
 
 ## [v6.8.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.7.0...v6.8.0)
 
@@ -190,7 +246,7 @@ Nothing currently.
 * Improved low-code documentation for the `notify` and `alert` methods.
 * Restructured config files for better future updates. Fixed some niggles.
 
-## Other
+### Other
 
 * **FIXED** uibuilder's instance debug page was not working. Now fixed.
 * The list of all uibuilder apps available at `/uibuilder/apps` is now sorted by URL. Don't forget that it also uses the description fields of each uibuilder node.

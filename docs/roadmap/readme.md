@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-01-01 13:59:16
+updated: 2024-01-01 17:50:02
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -572,6 +572,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ### Library: `uibrouter.js` (FE router)
 
+* Option to auto-unload external route templates after use - for example, use with a library of markdown files to produce something similar to Obsidian. Will need change to doRoute to reload the template when needed
 * Add option to auto scroll to a css selector on route change.
 * Add a function to auto-rotate routes.
 * Add a function to go to next/previous route.
