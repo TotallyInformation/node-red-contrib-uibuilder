@@ -3,8 +3,8 @@
 /** A simple, vanilla JavaScript front-end router class
  * Included in node-red-contrib-uibuilder but is not dependent on it.
  * May be used in other contexts as desired.
- * 
- * Copyright (c) 2023-2023 Julian Knight (Totally Information)
+ *
+ * Copyright (c) 2023-2024 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -24,23 +24,24 @@
  * routeDefinition
  * @typedef {object} routeDefinition Single route configuration
  * @property {string} id REQUIRED. Route ID
- * @property {string} src REQUIRED. CSS Selector for template tag routes, url for external routes
- * @property {"url"|undefined} [type] OPTIONAL. "url" for external routes
- * @property {string} [title] OPTIONAL. Text to use as a short title for the route
- * @property {string} [description] OPTIONAL. Text to use as a long description for the route
+ * @property {string} src REQUIRED for external, optional for internal (default=route id). CSS Selector for template tag routes, url for external routes
+ * @property {"url"|undefined} [type] OPTIONAL, default=internal route. "url" for external routes
+ * @property {string} [title] OPTIONAL, default=route id. Text to use as a short title for the route
+ * @property {string} [description] OPTIONAL, default=route id. Text to use as a long description for the route
  * UibRouterConfig
  * @typedef {object} UibRouterConfig Configuration for the UiBRouter class instances
  * @property {routeDefinition[]} routes REQUIRED. Array of route definitions
- * @property {string} [defaultRoute] OPTIONAL. If set to a route id, that route will be automatically shown on load
- * @property {string} [routeContainer] OPTIONAL. CSS Selector for an HTML Element containing routes
- * @property {boolean} [hide] OPTIONAL. If TRUE, routes will be hidden/shown on change instead of removed/added
- * @property {boolean} [unload] OPTIONAL. If TRUE, route templates will be unloaded from DOM after access. Only useful with the `hide` option
+ * @property {string} [defaultRoute] OPTIONAL, default=1st route. If set to a route id, that route will be automatically shown on load
+ * @property {string} [routeContainer] OPTIONAL, default='#uibroutecontainer'. CSS Selector for an HTML Element containing routes
+ * @property {boolean} [hide] OPTIONAL, default=false. If TRUE, routes will be hidden/shown on change instead of removed/added
+ * @property {boolean} [templateLoadAll] OPTIONAL, default=false. If TRUE, all external route templates will be loaded when the router is instanciated. Default is to lazy-load external templates
+ * @property {boolean} [templateUnload] OPTIONAL, default=true. If TRUE, route templates will be unloaded from DOM after access.
  */
 
 class UibRouter { // eslint-disable-line no-unused-vars
     //#region --- Variables ---
     /** Class version */
-    static version = '1.0.1'
+    static version = '1.2.0' // 2024-01-02 16:04
 
     /** Configuration settings @type {UibRouterConfig} */
     config
@@ -68,26 +69,49 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         if (!routerConfig) throw new Error('[uibrouter:constructor] No config provided')
         if (!routerConfig.routes) throw new Error('[uibrouter:constructor] No routes provided in routerConfig')
-        // Add a default route container uf needed
-        if (!routerConfig.routeContainer)routerConfig.routeContainer = '#uibroutecontainer'
 
         // Save the config
         this.config = routerConfig
+
+        // Add a default route container uf needed
+        if (!this.config.routeContainer) this.config.routeContainer = '#uibroutecontainer'
         // If no default set in config, set to the first entry
         if (!this.config.defaultRoute && this.config.routes[0] && this.config.routes[0].id) this.config.defaultRoute = this.config.routes[0].id
+        // Other defaults
+        if (!this.config.hide) this.config.hide = false
+        if (!this.config.templateLoadAll) this.config.templateLoadAll = false
+        if (!this.config.templateUnload) this.config.templateUnload = true
+
         // Create/access the route container element, sets this.routeContainerEl
         this._setRouteContainer()
 
         this._updateRouteIds()
 
-        // Load all external route templates async in parallel - NB: Object.values works on both arrays and objects
-        // Note that final `then` is called even if no external routes are given
-        Promise.all(Object.values(routerConfig.routes).filter(r => r.type && r.type === 'url').map(this._loadExternal)) // eslint-disable-line promise/catch-or-return
-            .then(this._appendExternalTemplates)
-            .then( () => { // eslint-disable-line promise/always-return
-                // Everything is loaded so we can start
-                this._start()
-            } )
+        if (this.config.templateLoadAll === false) {
+            this._start()
+        } else {
+            console.info('[uibrouter] Pre-loading all external templates')
+            // Load all external route templates async in parallel - NB: Object.values works on both arrays and objects
+            // Note that final `then` is called even if no external routes are given
+            Promise.allSettled(Object.values(routerConfig.routes).filter(r => r.type && r.type === 'url').map(this._loadExternal))
+                .then( results => {
+                    results.filter( res => res.status === 'rejected').forEach(res => {
+                        console.error(res.reason)
+                    })
+                    results.filter( res => res.status === 'fulfilled').forEach(res => {
+                        console.log('allSettled results', res, results)
+                        this._appendExternalTemplates(res.value)
+                    })
+                    // Everything is loaded that can be so we can start
+                    this._start()
+                    return true
+                })
+                .catch( reason => {
+                    console.error(reason)
+                })
+        }
+
+        if (uibuilder) uibuilder.set('uibrouterinstance', this)
     }
 
     /** Save a reference to, and create if necessary, the HTML element to hold routes */
@@ -104,29 +128,37 @@ class UibRouter { // eslint-disable-line no-unused-vars
         }
     }
 
-    /** Load fetched external elements to templates tags under the head tag
+    /** Apply fetched external elements to templates tags under the head tag
      * @param {HTMLElement[]} loadedElements Array of loaded external elements to add as templates to the head tag
+     * @returns {number} Count of load errors
      */
     _appendExternalTemplates(loadedElements) {
+        if (!Array.isArray(loadedElements)) loadedElements = [loadedElements]
+        // console.log('_appendExternalTemplates', loadedElements)
         const head = document.getElementsByTagName('head')[0]
+        let errors = 0
         // Append the loaded content to the main container
         loadedElements.forEach(element => {
             if (Array.isArray(element)) {
                 console.error(...element)
+                errors++
             } else {
                 head.append(element)
             }
         })
+        return errors
     }
 
     /** Called once all external templates have been loaded */
-    _start() {
+    async _start() {
         if (this.#startDone === true) return // Don't run this again
 
-        // Listen for url hash changes and process route change
+        // Go to url hash route or default route if no route in url
+        await this.doRoute(this.keepHashFromUrl(window.location.hash))
+
+        // After initial route set, listen for url hash changes and process route change
         window.addEventListener('hashchange', (event) => this._hashChange(event) )
-        // Go to default route if no route in url and if a default is defined or ensure current route is shown
-        this.doRoute()
+
         // Events on fully loaded ...
         document.dispatchEvent(new CustomEvent('uibrouter:loaded'))
         if (uibuilder) uibuilder.set('uibrouter', 'loaded') // eslint-disable-line no-undef
@@ -147,61 +179,96 @@ class UibRouter { // eslint-disable-line no-unused-vars
      * @param {string} routeId ID of the route definition to use to create the content
      * @returns {boolean} True if the route content was created successfully, false otherwise
      */
-    _createRouteContent(routeId) {
-        const rContent = document.querySelector(`#${routeId}`)
+    async _createRouteContent(routeId) {
+        // Try to reference the template for this route
+        let rContent = document.querySelector(`#${routeId}`)
+
         if (!rContent) {
-            console.error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`)
-            return false
+            // If external template content doesn't exist, try to load it now (but only try once)
+            const r = this.getRouteConfigById(routeId)
+            if (r.type && r.type === 'url') {
+                let loadedEls
+                try {
+                    loadedEls = await this._loadExternal(r)
+                } catch (e) {
+                    throw new Error(e.message, e)
+                }
+
+                if (!loadedEls) throw new Error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`)
+
+                // Apply fetched external elements to templates tags under the head tag
+                this._appendExternalTemplates(loadedEls)
+
+                // And check that the template now actually exists
+                rContent = document.querySelector(`#${routeId}`)
+
+                if (!rContent) throw new Error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`)
+            } else {
+                // type not not external so we can't do anything when it doesn't actually exist
+                throw new Error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`)
+            }
         }
+
+        // Clone the template
         const docFrag = rContent.content.cloneNode(true)
+
         // Have to re-apply the scripts to make them run - only for external templates
         if (this.isRouteExternal(routeId)) this._applyScripts(docFrag)
+
         // Create the route wrapper div with data-route attrib
         const tempContainer = document.createElement('div')
         tempContainer.dataset.route = routeId
         tempContainer.append(docFrag)
+
         // And finally try to append to the container
         try {
             this.routeContainerEl.append(tempContainer)
         } catch (e) {
-            console.error(`[uibrouter:createRouteContent] Failed to apply route id '${routeId}'. \n ${e.message}`)
-            return false
+            throw new Error(`[uibrouter:createRouteContent] Failed to apply route id '${routeId}'. \n ${e.message}`)
         }
+
+        // If we get here, everything is good
         return true
     }
 
-    /** Loads an external HTML file into a `<template>` tag, adding the router id as the template id.
-     *  or returns an error array
+    /** Loads an external HTML file into a `<template>` tag, adding the router id as the template id. Or throws.
      * @param {routeDefinition} routeDefinition Configuration for a single route
-     * @returns {Promise<HTMLTemplateElement[]|[string,string,number,string]>} A promise that fulfills to an HTMLTemplateElement or an array containing error information
+     * @returns {HTMLTemplateElement[]} An HTMLTemplateElement that will provide the route content
      */
-    _loadExternal(routeDefinition) {
-        // const id = singleConfig.src.split('/').pop().replace('.html','')
+    async _loadExternal(routeDefinition) {
+        if (!routeDefinition) throw new Error('[uibrouter:loadExternal] Error loading route template. No route definition provided.')
+        // Obviously, this only works for internal routes
+        if (!routeDefinition.src) {
+            if (!routeDefinition.type || (routeDefinition.type && routeDefinition.type !== 'url'))routeDefinition.src = routeDefinition.id
+            else throw new Error('[uibrouter:loadExternal] Error loading route template. `src` property not defined')
+        }
+
         const id = routeDefinition.id
-        // @ts-ignore
-        return fetch(routeDefinition.src)
-            .then(response => {
-                // Fetch failed?
-                if (response.ok === false) return [routeDefinition.id, routeDefinition.src, response.status, response.statusText]
-                return response.text()
-            })
-            .then((/** @type {string} */ htmlText) => {
-                if (Array.isArray(htmlText)) return htmlText // if the fetch failed
 
-                // Check to see if template already exists, if so, remove it
-                try {
-                    const chkTemplate = document.querySelector(`#${id}`)
-                    if (chkTemplate) chkTemplate.remove()
-                } catch (e) {}
+        let response
+        try {
+            response = await fetch(routeDefinition.src)
+        } catch (e) {
+            throw new Error(`[uibrouter:loadExternal] Error loading route template HTML for route: ${routeDefinition.id}, src: ${routeDefinition.src}. Error: ${e.message}`, e)
+        }
 
-                const tempContainer = document.createElement('template')
-                tempContainer.innerHTML = htmlText
-                tempContainer.setAttribute('id', id)
-                return tempContainer
-            })
-            .catch(error => {
-                console.error(`[uibrouter:loadHTML] Error loading route template HTML from ${routeDefinition.src}:`, error)
-            })
+        // Fetch failed?
+        if (response.ok === false) throw new Error(`[uibrouter:loadExternal] Fetch failed to return data for route: ${routeDefinition.id}, src: ${routeDefinition.src}. Status: ${response.statusText} (${response.status})`, [routeDefinition.id, routeDefinition.src, response.status, response.statusText])
+
+        /** @type {string & any[]} */
+        const htmlText = await response.text()
+
+        // Check to see if template already exists, if so, remove it
+        try {
+            const chkTemplate = document.querySelector(`#${id}`)
+            if (chkTemplate) chkTemplate.remove()
+        } catch (e) {}
+
+        // Return the template
+        const tempContainer = document.createElement('template')
+        tempContainer.innerHTML = htmlText
+        tempContainer.setAttribute('id', id)
+        return tempContainer
     }
 
     /** Remove/re-apply scripts in a container Element so that they are executed.
@@ -226,7 +293,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
     /** Process a routing request
      * @param {PointerEvent|MouseEvent|HashChangeEvent|TouchEvent|string} routeSource Either string containing route id or DOM Event object either click/touch on element containing `href="#routeid"` or Hash URL change event
      */
-    doRoute(routeSource) {
+    async doRoute(routeSource) {
         if (!routeSource) routeSource = this.config.defaultRoute
 
         const container = this.routeContainerEl
@@ -272,15 +339,24 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         let routeShown = false
 
-        // If no defined valid route, undo and throw error
+        // If no defined valid route, undo and report error
         if (!newRouteId || !this.routeIds.has(newRouteId)) {
             // Events on route change fail ...
             document.dispatchEvent(new CustomEvent('uibrouter:route-change-failed', { detail: { newRouteId, oldRouteId } }))
             if (uibuilder) uibuilder.set('uibrouter', 'route change failed') // eslint-disable-line no-undef
 
-            window.location.hash = oldRouteId ? `#${oldRouteId}` : ''
-            throw new Error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#routename'. Route id requested: '${newRouteId}'`)
+            // If the same, this happened on load and would keep failing so revert to default
+            if (newRouteId === oldRouteId) oldRouteId = ''
+            // Revert route
+            this.doRoute(oldRouteId || '')
+
+            // Don't throw an error here, it stops the menu highlighting from working
+            console.error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#${newRouteId}'. Route id requested: '${newRouteId}'`)
+            return
         }
+
+        // If requested (default), unload the old route template
+        if (this.config.templateUnload) this.unloadTemplate(oldRouteId)
 
         // Show the new container (replace or show)
         if (this.config.hide) {
@@ -297,13 +373,23 @@ class UibRouter { // eslint-disable-line no-unused-vars
                 routeShown = true
             } else {
                 // else create new content from template
-                routeShown = this._createRouteContent(newRouteId)
+                try {
+                    routeShown = await this._createRouteContent(newRouteId)
+                } catch (e) {
+                    console.error('[uibrouter:doRRoute] ', e)
+                    routeShown = false
+                }
             }
         } else {
             // config.hide != true so remove previous contents
             container.replaceChildren()
             // Create new content from template
-            routeShown = this._createRouteContent(newRouteId)
+            try {
+                routeShown = await this._createRouteContent(newRouteId)
+            } catch (e) {
+                console.error('[uibrouter:doRRoute] ', e)
+                routeShown = false
+            }
         }
 
         // console.log({ newRouteId, oldRouteId, currentHash, routeShown })
@@ -396,19 +482,69 @@ class UibRouter { // eslint-disable-line no-unused-vars
      */
     addRoutes(routeDefn) {
         if (!Array.isArray(routeDefn)) routeDefn = [routeDefn]
-        // Load all external route templates async in parallel - NB: Object.values works on both arrays and objects
-        // Note that final `then` is called even if no external routes are given
-        Promise.all(Object.values(routeDefn).filter(r => r.type && r.type === 'url').map(this._loadExternal)) // eslint-disable-line promise/catch-or-return
-            .then(this._appendExternalTemplates)
-            .then( () => { // eslint-disable-line promise/always-return
-                // Everything is loaded - Add new routes to config
-                this.config.routes.push(...routeDefn)
-                // and update the routeIds list
-                this._updateRouteIds()
-                // Let everyone know it all finished
-                document.dispatchEvent(new CustomEvent('uibrouter:routes-added', { detail: routeDefn }))
-                if (uibuilder) uibuilder.set('uibrouter', 'routes added') // eslint-disable-line no-undef, promise/always-return
-            } )
+
+        if (this.config.templateLoadAll === false) {
+            // Only need to load the route configs since templates will be lazy loaded
+            this.config.routes.push(...routeDefn)
+            // and update the routeIds list
+            this._updateRouteIds()
+            // Let everyone know it all finished
+            document.dispatchEvent(new CustomEvent('uibrouter:routes-added', { detail: routeDefn }))
+            if (uibuilder) uibuilder.set('uibrouter', 'routes added')
+        } else {
+            // Load all external route templates async in parallel - NB: Object.values works on both arrays and objects
+            Promise.allSettled(Object.values(routeDefn).filter(r => r.type && r.type === 'url').map(this._loadExternal))
+                .then( results => {
+                    results.filter( res => res.status === 'rejected').forEach(res => {
+                        console.error(res.reason)
+                    })
+                    // results.filter( res => res.status === 'fulfilled').forEach(res => {})
+
+                    // Everything is loaded that can be - Add new routes to config
+                    this.config.routes.push(...routeDefn)
+                    // and update the routeIds list
+                    this._updateRouteIds()
+                    // Let everyone know it all finished
+                    document.dispatchEvent(new CustomEvent('uibrouter:routes-added', { detail: routeDefn }))
+                    if (uibuilder) uibuilder.set('uibrouter', 'routes added')
+                    return true
+                })
+                .catch( reason => {
+                    console.error(reason)
+                })
+        }
+    }
+
+    /** Remove a template from the DOM (optionally external templates only)
+     * @param {string} routeId REQUIRED. The route id of the template to remove (templates are ID's by their route id)
+     * @param {boolean=} externalOnly OPTIONAL, default=true. If true only remove if routeId is an external template
+     */
+    unloadTemplate(routeId, externalOnly) {
+        if (!externalOnly) externalOnly = true
+        if (!routeId || !this.isRouteExternal(routeId)) return
+
+        if (externalOnly === true && !this.isRouteExternal(routeId)) return
+
+        // Try to get the template - if found delete it
+        const chkTemplate = document.querySelector(`#${routeId}`)
+        if (chkTemplate) chkTemplate.remove()
+    }
+
+    /** Remove ALL templates from the DOM (optionally external templates only)
+     * @param {Array<string>=} templateIds OPTIONAL, default=ALL. Array of template (route) id's to remove
+     * @param {boolean=} externalOnly OPTIONAL, default=true. If true only remove if routeId is an external template
+     */
+    deleteTemplates(templateIds, externalOnly) {
+        if (!externalOnly) externalOnly = true
+        if (!templateIds || templateIds === '*') templateIds = [...this.routeIds]
+
+        if (!Array.isArray(templateIds)) templateIds = [templateIds]
+
+        templateIds.forEach( routeId => {
+            if (externalOnly === true && !this.isRouteExternal(routeId)) return
+            console.log('delete', routeId, this.isRouteExternal(routeId), externalOnly)
+            this.unloadTemplate(routeId, externalOnly)
+        } )
     }
 
     //#region --- utils for page display & processing ---
@@ -453,14 +589,6 @@ class UibRouter { // eslint-disable-line no-unused-vars
     //     // TODO remove from the config: this.config.routes = this.config.routes.filter(r => !aRoutes.includes(r.id))
 
     //     // ? Optional future upgrade - attempt to also remove any links to this route?
-    // }
-
-    // TODO
-    // deleteTemplates(templateIds) {
-    //     if (!Array.isArray(templateIds)) templateIds = [templateIds]
-    //     templateIds.forEach( templateid => {
-    //         // TODO delete
-    //     } )
     // }
 
     // TODO

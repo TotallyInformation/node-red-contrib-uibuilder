@@ -33,6 +33,7 @@
      * @param {UibRouterConfig} routerConfig Configuration object
      */
     constructor(routerConfig2) {
+      // 2024-01-02 16:04
       /** Configuration settings @type {UibRouterConfig} */
       __publicField(this, "config");
       /** Reference to the container DOM element - set in setup() @type {HTMLDivElement} */
@@ -51,16 +52,39 @@
         throw new Error("[uibrouter:constructor] No config provided");
       if (!routerConfig2.routes)
         throw new Error("[uibrouter:constructor] No routes provided in routerConfig");
-      if (!routerConfig2.routeContainer)
-        routerConfig2.routeContainer = "#uibroutecontainer";
       this.config = routerConfig2;
+      if (!this.config.routeContainer)
+        this.config.routeContainer = "#uibroutecontainer";
       if (!this.config.defaultRoute && this.config.routes[0] && this.config.routes[0].id)
         this.config.defaultRoute = this.config.routes[0].id;
+      if (!this.config.hide)
+        this.config.hide = false;
+      if (!this.config.templateLoadAll)
+        this.config.templateLoadAll = false;
+      if (!this.config.templateUnload)
+        this.config.templateUnload = true;
       this._setRouteContainer();
       this._updateRouteIds();
-      Promise.all(Object.values(routerConfig2.routes).filter((r) => r.type && r.type === "url").map(this._loadExternal)).then(this._appendExternalTemplates).then(() => {
+      if (this.config.templateLoadAll === false) {
         this._start();
-      });
+      } else {
+        console.info("[uibrouter] Pre-loading all external templates");
+        Promise.allSettled(Object.values(routerConfig2.routes).filter((r) => r.type && r.type === "url").map(this._loadExternal)).then((results) => {
+          results.filter((res) => res.status === "rejected").forEach((res) => {
+            console.error(res.reason);
+          });
+          results.filter((res) => res.status === "fulfilled").forEach((res) => {
+            console.log("allSettled results", res, results);
+            this._appendExternalTemplates(res.value);
+          });
+          this._start();
+          return true;
+        }).catch((reason) => {
+          console.error(reason);
+        });
+      }
+      if (uibuilder)
+        uibuilder.set("uibrouterinstance", this);
     }
     /** Save a reference to, and create if necessary, the HTML element to hold routes */
     _setRouteContainer() {
@@ -73,25 +97,31 @@
         routeContainerEl = this.routeContainerEl = document.querySelector(this.config.routeContainer);
       }
     }
-    /** Load fetched external elements to templates tags under the head tag
+    /** Apply fetched external elements to templates tags under the head tag
      * @param {HTMLElement[]} loadedElements Array of loaded external elements to add as templates to the head tag
+     * @returns {number} Count of load errors
      */
     _appendExternalTemplates(loadedElements) {
+      if (!Array.isArray(loadedElements))
+        loadedElements = [loadedElements];
       const head = document.getElementsByTagName("head")[0];
+      let errors = 0;
       loadedElements.forEach((element) => {
         if (Array.isArray(element)) {
           console.error(...element);
+          errors++;
         } else {
           head.append(element);
         }
       });
+      return errors;
     }
     /** Called once all external templates have been loaded */
-    _start() {
+    async _start() {
       if (__privateGet(this, _startDone) === true)
         return;
+      await this.doRoute(this.keepHashFromUrl(window.location.hash));
       window.addEventListener("hashchange", (event) => this._hashChange(event));
-      this.doRoute();
       document.dispatchEvent(new CustomEvent("uibrouter:loaded"));
       if (uibuilder)
         uibuilder.set("uibrouter", "loaded");
@@ -108,11 +138,26 @@
      * @param {string} routeId ID of the route definition to use to create the content
      * @returns {boolean} True if the route content was created successfully, false otherwise
      */
-    _createRouteContent(routeId) {
-      const rContent = document.querySelector(`#${routeId}`);
+    async _createRouteContent(routeId) {
+      let rContent = document.querySelector(`#${routeId}`);
       if (!rContent) {
-        console.error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`);
-        return false;
+        const r = this.getRouteConfigById(routeId);
+        if (r.type && r.type === "url") {
+          let loadedEls;
+          try {
+            loadedEls = await this._loadExternal(r);
+          } catch (e) {
+            throw new Error(e.message, e);
+          }
+          if (!loadedEls)
+            throw new Error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`);
+          this._appendExternalTemplates(loadedEls);
+          rContent = document.querySelector(`#${routeId}`);
+          if (!rContent)
+            throw new Error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`);
+        } else {
+          throw new Error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`);
+        }
       }
       const docFrag = rContent.content.cloneNode(true);
       if (this.isRouteExternal(routeId))
@@ -123,39 +168,44 @@
       try {
         this.routeContainerEl.append(tempContainer);
       } catch (e) {
-        console.error(`[uibrouter:createRouteContent] Failed to apply route id '${routeId}'. 
+        throw new Error(`[uibrouter:createRouteContent] Failed to apply route id '${routeId}'. 
  ${e.message}`);
-        return false;
       }
       return true;
     }
-    /** Loads an external HTML file into a `<template>` tag, adding the router id as the template id.
-     *  or returns an error array
+    /** Loads an external HTML file into a `<template>` tag, adding the router id as the template id. Or throws.
      * @param {routeDefinition} routeDefinition Configuration for a single route
-     * @returns {Promise<HTMLTemplateElement[]|[string,string,number,string]>} A promise that fulfills to an HTMLTemplateElement or an array containing error information
+     * @returns {HTMLTemplateElement[]} An HTMLTemplateElement that will provide the route content
      */
-    _loadExternal(routeDefinition) {
+    async _loadExternal(routeDefinition) {
+      if (!routeDefinition)
+        throw new Error("[uibrouter:loadExternal] Error loading route template. No route definition provided.");
+      if (!routeDefinition.src) {
+        if (!routeDefinition.type || routeDefinition.type && routeDefinition.type !== "url")
+          routeDefinition.src = routeDefinition.id;
+        else
+          throw new Error("[uibrouter:loadExternal] Error loading route template. `src` property not defined");
+      }
       const id = routeDefinition.id;
-      return fetch(routeDefinition.src).then((response) => {
-        if (response.ok === false)
-          return [routeDefinition.id, routeDefinition.src, response.status, response.statusText];
-        return response.text();
-      }).then((htmlText) => {
-        if (Array.isArray(htmlText))
-          return htmlText;
-        try {
-          const chkTemplate = document.querySelector(`#${id}`);
-          if (chkTemplate)
-            chkTemplate.remove();
-        } catch (e) {
-        }
-        const tempContainer = document.createElement("template");
-        tempContainer.innerHTML = htmlText;
-        tempContainer.setAttribute("id", id);
-        return tempContainer;
-      }).catch((error) => {
-        console.error(`[uibrouter:loadHTML] Error loading route template HTML from ${routeDefinition.src}:`, error);
-      });
+      let response;
+      try {
+        response = await fetch(routeDefinition.src);
+      } catch (e) {
+        throw new Error(`[uibrouter:loadExternal] Error loading route template HTML for route: ${routeDefinition.id}, src: ${routeDefinition.src}. Error: ${e.message}`, e);
+      }
+      if (response.ok === false)
+        throw new Error(`[uibrouter:loadExternal] Fetch failed to return data for route: ${routeDefinition.id}, src: ${routeDefinition.src}. Status: ${response.statusText} (${response.status})`, [routeDefinition.id, routeDefinition.src, response.status, response.statusText]);
+      const htmlText = await response.text();
+      try {
+        const chkTemplate = document.querySelector(`#${id}`);
+        if (chkTemplate)
+          chkTemplate.remove();
+      } catch (e) {
+      }
+      const tempContainer = document.createElement("template");
+      tempContainer.innerHTML = htmlText;
+      tempContainer.setAttribute("id", id);
+      return tempContainer;
     }
     /** Remove/re-apply scripts in a container Element so that they are executed.
      * @param {HTMLElement} tempContainer HTML Element of container to process
@@ -177,7 +227,7 @@
     /** Process a routing request
      * @param {PointerEvent|MouseEvent|HashChangeEvent|TouchEvent|string} routeSource Either string containing route id or DOM Event object either click/touch on element containing `href="#routeid"` or Hash URL change event
      */
-    doRoute(routeSource) {
+    async doRoute(routeSource) {
       if (!routeSource)
         routeSource = this.config.defaultRoute;
       const container = this.routeContainerEl;
@@ -216,9 +266,14 @@
         document.dispatchEvent(new CustomEvent("uibrouter:route-change-failed", { detail: { newRouteId, oldRouteId } }));
         if (uibuilder)
           uibuilder.set("uibrouter", "route change failed");
-        window.location.hash = oldRouteId ? `#${oldRouteId}` : "";
-        throw new Error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#routename'. Route id requested: '${newRouteId}'`);
+        if (newRouteId === oldRouteId)
+          oldRouteId = "";
+        this.doRoute(oldRouteId || "");
+        console.error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#${newRouteId}'. Route id requested: '${newRouteId}'`);
+        return;
       }
+      if (this.config.templateUnload)
+        this.unloadTemplate(oldRouteId);
       if (this.config.hide) {
         if (oldRouteId) {
           const oldContent = document.querySelector(`div[data-route="${oldRouteId}"]`);
@@ -230,11 +285,21 @@
           content.style.removeProperty("display");
           routeShown = true;
         } else {
-          routeShown = this._createRouteContent(newRouteId);
+          try {
+            routeShown = await this._createRouteContent(newRouteId);
+          } catch (e) {
+            console.error("[uibrouter:doRRoute] ", e);
+            routeShown = false;
+          }
         }
       } else {
         container.replaceChildren();
-        routeShown = this._createRouteContent(newRouteId);
+        try {
+          routeShown = await this._createRouteContent(newRouteId);
+        } catch (e) {
+          console.error("[uibrouter:doRRoute] ", e);
+          routeShown = false;
+        }
       }
       if (routeShown === false) {
         document.dispatchEvent(new CustomEvent("uibrouter:route-change-failed", { detail: { newRouteId, oldRouteId } }));
@@ -310,12 +375,59 @@
     addRoutes(routeDefn) {
       if (!Array.isArray(routeDefn))
         routeDefn = [routeDefn];
-      Promise.all(Object.values(routeDefn).filter((r) => r.type && r.type === "url").map(this._loadExternal)).then(this._appendExternalTemplates).then(() => {
+      if (this.config.templateLoadAll === false) {
         this.config.routes.push(...routeDefn);
         this._updateRouteIds();
         document.dispatchEvent(new CustomEvent("uibrouter:routes-added", { detail: routeDefn }));
         if (uibuilder)
           uibuilder.set("uibrouter", "routes added");
+      } else {
+        Promise.allSettled(Object.values(routeDefn).filter((r) => r.type && r.type === "url").map(this._loadExternal)).then((results) => {
+          results.filter((res) => res.status === "rejected").forEach((res) => {
+            console.error(res.reason);
+          });
+          this.config.routes.push(...routeDefn);
+          this._updateRouteIds();
+          document.dispatchEvent(new CustomEvent("uibrouter:routes-added", { detail: routeDefn }));
+          if (uibuilder)
+            uibuilder.set("uibrouter", "routes added");
+          return true;
+        }).catch((reason) => {
+          console.error(reason);
+        });
+      }
+    }
+    /** Remove a template from the DOM (optionally external templates only)
+     * @param {string} routeId REQUIRED. The route id of the template to remove (templates are ID's by their route id)
+     * @param {boolean=} externalOnly OPTIONAL, default=true. If true only remove if routeId is an external template
+     */
+    unloadTemplate(routeId, externalOnly) {
+      if (!externalOnly)
+        externalOnly = true;
+      if (!routeId || !this.isRouteExternal(routeId))
+        return;
+      if (externalOnly === true && !this.isRouteExternal(routeId))
+        return;
+      const chkTemplate = document.querySelector(`#${routeId}`);
+      if (chkTemplate)
+        chkTemplate.remove();
+    }
+    /** Remove ALL templates from the DOM (optionally external templates only)
+     * @param {Array<string>=} templateIds OPTIONAL, default=ALL. Array of template (route) id's to remove
+     * @param {boolean=} externalOnly OPTIONAL, default=true. If true only remove if routeId is an external template
+     */
+    deleteTemplates(templateIds, externalOnly) {
+      if (!externalOnly)
+        externalOnly = true;
+      if (!templateIds || templateIds === "*")
+        templateIds = [...this.routeIds];
+      if (!Array.isArray(templateIds))
+        templateIds = [templateIds];
+      templateIds.forEach((routeId) => {
+        if (externalOnly === true && !this.isRouteExternal(routeId))
+          return;
+        console.log("delete", routeId, this.isRouteExternal(routeId), externalOnly);
+        this.unloadTemplate(routeId, externalOnly);
       });
     }
     //#region --- utils for page display & processing ---
@@ -355,13 +467,6 @@
     //     // ? Optional future upgrade - attempt to also remove any links to this route?
     // }
     // TODO
-    // deleteTemplates(templateIds) {
-    //     if (!Array.isArray(templateIds)) templateIds = [templateIds]
-    //     templateIds.forEach( templateid => {
-    //         // TODO delete
-    //     } )
-    // }
-    // TODO
     // reloadTemplates(templateIds) {
     //     if (!Array.isArray(templateIds)) templateIds = [templateIds]
     //     templateIds.forEach( templateid => {
@@ -373,7 +478,7 @@
   // eslint-disable-line no-unused-vars
   //#region --- Variables ---
   /** Class version */
-  __publicField(UibRouter, "version", "1.0.1");
+  __publicField(UibRouter, "version", "1.2.0");
   var uibrouter_default = UibRouter;
   if (!window["UibRouter"]) {
     window["UibRouter"] = UibRouter;
