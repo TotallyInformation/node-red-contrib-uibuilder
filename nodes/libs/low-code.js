@@ -65,6 +65,13 @@ class UibLowCode {
         this.#isConfigured = true
     } // ---- End of setup ---- //
 
+    //#region --- Modes ---
+    // remove
+    // removeAll
+    // replace
+    // update
+    //#endregion --- Modes ---
+
     /** Create/update the _ui object and retain for replay
      * @param {*} msg incoming msg
      * @param {runtimeNode} node reference to node instance
@@ -84,18 +91,16 @@ class UibLowCode {
         // If mode is remove, then simply do that and return
         if ( msg.mode === 'delete' || msg.mode === 'remove' ) {
             if (!node.elementId) {
-                node.warn('[uib-element:buildUi] Cannot remove element as no HTML ID provided')
+                node.warn('[low-code:buildUi] Cannot remove element as no HTML ID provided')
                 return
             }
 
-            node._ui.push(
-                {
-                    'method': 'removeAll',
-                    'components': [
-                        `#${node.elementId}`,
-                    ]
-                }
-            )
+            node._ui.push( {
+                'method': 'remove',
+                'components': [
+                    `#${node.elementId}`,
+                ]
+            } )
             return
         }
 
