@@ -25,17 +25,34 @@ Please see the documentation for archived changelogs - a new archive is produced
     * [ ] `templateUnload` and `templateLoadAll` flags.
     * [ ] Remove doc for `unload` flag.
     * [ ] Document the `unloadTemplate` and `deleteTemplates` methods.
-    * [ ] Make [this](https://discourse.nodered.org/t/urgent-regression/84197/15) into some use-cases.
+    * [ ] Make [this](https://discourse.nodered.org/t/urgent-regression/84197/15) and [this](https://discourse.nodered.org/t/uibuilder-front-end-routing-example/83319/9?u=totallyinformation) into some use-cases.
   * [ ] Enforce only 1 instance of a router on page (would need to change how uib vars work otherwise).
   * [ ] Update router example (code changes).
 
   * If uibuilder:
-    * [x] add ref to router to managed uib var
-    * [ ] add remote command listener
+    * [x] add reference to router to a managed uibuilder var. Allowing the uibuilder client library to detect its use and add automation.
+    * [ ] add remote command listener to enable Node-RED to control the route.
 
 ## Issues
 
 * [ ] `uib-save` - list of available uibuilder nodes is not sorted?
+* [ ] `uibuilder` file Editor - sometimes on file change, we get:
+  Uncaught Error: Illegal value for lineNumber
+  Error: Illegal value for lineNumber
+      at e.getLineMaxColumn (editor.js:5:1743420)
+      at zo.getViewLineMaxColumn (editor.js:5:1161732)
+      at Go.getViewLineMaxColumn (editor.js:5:1174931)
+      at es.getLineMaxColumn (editor.js:5:1196932)
+      at new yn (editor.js:5:1096427)
+      at In._actualRender (editor.js:5:1110215)
+      at editor.js:5:1109784
+      at editor.js:5:1109747
+      at In._renderNow (editor.js:5:1109773)
+      at In._flushAccumulatedAndRenderNow (editor.js:5:1107153)
+      at In._onRenderScheduled (editor.js:5:1109678)
+      at y.execute (editor.js:2:180485)
+      at o (editor.js:2:181412)
+      at editor.js:5:161683
 
 
 ### "Outdated" dependencies
