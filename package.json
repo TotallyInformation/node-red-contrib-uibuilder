@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "6.8.1",
+  "version": "6.8.2",
   "description": "Easily create data-driven web UI's for Node-RED using any (or no) front-end library.",
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",

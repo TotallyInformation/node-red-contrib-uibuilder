@@ -1,5 +1,5 @@
 const Ui = class Ui2 {
-  version = "6.8.1-node";
+  version = "6.8.2-node";
   // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
   sanitiseExtraTags = ["uib-var"];
   sanitiseExtraAttribs = ["variable", "report", "undefined"];

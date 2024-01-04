@@ -3,7 +3,7 @@
 /** A simple, vanilla JavaScript front-end router class
  * Included in node-red-contrib-uibuilder but is not dependent on it.
  * May be used in other contexts as desired.
- *
+ * 
  * Copyright (c) 2023-2024 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
@@ -340,11 +340,20 @@ class UibRouter { // eslint-disable-line no-unused-vars
         let routeShown = false
 
         // If no defined valid route, undo and report error
+        // If no defined valid route, undo and report error
         if (!newRouteId || !this.routeIds.has(newRouteId)) {
             // Events on route change fail ...
             document.dispatchEvent(new CustomEvent('uibrouter:route-change-failed', { detail: { newRouteId, oldRouteId } }))
             if (uibuilder) uibuilder.set('uibrouter', 'route change failed') // eslint-disable-line no-undef
 
+            // If the same, this happened on load and would keep failing so revert to default
+            if (newRouteId === oldRouteId) oldRouteId = ''
+            // Revert route
+            this.doRoute(oldRouteId || '')
+
+            // Don't throw an error here, it stops the menu highlighting from working
+            console.error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#${newRouteId}'. Route id requested: '${newRouteId}'`)
+            return
             // If the same, this happened on load and would keep failing so revert to default
             if (newRouteId === oldRouteId) oldRouteId = ''
             // Revert route
