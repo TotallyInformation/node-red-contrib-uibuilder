@@ -3,7 +3,7 @@
 /** A simple, vanilla JavaScript front-end router class
  * Included in node-red-contrib-uibuilder but is not dependent on it.
  * May be used in other contexts as desired.
- * 
+ *
  * Copyright (c) 2023-2024 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *

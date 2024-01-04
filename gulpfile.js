@@ -1239,6 +1239,7 @@ exports.packfe      = packfe
 exports.packfeModule = packfeModule
 exports.packfeIIFE  = packfeIIFE
 exports.createTag   = createTag
-exports.setVersion  = series( setPackageVersion, setPackageLockVersion, setFeVersionDev, setFeVersion, setFeVersionMin, notifyOtherVersions )
+// exports.setVersion  = series( setPackageVersion, setPackageLockVersion, setFeVersionDev, setFeVersion, setFeVersionMin, notifyOtherVersions )
+exports.setVersion  = series( setPackageVersion, setPackageLockVersion, notifyOtherVersions )
 // To update branch from main: git pull origin main
 // To publish: npm publish --access public

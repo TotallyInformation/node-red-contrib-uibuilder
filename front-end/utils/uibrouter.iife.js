@@ -271,6 +271,11 @@
         this.doRoute(oldRouteId || "");
         console.error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#${newRouteId}'. Route id requested: '${newRouteId}'`);
         return;
+        if (newRouteId === oldRouteId)
+          oldRouteId = "";
+        this.doRoute(oldRouteId || "");
+        console.error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#${newRouteId}'. Route id requested: '${newRouteId}'`);
+        return;
       }
       if (this.config.templateUnload)
         this.unloadTemplate(oldRouteId);

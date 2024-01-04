@@ -35,7 +35,6 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## Issues
 
-* [ ] `uib-save` - list of available uibuilder nodes is not sorted?
 * [ ] `uibuilder` file Editor - sometimes on file change, we get:
   Uncaught Error: Illegal value for lineNumber
   Error: Illegal value for lineNumber
@@ -94,7 +93,19 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.2...main)
 
-Nothing currently.
+<!-- Nothing currently. -->
+
+### 📌 Highlights
+
+### `uibrouter` library
+
+Note that, while it has various uibuilder integrations and is only currently published with UIBUILDER, the router library is not dependent on uibuilder and could be used separately if you like. Might be especially useful for Dashboard or http-in/-out flows.
+
+* **FIXED** Default route was always being set on load. Now correctly takes the current URL hash into account first.
+* **FIXED** Routes loaded via script, if pre-selected on page load (e.g. in URL hash), were crashing. Now will automatically revert to the default route and just print an error to the console.
+* **NEW** If using uibuilder, added a new uibuilder managed variable `uibrouterinstance` which has a reference to the router instance. Will alow the uibuilder client library to auto-update things & will allow easier remote control from Node-RED.
+
+
 
 ## [v6.8.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.1...v6.8.2)
 
@@ -114,17 +125,7 @@ Nothing currently.
 ### `ti-common.js` Editor support library
 
 * **IMPROVED** Due to a timing issue in how Node-RED reports on nodes added to the flows on Editor page load, the in-editor list of uibuilder node was not built soon enough for use. Now pre-populates the list of in-editor uibuilder nodes with deployed uibuilder nodes. (Only if the in-editor list has zero entries).
-<!-- Nothing currently. -->
 
-### 📌 Highlights
-
-### `uibrouter` library
-
-Note that, while it has various uibuilder integrations and is only currently published with UIBUILDER, the router library is not dependent on uibuilder and could be used separately if you like. Might be especially useful for Dashboard or http-in/-out flows.
-
-* **FIXED** Default route was always being set on load. Now correctly takes the current URL hash into account first.
-* **FIXED** Routes loaded via script, if pre-selected on page load (e.g. in URL hash), were crashing. Now will automatically revert to the default route and just print an error to the console.
-* **NEW** If using uibuilder, added a new uibuilder managed variable `uibrouterinstance` which has a reference to the router instance. Will alow the uibuilder client library to auto-update things & will allow easier remote control from Node-RED.
 
 ## [v6.8.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.0...v6.8.1)
 
