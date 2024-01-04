@@ -82,6 +82,9 @@
                     },
                     success: (instances) => {
                         this.deployedUibInstances = this.sortInstances(instances)
+                        // Also pre-populate the editorUibInstances to avoid the problem that
+                        // that list is built too late during Editor load
+                        if (Object.keys(this.editorUibInstances).length === 0) this.editorUibInstances = this.deployedUibInstances
                         // uibuilder.log('[uibuilder] Deployed Instances >>', instances, this )
                     }
                 })

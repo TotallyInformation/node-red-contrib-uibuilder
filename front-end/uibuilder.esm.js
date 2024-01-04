@@ -62,7 +62,7 @@ var require_ui = __commonJS({
        * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
        */
       constructor(win, extLog, jsonHighlight) {
-        __publicField(this, "version", "6.8.1-src");
+        __publicField(this, "version", "6.8.2-src");
         // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
         __publicField(this, "sanitiseExtraTags", ["uib-var"]);
         __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -4641,7 +4641,7 @@ __publicField(_UibVar, "props", ["filter", "id", "name", "report", "topic", "typ
 var UibVar = _UibVar;
 
 // src/front-end-module/uibuilder.module.js
-var version = "6.8.1-esm";
+var version = "6.8.2-esm";
 var isMinified = !/param/.test(function(param) {
 });
 var logLevel = isMinified ? 0 : 1;

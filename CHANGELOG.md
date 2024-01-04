@@ -8,12 +8,6 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## Issues
 
-* uibuilder.send({ payload: pl, topic: tp }, nodename)
-
-  where nodename is defined as:
-  const nodename = '30fb97fcc6154e6c'
-  After the upgrade, this is no more working, no errors in console. It simply doesn't send the message back to the node in NR.
-
 ### "Outdated" dependencies
 
 Unfortunately, for various reasons, some of the package dependencies that UIBUILDER relies on cannot be updated to their latest versions. These are documented, with the reason, here.
@@ -31,9 +25,28 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.1...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.2...main)
 
 Nothing currently.
+
+## [v6.8.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.1...v6.8.2)
+
+### `uibrouter` library
+
+* **FIXED** Default route was always being set on load. Now correctly takes the current URL hash into account first.
+* **FIXED** Routes loaded via script, if pre-selected on page load (e.g. in URL hash), were crashing. Now will automatically revert to the default route and just print an error to the console.
+* **FIXED** On start, hash change event could be fired twice. Now does the initial route before setting up the hash change listener.
+
+### `uib-save` node
+
+* **FIXED** After import/paste, impossible to set a selected uibuilder node reference. Due to a timing issue in how Node-RED reports on nodes added to the flows on Editor page load. Now pre-populate the list of in-editor uibuilder nodes with deployed uibuilder nodes.
+* **FIXED** Correctly change saved URL if a uibuilder node changes it. In this case, the save node knows the id of its linked uibuilder node but not the name so we change the name and mark the save node as needing re-deployment.
+* **FIXED** In the Editor, the list of available uibuilder nodes to choose from was not sorted. Now sorted for ease of access.
+* **FIXED** After a paste/import, when the url changes, reset the `addType` flag to stop chkUrl re-blanking it by adding `if (node.addType === 'paste/import') node.addType = 'load'` (in `oneditchange`)
+
+### `ti-common.js` Editor support library
+
+* **IMPROVED** Due to a timing issue in how Node-RED reports on nodes added to the flows on Editor page load, the in-editor list of uibuilder node was not built soon enough for use. Now pre-populates the list of in-editor uibuilder nodes with deployed uibuilder nodes. (Only if the in-editor list has zero entries).
 
 ## [v6.8.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.0...v6.8.1)
 

@@ -4,7 +4,7 @@
  * Included in node-red-contrib-uibuilder but is not dependent on it.
  * May be used in other contexts as desired.
  * 
- * Copyright (c) 2023-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2024 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -40,7 +40,7 @@
 class UibRouter { // eslint-disable-line no-unused-vars
     //#region --- Variables ---
     /** Class version */
-    static version = '1.0.1'
+    static version = '1.0.2'
 
     /** Configuration settings @type {UibRouterConfig} */
     config
@@ -82,12 +82,16 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         // Load all external route templates async in parallel - NB: Object.values works on both arrays and objects
         // Note that final `then` is called even if no external routes are given
-        Promise.all(Object.values(routerConfig.routes).filter(r => r.type && r.type === 'url').map(this._loadExternal)) // eslint-disable-line promise/catch-or-return
+        Promise.all(Object.values(routerConfig.routes).filter(r => r.type && r.type === 'url').map(this._loadExternal))
             .then(this._appendExternalTemplates)
-            .then( () => { // eslint-disable-line promise/always-return
+            .then( () => {
                 // Everything is loaded so we can start
                 this._start()
+                return true
             } )
+            .catch( reason => {
+                console.error(reason)
+            })
     }
 
     /** Save a reference to, and create if necessary, the HTML element to hold routes */
@@ -123,10 +127,12 @@ class UibRouter { // eslint-disable-line no-unused-vars
     _start() {
         if (this.#startDone === true) return // Don't run this again
 
-        // Listen for url hash changes and process route change
-        window.addEventListener('hashchange', (event) => this._hashChange(event) )
         // Go to default route if no route in url and if a default is defined or ensure current route is shown
-        this.doRoute()
+        this.doRoute(this.keepHashFromUrl(window.location.hash))
+
+        // After initial route set, listen for url hash changes and process route change
+        window.addEventListener('hashchange', (event) => this._hashChange(event) )
+
         // Events on fully loaded ...
         document.dispatchEvent(new CustomEvent('uibrouter:loaded'))
         if (uibuilder) uibuilder.set('uibrouter', 'loaded') // eslint-disable-line no-undef
@@ -272,14 +278,20 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         let routeShown = false
 
-        // If no defined valid route, undo and throw error
+        // If no defined valid route, undo and report error
         if (!newRouteId || !this.routeIds.has(newRouteId)) {
             // Events on route change fail ...
             document.dispatchEvent(new CustomEvent('uibrouter:route-change-failed', { detail: { newRouteId, oldRouteId } }))
             if (uibuilder) uibuilder.set('uibrouter', 'route change failed') // eslint-disable-line no-undef
 
-            window.location.hash = oldRouteId ? `#${oldRouteId}` : ''
-            throw new Error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#routename'. Route id requested: '${newRouteId}'`)
+            // If the same, this happened on load and would keep failing so revert to default
+            if (newRouteId === oldRouteId) oldRouteId = ''
+            // Revert route
+            this.doRoute(oldRouteId || '')
+
+            // Don't throw an error here, it stops the menu highlighting from working
+            console.error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#${newRouteId}'. Route id requested: '${newRouteId}'`)
+            return
         }
 
         // Show the new container (replace or show)

@@ -59,6 +59,9 @@ var UibRouter = class {
     this._updateRouteIds();
     Promise.all(Object.values(routerConfig2.routes).filter((r) => r.type && r.type === "url").map(this._loadExternal)).then(this._appendExternalTemplates).then(() => {
       this._start();
+      return true;
+    }).catch((reason) => {
+      console.error(reason);
     });
   }
   /** Save a reference to, and create if necessary, the HTML element to hold routes */
@@ -89,8 +92,8 @@ var UibRouter = class {
   _start() {
     if (__privateGet(this, _startDone) === true)
       return;
+    this.doRoute(this.keepHashFromUrl(window.location.hash));
     window.addEventListener("hashchange", (event) => this._hashChange(event));
-    this.doRoute();
     document.dispatchEvent(new CustomEvent("uibrouter:loaded"));
     if (uibuilder)
       uibuilder.set("uibrouter", "loaded");
@@ -215,8 +218,11 @@ var UibRouter = class {
       document.dispatchEvent(new CustomEvent("uibrouter:route-change-failed", { detail: { newRouteId, oldRouteId } }));
       if (uibuilder)
         uibuilder.set("uibrouter", "route change failed");
-      window.location.hash = oldRouteId ? `#${oldRouteId}` : "";
-      throw new Error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#routename'. Route id requested: '${newRouteId}'`);
+      if (newRouteId === oldRouteId)
+        oldRouteId = "";
+      this.doRoute(oldRouteId || "");
+      console.error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#${newRouteId}'. Route id requested: '${newRouteId}'`);
+      return;
     }
     if (this.config.hide) {
       if (oldRouteId) {
@@ -372,7 +378,7 @@ _startDone = new WeakMap();
 // eslint-disable-line no-unused-vars
 //#region --- Variables ---
 /** Class version */
-__publicField(UibRouter, "version", "1.0.1");
+__publicField(UibRouter, "version", "1.0.2");
 var uibrouter_default = UibRouter;
 if (!window["UibRouter"]) {
   window["UibRouter"] = UibRouter;

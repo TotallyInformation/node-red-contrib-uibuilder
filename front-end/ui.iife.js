@@ -21,7 +21,7 @@
          * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
          */
         constructor(win, extLog, jsonHighlight) {
-          __publicField(this, "version", "6.8.1-src");
+          __publicField(this, "version", "6.8.2-src");
           // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
           __publicField(this, "sanitiseExtraTags", ["uib-var"]);
           __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
