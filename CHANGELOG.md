@@ -14,26 +14,19 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### `uibrouter` FE library
 
-* Completed
-  * [x] If route.src not set, try to use `#${route.id}` - for internal routes only. In keeping with title and description.
-  * [x] Add explicit defaults for `templateLoadAll` (false), & `hide` (false).
-  * [x] Finish `templateLoadAll`=true processing.
-  * [x] Add `templateUnload` flag (default=true) that unloads external templates after use. Allows for massive template collections for things like WIKI's. Also allows for external changes to templates.
-  * [x] Move template load to public method to allow manual call. `loadRoute(routeId, routeParentEl)`
-
-* [ ] If uibuilder, send uibuilder control messages back to Node-RED on route changes (including initial load - or build that into uibuilder's standard control msg). Might need an adjustment to be able to differentiate between initial and subsequent changes. Add cache replay property.
-
 * [ ] Allow a route to have a set display parent. That might allow specific routes to be loaded to a different on-page location than the default. This would enable things like menu's to be routes themselves.
+
   * [ ] This may need a config flag to force early load? OR, add `menuRoutes` array to config to auto-load?
 
 
 * [ ] Add `defaultRouteOnLoad` flag (default=false) to allow for dynamically added routes to have been pre-selected on page load.
 * [ ] Update documentation:
+
   * [ ] `templateUnload` and `templateLoadAll` flags.
   * [ ] Remove doc for `unload` flag.
   * [ ] Document the `unloadTemplate` and `deleteTemplates` methods.
   * [ ] Make [this](https://discourse.nodered.org/t/urgent-regression/84197/15) and [this](https://discourse.nodered.org/t/uibuilder-front-end-routing-example/83319/9?u=totallyinformation) into some use-cases.
-* [ ] Enforce only 1 instance of a router on page (would need to change how uib vars work otherwise).
+
 * [ ] Update router example (code changes).
 * [ ] Track first (on-load) route? Don't need to send initial route to node-red if the `client connect` message already has it.
 
@@ -151,6 +144,7 @@ Note that, while it has various uibuilder integrations and is only currently pub
   * `loadRoute(routeId, routeParentEl)` - Loads template content to the page. Will load an external template if not already loaded. Calls `ensureTemplate`. Async, throws errors.
   * `ensureTemplate(routeId)` - Ensures that a specific template has been loaded. Will attempt to load an external template. Async, throws errors.
 * `loadRoute` method now has optional 2nd argument, `routeParentEl`, a reference to an HTML parent element. The route template will be added to this as a new child. If not provided, the master content container is used (which has already been defined and created at router startup). This allows specific routes to be loaded to a different parent, useful for having things like menu's defined as routes or for loading routes as sidebars, etc.
+* Now enforces only 1 instance of a router on page (would need to change how uib vars work otherwise).
 
 ### `uibuilder` node
 

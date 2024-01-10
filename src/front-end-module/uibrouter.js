@@ -43,6 +43,8 @@ class UibRouter { // eslint-disable-line no-unused-vars
     //#region --- Variables ---
     /** Class version */
     static version = '1.2.0' // 2024-01-02 16:04
+    /** Ensures only 1 class instance on a page */
+    static #instanceExists = false
 
     /** Configuration settings @type {UibRouterConfig} */
     config
@@ -66,7 +68,10 @@ class UibRouter { // eslint-disable-line no-unused-vars
      * @param {UibRouterConfig} routerConfig Configuration object
      */
     constructor(routerConfig) {
-        // Fetch is on desktop browsers since 2017 at latest. Not so much on mobile (Android!)
+        // Enforce only 1 instance on page (otherwise uibuilder vars will be overwritten)
+        if (UibRouter.#instanceExists) throw new Error('[uibrouter:constructor] Only 1 instance of a UibRouter may exist on the page.')
+
+        // Fetch is on desktop browsers since 2017 at least. Not so much on mobile (Android!)
         // May need a polyfill on mobile or old browsers.
         if (!fetch) throw new Error('[uibrouter:constructor] UibRouter requires `fetch`. Please use a current browser or load a fetch polyfill.')
 
@@ -92,6 +97,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         this._updateRouteIds()
 
+        // Only pre-load all templates if requested (default is not to)
         if (this.config.templateLoadAll === false) {
             this._start()
         } else {
@@ -116,6 +122,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
                 })
         }
 
+        UibRouter.#instanceExists = true
     }
 
     /** Save a reference to, and create if necessary, the HTML element to hold routes */

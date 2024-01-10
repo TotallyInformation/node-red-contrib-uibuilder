@@ -24,15 +24,14 @@ var __privateSet = (obj, member, value, setter) => {
 };
 
 // src/front-end-module/uibrouter.js
-var _startDone;
-var UibRouter = class {
+var _instanceExists, _startDone;
+var _UibRouter = class _UibRouter {
   //#endregion --- ----- ---
   //#region --- Internal Methods ---
   /** Class constructor
    * @param {UibRouterConfig} routerConfig Configuration object
    */
   constructor(routerConfig2) {
-    // 2024-01-02 16:04
     /** Configuration settings @type {UibRouterConfig} */
     __publicField(this, "config");
     /** Reference to the container DOM element - set in setup() @type {HTMLDivElement} */
@@ -46,6 +45,8 @@ var UibRouter = class {
     /** Internal only. Set to true when the _start() method has been called */
     __privateAdd(this, _startDone, false);
     __publicField(this, "safety", 0);
+    if (__privateGet(_UibRouter, _instanceExists))
+      throw new Error("[uibrouter:constructor] Only 1 instance of a UibRouter may exist on the page.");
     if (!fetch)
       throw new Error("[uibrouter:constructor] UibRouter requires `fetch`. Please use a current browser or load a fetch polyfill.");
     if (!routerConfig2)
@@ -85,6 +86,7 @@ var UibRouter = class {
         console.error(reason);
       });
     }
+    __privateSet(_UibRouter, _instanceExists, true);
   }
   /** Save a reference to, and create if necessary, the HTML element to hold routes */
   _setRouteContainer() {
@@ -519,11 +521,16 @@ var UibRouter = class {
   //     } )
   // }
 };
+_instanceExists = new WeakMap();
 _startDone = new WeakMap();
 // eslint-disable-line no-unused-vars
 //#region --- Variables ---
 /** Class version */
-__publicField(UibRouter, "version", "1.2.0");
+__publicField(_UibRouter, "version", "1.2.0");
+// 2024-01-02 16:04
+/** Ensures only 1 class instance on a page */
+__privateAdd(_UibRouter, _instanceExists, false);
+var UibRouter = _UibRouter;
 var uibrouter_default = UibRouter;
 if (!window["UibRouter"]) {
   window["UibRouter"] = UibRouter;
