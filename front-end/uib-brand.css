@@ -63,6 +63,8 @@
     --lightness: calc(var(--lightness-value) + var(--lightness-bias));
 
     --base-margin: 1rem;
+    --max-width: 64rem;
+
     --border-radius: 0.5rem; /*8px;*/
     --border-pad: 0.5rem;
     --border-margin: 0;
@@ -544,10 +546,10 @@ blockquote {
 code {
     font-size: 120%;
 }
-main {
+main, header, footer {
     padding-left: var(--base-margin);
     padding-right: var(--base-margin);
-    max-width: 64rem;
+    max-width: var(--max-width);
     margin-left:auto;
     margin-right: auto;    
 }
