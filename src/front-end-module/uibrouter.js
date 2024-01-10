@@ -90,7 +90,14 @@ class UibRouter { // eslint-disable-line no-unused-vars
         if (!this.config.templateLoadAll) this.config.templateLoadAll = false
         if (!this.config.templateUnload) this.config.templateUnload = true
 
-        if (uibuilder) uibuilder.set('uibrouterinstance', this)
+        if (uibuilder) {
+            uibuilder.set('uibrouterinstance', this)
+            // Add a remote command listener
+            uibuilder.onChange('msg', (msg) => {
+                if (!msg._uibRouteChange) return
+                this.doRoute(msg._uibRouteChange)
+            })
+        }
 
         // Create/access the route container element, sets this.routeContainerEl
         this._setRouteContainer()

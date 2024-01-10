@@ -30,10 +30,6 @@ Please see the documentation for archived changelogs - a new archive is produced
 * [ ] Update router example (code changes).
 * [ ] Track first (on-load) route? Don't need to send initial route to node-red if the `client connect` message already has it.
 
-* If uibuilder:
-  * [x] add reference to router to a managed uibuilder var. Allowing the uibuilder client library to detect its use and add automation.
-  * [ ] add remote command listener to enable Node-RED to control the route.
-
 ### FE library
 
 * [ ] Document `hasUibRouter` new function
@@ -139,11 +135,16 @@ Note that, while it has various uibuilder integrations and is only currently pub
 
 * **FIXED** Default route was always being set on load. Now correctly takes the current URL hash into account first.
 * **FIXED** Routes loaded via script, if pre-selected on page load (e.g. in URL hash), were crashing. Now will automatically revert to the default route and just print an error to the console.
+
 * **NEW** If using uibuilder, added a new uibuilder managed variable `uibrouterinstance` which has a reference to the router instance. Will alow the uibuilder client library to auto-update things & will allow easier remote control from Node-RED.
+* **NEW** Added a remote command listener to enable Node-RED to control the route if using UIBUILDER.
+
 * Refactored some of the router methods, now exposing:
   * `loadRoute(routeId, routeParentEl)` - Loads template content to the page. Will load an external template if not already loaded. Calls `ensureTemplate`. Async, throws errors.
   * `ensureTemplate(routeId)` - Ensures that a specific template has been loaded. Will attempt to load an external template. Async, throws errors.
+
 * `loadRoute` method now has optional 2nd argument, `routeParentEl`, a reference to an HTML parent element. The route template will be added to this as a new child. If not provided, the master content container is used (which has already been defined and created at router startup). This allows specific routes to be loaded to a different parent, useful for having things like menu's defined as routes or for loading routes as sidebars, etc.
+
 * Now enforces only 1 instance of a router on page (would need to change how uib vars work otherwise).
 
 ### `uibuilder` node
