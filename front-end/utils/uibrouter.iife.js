@@ -46,6 +46,7 @@
       __publicField(this, "routeIds", []);
       /** Internal only. Set to true when the _start() method has been called */
       __privateAdd(this, _startDone, false);
+      __publicField(this, "safety", 0);
       if (!fetch)
         throw new Error("[uibrouter:constructor] UibRouter requires `fetch`. Please use a current browser or load a fetch polyfill.");
       if (!routerConfig2)
@@ -63,6 +64,8 @@
         this.config.templateLoadAll = false;
       if (!this.config.templateUnload)
         this.config.templateUnload = true;
+      if (uibuilder)
+        uibuilder.set("uibrouterinstance", this);
       this._setRouteContainer();
       this._updateRouteIds();
       if (this.config.templateLoadAll === false) {
@@ -83,8 +86,6 @@
           console.error(reason);
         });
       }
-      if (uibuilder)
-        uibuilder.set("uibrouterinstance", this);
     }
     /** Save a reference to, and create if necessary, the HTML element to hold routes */
     _setRouteContainer() {
@@ -132,46 +133,6 @@
      */
     _hashChange(event) {
       this.doRoute(event);
-    }
-    /** Create DOM route content from a route template (internal or external)
-     * Route templates have to be a `<template>` tag with an ID that matches the route id.
-     * @param {string} routeId ID of the route definition to use to create the content
-     * @returns {boolean} True if the route content was created successfully, false otherwise
-     */
-    async _createRouteContent(routeId) {
-      let rContent = document.querySelector(`#${routeId}`);
-      if (!rContent) {
-        const r = this.getRouteConfigById(routeId);
-        if (r.type && r.type === "url") {
-          let loadedEls;
-          try {
-            loadedEls = await this._loadExternal(r);
-          } catch (e) {
-            throw new Error(e.message, e);
-          }
-          if (!loadedEls)
-            throw new Error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`);
-          this._appendExternalTemplates(loadedEls);
-          rContent = document.querySelector(`#${routeId}`);
-          if (!rContent)
-            throw new Error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`);
-        } else {
-          throw new Error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`);
-        }
-      }
-      const docFrag = rContent.content.cloneNode(true);
-      if (this.isRouteExternal(routeId))
-        this._applyScripts(docFrag);
-      const tempContainer = document.createElement("div");
-      tempContainer.dataset.route = routeId;
-      tempContainer.append(docFrag);
-      try {
-        this.routeContainerEl.append(tempContainer);
-      } catch (e) {
-        throw new Error(`[uibrouter:createRouteContent] Failed to apply route id '${routeId}'. 
- ${e.message}`);
-      }
-      return true;
     }
     /** Loads an external HTML file into a `<template>` tag, adding the router id as the template id. Or throws.
      * @param {routeDefinition} routeDefinition Configuration for a single route
@@ -223,11 +184,33 @@
     _updateRouteIds() {
       this.routeIds = new Set(Object.values(routerConfig.routes).map((r) => r.id));
     }
+    /** If uibuilder in use, report on route change
+     * @param {string} newRouteId The route id now shown
+     */
+    _uibRouteChange(newRouteId) {
+      if (!uibuilder || !newRouteId)
+        return;
+      uibuilder.set("uibrouter", "route changed");
+      uibuilder.set("uibrouter_CurrentRoute", newRouteId);
+      uibuilder.set("uibrouter_CurrentTitle", this.routeTitle());
+      uibuilder.set("uibrouter_CurrentDescription", this.routeDescription());
+      uibuilder.set("uibrouter_CurrentDetails", this.getRouteConfigById(newRouteId));
+      uibuilder.sendCtrl({
+        uibuilderCtrl: "route change",
+        routeId: newRouteId,
+        title: this.routeTitle(),
+        description: this.routeDescription(),
+        details: this.getRouteConfigById(newRouteId)
+      });
+    }
     //#endregion --- ----- --
     /** Process a routing request
+     * All errors throw so make sure to try/catch calls to this method.
      * @param {PointerEvent|MouseEvent|HashChangeEvent|TouchEvent|string} routeSource Either string containing route id or DOM Event object either click/touch on element containing `href="#routeid"` or Hash URL change event
      */
     async doRoute(routeSource) {
+      if (this.safety > 10)
+        throw new Error("\u{1F6AB} [uibrouter:doRoute] Safety protocol triggered, too many route bounces");
       if (!routeSource)
         routeSource = this.config.defaultRoute;
       const container = this.routeContainerEl;
@@ -268,17 +251,11 @@
           uibuilder.set("uibrouter", "route change failed");
         if (newRouteId === oldRouteId)
           oldRouteId = "";
-        this.doRoute(oldRouteId || "");
         console.error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#${newRouteId}'. Route id requested: '${newRouteId}'`);
-        return;
-        if (newRouteId === oldRouteId)
-          oldRouteId = "";
+        this.safety++;
         this.doRoute(oldRouteId || "");
-        console.error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#${newRouteId}'. Route id requested: '${newRouteId}'`);
         return;
       }
-      if (this.config.templateUnload)
-        this.unloadTemplate(oldRouteId);
       if (this.config.hide) {
         if (oldRouteId) {
           const oldContent = document.querySelector(`div[data-route="${oldRouteId}"]`);
@@ -291,18 +268,18 @@
           routeShown = true;
         } else {
           try {
-            routeShown = await this._createRouteContent(newRouteId);
+            routeShown = await this.loadRoute(newRouteId);
           } catch (e) {
-            console.error("[uibrouter:doRRoute] ", e);
+            console.error("[uibrouter:doRoute] ", e);
             routeShown = false;
           }
         }
       } else {
         container.replaceChildren();
         try {
-          routeShown = await this._createRouteContent(newRouteId);
+          routeShown = await this.loadRoute(newRouteId);
         } catch (e) {
-          console.error("[uibrouter:doRRoute] ", e);
+          console.error("[uibrouter:doRoute] ", e);
           routeShown = false;
         }
       }
@@ -310,21 +287,85 @@
         document.dispatchEvent(new CustomEvent("uibrouter:route-change-failed", { detail: { newRouteId, oldRouteId } }));
         if (uibuilder)
           uibuilder.set("uibrouter", "route change failed");
-        window.location.hash = oldRouteId ? `#${oldRouteId}` : "";
+        if (newRouteId === oldRouteId)
+          oldRouteId = "";
+        console.error(`[uibrouter:doRoute] Route content for '${newRouteId}' could not be shown, reverting to old route '${oldRouteId}'`);
+        this.safety++;
+        this.doRoute(oldRouteId || "");
         return;
       }
+      this.safety = 0;
+      if (this.config.templateUnload)
+        this.unloadTemplate(oldRouteId);
       this.currentRouteId = newRouteId;
       this.previousRouteId = oldRouteId;
       container.dataset.currentRoute = newRouteId;
       this.setCurrentMenuItems();
       document.dispatchEvent(new CustomEvent("uibrouter:route-changed", { detail: { newRouteId, oldRouteId } }));
-      if (uibuilder) {
-        uibuilder.set("uibrouter", "route changed");
-        uibuilder.set("uibrouter_CurrentRoute", newRouteId);
-        uibuilder.set("uibrouter_CurrentTitle", this.routeTitle());
-        uibuilder.set("uibrouter_CurrentDescription", this.routeDescription());
-        uibuilder.set("uibrouter_CurrentDetails", this.getRouteConfigById(newRouteId));
+      this._uibRouteChange(newRouteId);
+    }
+    /** Async method to create DOM route content from a route template (internal or external) - loads external templates if not already loaded
+     * Route templates have to be a `<template>` tag with an ID that matches the route id.
+     * Scripts in the template are run at this point.
+     * All errors throw so make sure to try/catch calls to this method.
+     * @param {string} routeId ID of the route definition to use to create the content
+     * @param {HTMLElement} [routeParentEl] OPTIONAL, default=this.routeContainerEl (master route container). Reference to an HTML Element to which the route content will added as a child.
+     * @returns {boolean} True if the route content was created successfully, false otherwise
+     */
+    async loadRoute(routeId, routeParentEl) {
+      if (!routeParentEl)
+        routeParentEl = this.routeContainerEl;
+      let rContent;
+      try {
+        rContent = await this.ensureTemplate(routeId);
+      } catch (e) {
+        throw new Error(`[uibrouter:loadRoute] No template for route id '${routeId}'. 
+ ${e.message}`);
       }
+      const docFrag = rContent.content.cloneNode(true);
+      if (this.isRouteExternal(routeId))
+        this._applyScripts(docFrag);
+      const tempContainer = document.createElement("div");
+      tempContainer.dataset.route = routeId;
+      tempContainer.append(docFrag);
+      try {
+        routeParentEl.append(tempContainer);
+      } catch (e) {
+        throw new Error(`[uibrouter:loadRoute] Failed to apply route id '${routeId}'. 
+ ${e.message}`);
+      }
+      return true;
+    }
+    /** Async method to ensure that a template element exists for a given route id
+     *  If route is external, will try to load if it doesn't exist.
+     * All errors throw so make sure to try/catch calls to this method.
+     * @param {string} routeId A single route ID
+     * @returns {HTMLTemplateElement} A reference to the HTML Template element
+     */
+    async ensureTemplate(routeId) {
+      if (!routeId || !this.routeIds.has(routeId))
+        throw new Error(`[uibrouter:ensureTemplate] No valid route id provided. Route ID: '${routeId}'`);
+      let rContent = document.querySelector(`#${routeId}`);
+      if (!rContent) {
+        const r = this.getRouteConfigById(routeId);
+        if (r.type && r.type === "url") {
+          let loadedEls;
+          try {
+            loadedEls = await this._loadExternal(r);
+          } catch (e) {
+            throw new Error(e.message, e);
+          }
+          if (!loadedEls)
+            throw new Error(`[uibrouter:ensureTemplate] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`);
+          this._appendExternalTemplates(loadedEls);
+          rContent = document.querySelector(`#${routeId}`);
+          if (!rContent)
+            throw new Error(`[uibrouter:ensureTemplate] No valid route template found for external route selector '#${routeId}'`);
+        } else {
+          throw new Error(`[uibrouter:ensureTemplate] No route template found for internal route selector '#${routeId}'. Ensure that a template element with the matching ID exists in the HTML.`);
+        }
+      }
+      return rContent;
     }
     /** Return a route config given a route id (returns undefined if route not found)
      * @param {string} routeId Route ID to search for

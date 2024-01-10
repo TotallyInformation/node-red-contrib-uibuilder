@@ -28,6 +28,7 @@
  * @property {"url"|undefined} [type] OPTIONAL, default=internal route. "url" for external routes
  * @property {string} [title] OPTIONAL, default=route id. Text to use as a short title for the route
  * @property {string} [description] OPTIONAL, default=route id. Text to use as a long description for the route
+ * @property {string} [routeContainer] OPTIONAL, default=config routeContainer. Override routeContainer. Allows routes to be loaded somewhere else.
  * UibRouterConfig
  * @typedef {object} UibRouterConfig Configuration for the UiBRouter class instances
  * @property {routeDefinition[]} routes REQUIRED. Array of route definitions
@@ -56,6 +57,8 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
     /** Internal only. Set to true when the _start() method has been called */
     #startDone = false
+
+    safety = 0
     //#endregion --- ----- ---
 
     //#region --- Internal Methods ---
@@ -81,6 +84,8 @@ class UibRouter { // eslint-disable-line no-unused-vars
         if (!this.config.hide) this.config.hide = false
         if (!this.config.templateLoadAll) this.config.templateLoadAll = false
         if (!this.config.templateUnload) this.config.templateUnload = true
+
+        if (uibuilder) uibuilder.set('uibrouterinstance', this)
 
         // Create/access the route container element, sets this.routeContainerEl
         this._setRouteContainer()
@@ -111,7 +116,6 @@ class UibRouter { // eslint-disable-line no-unused-vars
                 })
         }
 
-        if (uibuilder) uibuilder.set('uibrouterinstance', this)
     }
 
     /** Save a reference to, and create if necessary, the HTML element to hold routes */
@@ -174,63 +178,6 @@ class UibRouter { // eslint-disable-line no-unused-vars
         this.doRoute(event)
     }
 
-    /** Create DOM route content from a route template (internal or external)
-     * Route templates have to be a `<template>` tag with an ID that matches the route id.
-     * @param {string} routeId ID of the route definition to use to create the content
-     * @returns {boolean} True if the route content was created successfully, false otherwise
-     */
-    async _createRouteContent(routeId) {
-        // Try to reference the template for this route
-        let rContent = document.querySelector(`#${routeId}`)
-
-        if (!rContent) {
-            // If external template content doesn't exist, try to load it now (but only try once)
-            const r = this.getRouteConfigById(routeId)
-            if (r.type && r.type === 'url') {
-                let loadedEls
-                try {
-                    loadedEls = await this._loadExternal(r)
-                } catch (e) {
-                    throw new Error(e.message, e)
-                }
-
-                if (!loadedEls) throw new Error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`)
-
-                // Apply fetched external elements to templates tags under the head tag
-                this._appendExternalTemplates(loadedEls)
-
-                // And check that the template now actually exists
-                rContent = document.querySelector(`#${routeId}`)
-
-                if (!rContent) throw new Error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`)
-            } else {
-                // type not not external so we can't do anything when it doesn't actually exist
-                throw new Error(`[uibrouter:createRouteContent] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`)
-            }
-        }
-
-        // Clone the template
-        const docFrag = rContent.content.cloneNode(true)
-
-        // Have to re-apply the scripts to make them run - only for external templates
-        if (this.isRouteExternal(routeId)) this._applyScripts(docFrag)
-
-        // Create the route wrapper div with data-route attrib
-        const tempContainer = document.createElement('div')
-        tempContainer.dataset.route = routeId
-        tempContainer.append(docFrag)
-
-        // And finally try to append to the container
-        try {
-            this.routeContainerEl.append(tempContainer)
-        } catch (e) {
-            throw new Error(`[uibrouter:createRouteContent] Failed to apply route id '${routeId}'. \n ${e.message}`)
-        }
-
-        // If we get here, everything is good
-        return true
-    }
-
     /** Loads an external HTML file into a `<template>` tag, adding the router id as the template id. Or throws.
      * @param {routeDefinition} routeDefinition Configuration for a single route
      * @returns {HTMLTemplateElement[]} An HTMLTemplateElement that will provide the route content
@@ -288,12 +235,35 @@ class UibRouter { // eslint-disable-line no-unused-vars
     _updateRouteIds() {
         this.routeIds = new Set(Object.values(routerConfig.routes).map( r => r.id ))
     }
+
+    /** If uibuilder in use, report on route change
+     * @param {string} newRouteId The route id now shown
+     */
+    _uibRouteChange(newRouteId) {
+        if (!uibuilder || !newRouteId) return
+        uibuilder.set('uibrouter', 'route changed')
+        uibuilder.set('uibrouter_CurrentRoute', newRouteId)
+        uibuilder.set('uibrouter_CurrentTitle', this.routeTitle())
+        uibuilder.set('uibrouter_CurrentDescription', this.routeDescription())
+        uibuilder.set('uibrouter_CurrentDetails', this.getRouteConfigById(newRouteId))
+        // Send control msg back to Node-RED
+        uibuilder.sendCtrl({
+            uibuilderCtrl: 'route change',
+            routeId: newRouteId,
+            title: this.routeTitle(),
+            description: this.routeDescription(),
+            details: this.getRouteConfigById(newRouteId),
+        })
+    }
     //#endregion --- ----- --
 
     /** Process a routing request
+     * All errors throw so make sure to try/catch calls to this method.
      * @param {PointerEvent|MouseEvent|HashChangeEvent|TouchEvent|string} routeSource Either string containing route id or DOM Event object either click/touch on element containing `href="#routeid"` or Hash URL change event
      */
     async doRoute(routeSource) {
+        if (this.safety > 10) throw new Error('🚫 [uibrouter:doRoute] Safety protocol triggered, too many route bounces')
+
         if (!routeSource) routeSource = this.config.defaultRoute
 
         const container = this.routeContainerEl
@@ -339,33 +309,24 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         let routeShown = false
 
-        // If no defined valid route, undo and report error
-        // If no defined valid route, undo and report error
+        // If no defined valid route id, undo and report error
         if (!newRouteId || !this.routeIds.has(newRouteId)) {
             // Events on route change fail ...
             document.dispatchEvent(new CustomEvent('uibrouter:route-change-failed', { detail: { newRouteId, oldRouteId } }))
             if (uibuilder) uibuilder.set('uibrouter', 'route change failed') // eslint-disable-line no-undef
-
-            // If the same, this happened on load and would keep failing so revert to default
+            // If ID's the same, this happened on load and would keep failing so revert to default
             if (newRouteId === oldRouteId) oldRouteId = ''
-            // Revert route
-            this.doRoute(oldRouteId || '')
-
             // Don't throw an error here, it stops the menu highlighting from working
             console.error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#${newRouteId}'. Route id requested: '${newRouteId}'`)
-            return
-            // If the same, this happened on load and would keep failing so revert to default
-            if (newRouteId === oldRouteId) oldRouteId = ''
+            this.safety++
             // Revert route
             this.doRoute(oldRouteId || '')
-
-            // Don't throw an error here, it stops the menu highlighting from working
-            console.error(`[uibrouter:doRoute] No valid route found. Either pass a valid route name or an event from an element having an href of '#${newRouteId}'. Route id requested: '${newRouteId}'`)
             return
         }
 
-        // If requested (default), unload the old route template
-        if (this.config.templateUnload) this.unloadTemplate(oldRouteId)
+        // At this point, we have a valid route ID
+
+        // NB: The `loadRoute` method will attempt to load external templates that are not currently loaded
 
         // Show the new container (replace or show)
         if (this.config.hide) {
@@ -383,9 +344,9 @@ class UibRouter { // eslint-disable-line no-unused-vars
             } else {
                 // else create new content from template
                 try {
-                    routeShown = await this._createRouteContent(newRouteId)
+                    routeShown = await this.loadRoute(newRouteId)
                 } catch (e) {
-                    console.error('[uibrouter:doRRoute] ', e)
+                    console.error('[uibrouter:doRoute] ', e)
                     routeShown = false
                 }
             }
@@ -394,9 +355,9 @@ class UibRouter { // eslint-disable-line no-unused-vars
             container.replaceChildren()
             // Create new content from template
             try {
-                routeShown = await this._createRouteContent(newRouteId)
+                routeShown = await this.loadRoute(newRouteId)
             } catch (e) {
-                console.error('[uibrouter:doRRoute] ', e)
+                console.error('[uibrouter:doRoute] ', e)
                 routeShown = false
             }
         }
@@ -408,10 +369,21 @@ class UibRouter { // eslint-disable-line no-unused-vars
             // Events on route change fail ...
             document.dispatchEvent(new CustomEvent('uibrouter:route-change-failed', { detail: { newRouteId, oldRouteId } }))
             if (uibuilder) uibuilder.set('uibrouter', 'route change failed') // eslint-disable-line no-undef
-
-            window.location.hash = oldRouteId ? `#${oldRouteId}` : ''
+            // If ID's the same, this happened on load and would keep failing so revert to default
+            if (newRouteId === oldRouteId) oldRouteId = ''
+            // Don't throw an error here, it stops the menu highlighting from working
+            console.error(`[uibrouter:doRoute] Route content for '${newRouteId}' could not be shown, reverting to old route '${oldRouteId}'`)
+            this.safety++
+            // Revert route
+            this.doRoute(oldRouteId || '')
             return
         }
+
+        // At this point, the new route has successfully been shown
+        this.safety = 0
+
+        // If requested (default), unload the old route template
+        if (this.config.templateUnload) this.unloadTemplate(oldRouteId)
 
         // Retain current and previous route id's
         this.currentRouteId = newRouteId
@@ -425,13 +397,87 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         // Events on route changed ...
         document.dispatchEvent(new CustomEvent('uibrouter:route-changed', { detail: { newRouteId, oldRouteId } }))
-        if (uibuilder) {
-            uibuilder.set('uibrouter', 'route changed')
-            uibuilder.set('uibrouter_CurrentRoute', newRouteId)
-            uibuilder.set('uibrouter_CurrentTitle', this.routeTitle())
-            uibuilder.set('uibrouter_CurrentDescription', this.routeDescription())
-            uibuilder.set('uibrouter_CurrentDetails', this.getRouteConfigById(newRouteId))
+        this._uibRouteChange(newRouteId)
+    }
+
+    /** Async method to create DOM route content from a route template (internal or external) - loads external templates if not already loaded
+     * Route templates have to be a `<template>` tag with an ID that matches the route id.
+     * Scripts in the template are run at this point.
+     * All errors throw so make sure to try/catch calls to this method.
+     * @param {string} routeId ID of the route definition to use to create the content
+     * @param {HTMLElement} [routeParentEl] OPTIONAL, default=this.routeContainerEl (master route container). Reference to an HTML Element to which the route content will added as a child.
+     * @returns {boolean} True if the route content was created successfully, false otherwise
+     */
+    async loadRoute(routeId, routeParentEl) {
+        if (!routeParentEl) routeParentEl = this.routeContainerEl
+        // Try to reference the template for this route
+        let rContent
+
+        try {
+            rContent = await this.ensureTemplate(routeId)
+        } catch (e) {
+            throw new Error(`[uibrouter:loadRoute] No template for route id '${routeId}'. \n ${e.message}`)
         }
+
+        // Clone the template
+        const docFrag = rContent.content.cloneNode(true)
+
+        // Have to re-apply the scripts to make them run - only for external templates
+        if (this.isRouteExternal(routeId)) this._applyScripts(docFrag)
+
+        // Create the route wrapper div with data-route attrib
+        const tempContainer = document.createElement('div')
+        tempContainer.dataset.route = routeId
+        tempContainer.append(docFrag)
+
+        // And finally try to append to the container
+        try {
+            routeParentEl.append(tempContainer)
+        } catch (e) {
+            throw new Error(`[uibrouter:loadRoute] Failed to apply route id '${routeId}'. \n ${e.message}`)
+        }
+
+        // If we get here, everything is good
+        return true
+    }
+
+    /** Async method to ensure that a template element exists for a given route id
+     *  If route is external, will try to load if it doesn't exist.
+     * All errors throw so make sure to try/catch calls to this method.
+     * @param {string} routeId A single route ID
+     * @returns {HTMLTemplateElement} A reference to the HTML Template element
+     */
+    async ensureTemplate(routeId) {
+        if (!routeId || !this.routeIds.has(routeId)) throw new Error(`[uibrouter:ensureTemplate] No valid route id provided. Route ID: '${routeId}'`)
+        // Try to reference the template for this route
+        let rContent = document.querySelector(`#${routeId}`)
+        // If not found, try once to load it - assuming it is external
+        if (!rContent) {
+            // If external template content doesn't exist, try to load it now (but only try once)
+            const r = this.getRouteConfigById(routeId)
+            if (r.type && r.type === 'url') {
+                let loadedEls
+                try {
+                    loadedEls = await this._loadExternal(r)
+                } catch (e) {
+                    throw new Error(e.message, e)
+                }
+
+                if (!loadedEls) throw new Error(`[uibrouter:ensureTemplate] No route template found for route selector '#${routeId}'. Does the link url match a defined route id?`)
+
+                // Apply fetched external elements to templates tags under the head tag
+                this._appendExternalTemplates(loadedEls)
+
+                // And check that the template now actually exists
+                rContent = document.querySelector(`#${routeId}`)
+
+                if (!rContent) throw new Error(`[uibrouter:ensureTemplate] No valid route template found for external route selector '#${routeId}'`)
+            } else {
+                // type not not external so we can't do anything when it doesn't actually exist
+                throw new Error(`[uibrouter:ensureTemplate] No route template found for internal route selector '#${routeId}'. Ensure that a template element with the matching ID exists in the HTML.`)
+            }
+        }
+        return rContent
     }
 
     /** Return a route config given a route id (returns undefined if route not found)
