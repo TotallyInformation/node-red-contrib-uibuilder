@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-01-01 17:32:06
+updated: 2024-01-05 01:00:22
 ---
 
 # Changelog
@@ -12,26 +12,67 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 * [ ] Add to uib-save example: topic example.
 
-* `uibrouter`
+### `uibrouter` FE library
 
+* Completed
   * [x] If route.src not set, try to use `#${route.id}` - for internal routes only. In keeping with title and description.
   * [x] Add explicit defaults for `templateLoadAll` (false), & `hide` (false).
   * [x] Finish `templateLoadAll`=true processing.
+  * [x] Add `templateUnload` flag (default=true) that unloads external templates after use. Allows for massive template collections for things like WIKI's. Also allows for external changes to templates.
+  * [x] Move template load to public method to allow manual call. `loadRoute(routeId, routeParentEl)`
 
-  * [ ] [started] Add `templateUnload` flag (default=true) that unloads external templates after use. Allows for massive template collections for things like WIKI's. Also allows for external changes to templates.
+* [ ] If uibuilder, send uibuilder control messages back to Node-RED on route changes (including initial load - or build that into uibuilder's standard control msg). Might need an adjustment to be able to differentiate between initial and subsequent changes. Add cache replay property.
 
-  * [ ] Add `defaultRouteOnLoad` flag (default=false) to allow for dynamically added routes to have been pre-selected on page load.
-  * [ ] Update documentation:
-    * [ ] `templateUnload` and `templateLoadAll` flags.
-    * [ ] Remove doc for `unload` flag.
-    * [ ] Document the `unloadTemplate` and `deleteTemplates` methods.
-    * [ ] Make [this](https://discourse.nodered.org/t/urgent-regression/84197/15) and [this](https://discourse.nodered.org/t/uibuilder-front-end-routing-example/83319/9?u=totallyinformation) into some use-cases.
-  * [ ] Enforce only 1 instance of a router on page (would need to change how uib vars work otherwise).
-  * [ ] Update router example (code changes).
+* [ ] Allow a route to have a set display parent. That might allow specific routes to be loaded to a different on-page location than the default. This would enable things like menu's to be routes themselves.
+  * [ ] This may need a config flag to force early load? OR, add `menuRoutes` array to config to auto-load?
 
-  * If uibuilder:
-    * [x] add reference to router to a managed uibuilder var. Allowing the uibuilder client library to detect its use and add automation.
-    * [ ] add remote command listener to enable Node-RED to control the route.
+
+* [ ] Add `defaultRouteOnLoad` flag (default=false) to allow for dynamically added routes to have been pre-selected on page load.
+* [ ] Update documentation:
+  * [ ] `templateUnload` and `templateLoadAll` flags.
+  * [ ] Remove doc for `unload` flag.
+  * [ ] Document the `unloadTemplate` and `deleteTemplates` methods.
+  * [ ] Make [this](https://discourse.nodered.org/t/urgent-regression/84197/15) and [this](https://discourse.nodered.org/t/uibuilder-front-end-routing-example/83319/9?u=totallyinformation) into some use-cases.
+* [ ] Enforce only 1 instance of a router on page (would need to change how uib vars work otherwise).
+* [ ] Update router example (code changes).
+* [ ] Track first (on-load) route? Don't need to send initial route to node-red if the `client connect` message already has it.
+
+* If uibuilder:
+  * [x] add reference to router to a managed uibuilder var. Allowing the uibuilder client library to detect its use and add automation.
+  * [ ] add remote command listener to enable Node-RED to control the route.
+
+### FE library
+
+* [ ] Document `hasUibRouter` new function
+
+### `uib-cache` node
+
+* [ ] Add option to send cache on "route change" control msg
+* [ ] Add option to ONLY send cache on "route change" control msg
+* [ ] Add processing for filters - use saved input on `_ui` or `_uib`, process if filter turned on
+* [ ] Add flag & filter for `routerId`
+* [ ] Add flag & filter for `clientId`
+* [ ] Add flag & filter for `pageName`
+
+### `uib-element` node
+
+* [ ] Add option for `routerId` - would ensure that the output only goes to the appropriate route.
+* [ ] Add option for `clientId` - would ensure that the output only goes to the appropriate client.
+* [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
+
+### `uib-tag` node
+
+* [ ] Add option for `routerId` - would ensure that the output only goes to the appropriate route.
+* [ ] Add option for `clientId` - would ensure that the output only goes to the appropriate client.
+* [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
+
+### `uibuilder` node
+
+* [ ] ?? Filter `clientId` and `pageName` using socket.io rooms?
+
+### `uib-brand.css` styles
+
+* [ ] Document new resets and --max-width.
 
 ## Issues
 
@@ -53,7 +94,6 @@ Please see the documentation for archived changelogs - a new archive is produced
       at o (editor.js:2:181412)
       at editor.js:5:161683
 
-
 ### "Outdated" dependencies
 
 Unfortunately, for various reasons, some of the package dependencies that UIBUILDER relies on cannot be updated to their latest versions. These are documented, with the reason, here.
@@ -71,10 +111,9 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 
 ## Ideas
 
-### `uibrouter`
+### `uibrouter` FE library
 
-* Consider allowing a route to have a set display parent. That might allow specific routes to be loaded to a different on-page location than the default. This would enable things like menu's to be routes themselves.
-* If uibuilder, send uibuilder control messages back to Node-RED on route changes (including initial load - or build that into uibuilder's standard control msg). Might need an adjustment to be able to differentiate between initial and subsequent changes. Add cache replay property.
+* Add function that returns the route config schema
 
 ### `uib-cache` node
 
@@ -97,15 +136,36 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 
 ### 📌 Highlights
 
-### `uibrouter` library
+### uibuilder front-end library
+
+* **NEW FUNCTION** `hasUibRouter()` Returns true if a uibrouter instance is loaded, otherwise returns false. Note that, because the router will be loaded in a page script, it is not available until AFTER the uibuilder library has loaded and socket.io initialised.
+
+### `uibrouter` front-end library
 
 Note that, while it has various uibuilder integrations and is only currently published with UIBUILDER, the router library is not dependent on uibuilder and could be used separately if you like. Might be especially useful for Dashboard or http-in/-out flows.
 
 * **FIXED** Default route was always being set on load. Now correctly takes the current URL hash into account first.
 * **FIXED** Routes loaded via script, if pre-selected on page load (e.g. in URL hash), were crashing. Now will automatically revert to the default route and just print an error to the console.
 * **NEW** If using uibuilder, added a new uibuilder managed variable `uibrouterinstance` which has a reference to the router instance. Will alow the uibuilder client library to auto-update things & will allow easier remote control from Node-RED.
+* Refactored some of the router methods, now exposing:
+  * `loadRoute(routeId, routeParentEl)` - Loads template content to the page. Will load an external template if not already loaded. Calls `ensureTemplate`. Async, throws errors.
+  * `ensureTemplate(routeId)` - Ensures that a specific template has been loaded. Will attempt to load an external template. Async, throws errors.
+* `loadRoute` method now has optional 2nd argument, `routeParentEl`, a reference to an HTML parent element. The route template will be added to this as a new child. If not provided, the master content container is used (which has already been defined and created at router startup). This allows specific routes to be loaded to a different parent, useful for having things like menu's defined as routes or for loading routes as sidebars, etc.
 
+### `uibuilder` node
 
+* If router loaded (`uibuilder.uibrouterinstance` exists), Add routeId to control messages and to `msg._uib` for standard msgs. 
+  
+  NB: Cant send route id with initial connect msg since router instance is added later. So cache control must happen on route change messages.
+
+### `socket.js` library
+
+* If a client msg received with a msg._uib property but the `uibuilder` node hasn't requested that they are shown, delete it before sending on to flow.
+
+### `uib-brand.css` styles
+
+* `header` and `footer` given same basic reset as `main`. So they all have max width and are centered in window.
+* New variable `--max-width` added & set to `64rem`. This is used in the above resets.
 
 ## [v6.8.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.1...v6.8.2)
 
