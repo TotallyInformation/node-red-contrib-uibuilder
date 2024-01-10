@@ -591,6 +591,7 @@
  * @property {"url"|undefined} [type] OPTIONAL, default=internal route. "url" for external routes
  * @property {string} [title] OPTIONAL, default=route id. Text to use as a short title for the route
  * @property {string} [description] OPTIONAL, default=route id. Text to use as a long description for the route
+ * @property {string} [routeContainer] OPTIONAL, default=config routeContainer. Override routeContainer. Allows routes to be loaded somewhere else.
  */
 /** UibRouterConfig
  * @typedef {object} UibRouterConfig Configuration for the UiBRouter class instances
