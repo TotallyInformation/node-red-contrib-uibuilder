@@ -437,6 +437,12 @@ export const Uib = class Uib {
      * @type {(string|undefined)}
      */
     topic = undefined
+    /** Either undefined or a reference to a uib router instance
+     * Set by uibrouter, do not set manually.
+     */
+    uibrouterinstance
+    /** Set by uibrouter, do not set manually */
+    uibrouter_CurrentRoute
     //#endregion ---- ---- ---- ---- //
 
     //#region ---- These are unlikely to be needed externally: ----
@@ -854,6 +860,13 @@ export const Uib = class Uib {
             return 'NaN'
         }
         return out
+    }
+
+    /** Returns true if a uibrouter instance is loaded, otherwise returns false
+     * @returns {boolean} true if uibrouter instance loaded else false
+     */
+    hasUibRouter() {
+        return !!this.uibrouterinstance
     }
 
     /** Only keep the URL Hash & ignoring query params
@@ -1635,9 +1648,13 @@ export const Uib = class Uib {
     _send(msgToSend, channel, originator = '') {
         if (channel === null || channel === undefined) channel = this._ioChannels.client
 
-        // Make sure msgToSend is an object
+        // Make sure msgToSend is an object & add props to control msgs
         if (channel === this._ioChannels.client) {
             msgToSend = makeMeAnObject(msgToSend, 'payload')
+            if (this.hasUibRouter()) {
+                if (!msgToSend._uib) msgToSend._uib = {}
+                msgToSend._uib.routeId = this.uibrouter_CurrentRoute
+            }
         } else if (channel === this._ioChannels.control) {
             msgToSend = makeMeAnObject(msgToSend, 'uibuilderCtrl')
             if (!Object.prototype.hasOwnProperty.call(msgToSend, 'uibuilderCtrl')) {
@@ -1645,6 +1662,8 @@ export const Uib = class Uib {
             }
             // help remember where this came from as ctrl msgs can come from server or client
             msgToSend.from = 'client'
+            // Add current route id if needed
+            if (this.hasUibRouter()) msgToSend.routeId = this.uibrouter_CurrentRoute
         }
 
         /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
@@ -1668,8 +1687,11 @@ export const Uib = class Uib {
             }
         }
 
-        // If a standard send & _ui property exists, make sure to add _ui.from = 'client'
-        if (msgToSend._ui) msgToSend._ui.from = 'client'
+        // If a standard send & _ui property exists, make sure to add _ui.from = 'client' & routerId if needed
+        if (msgToSend._ui) {
+            msgToSend._ui.from = 'client'
+            if (this.hasUibRouter()) msgToSend._ui.routeId = this.uibrouter_CurrentRoute
+        }
 
         // Track how many messages have been sent & last msg sent
         let numMsgs
@@ -2299,8 +2321,6 @@ export const Uib = class Uib {
 
         // Update the URL path to make sure we have the right one
         this.socketOptions.path = this.ioPath
-
-        // NOTE: this._socket.auth is now set by callback and so automatically updated for each client (re)connection. No need to set here
 
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
         log('trace', 'Uib:ioSetup', `About to create IO object. Transports: [${this.socketOptions.transports.join(', ')}]`)()

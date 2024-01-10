@@ -4960,6 +4960,12 @@ var Uib = (_a = class {
      * @type {(string|undefined)}
      */
     __publicField(this, "topic");
+    /** Either undefined or a reference to a uib router instance
+     * Set by uibrouter, do not set manually.
+     */
+    __publicField(this, "uibrouterinstance");
+    /** Set by uibrouter, do not set manually */
+    __publicField(this, "uibrouter_CurrentRoute");
     //#endregion ---- ---- ---- ---- //
     //#region ---- These are unlikely to be needed externally: ----
     __publicField(this, "autoSendReady", true);
@@ -5427,6 +5433,12 @@ var Uib = (_a = class {
       return "NaN";
     }
     return out;
+  }
+  /** Returns true if a uibrouter instance is loaded, otherwise returns false
+   * @returns {boolean} true if uibrouter instance loaded else false
+   */
+  hasUibRouter() {
+    return !!this.uibrouterinstance;
   }
   /** Only keep the URL Hash & ignoring query params
    * @param {string} url URL to extract the hash from
@@ -6061,12 +6073,19 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       channel = this._ioChannels.client;
     if (channel === this._ioChannels.client) {
       msgToSend = makeMeAnObject(msgToSend, "payload");
+      if (this.hasUibRouter()) {
+        if (!msgToSend._uib)
+          msgToSend._uib = {};
+        msgToSend._uib.routeId = this.uibrouter_CurrentRoute;
+      }
     } else if (channel === this._ioChannels.control) {
       msgToSend = makeMeAnObject(msgToSend, "uibuilderCtrl");
       if (!Object.prototype.hasOwnProperty.call(msgToSend, "uibuilderCtrl")) {
         msgToSend.uibuilderCtrl = "manual send";
       }
       msgToSend.from = "client";
+      if (this.hasUibRouter())
+        msgToSend.routeId = this.uibrouter_CurrentRoute;
     }
     msgToSend._socketId = this._socket.id;
     if (originator === "" && this.originator !== "")
@@ -6082,8 +6101,11 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         }
       }
     }
-    if (msgToSend._ui)
+    if (msgToSend._ui) {
       msgToSend._ui.from = "client";
+      if (this.hasUibRouter())
+        msgToSend._ui.routeId = this.uibrouter_CurrentRoute;
+    }
     let numMsgs;
     if (channel === this._ioChannels.client) {
       this.set("sentMsg", msgToSend);
