@@ -337,12 +337,7 @@ class UibSockets {
         // Add page name meta to allow caches and other flows to send back to specific page
         // Note, could use socket.handshake.auth.pageName instead
         let pageName
-        if ( socket.handshake.auth.pathName ) {
-            pageName = getClientPageName(socket, node)
-        }
-
-        // @ts-ignore
-        const clientTimeDifference = (new Date(socket.handshake.issued)) - (new Date(socket.handshake.auth.browserConnectTimestamp))
+        if ( socket.handshake.auth.pathName ) pageName = getClientPageName(socket, node)
 
         // WARNING: The socket.handshake data can only ever be changed by the client when it (re)connects
         const out = {
@@ -354,7 +349,7 @@ class UibSockets {
             'recovered': socket.recovered,
             /** Do our best to get the actual IP addr of client despite any Proxies */
             'ip': getClientRealIpAddress(socket),
-            /** THe referring webpage, should be the full URL of the uibuilder page */
+            /** The referring webpage, should be the full URL of the uibuilder page */
             'referer': socket.request.headers.referer,
 
             // Let the flow know what v of uib client is in use
@@ -376,6 +371,8 @@ class UibSockets {
             // 'browserConnectTimestamp': socket.handshake.auth.browserConnectTimestamp,
         }
 
+        // @ts-ignore
+        const clientTimeDifference = (new Date(socket.handshake.issued)) - (new Date(socket.handshake.auth.browserConnectTimestamp))
         // Only include this if The difference between the timestamps is > 1 minute - output is in milliseconds
         if (clientTimeDifference > 60000) out.clientTimeDifference = clientTimeDifference
 
@@ -426,7 +423,7 @@ class UibSockets {
         // If the sender hasn't added msg._socketId, add the Socket.id now
         if ( !Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
 
-        // If required, add/merge the client details to the msg using msg._uib
+        // If required, add/merge the client details to the msg using msg._uib, remove if not required
         if (node.showMsgUib) {
             if (!msg._uib) msg._uib = this.getClientDetails(socket, node)
             else {
@@ -435,6 +432,9 @@ class UibSockets {
                     ...this.getClientDetails(socket, node)
                 }
             }
+        } else {
+            // Remove msg._uib
+            delete msg._uib
         }
 
         // Send out the message for downstream flows
