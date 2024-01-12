@@ -14,21 +14,18 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### `uibrouter` FE library
 
-* [ ] Allow a route to have a set display parent. That might allow specific routes to be loaded to a different on-page location than the default. This would enable things like menu's to be routes themselves.
-
-  * [ ] This may need a config flag to force early load? OR, add `menuRoutes` array to config to auto-load?
-
+* [ ] [STARTED] Add other external load definition to allow things like menu templates to be used.
+* [ ] Add external command listener for `msg._uibRouteLoad`. With the value being a route definition or an array of route definitions. (and update the eg flows)
 
 * [ ] Add `defaultRouteOnLoad` flag (default=false) to allow for dynamically added routes to have been pre-selected on page load.
+* [ ] Update router example (code changes).
+
 * [ ] Update documentation:
 
   * [ ] `templateUnload` and `templateLoadAll` flags.
   * [ ] Remove doc for `unload` flag.
   * [ ] Document the `unloadTemplate` and `deleteTemplates` methods.
   * [ ] Make [this](https://discourse.nodered.org/t/urgent-regression/84197/15) and [this](https://discourse.nodered.org/t/uibuilder-front-end-routing-example/83319/9?u=totallyinformation) into some use-cases.
-
-* [ ] Update router example (code changes).
-* [ ] Track first (on-load) route? Don't need to send initial route to node-red if the `client connect` message already has it.
 
 ### FE library
 
@@ -48,6 +45,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 * [ ] Add option for `routerId` - would ensure that the output only goes to the appropriate route.
 * [ ] Add option for `clientId` - would ensure that the output only goes to the appropriate client.
 * [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
+* [ ] Add new type: `navigation menu` - to work with the router.
 
 ### `uib-tag` node
 
@@ -124,6 +122,15 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 <!-- Nothing currently. -->
 
 ### 📌 Highlights
+
+* Security of the UIBUILDER repository on GitHub has been improved.
+
+### General Changes
+
+* Additional security checks added to the public repository. Checks are now locked. OSSF Scorecard checks added. Checks are applied to `main` branch whenever updated.
+* stepsecurity.io recommendations applied to the repository.
+* Added a `SECURITY.md` policy document.
+* Security issues in UIBUILDER can now be reported using GitHub's security advisory service using this link: https://github.com/totallyinformation/node-red-contrib-uibuilder/security/advisories/new
 
 ### uibuilder front-end library
 

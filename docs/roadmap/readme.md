@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-01-01 17:50:02
+updated: 2024-01-12 17:47:12
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -107,6 +107,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 * `uib-template` -  New node to take a msg._ui template input and update parts of it belore sending (e.g. parent, id, ...). `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation).
 * `uib-event` - Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance.
+* `uib-ctrl` - route different types of control msgs to different output ports: `network` ("client connect", "client disconnect"), `visibilty`, `routing` ("route c")
 
 ### General changes
 
@@ -748,7 +749,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
   * Change style of requiring core node modules: `require('node:os')` instead of `require('os')`
   * JSON Modules (experimental in v14, full in 16.15.0)
-  * Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)
+  * **==Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)==**
   * [Error cause](https://v8.dev/features/error-cause) (16.9.0)
   * [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0) - allows use of negative indexes.
   * Stable Timers Promises API, RegExp Match Indices, which provide the start and end indices of the captured string (16.0.0)
