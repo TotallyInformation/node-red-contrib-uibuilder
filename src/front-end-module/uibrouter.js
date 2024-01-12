@@ -28,7 +28,6 @@
  * @property {"url"|undefined} [type] OPTIONAL, default=internal route. "url" for external routes
  * @property {string} [title] OPTIONAL, default=route id. Text to use as a short title for the route
  * @property {string} [description] OPTIONAL, default=route id. Text to use as a long description for the route
- * @property {string} [routeContainer] OPTIONAL, default=config routeContainer. Override routeContainer. Allows routes to be loaded somewhere else.
  * UibRouterConfig
  * @typedef {object} UibRouterConfig Configuration for the UiBRouter class instances
  * @property {routeDefinition[]} routes REQUIRED. Array of route definitions
@@ -37,6 +36,12 @@
  * @property {boolean} [hide] OPTIONAL, default=false. If TRUE, routes will be hidden/shown on change instead of removed/added
  * @property {boolean} [templateLoadAll] OPTIONAL, default=false. If TRUE, all external route templates will be loaded when the router is instanciated. Default is to lazy-load external templates
  * @property {boolean} [templateUnload] OPTIONAL, default=true. If TRUE, route templates will be unloaded from DOM after access.
+ *
+ * otherLoadDefinition
+ * @typedef {object} otherLoadDefinition Single external load configuration
+ * @property {string} id REQUIRED. Unique (to page) ID. Will be applied to loaded content.
+ * @property {string} src REQUIRED. url of external template to load
+ * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
  */
 
 class UibRouter { // eslint-disable-line no-unused-vars
@@ -200,7 +205,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         if (!routeDefinition) throw new Error('[uibrouter:loadExternal] Error loading route template. No route definition provided.')
         // Obviously, this only works for internal routes
         if (!routeDefinition.src) {
-            if (!routeDefinition.type || (routeDefinition.type && routeDefinition.type !== 'url'))routeDefinition.src = routeDefinition.id
+            if (!routeDefinition.type || (routeDefinition.type && routeDefinition.type !== 'url')) routeDefinition.src = routeDefinition.id
             else throw new Error('[uibrouter:loadExternal] Error loading route template. `src` property not defined')
         }
 
@@ -412,6 +417,39 @@ class UibRouter { // eslint-disable-line no-unused-vars
         // Events on route changed ...
         document.dispatchEvent(new CustomEvent('uibrouter:route-changed', { detail: { newRouteId, oldRouteId } }))
         this._uibRouteChange(newRouteId)
+    }
+
+    /** Load other external files and apply to specific parents (mostly used for externally defined menus)
+     * @param {otherLoadDefinition|Array<otherLoadDefinition>} extOther Required. Array of objects defining what to load and where
+     */
+    loadOther(extOther) {
+        if (!extOther) throw new Error('[uibrouter:loadOther] At least 1 load definition must be provided')
+        if (!Array.isArray(extOther)) extOther = [extOther]
+
+        extOther.forEach( async f => {
+            const parent = document.querySelector(f.container)
+            if (!parent) return // Nothing to do if parent does not exist on page
+
+            let response
+            try {
+                response = await fetch(f.src)
+            } catch (e) {
+                throw new Error(`[uibrouter:loadOther] Error loading template HTML for '${f.id}', src: '${f.src}'. Error: ${e.message}`, e)
+            }
+            // Fetch failed?
+            if (response.ok === false) throw new Error(`[uibrouter:loadOther] Fetch failed to return data '${f.id}', src: '${f.src}'. Status: ${response.statusText} (${response.status})`, [f.id, f.src, response.status, response.statusText])
+
+            /** @type {string & any[]} */
+            const htmlText = await response.text()
+
+            // We fetched it, so now load it to the DOM
+            const tempContainer = document.createElement('div')
+            tempContainer.innerHTML = htmlText
+            tempContainer.id = f.id
+
+            parent.append(tempContainer)
+            this._applyScripts(parent.lastChild)
+        })
     }
 
     /** Async method to create DOM route content from a route template (internal or external) - loads external templates if not already loaded

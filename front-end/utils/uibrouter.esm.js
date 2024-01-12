@@ -311,6 +311,34 @@ var _UibRouter = class _UibRouter {
     document.dispatchEvent(new CustomEvent("uibrouter:route-changed", { detail: { newRouteId, oldRouteId } }));
     this._uibRouteChange(newRouteId);
   }
+  /** Load other external files and apply to specific parents (mostly used for externally defined menus)
+   * @param {otherLoadDefinition|Array<otherLoadDefinition>} extOther Required. Array of objects defining what to load and where
+   */
+  loadOther(extOther) {
+    if (!extOther)
+      throw new Error("[uibrouter:loadOther] At least 1 load definition must be provided");
+    if (!Array.isArray(extOther))
+      extOther = [extOther];
+    extOther.forEach(async (f) => {
+      const parent = document.querySelector(f.container);
+      if (!parent)
+        return;
+      let response;
+      try {
+        response = await fetch(f.src);
+      } catch (e) {
+        throw new Error(`[uibrouter:loadOther] Error loading template HTML for '${f.id}', src: '${f.src}'. Error: ${e.message}`, e);
+      }
+      if (response.ok === false)
+        throw new Error(`[uibrouter:loadOther] Fetch failed to return data '${f.id}', src: '${f.src}'. Status: ${response.statusText} (${response.status})`, [f.id, f.src, response.status, response.statusText]);
+      const htmlText = await response.text();
+      const tempContainer = document.createElement("div");
+      tempContainer.innerHTML = htmlText;
+      tempContainer.id = f.id;
+      parent.append(tempContainer);
+      this._applyScripts(parent.lastChild);
+    });
+  }
   /** Async method to create DOM route content from a route template (internal or external) - loads external templates if not already loaded
    * Route templates have to be a `<template>` tag with an ID that matches the route id.
    * Scripts in the template are run at this point.
