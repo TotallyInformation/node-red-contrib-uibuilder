@@ -24,7 +24,7 @@
     "fast-glob": "^3.2.7",
     "fs-extra": "^11.1.0",
     "jsdom": "^21",
-    "nanoid": "^3",
+    "nanoid": "^5",
     "serve-index": "^1.9.1",
     "socket.io": "^4.3.2",
     "socket.io-client": "^4.4.1"
