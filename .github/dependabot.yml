@@ -1,0 +1,66 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /nodes/modules
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /templates/blank
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /templates/esm-blank-client
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /templates/esm-vue3-nobuild
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /templates/iife-blank-client
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /templates/iife-vue3-nobuild
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /templates/old-blank-client
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /templates/svelte-basic
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /templates/vue2-bootstrap
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /templates/vue2-simple
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /templates/vue3-sfc-load
+    schedule:
+      interval: daily
