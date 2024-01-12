@@ -3,17 +3,25 @@ name: Check .md links on v6.6.0 branch
 on:
   push: [v6.6.0]
 
+permissions:
+  contents: read
+
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
     # check out the the code
     steps:
-    - uses: actions/checkout@master
+    - name: Harden Runner
+      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@61b9e3751b92087fd0b06925ba6dd6314e06f089 # master
       with:
         ref: v6.6.0
 
     # Checks the status of hyperlinks in .md files in verbose mode
     - name: Check links
-      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      uses: gaurav-nelson/github-action-markdown-link-check@5c5dfc0ac2e225883c0e5f03a85311ec2830d368 # v1
       with:
         use-verbose-mode: 'yes'
