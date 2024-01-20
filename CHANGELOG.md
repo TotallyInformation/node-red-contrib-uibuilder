@@ -11,14 +11,22 @@ Please see the documentation for archived changelogs - a new archive is produced
 ## To Do
 
 * [ ] Add to uib-save example: topic example.
+* [ ] Update text update example to include new `uib-topic` html attributes
+* [ ] [STARTED] Refactor node html files, move help to `locales/en-US` & remove from `src/editor/` and from gulp watch. (See roadmap for progress)
 
 ### `uibrouter` FE library
 
-* [ ] [STARTED] Add other external load definition to allow things like menu templates to be used.
-* [ ] Add external command listener for `msg._uibRouteLoad`. With the value being a route definition or an array of route definitions. (and update the eg flows)
+* [ ] Add external command listeners for:
+  * [ ] `msg._uibRouteLoad`. With the value being a route definition or an array of route definitions. (and update the eg flows)
+  * [ ] `loadOther`
+  * [ ] `rotate`
+  * [ ] `next`
+  * [ ] `previous`
 
 * [ ] Add `defaultRouteOnLoad` flag (default=false) to allow for dynamically added routes to have been pre-selected on page load.
-* [ ] Update router example (code changes).
+* [ ] Add method to load and convert markdown (.md) files.
+* [ ] Find a way to include a first-show marker if not unloading routes
+* [ ] Update router example (code changes, remove remote cmd example).
 
 * [ ] Update documentation:
 
@@ -30,6 +38,15 @@ Please see the documentation for archived changelogs - a new archive is produced
 ### FE library
 
 * [ ] Document `hasUibRouter` new function
+* [ ] Need std innerHTML process to account for MD and sanitize.
+* [ ] [STARTED] uib-attr process
+  * [ ] Add processors for classes, styles, _ui. Need std innerHTML process to account for MD and sanitize.
+  * [ ] Add tracking flag to messages so they don't get reprocessed.
+  * [ ] ? Add uib-var processor?
+
+### `<uib-var>` custom HTML component
+
+* [ ] Amend to use same processors as the uib-attr process above
 
 ### `uib-cache` node
 
@@ -123,6 +140,10 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 
 ### 📌 Highlights
 
+* Lots of extensions and improvements to the `uibrouter` front-end routing library in this release:
+
+  * You can now define a set of external html files (that can include scripts and css just like routes) that are immediately loaded to the page. These can be defined in the initial router config when they will be loaded immediately (before routes) or can be manually loaded later. Use these for things like menu's or other fixed parts of the UI.
+
 * Security of the UIBUILDER repository on GitHub has been improved.
 
 ### General Changes
@@ -131,10 +152,12 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 * stepsecurity.io recommendations applied to the repository.
 * Added a `SECURITY.md` policy document.
 * Security issues in UIBUILDER can now be reported using GitHub's security advisory service using this link: https://github.com/totallyinformation/node-red-contrib-uibuilder/security/advisories/new
+* Moved node definition files for uibuilder, uib-sender and uib-cache into their own sub-folders to match the other nodes. package.json and gulpfile updated accordingly. Also blank `locale/en-US` sub-folders created in readiness for moving help html.
 
 ### uibuilder front-end library
 
 * **NEW FUNCTION** `hasUibRouter()` Returns true if a uibrouter instance is loaded, otherwise returns false. Note that, because the router will be loaded in a page script, it is not available until AFTER the uibuilder library has loaded and socket.io initialised.
+* **NEW FUNCTION** `arrayIntersect(a1, a2)` Returns a new array (which could be empty) of the intersection of the 2 input arrays.
 
 ### `uibrouter` front-end library
 
@@ -143,6 +166,7 @@ Note that, while it has various uibuilder integrations and is only currently pub
 * **FIXED** Default route was always being set on load. Now correctly takes the current URL hash into account first.
 * **FIXED** Routes loaded via script, if pre-selected on page load (e.g. in URL hash), were crashing. Now will automatically revert to the default route and just print an error to the console.
 
+* **NEW** Router config property `otherLoad` and router function `loadOther` added. These let you load other external HTML template files on startup or manually (respectively). Used for external menu definitions and other fixed parts of the UI.
 * **NEW** If using uibuilder, added a new uibuilder managed variable `uibrouterinstance` which has a reference to the router instance. Will alow the uibuilder client library to auto-update things & will allow easier remote control from Node-RED.
 * **NEW** Added a remote command listener to enable Node-RED to control the route if using UIBUILDER.
 

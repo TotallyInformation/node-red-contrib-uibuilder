@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-01-12 17:47:12
+updated: 2024-01-20 12:51:27
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -42,7 +42,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Update example
 * Make this.config.routes a SET to prevent duplicates. Or possibly an object. Needs some code changes.
 * Methods needed:
-  * Delete route - need to update routeIds
+  * [x] Delete route - need to update routeIds
   * Update/reload route
   * shutdown - that removes all elements
   * delete templates - unloads a list of (or all) templates
@@ -53,8 +53,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Add pre-load option early load of all routes instead of default lazy-load.
   * unload templates after they are added to the route container. Only if hide=true. `unload: true`
   * Maybe: options to auto-load js and css files with the same name as a template file.
+  * Maybe: Reset route to template option?
 
-### Core node
+### `uibuilder` core node
 
 * Add manual entry field to editor config for a URL scheme to open the instanceRoot folder in an editor new window. Pre-fill with vscode entry for localhost. Partially fill with vscode-remote otherwise (or maybe have a button).
 
@@ -85,6 +86,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 | jQ Tooltips                   | ✔️                     | ✔️         | ✔️                   |          | ✔️        |            | ✔️       | ✔️          |                                     |
 | rename template.html          | ✔️                     | ✔️         | ✔️                   |          | ✔️        | ✔️          |         | ✔️          |                                     |
 | jQ TI class not id            | ✔️                     | ✔️         | ✔️                   |          | ✔️        |            |         |            |                                     |
+| Remove build                  |                       |           |                     |          | ✔️        |            |         |            |                                     |
 | Notes                         | class="ti-edit-panel" |           | mv combobox styles? |          |          |            |         |            | check this for other needed updates |
 
 Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId].
@@ -126,6 +128,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 ### Node: `uibuilder`
 
 * **FIX NEEDED** Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
+* **IMPROVEMENT NEEDED** in code editor. Needs bringing up to latest Node-RED code standards. [Ref](https://discourse.nodered.org/t/json-typed-into-with-schema-validation/84499/11?u=totallyinformation).
 * Allow file uploads
 * Add instance title and description fields. Extend record of instances to include these and update the `apps` page.
 * Use alt logging for websocket disconnects, sleep, error, etc
