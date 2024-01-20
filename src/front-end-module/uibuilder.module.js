@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* This is the Front-End JavaScript for uibuilder  in HTML Module form
   It provides a number of global objects that can be used in your own javascript.
   see the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
@@ -375,6 +376,10 @@ export const Uib = class Uib {
 
     // Track ui observers (see uiWatch)
     #uiObservers = {}
+
+    // List of uib specific attributes that will be watched and processed dynamically
+    uibAttribs = ['uib-topic', 'data-uib-topic']
+    #uibAttrSel = `[${this.uibAttribs.join('], [')}]`
 
     //#endregion
 
@@ -796,6 +801,15 @@ export const Uib = class Uib {
                 this.send({ topic: 'hashChange', payload: location.hash, newHash: this.keepHashFromUrl(event.newURL), oldHash: this.keepHashFromUrl(event.oldURL) })
             }
         })
+    }
+
+    /** Returns a new array containing the intersection of the 2 input arrays
+     * @param {Array} a1 Array to check
+     * @param {Array} a2 Array to intersect
+     * @returns {Array} The intersection of the 2 arrays (may be an empty array)
+     */
+    arrayIntersect(a1, a2) {
+        return a1.filter(uName => a2.includes(uName))
     }
 
     /** Copies a uibuilder variable to the browser clipboard
@@ -1599,6 +1613,9 @@ export const Uib = class Uib {
 
         // Topic
         if ( msg.topic ) this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg)
+
+        // Check whether 
+        if (msg._uib_processed_by) console.log('msg._uib_processed_by')
 
         // Handle msg._uib special requests
         if (msg._uib) {
@@ -2426,6 +2443,86 @@ export const Uib = class Uib {
 
     //#endregion -------- ------------ -------- //
 
+    //#region ! EXPERIMENTAL: Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
+
+    /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
+     * Observer is set up in the start() function
+     * @param {MutationRecord[]} mutations Array of Mutation Records
+     */
+    _uibAttribObserver(mutations/* , observer */) {
+        mutations.forEach( m => {
+            // Deal with attribute changes
+            if (m.attributeName && (m.attributeName.startsWith('uib') || m.attributeName.startsWith('data-uib'))) {
+                // log(0, 'attribute mutation', m.attributeName, m.target.getAttribute(m.attributeName), m.oldValue, m )()
+                this._uibAttrScanOne(m.target)
+            } else if (m.addedNodes.length > 0) {
+                // And deal with newly added elements (e.g. from route change)
+                // Check for added nodes with uib attribs
+                m.addedNodes.forEach( n => {
+                    // Attributes are a map and we need an array
+                    let aNames = []
+                    try { // Nodes might not always have attributes
+                        aNames = [...n.attributes]
+                    } catch (e) {}
+                    // Get any added elements that have uib attribs
+                    const intersect = this.arrayIntersect(this.uibAttribs, aNames)
+                    // And get any children that have uib attribs (a node might not have querySelectorAll method)
+                    let uibChildren = []
+                    if (n.querySelectorAll) uibChildren = n.querySelectorAll(this.#uibAttrSel)
+                    // We want them all.
+                    const combi = [...intersect, ...uibChildren]
+                    if (combi.length > 0) {
+                        // console.log('new elements uib attrib', combi)
+                        this._uibAttrScanAll(combi)
+                    }
+                })
+            }
+        })
+    }
+
+    /** Check a single HTML element for uib attributes and add auto-processors as needed.
+     * Understands only uib-topic at present. Msgs received on the topic can have:
+     *   msg.payload - replaces innerHTML
+     *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
+     * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
+     */
+    _uibAttrScanOne(el) {
+        const topic = el.getAttribute('uib-topic') || el.getAttribute('data-uib-topic')
+        // console.log('uib-topic processed (1)', topic)
+        this.onTopic(topic, (msg) => {
+            msg._uib_processed_by = 'uibAttrScanOne'
+            // console.log('uib-topic processed', topic)
+            if (Object.prototype.hasOwnProperty.call(msg, 'attributes')) {
+                try {
+                    for (const [k, v] of Object.entries(msg.attributes)) {
+                        el.setAttribute(k, v)
+                    }
+                } catch (e) {
+                    log(0, 'uibuilder:attribute-processing', 'Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.')()
+                }
+            }
+            if (Object.prototype.hasOwnProperty.call(msg, 'payload')) el.innerHTML = msg.payload
+        })
+    }
+
+    /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
+     * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
+     */
+    _uibAttrScanAll(parentEl) {
+        if (!Array.isArray(parentEl)) parentEl = [parentEl]
+        parentEl.forEach( p => {
+            const uibChildren = p.querySelectorAll(this.#uibAttrSel)
+            if (uibChildren.length > 0) {
+                // console.log('existing elements uib attrib', uibChildren)
+                uibChildren.forEach( el => {
+                    this._uibAttrScanOne(el)
+                })
+            }
+        })
+    }
+
+    //#region ! EXPERIMENTAL
+
     //#region ------- Class construction & startup method -------- //
 
     constructor() {
@@ -2632,6 +2729,19 @@ export const Uib = class Uib {
                 const eMsg = document.getElementById('uib_last_msg')
                 if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg)
             }
+        })
+
+        // ! EXPERIMENTAL
+        // @ts-ignore  Initial scan for uib-* attributes & add suitable change processors
+        this._uibAttrScanAll(document)
+        // Observer to watch for new/changed elements & add suitable change processors
+        const observer = new MutationObserver(this._uibAttribObserver.bind(this))
+        observer.observe(document, {
+            subtree: true,
+            attributes: true,
+            attributeOldValue: true,
+            attributeFilter: this.uibAttribs,
+            childList: true
         })
 
         this._dispatchCustomEvent('uibuilder:startComplete')

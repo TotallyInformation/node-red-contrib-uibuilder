@@ -4820,9 +4820,9 @@
     return json;
   }
   var _ui = new import_ui.default(window, log, syntaxHighlight);
-  var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _extCommands, _managedVars, _showStatus, _uiObservers;
+  var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _extCommands, _managedVars, _showStatus, _uiObservers, _uibAttrSel;
   var Uib = (_a = class {
-    //#endregion -------- ------------ -------- //
+    //#region ! EXPERIMENTAL
     //#region ------- Class construction & startup method -------- //
     constructor() {
       //#endregion ---- ---- ---- ----
@@ -4903,6 +4903,9 @@
       });
       // Track ui observers (see uiWatch)
       __privateAdd(this, _uiObservers, {});
+      // List of uib specific attributes that will be watched and processed dynamically
+      __publicField(this, "uibAttribs", ["uib-topic", "data-uib-topic"]);
+      __privateAdd(this, _uibAttrSel, `[${this.uibAttribs.join("], [")}]`);
       //#endregion
       //#region public class vars
       // TODO Move to proper getters
@@ -5371,6 +5374,14 @@
           this.send({ topic: "hashChange", payload: location.hash, newHash: this.keepHashFromUrl(event2.newURL), oldHash: this.keepHashFromUrl(event2.oldURL) });
         }
       });
+    }
+    /** Returns a new array containing the intersection of the 2 input arrays
+     * @param {Array} a1 Array to check
+     * @param {Array} a2 Array to intersect
+     * @returns {Array} The intersection of the 2 arrays (may be an empty array)
+     */
+    arrayIntersect(a1, a2) {
+      return a1.filter((uName) => a2.includes(uName));
     }
     /** Copies a uibuilder variable to the browser clipboard
      * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
@@ -6035,6 +6046,8 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
       if (msg.topic)
         this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg);
+      if (msg._uib_processed_by)
+        console.log("msg._uib_processed_by");
       if (msg._uib) {
         if (!this._forThis(msg._uib))
           return;
@@ -6654,6 +6667,73 @@ Namespace: ${this.ioNamespace}`)();
       if (__privateGet(this, _timerid))
         window.clearTimeout(__privateGet(this, _timerid));
     }
+    //#endregion -------- ------------ -------- //
+    //#region ! EXPERIMENTAL: Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
+    /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
+     * Observer is set up in the start() function
+     * @param {MutationRecord[]} mutations Array of Mutation Records
+     */
+    _uibAttribObserver(mutations) {
+      mutations.forEach((m) => {
+        if (m.attributeName && (m.attributeName.startsWith("uib") || m.attributeName.startsWith("data-uib"))) {
+          this._uibAttrScanOne(m.target);
+        } else if (m.addedNodes.length > 0) {
+          m.addedNodes.forEach((n) => {
+            let aNames = [];
+            try {
+              aNames = [...n.attributes];
+            } catch (e) {
+            }
+            const intersect = this.arrayIntersect(this.uibAttribs, aNames);
+            let uibChildren = [];
+            if (n.querySelectorAll)
+              uibChildren = n.querySelectorAll(__privateGet(this, _uibAttrSel));
+            const combi = [...intersect, ...uibChildren];
+            if (combi.length > 0) {
+              this._uibAttrScanAll(combi);
+            }
+          });
+        }
+      });
+    }
+    /** Check a single HTML element for uib attributes and add auto-processors as needed.
+     * Understands only uib-topic at present. Msgs received on the topic can have:
+     *   msg.payload - replaces innerHTML
+     *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
+     * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
+     */
+    _uibAttrScanOne(el) {
+      const topic = el.getAttribute("uib-topic") || el.getAttribute("data-uib-topic");
+      this.onTopic(topic, (msg) => {
+        msg._uib_processed_by = "uibAttrScanOne";
+        if (Object.prototype.hasOwnProperty.call(msg, "attributes")) {
+          try {
+            for (const [k, v] of Object.entries(msg.attributes)) {
+              el.setAttribute(k, v);
+            }
+          } catch (e) {
+            log(0, "uibuilder:attribute-processing", "Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.")();
+          }
+        }
+        if (Object.prototype.hasOwnProperty.call(msg, "payload"))
+          el.innerHTML = msg.payload;
+      });
+    }
+    /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
+     * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
+     */
+    _uibAttrScanAll(parentEl) {
+      if (!Array.isArray(parentEl))
+        parentEl = [parentEl];
+      parentEl.forEach((p) => {
+        const uibChildren = p.querySelectorAll(__privateGet(this, _uibAttrSel));
+        if (uibChildren.length > 0) {
+          uibChildren.forEach((el) => {
+            this._uibAttrScanOne(el);
+          });
+        }
+      });
+    }
     /** Start up Socket.IO comms and listeners
      * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
      * necessarily work out the correct ioPath to use.
@@ -6728,10 +6808,19 @@ ioPath: ${this.ioPath}`)();
             eMsg.innerHTML = this.syntaxHighlight(msg);
         }
       });
+      this._uibAttrScanAll(document);
+      const observer = new MutationObserver(this._uibAttribObserver.bind(this));
+      observer.observe(document, {
+        subtree: true,
+        attributes: true,
+        attributeOldValue: true,
+        attributeFilter: this.uibAttribs,
+        childList: true
+      });
       this._dispatchCustomEvent("uibuilder:startComplete");
     }
     //#endregion -------- ------------ -------- //
-  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), //#region --- Static variables ---
+  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), _uibAttrSel = new WeakMap(), //#region --- Static variables ---
   __publicField(_a, "_meta", {
     version,
     type: "module",

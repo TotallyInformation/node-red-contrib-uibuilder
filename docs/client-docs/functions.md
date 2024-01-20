@@ -4,7 +4,7 @@ description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
 lastUpdated: 2023-12-29 17:26:05
-updated: 2023-12-30 17:01:41
+updated: 2024-01-20 16:14:46
 ---
 
 Functions accessible in client-side user code.
@@ -670,6 +670,10 @@ This means that it returns different data to the `$()` function.
 
 This is very similar to the function of the same name in the Chromium DevTools. The only difference being that UIBUILDER's function does not accept a 2nd parameter. UIBUILDER's function supercedes that of the DevTools.
 
+### `arrayIntersect(a1, a2)` - Intersection of two input arrays :id=arrayIntersect
+
+Takes 2 arrays as input and returns a new array, which could be empty, of the intersecting items.
+
 ### `connect()` - Manually (re)connect Socket.IO communications between the browser and Node-RED :id=connect
 
 Allows fine control of the communications.
@@ -773,6 +777,7 @@ If examining the library code, please remember that functions starting with `_` 
 * [`$$`](#dollar2)
 * `$ui`§ - Reference to the ui.js library, not a function
 * [`addClass`](#addClass)§
+* [`arrayIntersect`](#arrayIntersect)
 * [`beaconLog`](#beaconLog)
 * [`cancelChange`](#cancelChange)
 * [`cancelTopic`](#cancelTopic)
