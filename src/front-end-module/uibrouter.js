@@ -36,6 +36,7 @@
  * @property {boolean} [hide] OPTIONAL, default=false. If TRUE, routes will be hidden/shown on change instead of removed/added
  * @property {boolean} [templateLoadAll] OPTIONAL, default=false. If TRUE, all external route templates will be loaded when the router is instanciated. Default is to lazy-load external templates
  * @property {boolean} [templateUnload] OPTIONAL, default=true. If TRUE, route templates will be unloaded from DOM after access.
+ * @property {otherLoadDefinition[]} [otherLoad] OPTIONAL, default=none. If present, router start will pre-load other external templates direct to the DOM. Use for menu's, etc.
  *
  * otherLoadDefinition
  * @typedef {object} otherLoadDefinition Single external load configuration
@@ -97,15 +98,12 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         if (uibuilder) {
             uibuilder.set('uibrouterinstance', this)
-            // Add a remote command listener
-            uibuilder.onChange('msg', (msg) => {
-                if (!msg._uibRouteChange) return
-                this.doRoute(msg._uibRouteChange)
-            })
         }
 
         // Create/access the route container element, sets this.routeContainerEl
         this._setRouteContainer()
+
+        if (this.config.otherLoad) this.loadOther(this.config.otherLoad)
 
         this._updateRouteIds()
 

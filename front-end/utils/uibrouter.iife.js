@@ -67,13 +67,10 @@
         this.config.templateUnload = true;
       if (uibuilder) {
         uibuilder.set("uibrouterinstance", this);
-        uibuilder.onChange("msg", (msg) => {
-          if (!msg._uibRouteChange)
-            return;
-          this.doRoute(msg._uibRouteChange);
-        });
       }
       this._setRouteContainer();
+      if (this.config.otherLoad)
+        this.loadOther(this.config.otherLoad);
       this._updateRouteIds();
       if (this.config.templateLoadAll === false) {
         this._start();
