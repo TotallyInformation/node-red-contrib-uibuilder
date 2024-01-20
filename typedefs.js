@@ -601,6 +601,12 @@
  * @property {boolean} [templateLoadAll] OPTIONAL, default=false. If TRUE, all external route templates will be loaded when the router is instanciated. Default is to lazy-load external templates
  * @property {boolean} [templateUnload] OPTIONAL, default=true. If TRUE, route templates will be unloaded from DOM after access.
  */
+/** otherLoadDefinition
+ * @typedef {object} otherLoadDefinition Single external load configuration
+ * @property {string} id REQUIRED. Unique (to page) ID. Will be applied to loaded content.
+ * @property {string} src REQUIRED. url of external template to load
+ * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
+ */
 
 /** Props define attributes on a virtual node.
  * @typedef {Object<string, any> | {}} Props
