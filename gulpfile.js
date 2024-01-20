@@ -842,7 +842,7 @@ function buildPanelUib2(cb) {
             // .pipe(once())
             .pipe(rename('uibuilder.html'))
             .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
-            .pipe(dest(nodeDest))
+            .pipe(dest(`${nodeDest}/uibuilder/`))
     } catch (e) {
         console.error('buildPanelUib2 failed', e)
     }
@@ -858,7 +858,7 @@ function buildPanelCache(cb) {
             .pipe(once())
             .pipe(rename('uib-cache.html'))
             .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
-            .pipe(dest(nodeDest))
+            .pipe(dest(`${nodeDest}/uib-cache/`))
     } catch (e) {
         console.error('buildPanelCache failed', e)
     }
@@ -874,7 +874,7 @@ function buildPanelSender(cb) {
             .pipe(once())
             .pipe(rename('uib-sender.html'))
             .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
-            .pipe(dest(nodeDest))
+            .pipe(dest(`${nodeDest}/uib-sender/`))
     } catch (e) {
         console.error('buildPanelSender failed', e)
     }
@@ -1002,28 +1002,6 @@ function buildPanelHTML(cb) {
     cb()
 }
 
-/** Combine the parts of uib-save.html */
-function buildPanelSave(cb) {
-    try {
-        src(`${nodeSrcRoot}/uib-save/main.html`, ) // { since: lastRun(buildMe) } )
-            // .pipe(debug({title:'debug1',minimal:false}))
-            .pipe( include() )
-            // Rename output to $dirname/editor.html
-            .pipe(rename(function(thispath) {
-                // thispath.dirname = `${thispath.dirname}`
-                thispath.basename = 'customNode'
-                // thispath.extname = 'html'
-            }))
-            // Minimise HTML output
-            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
-            .pipe(dest(`${nodeDest}/uib-save/`))
-    } catch (e) {
-        console.error('buildPanelSave failed', e)
-    }
-
-    cb()
-}
-
 //#endregion ---- ---- ----
 
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
@@ -1037,7 +1015,6 @@ const buildme = parallel(
     buildPanelUpdate,
     buildPanelTag,
     buildPanelHTML,
-    buildPanelSave,
 )
 
 const buildNewFe = parallel(
@@ -1093,7 +1070,7 @@ function watchme(cb) {
     watch('src/editor/uib-update/*', buildPanelUpdate)
     watch('src/editor/uib-tag/*', buildPanelTag)
     watch('src/editor/uib-html/*', buildPanelHTML)
-    watch('src/editor/uib-save/*', buildPanelSave)
+    // watch('src/editor/uib-save/*', buildPanelSave)
     watch('front-end/uib-brand.css', minifyBrandCSS)
     // watch('src/components/uib-var.js', parallel(buildUibVarIIFE, buildUibVarIIFEmin))
     // watch('src/libs/*', buildNodeLibs)

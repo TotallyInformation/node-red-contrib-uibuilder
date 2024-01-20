@@ -18,37 +18,37 @@
 'use strict'
 
 /** --- Type Defs ---
- * @typedef {import('../typedefs.js').MsgAuth} MsgAuth
- * @typedef {import('../typedefs.js').uibNode} uibNode
- * @typedef {import('../typedefs.js').uibConfig} uibConfig
- * @typedef {import('../typedefs.js').runtimeRED} runtimeRED
- * @typedef {import('../typedefs.js').runtimeNodeConfig} runtimeNodeConfig
- * @typedef {import('../typedefs.js').uibuilderEditorVars} uibuilderEditorVars
+ * @typedef {import('../../typedefs.js').MsgAuth} MsgAuth
+ * @typedef {import('../../typedefs.js').uibNode} uibNode
+ * @typedef {import('../../typedefs.js').uibConfig} uibConfig
+ * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
+ * @typedef {import('../../typedefs.js').runtimeNodeConfig} runtimeNodeConfig
+ * @typedef {import('../../typedefs.js').uibuilderEditorVars} uibuilderEditorVars
  */
 
 //#region ------ Require packages ------ //
 // uibuilder custom
-const uiblib = require('./libs/uiblib')  // Utility library for uibuilder
-const tilib = require('./libs/tilib')   // General purpose library (by Totally Information)
-const packageMgt = require('./libs/package-mgt')
+const uiblib = require('../libs/uiblib.js')  // Utility library for uibuilder
+const tilib = require('../libs/tilib.js')   // General purpose library (by Totally Information)
+const packageMgt = require('../libs/package-mgt.js')
 const tiEvents = require('@totallyinformation/ti-common-event-handler') // https://github.com/EventEmitter2/EventEmitter2
-const fslib  = require('./libs/fs')   // File/folder handling library (by Totally Information)
+const fslib  = require('../libs/fs.js')   // File/folder handling library (by Totally Information)
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
 try {
     // Template configuration metadata
-    var templateConf = require('../templates/template_dependencies') // eslint-disable-line no-var
+    var templateConf = require('../../templates/template_dependencies.js') // eslint-disable-line no-var
 } catch (e) {
     console.error('[uibuilder] REQUIRE TEMPLATE-CONF failed::', e)
 }
 try {
     // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
-    var sockets = require('./libs/socket') // eslint-disable-line no-var
+    var sockets = require('../libs/socket.js') // eslint-disable-line no-var
 } catch (e) {
     console.error('[uibuilder] REQUIRE SOCKET failed::', e)
 }
 try {
     // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
-    var web = require('./libs/web') // eslint-disable-line no-var
+    var web = require('../libs/web.js') // eslint-disable-line no-var
 } catch (e) {
     console.error('[uibuilder] REQUIRE WEB failed::', e)
 }
@@ -70,14 +70,14 @@ const fs = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra
 
 /** @type {uibConfig} */
 const uib = {
-    me: fslib.readJSONSync(path.join( __dirname, '..', 'package.json' )),
+    me: fslib.readJSONSync(path.join( __dirname, '..', '..', 'package.json' )),
     moduleName: 'uibuilder',
     nodeRoot: '',
     deployments: {},
     instances: {},
     apps: {},
-    masterTemplateFolder: path.join( __dirname, '..', 'templates' ),
-    masterStaticFeFolder: path.join( __dirname, '..', 'front-end' ),
+    masterTemplateFolder: path.join( __dirname, '..', '..', 'templates' ),
+    masterStaticFeFolder: path.join( __dirname, '..', '..', 'front-end' ),
     rootFolder: null,
     configFolder: null,
     configFolderName: '.config',

@@ -18,10 +18,10 @@
 'use strict'
 
 /** --- Type Defs ---
- * @typedef {import('../typedefs.js').runtimeRED} runtimeRED
- * @typedef {import('../typedefs.js').runtimeNodeConfig} runtimeNodeConfig
- * @typedef {import('../typedefs.js').runtimeNode} runtimeNode
- * @typedef {import('../typedefs.js').senderNode1} senderNode
+ * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
+ * @typedef {import('../../typedefs.js').runtimeNodeConfig} runtimeNodeConfig
+ * @typedef {import('../../typedefs.js').runtimeNode} runtimeNode
+ * @typedef {import('../../typedefs.js').senderNode1} senderNode
  * typedef {import('../typedefs.js').myNode} myNode
  */
 
