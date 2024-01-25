@@ -28,6 +28,8 @@
  * @property {"url"|undefined} [type] OPTIONAL, default=internal route. "url" for external routes
  * @property {string} [title] OPTIONAL, default=route id. Text to use as a short title for the route
  * @property {string} [description] OPTIONAL, default=route id. Text to use as a long description for the route
+ * @property {"html"|"md"|"markdown"} [format] OPTIONAL, default=html. Route content format, HTML or Markdown (md). Markdown requires the Markdown-IT library to have been loaded.
+ *
  * UibRouterConfig
  * @typedef {object} UibRouterConfig Configuration for the UiBRouter class instances
  * @property {routeDefinition[]} routes REQUIRED. Array of route definitions
@@ -460,14 +462,20 @@ class UibRouter { // eslint-disable-line no-unused-vars
      */
     async loadRoute(routeId, routeParentEl) {
         if (!routeParentEl) routeParentEl = this.routeContainerEl
+
         // Try to reference the template for this route
         let rContent
-
         try {
             rContent = await this.ensureTemplate(routeId)
         } catch (e) {
             throw new Error(`[uibrouter:loadRoute] No template for route id '${routeId}'. \n ${e.message}`)
         }
+
+        // What format is the template?
+        const conf = this.getRouteConfigById(routeId)
+        let fmt = conf.format || 'html'
+        fmt = fmt.toLowerCase()
+        if (fmt === 'markdown') fmt = 'md'
 
         // Clone the template
         const docFrag = rContent.content.cloneNode(true)
@@ -478,7 +486,18 @@ class UibRouter { // eslint-disable-line no-unused-vars
         // Create the route wrapper div with data-route attrib
         const tempContainer = document.createElement('div')
         tempContainer.dataset.route = routeId
-        tempContainer.append(docFrag)
+
+        // If Markdown & library loaded, convert from markdown to HTML
+        if (window['markdownit'] && (fmt === 'md')) {
+            // Bonkers way that text containing potential html tags must be converted to extract it. Ref: https://stackoverflow.com/a/49894968/1309986
+            const xmlnAttribute = ' xmlns="http://www.w3.org/1999/xhtml"'
+            const regEx = new RegExp(xmlnAttribute, 'g')
+            const serializer = new XMLSerializer()
+            const t = serializer.serializeToString(docFrag).replace(regEx, '')
+            tempContainer.innerHTML = this.renderMarkdown(t)
+        } else {
+            tempContainer.append(docFrag)
+        }
 
         // And finally try to append to the container
         try {
@@ -647,7 +666,6 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         templateIds.forEach( routeId => {
             if (externalOnly === true && !this.isRouteExternal(routeId)) return
-            console.log('delete', routeId, this.isRouteExternal(routeId), externalOnly)
             this.unloadTemplate(routeId, externalOnly)
         } )
     }
@@ -679,6 +697,37 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
     currentRoute() {
         return this.getRouteConfigById(this.currentRouteId)
+    }
+
+    /** Use Markdown-IT to render Markdown to HTML
+     * https://markdown-it.github.io/markdown-it
+     * @param {string} mdText Markdown string
+     * @returns {string} HTML rendering of the Markdown input
+     */
+    renderMarkdown(mdText) {
+        const opts = { // eslint-disable-line object-shorthand
+            html: true,
+            linkify: true,
+            _highlight: true,
+            langPrefix: 'language-',
+            highlight(str, lang) {
+                // https://highlightjs.org
+                if (lang && window['hljs'] && window['hljs'].getLanguage(lang)) {
+                    try {
+                        return `<pre class="highlight border" data-language="${lang.toUpperCase()}">
+                                <code class="language-${lang}" style="display:block">${window['hljs'].highlightAuto(str).value}</code></pre>`
+                    } finally { } // eslint-disable-line no-empty
+                }
+                return `<pre class="highlight border"><code style="display:block">${md.utils.escapeHtml(str)}</code></pre>`
+            },
+        }
+        const md = window['markdownit'](opts)
+        try {
+            return md.render(mdText.trim())
+        } catch (e) {
+            console.error(`[uibrouter:renderMarkdown] Could not render Markdown. ${e.message}`, e)
+            return '<p class="border error">Could not render Markdown<p>'
+        }
     }
     //#endregion ---- ----- ----
 

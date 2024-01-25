@@ -355,12 +355,25 @@
         throw new Error(`[uibrouter:loadRoute] No template for route id '${routeId}'. 
  ${e.message}`);
       }
+      const conf = this.getRouteConfigById(routeId);
+      let fmt = conf.format || "html";
+      fmt = fmt.toLowerCase();
+      if (fmt === "markdown")
+        fmt = "md";
       const docFrag = rContent.content.cloneNode(true);
       if (this.isRouteExternal(routeId))
         this._applyScripts(docFrag);
       const tempContainer = document.createElement("div");
       tempContainer.dataset.route = routeId;
-      tempContainer.append(docFrag);
+      if (window["markdownit"] && fmt === "md") {
+        const xmlnAttribute = ' xmlns="http://www.w3.org/1999/xhtml"';
+        const regEx = new RegExp(xmlnAttribute, "g");
+        const serializer = new XMLSerializer();
+        const t = serializer.serializeToString(docFrag).replace(regEx, "");
+        tempContainer.innerHTML = this.renderMarkdown(t);
+      } else {
+        tempContainer.append(docFrag);
+      }
       try {
         routeParentEl.append(tempContainer);
       } catch (e) {
@@ -505,7 +518,6 @@
       templateIds.forEach((routeId) => {
         if (externalOnly === true && !this.isRouteExternal(routeId))
           return;
-        console.log("delete", routeId, this.isRouteExternal(routeId), externalOnly);
         this.unloadTemplate(routeId, externalOnly);
       });
     }
@@ -532,6 +544,37 @@
     }
     currentRoute() {
       return this.getRouteConfigById(this.currentRouteId);
+    }
+    /** Use Markdown-IT to render Markdown to HTML
+     * https://markdown-it.github.io/markdown-it
+     * @param {string} mdText Markdown string
+     * @returns {string} HTML rendering of the Markdown input
+     */
+    renderMarkdown(mdText) {
+      const opts = {
+        // eslint-disable-line object-shorthand
+        html: true,
+        linkify: true,
+        _highlight: true,
+        langPrefix: "language-",
+        highlight(str, lang) {
+          if (lang && window["hljs"] && window["hljs"].getLanguage(lang)) {
+            try {
+              return `<pre class="highlight border" data-language="${lang.toUpperCase()}">
+                                <code class="language-${lang}" style="display:block">${window["hljs"].highlightAuto(str).value}</code></pre>`;
+            } finally {
+            }
+          }
+          return `<pre class="highlight border"><code style="display:block">${md.utils.escapeHtml(str)}</code></pre>`;
+        }
+      };
+      const md = window["markdownit"](opts);
+      try {
+        return md.render(mdText.trim());
+      } catch (e) {
+        console.error(`[uibrouter:renderMarkdown] Could not render Markdown. ${e.message}`, e);
+        return '<p class="border error">Could not render Markdown<p>';
+      }
     }
     //#endregion ---- ----- ----
     // TODO
