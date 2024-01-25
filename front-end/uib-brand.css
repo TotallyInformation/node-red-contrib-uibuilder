@@ -553,6 +553,9 @@ main, header, footer {
     margin-left:auto;
     margin-right: auto;    
 }
+footer {
+    margin-top: 1em;
+}
 
 /*#endregion --- Basic reset --- */
 
