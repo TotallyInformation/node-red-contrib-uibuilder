@@ -324,8 +324,10 @@
           if (!Array.isArray(msg._ui))
             msg._ui = [msg._ui];
           msg._ui.forEach((ui, i2) => {
+            if (ui.mode && !ui.method)
+              ui.method = ui.mode;
             if (!ui.method) {
-              _a2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring`)();
+              _a2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring. `, ui)();
               return;
             }
             ui.payload = msg.payload;
@@ -4822,7 +4824,7 @@
   var _ui = new import_ui.default(window, log, syntaxHighlight);
   var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _extCommands, _managedVars, _showStatus, _uiObservers, _uibAttrSel;
   var Uib = (_a = class {
-    //#region ! EXPERIMENTAL
+    //#endregion ! EXPERIMENTAL
     //#region ------- Class construction & startup method -------- //
     constructor() {
       //#endregion ---- ---- ---- ----
@@ -6670,15 +6672,17 @@ Namespace: ${this.ioNamespace}`)();
     //#endregion -------- ------------ -------- //
     //#region ! EXPERIMENTAL: Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
     /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
+     * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
+     *          as possible. Async so that calling function does not need to wait.
      * Observer is set up in the start() function
      * @param {MutationRecord[]} mutations Array of Mutation Records
      */
-    _uibAttribObserver(mutations) {
-      mutations.forEach((m) => {
+    async _uibAttribObserver(mutations) {
+      mutations.forEach(async (m) => {
         if (m.attributeName && (m.attributeName.startsWith("uib") || m.attributeName.startsWith("data-uib"))) {
           this._uibAttrScanOne(m.target);
         } else if (m.addedNodes.length > 0) {
-          m.addedNodes.forEach((n) => {
+          m.addedNodes.forEach(async (n) => {
             let aNames = [];
             try {
               aNames = [...n.attributes];
@@ -6697,12 +6701,13 @@ Namespace: ${this.ioNamespace}`)();
       });
     }
     /** Check a single HTML element for uib attributes and add auto-processors as needed.
+     * Async so that calling function does not need to wait.
      * Understands only uib-topic at present. Msgs received on the topic can have:
      *   msg.payload - replaces innerHTML
      *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
      * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
      */
-    _uibAttrScanOne(el) {
+    async _uibAttrScanOne(el) {
       const topic = el.getAttribute("uib-topic") || el.getAttribute("data-uib-topic");
       this.onTopic(topic, (msg) => {
         msg._uib_processed_by = "uibAttrScanOne";
@@ -6720,12 +6725,13 @@ Namespace: ${this.ioNamespace}`)();
       });
     }
     /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
+     * Async so that calling function does not need to wait.
      * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
      */
-    _uibAttrScanAll(parentEl) {
+    async _uibAttrScanAll(parentEl) {
       if (!Array.isArray(parentEl))
         parentEl = [parentEl];
-      parentEl.forEach((p) => {
+      parentEl.forEach(async (p) => {
         const uibChildren = p.querySelectorAll(__privateGet(this, _uibAttrSel));
         if (uibChildren.length > 0) {
           uibChildren.forEach((el) => {
