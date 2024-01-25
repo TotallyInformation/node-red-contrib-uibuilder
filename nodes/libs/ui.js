@@ -270,8 +270,10 @@ const Ui = class Ui2 {
     if (!Array.isArray(msg._ui))
       msg._ui = [msg._ui];
     msg._ui.forEach((ui, i) => {
+      if (ui.mode && !ui.method)
+        ui.method = ui.mode;
       if (!ui.method) {
-        Ui2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i}]. Ignoring`)();
+        Ui2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i}]. Ignoring. `, ui)();
         return;
       }
       ui.payload = msg.payload;

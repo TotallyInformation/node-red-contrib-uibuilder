@@ -281,8 +281,10 @@ var require_ui = __commonJS({
         if (!Array.isArray(msg._ui))
           msg._ui = [msg._ui];
         msg._ui.forEach((ui, i) => {
+          if (ui.mode && !ui.method)
+            ui.method = ui.mode;
           if (!ui.method) {
-            _a.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i}]. Ignoring`)();
+            _a.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i}]. Ignoring. `, ui)();
             return;
           }
           ui.payload = msg.payload;

@@ -381,8 +381,9 @@ const Ui = class Ui {
         if (!Array.isArray(msg._ui)) msg._ui = [msg._ui]
 
         msg._ui.forEach((ui, i) => {
+            if (ui.mode && !ui.method) ui.method = ui.mode
             if (!ui.method) {
-                Ui.log('error', 'Ui:_uiManager', `No method defined for msg._ui[${i}]. Ignoring`)()
+                Ui.log('error', 'Ui:_uiManager', `No method defined for msg._ui[${i}]. Ignoring. `, ui)()
                 return
             }
 
@@ -602,6 +603,7 @@ const Ui = class Ui {
     } // --- end of _uiUpdate ---
 
     //#endregion ---- -------- ----
+
     //#region ---- External Methods ----
 
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
