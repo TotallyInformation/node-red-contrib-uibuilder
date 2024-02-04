@@ -4,7 +4,7 @@ description: |
   This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a `uibuilder` node where the messages contain a `msg._ui` property. This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
 created: 2022-06-11 14:15:26
 lastUpdated: 2023-09-30 13:02:29
-updated: 2023-12-30 17:01:41
+updated: 2024-02-04 15:46:20
 ---
 
 - [Restricting actions to specific pages, users, tabs](#restricting-actions-to-specific-pages-users-tabs)
@@ -302,7 +302,7 @@ Each component can:
 
 The load method allows you to dynamically load JavaScript and CSS. For example, external web components, ECMA modules, plain JavaScript, and CSS stylesheets. It also allows loading of JavaScript and CSS Styles from given text input.
 
-> [!ATTENTION]
+> [!WARNING]
 > Please take note of the limitations and caveats of the load method for loading JavaScript. It works well for loading web components before adding them dynamically to your UI. Also works well for dynamic changes to scripts and css. However, there are a lot of things that can catch you out. If having issues, use an import statement or a script tag in your front-end code instead.
 
 ### Caveats and limitations

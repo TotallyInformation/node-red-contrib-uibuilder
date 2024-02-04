@@ -1,6 +1,6 @@
 ---
 created: 2023-10-21 15:30:26
-updated: 2023-12-30 17:01:41
+updated: 2024-02-04 15:45:32
 ---
 # How to manage UIBUILDER documentation using Docksify.
 
@@ -66,19 +66,13 @@ The ["Flexible Alerts"](https://github.com/fzankl/docsify-plugin-flexible-alerts
 > [!TIP]
 
 > [!WARNING]
-
-> [!ATTENTION]
 ```
 
 Additional types can be defined in `index.html` and the layout/style can be adjusted. See the plugin documentation for details.
 
-The following Docsify native callouts can also be used but are not recommended as they do not render well in all circumstances:
+Note that the 3 listed match the callouts allowed in GitHub markdown as well. They are also supported in Obsidian (via ) and natively in Typora.
 
-```
-!> Callout with red exclamation mark
-
-?> Callout with blue information mark
-```
+Docsify native callouts (`!>`, `?>`) are not recommended as they do not match the commonly used GitHub callouts.
 
 ## UIBUILDER Major Version Changes
 

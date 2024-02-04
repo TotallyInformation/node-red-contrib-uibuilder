@@ -4,7 +4,7 @@ description: |
   Turns an array/object of objects into a simple, accessible form.
 created: 2023-02-24 16:49:49
 lastUpdated: 2023-08-19 17:01:20
-updated: 2023-12-30 17:01:41
+updated: 2024-02-04 15:51:32
 ---
 
 The `uib-element` node, set to the "Simple Form" type, outputs a simple but accessible Form with inputs and buttons. Most HTML features of inputs and forms are supported.
@@ -182,7 +182,7 @@ By default, HTML checkbox inputs do not set the `value` attribute (which is tota
 
 ### Select (drop-down)
 
-> [!ATTENTION]
+> [!NOTE]
 > As of uibuilder v6.5.0-Dev, multi-select can be defined but only the first selected option is returned.
 > In addition, you cannot currently pre-select multiples.
 > Hopefully this will be fixed before v6.5 is released.

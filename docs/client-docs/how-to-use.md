@@ -4,7 +4,7 @@ description: |
   This version of the library can either be used in the same style as the old `uibuilderfe.js` client (loading in a script link in the HTML) using the `uibuilder.iife.js` version or as a modern [ES Module](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) using the `uibuilder.esm.js` version. Both builds of the library have identical features but are called differently as shown below.
 created: 2023-01-28 15:19:38
 lastUpdated: 2023-07-02 13:48:04
-updated: 2023-12-30 17:01:41
+updated: 2024-02-04 15:50:41
 ---
 
 
@@ -159,7 +159,7 @@ It also adds the global `$` as long as it doesn't already exist (e.g. if you alr
 
 `$$` is added and is bound to `Array.from(document.querySelectorAll(cssSelector))` so that it returns the properties of all elements discovered by the selector. [Ref.](client-docs/functions#cssselector---returns-an-array-of-html-elements-properties). This is also available as `uibuilder.$$` in case the global `$$` is already defined.
 
-> [!attention]
+> [!WARNING]
 > Please note that this version requires a browser since early 2019. This is probably only an issue if you are stuck on Internet Explorer or on a version of Apple Safari <12.1.
 >
 > If you really must support outdated browsers, you should run the uibuilder library through a build step using `esbuild`, `babel`, or a similar tool that can convert modern JavaScript to older formats (possibly including polyfill libraries if necessary).
