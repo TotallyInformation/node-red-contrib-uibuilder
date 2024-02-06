@@ -228,6 +228,9 @@ const Ui = class Ui {
         if (comp.attributes) {
             Object.keys(comp.attributes).forEach((attrib) => {
                 if (attrib === 'class' && Array.isArray(comp.attributes[attrib])) comp.attributes[attrib].join(' ')
+
+                Ui.log('trace', '_uiComposeComponent:attributes-forEach', `Attribute: '${attrib}', value: '${comp.attributes[attrib]}'`)()
+
                 // For values, set the actual value as well since the attrib only changes the DEFAULT value
                 if (attrib === 'value') el.value = comp.attributes[attrib]
 
@@ -548,19 +551,22 @@ const Ui = class Ui {
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
     _uiUpdate(ui) {
-        Ui.log('trace', 'Ui:_uiManager:update', 'Starting _uiUpdate')()
+        Ui.log('trace', 'UI:_uiUpdate:update', 'Starting _uiUpdate', ui)()
 
         // We allow an update not to actually need to spec a component
         if (!ui.components) ui.components = [Object.assign({}, ui)]
 
         ui.components.forEach((compToUpd, i) => {
-            Ui.log('trace', '_uiUpdate:components-forEach', `Component #${i}`, compToUpd)()
+            Ui.log('trace', '_uiUpdate:components-forEach', `Start loop #${i}`, compToUpd)()
 
             /** @type {NodeListOf<Element>} */
             let elToUpd
 
-            // Either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. ALL elements matching are updated.
-            if (compToUpd.id) {
+            // If a parent element is passed, use that as the update target (only allowed internally)
+            // Otherwise either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. ALL elements matching are updated.
+            if (compToUpd.parentEl) {
+                elToUpd = compToUpd.parentEl
+            } else if (compToUpd.id) {
                 // NB We don't use get by id because this way the code is simpler later on
                 elToUpd = this.document.querySelectorAll(`#${compToUpd.id}`)
             } else if (compToUpd.selector || compToUpd.select) {
@@ -583,21 +589,43 @@ const Ui = class Ui {
             if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload
 
             // Might have >1 element to update - so update them all
-            elToUpd.forEach(el => {
+            elToUpd.forEach((el, j) => {
+                Ui.log('trace', '_uiUpdate:components-forEach', `Updating element #${j}`, el)()
                 this._uiComposeComponent(el, compToUpd)
+                // Try to go down another level of nesting if needed
+                // ! NOT CONVINCED THIS ACTUALLY WORKS !
+                if (compToUpd.components) {
+                    Ui.log('trace', '_uiUpdate:nested-component', `Element #${j} - nested-component`, compToUpd, el)()
+                    const nc = { _ui: [] }
+                    compToUpd.components.forEach((nestedComp, k) => {
+                        const method = nestedComp.method || compToUpd.method || ui.method
+                        if (nestedComp.method) delete nestedComp.method
+                        if (!Array.isArray(nestedComp)) nestedComp = [nestedComp]
+                        // nestedComp.parentEl = el
+                        // nestedComp.components = [nestedComp]
+                        Ui.log('trace', '_uiUpdate:nested-component', `Element #${j} - nested-component #${k}`, nestedComp)()
+                        nc._ui.push( {
+                            method: method,
+                            parentEl: el,
+                            components: nestedComp,
+                        })
+                    })
+                    Ui.log('trace', '_uiUpdate:nested-component', `Element #${j} - nested-component new manager`, nc)()
+                    this._uiManager(nc)
+                }
             })
 
-            // If nested components, go again - but don't pass payload to sub-components
-            if (compToUpd.components) {
-                elToUpd.forEach(el => {
-                    Ui.log('trace', '_uiUpdate:components', 'el', el)()
-                    this._uiUpdate({
-                        method: ui.method,
-                        parentEl: el,
-                        components: compToUpd.components,
-                    })
-                })
-            }
+            // If nested components, apply to every found element - but don't pass payload to sub-components
+            // if (compToUpd.components) {
+            //     compToUpd.components.forEach((el, k) => {
+            //         Ui.log('trace', '_uiUpdate:nested-component', `Updating nested-component #${k}`, el)()
+            //         this._uiUpdate({
+            //             method: el.method || ui.method,
+            //             parentEl: el,
+            //             components: el.components,
+            //         })
+            //     })
+            // }
 
         })
     } // --- end of _uiUpdate ---

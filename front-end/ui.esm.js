@@ -165,6 +165,7 @@ var require_ui = __commonJS({
           Object.keys(comp.attributes).forEach((attrib) => {
             if (attrib === "class" && Array.isArray(comp.attributes[attrib]))
               comp.attributes[attrib].join(" ");
+            _a.log("trace", "_uiComposeComponent:attributes-forEach", `Attribute: '${attrib}', value: '${comp.attributes[attrib]}'`)();
             if (attrib === "value")
               el.value = comp.attributes[attrib];
             if (attrib.startsWith("xlink:"))
@@ -417,13 +418,15 @@ var require_ui = __commonJS({
        * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
        */
       _uiUpdate(ui) {
-        _a.log("trace", "Ui:_uiManager:update", "Starting _uiUpdate")();
+        _a.log("trace", "UI:_uiUpdate:update", "Starting _uiUpdate", ui)();
         if (!ui.components)
           ui.components = [Object.assign({}, ui)];
         ui.components.forEach((compToUpd, i) => {
-          _a.log("trace", "_uiUpdate:components-forEach", `Component #${i}`, compToUpd)();
+          _a.log("trace", "_uiUpdate:components-forEach", `Start loop #${i}`, compToUpd)();
           let elToUpd;
-          if (compToUpd.id) {
+          if (compToUpd.parentEl) {
+            elToUpd = compToUpd.parentEl;
+          } else if (compToUpd.id) {
             elToUpd = this.document.querySelectorAll(`#${compToUpd.id}`);
           } else if (compToUpd.selector || compToUpd.select) {
             elToUpd = this.document.querySelectorAll(compToUpd.selector);
@@ -439,19 +442,29 @@ var require_ui = __commonJS({
           _a.log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
           if (!compToUpd.slot && compToUpd.payload)
             compToUpd.slot = compToUpd.payload;
-          elToUpd.forEach((el) => {
+          elToUpd.forEach((el, j) => {
+            _a.log("trace", "_uiUpdate:components-forEach", `Updating element #${j}`, el)();
             this._uiComposeComponent(el, compToUpd);
-          });
-          if (compToUpd.components) {
-            elToUpd.forEach((el) => {
-              _a.log("trace", "_uiUpdate:components", "el", el)();
-              this._uiUpdate({
-                method: ui.method,
-                parentEl: el,
-                components: compToUpd.components
+            if (compToUpd.components) {
+              _a.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component`, compToUpd, el)();
+              const nc = { _ui: [] };
+              compToUpd.components.forEach((nestedComp, k) => {
+                const method = nestedComp.method || compToUpd.method || ui.method;
+                if (nestedComp.method)
+                  delete nestedComp.method;
+                if (!Array.isArray(nestedComp))
+                  nestedComp = [nestedComp];
+                _a.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component #${k}`, nestedComp)();
+                nc._ui.push({
+                  method,
+                  parentEl: el,
+                  components: nestedComp
+                });
               });
-            });
-          }
+              _a.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component new manager`, nc)();
+              this._uiManager(nc);
+            }
+          });
         });
       }
       // --- end of _uiUpdate ---
