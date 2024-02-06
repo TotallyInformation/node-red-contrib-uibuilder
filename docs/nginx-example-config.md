@@ -4,12 +4,12 @@ description: |
   An example of a reasonably secure configuration for Node-RED and UIBUILDER.
 created: 2022-02-21 13:05:38
 lastUpdated: 2023-09-30 13:06:35
-updated: 2023-12-30 17:01:41
+updated: 2024-02-06 17:30:33
 ---
 
 !> Status: Incomplete
 
-Please read the [Securing uib web apps](security.md) and [Securing apps using NGINX](uib-security-nginx.md) pages before trying this configuration.
+Please read the [Securing uib web apps](Programming/uibuilder/docs/archived/security.md) and [Securing apps using NGINX](uib-security-nginx.md) pages before trying this configuration.
 
 !> This is not offered with any kind of guarantee or warrantee that it will be secure or even whether it will work. It merely offers some suggestions that you may wish to look at.
 

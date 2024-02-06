@@ -13,8 +13,19 @@ Please see the documentation for archived changelogs - a new archive is produced
 * [ ] Add to uib-save example: topic example.
 * [ ] Update text update example to include new `uib-topic` html attributes
 * [ ] [STARTED] Refactor node html files, move help to `locales/en-US` & remove from `src/editor/` and from gulp watch. (See roadmap for progress)
+* [ ] `uib-tag` input fields not resizing correctly.
 
 ### `uibrouter` FE library
+
+* [ ] ? Option to load route config from a file ?
+* [ ] Add md rendering to `loadOther`
+* [ ] Allow config updates from Node-RED
+* [ ] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
+
+* [x] Allow route templates as Markdown
+  * [x] Add `format` prop to route definitions.
+  * [x] Check that Markdown-IT is loaded. `if (window['markdownit']) {...}`
+  * [x] On route load, process markdown.
 
 * [ ] Add external command listeners for:
   * [ ] `msg._uibRouteLoad`. With the value being a route definition or an array of route definitions. (and update the eg flows)
@@ -27,6 +38,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 * [ ] Add method to load and convert markdown (.md) files.
 * [ ] Find a way to include a first-show marker if not unloading routes
 * [ ] Update router example (code changes, remove remote cmd example).
+* [ ] Route menu added from Node-RED not auto-highlighting.
 
 * [ ] Update documentation:
 
@@ -44,6 +56,10 @@ Please see the documentation for archived changelogs - a new archive is produced
   * [ ] Add tracking flag to messages so they don't get reprocessed.
   * [ ] ? Add uib-var processor?
 
+### FE `ui` library
+
+* [ ] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
+
 ### `<uib-var>` custom HTML component
 
 * [ ] Amend to use same processors as the uib-attr process above
@@ -56,9 +72,15 @@ Please see the documentation for archived changelogs - a new archive is produced
 * [ ] Add flag & filter for `routerId`
 * [ ] Add flag & filter for `clientId`
 * [ ] Add flag & filter for `pageName`
+* [ ] Add a msg property option to DELAY delivery on cache replay.
 
 ### `uib-element` node
 
+* [ ] Forms
+  * [ ] Add hidden error div with suitable id.  [ref](https://discourse.nodered.org/t/dynamic-config-dashboard/84531/31)
+  * [ ] Allow definition of error text.
+  * [ ] Forms assume only 1 per page (actually probably all the elements do?) - form inputs should have really unique id's.
+  * [ ] 
 * [ ] Add option for `routerId` - would ensure that the output only goes to the appropriate route.
 * [ ] Add option for `clientId` - would ensure that the output only goes to the appropriate client.
 * [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
@@ -143,6 +165,8 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 * Lots of extensions and improvements to the `uibrouter` front-end routing library in this release:
 
   * You can now define a set of external html files (that can include scripts and css just like routes) that are immediately loaded to the page. These can be defined in the initial router config when they will be loaded immediately (before routes) or can be manually loaded later. Use these for things like menu's or other fixed parts of the UI.
+  
+  * You can now define route content as Markdown instead of HTML. This makes Notion/Obsidian-like applications feasible using UIBUILDER.
 
 * Security of the UIBUILDER repository on GitHub has been improved.
 
@@ -159,6 +183,10 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 * **NEW FUNCTION** `hasUibRouter()` Returns true if a uibrouter instance is loaded, otherwise returns false. Note that, because the router will be loaded in a page script, it is not available until AFTER the uibuilder library has loaded and socket.io initialised.
 * **NEW FUNCTION** `arrayIntersect(a1, a2)` Returns a new array (which could be empty) of the intersection of the 2 input arrays.
 
+### `ui` library
+
+* **FIXED** small inconsistency when handling a msg._ui who's top level was an object with a `mode` mode property instead of an array.
+
 ### `uibrouter` front-end library
 
 Note that, while it has various uibuilder integrations and is only currently published with UIBUILDER, the router library is not dependent on uibuilder and could be used separately if you like. Might be especially useful for Dashboard or http-in/-out flows.
@@ -167,6 +195,7 @@ Note that, while it has various uibuilder integrations and is only currently pub
 * **FIXED** Routes loaded via script, if pre-selected on page load (e.g. in URL hash), were crashing. Now will automatically revert to the default route and just print an error to the console.
 
 * **NEW** Router config property `otherLoad` and router function `loadOther` added. These let you load other external HTML template files on startup or manually (respectively). Used for external menu definitions and other fixed parts of the UI.
+* **NEW** Router route config property `format` added. By default the content for route templates is HTML, this property lets you optionally define template content as Markdown. In that case, if you have the Markdown-IT library pre-loaded, the Markdown template will be rendered as HTML automatically. This allows you to define route content using Markdown instead of writing HTML.
 * **NEW** If using uibuilder, added a new uibuilder managed variable `uibrouterinstance` which has a reference to the router instance. Will alow the uibuilder client library to auto-update things & will allow easier remote control from Node-RED.
 * **NEW** Added a remote command listener to enable Node-RED to control the route if using UIBUILDER.
 

@@ -4,14 +4,14 @@ description: |
   An outline on securing uibuilder web UI's using NGINX as a reverse proxy server.
 created: 2022-02-18 16:05:17
 lastUpdated: 2022-02-21 11:24:19
-updated: 2023-12-30 17:01:42
+updated: 2024-02-06 17:30:33
 ---
 
 ?> This page is DRAFT. I realise that it will confuse more than help as it stands. However, if you can be bothered to read through it a couple of times, you will realise that it already gives you many pointers on how to secure a uibuilder front-end web app using NGINX. Indeed it gives lots of information for securing any web site or web app using NGINX. 😁<br>I will be creating a step-by-step guide at some point and that should help simplify things.
 
 !> This page is offered as a set of ideas for securing Node-RED and uibuilder using NGINX, it comes with no guarantee or warrantee of accuracy or security.
 
-?> Please refer to the [Securing uib web apps page](security.md) for an overview of security, terminology and securing uibuilder and Node-RED.
+?> Please refer to the [Securing uib web apps page](Programming/uibuilder/docs/security/security.md) for an overview of security, terminology and securing uibuilder and Node-RED.
 
 This page does not attempt to be a full tutorial about creating a secure front-end for Node-RED and uibuilder. It simply presents the things you need to think about and will want to implement to meet basic and more advanced security.
 

@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-01-20 12:51:27
+updated: 2024-02-05 20:03:34
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -79,15 +79,16 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Node Edit Panel Refactoring
 
-| Refactor / Node:              | uibuilder             | uib-cache | uib-element         | uib-html | uib-save | uib-sender | uib-tag | uib-update | *uib-uplot*                         |
-| ----------------------------- | --------------------- | --------- | ------------------- | -------- | -------- | ---------- | ------- | ---------- | ----------------------------------- |
-| Ref ti-common.js/css          | ✔️                     | ✔️         | ✔️                   |          | ✔️        |            | ✔️       | ✔️          |                                     |
-| Mv src editor.js to resources | ✔️                     | ✔️         | ✔️                   |          | ✔️        |            | ✔️       | ✔️          |                                     |
-| jQ Tooltips                   | ✔️                     | ✔️         | ✔️                   |          | ✔️        |            | ✔️       | ✔️          |                                     |
-| rename template.html          | ✔️                     | ✔️         | ✔️                   |          | ✔️        | ✔️          |         | ✔️          |                                     |
-| jQ TI class not id            | ✔️                     | ✔️         | ✔️                   |          | ✔️        |            |         |            |                                     |
-| Remove build                  |                       |           |                     |          | ✔️        |            |         |            |                                     |
-| Notes                         | class="ti-edit-panel" |           | mv combobox styles? |          |          |            |         |            | check this for other needed updates |
+| Refactor / Node:                 | uibuilder | uib-cache | uib-element             | uib-html | uib-save | uib-sender | uib-tag | uib-update | *uib-uplot*                         |
+| -------------------------------- | --------- | --------- | ----------------------- | -------- | -------- | ---------- | ------- | ---------- | ----------------------------------- |
+| Ref ti-common.js/css             | ✔️         | ✔️         | ✔️                       |          | ✔️        |            | ✔️       | ✔️          |                                     |
+| Mv src editor.js to resources    | ✔️         | ✔️         | ✔️                       |          | ✔️        |            | ✔️       | ✔️          |                                     |
+| jQ Tooltips                      | ✔️         | ✔️         | ✔️                       |          | ✔️        |            | ✔️       | ✔️          |                                     |
+| rename template.html             | ✔️         | ✔️         | ✔️                       |          | ✔️        | ✔️          |         | ✔️          |                                     |
+| jQ TI class not id               | ✔️         | ✔️         | ✔️                       |          | ✔️        |            |         |            |                                     |
+| Mv help to locales/en-US         | ✔️         | ✔️         | ✔️                       |          | ✔️        |            |         |            |                                     |
+| Remove build & src/editor folder | ✔️         | ✔️         | 🚫(templates need build) |          | ✔️        |            |         |            |                                     |
+| Notes                            |           |           | mv combobox styles?     |          |          |            |         |            | check this for other needed updates |
 
 Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId].
 
@@ -107,9 +108,16 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ### Possible New Nodes
 
-* `uib-template` -  New node to take a msg._ui template input and update parts of it belore sending (e.g. parent, id, ...). `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation).
+* `uib-template` -  New node to take a `msg._ui` template input and update parts of it before sending (e.g. parent, id, ...). Alt. name ideas: `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation).
 * `uib-event` - Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance.
-* `uib-ctrl` - route different types of control msgs to different output ports: `network` ("client connect", "client disconnect"), `visibilty`, `routing` ("route c")
+* `uib-ctrl` - route different types of control msgs to different output ports: `cache` ("client connect"), `network` ("client connect", "client disconnect"), `visibilty`, `routing` ("route change").
+* `uib-file-change` - Watches for changes to files for a specific uibuilder instance. Allows filtering. Triggers an output on-change.
+* `uib-file-read` - Reads a file for a specific uibuilder instance. Allows, for example, the file to be passed to the FE for editing.
+* `uib-read-file-meta` - Reads a folder recursively and compiles all YAML Front-Matter entries into a single return. Use with `uib-file-change` to update when files change.
+
+#### Maybe
+
+* `uib-custom` - Like `uib-element` but only using custom web components.
 
 ### General changes
 
@@ -313,6 +321,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
   * Add Auto-complete for text inputs
   * If no button added, make each input send changes direct - or possibly add that as an optional setting.
   * Rich text edit (Markdown? HTML?)
+* Add new element: Multi-state switch (AKA button row). [ref](https://discourse.nodered.org/t/dashboard-2-multi-state-switch/85168/14)
 * Add input to allow restriction by pageName/clientId/tabId. `_ui.pageName`, `_ui.clientId`, and/or `_ui.tabId`
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
 * New Types for CSS and JS files?
@@ -468,6 +477,8 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
   
 
+* Add pre-config variable option. Allowing `window.uibConfig` as an object containing configuration settings. Adjust the start fn to look for it. Allow comms settings (e.g. turn off websocket or polling), pre-setup of managed uib variables, options to turn off "heavy" options such as the observers. Early loading of UI (e.g. from a JSON resource). Maybe early loading of dependency libraries?
+
 * Add client msg filter for URL Hash. To allow sending of data only to a specific router route.
 
 * ??? `uib.setAttr(selector, attr, val)`?  - quick way to set an attribute on an element.
@@ -592,6 +603,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 * `<uib-loop>`. [Ref](https://discourse.nodered.org/t/ui/82818/33?u=totallyinformation) - A web component that takes a variable to loop over. Slot content being used as a template and replicated. Need a way to represent loop properties in the template.
 * lamp - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras)
 * gauge - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras).
+* `<uib-input>` - extended input. Refs: [1](https://stackoverflow.com/questions/25495849/can-a-custom-element-extend-an-input-element), [2](https://elements-x.com/?path=/docs/getting-started--docs), [3](https://medium.com/@andresander/extending-html-inputs-in-a-framework-agnostic-way-with-web-components-9227532b6139), [4](https://blog.revillweb.com/extending-native-dom-elements-with-web-components-233350c8e86a).
 
 ### Styles: `uib-brand.css`
 
