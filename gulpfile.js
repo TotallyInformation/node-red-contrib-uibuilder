@@ -820,51 +820,51 @@ function minifyBrandCSS(cb) {
 //#region ---- Build node panels ----
 
 /** NO LONGER USED - Combine the parts of uibuilder.html */
-function buildPanelUib1(cb) {
-    try {
-        src('src/editor/uibuilder/editor.js')
-            // .pipe(debug({title:'1', minimal:true}))
-            // .pipe(once())
-            // .pipe(debug({title:'2', minimal:true}))
-            .pipe(uglify())
-            .pipe(rename('editor.min.js'))
-            .pipe(dest('src/editor/uibuilder'))
-    } catch (e) {
-        console.error('buildPanelUib1 failed', e)
-    }
-    cb()
-}
+// function buildPanelUib1(cb) {
+//     try {
+//         src('src/editor/uibuilder/editor.js')
+//             // .pipe(debug({title:'1', minimal:true}))
+//             // .pipe(once())
+//             // .pipe(debug({title:'2', minimal:true}))
+//             .pipe(uglify())
+//             .pipe(rename('editor.min.js'))
+//             .pipe(dest('src/editor/uibuilder'))
+//     } catch (e) {
+//         console.error('buildPanelUib1 failed', e)
+//     }
+//     cb()
+// }
 /** compress */
-function buildPanelUib2(cb) {
-    try {
-        src('src/editor/uibuilder/main.html')
-            .pipe(include())
-            // .pipe(once())
-            .pipe(rename('uibuilder.html'))
-            .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
-            .pipe(dest(`${nodeDest}/uibuilder/`))
-    } catch (e) {
-        console.error('buildPanelUib2 failed', e)
-    }
+// function buildPanelUib2(cb) {
+//     try {
+//         src('src/editor/uibuilder/main.html')
+//             .pipe(include())
+//             // .pipe(once())
+//             .pipe(rename('uibuilder.html'))
+//             .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
+//             .pipe(dest(`${nodeDest}/uibuilder/`))
+//     } catch (e) {
+//         console.error('buildPanelUib2 failed', e)
+//     }
 
-    cb()
-}
+//     cb()
+// }
 
 /** Combine the parts of uib-cache.html */
-function buildPanelCache(cb) {
-    try {
-        src('src/editor/uib-cache/main.html')
-            .pipe(include())
-            .pipe(once())
-            .pipe(rename('uib-cache.html'))
-            .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
-            .pipe(dest(`${nodeDest}/uib-cache/`))
-    } catch (e) {
-        console.error('buildPanelCache failed', e)
-    }
+// function buildPanelCache(cb) {
+//     try {
+//         src('src/editor/uib-cache/main.html')
+//             .pipe(include())
+//             .pipe(once())
+//             .pipe(rename('uib-cache.html'))
+//             .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
+//             .pipe(dest(`${nodeDest}/uib-cache/`))
+//     } catch (e) {
+//         console.error('buildPanelCache failed', e)
+//     }
 
-    cb()
-}
+//     cb()
+// }
 
 /** Combine the parts of uib-sender.html */
 function buildPanelSender(cb) {
@@ -1007,9 +1007,9 @@ function buildPanelHTML(cb) {
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
 const buildme = parallel(
     // series(buildPanelUib1, buildPanelUib2),
-    buildPanelUib2,
+    // buildPanelUib2,
     buildPanelSender,
-    buildPanelCache,
+    // buildPanelCache,
     buildPanelUibList,
     buildPanelUibElement,
     buildPanelUpdate,
@@ -1061,10 +1061,10 @@ function watchme(cb) {
     // watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
     // Re-combine uibuilder.html if the source changes
     // watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.js'], buildPanelUib2)
-    watch(['src/editor/uibuilder/*'], buildPanelUib2)
+    // watch(['src/editor/uibuilder/*'], buildPanelUib2)
     watch('src/editor/uib-sender/*', buildPanelSender)
     // watch('src/editor/uib-receiver/*', buildPanelReceiver)
-    watch('src/editor/uib-cache/*', buildPanelCache)
+    // watch('src/editor/uib-cache/*', buildPanelCache)
     watch('src/editor/uib-list/*', buildPanelUibList)
     watch('src/editor/uib-element/*', buildPanelUibElement)
     watch('src/editor/uib-update/*', buildPanelUpdate)
@@ -1208,7 +1208,7 @@ async function createTag(cb) {
 
 exports.default     = series( packfe, packfeModule, buildme ) // series(runLinter,parallel(generateCSS,generateHTML),runTests)
 exports.watch       = watchme
-exports.buildPanelUib = series(buildPanelUib1, buildPanelUib2)
+// exports.buildPanelUib = series(buildPanelUib1, buildPanelUib2)
 exports.build       = buildme
 exports.buildFe     = buildNewFe
 // exports.buildNodeLibs = buildNodeLibs
