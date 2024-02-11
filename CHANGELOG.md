@@ -26,6 +26,7 @@ Please see the documentation for archived changelogs - a new archive is produced
   * [x] Add `format` prop to route definitions.
   * [x] Check that Markdown-IT is loaded. `if (window['markdownit']) {...}`
   * [x] On route load, process markdown.
+  * [ ] Add CDATA wrapper
 
 * [ ] Add external command listeners for:
   * [ ] `msg._uibRouteLoad`. With the value being a route definition or an array of route definitions. (and update the eg flows)
@@ -98,7 +99,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### `uib-brand.css` styles
 
-* [ ] Document new resets and --max-width.
+* [x] Document new resets and --max-width.
 
 ## Issues
 
@@ -213,14 +214,15 @@ Note that, while it has various uibuilder integrations and is only currently pub
   
   NB: Cant send route id with initial connect msg since router instance is added later. So cache control must happen on route change messages.
 
-### `socket.js` library
+### `libs/socket.js` library
 
 * If a client msg received with a msg._uib property but the `uibuilder` node hasn't requested that they are shown, delete it before sending on to flow.
 
 ### `uib-brand.css` styles
 
-* `header` and `footer` given same basic reset as `main`. So they all have max width and are centered in window.
+* `header`, `footer`, `section`, and `article` given same basic reset as `main`. So they all have max width and are centered in window. However, the formatting is now restricted only to where they are direct children of `body`.
 * New variable `--max-width` added & set to `64rem`. This is used in the above resets.
+* Block elements (h2-4, div, p) inside a select element are now rendered as inline-blocks.
 
 ## [v6.8.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.1...v6.8.2)
 

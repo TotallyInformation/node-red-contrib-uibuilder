@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-02-05 20:03:34
+updated: 2024-02-09 11:12:46
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -44,14 +44,14 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Methods needed:
   * [x] Delete route - need to update routeIds
   * Update/reload route
-  * shutdown - that removes all elements
-  * delete templates - unloads a list of (or all) templates
-  * reload templates - to facilitate updates of a list of (or all) templates
-  * auto-rotation of routes - uib..navigate(nextRoute)
-  * next/prev route navigation
+  * Shutdown - that removes all elements
+  * Delete templates - unloads a list of (or all) templates
+  * Reload templates - to facilitate updates of a list of (or all) templates
+  * Auto-rotation of routes - uib..navigate(nextRoute)
+  * Next/prev route navigation
 * Additional options:
   * Add pre-load option early load of all routes instead of default lazy-load.
-  * unload templates after they are added to the route container. Only if hide=true. `unload: true`
+  * Unload templates after they are added to the route container. Only if hide=true. `unload: true`
   * Maybe: options to auto-load js and css files with the same name as a template file.
   * Maybe: Reset route to template option?
 
@@ -494,6 +494,8 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 * Add small button to showStatus output to allow user to turn off the display.
 
 * Make sure that all watch/monitor fns emit custom events
+
+* ==Add reactive data feature== (see [arrow.js](https://www.arrow-js.com/docs/#reactive-data))
 
 * msgShow - add a message counter (optional?)
 
