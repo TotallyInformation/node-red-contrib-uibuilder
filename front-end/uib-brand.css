@@ -556,6 +556,9 @@ main, header, footer {
 footer {
     margin-top: 1em;
 }
+summary > h2, summary > h3, summary > h4, summary > div, summary > p {
+    display: inline-block;
+}
 
 /*#endregion --- Basic reset --- */
 
