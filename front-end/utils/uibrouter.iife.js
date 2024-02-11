@@ -65,9 +65,11 @@
         this.config.templateLoadAll = false;
       if (!this.config.templateUnload)
         this.config.templateUnload = true;
-      if (uibuilder) {
+      this._normaliseRouteDefns(this.config.routes);
+      if (window["markdownit"])
+        this._markdownIt();
+      if (uibuilder)
         uibuilder.set("uibrouterinstance", this);
-      }
       this._setRouteContainer();
       if (this.config.otherLoad)
         this.loadOther(this.config.otherLoad);
@@ -161,7 +163,10 @@
       }
       if (response.ok === false)
         throw new Error(`[uibrouter:loadExternal] Fetch failed to return data for route: ${routeDefinition.id}, src: ${routeDefinition.src}. Status: ${response.statusText} (${response.status})`, [routeDefinition.id, routeDefinition.src, response.status, response.statusText]);
-      const htmlText = await response.text();
+      let htmlText = await response.text();
+      if (window["markdownit"] && routeDefinition.format === "md") {
+        htmlText = this.renderMarkdown(htmlText);
+      }
       try {
         const chkTemplate = document.querySelector(`#${id}`);
         if (chkTemplate)
@@ -183,6 +188,52 @@
         newScript.textContent = scr.innerText;
         tempContainer.append(newScript);
         scr.remove();
+      });
+    }
+    _markdownIt() {
+      if (!window["markdownit"])
+        return;
+      _UibRouter.mdOpts = {
+        html: true,
+        xhtmlOut: false,
+        linkify: true,
+        _highlight: true,
+        _strict: false,
+        _view: "html",
+        langPrefix: "language-",
+        // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
+        highlight: function(str, lang) {
+          if (window["hljs"]) {
+            if (lang && window["hljs"].getLanguage(lang)) {
+              try {
+                return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+              } finally {
+              }
+            } else {
+              try {
+                const high = window["hljs"].highlightAuto(str);
+                return `<pre><code class="hljs border language-${high.language}" data-language="${high.language}" title="Source language estimated by HighlightJS: '${high.language}'">${high.value}</code></pre>`;
+              } finally {
+              }
+            }
+          }
+          return `<pre><code class="border">${Ui.md.utils.escapeHtml(str).trim()}</code></pre>`;
+        }
+      };
+      _UibRouter.md = window["markdownit"](_UibRouter.mdOpts);
+    }
+    /** Normalise route definition arrays
+     * @param {Array<routeDefinition>} routeDefns Route definitions to normalise
+     */
+    _normaliseRouteDefns(routeDefns) {
+      if (!Array.isArray(routeDefns))
+        routeDefns = [routeDefns];
+      routeDefns.forEach((defn) => {
+        let fmt = defn.format || "html";
+        fmt = fmt.toLowerCase();
+        if (fmt === "markdown")
+          fmt = "md";
+        defn.format = fmt;
       });
     }
     /** Update this.routeIds array from this.config (on start and after add/remove routes) */
@@ -355,25 +406,12 @@
         throw new Error(`[uibrouter:loadRoute] No template for route id '${routeId}'. 
  ${e.message}`);
       }
-      const conf = this.getRouteConfigById(routeId);
-      let fmt = conf.format || "html";
-      fmt = fmt.toLowerCase();
-      if (fmt === "markdown")
-        fmt = "md";
       const docFrag = rContent.content.cloneNode(true);
       if (this.isRouteExternal(routeId))
         this._applyScripts(docFrag);
       const tempContainer = document.createElement("div");
       tempContainer.dataset.route = routeId;
-      if (window["markdownit"] && fmt === "md") {
-        const xmlnAttribute = ' xmlns="http://www.w3.org/1999/xhtml"';
-        const regEx = new RegExp(xmlnAttribute, "g");
-        const serializer = new XMLSerializer();
-        const t = serializer.serializeToString(docFrag).replace(regEx, "");
-        tempContainer.innerHTML = this.renderMarkdown(t);
-      } else {
-        tempContainer.append(docFrag);
-      }
+      tempContainer.append(docFrag);
       try {
         routeParentEl.append(tempContainer);
       } catch (e) {
@@ -467,13 +505,13 @@
     addRoutes(routeDefn) {
       if (!Array.isArray(routeDefn))
         routeDefn = [routeDefn];
-      if (this.config.templateLoadAll === false) {
-        this.config.routes.push(...routeDefn);
-        this._updateRouteIds();
-        document.dispatchEvent(new CustomEvent("uibrouter:routes-added", { detail: routeDefn }));
-        if (uibuilder)
-          uibuilder.set("uibrouter", "routes added");
-      } else {
+      this._normaliseRouteDefns(routeDefn);
+      this.config.routes.push(...routeDefn);
+      this._updateRouteIds();
+      document.dispatchEvent(new CustomEvent("uibrouter:routes-added", { detail: routeDefn }));
+      if (uibuilder)
+        uibuilder.set("uibrouter", "routes added");
+      if (this.config.templateLoadAll) {
         Promise.allSettled(Object.values(routeDefn).filter((r) => r.type && r.type === "url").map(this._loadExternal)).then((results) => {
           results.filter((res) => res.status === "rejected").forEach((res) => {
             console.error(res.reason);
@@ -551,30 +589,16 @@
      * @returns {string} HTML rendering of the Markdown input
      */
     renderMarkdown(mdText) {
-      const opts = {
-        // eslint-disable-line object-shorthand
-        html: true,
-        linkify: true,
-        _highlight: true,
-        langPrefix: "language-",
-        highlight(str, lang) {
-          if (lang && window["hljs"] && window["hljs"].getLanguage(lang)) {
-            try {
-              return `<pre class="highlight border" data-language="${lang.toUpperCase()}">
-                                <code class="language-${lang}" style="display:block">${window["hljs"].highlightAuto(str).value}</code></pre>`;
-            } finally {
-            }
-          }
-          return `<pre class="highlight border"><code style="display:block">${md.utils.escapeHtml(str)}</code></pre>`;
-        }
-      };
-      const md = window["markdownit"](opts);
+      if (!window["markdownit"])
+        return;
+      if (!_UibRouter.md)
+        this._markdownIt();
       try {
-        return md.render(mdText.trim());
+        return _UibRouter.md.render(mdText.trim());
       } catch (e) {
         console.error(`[uibrouter:renderMarkdown] Could not render Markdown. ${e.message}`, e);
-        return '<p class="border error">Could not render Markdown<p>';
       }
+      return '<p class="border error">Could not render Markdown<p>';
     }
     //#endregion ---- ----- ----
     // TODO
@@ -601,10 +625,14 @@
   // eslint-disable-line no-unused-vars
   //#region --- Variables ---
   /** Class version */
-  __publicField(_UibRouter, "version", "1.2.0");
-  // 2024-01-02 16:04
+  __publicField(_UibRouter, "version", "1.3.0");
+  // 2024-02-11
   /** Ensures only 1 class instance on a page */
   __privateAdd(_UibRouter, _instanceExists, false);
+  /** Options for Markdown-IT if available (set in constructor) */
+  __publicField(_UibRouter, "mdOpts");
+  /** Reference to pre-loaded Markdown-IT library */
+  __publicField(_UibRouter, "md");
   var UibRouter = _UibRouter;
   var uibrouter_default = UibRouter;
   if (!window["UibRouter"]) {
