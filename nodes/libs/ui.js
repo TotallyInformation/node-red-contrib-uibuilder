@@ -1,5 +1,6 @@
 const Ui = class Ui2 {
-  version = "6.8.2-node";
+  //#region --- Class variables ---
+  version = "6.9.0-node";
   // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
   sanitiseExtraTags = ["uib-var"];
   sanitiseExtraAttribs = ["variable", "report", "undefined"];
@@ -10,6 +11,11 @@ const Ui = class Ui2 {
    * @type {function}
    */
   static log;
+  /** Options for Markdown-IT if available (set in constructor) */
+  static mdOpts;
+  /** Reference to pre-loaded Markdown-IT library */
+  static md;
+  //#endregion --- class variables ---
   /** Called when `new Ui(...)` is called
    * @param {globalThis} win Either the browser global window or jsdom dom.window
    * @param {function} [extLog] A function that returns a function for logging
@@ -34,8 +40,63 @@ const Ui = class Ui2 {
     else
       this.syntaxHighlight = function() {
       };
+    if (window["markdownit"]) {
+      Ui2.mdOpts = {
+        html: true,
+        xhtmlOut: false,
+        linkify: true,
+        _highlight: true,
+        _strict: false,
+        _view: "html",
+        langPrefix: "language-",
+        // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
+        highlight: function(str, lang) {
+          if (lang && window["hljs"] && window["hljs"].getLanguage(lang)) {
+            try {
+              return `<pre class="">
+                                    <code class="hljs border">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+            } finally {
+            }
+          }
+          return `<pre class="hljs border"><code>${Ui2.md.utils.escapeHtml(str).trim()}</code></pre>`;
+        }
+      };
+      Ui2.md = window["markdownit"](Ui2.mdOpts);
+    }
   }
   //#region ---- Internal Methods ----
+  _markDownIt() {
+    if (window["markdownit"]) {
+      Ui2.mdOpts = {
+        html: true,
+        xhtmlOut: false,
+        linkify: true,
+        _highlight: true,
+        _strict: false,
+        _view: "html",
+        langPrefix: "language-",
+        // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
+        highlight: function(str, lang) {
+          if (window["hljs"]) {
+            if (lang && window["hljs"].getLanguage(lang)) {
+              try {
+                return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+              } finally {
+              }
+            } else {
+              try {
+                const high = window["hljs"].highlightAuto(str);
+                return `<pre><code class="hljs border language-${high.language}" data-language="${high.language}" title="Source language estimated by HighlightJS: '${high.language}'">${high.value}</code></pre>`;
+              } finally {
+              }
+            }
+          }
+          return `<pre><code class="border">${Ui2.md.utils.escapeHtml(str).trim()}</code></pre>`;
+        }
+      };
+      Ui2.md = window["markdownit"](Ui2.mdOpts);
+    }
+  }
   /** Show a browser notification if the browser and the user allows it
    * @param {object} config Notification config data
    * @returns {Promise} Resolves on close or click event, returns the event.
@@ -509,25 +570,14 @@ const Ui = class Ui2 {
       return "";
     if (!this.window["markdownit"])
       return mdText;
-    const opts = {
-      // eslint-disable-line object-shorthand
-      html: true,
-      linkify: true,
-      _highlight: true,
-      langPrefix: "language-",
-      highlight(str, lang) {
-        if (lang && this.window["hljs"] && this.window["hljs"].getLanguage(lang)) {
-          try {
-            return `<pre class="highlight" data-language="${lang.toUpperCase()}">
-                                <code class="language-${lang}">${this.window["hljs"].highlightAuto(str).value}</code></pre>`;
-          } finally {
-          }
-        }
-        return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
-      }
-    };
-    const md = this.window["markdownit"](opts);
-    return md.render(mdText);
+    if (!Ui2.md)
+      this._markDownIt();
+    try {
+      return Ui2.md.render(mdText.trim());
+    } catch (e) {
+      Ui2.log(0, "uibuilder:convertMarkdown", `Could not render Markdown. ${e.message}`, e)();
+    }
+    return '<p class="border error">Could not render Markdown<p>';
   }
   /** Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
    * Wraps the included object in a div tag.
