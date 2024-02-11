@@ -1166,6 +1166,84 @@ export const Uib = class Uib {
 
     //#endregion -- direct to _ui --
 
+    /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
+     * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
+     *          as possible. Async so that calling function does not need to wait.
+     * Observer is set up in the start() function
+     * @param {MutationRecord[]} mutations Array of Mutation Records
+     */
+    async _uibAttribObserver(mutations/* , observer */) {
+        mutations.forEach( async m => { // async so process does not wait
+            // Deal with attribute changes
+            if (m.attributeName && (m.attributeName.startsWith('uib') || m.attributeName.startsWith('data-uib'))) {
+                // log(0, 'attribute mutation', m.attributeName, m.target.getAttribute(m.attributeName), m.oldValue, m )()
+                this._uibAttrScanOne(m.target)
+            } else if (m.addedNodes.length > 0) {
+                // And deal with newly added elements (e.g. from route change)
+                // Check for added nodes with uib attribs
+                m.addedNodes.forEach( async n => { // async so process does not wait
+                    // Attributes are a map and we need an array
+                    let aNames = []
+                    try { // Nodes might not always have attributes
+                        aNames = [...n.attributes]
+                    } catch (e) {}
+                    // Get any added elements that have uib attribs
+                    const intersect = this.arrayIntersect(this.uibAttribs, aNames)
+                    // And get any children that have uib attribs (a node might not have querySelectorAll method)
+                    let uibChildren = []
+                    if (n.querySelectorAll) uibChildren = n.querySelectorAll(this.#uibAttrSel)
+                    // We want them all.
+                    const combi = [...intersect, ...uibChildren]
+                    if (combi.length > 0) {
+                        this._uibAttrScanAll(combi) // async so process does not wait
+                    }
+                })
+            }
+        })
+    }
+
+    /** Check a single HTML element for uib attributes and add auto-processors as needed.
+     * Async so that calling function does not need to wait.
+     * Understands only uib-topic at present. Msgs received on the topic can have:
+     *   msg.payload - replaces innerHTML
+     *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
+     * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
+     */
+    async _uibAttrScanOne(el) {
+        const topic = el.getAttribute('uib-topic') || el.getAttribute('data-uib-topic')
+        // Create a topic listener
+        this.onTopic(topic, (msg) => {
+            msg._uib_processed_by = 'uibAttrScanOne'
+            if (Object.prototype.hasOwnProperty.call(msg, 'attributes')) {
+                try {
+                    for (const [k, v] of Object.entries(msg.attributes)) {
+                        el.setAttribute(k, v)
+                    }
+                } catch (e) {
+                    log(0, 'uibuilder:attribute-processing', 'Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.')()
+                }
+            }
+            if (Object.prototype.hasOwnProperty.call(msg, 'payload')) el.innerHTML = msg.payload
+        })
+    }
+
+    /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
+     * Async so that calling function does not need to wait.
+     * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
+     */
+    async _uibAttrScanAll(parentEl) {
+        if (!Array.isArray(parentEl)) parentEl = [parentEl]
+        parentEl.forEach( async p => { // async so process does not wait
+            const uibChildren = p.querySelectorAll(this.#uibAttrSel)
+            if (uibChildren.length > 0) {
+                // console.log('existing elements uib attrib', uibChildren)
+                uibChildren.forEach( el => {
+                    this._uibAttrScanOne(el) // async so process does not wait
+                })
+            }
+        })
+    }
+
     /** * Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
      * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
      * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
@@ -2445,83 +2523,69 @@ export const Uib = class Uib {
 
     //#region ! EXPERIMENTAL: Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
 
-    /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
-     * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
-     *          as possible. Async so that calling function does not need to wait.
-     * Observer is set up in the start() function
-     * @param {MutationRecord[]} mutations Array of Mutation Records
+    /** Attempt to load a service worker
+     * https://yonatankra.com/how-service-workers-sped-up-our-website-by-97-5/
+     * @param {string} fileName Name of service worker js file (without .js extension)
      */
-    async _uibAttribObserver(mutations/* , observer */) {
-        mutations.forEach( async m => { // async so process does not wait
-            // Deal with attribute changes
-            if (m.attributeName && (m.attributeName.startsWith('uib') || m.attributeName.startsWith('data-uib'))) {
-                // log(0, 'attribute mutation', m.attributeName, m.target.getAttribute(m.attributeName), m.oldValue, m )()
-                this._uibAttrScanOne(m.target)
-            } else if (m.addedNodes.length > 0) {
-                // And deal with newly added elements (e.g. from route change)
-                // Check for added nodes with uib attribs
-                m.addedNodes.forEach( async n => { // async so process does not wait
-                    // Attributes are a map and we need an array
-                    let aNames = []
-                    try { // Nodes might not always have attributes
-                        aNames = [...n.attributes]
-                    } catch (e) {}
-                    // Get any added elements that have uib attribs
-                    const intersect = this.arrayIntersect(this.uibAttribs, aNames)
-                    // And get any children that have uib attribs (a node might not have querySelectorAll method)
-                    let uibChildren = []
-                    if (n.querySelectorAll) uibChildren = n.querySelectorAll(this.#uibAttrSel)
-                    // We want them all.
-                    const combi = [...intersect, ...uibChildren]
-                    if (combi.length > 0) {
-                        this._uibAttrScanAll(combi) // async so process does not wait
-                    }
-                })
-            }
-        })
-    }
+    // async registerServiceWorker(fileName) {
+    //     if (!navigator.serviceWorker) return
 
-    /** Check a single HTML element for uib attributes and add auto-processors as needed.
-     * Async so that calling function does not need to wait.
-     * Understands only uib-topic at present. Msgs received on the topic can have:
-     *   msg.payload - replaces innerHTML
-     *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
-     * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
-     */
-    async _uibAttrScanOne(el) {
-        const topic = el.getAttribute('uib-topic') || el.getAttribute('data-uib-topic')
-        // Create a topic listener
-        this.onTopic(topic, (msg) => {
-            msg._uib_processed_by = 'uibAttrScanOne'
-            if (Object.prototype.hasOwnProperty.call(msg, 'attributes')) {
-                try {
-                    for (const [k, v] of Object.entries(msg.attributes)) {
-                        el.setAttribute(k, v)
-                    }
-                } catch (e) {
-                    log(0, 'uibuilder:attribute-processing', 'Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.')()
-                }
-            }
-            if (Object.prototype.hasOwnProperty.call(msg, 'payload')) el.innerHTML = msg.payload
-        })
-    }
+    //     await navigator.serviceWorker.register(
+    //         `./${fileName}.js`,
+    //         {
+    //             scope: './',
+    //         }
+    //     )
+    // }
 
-    /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
-     * Async so that calling function does not need to wait.
-     * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
+    /** Wrap an object in a JS proxy
+     * WARNING: Sadly, `let x = uib.createProxy( [1,2] ); x.push(3);` Does not trigger a send because that is classed as a 
+     * GET, not a SET.
+     * @param {*} target The target object to proxy
+     * @returns {Proxy} A proxied version of the target object
      */
-    async _uibAttrScanAll(parentEl) {
-        if (!Array.isArray(parentEl)) parentEl = [parentEl]
-        parentEl.forEach( async p => { // async so process does not wait
-            const uibChildren = p.querySelectorAll(this.#uibAttrSel)
-            if (uibChildren.length > 0) {
-                // console.log('existing elements uib attrib', uibChildren)
-                uibChildren.forEach( el => {
-                    this._uibAttrScanOne(el) // async so process does not wait
-                })
-            }
-        })
-    }
+    // createProxy(target) {
+    //     return new Proxy(target, {
+    //         _doSend(prop, val, oldVal) {
+    //             uibuilder.send({
+    //                 topic: 'uibuilder/proxy/change',
+    //                 _uib: {
+    //                     varChange: {
+    //                         name: self.$name,
+    //                         property: prop,
+    //                         oldValue: oldVal,
+    //                         newValue: val,
+    //                     }
+    //                 },
+    //                 payload: target,
+    //             })
+    //         },
+    //         get(target, prop, receiver) {
+    //             console.log('uib proxy - GET: ', prop, target)
+    //             let val = Reflect.get(...arguments)
+    //             if (typeof val === 'function') val = val.bind(target)
+    //             if (self.$sendChanges) this._doSend(prop, Reflect.get(target))
+    //             return val
+    //         },
+    //         set(target, prop, val, receiver) {
+    //             if (prop === '$sendChanges') {
+    //                 self.$sendChanges = typeof val === 'boolean' ? val : false
+    //                 return true
+    //             }
+    //             if (prop === '$name') {
+    //                 self.$name = typeof val === 'string' ? val : undefined
+    //                 return true
+    //             }
+    //             console.log('uib proxy - SET: ', val, prop, target)
+    //             const oldVal = Reflect.get(...arguments)
+    //             const worked = Reflect.set(target, prop, val, receiver)
+    //             if (self.$sendChanges && worked) {
+    //                 self._doSend(prop, val, oldVal)
+    //             }
+    //             return worked
+    //         },
+    //     })
+    // }
 
     //#endregion ! EXPERIMENTAL
 
@@ -2628,6 +2692,9 @@ export const Uib = class Uib {
             }
         } catch (e) {}
 
+        // ! Experimental service worker
+        // this.registerServiceWorker('sw')
+
         this._dispatchCustomEvent('uibuilder:constructorComplete')
 
         log('trace', 'Uib:constructor', 'Ending')()
@@ -2733,8 +2800,7 @@ export const Uib = class Uib {
             }
         })
 
-        // ! EXPERIMENTAL
-        // @ts-ignore  Initial scan for uib-* attributes & add suitable change processors
+        // Initial scan for uib-* attributes & add suitable change processors
         this._uibAttrScanAll(document)
         // Observer to watch for new/changed elements & add suitable change processors
         const observer = new MutationObserver(this._uibAttribObserver.bind(this))
