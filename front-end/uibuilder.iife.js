@@ -57,13 +57,15 @@
     "src/front-end-module/ui.js"(exports, module) {
       var _a2;
       var Ui2 = (_a2 = class {
+        //#endregion --- class variables ---
         /** Called when `new Ui(...)` is called
          * @param {globalThis} win Either the browser global window or jsdom dom.window
          * @param {function} [extLog] A function that returns a function for logging
          * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
          */
         constructor(win, extLog, jsonHighlight) {
-          __publicField(this, "version", "6.8.2-src");
+          //#region --- Class variables ---
+          __publicField(this, "version", "6.9.0-src");
           // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
           __publicField(this, "sanitiseExtraTags", ["uib-var"]);
           __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -88,8 +90,63 @@
           else
             this.syntaxHighlight = function() {
             };
+          if (window["markdownit"]) {
+            _a2.mdOpts = {
+              html: true,
+              xhtmlOut: false,
+              linkify: true,
+              _highlight: true,
+              _strict: false,
+              _view: "html",
+              langPrefix: "language-",
+              // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
+              highlight: function(str, lang) {
+                if (lang && window["hljs"] && window["hljs"].getLanguage(lang)) {
+                  try {
+                    return `<pre class="">
+                                    <code class="hljs border">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+                  } finally {
+                  }
+                }
+                return `<pre class="hljs border"><code>${_a2.md.utils.escapeHtml(str).trim()}</code></pre>`;
+              }
+            };
+            _a2.md = window["markdownit"](_a2.mdOpts);
+          }
         }
         //#region ---- Internal Methods ----
+        _markDownIt() {
+          if (window["markdownit"]) {
+            _a2.mdOpts = {
+              html: true,
+              xhtmlOut: false,
+              linkify: true,
+              _highlight: true,
+              _strict: false,
+              _view: "html",
+              langPrefix: "language-",
+              // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
+              highlight: function(str, lang) {
+                if (window["hljs"]) {
+                  if (lang && window["hljs"].getLanguage(lang)) {
+                    try {
+                      return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+                    } finally {
+                    }
+                  } else {
+                    try {
+                      const high = window["hljs"].highlightAuto(str);
+                      return `<pre><code class="hljs border language-${high.language}" data-language="${high.language}" title="Source language estimated by HighlightJS: '${high.language}'">${high.value}</code></pre>`;
+                    } finally {
+                    }
+                  }
+                }
+                return `<pre><code class="border">${_a2.md.utils.escapeHtml(str).trim()}</code></pre>`;
+              }
+            };
+            _a2.md = window["markdownit"](_a2.mdOpts);
+          }
+        }
         /** Show a browser notification if the browser and the user allows it
          * @param {object} config Notification config data
          * @returns {Promise} Resolves on close or click event, returns the event.
@@ -563,25 +620,14 @@
             return "";
           if (!this.window["markdownit"])
             return mdText;
-          const opts = {
-            // eslint-disable-line object-shorthand
-            html: true,
-            linkify: true,
-            _highlight: true,
-            langPrefix: "language-",
-            highlight(str, lang) {
-              if (lang && this.window["hljs"] && this.window["hljs"].getLanguage(lang)) {
-                try {
-                  return `<pre class="highlight" data-language="${lang.toUpperCase()}">
-                                <code class="language-${lang}">${this.window["hljs"].highlightAuto(str).value}</code></pre>`;
-                } finally {
-                }
-              }
-              return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
-            }
-          };
-          const md = this.window["markdownit"](opts);
-          return md.render(mdText);
+          if (!_a2.md)
+            this._markDownIt();
+          try {
+            return _a2.md.render(mdText.trim());
+          } catch (e) {
+            _a2.log(0, "uibuilder:convertMarkdown", `Could not render Markdown. ${e.message}`, e)();
+          }
+          return '<p class="border error">Could not render Markdown<p>';
         }
         /** Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
          * Wraps the included object in a div tag.
@@ -1089,7 +1135,9 @@
       }, /** Log function - passed in constructor or will be a dummy function
        * @type {function}
        */
-      __publicField(_a2, "log"), _a2);
+      __publicField(_a2, "log"), /** Options for Markdown-IT if available (set in constructor) */
+      __publicField(_a2, "mdOpts"), /** Reference to pre-loaded Markdown-IT library */
+      __publicField(_a2, "md"), _a2);
       module.exports = Ui2;
     }
   });
@@ -4837,6 +4885,69 @@
   var _ui = new import_ui.default(window, log, syntaxHighlight);
   var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _extCommands, _managedVars, _showStatus, _uiObservers, _uibAttrSel;
   var Uib = (_a = class {
+    //#endregion -------- ------------ -------- //
+    //#region ! EXPERIMENTAL: Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
+    /** Attempt to load a service worker
+     * https://yonatankra.com/how-service-workers-sped-up-our-website-by-97-5/
+     * @param {string} fileName Name of service worker js file (without .js extension)
+     */
+    // async registerServiceWorker(fileName) {
+    //     if (!navigator.serviceWorker) return
+    //     await navigator.serviceWorker.register(
+    //         `./${fileName}.js`,
+    //         {
+    //             scope: './',
+    //         }
+    //     )
+    // }
+    /** Wrap an object in a JS proxy
+     * WARNING: Sadly, `let x = uib.createProxy( [1,2] ); x.push(3);` Does not trigger a send because that is classed as a 
+     * GET, not a SET.
+     * @param {*} target The target object to proxy
+     * @returns {Proxy} A proxied version of the target object
+     */
+    // createProxy(target) {
+    //     return new Proxy(target, {
+    //         _doSend(prop, val, oldVal) {
+    //             uibuilder.send({
+    //                 topic: 'uibuilder/proxy/change',
+    //                 _uib: {
+    //                     varChange: {
+    //                         name: self.$name,
+    //                         property: prop,
+    //                         oldValue: oldVal,
+    //                         newValue: val,
+    //                     }
+    //                 },
+    //                 payload: target,
+    //             })
+    //         },
+    //         get(target, prop, receiver) {
+    //             console.log('uib proxy - GET: ', prop, target)
+    //             let val = Reflect.get(...arguments)
+    //             if (typeof val === 'function') val = val.bind(target)
+    //             if (self.$sendChanges) this._doSend(prop, Reflect.get(target))
+    //             return val
+    //         },
+    //         set(target, prop, val, receiver) {
+    //             if (prop === '$sendChanges') {
+    //                 self.$sendChanges = typeof val === 'boolean' ? val : false
+    //                 return true
+    //             }
+    //             if (prop === '$name') {
+    //                 self.$name = typeof val === 'string' ? val : undefined
+    //                 return true
+    //             }
+    //             console.log('uib proxy - SET: ', val, prop, target)
+    //             const oldVal = Reflect.get(...arguments)
+    //             const worked = Reflect.set(target, prop, val, receiver)
+    //             if (self.$sendChanges && worked) {
+    //                 self._doSend(prop, val, oldVal)
+    //             }
+    //             return worked
+    //         },
+    //     })
+    // }
     //#endregion ! EXPERIMENTAL
     //#region ------- Class construction & startup method -------- //
     constructor() {
@@ -5694,6 +5805,75 @@
       _ui.uiEnhanceElement(el, component);
     }
     //#endregion -- direct to _ui --
+    /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
+     * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
+     *          as possible. Async so that calling function does not need to wait.
+     * Observer is set up in the start() function
+     * @param {MutationRecord[]} mutations Array of Mutation Records
+     */
+    async _uibAttribObserver(mutations) {
+      mutations.forEach(async (m) => {
+        if (m.attributeName && (m.attributeName.startsWith("uib") || m.attributeName.startsWith("data-uib"))) {
+          this._uibAttrScanOne(m.target);
+        } else if (m.addedNodes.length > 0) {
+          m.addedNodes.forEach(async (n) => {
+            let aNames = [];
+            try {
+              aNames = [...n.attributes];
+            } catch (e) {
+            }
+            const intersect = this.arrayIntersect(this.uibAttribs, aNames);
+            let uibChildren = [];
+            if (n.querySelectorAll)
+              uibChildren = n.querySelectorAll(__privateGet(this, _uibAttrSel));
+            const combi = [...intersect, ...uibChildren];
+            if (combi.length > 0) {
+              this._uibAttrScanAll(combi);
+            }
+          });
+        }
+      });
+    }
+    /** Check a single HTML element for uib attributes and add auto-processors as needed.
+     * Async so that calling function does not need to wait.
+     * Understands only uib-topic at present. Msgs received on the topic can have:
+     *   msg.payload - replaces innerHTML
+     *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
+     * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
+     */
+    async _uibAttrScanOne(el) {
+      const topic = el.getAttribute("uib-topic") || el.getAttribute("data-uib-topic");
+      this.onTopic(topic, (msg) => {
+        msg._uib_processed_by = "uibAttrScanOne";
+        if (Object.prototype.hasOwnProperty.call(msg, "attributes")) {
+          try {
+            for (const [k, v] of Object.entries(msg.attributes)) {
+              el.setAttribute(k, v);
+            }
+          } catch (e) {
+            log(0, "uibuilder:attribute-processing", "Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.")();
+          }
+        }
+        if (Object.prototype.hasOwnProperty.call(msg, "payload"))
+          el.innerHTML = msg.payload;
+      });
+    }
+    /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
+     * Async so that calling function does not need to wait.
+     * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
+     */
+    async _uibAttrScanAll(parentEl) {
+      if (!Array.isArray(parentEl))
+        parentEl = [parentEl];
+      parentEl.forEach(async (p) => {
+        const uibChildren = p.querySelectorAll(__privateGet(this, _uibAttrSel));
+        if (uibChildren.length > 0) {
+          uibChildren.forEach((el) => {
+            this._uibAttrScanOne(el);
+          });
+        }
+      });
+    }
     /** * Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
      * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
      * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
@@ -6681,77 +6861,6 @@ Namespace: ${this.ioNamespace}`)();
       this._socket.disconnect();
       if (__privateGet(this, _timerid))
         window.clearTimeout(__privateGet(this, _timerid));
-    }
-    //#endregion -------- ------------ -------- //
-    //#region ! EXPERIMENTAL: Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
-    /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
-     * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
-     *          as possible. Async so that calling function does not need to wait.
-     * Observer is set up in the start() function
-     * @param {MutationRecord[]} mutations Array of Mutation Records
-     */
-    async _uibAttribObserver(mutations) {
-      mutations.forEach(async (m) => {
-        if (m.attributeName && (m.attributeName.startsWith("uib") || m.attributeName.startsWith("data-uib"))) {
-          this._uibAttrScanOne(m.target);
-        } else if (m.addedNodes.length > 0) {
-          m.addedNodes.forEach(async (n) => {
-            let aNames = [];
-            try {
-              aNames = [...n.attributes];
-            } catch (e) {
-            }
-            const intersect = this.arrayIntersect(this.uibAttribs, aNames);
-            let uibChildren = [];
-            if (n.querySelectorAll)
-              uibChildren = n.querySelectorAll(__privateGet(this, _uibAttrSel));
-            const combi = [...intersect, ...uibChildren];
-            if (combi.length > 0) {
-              this._uibAttrScanAll(combi);
-            }
-          });
-        }
-      });
-    }
-    /** Check a single HTML element for uib attributes and add auto-processors as needed.
-     * Async so that calling function does not need to wait.
-     * Understands only uib-topic at present. Msgs received on the topic can have:
-     *   msg.payload - replaces innerHTML
-     *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
-     * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
-     */
-    async _uibAttrScanOne(el) {
-      const topic = el.getAttribute("uib-topic") || el.getAttribute("data-uib-topic");
-      this.onTopic(topic, (msg) => {
-        msg._uib_processed_by = "uibAttrScanOne";
-        if (Object.prototype.hasOwnProperty.call(msg, "attributes")) {
-          try {
-            for (const [k, v] of Object.entries(msg.attributes)) {
-              el.setAttribute(k, v);
-            }
-          } catch (e) {
-            log(0, "uibuilder:attribute-processing", "Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.")();
-          }
-        }
-        if (Object.prototype.hasOwnProperty.call(msg, "payload"))
-          el.innerHTML = msg.payload;
-      });
-    }
-    /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
-     * Async so that calling function does not need to wait.
-     * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
-     */
-    async _uibAttrScanAll(parentEl) {
-      if (!Array.isArray(parentEl))
-        parentEl = [parentEl];
-      parentEl.forEach(async (p) => {
-        const uibChildren = p.querySelectorAll(__privateGet(this, _uibAttrSel));
-        if (uibChildren.length > 0) {
-          uibChildren.forEach((el) => {
-            this._uibAttrScanOne(el);
-          });
-        }
-      });
     }
     /** Start up Socket.IO comms and listeners
      * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
