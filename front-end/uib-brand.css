@@ -546,7 +546,8 @@ blockquote {
 code {
     font-size: 120%;
 }
-main, header, footer {
+/* HTML5 section tags - only special format top-level to reduce odd fmts */
+body > main, body > header, body > footer, body > section, body > article {
     padding-left: var(--base-margin);
     padding-right: var(--base-margin);
     max-width: var(--max-width);
