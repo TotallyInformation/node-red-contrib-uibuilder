@@ -4704,7 +4704,7 @@ __publicField(_UibVar, "props", ["filter", "id", "name", "report", "topic", "typ
 var UibVar = _UibVar;
 
 // src/front-end-module/uibuilder.module.js
-var version = "6.8.2-esm";
+var version = "6.9.0-esm";
 var isMinified = !/param/.test(function(param) {
 });
 var logLevel = isMinified ? 0 : 1;
@@ -6677,7 +6677,11 @@ ${document.documentElement.outerHTML}`;
       });
     }
     if (domevent.type === "change") {
-      msg._ui.newValue = msg.payload.value = "checked" in target ? target.checked : domevent.target.value;
+      if (target.attributes.type && target.type === "checkbox") {
+        msg._ui.newValue = msg._ui.checked = msg.payload.value = target.checked;
+      } else if (!msg.payload.value && !target.form && target.value) {
+        msg._ui.newValue = msg.payload.value = target.value;
+      }
     }
     log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg)();
     if (target.dataset && target.dataset.length === 0)

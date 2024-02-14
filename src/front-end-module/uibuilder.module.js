@@ -34,7 +34,7 @@ import Ui from './ui'
 import io from 'socket.io-client'
 import UibVar from '../components/uib-var'
 
-const version = '6.8.2-src'
+const version = '6.9.0-src'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
@@ -2216,9 +2216,13 @@ export const Uib = class Uib {
             })
         }
 
-        if (domevent.type === 'change') {
-            // Checkboxes don't have a value!!
-            msg._ui.newValue = msg.payload.value = 'checked' in target ? target.checked : domevent.target.value
+        if (domevent.type === 'change' ) {
+            if (target.attributes.type && target.type === 'checkbox') {
+                // Checkboxes don't have a value!!
+                msg._ui.newValue = msg._ui.checked = msg.payload.value = target.checked
+            } else if (!msg.payload.value && !target.form && target.value) {
+                msg._ui.newValue = msg.payload.value = target.value
+            }
         }
 
         log('trace', 'Uib:eventSend', 'Sending msg to Node-RED', msg)()
