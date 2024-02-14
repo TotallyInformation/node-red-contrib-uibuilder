@@ -24,6 +24,11 @@
 
 'use strict'
 
+const uibwarntext = 'The uibuilderfe client library WILL be removed in UIBUILDER v7. Please switch to the uibuilder.iife or uibuilder.esm library as soon as possible.'
+console.warn(uibwarntext)
+window.alert(uibwarntext)
+
+
 /** Tell Webpack/Parcel that we need socket.io client if running from webpack build
  * For this to work, you have to have the socket.io-client package installed as a dev
  * dependency in your front-end project.
@@ -124,7 +129,7 @@ if (typeof require !== 'undefined'  &&  typeof io === 'undefined') { // eslint-d
 
         //#region ++++++++++ Start of setup ++++++++++ //
 
-        self.version = '6.8.2-old'
+        self.version = '6.9.0-old'
         self.moduleName  = 'uibuilder' // Must match moduleName in uibuilder.js on the server
         // @ts-expect-error ts(2345) Tests loaded ver of lib to see if minified
         self.isUnminified = (/param/).test(function(param) {}) // eslint-disable-line no-unused-vars
