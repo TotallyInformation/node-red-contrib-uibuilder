@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-02-09 11:12:46
+updated: 2024-02-16 17:45:26
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -79,45 +79,52 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Node Edit Panel Refactoring
 
-| Refactor / Node:                 | uibuilder | uib-cache | uib-element             | uib-html | uib-save | uib-sender | uib-tag | uib-update | *uib-uplot*                         |
-| -------------------------------- | --------- | --------- | ----------------------- | -------- | -------- | ---------- | ------- | ---------- | ----------------------------------- |
-| Ref ti-common.js/css             | ✔️         | ✔️         | ✔️                       |          | ✔️        |            | ✔️       | ✔️          |                                     |
-| Mv src editor.js to resources    | ✔️         | ✔️         | ✔️                       |          | ✔️        |            | ✔️       | ✔️          |                                     |
-| jQ Tooltips                      | ✔️         | ✔️         | ✔️                       |          | ✔️        |            | ✔️       | ✔️          |                                     |
-| rename template.html             | ✔️         | ✔️         | ✔️                       |          | ✔️        | ✔️          |         | ✔️          |                                     |
-| jQ TI class not id               | ✔️         | ✔️         | ✔️                       |          | ✔️        |            |         |            |                                     |
-| Mv help to locales/en-US         | ✔️         | ✔️         | ✔️                       |          | ✔️        |            |         |            |                                     |
-| Remove build & src/editor folder | ✔️         | ✔️         | 🚫(templates need build) |          | ✔️        |            |         |            |                                     |
-| Notes                            |           |           | mv combobox styles?     |          |          |            |         |            | check this for other needed updates |
+| Refactor / Node:                 | uibuilder | uib-cache | uib-element             | uib-file-list | uib-html | uib-save | uib-sender | uib-tag | uib-update | *uib-uplot*                         |
+| -------------------------------- | --------- | --------- | ----------------------- | ------------- | -------- | -------- | ---------- | ------- | ---------- | ----------------------------------- |
+| Ref ti-common.js/css             | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        |            | ✔️       | ✔️          |                                     |
+| Mv src editor.js to resources    | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        |            | ✔️       | ✔️          |                                     |
+| jQ Tooltips                      | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        |            | ✔️       | ✔️          |                                     |
+| rename template.html             | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        | ✔️          |         | ✔️          |                                     |
+| ==jQ TI class not id==           | ✔️         | ✔️         | ✔️                       |               |          | ✔️        |            |         |            |                                     |
+| Mv help to locales/en-US         | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        |            |         |            |                                     |
+| Remove build & src/editor folder | ✔️         | ✔️         | 🚫(templates need build) | ✔️             |          | ✔️        |            |         |            |                                     |
+| checkbox's remove style          |           |           |                         | ✔️             |          |          |            |         |            |                                     |
+| Notes                            |           |           | mv combobox styles?     |               |          |          |            |         |            | check this for other needed updates |
 
 Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId].
 
 ### Node Runtime Refactoring
 
-| Refactor / Node:             | uibuilder | uib-cache | uib-element | uib-html | uib-save | uib-sender | uib-tag | uib-update | *uib-uplot*                         |
-| ---------------------------- | --------- | --------- | ----------- | -------- | -------- | ---------- | ------- | ---------- | ----------------------------------- |
-| getSource                    |           |           | ✔️           |          |          |            | ✔️       |            |                                     |
-| Std process for typed inputs |           |           |             |          |          |            |         |            |                                     |
-| fs to std lib                |           |           |             |          |          |            |         |            |                                     |
-| buildUi to std lib           | --        | --        |             |          | --       | --         |         |            | ??                                  |
-| Notes                        |           |           |             |          |          |            |         |            | check this for other needed updates |
+| Refactor / Node:             | uibuilder | uib-cache | uib-element | uib-file-list | uib-html | uib-save | uib-sender | uib-tag | uib-update | *uib-uplot*                         |
+| ---------------------------- | --------- | --------- | ----------- | ------------- | -------- | -------- | ---------- | ------- | ---------- | ----------------------------------- |
+| getSource                    |           |           | ✔️           |               |          |          |            | ✔️       |            |                                     |
+| Std process for typed inputs |           |           |             |               |          |          |            |         |            |                                     |
+| fs to std lib                |           |           |             | ✔️             |          |          |            |         |            |                                     |
+| buildUi to std lib           | --        | --        |             |               |          | --       | --         |         |            | ??                                  |
+| Notes                        |           |           |             |               |          |          |            |         |            | check this for other needed updates |
 
 ---
 
-## Next - these are things that need to be done
+## Next - things that may be needed
 
 ### Possible New Nodes
 
+* [x] `uib-file-list` - Return a list of files (or URLs, or both) for a specific uibuilder instance. Allow folder choice, filtering (via fast-glob). Use for automating links and menu's in the front-end.
 * `uib-template` -  New node to take a `msg._ui` template input and update parts of it before sending (e.g. parent, id, ...). Alt. name ideas: `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation).
 * `uib-event` - Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance.
 * `uib-ctrl` - route different types of control msgs to different output ports: `cache` ("client connect"), `network` ("client connect", "client disconnect"), `visibilty`, `routing` ("route change").
-* `uib-file-change` - Watches for changes to files for a specific uibuilder instance. Allows filtering. Triggers an output on-change.
+* `uib-file-change` - Watches for changes to files for a specific uibuilder instance. Allow folder choice, filtering (via fast-glob). Triggers an output on-change. Output can be a folder/file list OR a URL list (or maybe both).
 * `uib-file-read` - Reads a file for a specific uibuilder instance. Allows, for example, the file to be passed to the FE for editing.
 * `uib-read-file-meta` - Reads a folder recursively and compiles all YAML Front-Matter entries into a single return. Use with `uib-file-change` to update when files change.
 
 #### Maybe
 
 * `uib-custom` - Like `uib-element` but only using custom web components.
+
+### Possible New Web Components
+
+* `<include-fragment src="/tips">` [ref]([github/include-fragment-element: A client-side includes tag.](https://github.com/github/include-fragment-element/))
+* 
 
 ### General changes
 
@@ -361,24 +368,28 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
        As for [ui-iframe](https://flows.nodered.org/node/node-red-node-ui-iframe)
 
   * [ ] Charts
+  
+    * [ ] Sparkline. Refs: [1](https://github.com/fnando/sparkline/blob/main/src/sparkline.js), [2](https://www.codedrome.com/sparklines-in-javascript/), [3](https://github.com/CodeDrome/sparklines-javascript/blob/master/sparklinedemo.htm), [4](https://github.com/rikukissa/node-red-contrib-image-output/blob/master/image/image.html), [5](https://github.com/mblackstock/node-red-contrib-data-view)
   * [ ] Gauges
-  * [X] List (ul, ol, dl)
-
+  
+    Refs: [1](https://github.com/johnebgood/node-red-contrib-inline-gauge/blob/main/gauge/gauge.html)
+  * [x] List (ul, ol, dl)
+  
     * Future improvements:
-
+  
       * Better validation of input data
       * list-style-type (add to outer) - several options plus text (incl emoji's)
       * Collapsable list style. [ref](https://github.com/mdn/web-components-examples/blob/main/expanding-list-web-component)
       * ? Optional list leading/trailing text ?
-  * [X] Card/Article
-
+  * [x] Card/Article
+  
     * Future improvements:
-
+  
       * Better layout, more optional internal structure (footer, etc)
-  * [X] Table
-
+  * [x] Table
+  
     * Future improvements:
-
+  
       * Additional field definitions in input data
       * Better validation of input data
       * Caption
@@ -416,9 +427,9 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
   * [ ] Accordian.
     [ref](https://css-tricks.com/quick-reminder-that-details-summary-is-the-easiest-way-ever-to-make-an-accordion/)
   * [ ] Map - Leaflet
-
+  
   * Completed
-
+  
     * [X] Markdown
       Allow raw Markdown to be sent similar to the HTML element. Will require the Markdown-IT library to be loaded as per other uibuilder Markdown support.
     * [X] Simple Form - Input types: button, checkbox, color, date, datetime-local, email, hidden, month, number, password, radio, range, tel, text, time, url, week
@@ -730,6 +741,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 * Minimum node.js v18
 * Minimum node-red v4
+* Remove uibuilderfe library (and tidy gulp and source)
 * Removal of uib-list node
 * Remove Pollyfills from uibuilder editor code
 * Consider removing the css auto-load in the next major release since at least 1 person has hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876).
@@ -739,7 +751,9 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
   In rare cases, this can cause an error. Will make both case sensitive in line with W3C recommendations (will be optional until next major release).
 
   Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
-* Restrict `onChange` to only watch watched variables? (checking to make sure it doesn't start with `_` or `#`)
+* Restrict `onChange` to only watch watched variables? (checking to make sure it doesn't start with `_` or `#`).
+* Move socket.io-client from dependencies to dev-dependencies - ensure removed from runtime code.
+* Remove `serve-index` dependency if the `uib-file-*` nodes have been delivered.
 
 ## Ideas for releases further out
 
@@ -916,9 +930,15 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ---
 
-## Rejected
+## Rejected & Why Not
 
 [Rejected entries](roadmap/Rejected) - Don't repeat the mistakes!
+
+### Why not?
+
+* Use a config node to define uibuilder endpoints?
+
+  Because the UX would be worse. When uibuilder and related nodes are pasted or imported, the URL has to be blanked to help ensure there are no duplicates. With this buried in a config node, it would likely be less visible and harder for people to understand.
 
 ## OLD
 

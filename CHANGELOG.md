@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-01-05 01:00:22
+updated: 2024-02-11 17:32:36
 ---
 
 # Changelog
@@ -22,12 +22,6 @@ Please see the documentation for archived changelogs - a new archive is produced
 * [ ] Allow config updates from Node-RED
 * [ ] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
 
-* [x] Allow route templates as Markdown
-  * [x] Add `format` prop to route definitions.
-  * [x] Check that Markdown-IT is loaded. `if (window['markdownit']) {...}`
-  * [x] On route load, process markdown.
-  * [ ] Add CDATA wrapper
-
 * [ ] Add external command listeners for:
   * [ ] `msg._uibRouteLoad`. With the value being a route definition or an array of route definitions. (and update the eg flows)
   * [ ] `loadOther`
@@ -36,7 +30,6 @@ Please see the documentation for archived changelogs - a new archive is produced
   * [ ] `previous`
 
 * [ ] Add `defaultRouteOnLoad` flag (default=false) to allow for dynamically added routes to have been pre-selected on page load.
-* [ ] Add method to load and convert markdown (.md) files.
 * [ ] Find a way to include a first-show marker if not unloading routes
 * [ ] Update router example (code changes, remove remote cmd example).
 * [ ] Route menu added from Node-RED not auto-highlighting.
@@ -163,6 +156,8 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 
 ### 📌 Highlights
 
+* You can now add a `uib-topic="mytopic"` attribute to _ANY_ HTML element. Doing so sets up a message listener. A matching msg.payload will replace the inner HTML of the element and msg.attributes will update corresponding attributes. Making this now one of the easiest ways to define dynamic updates in your UI.
+
 * Lots of extensions and improvements to the `uibrouter` front-end routing library in this release:
 
   * You can now define a set of external html files (that can include scripts and css just like routes) that are immediately loaded to the page. These can be defined in the initial router config when they will be loaded immediately (before routes) or can be manually loaded later. Use these for things like menu's or other fixed parts of the UI.
@@ -171,34 +166,76 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 
 * Security of the UIBUILDER repository on GitHub has been improved.
 
+* A new node is available. `uib-file-list` will produce a list of files from a uibuilder instance. It automatically adjusts to the currently served sub-folder and allows filtering. Use this for producing indexes and menus.
+
+* The old `uibuilderfe` client library will now issue a user and a console alert on every load. The alert warns that the library will be removed when UIBUILDER v7 is released (which should happen once Node-RED v4 is also released). If you are still using the old client, please switch to the current client library ASAP. The new library has been available for nearly 2 years now, so time to move on.
+
 ### General Changes
 
 * Additional security checks added to the public repository. Checks are now locked. OSSF Scorecard checks added. Checks are applied to `main` branch whenever updated.
 * stepsecurity.io recommendations applied to the repository.
 * Added a `SECURITY.md` policy document.
 * Security issues in UIBUILDER can now be reported using GitHub's security advisory service using this link: https://github.com/totallyinformation/node-red-contrib-uibuilder/security/advisories/new
-* Moved node definition files for uibuilder, uib-sender and uib-cache into their own sub-folders to match the other nodes. package.json and gulpfile updated accordingly. Also blank `locale/en-US` sub-folders created in readiness for moving help html.
+* Moved node definition files for uibuilder, uib-sender and uib-cache into their own sub-folders to match the other nodes. package.json and gulpfile updated accordingly. Also `locale/en-US` sub-folders created in readiness for moving help html. Some help files already moved.
+* Removed all `> [!ATTENTION]` callouts from the documentation as it is not used in GitHub.
+* Removal warning added to the old `uibuilderfe` client library. UIBUILDER v7 will remove this old library.
+
+### NEW node - `uib-file-list`
+
+Returns a list of files with their folders from the active source folder of the chosen uibuilder instance. The searches are constrained to that folder or below and may not escape for security purposes. In addition, any file or folder name starting with a `.` dot will not be searched. Any files or folders that are links, will be followed.
+
+The optional `folder` setting lets you change the search root to a sub-folder. This does not allow a wildcard.
+
+The `filter` and `exclude` settings use simple or advanced search specifications from the [fast-glob](https://www.npmjs.com/package/fast-glob) library.
+
+The `URL Output?` setting will change the output from a folder/file list to a relative URL list (with all entries prefixed with `./` and any `index.html` file names hidden - this allows you to use them in an index or menu listing in the browser).
+
+> [!TIP]
+> 
+> Use with the front-end router library. Use this node to dynamically create a navigation menu or sidebar index for example.
 
 ### uibuilder front-end library
+
+* **NEW FEATURE** - The library now actively monitors for `uib-topic` and `data-uib-topic` attributes on **ANY** HTML tag. Where present, a message listener is set up. Messages from Node-RED that match the topic will have their `msg.payload` inserted as the content of the tag (replacing any previous content) and any `msg.attributes` (key/value object) will add/replace attributes on the tag.
+  
+  Note however, that this uses the native HTML Mutation Observer API, when used on very large, complex pages and on a limited performance client device, this might occassionally cause performance issues. Therefore it will be made optional (but on by default as the code is quite efficient and should be unnoticeable in most cases).
+
+  Use this feature as an alternative to using the `<uib-var>` custom web component.
+
+* **NEW FUNCTIONS** `Element.prototype.query(cssSelector)` and `Element.prototype.queryAll(cssSelector)` Similar to `$(cssSelector)` and `$$(cssSelector)` respectively. However, instead of searching the whole document, these can be used to search a sub-set of the document. For example: `$('#mydiv').queryAll('div')` would return all of the child `div`s of the element with the id `mydiv`. This can be a lot more efficient with very large documents.
+
+  In addition `Element.prototype.on(event, callback)` is a shortcut for `addEventListener` and is a bit easier to remember. `callback` is a function with a single argument `(event)`. Inside the callback, `this` refers to the `event.target`. Unlike `addEventListener`, the `on` method does not support additional options. Use with anything that returns an object derived from `Element`, for example `$('#custom-drag').on('wheel', (e) => console.log('wheel', e))`. The `on` alias is also added to the `window` and `document` objects for convenience.
+
+  > [!NOTE]
+  > Only available in the browser.
+  >
+  > Since they are attached to the HTML `Element` class, they cannot be used in `uib-html`.
 
 * **NEW FUNCTION** `hasUibRouter()` Returns true if a uibrouter instance is loaded, otherwise returns false. Note that, because the router will be loaded in a page script, it is not available until AFTER the uibuilder library has loaded and socket.io initialised.
 * **NEW FUNCTION** `arrayIntersect(a1, a2)` Returns a new array (which could be empty) of the intersection of the 2 input arrays.
 
+* Improved handling of stand-alone input changes in the `eventSend` function. Previously, these may not have sent their new values on change events.
+* Moved function `makeMeAnObject(thing, property)` into the class so that it is now available as `uibuilder.makeMeAnObject(thing, property)` in your own code. It returns a valid JavaScript object if given a null or string as an input. `property` defaults to "payload" so that `uibuilder.makeMeAnObject("mystring")` will output `{payload: "mystring"}`.
+* Moved function `urlJoin()` inst the class so that it is available as `uibuilder.urlJoin()`. It returns a string that joins all of the arguments with single `/` characters. The result will start with a leading `/` and end without one. If the arguments contain leading/trailing slashes, these are removed.
+
 ### `ui` library
 
 * **FIXED** small inconsistency when handling a msg._ui who's top level was an object with a `mode` mode property instead of an array.
+* Improved Markdown handling. Should now be more efficient. Also HighlightJS code highlights should be better: Some unnecessary whitespace removed, code brought into line with the latest releases of the HighlightJS library, language guessing now only used if the language is not provided.
 
 ### `uibrouter` front-end library
 
-Note that, while it has various uibuilder integrations and is only currently published with UIBUILDER, the router library is not dependent on uibuilder and could be used separately if you like. Might be especially useful for Dashboard or http-in/-out flows.
+> Notes:
+>
+> 1. While it has various uibuilder integrations and is only currently published with UIBUILDER, the router library is not dependent on uibuilder and could be used separately if you like. Might be especially useful for Dashboard or http-in/-out flows.
+> 2. To remote-control the current route from Node-RED, use uibuilder's `navigate` command: `msg._uib = {"command":"navigate","prop":"#route07"}`.
 
 * **FIXED** Default route was always being set on load. Now correctly takes the current URL hash into account first.
 * **FIXED** Routes loaded via script, if pre-selected on page load (e.g. in URL hash), were crashing. Now will automatically revert to the default route and just print an error to the console.
 
 * **NEW** Router config property `otherLoad` and router function `loadOther` added. These let you load other external HTML template files on startup or manually (respectively). Used for external menu definitions and other fixed parts of the UI.
-* **NEW** Router route config property `format` added. By default the content for route templates is HTML, this property lets you optionally define template content as Markdown. In that case, if you have the Markdown-IT library pre-loaded, the Markdown template will be rendered as HTML automatically. This allows you to define route content using Markdown instead of writing HTML.
+* **NEW** *External route content can now be Markdown instead of HTML*. The router route config property `format` has been added. By default the content for route templates is HTML, this property lets you optionally define template content as Markdown. In that case, if you have the *Markdown-IT* library pre-loaded, the Markdown template will be rendered as HTML automatically. This allows you to define route content using Markdown instead of writing HTML. If the *HighlightJS* library and CSS is also pre-loaded, code blocks will be nicely rendered.
 * **NEW** If using uibuilder, added a new uibuilder managed variable `uibrouterinstance` which has a reference to the router instance. Will alow the uibuilder client library to auto-update things & will allow easier remote control from Node-RED.
-* **NEW** Added a remote command listener to enable Node-RED to control the route if using UIBUILDER.
 
 * Refactored some of the router methods, now exposing:
   * `loadRoute(routeId, routeParentEl)` - Loads template content to the page. Will load an external template if not already loaded. Calls `ensureTemplate`. Async, throws errors.
@@ -223,6 +260,7 @@ Note that, while it has various uibuilder integrations and is only currently pub
 * `header`, `footer`, `section`, and `article` given same basic reset as `main`. So they all have max width and are centered in window. However, the formatting is now restricted only to where they are direct children of `body`.
 * New variable `--max-width` added & set to `64rem`. This is used in the above resets.
 * Block elements (h2-4, div, p) inside a select element are now rendered as inline-blocks.
+* Input, button, textarea and select tags given a minimum width of 2em to allow for more flexible form layouts.
 
 ## [v6.8.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.1...v6.8.2)
 
