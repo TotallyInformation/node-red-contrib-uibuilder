@@ -3,8 +3,8 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-12-29 17:26:05
-updated: 2024-01-20 16:14:46
+lastUpdated: 2024-02-16 13:44:36
+updated: 2024-02-20 16:09:51
 ---
 
 Functions accessible in client-side user code.
@@ -708,6 +708,10 @@ To set the log level to display in your code, use `uibuilder.logLevel = 5` or `u
 
 Future versions of this function after v6.1 will extend it to output to an on-page visible log and/or log back to Node-RED.
 
+### `makeMeAnObject(thing, property)` - Return a valid object if input is null or a string :id=makeMeAnObject
+
+`property` defaults to "payload" if not supplied. So `uibuilder.makeMeAnObject("mystring")` will output `{payload: "mystring"}`.
+
 ### `navigate(url)` - Either show a new route or navigate to a new page :id=navigate
 
 Returns the current URL after navigation (if any).
@@ -746,6 +750,12 @@ False accepts 'off', 'Off', 'OFF', 'false', 'False', 'FALSE', '0', false, 0
 
 If neither truthy or falsy, the optional default value is returned or `undefined` if that parameter is not supplied.
 
+### `urlJoin(...)` - Join all arguments together as a valid URL path string :id=urlJoin
+
+Removes leading/trailing `/` characters from each argument and then joins them with `/`. The result starts with a `/` but does not have one on the end.
+
+Examples: `uibuilder.urlJoin('/aaa/', '//bbbb/ccc/')` -> `/aaa/bbbb/ccc`, `uibuilder.urlJoin('aaa', 'bbbb')` -> `/aaa/bbbb`.
+
 ## Startup
 
 ### `start(options)` - Mostly no longer needed - Starts Socket.IO communications with Node-RED :id=start
@@ -773,8 +783,12 @@ Those marked with `*` can be triggered with a command message from Node-RED flow
 
 If examining the library code, please remember that functions starting with `_` are for *internal* use.
 
-* [`$`](#dollar)
-* [`$$`](#dollar2)
+### `uibuilder` functions
+
+Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
+
+* [`$`](#dollar) - Alias of `document.querySelect`
+* [`$$`](#dollar2) - Alias of `document.querySelectAll`
 * `$ui`§ - Reference to the ui.js library, not a function
 * [`addClass`](#addClass)§
 * [`arrayIntersect`](#arrayIntersect)
@@ -805,6 +819,7 @@ If examining the library code, please remember that functions starting with `_` 
 * [`loadui`](#loadui)§
 * [`log`](#log)
 * [`logToServer`](#logToServer)
+* [`makeMeAnObject`](#makeMeAnObject)
 * [`navigate`](#navigate)*
 * [`notify`](#notify)
 * [`onChange`](#onChange)
@@ -834,5 +849,36 @@ If examining the library code, please remember that functions starting with `_` 
 * [`uiEnhanceElement`](#uiEnhanceElement)
 * [`uiGet`](#uiGet)*
 * [`uiWatch`](#uiWatch)*
+* [`urlJoin`](#urlJoin) - Join arguments as a valid URL path string
 * [`watchDom`](#watchDom)
 * [`watchUrlHash`](#watchUrlHash)*
+
+### Global (`window`) functions
+
+These are attached to the `window` (AKA `globalThis`) object if they can be.
+
+They will not be attached if there is a name clash to avoid issues with other libraries. The `$` and `$$` definitions in particular are widely used by other libraries and frameworks, this will generally not cause any issues since their use should be the same (jQuery use is slightly different but should generally still work). `$ui` is not likely to be used by another library but if it is, this may be slightly more problematic - however, it is rare that you will use this directly anyway.
+
+* [`$`](#dollar) - Alias of `document.querySelect`
+* [`$$`](#dollar2) - Alias of `document.querySelectAll`
+* `$ui`§ - Reference to the ui.js library, not a function.
+* `on` - Alias of `window.addEventListener`
+* `uib` - Alias of `uibuilder`.
+* `uibuilder` - the loaded instance of the client library.
+
+### Extended `Element` class functions
+
+These are added to the prototype of the [`Element` built-in HTML class](https://developer.mozilla.org/en-US/docs/Web/API/Element). This enables them to be used in any case that returns an HTML object based on the `Element` class. For example, the `$(cssSelector)` function will return something useful such that `$('#custom-drag').on('wheel', (e) => console.log('wheel', e))` will add an event listener to the HTML element with an id of `custom-drag`.
+
+> [!TIP]
+> SVG's and MathML elements also inherit from this class and so these utility functions will work on them as well.
+
+As with the global functions, these are only attached if they don't already exist. Some other libraries or frameworks might also define them which should not be an issue as it is anticipated they will behave in the same way.
+
+* `on` - Alias of `<element>.addEventListener`. [[Reference](https://developer.mozilla.org/en-US/docs/Web/API/element#events)]
+* `query` - Alias of `<element>.querySelect`
+* `queryAll` - Alias of `<element>.querySelectAll`
+
+### Extended `document` functions
+
+* `on` - Alias of `document.addEventListener`
