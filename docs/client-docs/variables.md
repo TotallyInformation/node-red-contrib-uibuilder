@@ -4,7 +4,7 @@ description: |
   Details about the variables used in the uibuilder modern front-end client library. Some variables are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
 lastUpdated: 2023-10-30 17:18:40
-updated: 2023-12-30 17:01:41
+updated: 2024-02-20 16:15:58
 ---
 
 ## Read/write
@@ -31,6 +31,7 @@ Always use `uibuilder.get('varname', value)` to obtain the value of these. You c
 * `cookies` - The collection of cookies provided by uibuilder
 * `ctrlMsg` - Copy of last control msg object received from sever
 * `ioConnected` - Is Socket.IO client connected to the server?
+* `isMinified` - Whether or not the library was loaded from a minified version
 * `isVisible` - Whether or not, the current page is showing to the user
 * `isVue` - Has the VueJS framework library been loaded?
 * `lastNavType` - Remember the last page (re)load/navigation type (navigate, reload, back_forward, prerender)
