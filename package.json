@@ -61,12 +61,14 @@
     "nodes": {
       "uibuilder": "nodes/uibuilder/uibuilder.js",
       "uib-cache": "nodes/uib-cache/uib-cache.js",
-      "uib-tag": "nodes/uib-tag/customNode.js",
       "uib-element": "nodes/uib-element/customNode.js",
-      "uib-update": "nodes/uib-update/customNode.js",
+      "uib-file-list": "nodes/uib-file-list/customNode.js",
       "uib-html": "nodes/uib-html/customNode.js",
       "uib-save": "nodes/uib-save/customNode.js",
       "uib-sender": "nodes/uib-sender/uib-sender.js",
+      "uib-tag": "nodes/uib-tag/customNode.js",
+      "uib-update": "nodes/uib-update/customNode.js",
+      
       "uib-list": "nodes/uib-list/customNode.js"
     },
     "notyetnodes": {}
@@ -81,7 +83,7 @@
     "test": "./tests"
   },
   "main": "./nodes/uibuilder/uibuilder.js",
-  "browser": "./front-end/uibuilderfe.min.js",
+  "browser": "./front-end/uibuilder.iife.min.js",
   "style": "./front-end/uib-styles.css",
   "types": "index.d.ts",
   "type": "commonjs",
@@ -93,52 +95,54 @@
     "name": "Julian Knight (TotallyInformation)",
     "url": "https://github.com/TotallyInformation"
   },
-  "contributors": [{
-    "name": "Julian Knight",
-    "url": "https://github.com/TotallyInformation"
-  }, {
-    "name": "Colin Law",
-    "url": "https://github.com/colinl"
-  }, {
-    "name": "Steve Rickus",
-    "url": "https://github.com/shrickus"
-  }, {
-    "name": "Ellie Lee",
-    "url": "https://github.com/ellieejlee"
-  }, {
-    "name": "Thomas Wagner",
-    "url": "https://github.com/Thomseeen"
-  }, {
-    "name": "Arlena Derksen",
-    "url": "https://github.com/boisei0"
-  }, {
-    "name": "cflurin",
-    "url": "https://discourse.nodered.org/u/cflurin"
-  }, {
-    "name": "Scott Page - IndySoft",
-    "url": "https://github.com/scottpageindysoft"
-  }, {
-    "name": "Stephen McLaughlin - Steve-Mcl",
-    "url": "https://discourse.nodered.org/u/Steve-Mcl"
-  }, {
-    "name": "Sergio Rius",
-    "url": "https://github.com/SergioRius"
-  }, {
-    "name": "Thorsten von Eicken",
-    "url": "https://github.com/tve"
-  }, {
-    "name": "meeki007",
-    "url": "https://github.com/meeki007"
-  }, {
-    "name": "talltechdude",
-    "url": "https://github.com/talltechdude"
-  }, {
-    "name": "Harold Peters Inskipp",
-    "url": "https://github.com/HaroldPetersInskipp"
-  }, {
-    "name": "Mudwalker (Colin J)",
-    "url": "https://github.com/mudwalkercj"
-  }],
+  "contributors": [
+    {
+      "name": "Julian Knight",
+      "url": "https://github.com/TotallyInformation"
+    }, {
+      "name": "Colin Law",
+      "url": "https://github.com/colinl"
+    }, {
+      "name": "Steve Rickus",
+      "url": "https://github.com/shrickus"
+    }, {
+      "name": "Ellie Lee",
+      "url": "https://github.com/ellieejlee"
+    }, {
+      "name": "Thomas Wagner",
+      "url": "https://github.com/Thomseeen"
+    }, {
+      "name": "Arlena Derksen",
+      "url": "https://github.com/boisei0"
+    }, {
+      "name": "cflurin",
+      "url": "https://discourse.nodered.org/u/cflurin"
+    }, {
+      "name": "Scott Page - IndySoft",
+      "url": "https://github.com/scottpageindysoft"
+    }, {
+      "name": "Stephen McLaughlin - Steve-Mcl",
+      "url": "https://discourse.nodered.org/u/Steve-Mcl"
+    }, {
+      "name": "Sergio Rius",
+      "url": "https://github.com/SergioRius"
+    }, {
+      "name": "Thorsten von Eicken",
+      "url": "https://github.com/tve"
+    }, {
+      "name": "meeki007",
+      "url": "https://github.com/meeki007"
+    }, {
+      "name": "talltechdude",
+      "url": "https://github.com/talltechdude"
+    }, {
+      "name": "Harold Peters Inskipp",
+      "url": "https://github.com/HaroldPetersInskipp"
+    }, {
+      "name": "Mudwalker (Colin J)",
+      "url": "https://github.com/mudwalkercj"
+    }
+  ],
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

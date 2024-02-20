@@ -485,6 +485,22 @@
  * }} uibSaveNode
  */
 
+/** uibFileListNode (File List Node)
+ * @typedef {{
+ * name: string;
+ * topic: string;
+ * url: string;
+ * uibId: string;
+ * folder: string;
+ * filter: Array<string>;
+ * exclude: string;
+ * urlOut: boolean;
+ * live: boolean;
+ * fullPrefix: boolean;
+ * statusDisplay: object;
+ * }} uibFileListNode
+ */
+
 /** uibUpdNode (Update Node)
  * @typedef {{
  *   name: string;
