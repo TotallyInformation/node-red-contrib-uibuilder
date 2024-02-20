@@ -545,6 +545,9 @@ class UibRouter { // eslint-disable-line no-unused-vars
             throw new Error(`[uibrouter:loadRoute] Failed to apply route id '${routeId}'. \n ${e.message}`)
         }
 
+        // Then tell the world
+        document.dispatchEvent(new CustomEvent('uibrouter:route-loaded', {routeId: routeId}))
+
         // If we get here, everything is good
         return true
     }

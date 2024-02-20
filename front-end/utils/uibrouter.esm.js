@@ -417,6 +417,7 @@ var _UibRouter = class _UibRouter {
       throw new Error(`[uibrouter:loadRoute] Failed to apply route id '${routeId}'. 
  ${e.message}`);
     }
+    document.dispatchEvent(new CustomEvent("uibrouter:route-loaded", { routeId }));
     return true;
   }
   /** Async method to ensure that a template element exists for a given route id
