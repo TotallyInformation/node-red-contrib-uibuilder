@@ -537,6 +537,7 @@ button:active, input[type="button" i]:active, input[type="reset" i]:active, inpu
 }
 input, button, textarea, select {
     font: inherit;
+    min-width: 2em;
 }
 blockquote {
     border: 1px solid var(--text3);
