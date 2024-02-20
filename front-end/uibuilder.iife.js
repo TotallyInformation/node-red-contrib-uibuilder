@@ -4831,30 +4831,6 @@
       ...args
     );
   }
-  function makeMeAnObject(thing, property) {
-    if (!property)
-      property = "payload";
-    if (typeof property !== "string") {
-      log("warn", "uibuilderfe:makeMeAnObject", `WARNING: property parameter must be a string and not: ${typeof property}`)();
-      property = "payload";
-    }
-    let out = {};
-    if (thing !== null && thing.constructor.name === "Object") {
-      out = thing;
-    } else if (thing !== null) {
-      out[property] = thing;
-    }
-    return out;
-  }
-  function urlJoin() {
-    const paths = Array.prototype.slice.call(arguments);
-    const url2 = "/" + paths.map(function(e) {
-      return e.replace(/^\/|\/$/g, "");
-    }).filter(function(e) {
-      return e;
-    }).join("/");
-    return url2.replace("//", "/");
-  }
   function syntaxHighlight(json) {
     if (json === void 0) {
       json = '<span class="undefined">undefined</span>';
@@ -5045,6 +5021,8 @@
       __publicField(this, "ctrlMsg", {});
       /** Is Socket.IO client connected to the server? */
       __publicField(this, "ioConnected", false);
+      // Is the library running from a minified version?
+      __publicField(this, "isMinified", isMinified);
       // Is the browser tab containing this page visible or not?
       __publicField(this, "isVisible", false);
       // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
@@ -5221,7 +5199,7 @@
         this.set("httpNodeRoot", `/${fullPath.join("/")}`);
         log("trace", "[Uib:constructor]", `httpNodeRoot set by URL parsing to "${this.httpNodeRoot}". NOTE: This may fail for pages in sub-folders.`)();
       }
-      this.set("ioPath", urlJoin(this.httpNodeRoot, _a._meta.displayName, "vendor", "socket.io"));
+      this.set("ioPath", this.urlJoin(this.httpNodeRoot, _a._meta.displayName, "vendor", "socket.io"));
       log("trace", "Uib:constructor", `ioPath: "${this.ioPath}"`)();
       this.set("pageName", window.location.pathname.replace(`${this.ioNamespace}/`, ""));
       if (this.pageName.endsWith("/"))
@@ -5590,6 +5568,28 @@
     log() {
       log(...arguments)();
     }
+    /** Makes a null or non-object into an object. If thing is already an object.
+     * If not null, moves "thing" to {payload:thing}
+     * @param {*} thing Thing to check
+     * @param {string} [property='payload'] property that "thing" is moved to if not null and not an object
+     * @returns {!object} _
+     */
+    makeMeAnObject(thing, property) {
+      if (!property)
+        property = "payload";
+      if (typeof property !== "string") {
+        log("warn", "uibuilder:makeMeAnObject", `WARNING: property parameter must be a string and not: ${typeof property}`)();
+        property = "payload";
+      }
+      let out = {};
+      if (thing !== null && thing.constructor.name === "Object") {
+        out = thing;
+      } else if (thing !== null) {
+        out[property] = thing;
+      }
+      return out;
+    }
+    // --- End of make me an object --- //
     /** Navigate to a new page or a new route (hash)
      * @param {string} url URL to navigate to. Can be absolute or relative (to current page) or just a hash for a route change
      * @returns {Location} The new window.location string
@@ -5666,6 +5666,22 @@
         ret = deflt;
       return ret;
     }
+    /** Joins all arguments as a URL string
+     * see http://stackoverflow.com/a/28592528/3016654
+     * since v1.0.10, fixed potential double // issue
+     * arguments {string} URL fragments
+     * @returns {string} _
+     */
+    urlJoin() {
+      const paths = Array.prototype.slice.call(arguments);
+      const url2 = "/" + paths.map(function(e) {
+        return e.replace(/^\/|\/$/g, "");
+      }).filter(function(e) {
+        return e;
+      }).join("/");
+      return url2.replace("//", "/");
+    }
+    // ---- End of urlJoin ---- //
     /** Turn on/off/toggle sending URL hash changes back to Node-RED
      * @param {string|number|boolean|undefined} [toggle] Optional on/off/etc
      * @returns {boolean} True if we will send a msg to Node-RED on a hash change
@@ -6281,14 +6297,14 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       if (channel === null || channel === void 0)
         channel = this._ioChannels.client;
       if (channel === this._ioChannels.client) {
-        msgToSend = makeMeAnObject(msgToSend, "payload");
+        msgToSend = this.makeMeAnObject(msgToSend, "payload");
         if (this.hasUibRouter()) {
           if (!msgToSend._uib)
             msgToSend._uib = {};
           msgToSend._uib.routeId = this.uibrouter_CurrentRoute;
         }
       } else if (channel === this._ioChannels.control) {
-        msgToSend = makeMeAnObject(msgToSend, "uibuilderCtrl");
+        msgToSend = this.makeMeAnObject(msgToSend, "uibuilderCtrl");
         if (!Object.prototype.hasOwnProperty.call(msgToSend, "uibuilderCtrl")) {
           msgToSend.uibuilderCtrl = "manual send";
         }
@@ -6335,7 +6351,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
      * @this Uib
      */
     _stdMsgFromServer(receivedMsg) {
-      receivedMsg = makeMeAnObject(receivedMsg, "payload");
+      receivedMsg = this.makeMeAnObject(receivedMsg, "payload");
       if (receivedMsg._uib && !this._forThis(receivedMsg._uib))
         return;
       if (receivedMsg._ui && !this._forThis(receivedMsg._ui))
@@ -6983,6 +6999,34 @@ ioPath: ${this.ioPath}`)();
     window["$ui"] = window["uibuilder"].$ui;
   } else {
     log("warn", "uibuilder.module.js", "Cannot allocate the global `$ui`, it is already in use. Use `uibuilder.$ui` or `uib.$ui` instead.");
+  }
+  if (!("on" in document)) {
+    document.on = function(event2, callback) {
+      this.addEventListener(event2, callback);
+    };
+  }
+  if (!("on" in window)) {
+    window.on = function(event2, callback) {
+      this.addEventListener(event2, callback);
+    };
+  }
+  try {
+    if (!("query" in Element)) {
+      Element.prototype.query = function(selector) {
+        return this.querySelector(selector);
+      };
+    }
+    if (!("queryAll" in Element)) {
+      Element.prototype.queryAll = function(selector) {
+        return this.querySelectorAll(selector);
+      };
+    }
+    if (!("on" in Element)) {
+      Element.prototype.on = function(event2, callback) {
+        this.addEventListener(event2, callback);
+      };
+    }
+  } finally {
   }
   var uibuilder_module_default = uibuilder2;
   uibuilder2.start();

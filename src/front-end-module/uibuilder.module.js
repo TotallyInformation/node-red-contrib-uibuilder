@@ -39,8 +39,8 @@ const version = '6.9.0-src'
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
 
-// @ts-ignore Detect whether the loaded library is minified or not
-const isMinified = !(/param/).test(function (param) { }) // eslint-disable-line no-unused-vars
+// Detect whether the loaded library is minified or not
+const isMinified = !(/param/).test(function (param) { })
 
 //#region --- print/console - debugging output functions --- //
 
@@ -212,46 +212,6 @@ function log() {
 //     return done
 // }
 
-/** Makes a null or non-object into an object
- * If not null, moves "thing" to {payload:thing}
- *
- * @param {*} thing Thing to check
- * @param {string} [property='payload'] property that "thing" is moved to if not null and not an object
- * @returns {!object} _
- */
-function makeMeAnObject(thing, property) {
-    if (!property) property = 'payload'
-    if (typeof property !== 'string') {
-        log('warn', 'uibuilderfe:makeMeAnObject', `WARNING: property parameter must be a string and not: ${typeof property}`)()
-        property = 'payload'
-    }
-    let out = {}
-    if ( thing !== null && thing.constructor.name === 'Object' ) {
-        out = thing
-    } else if (thing !== null) {
-        out[property] = thing
-    }
-    return out
-} // --- End of make me an object --- //
-
-/** Joins all arguments as a URL string
- * see http://stackoverflow.com/a/28592528/3016654
- * since v1.0.10, fixed potential double // issue
- * arguments {string} URL fragments
- * @returns {string} _
- */
-function urlJoin() {
-    const paths = Array.prototype.slice.call(arguments)
-    const url = '/' + paths.map(function (e) {
-        return e.replace(/^\/|\/$/g, '')
-    })
-        .filter(function (e) {
-            return e
-        })
-        .join('/')
-    return url.replace('//', '/')
-} // ---- End of urlJoin ---- //
-
 /** Convert JSON to Syntax Highlighted HTML
  * @param {object} json A JSON/JavaScript Object
  * @returns {html} Object reformatted as highlighted HTML
@@ -396,6 +356,8 @@ export const Uib = class Uib {
     ctrlMsg = {}
     /** Is Socket.IO client connected to the server? */
     ioConnected = false
+    // Is the library running from a minified version?
+    isMinified = isMinified
     // Is the browser tab containing this page visible or not?
     isVisible = false
     // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
@@ -896,6 +858,27 @@ export const Uib = class Uib {
         log(...arguments)()
     }
 
+    /** Makes a null or non-object into an object. If thing is already an object.
+     * If not null, moves "thing" to {payload:thing}
+     * @param {*} thing Thing to check
+     * @param {string} [property='payload'] property that "thing" is moved to if not null and not an object
+     * @returns {!object} _
+     */
+    makeMeAnObject(thing, property) {
+        if (!property) property = 'payload'
+        if (typeof property !== 'string') {
+            log('warn', 'uibuilder:makeMeAnObject', `WARNING: property parameter must be a string and not: ${typeof property}`)()
+            property = 'payload'
+        }
+        let out = {}
+        if ( thing !== null && thing.constructor.name === 'Object' ) {
+            out = thing
+        } else if (thing !== null) {
+            out[property] = thing
+        }
+        return out
+    } // --- End of make me an object --- //
+
     /** Navigate to a new page or a new route (hash)
      * @param {string} url URL to navigate to. Can be absolute or relative (to current page) or just a hash for a route change
      * @returns {Location} The new window.location string
@@ -971,6 +954,24 @@ export const Uib = class Uib {
         else ret = deflt
         return ret
     }
+
+    /** Joins all arguments as a URL string
+     * see http://stackoverflow.com/a/28592528/3016654
+     * since v1.0.10, fixed potential double // issue
+     * arguments {string} URL fragments
+     * @returns {string} _
+     */
+    urlJoin() {
+        const paths = Array.prototype.slice.call(arguments)
+        const url = '/' + paths.map(function (e) {
+            return e.replace(/^\/|\/$/g, '')
+        })
+            .filter(function (e) {
+                return e
+            })
+            .join('/')
+        return url.replace('//', '/')
+    } // ---- End of urlJoin ---- //
 
     /** Turn on/off/toggle sending URL hash changes back to Node-RED
      * @param {string|number|boolean|undefined} [toggle] Optional on/off/etc
@@ -1745,13 +1746,13 @@ export const Uib = class Uib {
 
         // Make sure msgToSend is an object & add props to control msgs
         if (channel === this._ioChannels.client) {
-            msgToSend = makeMeAnObject(msgToSend, 'payload')
+            msgToSend = this.makeMeAnObject(msgToSend, 'payload')
             if (this.hasUibRouter()) {
                 if (!msgToSend._uib) msgToSend._uib = {}
                 msgToSend._uib.routeId = this.uibrouter_CurrentRoute
             }
         } else if (channel === this._ioChannels.control) {
-            msgToSend = makeMeAnObject(msgToSend, 'uibuilderCtrl')
+            msgToSend = this.makeMeAnObject(msgToSend, 'uibuilderCtrl')
             if (!Object.prototype.hasOwnProperty.call(msgToSend, 'uibuilderCtrl')) {
                 msgToSend.uibuilderCtrl = 'manual send'
             }
@@ -1812,7 +1813,7 @@ export const Uib = class Uib {
     _stdMsgFromServer(receivedMsg) {
 
         // Make sure that msg is an object & not null
-        receivedMsg = makeMeAnObject(receivedMsg, 'payload')
+        receivedMsg = this.makeMeAnObject(receivedMsg, 'payload')
 
         // Don't process if the inbound msg is not for us
         if (receivedMsg._uib && !this._forThis(receivedMsg._uib)) return
@@ -2676,7 +2677,7 @@ export const Uib = class Uib {
             this.set('httpNodeRoot', `/${fullPath.join('/')}`)
             log('trace', '[Uib:constructor]', `httpNodeRoot set by URL parsing to "${this.httpNodeRoot}". NOTE: This may fail for pages in sub-folders.`)()
         }
-        this.set('ioPath', urlJoin(this.httpNodeRoot, Uib._meta.displayName, 'vendor', 'socket.io'))
+        this.set('ioPath', this.urlJoin(this.httpNodeRoot, Uib._meta.displayName, 'vendor', 'socket.io'))
         log('trace', 'Uib:constructor', `ioPath: "${this.ioPath}"`)()
 
         //#endregion
@@ -2865,6 +2866,35 @@ if (!window['$ui']) {
 } else {
     log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$ui`, it is already in use. Use `uibuilder.$ui` or `uib.$ui` instead.')
 }
+
+if (!('on' in document)) {
+    document.on = function (event, callback) {
+        this.addEventListener(event, callback)
+    }
+}
+if (!('on' in window)) {
+    window.on = function (event, callback) {
+        this.addEventListener(event, callback)
+    }
+}
+
+try {
+    if (!('query' in Element)) {
+        Element.prototype.query = function(selector) {
+            return this.querySelector(selector)
+        }
+    }
+    if (!('queryAll' in Element)) {
+        Element.prototype.queryAll = function(selector) {
+            return this.querySelectorAll(selector)
+        }
+    }
+    if (!('on' in Element)) {
+        Element.prototype.on = function (event, callback) {
+            this.addEventListener(event, callback)
+        }
+    }
+} finally { }
 
 // Can import as `import uibuilder from ...` OR `import {uibuilder} from ...`
 export { uibuilder }
