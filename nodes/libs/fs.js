@@ -131,9 +131,107 @@ class UibFs {
 
     //#endregion ---- ---- ----
 
+    get uibRootFolder() {
+        return this.uib.rootFolder
+    }
+
     //#region ---- Async Methods ----
 
     // async getAllInstanceUrls
+
+    /** Return list of found files as folder/files and/or urls
+     * @param {string} uibId The uibuilder node instance id to search
+     * @param {boolean} live If true, the search root will be limited to the currently live served folder
+     * @param {[string]} filter A fast-glob search filter array (or string)
+     * @param {[string]} exclude A fast-glob exclude filter array (or string)
+     * @param {boolean} urlOut Output will include a url list (relative to the current uib instance root)
+     * @param {boolean} fullPrefix Output will be prefixed with the full path for both file and url outputs
+     * @returns {Promise<any>} List of found files
+     */
+    async searchInstance(uibId, live, filter, exclude, urlOut, fullPrefix) {
+        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [uibuilder:UibFs:searchInstance]')
+        if ( this.uib.RED === null ) throw new Error('uib.RED is null [uibuilder:UibFs:searchInstance] ')
+        const RED = this.uib.RED
+
+        // Get node instance paths
+        const uibnode = RED.nodes.getNode(uibId)
+        const searchFolder = path.join(uibnode.customFolder, live === true ? uibnode.sourceFolder : '')
+
+        // Defaults to finding everything in the search folder
+        if (!filter) filter = ['*']
+        if (!Array.isArray(filter)) filter = [filter]
+
+        // Remove dangerous ../ segments from filters
+        filter.forEach( (f, i) => {
+            filter[i] = f.replace(/\.\.\//g, '')
+        })
+
+        const opts = {
+            cwd: searchFolder,
+            suppressErrors: true,
+            unique: true,
+            deep: 10, // restrict to max 10 deep sub-folders (prevent recursion)
+            // caseSensitiveMatch: true, // default
+            // dot: false, // default
+        }
+        if (exclude) opts.ignore = exclude
+
+        const srch = await fg.async(filter, opts)
+
+        const isCustom = this.uib.customServer.isCustom
+
+        let prefix = ''
+        if (urlOut) {
+            if (fullPrefix) {
+                if (isCustom || (!isCustom && !this.uib.httpRoot)) prefix = `./${uibnode.url}/`
+                else prefix = `./${this.uib.httpRoot}/${uibnode.url}/`
+            } else {
+                prefix = './'
+            }
+        }
+        srch.forEach( (f, i) => {
+            // If output as urls required, replace `index.html`
+            if (urlOut) {
+                f = f.replace('index.html', '')
+            } else {
+                if (fullPrefix) {
+                    f = path.join(searchFolder, f)
+                } else {
+                    f = path.relative(searchFolder, path.join(searchFolder, f))
+                }
+            }
+            srch[i] = `${prefix}${f}`
+        })
+
+        const out = {
+            results: srch,
+            config: {
+                filter: {
+                    searchRoot: searchFolder,
+                    filter: filter,
+                    exclude: exclude,
+                    urlOutput: urlOut,
+                    fullPrefixOutput: fullPrefix,
+                },
+                uibuilder: {
+                    rootFolder: path.normalize(this.uibRootFolder),
+                },
+                node: {
+                    id: uibId,
+                    name: uibnode.url,
+                    customFolder: uibnode.customFolder,
+                    liveFolder: uibnode.sourceFolder,
+                }
+            },
+        }
+        if (!isCustom) {
+            out.config.uibuilder.httpRoot = this.uib.httpRoot
+        } else {
+            out.config.uibuilder.customServer = this.uib.customServer
+        }
+
+        return out
+    }
 
     /** Return all of the *.html files from the served folder for a specific instance
      * NOTE: Only call this after all nodes are loaded into the Node-RED runtime
@@ -171,6 +269,15 @@ class UibFs {
 
         return allFiles
     } // -- End of getInstanceLiveHtmlFiles -- //
+
+    /** Get a text file from uibuilder's master template folders
+     * @param {*} template The name of the master template, e.g. "blank" or "esm-blank-client"
+     * @param {*} fName The name of the file to get (optionally with leading folder using forward-slash separators)
+     * @returns {Promise<string>} The text contents of the file.
+     */
+    async getTemplateFile(template, fName) {
+        return await fs.readFile( path.join(__dirname, '..', '..', 'templates', template, fName), 'utf8')
+    }
 
     async getUibInstanceRootFolders() {
         // const chkInstances = Object.values(uib.instances).includes(params.url)
@@ -241,15 +348,6 @@ class UibFs {
 
         log.trace(`📗[uibuilder:UibFs:writeInstanceFile] File write SUCCESS. url=${url}, file=${folder}/${fname}`)
     } // -- End of writeFile -- //
-
-    /** Get a text file from uibuilder's master template folders
-     * @param {*} template The name of the master template, e.g. "blank" or "esm-blank-client"
-     * @param {*} fName The name of the file to get (optionally with leading folder using forward-slash separators)
-     * @returns {Promise<string>} The text contents of the file.
-     */
-    async getTemplateFile(template, fName) {
-        return await fs.readFile( path.join(__dirname, '..', '..', 'templates', template, fName), 'utf8')
-    }
 
     //#endregion ---- ---- ----
 
