@@ -144,3 +144,4 @@ tests/execa/test3.js
 
 #
 tmp/_*
+docs/docs.md
