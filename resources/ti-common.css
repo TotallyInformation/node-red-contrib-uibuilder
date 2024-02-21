@@ -42,6 +42,10 @@
         sans-serif;
 }
 
+#ti-edit-panel > .form-tips {
+    margin-bottom: 1rem;
+}
+
 #ti-edit-panel fieldset {
     border-style: groove;
     border-color: var(--red-ui-primary-background);
@@ -53,3 +57,9 @@
     padding-left: .2em;
     padding-right: .2em;
 }
+#ti-edit-panel input[type="checkbox"] {
+    display: inline-block; 
+    width: auto; 
+    vertical-align: top;
+}
+
