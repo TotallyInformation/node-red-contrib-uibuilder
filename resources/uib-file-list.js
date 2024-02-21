@@ -33,6 +33,15 @@
         })
     } // ---- end of getUrls ---- //
 
+    function srchRoot(node) {
+        if (node.uibId) {
+            const uibNode = RED.nodes.node(node.uibId)
+            if (uibNode) $('#srch-root').text(`${RED.settings.uibFileListRootFolder}/${uibNode.url}/${node.live ? uibNode.sourceFolder : ''}`)
+        } else {
+            $('#srch-root').text('⟪ Select UIBUILDER instance above ⟫')
+        }
+    }
+
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
@@ -40,11 +49,11 @@
         // Deal with the url
         getUrls()
 
-        // Get the current source folder
-        if (node.uibId) {
-            const uibNode = RED.nodes.node(node.uibId)
-            $('#srch-root').text(`<uibRoot>${node.url}/${uibNode.sourceFolder}`)
-        }
+        $('#node-input-live')
+            .on('change', function() {
+                node.live = this.checked
+                srchRoot(node)
+            })
 
         $('#node-input-url')
             .on('change', function() {
@@ -52,8 +61,7 @@
                 // After a paste or import, reset the paste/import flag now we've set a value (to stop chkUrl re-blanking it)
                 if (node.addType === 'paste/import') node.addType = 'load'
                 // Update the source folder
-                const uibNode = RED.nodes.node(node.uibId)
-                $('#srch-root').text(`${RED.settings.uibFileListRootFolder}/${uibNode.sourceFolder}`)
+                srchRoot(node)
             })
 
         if ( node.url && node.url.length > 0 ) {

@@ -6,34 +6,10 @@
     </p>
     <p>
         <a href="./uibuilder/docs/#/nodes/uib-file-list" target="_blank">Documentation</a>.
-        This node has examples in the Node-RED Import Examples library.
     </p>
 
     <h3>Inputs</h3>
-    <dl class="message-properties">
-        <dt>payload <span class="property-type">string|buffer</span></dt>
-        <dd>
-            REQUIRED. The data to output to the file.
-            Use a buffer for binary file types (video, audio, image, etc).
-        </dd>
-
-        <dt>folder <span class="property-type">string</span></dt>
-        <dd>
-            If supplied and the folder setting is blank, will be used as the output folder.
-        </dd>
-        <dd>
-            Folder name is <b>ALWAYS</b> relative to the node's instance root folder.
-            Folder traversal outside of that is not permitted.
-        </dd>
-
-        <dt>fname <span class="property-type">string</span></dt>
-        <dd>
-            If supplied and the file name setting is blank, will be used as the output file name.
-        </dd>
-        <dd>
-            This may contain prefixed sub-folders but cannot use <code>..</code> to prevent folder traversal.
-        </dd>
-    </dl>
+    <p>Currently none. The incoming msg is only used as a trigger. This will change in future releases.</p>
 
     <h3>Node Settings</h3>
     <dl class="message-properties">
@@ -46,88 +22,48 @@
             Sets the top-most (root) folder that can be written to.
         </dd>
 
-        <dt>Use pageName <span class="property-type">boolean</span></dt>
+        <dt>Filter <span class="property-type">string</span></dt>
         <dd>
-            If set, either <code>msg._uib.pageName</code> or <code>msg._ui.pageName</code> will be used
-            instead of the file name. The uibuilder node's current served folder will be used for the folder.
+            A <a href="https://www.npmjs.com/package/fast-glob" target="_blank" style="font-weight: bold; font-style: italic;">fast-glob</a> style glob filter specification.
         </dd>
         <dd>
-            This allows easy overwriting of a uibuilder page's file simply by issuing an <code>htmlSend</code> command
-            to the front-end and sending the resulting message to this node. See the included examples.
-        </dd>
-        
-        <dt>Folder <span class="property-type">string</span></dt>
-        <dd>
-            The name of an existing or new folder inside the chosen uibuilder instance root.
+            The default <code>**/*.html</code> specification will select all HTML files from the root folder and all sub-folders.
         </dd>
         <dd>
-            Defaults to <code>src</code>.
+            Hover over the field to see a drop-down that contains some common filters.
         </dd>
+        <dt>Exclude <span class="property-type">string</span></dt>
         <dd>
-            Folder name is <b>ALWAYS</b> relative to the node's instance root folder.
-            "<code>..</code>" cannot be included in the path to prevent escaping from the instance root.
-        </dd>
-        <dd>
-            If the folder does not exist, an error is generated unless the "Create Folder" flag is ticked.
-        </dd>
-        <dd>
-            <code>msg.folder</code> overrides this as long as this is left blank.
+            An exclusion glob filter specification.
         </dd>
 
-        <dt>File <span class="property-type">string</span></dt>
+        <dt>URL Output? <span class="property-type">boolean</span></dt>
         <dd>
-            The name of an existing or new file inside the chosen uibuilder instance root and folder.
+            If set (default), the returned payload array will be in the form of relative URL paths.
         </dd>
         <dd>
-            If the file does not exist, it will be created. Otherwise it is silently overwritten.
+            These paths are relative to either the uibuilder root URL (if <i>Use full prefix?</i> is set) or the uibuilder instance root path so they can be used directly in front-end links.
         </dd>
         <dd>
-            Neither "<code>/</code>" or "<code>\</code>" can be included in the file name. The name must be valid for the OS you are using.
-        </dd>
-        <dd>
-            <code>msg.fname</code> will be used if this is left blank.
-        </dd>
-        <dd>
-            This may contain prefixed sub-folders but cannot use <code>..</code> to prevent folder traversal.
+            In this mode, any outputs that end with <code>index.html</code> will have that text removed since that is the default for a specific URL path.
         </dd>
 
-        <dt>Create Folder? <span class="property-type">boolean</span></dt>
+        <dt>Use live served folder? <span class="property-type">boolean</span></dt>
         <dd>
-            If set and the given folder name does not exist inside the instance root folder,
-            the new folder will be automatically created.
-        </dd>
-        
-        <dt>Reload? <span class="property-type">boolean</span></dt>
-        <dd>
-            If ticked, any client browser tabs connected to the selected uibuilder node will be reloaded.
-            This may be useful when auto-changing static resource files (e.g. <code>index.html</code>).
-            It is mostly useful when testing. Use with caution on a live system.
-        </dd>
-        
-        <dt>Encoding <span class="property-type">string</span></dt>
-        <dd>
-            Not usable. Future enhancement.
+            If set (default), the uibuilder node's "Serve" folder will be the search root.
         </dd>
         <dd>
-            The optional string encoding to be used when the input data is a string.
-            It defaults to Node.js's <code>utf8</code>.
-            See Node.js documentation for what can be provided here.
+            If not set, the uibuilder node's instance root folder will be the search root. Allowing access to all folders and files.
         </dd>
 
-        <dt>Mode <span class="property-type">integer</span></dt>
+        <dt>Use full prefix? <span class="property-type">boolean</span></dt>
         <dd>
-            Not usable. Future enhancement.
+            If set (default), the output will be a full path.
         </dd>
         <dd>
-            The optional file output mode. Defaults to <code>0o666</code>
-            See Node.js documentation for what can be provided here.
+            Otherwise, the output will be a path relative to the uibuilder instance.
         </dd>
-        <dd>
-            This only impacts newly created files. It is ignored when overwriting existing files.
-        </dd>
-        <dd>
-            On Windows, only the write permission can be set.
-        </dd>
+        
 
         
         <dt>Topic <span class="property-type">string</span></dt>
@@ -138,6 +74,19 @@
         <dt>Name <span class="property-type">string</span></dt>
         <dd>
             Standard optional name. Has no impact other than on the Editor display.
+        </dd>
+    </dl>
+
+    <h3>Message Outputs</h3>
+    <dl class="message-outputs">
+        <dt><code>msg.results</code> <span class="property-type">string array</span></dt>
+        <dd>
+            An array of found files expressed as filing system or url paths according to the settings.
+        </dd>
+
+        <dt><code>msg.config</code> <span class="property-type">object</span></dt>
+        <dd>
+            An object showing all of the relavent settings for both this node and the parent uibuilder instance.
         </dd>
     </dl>
 
