@@ -227,6 +227,7 @@
  * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
  * @property {string} title Short descriptive title for the instance
  * @property {string} descr Longer description for the instance
+ * @property {string} editurl Shortcut URL that will open a code editor at the node instance folder
  */
 
 /** uibNode
@@ -282,6 +283,7 @@
  *
  * @property {string} title Short descriptive title for the instance
  * @property {string} descr Longer description for the instance
+ * @property {string} editurl Shortcut URL that will open a code editor at the node instance folder
  *
  * @property {Function} sendToFe Ref to sockets.sendToFe
  */

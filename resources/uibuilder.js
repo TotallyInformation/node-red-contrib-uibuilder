@@ -804,6 +804,34 @@
 
     } // ---- End of saveFile ---- //
 
+    /** Create the wrapping HTML string that provides a link to open the instance folder in vscode
+     * @param {object} node A reference to the panel's `this` object
+     * @returns {{pre,post,url,icon}} Prefix and postfix for link + vscode url scheme & icon
+     */
+    function vscodeLink(node) {
+        console.log(node)
+        if (!node.editurl) {
+            if (uibuilder.localHost) node.editurl = `vscode://file${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank`
+            else node.editurl = `vscode://vscode-remote/ssh-remote+${uibuilder.nrServer}${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank`
+            $('#node-input-editurl').val(node.editurl)
+        }
+
+        let pre, post
+        if (node.editurl) {
+            pre = `<a href="${node.editurl}" title="Open in VScode">`
+            post = '</a>'
+        } else {
+            pre = '<b>'
+            post = '</b>'
+        }
+        return {
+            pre: pre,
+            post: post,
+            url: node.editurl,
+            icon: '<img src="resources/node-red-contrib-uibuilder/vscode.svg" style="width:20px" >',
+        }
+    }
+
     //#endregion ==== File Management Functions ==== //
 
     //#region ==== Validation Functions ==== //
@@ -1338,38 +1366,21 @@
         $('#node-input-showMsgUib').prop('checked', node.showMsgUib)
     }
 
-    /** Create the wrapping HTML string that provides a link to open the instance folder in vscode
-     * @param {object} node A reference to the panel's `this` object
-     * @returns {{pre,post,url,icon}} Prefix and postfix for link + vscode url scheme & icon
-     */
-    function vscodeLink(node) {
-        let pre, post
-        if (uibuilder.localHost) {
-            pre = `<a href="vscode://file${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank" title="Open in VScode">`
-            post = '</a>'
-        } else {
-            pre = '<b>'
-            post = '</b>'
-        }
-        return {
-            pre: pre,
-            post: post,
-            url: `vscode://file${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank`,
-            icon: '<img src="resources/node-red-contrib-uibuilder/vscode.svg" style="width:20px" >',
-        }
-    }
-
     /** Show what server is in use
      * @param {object} node A reference to the panel's `this` object
      */
     function showServerInUse(node) {
         $('#info-webserver').empty()
 
-        const vslink = vscodeLink(node)
-
         $('#info-webserver').append(
-            `<div class="form-tips node-help"><span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> is using ${uibuilder.serverType} webserver at <a href="${uibuilder.urlPrefix}${node.url}" target="_blank" title="Open in new window">${uibuilder.urlPrefix}</a><br>Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post} </div>`
+            `<div class="form-tips node-help"><span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> is using ${uibuilder.serverType} webserver at <a href="${uibuilder.urlPrefix}${node.url}" target="_blank" title="Open in new window">${uibuilder.urlPrefix}</a>`
         )
+        if (node.url) {
+            const vslink = vscodeLink(node)
+            $('#info-webserver').append(
+                `<br>Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post} </div>`
+            )
+        }
     } // ---- end of showServerInUse ---- //
 
     /** Handle URL changes - update web links (called from onEditPrepare)
@@ -1377,6 +1388,7 @@
      * @this {Element} the selected jQuery object $('#node-input-url')
      */
     function urlChange(node) {
+        console.log('url changed')
         const thisurl = /** @type {string} */ ($(this).val())
 
         // Show the root URL
@@ -1393,6 +1405,7 @@
                     </a>
                 </div>`
             )
+        showServerInUse(node)
     } // ---- end of urlChange ---- //
 
     /** Run when switching to the Files tab
@@ -1901,6 +1914,7 @@
             showMsgUib: { value: false },    // Show msg._uib in standard msgs (client id, ip, page name)
             title: { value: '' },    // Optional short description for this instance
             descr: { value: '' },    // Optional long description for this instance
+            editurl: {}, // shortcut url for editing the FE code
         },
         inputs: 1,
         inputLabels: 'Msg to send to front-end',
