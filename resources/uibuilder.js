@@ -809,8 +809,7 @@
      * @returns {{pre,post,url,icon}} Prefix and postfix for link + vscode url scheme & icon
      */
     function vscodeLink(node) {
-        console.log(node)
-        if (!node.editurl) {
+        if (!node.editurl && node.url) {
             if (uibuilder.localHost) node.editurl = `vscode://file${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank`
             else node.editurl = `vscode://vscode-remote/ssh-remote+${uibuilder.nrServer}${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank`
             $('#node-input-editurl').val(node.editurl)
@@ -1377,7 +1376,7 @@
         )
         if (node.url) {
             const vslink = vscodeLink(node)
-            $('#info-webserver').append(
+            $('#info-webserver > .node-help').append(
                 `<br>Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post} </div>`
             )
         }
@@ -1388,23 +1387,24 @@
      * @this {Element} the selected jQuery object $('#node-input-url')
      */
     function urlChange(node) {
-        console.log('url changed')
         const thisurl = /** @type {string} */ ($(this).val())
 
-        // Show the root URL
-        $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${thisurl}`)
-        // .html(`<i class="fa fa-globe" aria-hidden="true"></i> Open ${node.nodeRoot}${thisurl}`)
-        $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
-        // NB: The index url link is only shown if the option is turned on
-        $('#show-src-folder-idx-url').empty()
-            .append(
-                `<div>at 
-                    <a href="${uibuilder.urlPrefix}${thisurl}/idx" target="_blank" 
-                            style="color:var(--red-ui-text-color-link);text-decoration:underline;">
-                        ${node.nodeRoot}${thisurl}/idx
-                    </a>
-                </div>`
-            )
+        if (thisurl) {
+            // Show the root URL
+            $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${thisurl}`)
+            // .html(`<i class="fa fa-globe" aria-hidden="true"></i> Open ${node.nodeRoot}${thisurl}`)
+            $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
+            // NB: The index url link is only shown if the option is turned on
+            $('#show-src-folder-idx-url').empty()
+                .append(
+                    `<div>at 
+                        <a href="${uibuilder.urlPrefix}${thisurl}/idx" target="_blank" 
+                                style="color:var(--red-ui-text-color-link);text-decoration:underline;">
+                            ${node.nodeRoot}${thisurl}/idx
+                        </a>
+                    </div>`
+                )
+        }
         showServerInUse(node)
     } // ---- end of urlChange ---- //
 
