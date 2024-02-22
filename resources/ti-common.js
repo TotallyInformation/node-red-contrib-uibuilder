@@ -18,6 +18,8 @@
             typedInputWidth: '68.5%',
             // Are we running on a local device?
             localHost: ['localhost', '127.0.0.1', '::1', ''].includes(window.location.hostname) || window.location.hostname.endsWith('.localhost'),
+            // Server address of the Node-RED server
+            nrServer: window.location.hostname,
             // URL root if needed (set below to '' if using a custom uib server)
             nodeRoot: RED.settings.httpNodeRoot.replace(/^\//, ''),
             // URL prefix for all uib nodes - set below
