@@ -18,6 +18,8 @@
             --heading-h4-border-color: var(--mono-tint3);
             --uib-blue: hsl(204 89% 55% / 70%);
             --uib-red: hsl(0 100% 45% / 70%); /*#8f0000;*/
+            --code-block-line-height: 1.2;
+            --code-block-padding: 1em .5em 1em .5em;
             /* --base-font-family: Arial, Sans-serif; */
             /*--sidebar-background: #005EB8;*/
         }
@@ -73,6 +75,13 @@
         .markdown-section h2 { border-bottom-width: thick;}
         .markdown-section h3 { border-bottom-width: thin;}
         
+        .pagination-item {
+            margin-top: 1em !important;
+        }
+        #main > hr {
+            margin: 1em 0;
+        }
+
         .flex-container {
             display: flex;
             flex-direction: row;
@@ -258,7 +267,7 @@
                                     strYr = yearFrom + '-' + yearTo
                                 }
 
-                                footer[5] = ` Last updated ${mydate.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}.`
+                                footer[5] = ` Updated ${mydate.toLocaleString('en-GB', { dateStyle: 'medium' })}.`
                             }
                             //#endregion ---  ---
 
