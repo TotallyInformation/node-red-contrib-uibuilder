@@ -293,7 +293,7 @@ const Ui = class Ui2 {
       if (!Array.isArray(ui.components))
         ui.components = [ui.components];
       ui.components.forEach(async (component) => {
-        await import(component);
+        import(component);
       });
     }
     if (ui.srcScripts) {
@@ -893,6 +893,7 @@ const Ui = class Ui2 {
   // TODO Add multi-slot
   /** Replace or add an HTML element's slot from text or an HTML string
    * Will use DOMPurify if that library has been loaded to window.
+   * WARN: Executes <script> tags!
    * param {*} ui Single entry from the msg._ui property
    * @param {Element} el Reference to the element that we want to update
    * @param {*} component The component we are trying to add/replace
@@ -904,7 +905,11 @@ const Ui = class Ui2 {
       return;
     if (this.window["DOMPurify"])
       component.slot = this.window["DOMPurify"].sanitize(component.slot);
-    el.innerHTML = component.slot;
+    const tempFrag = document.createRange().createContextualFragment(component.slot);
+    const elRange = document.createRange();
+    elRange.selectNodeContents(el);
+    elRange.deleteContents();
+    el.append(tempFrag);
   }
   /** Replace or add an HTML element's slot from a Markdown string
    * Only does something if the markdownit library has been loaded to window.

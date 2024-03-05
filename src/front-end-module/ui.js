@@ -403,7 +403,8 @@ const Ui = class Ui {
             if (!Array.isArray(ui.components)) ui.components = [ui.components]
 
             ui.components.forEach(async component => {
-                await import(component)
+                // NOTE: This happens asynchronously but we don't wait
+                import(component)
             })
         }
         // Remote Scripts
@@ -690,7 +691,6 @@ const Ui = class Ui {
             //         })
             //     })
             // }
-
         })
     } // --- end of _uiUpdate ---
 
@@ -1106,6 +1106,7 @@ const Ui = class Ui {
     // TODO Add multi-slot
     /** Replace or add an HTML element's slot from text or an HTML string
      * Will use DOMPurify if that library has been loaded to window.
+     * WARN: Executes <script> tags!
      * param {*} ui Single entry from the msg._ui property
      * @param {Element} el Reference to the element that we want to update
      * @param {*} component The component we are trying to add/replace
@@ -1116,8 +1117,15 @@ const Ui = class Ui {
 
         // If DOMPurify is loaded, apply it now
         if (this.window['DOMPurify']) component.slot = this.window['DOMPurify'].sanitize(component.slot)
-        // Set the component content to the msg.payload or the slot property
-        el.innerHTML = component.slot
+
+        // Create doc frag and apply html string (msg.payload or the slot property)
+        const tempFrag = document.createRange().createContextualFragment(component.slot)
+
+        // Remove content of el and replace with tempFrag
+        const elRange = document.createRange()
+        elRange.selectNodeContents(el)
+        elRange.deleteContents()
+        el.append(tempFrag)
     }
 
     /** Replace or add an HTML element's slot from a Markdown string

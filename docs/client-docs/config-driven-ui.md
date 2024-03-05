@@ -3,8 +3,7 @@ title: Dynamic, configuration-driven UI's (low-code)
 description: |
   This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a `uibuilder` node where the messages contain a `msg._ui` property. This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-09-30 13:02:29
-updated: 2024-02-04 15:46:20
+updated: 2024-03-05 17:56:35
 ---
 
 - [Restricting actions to specific pages, users, tabs](#restricting-actions-to-specific-pages-users-tabs)
@@ -68,6 +67,12 @@ The receipt from Node-RED or local setting (`uibuilder.set('msg', {_ui: { ... }}
 Each method object may contain any number of component descriptors. Component descriptors can contain any number of sub-component descriptors. There is no theoretical limit to the nesting, however expect things to break spectacularly if you try to take things to extremes. If top-level components have no parent defined, they will use the parent at the method level, if that isn't defined, everything will be added to the `<body>` tag and a warning is issued. Sub-components will always be added to the parent component.
 
 All methods and components are processed in the order they appear in the message.
+
+### Inserting scripts
+
+Prior to v6.9, only the `load` method allowed you to dynamically insert scripts to the client. However, from v6.9 onwards, `<script>` tags may be used _anywhere_ that allows you to insert HTML. Noting that references to the `slot` generally means being able to insert HTML.
+
+While this is incredibly powerful. If also comes with some risks. Make sure you only ever pass sanitised and/or known HTML to the client.
 
 ## Available methods
 
@@ -307,7 +312,8 @@ The load method allows you to dynamically load JavaScript and CSS. For example, 
 
 ### Caveats and limitations
 
-* **WARNING**: Passing code dynamically **IS** a potential security issue. Make sure that only safe code is permitted to be passed. There is no way for the front-end library to check the validity or safety of the code.
+> [!ATTENTION]
+> Passing code dynamically **IS** a potential security issue. Make sure that only safe code is permitted to be passed. There is no way for the front-end library to check the validity or safety of the code.
 
 * If using a relative url, it is relative to the uibuilder client library and NOT relative to your code.
 
@@ -318,6 +324,8 @@ The load method allows you to dynamically load JavaScript and CSS. For example, 
   * At present, only ES modules (that use `export` not `exports`) can be dynamically loaded since this feature is primarily aimed at loading [web components](https://developer.mozilla.org/en-US/docs/Web/Web_Components). This feature requires browser support for [Dynamic Imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_imports).
 
   * Dynamic Imports happen asynchronously. While this isn't usually a problem, the load does not wait to complete so very occasionally with a particularly complex component or on a particularly slow network, it is possible that the load will not complete before its use. In that case, simply delay the components use or move the load to earlier in the processing.
+  
+  * Imports cannot be assigned to a specific variable. Only modules that self-apply to the global context will likely work correctly.
 
 * For the `srcScripts` and `txtScripts` arrays
   
@@ -331,11 +339,11 @@ The load method allows you to dynamically load JavaScript and CSS. For example, 
 
 ### Msg schema
 
-```jsonc
+```json
 {
     "_ui": {
         "method": "load",
-        // import() JavaScript Modules from an external URL. Imports are dynamically executed. 
+        // import() JavaScript Modules from an external URL. Imports are dynamically executed. They have to self-load to global
         "components": [
             // Dynamic imports happen asynchronously.
             "url1", "url2" // as needed
@@ -370,7 +378,7 @@ The load method allows you to dynamically load JavaScript and CSS. For example, 
 }
 ```
 
-### Example: Use load method fromt front-end in custom index.js file
+### Example: Use load method from front-end in custom index.js file
 
 Note how this can and usually *should* be done immediately after importing the uibuilder library.
 
@@ -704,6 +712,12 @@ RED.util.uib.deepObjFind(msg._ui, matcher, cb)
 ## Dynamic content limitations
 
 There are currently a small number of limitations of this approach that you should be aware of.
+
+### HTML Security
+
+Note that wherever you can insert HTML and/or scripts, unless you use the `DOMPurify` 3rd-party library to sanitise the input, you potentially expose your clients to dynamically inserted code and this can present security or privacy issues if you aren't careful.
+
+So **ALWAYS** make sure that inputs are sanitised in Node-RED before trying to pass them to the clients.
 
 ### Updates and sub-components
 
