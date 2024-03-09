@@ -3,8 +3,7 @@ title: Custom web components
 description: |
   Web components built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-lastUpdated: 2023-12-29 17:25:31
-updated: 2023-12-30 17:01:41
+updated: 2024-03-09 14:55:14
 ---
 
 UIBUILDER can work with front-end frameworks such as REACT, VueJS, etc. However, it does not need them. But one thing that these frameworks often have are collections of components that you can add to your HTML. Each component will produce something useful in your web page such as an information card, tabbed interface, navigation menu, etc.
@@ -66,7 +65,11 @@ If the function name is not found in the global window context, the `uibuilder` 
 Generally, it will be best to define your own function. Further standard filters may be added in future releases of UIBUILDER. Until then, a list of standard filters included in the uibuilder is provided [lower-down](#useful-filter-functions).
 
 > [!NOTE]
-> If having problems getting your filter functions recognised, try adding them earlier in the HTML, for example, defining the `lang` filter:
+> If having problems getting your filter functions recognised, try adding them earlier in the HTML.
+>
+> Notably, **before** the uibuilder client library is loaded.
+> 
+> For example, defining the `lang` filter:
 > ```html
   <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->
   <script>
