@@ -498,7 +498,7 @@ p, h1, h2, h3, h4, h5, h6, heading, li, dl, dt, blockquote {
     hyphens: auto;
     word-break: break-word;
 }
-div > p {
+div > p, div > article {
     margin-left: var(--base-margin);
     margin-right: var(--base-margin);
 }
@@ -547,8 +547,22 @@ blockquote {
 code {
     font-size: 120%;
 }
+/* This lets us use an article like a card display */
+article {
+    max-width: var(--max-width);
+    border: 1px solid var(--text3);
+    border-radius: var(--border-radius);
+    padding: var(--border-pad);
+    margin: 1rem var(--border-margin);
+    background-color: var(--surface3);
+}
+article > h2, article > h3, article > h4 {
+    margin-block-start: 0;
+    border-bottom: 1px solid var(--text3);
+    padding-block-end: var(--border-pad);
+}
 /* HTML5 section tags - only special format top-level to reduce odd fmts */
-body > main, body > header, body > footer, body > section, body > article {
+body > main, body > header, body > footer, body > section {
     padding-left: var(--base-margin);
     padding-right: var(--base-margin);
     max-width: var(--max-width);
