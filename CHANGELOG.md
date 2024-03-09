@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-02-11 17:32:36
+updated: 2024-02-24 16:49:59
 ---
 
 # Changelog
@@ -10,9 +10,9 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## To Do
 
+* [ ] Add msg.value processing to `uib-topic` and other processing. Allow checkboxes to use value not checked.
 * [ ] Add to uib-save example: topic example.
-* [ ] Update text update example to include new `uib-topic` html attributes
-* [ ] [STARTED] Refactor node html files, move help to `locales/en-US` & remove from `src/editor/` and from gulp watch. (See roadmap for progress)
+* [ ] [started] Update text update example to include new `uib-topic` html attributes
 * [ ] `uib-tag` input fields not resizing correctly.
 
 ### `uibrouter` FE library
@@ -23,11 +23,11 @@ Please see the documentation for archived changelogs - a new archive is produced
 * [ ] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
 
 * [ ] Add external command listeners for:
-  * [ ] `msg._uibRouteLoad`. With the value being a route definition or an array of route definitions. (and update the eg flows)
-  * [ ] `loadOther`
-  * [ ] `rotate`
-  * [ ] `next`
-  * [ ] `previous`
+  * [ ] `msg._uibRoute.load`. With the value being a route definition or an array of route definitions. (and update the eg flows)
+  * [ ] `msg._uibRoute.loadOther`
+  * [ ] `msg._uibRoute.rotate`
+  * [ ] `msg._uibRoute.next`
+  * [ ] `msg._uibRoute.previous`
 
 * [ ] Add `defaultRouteOnLoad` flag (default=false) to allow for dynamically added routes to have been pre-selected on page load.
 * [ ] Find a way to include a first-show marker if not unloading routes
@@ -52,6 +52,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### FE `ui` library
 
+* [ ] Handle `<script>` tags in passed HTML content - using the uibrouter code.
 * [ ] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
 
 ### `<uib-var>` custom HTML component
@@ -146,8 +147,6 @@ I will be trying to eliminate packages that have enforced structural changes. Th
 
 * gauge tiles - web component or new element? [ref](https://discourse.nodered.org/t/dashboard-2-beta-development/83550/133?u=totallyinformation)
 
-
-
 ------------
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.2...main)
@@ -164,9 +163,11 @@ I will be trying to eliminate packages that have enforced structural changes. Th
   
   * You can now define route content as Markdown instead of HTML. This makes Notion/Obsidian-like applications feasible using UIBUILDER.
 
-* Security of the UIBUILDER repository on GitHub has been improved.
+* Wherever you can use no-/low-code features that accept HTML, you can now include `<script>` tags that will be executed on load.
 
 * A new node is available. `uib-file-list` will produce a list of files from a uibuilder instance. It automatically adjusts to the currently served sub-folder and allows filtering. Use this for producing indexes and menus.
+
+* Security of the UIBUILDER repository on GitHub has been improved.
 
 * The old `uibuilderfe` client library will now issue a user and a console alert on every load. The alert warns that the library will be removed when UIBUILDER v7 is released (which should happen once Node-RED v4 is also released). If you are still using the old client, please switch to the current client library ASAP. The new library has been available for nearly 2 years now, so time to move on.
 
@@ -222,6 +223,7 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 
 * **FIXED** small inconsistency when handling a msg._ui who's top level was an object with a `mode` mode property instead of an array.
 * Improved Markdown handling. Should now be more efficient. Also HighlightJS code highlights should be better: Some unnecessary whitespace removed, code brought into line with the latest releases of the HighlightJS library, language guessing now only used if the language is not provided.
+* Slot HTML content can now contain `<script>` tags that will be executed on load.
 
 ### `uibrouter` front-end library
 
@@ -261,10 +263,15 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 
 ### `uib-brand.css` styles
 
-* `header`, `footer`, `section`, and `article` given same basic reset as `main`. So they all have max width and are centered in window. However, the formatting is now restricted only to where they are direct children of `body`.
+* `header`, `footer`, and `section` given same basic reset as `main`. So they all have max width and are centered in window. However, the formatting is now restricted only to where they are direct children of `body`.
+* `article` given a border with rounded corners and same max-width as above. It is also given the `--surface3` background colour instead of the default `--surface2`. `h2`-`h4` immediately inside the article have reduced margins and a bottom border. This lets you use `article` as a "card" style visual. `div > article` gets additional left/right margins, same as `div > p` - allows for indented nesting/grouping.
 * New variable `--max-width` added & set to `64rem`. This is used in the above resets.
-* Block elements (h2-4, div, p) inside a select element are now rendered as inline-blocks.
+* Block elements (h2-4, div, p) inside a summary element are now rendered as inline-blocks. Because a summary already creates a block and you usually don't want the other tags to also create nested blocks.
 * Input, button, textarea and select tags given a minimum width of 2em to allow for more flexible form layouts.
+
+### Examples
+
+* `no-code-examples` - Updated to include dynamic script and css in the HTML passthrough example.
 
 ## [v6.8.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v6.8.1...v6.8.2)
 

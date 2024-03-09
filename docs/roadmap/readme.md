@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-02-16 17:45:26
+updated: 2024-03-07 17:07:59
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -142,12 +142,12 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ### Node: `uibuilder`
 
-* **FIX NEEDED** Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
-* **IMPROVEMENT NEEDED** in code editor. Needs bringing up to latest Node-RED code standards. [Ref](https://discourse.nodered.org/t/json-typed-into-with-schema-validation/84499/11?u=totallyinformation).
+* [ ] **FIX NEEDED** Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
+* [ ] **IMPROVEMENT NEEDED** in code editor. Needs bringing up to latest Node-RED code standards. [Ref](https://discourse.nodered.org/t/json-typed-into-with-schema-validation/84499/11?u=totallyinformation).
 * Allow file uploads
 * Add instance title and description fields. Extend record of instances to include these and update the `apps` page.
 * Use alt logging for websocket disconnects, sleep, error, etc
-* [**STARTED**] Move all filing system handling to a separate library module `libs/fs.js`. Should help work out how to support implementations with limited filing systems.
+* [ ] [**STARTED**] Move all filing system handling to a separate library module `libs/fs.js`. Should help work out how to support implementations with limited filing systems.
 * Move all uibRoot package.json handling to `libs/package-mgt.js`
 * Runtime API's - a new set of runtime API's
 
@@ -188,7 +188,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
   * https://crossbario.com/blog/Websocket-Persistent-Connections/
   * https://stackoverflow.com/questions/10886910/how-to-maintain-a-websockets-connection-between-pages
-* **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
+* [ ] **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
 
   Currently available by adding the appropriate ExpressJS option in settings.js.
 
@@ -689,6 +689,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
   * Switch light/dark
 * Mix of HTML and uibuilder uib-update for simple tasks.
 * Caching - node and custom
+* Remote programming environments [ref](https://discourse.nodered.org/t/remote-coding-environments/86227)
 
 ### Examples
 
