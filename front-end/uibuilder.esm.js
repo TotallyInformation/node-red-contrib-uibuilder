@@ -5864,7 +5864,7 @@ var Uib = (_a = class {
   async _uibAttrScanOne(el) {
     const topic = el.getAttribute("uib-topic") || el.getAttribute("data-uib-topic");
     this.onTopic(topic, (msg) => {
-      msg._uib_processed_by = "uibAttrScanOne";
+      msg._uib_processed_by = "_uibAttrScanOne";
       if (Object.prototype.hasOwnProperty.call(msg, "attributes")) {
         try {
           for (const [k, v] of Object.entries(msg.attributes)) {
@@ -6262,23 +6262,29 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     if (msg.topic)
       this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg);
     if (msg._uib_processed_by)
-      console.log("msg._uib_processed_by");
+      return;
+    else
+      msg._uib_processed_by = "_msgRcvdEvents";
     if (msg._uib) {
       if (!this._forThis(msg._uib))
         return;
       if (msg._uib.reload === true) {
         log("trace", "Uib:_msgRcvdEvents:_uib:reload", "reloading")();
+        msg._uib_processed_by = "_msgRcvdEvents - reload";
         location.reload();
         return;
       }
       if (msg._uib.command) {
+        msg._uib_processed_by = "_msgRcvdEvents - remote command";
         this._uibCommand(msg);
         return;
       }
       if (msg._uib.componentRef === "globalNotification") {
+        msg._uib_processed_by = "_msgRcvdEvents - globalNotification";
         _ui.showDialog("notify", msg._uib.options, msg);
       }
       if (msg._uib.componentRef === "globalAlert") {
+        msg._uib_processed_by = "_msgRcvdEvents - globalAlert";
         _ui.showDialog("alert", msg._uib.options, msg);
       }
     }
@@ -6286,6 +6292,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       if (!this._forThis(msg._ui))
         return;
       log("trace", "Uib:_msgRcvdEvents:_ui", "Calling _uiManager")();
+      msg._uib_processed_by = "_msgRcvdEvents - _ui";
       this._dispatchCustomEvent("uibuilder:msg:_ui", msg);
       _ui._uiManager(msg);
     }

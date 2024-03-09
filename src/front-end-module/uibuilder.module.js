@@ -1214,7 +1214,7 @@ export const Uib = class Uib {
         const topic = el.getAttribute('uib-topic') || el.getAttribute('data-uib-topic')
         // Create a topic listener
         this.onTopic(topic, (msg) => {
-            msg._uib_processed_by = 'uibAttrScanOne'
+            msg._uib_processed_by = '_uibAttrScanOne' // record that this has already been processed
             if (Object.prototype.hasOwnProperty.call(msg, 'attributes')) {
                 try {
                     for (const [k, v] of Object.entries(msg.attributes)) {
@@ -1693,8 +1693,9 @@ export const Uib = class Uib {
         // Topic
         if ( msg.topic ) this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg)
 
-        // Check whether 
-        if (msg._uib_processed_by) console.log('msg._uib_processed_by')
+        // Check whether the msg has already been processed - if so, we don't need to process again
+        if (msg._uib_processed_by) return
+        else msg._uib_processed_by = '_msgRcvdEvents'
 
         // Handle msg._uib special requests
         if (msg._uib) {
@@ -1705,21 +1706,25 @@ export const Uib = class Uib {
              * Note that msg._ui.reload is also actioned via the _ui processing below */
             if (msg._uib.reload === true) {
                 log('trace', 'Uib:_msgRcvdEvents:_uib:reload', 'reloading')()
+                msg._uib_processed_by = '_msgRcvdEvents - reload'
                 location.reload()
                 return
             }
 
             // Process msg._uib.command messages - allows Node-RED to run uibuilder FE functions
             if (msg._uib.command) {
+                msg._uib_processed_by = '_msgRcvdEvents - remote command'
                 this._uibCommand(msg)
                 return
             }
 
             // Better to request via msg._ui - these are for backwards compatibility
             if ( msg._uib.componentRef === 'globalNotification' ) {
+                msg._uib_processed_by = '_msgRcvdEvents - globalNotification'
                 _ui.showDialog('notify', msg._uib.options, msg)
             }
             if ( msg._uib.componentRef === 'globalAlert' ) {
+                msg._uib_processed_by = '_msgRcvdEvents - globalAlert'
                 _ui.showDialog('alert', msg._uib.options, msg)
             }
         }
@@ -1730,6 +1735,7 @@ export const Uib = class Uib {
             if (!this._forThis(msg._ui)) return
 
             log('trace', 'Uib:_msgRcvdEvents:_ui', 'Calling _uiManager')()
+            msg._uib_processed_by = '_msgRcvdEvents - _ui'
             this._dispatchCustomEvent('uibuilder:msg:_ui', msg)
             _ui._uiManager(msg)
         }
