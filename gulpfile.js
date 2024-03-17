@@ -1,4 +1,4 @@
-/* eslint-disable n/no-unpublished-require, sonarjs/no-duplicate-string, jsdoc/newline-after-description, jsdoc/require-param */
+/* eslint-disable n/no-unpublished-require, sonarjs/no-duplicate-string, jsdoc/require-param, jsdoc/require-jsdoc */
 
 /**
  * https://semaphoreci.com/community/tutorials/getting-started-with-gulp-js
@@ -30,7 +30,7 @@
 'use strict'
 
 const { src, dest, series, watch, parallel, } = require('gulp')
-const uglify = require('gulp-uglify')
+// const uglify = require('gulp-uglify')
 const rename = require('gulp-rename')
 const include = require('gulp-include')
 const once = require('gulp-once')
@@ -58,7 +58,6 @@ if (!process.cwd().startsWith('D:')) {
     throw new Error('NOT RUNNING FROM THE D: DRIVE')
 }
 
-const feSrc = 'src/front-end'
 const feModuleSrc = 'src/front-end-module'
 const feDest = 'front-end'
 const feDestAlt = 'test-front-end'
@@ -71,9 +70,9 @@ const stdio = 'inherit'
 // @ts-ignore Find the module version in the package.json
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
-const release = '6.9.0'
+const release = '7.0.0'
 // Wanted node.js version - used for ESBUILD
-const nodeVersion = 'node14.14'
+const nodeVersion = 'node18.12'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js Build Version: ${nodeVersion}`)
 
@@ -111,57 +110,11 @@ console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js
 /**
  * TODO
  *  - Add text replace to ensure 2021 in (c) blocks is current year
- *  - In packfe, set the source version string to the current package.json version
  */
 
-//#region ---- packing FE ----
+//#region ---- packing FE components ----
 
-/** Pack (Uglify) OLD front-end
- * @param {Function} cb Callback
- */
-function packfe(cb) {
-    try {
-        src(`${feSrc}/uibuilderfe.dev.js`)
-            // .pipe(debug({ title: '1', minimal: true }))
-            .pipe(once())
-            // .pipe(debug({ title: '2', minimal: true }))
-            .pipe(uglify())
-            .pipe(rename('uibuilderfe.min.js'))
-            .pipe(dest(feDest))
-        fs.copyFileSync(`${feSrc}/uibuilderfe.dev.js`, `${feDest}/uibuilderfe.js`)
-        // src(`${feSrc}/uibuilderfe.dev.js`)
-        //     .pipe(gulpEsbuild({
-        //         outfile: 'uibuilderfe.esm.min.js',
-        //         bundle: false,
-        //         format: 'esm',
-        //         platform: 'browser',
-        //         minify: true,
-        //         sourcemap: true,
-        //         target: [
-        //             'es2019',
-        //         ]
-        //     }))
-        //     .pipe(dest(feDest))
-        // src(`${feSrc}/uibuilderfe.dev.js`)
-        //     .pipe(gulpEsbuild({
-        //         outfile: 'uibuilderfe.alt.min.js',
-        //         bundle: false,
-        //         // format: 'esm',
-        //         platform: 'browser',
-        //         minify: true,
-        //         sourcemap: true,
-        //         target: [
-        //             'es6',
-        //         ]
-        //     }))
-        //     .pipe(dest(feDest))
-    } catch (e) {
-        console.error('Could not pack uibuilderfe', e)
-    }
-    cb()
-}
-
-//#region -- ESbuild NEW client library ---
+//#region -- ESbuild client library ---
 /** ESBuild front-end as ES Module minified
  * @param {Function} cb Callback
  */
@@ -503,78 +456,78 @@ function packUiNode(cb) {
 /** ESBuild front-end as IIFE minified
  * @param {Function} cb Callback
  */
-function buildUibVarIIFEmin(cb) {
-    src('src/components/uib-var.js')
-        .pipe(gulpEsbuild({
-            outfile: 'uib-var.iife.min.js',
-            bundle: true,
-            format: 'iife',
-            platform: 'browser',
-            minify: true,
-            sourcemap: true,
-            target: [
-                // 'es2019',
-                // Start of 2019
-                'chrome72',
-                'safari12.1',
-                'firefox65',
-                'opera58',
+// function buildUibVarIIFEmin(cb) {
+//     src('src/components/uib-var.js')
+//         .pipe(gulpEsbuild({
+//             outfile: 'uib-var.iife.min.js',
+//             bundle: true,
+//             format: 'iife',
+//             platform: 'browser',
+//             minify: true,
+//             sourcemap: true,
+//             target: [
+//                 // 'es2019',
+//                 // Start of 2019
+//                 'chrome72',
+//                 'safari12.1',
+//                 'firefox65',
+//                 'opera58',
 
-                // For private class fields:
-                // 'chrome74',   // Apr 23, 2019
-                // 'opera62',    // Jun 27, 2019
-                // 'edge79',     // Jan 15, 2020
-                // 'safari14.1', // Apr 26, 2021
-                // 'firefox90',  // Jul 13, 2021
+//                 // For private class fields:
+//                 // 'chrome74',   // Apr 23, 2019
+//                 // 'opera62',    // Jun 27, 2019
+//                 // 'edge79',     // Jan 15, 2020
+//                 // 'safari14.1', // Apr 26, 2021
+//                 // 'firefox90',  // Jul 13, 2021
 
-                // If we need top-level await
-                // 'chrome89',  // March 1, 2021
-                // 'edge89',
-                // 'opera75',   // Mar 24, 2021
-                // 'firefox89', // Jun 1, 2021
-                // 'safari15',  // Sep 20, 2021
-            ]
-        }))
-        .on('error', function(err) {
-            console.error('[buildUibVarIIFEmin] ERROR ', err)
-            cb(err)
-        })
-        // .pipe(greplace(/="(.*)-src"/, '="$1-iife.min"'))
-        .pipe(dest(feDest))
-        .on('end', function() {
-            // in case of success
-            cb()
-        })
-}
+//                 // If we need top-level await
+//                 // 'chrome89',  // March 1, 2021
+//                 // 'edge89',
+//                 // 'opera75',   // Mar 24, 2021
+//                 // 'firefox89', // Jun 1, 2021
+//                 // 'safari15',  // Sep 20, 2021
+//             ]
+//         }))
+//         .on('error', function(err) {
+//             console.error('[buildUibVarIIFEmin] ERROR ', err)
+//             cb(err)
+//         })
+//         // .pipe(greplace(/="(.*)-src"/, '="$1-iife.min"'))
+//         .pipe(dest(feDest))
+//         .on('end', function() {
+//             // in case of success
+//             cb()
+//         })
+// }
 /** ESBuild front-end as IIFE (not minified)
  * @param {Function} cb Callback
  */
-function buildUibVarIIFE(cb) {
-    src('src/components/uib-var.js')
-        .pipe(gulpEsbuild({
-            outfile: 'uib-var.iife.js',
-            bundle: true,
-            format: 'iife',
-            platform: 'browser',
-            minify: false,
-            sourcemap: false,
-            target: [
-                'es2020',
-            ]
-        }))
-        .on('error', function(err) {
-            console.error('[buildUibVarIIFE] ERROR ', err)
-            cb(err)
-        })
-        // .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-iife"'))
-        // .pipe(debug({title: '>>> '}))
-        .pipe(dest('front-end/'))
-        // .pipe(dest(`${feDest}/`))
-        .on('end', function() {
-            // in case of success
-            cb()
-        })
-}
+// function buildUibVarIIFE(cb) {
+//     src('src/components/uib-var.js')
+//         .pipe(gulpEsbuild({
+//             outfile: 'uib-var.iife.js',
+//             bundle: true,
+//             format: 'iife',
+//             platform: 'browser',
+//             minify: false,
+//             sourcemap: false,
+//             target: [
+//                 'es2020',
+//             ]
+//         }))
+//         .on('error', function(err) {
+//             console.error('[buildUibVarIIFE] ERROR ', err)
+//             cb(err)
+//         })
+//         // .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-iife"'))
+//         // .pipe(debug({title: '>>> '}))
+//         .pipe(dest('front-end/'))
+//         // .pipe(dest(`${feDest}/`))
+//         .on('end', function() {
+//             // in case of success
+//             cb()
+//         })
+// }
 
 //#endregion -- ---- --
 
@@ -673,7 +626,6 @@ function buildUibRouterESMmin(cb) {
 /** Pack (Uglify) front-end IIFE ES6 task
  * @param {Function} cb Callback
  */
-// @ts-ignore
 function packfeIIFEes6(cb) { // eslint-disable-line no-unused-vars
     try {
         src(`${feModuleSrc}/uibuilder.module.js`)
@@ -734,7 +686,6 @@ function packfeIIFEes6(cb) { // eslint-disable-line no-unused-vars
 /** Pack (Uglify) front-end IIFE ES5 task - DOES NOT WORK!
  * @param {Function} cb Callback
  */
-// @ts-ignore
 function packfeIIFEes5(cb) { // eslint-disable-line no-unused-vars
     try {
         src(`${feModuleSrc}/uibuilder.module.js`)
@@ -819,53 +770,6 @@ function minifyBrandCSS(cb) {
 
 //#region ---- Build node panels ----
 
-/** NO LONGER USED - Combine the parts of uibuilder.html */
-// function buildPanelUib1(cb) {
-//     try {
-//         src('src/editor/uibuilder/editor.js')
-//             // .pipe(debug({title:'1', minimal:true}))
-//             // .pipe(once())
-//             // .pipe(debug({title:'2', minimal:true}))
-//             .pipe(uglify())
-//             .pipe(rename('editor.min.js'))
-//             .pipe(dest('src/editor/uibuilder'))
-//     } catch (e) {
-//         console.error('buildPanelUib1 failed', e)
-//     }
-//     cb()
-// }
-/** compress */
-// function buildPanelUib2(cb) {
-//     try {
-//         src('src/editor/uibuilder/main.html')
-//             .pipe(include())
-//             // .pipe(once())
-//             .pipe(rename('uibuilder.html'))
-//             .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
-//             .pipe(dest(`${nodeDest}/uibuilder/`))
-//     } catch (e) {
-//         console.error('buildPanelUib2 failed', e)
-//     }
-
-//     cb()
-// }
-
-/** Combine the parts of uib-cache.html */
-// function buildPanelCache(cb) {
-//     try {
-//         src('src/editor/uib-cache/main.html')
-//             .pipe(include())
-//             .pipe(once())
-//             .pipe(rename('uib-cache.html'))
-//             .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
-//             .pipe(dest(`${nodeDest}/uib-cache/`))
-//     } catch (e) {
-//         console.error('buildPanelCache failed', e)
-//     }
-
-//     cb()
-// }
-
 /** Combine the parts of uib-sender.html */
 function buildPanelSender(cb) {
     try {
@@ -882,38 +786,6 @@ function buildPanelSender(cb) {
     cb()
 }
 
-/** Combine the parts of uib-receiver.html */
-// function buildPanelReceiver(cb) {
-//     src('src/editor/uib-receiver/main.html')
-//         .pipe(include())
-//         .pipe(once())
-//         .pipe(rename('uib-receiver.html'))
-//         .pipe(dest(nodeDest))
-
-//     cb()
-// }
-
-// For new nodes, the html & js files go in /nodes/<node-name>/ with the filename customNode.{html|js}
-function buildPanelUibList(cb) {
-    try {
-        src(`${nodeSrcRoot}/uib-list/main.html`, ) // { since: lastRun(buildMe) } )
-            // .pipe(debug({title:'debug1',minimal:false}))
-            .pipe( include() )
-            // Rename output to $dirname/editor.html
-            .pipe(rename(function(thispath) {
-                // thispath.dirname = `${thispath.dirname}`
-                thispath.basename = 'customNode'
-                // thispath.extname = 'html'
-            }))
-            // Minimise HTML output
-            // .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, processScripts: ['text/html'], removeScriptTypeAttributes: true }))
-            .pipe(dest(`${nodeDest}/uib-list/`))
-    } catch (e) {
-        console.error('buildPanelUibList failed', e)
-    }
-
-    cb()
-}
 /** Build the uib-element panel */
 function buildPanelUibElement(cb) {
     try {
@@ -1006,11 +878,7 @@ function buildPanelHTML(cb) {
 
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
 const buildme = parallel(
-    // series(buildPanelUib1, buildPanelUib2),
-    // buildPanelUib2,
     buildPanelSender,
-    // buildPanelCache,
-    buildPanelUibList,
     buildPanelUibElement,
     buildPanelUpdate,
     buildPanelTag,
@@ -1050,100 +918,23 @@ function buildNodeLibs(cb) {
 }
 */
 
-/** Watch for changes during development of uibuilderfe & editor */
+/** Watch for changes during development */
 function watchme(cb) {
-    // Re-pack uibuilderfe if it changes
-    watch('src/front-end/uibuilderfe.dev.js', packfe)
     watch(['src/front-end-module/uibuilder.module.js'], parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     watch('src/front-end-module/uibrouter.js', parallel(buildUibRouterIIFE, buildUibRouterIIFEmin, buildUibRouterESM, buildUibRouterESMmin))
     watch('src/components/uib-var.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     watch(['src/front-end-module/ui.js'], parallel(packUiNode, packUiEsmMin, packUiEsm, packUiIIFEmin, packUiIIFE, packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
-    // watch(['src/editor/uibuilder/editor.js'], buildPanelUib1)
-    // Re-combine uibuilder.html if the source changes
-    // watch(['src/editor/uibuilder/*', '!src/editor/uibuilder/editor.js'], buildPanelUib2)
-    // watch(['src/editor/uibuilder/*'], buildPanelUib2)
     watch('src/editor/uib-sender/*', buildPanelSender)
-    // watch('src/editor/uib-receiver/*', buildPanelReceiver)
-    // watch('src/editor/uib-cache/*', buildPanelCache)
-    watch('src/editor/uib-list/*', buildPanelUibList)
     watch('src/editor/uib-element/*', buildPanelUibElement)
     watch('src/editor/uib-update/*', buildPanelUpdate)
     watch('src/editor/uib-tag/*', buildPanelTag)
     watch('src/editor/uib-html/*', buildPanelHTML)
-    // watch('src/editor/uib-save/*', buildPanelSave)
     watch('front-end/uib-brand.css', minifyBrandCSS)
-    // watch('src/components/uib-var.js', parallel(buildUibVarIIFE, buildUibVarIIFEmin))
-    // watch('src/libs/*', buildNodeLibs)
 
     cb()
 }
 
 //#region ---- set versions ----
-
-/** Set the version string for uibuilderfe.js */
-function setFeVersionDev(cb) {
-    if (version !== release) {
-        // Replace the version in uibuilderfe.js
-        src(`${feSrc}/uibuilderfe.dev.js`)
-            // eslint-disable-next-line prefer-named-capture-group
-            .pipe(greplace(/self.version = '(.*?)'/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
-
-                if ( match !== release) {
-                    console.log(`setFeVersionDev: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
-                    // git commit -m 'my notes' path/to/my/file.ext
-                    return `self.version = '${release}-old'`
-                }
-
-                console.log(`setFeVersionDev: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
-
-                cb(new Error('setFeVersionDev: Content version same as release'))
-
-            })) // ,`self.version = '${release}'`))
-            .pipe(dest(feSrc))
-    }
-    cb()
-}
-/** Live version */
-function setFeVersion(cb) {
-    if (version !== release) {
-        // Replace the version in uibuilderfe.js
-        src(`${feDest}/uibuilderfe.js`)
-            // eslint-disable-next-line prefer-named-capture-group
-            .pipe(greplace(/self.version = '(.*?)'/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
-
-                if ( match !== release) {
-                    console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
-                    // git commit -m 'my notes' path/to/my/file.ext
-                    return `self.version = '${release}-old'`
-                }
-
-                console.log(`setFeVersion: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
-                cb(new Error('setFeVersion: Content version same as release'))
-
-            })) // ,`self.version = '${release}'`))
-            .pipe(dest(feDest))
-    }
-    cb()
-}
-/**  Set the version string for uibuilderfe.min.js */
-function setFeVersionMin(cb) {
-    if (version !== release) {
-        // Replace the version in uibuilderfe.min.js
-        src(`${feDest}/uibuilderfe.min.js`)
-            // eslint-disable-next-line prefer-named-capture-group
-            .pipe(greplace(/.version="(.*?)",/, function handleReplace(match, p1, offset, string) { // eslint-disable-line no-unused-vars
-                if ( match !== release) {
-                    console.log(`setFeVersionMin: Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
-                    return `.version="${release}-old",`
-                }
-
-                console.log(`Found '${match}', version: '${p1} at ${offset}. Replacing with '${release}-old'` )
-                cb(new Error('setFeVersionMin: Content version same as release'))
-            }))
-            .pipe(dest(feDest))
-    }
-    cb()
-}
 
 /** Set uibuilder version in package.json */
 function setPackageVersion(cb) {
@@ -1206,13 +997,12 @@ async function createTag(cb) {
     cb()
 }
 
-exports.default     = series( packfe, packfeModule, buildme ) // series(runLinter,parallel(generateCSS,generateHTML),runTests)
+exports.default     = series( packfeModule, buildme ) // series(runLinter,parallel(generateCSS,generateHTML),runTests)
 exports.watch       = watchme
 // exports.buildPanelUib = series(buildPanelUib1, buildPanelUib2)
 exports.build       = buildme
 exports.buildFe     = buildNewFe
 // exports.buildNodeLibs = buildNodeLibs
-exports.packfe      = packfe
 exports.packfeModule = packfeModule
 exports.packfeIIFE  = packfeIIFE
 exports.createTag   = createTag
