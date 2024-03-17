@@ -257,7 +257,7 @@
             });
           }
           if (comp.slot) {
-            this.replaceSlot(el, comp);
+            this.replaceSlot(el, comp.slot);
           }
           if (comp.slotMarkdown) {
             this.replaceSlotMarkdown(el, comp);
@@ -276,7 +276,7 @@
             compToAdd.ns = ns;
             if (compToAdd.ns === "html") {
               newEl = parentEl;
-              parentEl.innerHTML = compToAdd.slot;
+              this.replaceSlot(parentEl, compToAdd.slot);
             } else if (compToAdd.ns === "svg") {
               newEl = this.document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
               this._uiComposeComponent(newEl, compToAdd);
@@ -898,22 +898,20 @@
           if (el)
             el.classList.remove(...classNames);
         }
-        // TODO Add multi-slot
         /** Replace or add an HTML element's slot from text or an HTML string
+         * WARNING: Executes <script> tags! And will process <style> tags.
          * Will use DOMPurify if that library has been loaded to window.
-         * WARN: Executes <script> tags!
          * param {*} ui Single entry from the msg._ui property
          * @param {Element} el Reference to the element that we want to update
-         * @param {*} component The component we are trying to add/replace
+         * @param {*} slot The slot content we are trying to add/replace (defaults to empty string)
          */
-        replaceSlot(el, component) {
-          if (!component.slot)
-            return;
+        replaceSlot(el, slot) {
           if (!el)
             return;
-          if (this.window["DOMPurify"])
-            component.slot = this.window["DOMPurify"].sanitize(component.slot);
-          const tempFrag = document.createRange().createContextualFragment(component.slot);
+          if (!slot)
+            slot = "";
+          slot = this.sanitiseHTML(slot);
+          const tempFrag = document.createRange().createContextualFragment(slot);
           const elRange = document.createRange();
           elRange.selectNodeContents(el);
           elRange.deleteContents();

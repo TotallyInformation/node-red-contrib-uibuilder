@@ -340,7 +340,7 @@ const Ui = class Ui {
 
         //#region Add Slot content to innerHTML
         if (comp.slot) {
-            this.replaceSlot(el, comp)
+            this.replaceSlot(el, comp.slot)
         }
         //#endregion
 
@@ -371,7 +371,8 @@ const Ui = class Ui {
             if (compToAdd.ns === 'html') {
                 newEl = parentEl
                 // newEl.outerHTML = compToAdd.slot
-                parentEl.innerHTML = compToAdd.slot
+                // parentEl.innerHTML = compToAdd.slot
+                this.replaceSlot(parentEl, compToAdd.slot)
             } else if (compToAdd.ns === 'svg') {
                 newEl = this.document.createElementNS('http://www.w3.org/2000/svg', compToAdd.type)
                 // Updates newEl
@@ -1103,23 +1104,22 @@ const Ui = class Ui {
         if (el) el.classList.remove(...classNames)
     }
 
-    // TODO Add multi-slot
     /** Replace or add an HTML element's slot from text or an HTML string
+     * WARNING: Executes <script> tags! And will process <style> tags.
      * Will use DOMPurify if that library has been loaded to window.
-     * WARN: Executes <script> tags!
      * param {*} ui Single entry from the msg._ui property
      * @param {Element} el Reference to the element that we want to update
-     * @param {*} component The component we are trying to add/replace
+     * @param {*} slot The slot content we are trying to add/replace (defaults to empty string)
      */
-    replaceSlot(el, component) {
-        if (!component.slot) return
+    replaceSlot(el, slot) {
         if (!el) return
+        if (!slot) slot = ''
 
         // If DOMPurify is loaded, apply it now
-        if (this.window['DOMPurify']) component.slot = this.window['DOMPurify'].sanitize(component.slot)
+        slot = this.sanitiseHTML(slot)
 
         // Create doc frag and apply html string (msg.payload or the slot property)
-        const tempFrag = document.createRange().createContextualFragment(component.slot)
+        const tempFrag = document.createRange().createContextualFragment(slot)
 
         // Remove content of el and replace with tempFrag
         const elRange = document.createRange()
