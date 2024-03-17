@@ -62,12 +62,6 @@ module.exports = {
         'dependencies': [],
         'description': 'Simple Svelte template. Requires Svelte installation, see README.md'
     },
-    'old-blank-client': {
-        'name': 'No framework, old client',
-        'folder': 'old-blank-client',
-        'dependencies': [],
-        'description': 'Minimal template using the old uibuilderfe client.'
-    },
     // DO NOT REMOVE THIS ONE OR YOU WILL NOT BE ABLE TO LOAD EXTERNAL TEMPLATES
     external: {
         'name': 'Load an external template using Degit',

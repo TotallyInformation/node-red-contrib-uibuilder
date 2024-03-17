@@ -3,8 +3,7 @@ title: Future multi-node communications
 description: |
   Initially, UIBUILDER was a single node. However, there was always the intent to offer wider communications from other packages and nodes to UIBUILDER-based front-end's. This document lays out a proposal for how that may happen.
 created: 2021-09-29 20:04:36
-lastUpdated: 2023-09-30 13:09:32
-updated: 2023-12-30 17:01:41
+updated: 2024-03-17 20:04:23
 ---
 
 Status: **Draft**
@@ -39,8 +38,6 @@ Note that the component node does not _need_ to define any front-end components.
 However, there _will_ be a set of standards that will allow a component node to make resources available to uibuilder-based front-ends. 
 
 The important thing is that messages will be automatically routed both to and from the front-end.
-
-It is likely that there will be a mechanism in the `uibuilderfe.js` front-end library that will enable it to auto-load defined resources. Details to be defined later.
 
 ## How it works - the `uibuilder` node
 

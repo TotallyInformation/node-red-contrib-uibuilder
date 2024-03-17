@@ -1,12 +1,10 @@
 ---
-title: How to use the modern uibuilder front-end library
+title: How to use the uibuilder front-end client library
 description: |
-  This version of the library can either be used in the same style as the old `uibuilderfe.js` client (loading in a script link in the HTML) using the `uibuilder.iife.js` version or as a modern [ES Module](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) using the `uibuilder.esm.js` version. Both builds of the library have identical features but are called differently as shown below.
+  The client library can either be loaded in a script link in the HTML using the `uibuilder.iife.js` version or as a modern [ES Module](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) using the `uibuilder.esm.js` version. Both builds of the library have identical features but are called differently as shown below.
 created: 2023-01-28 15:19:38
-lastUpdated: 2023-07-02 13:48:04
-updated: 2024-02-04 15:50:41
+updated: 2024-03-17 20:29:01
 ---
-
 
 ## The quick guide
 

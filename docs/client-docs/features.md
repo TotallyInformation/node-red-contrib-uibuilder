@@ -3,8 +3,7 @@ title: Features of the modern, modular front-end client `uibuilder.esm.js` and `
 description: |
   Description of the main features.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-10-08 13:39:09
-updated: 2023-12-30 17:01:41
+updated: 2024-03-17 20:22:45
 ---
 
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)
@@ -59,20 +58,22 @@ See the [MDN documentation on CSS query selectors](https://developer.mozilla.org
 
 ## onChange/cancelChange functions
 
-The `onChange` function will be familiar if you have used previous versions of the `uibuilderfe.js` library. However, it works in a very different way now. The most important change is that it now returns a reference value that can be used to cancel the listener if you need to.
+The `onChange` function lets you monitor for changes to variables that are managed by the uibuilder client library. Changes to variables are managed using the `uibuilder.set` function both in your own code and within the library. By adding an `onChange` callback function, it will be run whenever `uibuilder.set` is called against the monitored variable name.
+
+By caputuring the returned reference, you can also cancel `onChange` callbacks.
 
 Here are some useful examples:
 
 ```javascript
-let ocRef = uibuilder.onChange('msg', function(msg) {
+let ocRef = uibuilder.onChange('msg', (msg) => {
     console.log('>> onChange `msg` >>', this, msg)
     // ... do something useful with the msg here ...
 })
-let ocRefPing = uibuilder.onChange('ping', function(data) {
+let ocRefPing = uibuilder.onChange('ping', (data) => {
     console.log('>> onChange `ping` >>', data)
     // ... do something useful with the msg here ...
 })
-uibuilder.onChange('ioConnected', function(isConnected) {
+uibuilder.onChange('ioConnected', (isConnected) => {
     console.log('>> onChange `ioConnected` >>', isConnected)
     // ... do something useful with the msg here ...
 })
@@ -93,7 +94,7 @@ This is a convenience function pair that lets you take action when a message fro
 For example, a message from Node-RED such as `{topic: 'mytopic', payload: 42}` could be actioned using the following code:
 
 ```javascript
-let otRef = uibuilder.onTopic('mytopic', function(msg) {
+let otRef = uibuilder.onTopic('mytopic', (msg) => {
     console.log('>> onTopic `mytopic` >>', this, msg)
     // ... do something useful with the msg here ...
 })
@@ -235,15 +236,15 @@ See [Custom Components](client-docs/custom-components) for details.
 
 ## set function (Managed variables)
 
-the `uibuilder.set()` function is now more flexible than in `uibuilderfe.js`. You can now set anything that doesn't start with `_` or `#`.
+The `uibuilder.set()` function can create/change any variable name that doesn't start with `_` or `#`. To obtain the current value of a set variable, use `uibuilder.get()`. To monitor for changes, use `uibuilder.onChange()`.
 
 !> Please note that there may be some rough edges still in regard to what should and shouldn't be `set`. Please try to avoid setting an internal variable or function or bad things may happen 😲
 
-This means that you can simulate an incoming message from Node-RED with something like `uibuilder.set('msg', {topic:'uibuilder', payload:42})` in your front-end JavaScript.
+This means that you can even simulate an incoming message from Node-RED with something like `uibuilder.set('msg', {topic:'uibuilder', payload:42})` in your front-end JavaScript.
 
 One interesting possibility is getting your page to auto-reload using `uibuilder.set('msg', {_uib:{reload:true}})`. Perhaps even more useful is the ability to very easily alter your UI on the page by using the dynamic UI feature (detailed below) `uibuilder.set('msg', {_ui:[{method:'add', ...}, {method:'remove', ....}]})`.
 
-Using the `set` function triggers an event `uibuilder:propertyChanged` which is attached to the `document` object. This means that you have two different ways to watch for variables changing.
+Using the `set` function triggers an event `uibuilder:propertyChanged` which is attached to the `document` object. So you have two different ways to watch for variables changing.
 
 This will listen for a specific variable changing:
 
@@ -562,9 +563,9 @@ It:
 * An event handler is created for incoming messages from Node-RED. It checks for reload and UI requests and deals with them automatically.
 * Automatically loads the default stylesheet if you haven't loaded your own.
 
-Normally, you will not have to pass any options to this function (unlike the equivalent function in the older `uibuilderfe.js` library before uibuilder v5). However, see the troubleshooting section if you are having problems connecting correctly.
+Normally, you will not have to pass any options to this function. However, see the troubleshooting section if you are having problems connecting correctly.
 
-If you do need the options, there is now only a single object argument with only two possible properties:
+If you do need the options, there is now only a single object argument:
 
 ```javascript
 uibuilder.start({

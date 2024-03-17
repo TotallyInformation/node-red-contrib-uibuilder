@@ -3,8 +3,7 @@ title: Pre-defined UIBUILDER messages
 description: |
   Documents the different types of UIBUILDER messages between a Node-RED `uibuilder` node and a UIBUILDER front-end.
 created: 2020-09-24 18:14:00
-lastUpdated: 2023-09-30 13:06:44
-updated: 2023-12-30 17:01:41
+updated: 2024-03-17 20:03:33
 ---
 
 - [Message types](#message-types)
@@ -311,7 +310,7 @@ Note that, if responding to a control msg (sending back to uibuilder's input), y
 
 ### Client Ready for Content (Control Message)
 
-Is send by the client library (uibuilderfe) to Node-RED whenever the client connects by loading or reloading the page.
+Is send by the client library to Node-RED whenever the client connects by loading or reloading the page.
 
 Any message that contains `"cacheControl": "REPLAY"` and is linked back to your cache node should trigger that node to replay all of the saved cache
 to the `uibuilder` node. Make sure you include the `_socketId` if you want that replay to only go to a specific connected client.

@@ -311,7 +311,7 @@ class UibWeb {
         // Add auto-generated index page to uibRouter showing all uibuilder user app endpoints at `../uibuilder/apps`
         this._serveUserUibIndex()
 
-        // Add masterStatic to ../uibuilder - serves up front-end/... uib-styles.css, uibuilderfe...
+        // Add masterStatic to ../uibuilder - serves up front-end/... uib-styles.css, clients, etc...
         if ( this.masterStatic !== undefined ) {
             this.uibRouter.use( express.static( this.masterStatic, uib.staticOpts ) )
             log.trace(`[uibuilder:web:_webSetup] Master Static Folder '${this.masterStatic}' added to uib router ('_httpNodeRoot_/uibuilder/')`)
@@ -585,7 +585,7 @@ class UibWeb {
         /** We want to add services in the right order - first load takes preference:
          *   (1) Middleware: (a) common (for all instances), (b) internal (all instances), (c) (if allowed in settings) instance API middleware
          *   (2) Front-end user code: (a) dynamic templated (*.ejs) & explicit (*.html) from views folder, (b) src or dist static
-         *   (3) Master static folders - for the built-in front-end resources (css, default html, uibuilderfe, etc)
+         *   (3) Master static folders - for the built-in front-end resources (css, default html, client libraries, etc)
          *   (4) [Optionally] The folder lister
          *   (5) Common static folder is last
          * TODO Make sure the above is documented in Docs

@@ -3,8 +3,7 @@ title: A first-timers walkthrough of using UIBUILDER
 description: |
   If you haven't used UIBUILDER before, it can be a little confusing as it brings together concepts from several different worlds. This walkthrough takes you from nothing to a basic data-driven web page.
 created: 2021-09-24 11:02:56
-lastUpdated: 2023-09-30 13:10:40
-updated: 2023-12-30 17:01:41
+updated: 2024-03-17 20:12:46
 ---
 
 Like UIBUILDER itself, this walkthrough may look complex. But you should bear in mind that if you follow the 7 steps in the [How to get started](#how-to-get-started-4-steps-to-a-data-driven-web-app) section, that is basically it.
@@ -93,7 +92,7 @@ Now that you have the basics running, it is time to look at the front-end code. 
   
   See the [uibuilder components overview](components) for a diagram of how the different parts of uibuilder work together with Node-RED and the browser.
 
-  There are actually 3 uibuilder client library versions. The one above should be the most commonly used. `uibuilder.min.esm.min.js` is used if you want to use [ES Module](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/) style coding. There is an older library, `uibuilderfe.min.js` but this is no longer being actively updated (as of uibuilder v6+) and should be replaced where possible.
+  There are two uibuilder client library versions. The one above should be the most commonly used. `uibuilder.min.esm.min.js` is used if you want to use [ES Module](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/) style coding.
 
 
 * All of the front-end code for a specific `uibuilder` node (an "[instance](glossary)") is stored in a single folder (with a number of sub-folders).
@@ -160,8 +159,7 @@ Notes:
   
   See the example flows and WIKI entries about "Caching" to see how to pre-load data into new/reloaded pages from Node-RED.
 
-* The various templates along with some of the examples show you the different ways to work with the `uibuilderfe` 
-  library depending whether you are using a front-end framework library or not.
+* The various templates along with some of the examples show you the different ways to work with the front-end client library depending whether you are using along with a front-end framework library or not.
 
 * There is an external template on GitHub called [`TotallyInformation/uib-template-test`](https://github.com/TotallyInformation/uib-template-test).
   You can use this to see the kinds of things that need to be in a template. Templates are likely to continue to evolve and in the future are likely

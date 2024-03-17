@@ -18,7 +18,7 @@ Node.JS        |
 npm            | 
 Node-RED       | 
 uibuilder node | 
-uibuilderFE    | 
+uibuilder client library | 
 OS             | 
 Browser        | 
 
