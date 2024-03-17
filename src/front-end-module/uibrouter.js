@@ -262,6 +262,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         })
     }
 
+    /** Set up the MarkdownIT library if loaded */
     _markdownIt() {
         if (!window['markdownit']) return
         // If Markdown-IT library pre-loaded, set it up now
