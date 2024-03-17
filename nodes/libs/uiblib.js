@@ -36,9 +36,42 @@
 const path = require('path')
 const fs = require('fs-extra')
 // const tilib = require('./tilib')
-const { nanoid } = require('nanoid')
+// const { nanoid } = require('nanoid')
 const { promisify } = require('util')
+const crypto = require('crypto')
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
+
+/** Encode data in a buffer as Base32 with a url-safe alphabet.
+ * Based on https://github.com/luavixen/foxid
+ * Algorithm copied from https://github.com/LinusU/base32-encode by Linus Unnebäck, MIT licensed.
+ * @param {Buffer} buff - A buffer containing crypto random bytes
+ * @param {number} length - Number of characters in the encoded string
+ * @param {number} size - Number of bytes in `buffer` to encode
+ * @returns {string} Encoded string
+ */
+function encodeNanoId(buff, length, size) {
+    let bits = 0
+    let value = 0
+    let output = ''
+    const alphaLen = 59  // was 31 in original (alphabet was only 0-9a-z = 32 chars)
+    const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghjkmnpqrstvwxyz_-'
+
+    for (let i = 0; i < size; i++) {
+        value = (value << 8) | buff[i]
+        bits += 8
+
+        while (bits >= 5) {
+            output += alphabet[(value >>> (bits - 5)) & alphaLen]
+            bits -= 5
+        }
+    }
+
+    if (bits > 0 && output.length < length) {
+        output += alphabet[(value << (5 - bits)) & alphaLen]
+    }
+
+    return output.substring(0, length)
+}
 
 module.exports = {
 
@@ -252,18 +285,38 @@ module.exports = {
 
     }, // ----- End of replaceTemplate() ----- //
 
+    /** Generates a secure and URL-friendly unique ID.
+     * Based on https://github.com/luavixen/foxid
+     * @param {number} [length] - Length of the generated ID, defaults to 21.
+     * @returns {string} Newly generated ID as a string.
+     */
+    nanoId: function nanoId(length) {
+        length = Math.max(length | 0, 0) || 21
+        const size = (length * 5 + 7) >>> 3
+
+        const buffer = Buffer.allocUnsafeSlow(size)
+
+        crypto.randomFillSync(buffer, 0, size)
+
+        return encodeNanoId(buffer, length, size)
+    },
+
     /** Get the client id from req headers cookie string OR, create a new one and return that
      * @param {*} req ExpressJS request object
      * @returns {string} The clientID
      */
     getClientId: function getClientId(req) {
+        const uidLen = 21
+        const regex = new RegExp(`uibuilder-client-id=(?<id>.{${uidLen}})`)
         let clientId
         if ( req.headers.cookie ) {
-            const matches = req.headers.cookie.match(/uibuilder-client-id=(?<id>.{21})/)
-            if ( !matches || !matches.groups.id ) clientId = nanoid()
+            const matches = req.headers.cookie.match(regex)
+            // if ( !matches || !matches.groups.id ) clientId = nanoid()
+            if ( !matches || !matches.groups.id ) clientId = this.nanoId(uidLen)
             else clientId = matches.groups.id
         } else {
-            clientId = nanoid()
+            // clientId = nanoid()
+            clientId = this.nanoid(uidLen)
         }
         return clientId
     },

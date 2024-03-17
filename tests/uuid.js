@@ -4,6 +4,8 @@ try {
 } catch (err) {
   console.log('crypto support is disabled!');
 }
+const { nanoId } = require('../nodes/libs/uiblib.js')
 // const options = {}
 // crypto.randomUUID(options)
-// crypto.randomUUID()
+// console.log(crypto.randomUUID())
+console.log( nanoId() )
