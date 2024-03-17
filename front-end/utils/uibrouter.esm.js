@@ -189,6 +189,7 @@ var _UibRouter = class _UibRouter {
       scr.remove();
     });
   }
+  /** Set up the MarkdownIT library if loaded */
   _markdownIt() {
     if (!window["markdownit"])
       return;
