@@ -3,8 +3,7 @@ title: UIBUILDER Documentation
 description: |
   UIBUILDER provides a stand-alone web server that allows for interfacing with Node-RED, while giving you help and complete freedom to create custom web interfaces.
 created: 2019-06-16 16:16:00
-lastUpdated: 2023-09-30 13:06:56
-updated: 2023-12-30 20:02:01
+updated: 2024-03-17 19:22:32
 ---
 
 It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces for Node-RED.
@@ -18,7 +17,7 @@ UIBUILDER comes with some *templates* to give you some front-end code to get you
 UIBUILDER also comes with a number of *example flows*. These are accessed from Node-RED's "hamburger" menu, import entry. They are fully working flows that demonstrate the use of UIBUILDER.
 
 > [!TIP]
-> These are the docs for UIBUILDER v6. If you need the v5 or earlier docs, the easiest way is to set up a test instance of Node-RED and manually install the appropriate UIBUILDER version: `npm install node-red-contrib-uibuilder@5` then use the documentation links from a `uibuilder` node.
+> These are the docs for UIBUILDER v7. If you need the v6 or earlier docs, the easiest way is to set up a test instance of Node-RED and manually install the appropriate UIBUILDER version: `npm install node-red-contrib-uibuilder@5` then use the documentation links from a `uibuilder` node.
 
 ## Getting help and contributing
 

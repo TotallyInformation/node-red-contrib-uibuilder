@@ -67,6 +67,7 @@
 * [Roadmap](roadmap/)
 * [Main readme <sup>🔗</sup>](uibhome)
 * Archives
+  * [v6 Changelog](archived/CHANGELOG-v6)
   * [v5 Changelog](archived/CHANGELOG-v5)
   * [v3/4 changelog](archived/CHANGELOG-v3-v4)
   * [v2 breaking changes](archived/v2-breaking-changes)
