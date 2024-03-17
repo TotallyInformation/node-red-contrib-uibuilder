@@ -74,6 +74,7 @@ module.exports = {
         'plugin:sonarjs/recommended',
         // 'plugin:prettier/recommended',
         // The n plugin reads the min. node.js version from package.json and error's any ES features not available in that version.
+        // https://www.npmjs.com/package/eslint-plugin-n#-rules
         'plugin:n/recommended',
     ],
     // settings: {
@@ -83,16 +84,6 @@ module.exports = {
     // },
     rules: {
         'n/no-process-exit': 'error',
-
-        // remove once min engines moves to node.js v14+
-        // 'es/no-optional-chaining': 'error',
-        // 'es/no-dynamic-import': 'error',
-        // 'es/no-nullish-coalescing-operators': 'error',
-
-        // remove once min engines moves to node.js v15+
-        'es/no-logical-assignment-operators': 'error',
-        'es/no-promise-any': 'error',
-        'es/no-numeric-separators': 'error',
 
         // Tidy up some jsdoc oddities
         'jsdoc/multiline-blocks': 0,
