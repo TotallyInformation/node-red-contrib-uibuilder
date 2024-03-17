@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "6.9.0",
+  "version": "7.0.0",
   "description": "Easily create data-driven web UI's for Node-RED using any (or no) front-end library.",
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",
@@ -12,9 +12,6 @@
     "edit-docs": "%LOCALAPPDATA%/Programs/Typora/Typora.exe ./",
     "buildSidebar": "node ./bin/docsify-auto-sidebar.js"
   },
-  "deprecated-dependencies": {
-    "express-validator": "^6.13.0"
-  },
   "dependencies": {
     "@totallyinformation/ti-common-event-handler": "^1.0.0",
     "degit": "^2.8.4",
@@ -23,24 +20,22 @@
     "express": "^4.17.1",
     "fast-glob": "^3.2.7",
     "fs-extra": "^11.1.0",
-    "jsdom": "^21",
-    "nanoid": "^3",
+    "jsdom": "^24.0.0",
     "serve-index": "^1.9.1",
-    "socket.io": "^4.3.2",
-    "socket.io-client": "^4.4.1"
+    "socket.io": "^4.3.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/jquery": "^3.5.25",
     "@types/jqueryui": "^1.12.19",
-    "@types/node": "^14.18.29",
+    "@types/node": "^18.19.24",
     "@types/node-red": "^1.3.3",
     "eslint": "^8.31.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-es": "^4.1.0",
-    "eslint-plugin-html": "^7.1.0",
+    "eslint-plugin-html": "^8.0.0",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsdoc": "^47.0.2",
+    "eslint-plugin-jsdoc": "^48.2.1",
     "eslint-plugin-n": "^16.0.1",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-sonarjs": "^0",
@@ -54,7 +49,8 @@
     "gulp-prompt": "^1.2.0",
     "gulp-rename": "^2.0.0",
     "gulp-replace": "^1.1.3",
-    "gulp-uglify": "^3.0.2"
+    "gulp-uglify": "^3.0.2",
+    "socket.io-client": "^4.4.1"
   },
   "node-red": {
     "version": ">=3",
@@ -67,14 +63,12 @@
       "uib-save": "nodes/uib-save/customNode.js",
       "uib-sender": "nodes/uib-sender/uib-sender.js",
       "uib-tag": "nodes/uib-tag/customNode.js",
-      "uib-update": "nodes/uib-update/customNode.js",
-      
-      "uib-list": "nodes/uib-list/customNode.js"
+      "uib-update": "nodes/uib-update/customNode.js"
     },
     "notyetnodes": {}
   },
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "directories": {
     "example": "./examples",
@@ -87,8 +81,25 @@
   "style": "./front-end/uib-styles.css",
   "types": "index.d.ts",
   "type": "commonjs",
-  "browserslist": ["> 0.5%", "maintained node versions", "last 2 versions", "not dead", "not ie > 0"],
-  "keywords": ["node-red", "ui", "gui", "dashboard", "SPA", "web", "website", "data-driven", "webpage", "web-app"],
+  "browserslist": [
+    "> 0.5%",
+    "maintained node versions",
+    "last 2 versions",
+    "not dead",
+    "not ie > 0"
+  ],
+  "keywords": [
+    "node-red",
+    "ui",
+    "gui",
+    "dashboard",
+    "SPA",
+    "web",
+    "website",
+    "data-driven",
+    "webpage",
+    "web-app"
+  ],
   "homepage": "https://totallyinformation.github.io/node-red-contrib-uibuilder/#/",
   "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
   "author": {
@@ -99,46 +110,60 @@
     {
       "name": "Julian Knight",
       "url": "https://github.com/TotallyInformation"
-    }, {
+    },
+    {
       "name": "Colin Law",
       "url": "https://github.com/colinl"
-    }, {
+    },
+    {
       "name": "Steve Rickus",
       "url": "https://github.com/shrickus"
-    }, {
+    },
+    {
       "name": "Ellie Lee",
       "url": "https://github.com/ellieejlee"
-    }, {
+    },
+    {
       "name": "Thomas Wagner",
       "url": "https://github.com/Thomseeen"
-    }, {
+    },
+    {
       "name": "Arlena Derksen",
       "url": "https://github.com/boisei0"
-    }, {
+    },
+    {
       "name": "cflurin",
       "url": "https://discourse.nodered.org/u/cflurin"
-    }, {
+    },
+    {
       "name": "Scott Page - IndySoft",
       "url": "https://github.com/scottpageindysoft"
-    }, {
+    },
+    {
       "name": "Stephen McLaughlin - Steve-Mcl",
       "url": "https://discourse.nodered.org/u/Steve-Mcl"
-    }, {
+    },
+    {
       "name": "Sergio Rius",
       "url": "https://github.com/SergioRius"
-    }, {
+    },
+    {
       "name": "Thorsten von Eicken",
       "url": "https://github.com/tve"
-    }, {
+    },
+    {
       "name": "meeki007",
       "url": "https://github.com/meeki007"
-    }, {
+    },
+    {
       "name": "talltechdude",
       "url": "https://github.com/talltechdude"
-    }, {
+    },
+    {
       "name": "Harold Peters Inskipp",
       "url": "https://github.com/HaroldPetersInskipp"
-    }, {
+    },
+    {
       "name": "Mudwalker (Colin J)",
       "url": "https://github.com/mudwalkercj"
     }
