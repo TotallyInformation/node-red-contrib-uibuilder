@@ -228,6 +228,10 @@ You can also support the development of UIBUILDER by sponsoring the development.
 [GitHub Sponsorship](https://github.com/sponsors/TotallyInformation), 
 [PayPal Sponsorship](https://paypal.me/TotallyInformation)
 
+## Sponsors
+
+- [@MagicJF](https://github.com/MagicJF)
+
 ## Developers/Contributors
 
 - [Julian Knight](https://github.com/TotallyInformation) - the designer and main author.
