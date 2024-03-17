@@ -740,21 +740,33 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ## UIBUILDER v7 planned breaking changes
 
-* Minimum node.js v18
-* Minimum node-red v4
-* Remove uibuilderfe library (and tidy gulp and source)
-* Removal of uib-list node
-* Remove Pollyfills from uibuilder editor code
-* Consider removing the css auto-load in the next major release since at least 1 person has hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876).
-* Switch to default of case sensitive URL's for ExpressJS. Socket.IO is already case sensitive but ExpressJS is not. This can cause issues as shown in [Ref](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6)
-* Add URL case sensitivity flag - currently ExpressJS and Socket.IO handle URL case sensitivity differently.
+* **Minimum node.js v18**
 
-  In rare cases, this can cause an error. Will make both case sensitive in line with W3C recommendations (will be optional until next major release).
+* **Remove uibuilderfe library** (and tidy gulp and source) - if you are still using this, please to try to move to the module based library as it is far more feature rich and has many bugs removed.
 
-  Add case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
-* Restrict `onChange` to only watch watched variables? (checking to make sure it doesn't start with `_` or `#`).
-* Move socket.io-client from dependencies to dev-dependencies - ensure removed from runtime code.
-* Remove `serve-index` dependency if the `uib-file-*` nodes have been delivered.
+* **Removal of `uib-list` node** - The `uib-element` node does everything that it did and more.
+
+* **Switch to default of case sensitive URL's for ExpressJS**. Socket.IO is already case sensitive but ExpressJS is not. This can cause issues as shown in [Ref](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
+
+  Will make both case sensitive in line with W3C recommendations. Will also add a case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [Ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
+
+* **Move socket.io-client from dependencies to dev-dependencies** - ensure removed from runtime code.
+
+  If using the module based client library, you should not be loading the Socket.IO client yourself anyway since it is already built into the client library.
+
+* In the client library, will consider **restricting `onChange` to only watch watched variables**.
+
+  Will also add checks to make sure the variable doesn't start with `_` or `#`.
+
+* Remove Pollyfills from uibuilder editor code - shouldn't impact anyone using a browser from the last 5 years or so.
+
+* Will consider removing the *css auto-load* in the next major release since at least 1 person has hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876).
+
+  This automatically loads the `uib-brand.css` if no css is provided at all. Since all of the standard templates include some CSS and have for a long time, this should not impact anyone.
+
+* Will remove `serve-index` dependency if the `uib-file-*` nodes have been delivered.
+
+  I'm really not sure anyone uses this in any case and the new nodes will provide a richer and more controllable experience.
 
 ## Ideas for releases further out
 
