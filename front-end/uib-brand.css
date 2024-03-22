@@ -638,7 +638,7 @@ input:invalid, textarea:invalid, select:invalid {
     border: 3px solid var(--success);
 } */
 /* at any level of nesting */
-form input, form textarea, form select {
+form input, form textarea, form select, form fieldset, form output {
     /* width: 75%; */
     flex: 2;
     border-radius: var(--border-radius);
@@ -663,14 +663,17 @@ form button, input[type="button" i], form input[type="reset" i], form input[type
     margin-left: .2em;
     margin-right: .2em;
 }
-form input[type="checkbox" i] {
+form input[type="checkbox" i], form input[type="radio" i] {
     height:1.5em;
+    vertical-align: middle;
 }
 form:invalid button {
     background-color: var(--warning);
 }
 form label {
     flex: 1;
+    vertical-align: middle;
+    display: inline-block;
 }
 form label[required]::after {
     content: " *"
@@ -678,6 +681,7 @@ form label[required]::after {
 /* first level only */
 form > div {
     display: inherit;
+    vertical-align: middle;
 }
 form > div:focus-within {
     font-weight: bold;
