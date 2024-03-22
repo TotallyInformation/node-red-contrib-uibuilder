@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 /** Manage uibuilder server files
  *
- * Copyright (c) 2023-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2024 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -31,9 +31,9 @@
  * @typedef {import('../../typedefs.js').uibPackageJson} uibPackageJson
  */
 
-const path = require('path')
+const path = require('node:path')
 // Async
-const fs = require('fs/promises')
+const fs = require('node:fs/promises')
 // Sync
 const { existsSync, accessSync, constants: fsConstants, mkdirSync, readFileSync } = require('fs')
 // TODO Remove in future?
