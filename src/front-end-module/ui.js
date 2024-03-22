@@ -3,9 +3,9 @@
   See: https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/config-driven-ui
 
   Author: Julian Knight (Totally Information), March 2023
-  
+
   License: Apache 2.0
-  Copyright (c) 2022-2023 Julian Knight (Totally Information)
+  Copyright (c) 2022-2024 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@
 
 const Ui = class Ui {
     //#region --- Class variables ---
-    version = '6.9.0-src'
+    version = '7.0.0-src'
 
     // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
     sanitiseExtraTags = ['uib-var']
@@ -43,7 +43,7 @@ const Ui = class Ui {
     window
 
     /** Log function - passed in constructor or will be a dummy function
-     * @type {function}
+     * @type {Function}
      */
     static log
 
@@ -55,8 +55,8 @@ const Ui = class Ui {
 
     /** Called when `new Ui(...)` is called
      * @param {globalThis} win Either the browser global window or jsdom dom.window
-     * @param {function} [extLog] A function that returns a function for logging
-     * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
+     * @param {Function} [extLog] A function that returns a function for logging
+     * @param {Function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
      */
     constructor(win, extLog, jsonHighlight) {
         // window must be passed in as an arg to the constructor
@@ -73,11 +73,11 @@ const Ui = class Ui {
 
         // If a suitable function not passed in, create a dummy one
         if (extLog) Ui.log = extLog
-        else Ui.log = function(){return function(){}}
+        else Ui.log = function() { return function() {} }
 
         // If a JSON HTML highlighting function passed then use it, else a dummy fn
         if (jsonHighlight) this.syntaxHighlight = jsonHighlight
-        else this.syntaxHighlight = function(){}
+        else this.syntaxHighlight = function() {}
 
         // If Markdown-IT pre-loaded, then configure it now
         if (window['markdownit']) {
@@ -154,14 +154,17 @@ const Ui = class Ui {
             return new Promise( (resolve, reject) => {
                 // Doesn't ever seem to fire (at least in Chromium)
                 notify.addEventListener('close', ev => {
+                    // @ts-ignore
                     ev.currentTarget.userAction = 'close'
                     resolve(ev)
                 })
                 notify.addEventListener('click', ev => {
+                    // @ts-ignore
                     ev.currentTarget.userAction = 'click'
                     resolve(ev)
                 })
                 notify.addEventListener('error', ev => {
+                    // @ts-ignore
                     ev.currentTarget.userAction = 'error'
                     reject(ev)
                 })
