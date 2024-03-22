@@ -34,7 +34,7 @@ import Ui from './ui'
 import io from 'socket.io-client'
 import UibVar from '../components/uib-var'
 
-const version = '6.9.0-src'
+const version = '7.0.0-src'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
@@ -297,6 +297,8 @@ export const Uib = class Uib {
     #isShowStatus = false
     // If true, URL hash changes send msg back to node-red. Controlled by watchUrlHash()
     #sendUrlHash = false
+    // Used to help create unique element ID's if one hasn't been provided, increment on use
+    #uniqueElID = 0
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
         'elementExists', 'get', 'getManagedVarList', 'getWatchedVars', 'htmlSend', 'include',
@@ -1099,13 +1101,14 @@ export const Uib = class Uib {
     removeClass = _ui.removeClass
 
     /** Replace or add an HTML element's slot from text or an HTML string
+     * WARNING: Executes <script> tags! And will process <style> tags.
      * Will use DOMPurify if that library has been loaded to window.
      * param {*} ui Single entry from the msg._ui property
      * @param {Element} el Reference to the element that we want to update
-     * @param {*} component The component we are trying to add/replace
+     * @param {*} slot The slot content we are trying to add/replace (defaults to empty string)
      */
-    replaceSlot(el, component) {
-        _ui.replaceSlot(el, component)
+    replaceSlot(el, slot) {
+        _ui.replaceSlot(el, slot)
     }
 
     /** Replace or add an HTML element's slot from a Markdown string
@@ -1206,7 +1209,7 @@ export const Uib = class Uib {
     /** Check a single HTML element for uib attributes and add auto-processors as needed.
      * Async so that calling function does not need to wait.
      * Understands only uib-topic at present. Msgs received on the topic can have:
-     *   msg.payload - replaces innerHTML
+     *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
      *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
      * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
      */
@@ -1215,6 +1218,7 @@ export const Uib = class Uib {
         // Create a topic listener
         this.onTopic(topic, (msg) => {
             msg._uib_processed_by = '_uibAttrScanOne' // record that this has already been processed
+            // Process msg.attributes
             if (Object.prototype.hasOwnProperty.call(msg, 'attributes')) {
                 try {
                     for (const [k, v] of Object.entries(msg.attributes)) {
@@ -1224,7 +1228,26 @@ export const Uib = class Uib {
                     log(0, 'uibuilder:attribute-processing', 'Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.')()
                 }
             }
-            if (Object.prototype.hasOwnProperty.call(msg, 'payload')) el.innerHTML = msg.payload
+
+            // Process msg.value (or set checked if boolean - for checkboxes)
+            // TODO Move this to a common function
+            const hasChecked = Object.prototype.hasOwnProperty.call(msg, 'checked')
+            const hasValue = Object.prototype.hasOwnProperty.call(msg, 'value')
+            if ( hasValue || hasChecked ) {
+                if (el.type && (el.type === 'checkbox' || el.type === 'radio')) {
+                    if (hasChecked) el.checked = this.truthy(msg.checked, false)
+                    else if (hasValue) el.checked = this.truthy(msg.value, false)
+                } else {
+                    if (hasValue) el.value = msg.value
+                    else if (hasChecked) el.value = this.truthy(msg.checked, false)
+                }
+            }
+
+            // TODO (MAYBE) Process msg.classes and msg.styles
+
+            // Process msg.payload (applied as slot HTML) - NB: Will process <script> & <style>
+            // if (Object.prototype.hasOwnProperty.call(msg, 'payload')) el.innerHTML = msg.payload
+            if (Object.prototype.hasOwnProperty.call(msg, 'payload')) this.replaceSlot(el, msg.payload)
         })
     }
 
@@ -1243,6 +1266,200 @@ export const Uib = class Uib {
                 })
             }
         })
+    }
+
+    /** Attempt to get target attributs - can fail for certain target types, if so, returns empty object
+     * @param {HTMLElement} el Target element
+     * @returns {object} Array of key/value HTML attribute objects
+     */
+    getElementAttributes(el) {
+        const ignoreAttribs = ['class', 'id', 'name']
+        let attribs
+        try {
+            attribs = Object.assign({},
+                ...Array.from(el.attributes,
+                    ( { name, value } ) => {
+                        if ( !ignoreAttribs.includes(name) ) {
+                            return ({ [name]: value })
+                        }
+                        return undefined
+                    }
+                )
+            )
+        } catch (e) {}
+
+        return attribs
+    }
+
+    /** Check for CSS Classes and return as array if found or undefined if not
+     * @param {HTMLElement} el Target element
+     * @returns {Array|undefined} Array of class names
+     */
+    getElementClasses(el) {
+        let classes
+        try {
+            classes = Array.from(el.classList)
+        } catch (e) {}
+        return classes
+    }
+
+    /** Get target custom properties - only shows custom props not element default ones
+     * Excludes custom props starting with _
+     * @param {HTMLElement} el Target element
+     * @returns {object} Object of propname/value pairs
+     */
+    getElementCustomProps(el) {
+        const props = {}
+        Object.keys(el).forEach( key => {
+            if (key.startsWith('_')) return // Exclude private
+            props[key] = el[key]
+        })
+        return props
+    }
+
+    // TODO - Handle files - How?
+    // ! TODO - Handle radio buttons - require them to be in a fieldset?
+    /** For HTML Form elements (e.g. input, textarea, select), return the details
+     * @param {HTMLFormElement} el Source form element
+     * @returns {object|null} Form element key details
+     */
+    getFormElementDetails(el) {
+        if (!el.type) {
+            log(1, 'uibuilder:getFormElementDetails', 'Cannot get form element details as this is not an input type element')()
+            return null
+        }
+
+        // Get or create a (hopefully) unique ID
+        const id = this.returnElementId(el)
+        if (!id) {
+            log(1, 'uibuilder:getFormElementDetails', 'Cannot get form element details as no id is present and could not be generated')()
+            return null
+        }
+
+        let value = el.value
+
+        let checked
+        if (el.type === 'checkbox' || el.type === 'radio' ) {
+            checked = el.checked
+            // HTML does not normally return any value if not checked,
+            // We will return an empty string
+            if (checked === false) value = ''
+        }
+
+        // If the value is a valid number, use that instead of the text version
+        if ('valueAsNumber' in el && !isNaN(el.valueAsNumber)) {
+            value = el.valueAsNumber
+        }
+
+        // For multi file input, get the file details as the value
+        // el.files is a FileList type & each entry is a File type - have to process these manually - stupid HTML!
+        // https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications
+        if (el.type === 'file' && el.files.length > 0) {
+            value = []
+            // Walk through each file in the FileList
+            for (const file of el.files) {
+                const props = {}
+                // Walk through each file property
+                for (const prop in file) {
+                    props[prop] = file[prop]
+                }
+                // Create a temp URL allowing access to download the file
+                // Automatically destroyed on page reload
+                props.tempUrl = window.URL.createObjectURL(file)
+
+                value.push(props)
+            }
+        }
+        // TODO: Use FileReader() to read the file and send to Node-RED
+
+        const formDetails = {
+            'id': id,
+            'name': el.name,
+            'value': value,
+            'checked': checked,
+            'valid': el.checkValidity(),
+            'type': el.type,
+        }
+
+        // If the form element has invalid content, try to report why
+        if (formDetails.valid === false) {
+            const v = el.validity
+            formDetails.validity = {
+                badInput: v.badInput === true ? v.badInput : undefined,
+                customError: v.customError === true ? v.customError : undefined,
+                patternMismatch: v.patternMismatch === true ? v.patternMismatch : undefined,
+                rangeOverflow: v.rangeOverflow === true ? v.rangeOverflow : undefined,
+                rangeUnderflow: v.rangeUnderflow === true ? v.rangeUnderflow : undefined,
+                stepMismatch: v.stepMismatch === true ? v.stepMismatch : undefined,
+                tooLong: v.tooLong === true ? v.tooLong : undefined,
+                tooShort: v.tooShort === true ? v.tooShort : undefined,
+                typeMismatch: v.typeMismatch === true ? v.typeMismatch : undefined,
+                valueMissing: v.valueMissing === true ? v.valueMissing : undefined,
+            }
+        }
+
+        // If any data-* attribs defined
+        if (Object.keys(el.dataset).length > 0) formDetails.data = el.dataset
+
+        return formDetails
+    }
+
+    /** Show a browser notification if possible.
+     * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
+     * or a Notifications API options object + config.title string.
+     * @example uibuilder.notify( 'My simple message to the user' )
+     * @example uibuilder.notify( {topic: 'My Title', payload: 'My simple message to the user'} )
+     * @example uibuilder.notify( {title: 'My Title', body: 'My simple message to the user'} )
+     * @example // If config.return = true, a promise is returned.
+     * // The resolved promise is only returned if the notification is clicked by the user.
+     * // Can be used to send the response back to Node-RED
+     * uibuilder.notify(notifyConfig).then( res => uibuilder.eventSend(res) )
+     * @ref https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+     * @param {object|string} config Notification config data or simple message string
+     * @returns {Promise<Event>|null} A promise that resolves to the click event or null
+     */
+    notify(config) {
+        if (config.return) return _ui.notification(config)
+
+        _ui.notification(config)
+            .then( res => { // eslint-disable-line promise/always-return
+                log('info', 'Uib:notification', 'Notification completed event', res)()
+                // if (config.return) return res
+            })
+            .catch( err => {
+                log('error', 'Uib:notification', 'Notification error event', err)()
+            })
+        return null
+    }
+
+    /** Get or create a (hopefully) unique ID
+     * @param {HTMLFormElement} el Source form element
+     * @returns {string|null} A hopefully unique element ID
+     */
+    returnElementId(el) {
+        return el.id !== '' ? el.id : (el.name !== '' ? `${el.name}-${++this.#uniqueElID}` : (el.type ? `${el.type}-${++this.#uniqueElID}` : `${el.localName}-${++this.#uniqueElID}`))
+    }
+
+    /** Scroll the page
+     * https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+     * @param {string} [cssSelector] Optional. If not set, scrolls to top of page.
+     * @param {{block:(string|undefined),inline:(string|undefined),behavior:(string|undefined)}} [opts] Optional. DOM scrollIntoView options
+     * @returns {boolean} True if element was found, false otherwise
+     */
+    scrollTo(cssSelector, opts) {
+        // @ts-ignore
+        if (!opts) opts = {}
+        if (!cssSelector || cssSelector === 'top'  || cssSelector === 'start') cssSelector = 'body'
+        else if (cssSelector === 'bottom' || cssSelector === 'end') {
+            cssSelector = 'body'
+            opts.block = 'end'
+        }
+        const el = this.$(cssSelector)
+        if (el) {
+            el.scrollIntoView(opts)
+            return true
+        }
+        return false
     }
 
     /** * Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
@@ -1311,56 +1528,6 @@ export const Uib = class Uib {
         }
 
         return showHide
-    }
-
-    /** Show a browser notification if possible.
-     * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
-     * or a Notifications API options object + config.title string.
-     * @example uibuilder.notify( 'My simple message to the user' )
-     * @example uibuilder.notify( {topic: 'My Title', payload: 'My simple message to the user'} )
-     * @example uibuilder.notify( {title: 'My Title', body: 'My simple message to the user'} )
-     * @example // If config.return = true, a promise is returned.
-     * // The resolved promise is only returned if the notification is clicked by the user.
-     * // Can be used to send the response back to Node-RED
-     * uibuilder.notify(notifyConfig).then( res => uibuilder.eventSend(res) )
-     * @ref https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
-     * @param {object|string} config Notification config data or simple message string
-     * @returns {Promise<Event>|null} A promise that resolves to the click event or null
-     */
-    notify(config) {
-        if (config.return) return _ui.notification(config)
-
-        _ui.notification(config)
-            .then( res => { // eslint-disable-line promise/always-return
-                log('info', 'Uib:notification', 'Notification completed event', res)()
-                // if (config.return) return res
-            })
-            .catch( err => {
-                log('error', 'Uib:notification', 'Notification error event', err)()
-            })
-        return null
-    }
-
-    /** Scroll the page
-     * https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
-     * @param {string} [cssSelector] Optional. If not set, scrolls to top of page.
-     * @param {{block:(string|undefined),inline:(string|undefined),behavior:(string|undefined)}} [opts] Optional. DOM scrollIntoView options
-     * @returns {boolean} True if element was found, false otherwise
-     */
-    scrollTo(cssSelector, opts) {
-        // @ts-ignore
-        if (!opts) opts = {}
-        if (!cssSelector || cssSelector === 'top'  || cssSelector === 'start') cssSelector = 'body'
-        else if (cssSelector === 'bottom' || cssSelector === 'end') {
-            cssSelector = 'body'
-            opts.block = 'end'
-        }
-        const el = this.$(cssSelector)
-        if (el) {
-            el.scrollIntoView(opts)
-            return true
-        }
-        return false
     }
 
     /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
@@ -1651,7 +1818,7 @@ export const Uib = class Uib {
             }
 
             default: {
-                log('trace', `uibuilderfe:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`)
+                log('trace', `uibuilder:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`)
                 // Anything else to do for other control msgs?
             }
         } // ---- End of process control msg types ---- //
@@ -2079,83 +2246,41 @@ export const Uib = class Uib {
         // The target element
         const target = domevent.currentTarget
 
-        // Get target properties - only shows custom props not element default ones
-        const props = {}
-        Object.keys(target).forEach( key => {
-            if (key.startsWith('_')) return // Exclude private
-            props[key] = target[key]
-        })
+        // Get target custom properties - only shows custom props not element default ones
+        const props = this.getElementCustomProps(target)
 
         // Attempt to get target attributs - can fail for certain target types
-        const ignoreAttribs = ['class', 'id', 'name']
-        let attribs
-        try {
-            attribs = Object.assign({},
-                ...Array.from(target.attributes,
-                    ( { name, value } ) => {
-                        if ( !ignoreAttribs.includes(name) ) {
-                            return ({ [name]: value })
-                        }
-                        return undefined
-                    }
-                )
-            )
-        } catch (e) {}
+        const attribs = this.getElementAttributes(target)
 
-        // If target embedded in a form, include the form data
-        let form
-        const frmVals = []
+        // Msg.payload
+        let payload = {}
+
+        // If target is embedded in a form, include ALL the form data in the output
+        let formDetails
         if ( target.form ) {
-            form = {}
-            form.valid = target.form.checkValidity()
+            formDetails = {
+                id: this.returnElementId(target.form),
+                valid: target.form.checkValidity(),
+            }
+
             Object.values(target.form).forEach( (frmEl, i) => {
-                const id = frmEl.id !== '' ? frmEl.id : (frmEl.name !== '' ? frmEl.name : `${i}-${frmEl.type}`)
+                // Ignore <fieldset>, <object> - they don't have values
+                if (['fieldset', 'object'].includes(frmEl.type)) return
 
-                // We must have both an element id (we may have forced one above) AND
-                // the element type MUST be not undefined - to allow for the extra properties added by frameworks such as Svelte
-                if (id !== '' && frmEl.type) {
-                    // Stupid HTML doesn't use value attrib for checkboxes. So override if value is set to default
-                    if ('checked' in frmEl && frmEl.value === 'on') frmEl.value = frmEl.checked.toString()
-
-                    frmVals.push( { key: id, val: frmEl.value } ) // simplified for addition to msg.payload
-
-                    form[id] = {
-                        'id': frmEl.id,
-                        'name': frmEl.name,
-                        'value': frmEl.value,
-                        'valid': frmEl.checkValidity(),
-                        'type': frmEl.type,
-                    }
-
-                    if (form[id].valid === false) {
-                        const v = frmEl.validity
-                        form[id].validity = {
-                            badInput: v.badInput === true ? v.badInput : undefined,
-                            customError: v.customError === true ? v.customError : undefined,
-                            patternMismatch: v.patternMismatch === true ? v.patternMismatch : undefined,
-                            rangeOverflow: v.rangeOverflow === true ? v.rangeOverflow : undefined,
-                            rangeUnderflow: v.rangeUnderflow === true ? v.rangeUnderflow : undefined,
-                            stepMismatch: v.stepMismatch === true ? v.stepMismatch : undefined,
-                            tooLong: v.tooLong === true ? v.tooLong : undefined,
-                            tooShort: v.tooShort === true ? v.tooShort : undefined,
-                            typeMismatch: v.typeMismatch === true ? v.typeMismatch : undefined,
-                            valueMissing: v.valueMissing === true ? v.valueMissing : undefined,
-                        }
-                    }
-
-                    if (frmEl.dataset) form[id].data = frmEl.dataset
+                const details = this.getFormElementDetails(frmEl)
+                if (details) {
+                    formDetails[details.id] = details
+                    // simplified for addition to msg.payload
+                    payload[details.id] = details.value
                 }
             })
         }
 
         // Check for CSS Classes
-        let classes
-        try {
-            classes = Array.from(target.classList)
-        } catch (e) {}
+        const classes = this.getElementClasses(target)
 
         // Each `data-xxxx` attribute is added as a property
-        let payload = { ...target.dataset }
+        if (Object.keys(target.dataset).length > 0) payload = { ...payload, ...target.dataset }
 
         // Handle Notification events
         let nprops
@@ -2182,7 +2307,6 @@ export const Uib = class Uib {
                 vibrate: target.vibrate,
             }
         }
-        // console.log(Object.prototype.toString.call(target))
 
         // Set up the msg to send - NB: Topic may be added by this._send
         const msg = {
@@ -2195,7 +2319,7 @@ export const Uib = class Uib {
                 name: target.name !== '' ? target.name : undefined,
                 slotText: target.textContent ? target.textContent.substring(0, 255) : undefined,
 
-                form: form,
+                form: formDetails,
                 props: props,
                 attribs: attribs,
                 classes: classes,
@@ -2217,23 +2341,7 @@ export const Uib = class Uib {
             }
         }
 
-        if (frmVals.length > 0) {
-            frmVals.forEach( entry => {
-                msg.payload[entry.key] = entry.val
-            })
-        }
-
-        if (domevent.type === 'change' ) {
-            if (target.attributes.type && target.type === 'checkbox') {
-                // Checkboxes don't have a value!!
-                msg._ui.newValue = msg._ui.checked = msg.payload.value = target.checked
-            } else if (!msg.payload.value && !target.form && target.value) {
-                msg._ui.newValue = msg.payload.value = target.value
-            }
-        }
-
         log('trace', 'Uib:eventSend', 'Sending msg to Node-RED', msg)()
-        if (target.dataset && target.dataset.length === 0) log('warn', 'Uib:eventSend', 'No payload in msg. data-* attributes should be used.')()
 
         this._send(msg, this._ioChannels.client, originator)
     }
@@ -2550,10 +2658,10 @@ export const Uib = class Uib {
     // }
 
     /** Wrap an object in a JS proxy
-     * WARNING: Sadly, `let x = uib.createProxy( [1,2] ); x.push(3);` Does not trigger a send because that is classed as a 
+     * WARNING: Sadly, `let x = uib.createProxy( [1,2] ); x.push(3);` Does not trigger a send because that is classed as a
      * GET, not a SET.
-     * @param {*} target The target object to proxy
-     * @returns {Proxy} A proxied version of the target object
+     * param {*} target The target object to proxy
+     * returns {Proxy} A proxied version of the target object
      */
     // createProxy(target) {
     //     return new Proxy(target, {
@@ -2900,7 +3008,7 @@ try {
             this.addEventListener(event, callback)
         }
     }
-} finally { }
+} finally { } // eslint-disable-line no-empty
 
 // Can import as `import uibuilder from ...` OR `import {uibuilder} from ...`
 export { uibuilder }
