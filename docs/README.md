@@ -1,22 +1,29 @@
 ---
-title: UIBUILDER Documentation
+title: UIBUILDER for Node-RED
 description: |
-  UIBUILDER provides a stand-alone web server that allows for interfacing with Node-RED, while giving you help and complete freedom to create custom web interfaces.
+  UIBUILDER provides a Node-RED integrated web server that allows for interfacing with Node-RED, while giving you help and complete freedom to create custom web interfaces.
 created: 2019-06-16 16:16:00
-updated: 2024-03-17 19:22:32
+updated: 2024-03-22 22:10:30
 ---
 
-It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces for Node-RED.
+It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces. It utilises standard HTML/CSS and is not a framework. You can use it with a front-end framework if you like, but in many cases you won't need one.
 
-All you need to start making use of UIBUILDER is a `uibuilder` node added to your flows. Select a suitable URL path and deploy. Then click on the "Open url" button to open the new page in a new tab.
+> [!TIP]
+> All you need to start making use of UIBUILDER is a `uibuilder` node added to your flows. Select a suitable URL path and deploy. Then click on the "Open url" button to open the new page in a new tab.
+> 
+> That's it, batteries are included!
 
-Now you can edit the front-end html, JavaScript and CSS files. You can also send messages to your front end and send messages back to Node-RED.
+Now you can decide how you want to build your UI. You can craft it by hand, use external editors, create configuration JSON or use one of the no-code nodes. Or even use any combination of these styles - UIBUILDER never locks you in!
 
-UIBUILDER comes with some *templates* to give you some front-end code to get you started. Load a different template if you like, use the editor to customise the UI. Use the library manager if you need any front-end libraries or frameworks (this adds the appropriate folders to the web server so that you can access them from your UI).
+Once you have some UI, you can now send and receive data messages to and from your connected browser pages and Node-RED. Using them to update the UI and get user input.
+
+UIBUILDER comes with *templates* to give you some front-end code to get you started. Load a different template if you like, use the editor to customise the UI. Use the library manager if you need any front-end libraries or frameworks (this adds the appropriate folders to the web server so that you can access them from your UI).
 
 UIBUILDER also comes with a number of *example flows*. These are accessed from Node-RED's "hamburger" menu, import entry. They are fully working flows that demonstrate the use of UIBUILDER.
 
-> [!TIP]
+The best way to get started is to add a uibuilder node or import one of the examples, then start playing. You will soon get the hang of it.
+
+> [!NOTE]
 > These are the docs for UIBUILDER v7. If you need the v6 or earlier docs, the easiest way is to set up a test instance of Node-RED and manually install the appropriate UIBUILDER version: `npm install node-red-contrib-uibuilder@5` then use the documentation links from a `uibuilder` node.
 
 ## Getting help and contributing
