@@ -73,6 +73,22 @@ function encodeNanoId(buff, length, size) {
     return output.substring(0, length)
 }
 
+/** Generates a secure and URL-friendly unique ID.
+ * Based on https://github.com/luavixen/foxid
+ * @param {number} [length] - Length of the generated ID, defaults to 21.
+ * @returns {string} Newly generated ID as a string.
+ */
+function nanoId(length) {
+    length = Math.max(length | 0, 0) || 21
+    const size = (length * 5 + 7) >>> 3
+
+    const buffer = Buffer.allocUnsafeSlow(size)
+
+    crypto.randomFillSync(buffer, 0, size)
+
+    return encodeNanoId(buffer, length, size)
+}
+
 module.exports = {
 
     /** Do any complex, custom node closure code here
@@ -285,22 +301,6 @@ module.exports = {
 
     }, // ----- End of replaceTemplate() ----- //
 
-    /** Generates a secure and URL-friendly unique ID.
-     * Based on https://github.com/luavixen/foxid
-     * @param {number} [length] - Length of the generated ID, defaults to 21.
-     * @returns {string} Newly generated ID as a string.
-     */
-    nanoId: function nanoId(length) {
-        length = Math.max(length | 0, 0) || 21
-        const size = (length * 5 + 7) >>> 3
-
-        const buffer = Buffer.allocUnsafeSlow(size)
-
-        crypto.randomFillSync(buffer, 0, size)
-
-        return encodeNanoId(buffer, length, size)
-    },
-
     /** Get the client id from req headers cookie string OR, create a new one and return that
      * @param {*} req ExpressJS request object
      * @returns {string} The clientID
@@ -316,7 +316,7 @@ module.exports = {
             else clientId = matches.groups.id
         } else {
             // clientId = nanoid()
-            clientId = this.nanoid(uidLen)
+            clientId = nanoId(uidLen)
         }
         return clientId
     },
