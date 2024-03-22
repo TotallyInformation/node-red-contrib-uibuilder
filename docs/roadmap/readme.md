@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-03-07 17:07:59
+updated: 2024-03-20 08:57:09
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -673,6 +673,10 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 #### Videos
 
+* Creating data-driven web apps using Node-RED
+  * http-in/-out, D1/2, UIB - lockin & flexibility
+  * UIB approaches
+
 * Updating content/attributes (see [ref](how-to/change-element.md))
 * Each release
 * Each node
@@ -738,39 +742,13 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 * How best to allow other nodes to provide zero-code nodes - that allow auto feedback from the front-end? e.g. something like the [node-red-contrib-ui-time-scheduler](https://github.com/fellinga/node-red-contrib-ui-time-scheduler) node.
 * How to provide a better log output? With a simple way to link to Node-RED log output (filtered) as well as a dedicated output node. That output's to a web page with highlighting and possibly page back/fwd through history.
 
-## UIBUILDER v7 planned breaking changes
+## UIBUILDER v8 planned breaking changes
 
-* **Minimum node.js v18**
-
-* **Remove uibuilderfe library** (and tidy gulp and source) - if you are still using this, please to try to move to the module based library as it is far more feature rich and has many bugs removed.
-
-* **Removal of `uib-list` node** - The `uib-element` node does everything that it did and more.
-
-* **Switch to default of case sensitive URL's for ExpressJS**. Socket.IO is already case sensitive but ExpressJS is not. This can cause issues as shown in [Ref](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
-
-  Will make both case sensitive in line with W3C recommendations. Will also add a case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [Ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
-
-* **Move socket.io-client from dependencies to dev-dependencies** - ensure removed from runtime code.
-
-  If using the module based client library, you should not be loading the Socket.IO client yourself anyway since it is already built into the client library.
-
-* In the client library, will consider **restricting `onChange` to only watch watched variables**.
-
-  Will also add checks to make sure the variable doesn't start with `_` or `#`.
-
-* Remove Pollyfills from uibuilder editor code - shouldn't impact anyone using a browser from the last 5 years or so.
-
-* Will consider removing the *css auto-load* in the next major release since at least 1 person has hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876).
-
-  This automatically loads the `uib-brand.css` if no css is provided at all. Since all of the standard templates include some CSS and have for a long time, this should not impact anyone.
-
-* Will remove `serve-index` dependency if the `uib-file-*` nodes have been delivered.
-
-  I'm really not sure anyone uses this in any case and the new nodes will provide a richer and more controllable experience.
+* [ ] None yet
 
 ## Ideas for releases further out
 
-### Changes needed for future versions of node.js (will be updating uib in line with Node-RED v3)
+### Changes needed for future versions of node.js
 
 * Node.js v14 features - code updates to leverage the latest features
 
@@ -850,7 +828,6 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
   * AbortController and AbortSignal (experimental in v14)
   * Fetch (Experimental 16.15.0, 18.0.0)
   * Permission model (experimental in v20)
-* Move the ui class to a separate *repo* so that it can be used independently.
 * Consider moving all libs to separate repo to reduce number of direct dependencies. (probably requires node v16 for nested mono-repo modules)
 * Restructure to a monorepo? With libs in 1, maybe nodes in their own and the front-end library in another? [ref](https://www.bing.com/search?pglt=161&q=what+is+a+monorepo&cvid=42b295dfc64143cfb64e4061114803fd&aqs=edge.0.0l9.7031j0j1&FORM=ANNTA1&PC=U531)
 * Some way to visually expose a library of JavaScript functions with their args as inputs. Maybe make this a cmd that pulls a doc from Node-RED? (keeps client lib small)
