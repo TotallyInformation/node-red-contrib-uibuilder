@@ -17,12 +17,12 @@ var require_ui = __commonJS({
       //#endregion --- class variables ---
       /** Called when `new Ui(...)` is called
        * @param {globalThis} win Either the browser global window or jsdom dom.window
-       * @param {function} [extLog] A function that returns a function for logging
-       * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
+       * @param {Function} [extLog] A function that returns a function for logging
+       * @param {Function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
        */
       constructor(win, extLog, jsonHighlight) {
         //#region --- Class variables ---
-        __publicField(this, "version", "6.9.0-src");
+        __publicField(this, "version", "7.0.0-src");
         // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
         __publicField(this, "sanitiseExtraTags", ["uib-var"]);
         __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -1093,7 +1093,7 @@ var require_ui = __commonJS({
       }
       //#endregion ---- -------- ----
     }, /** Log function - passed in constructor or will be a dummy function
-     * @type {function}
+     * @type {Function}
      */
     __publicField(_a, "log"), /** Options for Markdown-IT if available (set in constructor) */
     __publicField(_a, "mdOpts"), /** Reference to pre-loaded Markdown-IT library */

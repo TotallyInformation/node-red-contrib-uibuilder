@@ -1,6 +1,6 @@
 const Ui = class Ui2 {
   //#region --- Class variables ---
-  version = "6.9.0-node";
+  version = "7.0.0-node";
   // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
   sanitiseExtraTags = ["uib-var"];
   sanitiseExtraAttribs = ["variable", "report", "undefined"];
@@ -8,7 +8,7 @@ const Ui = class Ui2 {
   // Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
   window;
   /** Log function - passed in constructor or will be a dummy function
-   * @type {function}
+   * @type {Function}
    */
   static log;
   /** Options for Markdown-IT if available (set in constructor) */
@@ -18,8 +18,8 @@ const Ui = class Ui2 {
   //#endregion --- class variables ---
   /** Called when `new Ui(...)` is called
    * @param {globalThis} win Either the browser global window or jsdom dom.window
-   * @param {function} [extLog] A function that returns a function for logging
-   * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
+   * @param {Function} [extLog] A function that returns a function for logging
+   * @param {Function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
    */
   constructor(win, extLog, jsonHighlight) {
     if (win)
