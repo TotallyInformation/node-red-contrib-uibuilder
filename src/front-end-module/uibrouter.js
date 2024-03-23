@@ -755,8 +755,8 @@ class UibRouter { // eslint-disable-line no-unused-vars
             return UibRouter.md.render(mdText.trim())
         } catch (e) {
             console.error(`[uibrouter:renderMarkdown] Could not render Markdown. ${e.message}`, e)
+            return '<p class="border error">Could not render Markdown<p>'
         }
-        return '<p class="border error">Could not render Markdown<p>'
     }
     //#endregion ---- ----- ----
 

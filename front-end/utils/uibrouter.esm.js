@@ -598,8 +598,8 @@ var _UibRouter = class _UibRouter {
       return _UibRouter.md.render(mdText.trim());
     } catch (e) {
       console.error(`[uibrouter:renderMarkdown] Could not render Markdown. ${e.message}`, e);
+      return '<p class="border error">Could not render Markdown<p>';
     }
-    return '<p class="border error">Could not render Markdown<p>';
   }
   //#endregion ---- ----- ----
   // TODO
