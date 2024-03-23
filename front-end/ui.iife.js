@@ -584,8 +584,8 @@
             return _a.md.render(mdText.trim());
           } catch (e) {
             _a.log(0, "uibuilder:convertMarkdown", `Could not render Markdown. ${e.message}`, e)();
+            return '<p class="border error">Could not render Markdown<p>';
           }
-          return '<p class="border error">Could not render Markdown<p>';
         }
         /** Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
          * Wraps the included object in a div tag.
