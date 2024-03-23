@@ -5,31 +5,6 @@
 ;(function () { // eslint-disable-line sonarjs/cognitive-complexity
     'use strict'
 
-    //#region ------------------- Pollyfills --------------------- //
-
-    if (!Object.entries) {
-        Object.entries = function( obj ) {
-            const ownProps = Object.keys( obj )
-            let i = ownProps.length
-            const resArray = new Array(i) // preallocate the Array
-            while (i--) {
-                resArray[i] = [ownProps[i], obj[ownProps[i]]]
-            }
-
-            return resArray
-        }
-    }
-    if (!Object.values) {
-        const reduce = Function.bind.call(Function.call, Array.prototype.reduce)
-        const keys = Reflect.ownKeys // eslint-disable-line no-undef
-        const concat = Function.bind.call(Function.call, Array.prototype.concat)
-        const isEnumerable = Function.bind.call(Function.call, Object.prototype.propertyIsEnumerable)
-        Object.values = function values(O) {
-            return reduce(keys(O), (v, k) => concat(v, typeof k === 'string' && isEnumerable(O, k) ? [O[k]] : []), [])
-        }
-    }
-    //#endregion ----------------- Pollyfills -------------------- //
-
     //#region --------- "global" variables for the panel --------- //
 
     // RED._debug({topic: 'RED.settings', payload:RED.settings})
