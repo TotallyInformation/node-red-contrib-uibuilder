@@ -15,7 +15,6 @@
   "dependencies": {
     "@totallyinformation/ti-common-event-handler": "^1.0.0",
     "degit": "^2.8.4",
-    "ejs": "^3.1.6",
     "execa": "^5",
     "express": "^4.17.1",
     "fast-glob": "^3.2.7",
