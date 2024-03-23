@@ -4,7 +4,7 @@ description: |
   Usage and configuration.
 created: 2023-02-05 16:31:39
 lastUpdated: 2023-02-05 16:31:46
-updated: 2023-12-30 17:01:41
+updated: 2024-03-23 16:54:34
 ---
 
 > [!note]
@@ -65,7 +65,8 @@ The Topic string will be added to messages being sent to the front-end if the in
 
 ### Template Settings
 
-!> Changing the template overwrites existing files with the same names in your `<uibRoot>/<url>` server folder. So make sure you take copies before pressing the Load button if you don't want to loose them.
+> [!NOTE]
+> Changing the template overwrites existing files with the same names in your `<uibRoot>/<url>` server folder. So make sure you take copies before pressing the Load button if you don't want to loose them.
 
 uibuilder Templates let you have a rapid prototype for your front-end code. The Templates load a complete set of front-end files along with a README and an npm style `package.json` file. This allows a template to be a complete working model, ready to go.
 

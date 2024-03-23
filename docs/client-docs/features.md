@@ -3,7 +3,7 @@ title: Features of the modern, modular front-end client `uibuilder.esm.js` and `
 description: |
   Description of the main features.
 created: 2022-06-11 14:15:26
-updated: 2024-03-17 20:22:45
+updated: 2024-03-23 16:44:11
 ---
 
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)
@@ -46,7 +46,8 @@ uibuilder adds the global `$` and `$$` functions when loaded if it can (it won't
 
 The `$` function acts in a similar way to the version provided by jQuery and the same as in your browser dev console. It is actually bound to [`document.querySelector`](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) which lets you get a reference to an HTML element using a CSS selector. If multiple elements match the selection, the element returned will be the first one found.
 
-!> Note that this function will only ever return a **single** element which is different to jQuery but the same as the dev console.
+> [!NOTE]
+> This function will only ever return a **single** element which is different to jQuery but the same as the dev console.
 
 Example. With the HTML `<button id="button1">Press me</button>` and the JavaScript `$('#button1').innerHTML = 'boo!'`. The label on the button will change from "Press me" to "Boo!".
 
@@ -238,7 +239,8 @@ See [Custom Components](client-docs/custom-components) for details.
 
 The `uibuilder.set()` function can create/change any variable name that doesn't start with `_` or `#`. To obtain the current value of a set variable, use `uibuilder.get()`. To monitor for changes, use `uibuilder.onChange()`.
 
-!> Please note that there may be some rough edges still in regard to what should and shouldn't be `set`. Please try to avoid setting an internal variable or function or bad things may happen 😲
+> [!NOTE]
+> There may be some rough edges still in regard to what should and shouldn't be `set`. Please try to avoid setting an internal variable or function or bad things may happen 😲
 
 This means that you can even simulate an incoming message from Node-RED with something like `uibuilder.set('msg', {topic:'uibuilder', payload:42})` in your front-end JavaScript.
 
@@ -279,7 +281,8 @@ In previous versions of the front-end library, you had to provide your own CSS c
 
 In this version, if you haven't loaded any other stylesheets, the library will automatically load the new default stylesheet (`uib-brand.css`).
 
-!> Note that using this auto-load feature may result in a flash of an unformatted page before the styles are loaded and applied. So it is still recommended to load the stylesheet manually in the head section of your HTML. That will avoid the unstyled flash.
+> [!NOTE]
+> Using this auto-load feature may result in a flash of an unformatted page before the styles are loaded and applied. So it is still recommended to load the stylesheet manually in the head section of your HTML. That will avoid the unstyled flash.
 
 If you are trying to load the default CSS and can't find the correct URL, try removing the style link from your HTML and check what the client loads in the browsers dev tools network tab.
 
@@ -552,7 +555,8 @@ There is no longer a need to load this library, which sometimes caused confusion
 
 ## start function (now rarely needed)
 
-!> You should hardly ever need to manually run this now. Try without first. See the details below.
+> [!NOTE]
+> You should hardly ever need to manually run this now. Try without first. See the details below.
 
 The start function is what kick-starts the uibuilder front-end library into action. It attempts to make a connection to Node-RED and exchanges the initial control messages.
 

@@ -3,7 +3,7 @@ title: Developer documentation for `uibuilder.js`
 description: |
   `uibuilder.js` is the main file that defines the uibuilder node. It is this that is _required_ into Node-RED when it starts.
 created: 2019-05-18 18:25:00
-updated: 2024-03-17 20:36:04
+updated: 2024-03-23 16:50:25
 ---
 
 > [!WARNING]
@@ -317,7 +317,8 @@ Note that the file `typedefs.js` may have a more up-to-date version of this.
 * [UibWeb (`nodes/web.js`)](web-js.md) - A singleton class that manages the interactions with ExpressJS and so provides all of the web server capabilities.
 * [UibSockets (`socket.js`)](socket-js.md) - A singleton class that manages the interactions with Socket.IO and so provides all of the communications between Node-RED and front-end code.
 
-?> Note that a singleton class is one that can only be instantiated once. Thanks to the way that Node.js's `require` function works, whenever a singleton class is required, the same instance will always be used.
+> [!NOTE]
+> A singleton class is one that can only be instantiated once. Thanks to the way that Node.js's `require` function works, whenever a singleton class is required, the same instance will always be used.
 
 ### Utility Functions
 

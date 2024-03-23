@@ -4,7 +4,7 @@ description: |
   For a while, VueJS along with bootstrap-vue were the default frameworks supplied with uibuilder. As such, a few extra handlers were build into the uibuilderfe library. This page describes those features.
 created: 2020-12-11 16:38:00
 lastUpdated: 2023-09-30 13:10:18
-updated: 2024-03-22 17:58:40
+updated: 2024-03-23 16:42:25
 ---
 
 Note that these do not impact the use of uibuilder with other (or no) frameworks and in those cases, the extra features will do nothing and won't get in the way.
@@ -15,7 +15,8 @@ Note that these do not impact the use of uibuilder with other (or no) frameworks
 
 ## "Toast" Notifications
 
-!> From uibuilder v5, toasts are also available if Vue and bootstrap-vue are not in use. See the [pre-defined messages](./pre-defined-msgs.md) page for details.
+> [!NOTE]
+> From uibuilder v5, toasts are also available if Vue and bootstrap-vue are not in use. See the [pre-defined messages](./pre-defined-msgs.md) page for details.
 
 This feature allows you to send a msg with standard properties that will result in a pop-up notification appearing in the front-end user interface.
 

@@ -3,11 +3,11 @@ title: Configuring UIBUILDER
 description: |
   Describes how to change UIBUILDER's configuration, options and settings.
 created: 2021-12-30 17:38:33
-lastUpdated: 2023-09-30 13:08:51
-updated: 2023-12-30 17:01:41
+updated: 2024-03-23 16:49:30
 ---
 
-?> This page is about the global configuration of UIBUILDER. If you are looking for information on how to configure an individual `uibuilder` node instance, please refer to the [Configuring `uibuilder` nodes](uib-node-configuration.md) page. 
+> [!NOTE]
+> This page is about the global configuration of UIBUILDER. If you are looking for information on how to configure an individual `uibuilder` node instance, please refer to the [Configuring `uibuilder` nodes](uib-node-configuration.md) page. 
 
 UIBUILDER is configured in a number of places.
 

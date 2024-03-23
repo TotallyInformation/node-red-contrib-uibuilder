@@ -3,7 +3,7 @@ title: Pre-defined UIBUILDER messages
 description: |
   Documents the different types of UIBUILDER messages between a Node-RED `uibuilder` node and a UIBUILDER front-end.
 created: 2020-09-24 18:14:00
-updated: 2024-03-17 20:03:33
+updated: 2024-03-23 16:40:27
 ---
 
 - [Message types](#message-types)
@@ -227,7 +227,8 @@ Prior to v5, this required VueJS and bootstrap-vue. If these are available, then
 
 From v5, this works without VueJS as well. Just make sure that you include the default uibuilder stylesheet by putting `@import url("./uib-styles.css");` at the start of your `index.css` file. The toast will appear overlaid on all other content. Clicking on a notification will clear that one. Clicking on the background will clear all notifications.
 
-!> From v5.1 but only if using the new ESM version of the client library, this is replaced by the standardised `msg._ui` features detailed elsewhere.
+> [!NOTE]
+> From v5.1 but only if using the new ESM version of the client library, this is replaced by the standardised `msg._ui` features detailed elsewhere.
 
 #### Simple version
 
@@ -326,7 +327,8 @@ to the `uibuilder` node. Make sure you include the `_socketId` if you want that 
 
 ### DOM Event (standard message from eventSend function. PARTIALLY DEPRECATED IN v5.1)
 
-!> Note that from v5.1 with the ESM client library, this is replaced by the standardised `msg._ui` features.
+> [!NOTE]
+> Note that from v5.1 with the ESM client library, this is replaced by the standardised `msg._ui` features.
 
 Is sent whenever the eventSend function is called.
 

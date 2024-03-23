@@ -4,7 +4,7 @@ description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
 lastUpdated: 2024-02-16 13:44:36
-updated: 2024-03-23 12:11:43
+updated: 2024-03-23 12:38:27
 ---
 
 Functions accessible in client-side user code.
@@ -786,14 +786,18 @@ Examples: `uibuilder.urlJoin('/aaa/', '//bbbb/ccc/')` -> `/aaa/bbbb/ccc`, `uibui
 Unlike the original UIBUILDER client, this version:
 
 * Rarely needs to be manually called. It should work for all page locations including in sub-folders as long as the client allows cookies.
+
 * Only allows passing of a single options object.
+
 * Allows being called again which will reset the Socket.IO connection and internal msg event handlers.
+
+#### Options
 
 While multiple properties can be given in the options object, only the following are currently used:
 
 * `ioNamespace` - This is normally calculated for you. However, if using an external server to serve the page, you may need to manually set this. Check the UIBUILDER node details page in the Node-RED Editor for what this should be set to.
 * `ioPath` - As above.
-* `loadStylesheet` - (default=true). Set to false if you don't want the UIBUILDER default stylesheet (`uib-brand.css`) to be loaded if you haven't loaded your own. Checks to see if any stylesheet has already been loaded and if it has, does not load.
+* `nopolling` - If set, will turn off Socket.IO's HTTP long-polling transport. Forcing it to only use websockets.
 
 ## Alphabetical function list
 

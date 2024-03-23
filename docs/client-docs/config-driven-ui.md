@@ -3,7 +3,7 @@ title: Dynamic, configuration-driven UI's (low-code)
 description: |
   This version of the uibuilder front-end library supports the dynamic manipulation of your web pages. This is achieved either by loading a JSON file describing the layout and/or by sending messages from Node-RED via a `uibuilder` node where the messages contain a `msg._ui` property. This is known as "configuration-driven" design since you send the configuration information and not the actual HTML. It is considered a low-code approach.
 created: 2022-06-11 14:15:26
-updated: 2024-03-05 17:56:35
+updated: 2024-03-23 16:50:02
 ---
 
 - [Restricting actions to specific pages, users, tabs](#restricting-actions-to-specific-pages-users-tabs)
@@ -62,7 +62,8 @@ It is best practice to try and always include `id` attributes at least on every 
 
 The receipt from Node-RED or local setting (`uibuilder.set('msg', {_ui: { ... }})`) of a `msg` object containing a `msg._ui` property object will trigger the uibuilder front-end library to make changes to the web page if it can.
 
-?> Note that `msg._ui` can be either an Object (which only allows a single method call in the msg) or it can be an Array (which allows multiple method calls in a single msg).
+> [!NOTE]
+? `msg._ui` can be either an Object (which only allows a single method call in the msg) or it can be an Array (which allows multiple method calls in a single msg).
 
 Each method object may contain any number of component descriptors. Component descriptors can contain any number of sub-component descriptors. There is no theoretical limit to the nesting, however expect things to break spectacularly if you try to take things to extremes. If top-level components have no parent defined, they will use the parent at the method level, if that isn't defined, everything will be added to the `<body>` tag and a warning is issued. Sub-components will always be added to the parent component.
 
@@ -112,7 +113,8 @@ Each component can:
 
 * *Have custom properties set*. This can contain any data that can be passed via JSON. 
   
-  !> Note that, because the library adds any custom property direct to the element, you need to take care not to use an existing name (such as internal DOM API names). Doing so will either fail or will have unintended side-effects.
+  > [!NOTE]
+  > Because the library adds any custom property direct to the element, you need to take care not to use an existing name (such as internal DOM API names). Doing so will either fail or will have unintended side-effects.
 
   This allows you to pass complex data into an element, including custom web components.
 
