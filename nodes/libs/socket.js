@@ -209,7 +209,9 @@ class UibSockets {
         // Socket.Io server options, see https://socket.io/docs/v4/server-options/
         let ioOptions = {
             'path': uibSocketPath,
-            serveClient: true, // Needed for backwards compatibility
+            // NOTE: webtransport requires HTTP/3 and TLS. HTTP/2 & 3 not yet available in Node.js
+            // transports: ['polling', 'websocket', 'webtransport'],
+            serveClient: false, // No longer required from v7
             connectionStateRecovery: {
                 // the backup duration of the sessions and the packets
                 maxDisconnectionDuration: 120000, // Default = 2 * 60 * 1000 = 120000,
