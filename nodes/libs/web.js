@@ -49,6 +49,9 @@ class UibWeb {
      */
     #isConfigured = false
 
+    /** PRIVATE ExpressJS Router Options */
+    #routerOptions = { mergeParams: true, caseSensitive: true, }
+
     //#region ---- References to core Node-RED & uibuilder objects ---- //
 
     /** @type {runtimeRED} */
@@ -100,7 +103,6 @@ class UibWeb {
         // setTimeout(() => {
         //     console.log(' \n >> web.js dump >> ', Object.keys(this))
         // }, 3000)
-
     } // --- End of constructor() --- //
 
     /** Assign uibuilder and Node-RED core vars to Class static vars.
@@ -152,7 +154,7 @@ class UibWeb {
             return
         }
 
-        this.adminRouter = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
+        this.adminRouter = express.Router(this.#routerOptions)
 
         /** Serve up the v3 admin apis on /<httpAdminRoot>/uibuilder/admin/ */
         this.adminRouterV3 = require('./admin-api-v3')(this.uib, this.log)
@@ -306,7 +308,7 @@ class UibWeb {
         this.app.use(express.urlencoded({ extended: true }))
 
         // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/`
-        this.uibRouter = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
+        this.uibRouter = express.Router(this.#routerOptions)
 
         // Add auto-generated index page to uibRouter showing all uibuilder user app endpoints at `../uibuilder/apps`
         this._serveUserUibIndex()
@@ -473,7 +475,7 @@ class UibWeb {
         /** Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/vendor/`
          * @type {ExpressRouter & {myname?: string}}
          */
-        this.vendorRouter = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
+        this.vendorRouter = express.Router(this.#routerOptions)
         this.vendorRouter.myname = 'uibVendorRouter'
 
         // Remove the vendor router if it already exists - we will recreate it. `some` stops once it has found a result
@@ -579,7 +581,7 @@ class UibWeb {
         node.commonStaticLoaded = false
 
         // Create router for this node instance
-        this.instanceRouters[node.url] = express.Router({ mergeParams: true }) // eslint-disable-line new-cap
+        this.instanceRouters[node.url] = express.Router(this.#routerOptions)
         this.routers.instances[node.url].push( { name: 'Instance Rooter', path: `${this.uib.httpRoot}/${node.url}/`, desc: 'Other routes hang off this', type: 'Router', folder: '--' } )
 
         /** We want to add services in the right order - first load takes preference:
