@@ -426,6 +426,11 @@ export const Uib = class Uib {
     // NOTE: These can only change when a client (re)connects
     socketOptions = {
         path: this.ioPath,
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebTransport_API
+        // https://socket.io/get-started/webtransport
+        // NOTE: webtransport requires HTTP/3 and TLS. HTTP/2 & 3 not yet available in Node.js
+        // transports: ['polling', 'websocket', 'webtransport'],
         transports: ['polling', 'websocket'],
         // Using callback so that they are updated automatically on (re)connect
         // Only put things in here that will be valid for a websocket connected session
@@ -1245,7 +1250,6 @@ export const Uib = class Uib {
             // TODO (MAYBE) Process msg.classes and msg.styles
 
             // Process msg.payload (applied as slot HTML) - NB: Will process <script> & <style>
-            // if (Object.prototype.hasOwnProperty.call(msg, 'payload')) el.innerHTML = msg.payload
             if (Object.prototype.hasOwnProperty.call(msg, 'payload')) this.replaceSlot(el, msg.payload)
         })
     }
@@ -1692,38 +1696,6 @@ export const Uib = class Uib {
         return startStop
     } // ---- End of watchDom ---- //
 
-    //#endregion -------- -------- -------- //
-
-    //#region ------- HTML cache and DOM watch --------- //
-
-    /** Clear the saved DOM from localStorage */
-    clearHtmlCache() {
-        this.removeStore('htmlCache')
-        log('trace', 'uibuilder.module.js:clearHtmlCache', 'HTML cache cleared')()
-    }
-
-    /** Restore the complete DOM (the whole web page) from browser localStorage if available */
-    restoreHtmlFromCache() {
-        // Is the html cached? If so, restore it
-        const htmlCache = this.getStore('htmlCache')
-        if (htmlCache) {
-            const targetNode = document.getElementsByTagName('html')[0]
-            // Restore the entire HTML
-            targetNode.innerHTML = htmlCache
-            log('trace', 'uibuilder.module.js:restoreHtmlFromCache', 'Restored HTML from cache')()
-        } else {
-            log('trace', 'uibuilder.module.js:restoreHtmlFromCache', 'No cache to restore')()
-        }
-    }
-
-    /** Save the current DOM state to browser localStorage.
-     * localStorage is persistent and so can be recovered even after a browser restart.
-     */
-    saveHtmlCache() {
-        // Save the updated entire HTML in localStorage
-        this.setStore('htmlCache', document.documentElement.innerHTML)
-    }
-
     /** Use the Mutation Observer browser API to watch for and save changes to the HTML
      * Once the observer is created, it will be reused.
      * Sending true or undefined will turn on the observer, false turns it off.
@@ -1758,6 +1730,38 @@ export const Uib = class Uib {
             log('trace', 'uibuilder.module.js:watchDom', 'Stopped Watching and saving DOM changes')()
         }
     } // ---- End of watchDom ---- //
+
+    //#endregion -------- -------- -------- //
+
+    //#region ------- HTML cache --------- //
+
+    /** Clear the saved DOM from localStorage */
+    clearHtmlCache() {
+        this.removeStore('htmlCache')
+        log('trace', 'uibuilder.module.js:clearHtmlCache', 'HTML cache cleared')()
+    }
+
+    /** Restore the complete DOM (the whole web page) from browser localStorage if available */
+    restoreHtmlFromCache() {
+        // Is the html cached? If so, restore it
+        const htmlCache = this.getStore('htmlCache')
+        if (htmlCache) {
+            const targetNode = document.getElementsByTagName('html')[0]
+            // Restore the entire HTML
+            targetNode.innerHTML = htmlCache
+            log('trace', 'uibuilder.module.js:restoreHtmlFromCache', 'Restored HTML from cache')()
+        } else {
+            log('trace', 'uibuilder.module.js:restoreHtmlFromCache', 'No cache to restore')()
+        }
+    }
+
+    /** Save the current DOM state to browser localStorage.
+     * localStorage is persistent and so can be recovered even after a browser restart.
+     */
+    saveHtmlCache() {
+        // Save the updated entire HTML in localStorage
+        this.setStore('htmlCache', document.documentElement.innerHTML)
+    }
 
     //#endregion -------- -------- -------- //
 
@@ -2843,7 +2847,6 @@ export const Uib = class Uib {
             if (options.ioNamespace) this.set('ioNamespace', options.ioNamespace)
             if (options.ioPath) this.set('ioPath', options.ioPath)
             if (options.nopolling && this.socketOptions.transports[0] === 'polling') this.socketOptions.transports.shift()
-            // See below for handling of options.loadStylesheet
         }
 
         /** Handle specialist messages like reload and _ui -> Moved to _msgRcvdEvents */
@@ -2891,13 +2894,6 @@ export const Uib = class Uib {
         } else {
             log('trace', 'Uib:start', 'Markdown-IT is not loaded.')()
         }
-
-        // if (window['DOMPurify']) {
-        //     this.set('purify', true)
-        //     log('trace', 'Uib:start', 'DOMPurify is loaded.')
-        // } else {
-        //     log('trace', 'Uib:start', 'DOMPurify is not loaded.')
-        // }
 
         // Set up msg listener for the optional showMsg
         this.onChange('msg', (msg) => {

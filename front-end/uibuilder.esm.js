@@ -633,8 +633,8 @@ var require_ui = __commonJS({
           return _a2.md.render(mdText.trim());
         } catch (e) {
           _a2.log(0, "uibuilder:convertMarkdown", `Could not render Markdown. ${e.message}`, e)();
+          return '<p class="border error">Could not render Markdown<p>';
         }
-        return '<p class="border error">Could not render Markdown<p>';
       }
       /** Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
        * Wraps the included object in a div tag.
@@ -5124,6 +5124,11 @@ var Uib = (_a = class {
     // NOTE: These can only change when a client (re)connects
     __publicField(this, "socketOptions", {
       path: this.ioPath,
+      // https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
+      // https://developer.mozilla.org/en-US/docs/Web/API/WebTransport_API
+      // https://socket.io/get-started/webtransport
+      // NOTE: webtransport requires HTTP/3 and TLS. HTTP/2 & 3 not yet available in Node.js
+      // transports: ['polling', 'websocket', 'webtransport'],
       transports: ["polling", "websocket"],
       // Using callback so that they are updated automatically on (re)connect
       // Only put things in here that will be valid for a websocket connected session
@@ -6310,30 +6315,6 @@ var Uib = (_a = class {
     return startStop;
   }
   // ---- End of watchDom ---- //
-  //#endregion -------- -------- -------- //
-  //#region ------- HTML cache and DOM watch --------- //
-  /** Clear the saved DOM from localStorage */
-  clearHtmlCache() {
-    this.removeStore("htmlCache");
-    log("trace", "uibuilder.module.js:clearHtmlCache", "HTML cache cleared")();
-  }
-  /** Restore the complete DOM (the whole web page) from browser localStorage if available */
-  restoreHtmlFromCache() {
-    const htmlCache = this.getStore("htmlCache");
-    if (htmlCache) {
-      const targetNode = document.getElementsByTagName("html")[0];
-      targetNode.innerHTML = htmlCache;
-      log("trace", "uibuilder.module.js:restoreHtmlFromCache", "Restored HTML from cache")();
-    } else {
-      log("trace", "uibuilder.module.js:restoreHtmlFromCache", "No cache to restore")();
-    }
-  }
-  /** Save the current DOM state to browser localStorage.
-   * localStorage is persistent and so can be recovered even after a browser restart.
-   */
-  saveHtmlCache() {
-    this.setStore("htmlCache", document.documentElement.innerHTML);
-  }
   /** Use the Mutation Observer browser API to watch for and save changes to the HTML
    * Once the observer is created, it will be reused.
    * Sending true or undefined will turn on the observer, false turns it off.
@@ -6360,6 +6341,30 @@ var Uib = (_a = class {
     }
   }
   // ---- End of watchDom ---- //
+  //#endregion -------- -------- -------- //
+  //#region ------- HTML cache --------- //
+  /** Clear the saved DOM from localStorage */
+  clearHtmlCache() {
+    this.removeStore("htmlCache");
+    log("trace", "uibuilder.module.js:clearHtmlCache", "HTML cache cleared")();
+  }
+  /** Restore the complete DOM (the whole web page) from browser localStorage if available */
+  restoreHtmlFromCache() {
+    const htmlCache = this.getStore("htmlCache");
+    if (htmlCache) {
+      const targetNode = document.getElementsByTagName("html")[0];
+      targetNode.innerHTML = htmlCache;
+      log("trace", "uibuilder.module.js:restoreHtmlFromCache", "Restored HTML from cache")();
+    } else {
+      log("trace", "uibuilder.module.js:restoreHtmlFromCache", "No cache to restore")();
+    }
+  }
+  /** Save the current DOM state to browser localStorage.
+   * localStorage is persistent and so can be recovered even after a browser restart.
+   */
+  saveHtmlCache() {
+    this.setStore("htmlCache", document.documentElement.innerHTML);
+  }
   //#endregion -------- -------- -------- //
   //#region ------- Message Handling (To/From Node-RED) -------- //
   /** Handles original control msgs (not to be confused with "new" msg._uib controls)
