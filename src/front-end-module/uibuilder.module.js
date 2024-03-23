@@ -604,7 +604,6 @@ export const Uib = class Uib {
 
     //#region ------- Our own event handling system ---------- //
 
-    // TODO Add option to send event details back to Node-RED as uib ctrl msg
     /** Standard fn to create a custom event with details & dispatch it
      * @param {string} title The event name
      * @param {*} details Any details to pass to event output
@@ -2845,17 +2844,6 @@ export const Uib = class Uib {
             if (options.ioPath) this.set('ioPath', options.ioPath)
             if (options.nopolling && this.socketOptions.transports[0] === 'polling') this.socketOptions.transports.shift()
             // See below for handling of options.loadStylesheet
-        }
-
-        // Do we need to load styles?
-        if ( document.styleSheets.length >= 1 || (document.styleSheets.length === 1 && document.styleSheets[0].cssRules.length === 0) ) {
-            log('info', 'Uib:start', 'Styles already loaded so not loading uibuilder default styles.')()
-        } else {
-            if (options && options.loadStylesheet === false) log('info', 'Uib:start', 'No styles loaded & options.loadStylesheet === false.')()
-            else {
-                log('info', 'Uib:start', 'No styles loaded, loading uibuilder default styles.')()
-                this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.min.css`)
-            }
         }
 
         /** Handle specialist messages like reload and _ui -> Moved to _msgRcvdEvents */

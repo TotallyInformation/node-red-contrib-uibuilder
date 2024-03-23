@@ -5389,7 +5389,6 @@
     }
     //#endregion ------- -------- ------- //
     //#region ------- Our own event handling system ---------- //
-    // TODO Add option to send event details back to Node-RED as uib ctrl msg
     /** Standard fn to create a custom event with details & dispatch it
      * @param {string} title The event name
      * @param {*} details Any details to pass to event output
@@ -7026,16 +7025,6 @@ ioPath: ${this.ioPath}`)();
           this.set("ioPath", options.ioPath);
         if (options.nopolling && this.socketOptions.transports[0] === "polling")
           this.socketOptions.transports.shift();
-      }
-      if (document.styleSheets.length >= 1 || document.styleSheets.length === 1 && document.styleSheets[0].cssRules.length === 0) {
-        log("info", "Uib:start", "Styles already loaded so not loading uibuilder default styles.")();
-      } else {
-        if (options && options.loadStylesheet === false)
-          log("info", "Uib:start", "No styles loaded & options.loadStylesheet === false.")();
-        else {
-          log("info", "Uib:start", "No styles loaded, loading uibuilder default styles.")();
-          this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.min.css`);
-        }
       }
       const [entry] = performance.getEntriesByType("navigation");
       this.set("lastNavType", entry.type);
