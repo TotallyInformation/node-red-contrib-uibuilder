@@ -10,18 +10,6 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## v7 Planned Potentially Breaking Changes
 
-* [ ] **Switch to default of case sensitive URL's for ExpressJS**. Socket.IO is already case sensitive but ExpressJS is not. This can cause issues as shown in [Ref](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
-
-  Will make both case sensitive in line with W3C recommendations. Will also add a case sensitivity flag to uibuilder node and allow setting of ExpressJS flags on routers. [Ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). Also document in  uibuilder settings. [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
-
-* [ ] In the client library, add checks to make sure the variable doesn't start with `_` or `#`.
-
-* [ ] Remove Pollyfills from uibuilder editor code - shouldn't impact anyone using a browser from the last 5 years or so.
-
-* [ ] Will consider removing the *css auto-load* in the next major release since at least 1 person has hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876).
-
-  This automatically loads the `uib-brand.css` if no css is provided at all. Since all of the standard templates include some CSS and have for a long time, this should not impact anyone.
-
 * [ ] Will remove `serve-index` dependency if the `uib-file-*` nodes have been delivered.
 
   I'm really not sure anyone uses this in any case and the new nodes will provide a richer and more controllable experience.
@@ -36,6 +24,8 @@ Please see the documentation for archived changelogs - a new archive is produced
   * [ ] `uib-sender` - remove ref to uibuilderfe and update flows.
 * [ ] `uib-tag` input fields not resizing correctly.
 * [ ] uib-element forms need some serious TLC! checkbox, radio
+* [ ] Docs
+  * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
 
 ### `uibrouter` FE library
 
@@ -55,6 +45,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 * [ ] Find a way to include a first-show marker if not unloading routes
 * [ ] Update router example (code changes, remove remote cmd example).
 * [ ] Route menu added from Node-RED not auto-highlighting.
+* [ ] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
 
 * [ ] Update documentation:
 
@@ -63,10 +54,9 @@ Please see the documentation for archived changelogs - a new archive is produced
   * [ ] Document the `unloadTemplate` and `deleteTemplates` methods.
   * [ ] Make [this](https://discourse.nodered.org/t/urgent-regression/84197/15) and [this](https://discourse.nodered.org/t/uibuilder-front-end-routing-example/83319/9?u=totallyinformation) into some use-cases.
 
-### FE library
+### FE Client library
 
-* [ ] Document `hasUibRouter` new function
-* [ ] Need std innerHTML process to account for MD and sanitize.
+* [ ] Document `hasUibRouter` and other new functions.
 * [ ] eventSend: Add form file handling.
 * [ ] [STARTED] uib-attr process
   * [ ] Add processors for classes, styles, _ui. Need std innerHTML process to account for MD and sanitize.
@@ -79,7 +69,6 @@ Please see the documentation for archived changelogs - a new archive is produced
 ### FE `ui` library
 
 * [ ] Check unique ID logic - use the new returnElementId in the uibuilder library
-* [ ] Handle `<script>` tags in passed HTML content - using the uibrouter code.
 * [ ] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
 
 ### `<uib-var>` custom HTML component
@@ -187,6 +176,10 @@ Note that potentially breaking changes are only introduced in major version rele
 
 Most of these changes will *not* impact most people but you should check through them just in case.
 
+* If using uibuilder's custom ExpressJS server feature, **URL's are now case sensitive**
+  
+  This brings them into line not only with W3C guidance but also with the Socket.IO library.
+
 * **Minimum node.js now v18** - in line with the release of Node-RED v4, the minimum node.js version has moved from v14 to v18.
 
   If you need to update your own servers, please remember to do an `npm rebuild` of all node.js packages afterwards.
@@ -205,16 +198,25 @@ Most of these changes will *not* impact most people but you should check through
   
   The `uib-element` node does everything that it did and more.
 
-* **Move socket.io-client from dependencies to dev-dependencies**
+* **Moved socket.io-client from dependencies to dev-dependencies**
 
   If using the module based client library, you should not be loading the Socket.IO client yourself since it is already built into the client library. If you are still using the old `uibuilderfe` client, you should replace that and remove the socket.io client library from your html files.
+
+* **Removed the *css auto-load* from the client library** 
+  
+  This automatically loads the `uib-brand.css` if no css is provided at all. Since all of the standard templates include some CSS and have for a long time, this should not impact anyone.
+
+  At least 1 person hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876). So this is best removed.
 
 * `jsdom` (using in the `uib-html` node) now tracks the latest releases again
  
   Shouldn't be breaking at all but you might still want to review things since the new versions of `jsdom` are likely to have better available features. We were restricted to jsdom v21 previously as newer versions required node.js v18+.
 
+* `ejs` package removed
 
+  This should not impact anyone. `ejs` is an ExpressJS server-side templating library and what instructions exist (minimal) say that you need to install it manually. A new [How-to: Server-side Rendered Views](docs\how-to\server-side-views) has been created to help understand how to use server-side templating. It is far from complete however.
 
+* Removed Pollyfills from uibuilder editor code - shouldn't impact anyone using a browser from the last 5 years or so.
 
 
 ### 📌 Highlights
@@ -247,6 +249,11 @@ Most of these changes will *not* impact most people but you should check through
 * The `socket.io-client` package is no longer a dependency. It is now only a dev-dependency thanks to the removal of the `uibuilderfe` client library. The current client library versions have it pre-built.
 * The `nanoid` package is no longer a dependency. UIBUILDER now has its own UUID generator function. The nanoid package stopped being useful since it moved to only an ESM release.
 * The `jsdom` package now tracks the current release again thanks to UIBUILDER moving to a node.js baseline in line with Node-RED v4 (Node.js v18)
+* URL's are now _case sensitive_ when using the custom ExpressJS server feature. 
+  
+  Socket.IO is already case sensitive but ExpressJS is not. This can cause issues as shown in [Ref](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
+
+  [Ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
 
 ### NEW node - `uib-file-list`
 
@@ -304,6 +311,8 @@ The `URL Output?` setting will change the output from a folder/file list to a re
   
   File inputs still do not yet upload the file but they do return a special URL which could download the chosen file(s).
 
+* Auto-load of the brand css (when no other CSS was loaded) has been removed. This could occasionally suffer from a race condition.
+
 ### `ui` library
 
 * **FIXED** small inconsistency when handling a msg._ui who's top level was an object with a `mode` mode property instead of an array.
@@ -349,6 +358,8 @@ The `old-blank-client` template and all associated documentation has also been r
   
   NB: Cant send route id with initial connect msg since router instance is added later. So cache control must happen on route change messages.
 
+* Removed Pollyfills from uibuilder editor code - shouldn't impact anyone using a browser from the last 5 years or so.
+
 ### `uib-list` node
 
 **REMOVED** - this node was deprecated in UIBUILDER v6. It has now been removed. Use the `uib-element` node with one of the list element types.
@@ -356,6 +367,7 @@ The `old-blank-client` template and all associated documentation has also been r
 ### `libs/socket.js` library
 
 * If a client msg received with a msg._uib property but the `uibuilder` node hasn't requested that they are shown, delete it before sending on to flow.
+* Removed serving of the socket.io client library as this is no longer required (client library is pre-built into the uibuilder library).
 
 ### `libs/uiblib.js` library (uibuilder utilities)
 
