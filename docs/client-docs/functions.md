@@ -4,7 +4,7 @@ description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
 lastUpdated: 2024-02-16 13:44:36
-updated: 2024-02-20 16:09:51
+updated: 2024-03-23 12:11:43
 ---
 
 Functions accessible in client-side user code.
@@ -126,7 +126,7 @@ Set to an empty string to remove.
 
 This uses an HTTP API call to a custom UIBUILDER API endpoint in Node-RED. So it works even if the Socket.IO connection is not working. It is used to check that the Node-RED server and the UIBUILDER instance are both still working.
 
-##### Example
+#### Example
 
 ```javascript
 uibuilder.setPing(2000) // repeat every 2 sec. Re-issue with ping(0) to turn off repeat.
@@ -156,7 +156,7 @@ Can only be used as an event handler because browsers do not allow unrestricted 
 
 This is the preferred method to get an exposed UIBUILDER variable or property. Do not try to access variables and properties directly unless explicitly shared in this documentation. This function can also be called from Node-RED via `msg._uib.command` - `get` with `msg._uib.prop` set to the variable name to get.
 
-##### Example
+#### Example
 
 ```javascript
 console.log( uibuilder.get('version') )
@@ -198,18 +198,36 @@ Does not return anything. Does not generate an error if the key does not exist.
 
 This is the preferred method to set an exposed UIBUILDER variable or property. Do not try to set variables and properties directly.
 
-When using set, the variable that is set becomes responsive. That is to say, that issuing a set triggers both the internal event handler (as used in `uibuilder.onChange('prop', ...)`) but also the DOM custom event `uibuilder:propertyChanged`. Normally, you will want to use the `onChange` handler.
+When using set, the variable that is set becomes ***responsive***. That is to say, that issuing a set triggers both the internal event handler (as used in `uibuilder.onChange('prop', ...)`) but also the DOM custom event `uibuilder:propertyChanged`. Normally, you will want to use the `onChange` handler.
 
-Note that you can add additional custom data to the UIBUILDER object but care must be taken not to overwrite existing internal variables. This is useful if you want to be able to automatically process changes to your own variables using the `onChange` handler.
+> [!TIP]
+>
+> To send an update message to Node-RED whenever a managed variable changes, use `uibuilder.onChange('varname', (data) => uibuilder.send({payload: data}))` in your JavaScript.
 
-This function can also be called from Node-RED via `msg._uib.command` - `set` with `msg._uib.prop` set to the variable name to set. and `msg._uib.value` set to the new value. `msg._uib.options` is used as `{store: true, autoload: true}` to optionally pass the additional arguments.
+Note that you can add additional custom data variables to the UIBUILDER object but care must be taken not to overwrite existing internal variables. This is useful if you want to be able to automatically process changes to your own variables using the `onChange` handler.
 
-> [!WARNING]
-> `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is closed.
+#### Arguments
 
-##### Example
+* `prop` - (required) the variable to set and manage
+* `val` - (required) the value to set the prop to
+* `store`  - (optional) true/false. Default=false. If true, the change is written to the browser `localStorage` as well if possible.
+  
+  > [!WARNING]
+  > `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is *closed*.
+
+* `autoload` - (optional) true/false. Default=false. If true and if `store` is true, uibuilder will try to automatically restore the variable on future page loads. Do another `set` with this set to false to turn off.
+
+#### Remote call
+
+This function *can also be called from Node-RED* via `msg._uib.command` - `set` with `msg._uib.prop` set to the variable name to set. and `msg._uib.value` set to the new value. `msg._uib.options` is used as `{store: true, autoload: true}` to optionally pass the additional arguments.
+
+
+#### Example
 
 ```javascript
+// Optionally send changes back to Node-RED
+uibuilder.onChange('loglevel', (data) => uibuilder.send({topic: 'loglevel changed', payload: data}))
+
 uibuilder.set('logLevel', 3)
 ```
 
@@ -589,7 +607,7 @@ Returns a reference to the callback so that it can be cancelled if needed.
 
 Uses the `uibuilder:propertyChanged` event internally.
 
-##### Example
+#### Example
 
 ```javascript
 const msgChgEvt = uibuilder.onChange('msg', (msg) => {
