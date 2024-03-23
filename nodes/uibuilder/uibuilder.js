@@ -95,7 +95,13 @@ const uib = {
         host: undefined,
         hostName: undefined,
         isCustom: false,
-        serverOptions: {},
+        // These will only be applied if using a custom ExpressJS server
+        serverOptions: {
+            // @since v7 - make Express URL's case-sensitive to match w3c guidelines and socket.io
+            'case sensitive routing': true,
+            // For security
+            'x-powered-by': false,
+        },
     },
     reDeployNeeded: '4.1.2',
     degitEmitter: undefined,
@@ -299,7 +305,9 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
         // Allow instance-level api's to be loaded (default=false)
         if ( settings.instanceApiAllowed === true ) uib.instanceApiAllowed = true
 
-        if ( settings.serverOptions ) uib.customServer.serverOptions = settings.serverOptions
+        if ( settings.serverOptions ) {
+            uib.customServer.serverOptions = Object.assign(uib.customServer.serverOptions, settings.serverOptions)
+        }
 
     } // --- end of settings.js --- //
 
