@@ -127,6 +127,9 @@ The purpose of UIBUILDER is to:
 * Reduce the knowledge required for creating reliable, accessible web apps by providing low-code and no-code features.
 * Make it easy to install and serve front-end libraries to support the development of more complex web apps.
 
+> [!NOTE]
+> UIBUILDER triggers a couple of quality warnings in the [Flows scorecard entry](https://flows.nodered.org/node/node-red-contrib-uibuilder/scorecard). "Number of Dependencies" ia >6 - this is due to the large number of features in UIBUILDER and is expected. Even so, v7 only has 9 dependencies. "Dependencies use latest versions" is due to the use of `execa`, since the author stopped supporting CommonJS modules, trying to force everyone else to do the same but this isn't feasible with Node-RED. We are actively trying to eliminate this annoying package.
+
 ## Features
 
 The core features of UIBUILDER:
