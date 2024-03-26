@@ -338,6 +338,11 @@ const Ui = class Ui {
             Object.keys(comp.properties).forEach((prop) => {
                 // TODO break a.b into sub properties
                 el[prop] = comp.properties[prop]
+                // Auto-dispatch events if changing value or changed since DOM does not do this automatically
+                if (['value', 'checked'].includes(prop)) {
+                    el.dispatchEvent(new Event('input'))
+                    el.dispatchEvent(new Event('change'))
+                }
             })
         }
 
