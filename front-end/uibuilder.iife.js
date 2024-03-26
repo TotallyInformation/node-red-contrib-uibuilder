@@ -304,6 +304,10 @@
           if (comp.properties) {
             Object.keys(comp.properties).forEach((prop) => {
               el[prop] = comp.properties[prop];
+              if (["value", "checked"].includes(prop)) {
+                el.dispatchEvent(new Event("input"));
+                el.dispatchEvent(new Event("change"));
+              }
             });
           }
           if (comp.slot) {
