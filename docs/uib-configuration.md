@@ -3,7 +3,7 @@ title: Configuring UIBUILDER
 description: |
   Describes how to change UIBUILDER's configuration, options and settings.
 created: 2021-12-30 17:38:33
-updated: 2024-03-23 16:49:30
+updated: 2024-03-24 21:31:48
 ---
 
 > [!NOTE]
@@ -35,7 +35,7 @@ This file contains the global settings for Node-RED. You can add a new property 
 ```js
    /** Custom settings for all uibuilder node instances */
    uibuilder: {
-        /** Optional HTTP PORT. 
+        /** Optional HTTP PORT. Required for custom server.
          * If set and different to Node-RED's uiPort, uibuilder will create
          * a separate webserver for its own use.
          */
@@ -48,7 +48,8 @@ This file contains the global settings for Node-RED. You can add a new property 
         uibRoot: process.env.UIBROOT || path.join(os.homedir(), 'myuibroot'),
         
         /** Only used if a custom ExpressJS server in use (see port above)
-         * Optional: Default will be the same as Node-RED. @type {('http'|'https')} 
+         * Optional: Default will be the same as Node-RED. 
+         * @type {('http'|'https')} 
          */
         customType: 'http',
         
@@ -63,14 +64,23 @@ This file contains the global settings for Node-RED. You can add a new property 
         
         /** Optional: Custom ExpressJS server options
          *  Only required if using a custom webserver (see port setting above). 
-         * For a full list of available options, refer to http://expressjs.com/en/api.html#app.settings.table
+         * For a full list of available options, refer to
+         *   http://expressjs.com/en/api.html#app.settings.table
          */
         serverOptions: {
+            // If you want to turn off URL case sensitivity
+            // 'case sensitive routing': false,
+            
             // http://expressjs.com/en/api.html#trust.proxy.options.table
-            'trust proxy': true,  // true/false; or subnet(s) to trust; or custom function returning true/false. default=false
-            /** Optional view engine - the engine must be installed into your userDir (e.g. where this file lives)
-             * If set as shown, ExpressJS will translate source files ending in .ejs to HTML.
-             * See https://expressjs.com/en/guide/using-template-engines.html for details.
+            // true/false; or subnet(s) to trust; or custom function 
+            //   returning true/false. default=false
+            'trust proxy': true,
+            
+            /** Optional view engine - the engine must be installed into 
+             *  your userDir (e.g. where this file lives)
+             * If set as shown, ExpressJS will translate source files ending
+             * in .ejs to HTML.
+             * See https://expressjs.com/en/guide/using-template-engines.html
              */
             'view engine': 'ejs',
             // Optional global settings for view engine
