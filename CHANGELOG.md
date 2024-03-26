@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-02-24 16:49:59
+updated: 2024-03-26 18:04:10
 ---
 
 # Changelog
@@ -57,7 +57,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 ### FE Client library
 
 * [ ] Document `hasUibRouter` and other new functions.
-* [ ] eventSend: Add form file handling.
+* [ ] eventSend: Add form file handling. Not sure how as yet, will delay.
 * [ ] [STARTED] uib-attr process
   * [ ] Add processors for classes, styles, _ui. Need std innerHTML process to account for MD and sanitize.
   * [ ] ? Add uib-var processor?
@@ -178,7 +178,7 @@ Most of these changes will *not* impact most people but you should check through
 
 * If using uibuilder's custom ExpressJS server feature, **URL's are now case sensitive**
   
-  This brings them into line not only with W3C guidance but also with the Socket.IO library.
+  This brings them into line not only with W3C guidance but also with the Socket.IO library. It can be turned off in `settings.js` using property `uibuilder.serverOptions['case sensitive routing']` set to false.
 
 * **Minimum node.js now v18** - in line with the release of Node-RED v4, the minimum node.js version has moved from v14 to v18.
 
@@ -251,6 +251,8 @@ Most of these changes will *not* impact most people but you should check through
 * The `jsdom` package now tracks the current release again thanks to UIBUILDER moving to a node.js baseline in line with Node-RED v4 (Node.js v18)
 * URL's are now _case sensitive_ when using the custom ExpressJS server feature. 
   
+  This can be [turned off in `settings.js`](uib-configuration#settingsjs) using property `uibuilder.serverOptions['case sensitive routing']` set to `false`.
+  
   Socket.IO is already case sensitive but ExpressJS is not. This can cause issues as shown in [Ref](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
 
   [Ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
@@ -318,6 +320,7 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 * **FIXED** small inconsistency when handling a msg._ui who's top level was an object with a `mode` mode property instead of an array.
 * Improved Markdown handling. Should now be more efficient. Also HighlightJS code highlights should be better: Some unnecessary whitespace removed, code brought into line with the latest releases of the HighlightJS library, language guessing now only used if the language is not provided.
 * Slot HTML content can now contain `<script>` tags that will be executed on load.
+* Programmatic changes to input values or checked properties now trigger both `input` and `changed` events. By default, the DOM will not trigger events except for actual user input. This makes it easy to use `<output>` tags for example that automatically update when inputs change.
 
 ### `uibrouter` front-end library
 
