@@ -132,6 +132,9 @@ class UibWeb {
         if ( RED.settings.httpRoot === undefined ) this.uib.httpRoot = ''
         else this.uib.httpRoot = RED.settings.httpRoot
 
+        // Configure whether custom server will use case sensitive routing - allows override from settings.js
+        this.#routerOptions.caseSensitive = this.uib.customServer.serverOptions['case sensitive routing']
+
         this.routers.config = { httpRoot: this.uib.httpRoot, httpAdminRoot: this.RED.settings.httpAdminRoot }
 
         // At this point we have the refs to uib and RED
