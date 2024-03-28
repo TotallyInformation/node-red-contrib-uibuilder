@@ -1013,6 +1013,9 @@
             // Cannot be 'templates' as this is a reserved value (for v2)
             if ( value.toLowerCase().substring(0, 9) === 'templates' ) {
                 this.urlErrors.templ = 'Cannot be "templates"' }
+            // Cannot be 'common' as this is a reserved value
+            if ( value.toLowerCase().substring(0, 9) === 'common' ) {
+                this.urlErrors.templ = 'Cannot be "common"' }
             // Must not be `uibuilder` (breaking change in v5)
             if ( value.toLowerCase() === 'uibuilder' ) {
                 this.urlErrors.uibname = 'Cannot be "uibuilder" (since v5)' }

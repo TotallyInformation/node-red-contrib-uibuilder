@@ -106,7 +106,6 @@ Please see the documentation for archived changelogs - a new archive is produced
 ### `uibuilder` node
 
 * [ ] ?? Filter `clientId` and `pageName` using socket.io rooms?
-* [ ] Check that users cannot create url's starting with `.`, `_` or be the word `common`.
 
 ### `uib-brand.css` styles
 
@@ -218,6 +217,7 @@ Most of these changes will *not* impact most people but you should check through
 
 * Removed Pollyfills from uibuilder editor code - shouldn't impact anyone using a browser from the last 5 years or so.
 
+* A `uibuilder` node cannot be given a URL name of `common` as this would clash with the built-in folder of the same name that holds resources that can be shared with all instances. This was an oversight in previous releases I'm afraid, now fixed.
 
 ### 📌 Highlights
 
@@ -362,6 +362,8 @@ The `old-blank-client` template and all associated documentation has also been r
   NB: Cant send route id with initial connect msg since router instance is added later. So cache control must happen on route change messages.
 
 * Removed Pollyfills from uibuilder editor code - shouldn't impact anyone using a browser from the last 5 years or so.
+
+* **FIXED** A `uibuilder` node cannot be given a URL name of `common` as this would clash with the built-in folder of the same name that holds resources that can be shared with all instances. This was an oversight in previous releases I'm afraid, now fixed.
 
 ### `uib-list` node
 
