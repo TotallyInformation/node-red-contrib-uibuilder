@@ -3,11 +3,8 @@ title: Documentation for the uibuilder standard CSS file
 description: |
   Details of the different styles and their usage.
 created: 2023-02-25 13:54:50
-lastUpdated: 2023-12-11 17:36:55
-updated: 2023-12-30 17:01:41
+updated: 2024-03-28 17:27:12
 ---
-
-*(This document is a work-in-progress, it is not complete)*
 
 This style sheet is light/dark adaptive and has a basic style reset for the most commonly used HTML tags.
 
@@ -32,15 +29,62 @@ Each of the colour classes have matching sets of CSS variables. The main colour 
 * `.brand` - Use this as the base colour from which many of the other general styles are defined. The `--brand-hue` variable controls the base hue.
 * `.rad-shadow` - Standard adaptive box shadow.
 
+## Page Layout
+
+If you want a more structure layout than the basic reset, you should use the tags `<main>`, `<header>`, `<footer>`, `<section>` and `<article>` to provide structure to the page. Use this style of layout for content-rich pages, especially if you need them to perform well in search engines.
+
+An example well-structured HTML page is given in [Creating a well-structured HTML page](how-to\well-structured-html.md).
+
+`body` > `main`/`header`/`footer`/`section` all have a maximum width specified by the `--max-width` CSS variable. `main` is set with a grid layout. Within `main`, `article` and `aside` are set to left and right grid columns respectively. If you want multiple articles/asides, you can simply wrap them in `container` or `div` tags with the class set to `left` or `right`.
+
+References: [HTML Semantic Elements](https://www.w3schools.com/html/html5_semantic_elements.asp), [Headings and sections  |  web.dev](https://web.dev/learn/html/headings-and-sections/), [Document and website structure - Learn web development | MDN](https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML/Document_and_website_structure).
+
+Data-rich pages (such as Dashboards or data viewers) are likely to have a very different and more technical layout since ease of viewing the data.
+
 ## Forms
 
-Forms are bordered with a horizontal layout (labels on the same row as the inputs). Layouts currently done using floats but this will change in a future release to use Flex or Grid layouts.
+Forms are bordered with a horizontal layout (labels on the same row as the inputs). Layouts currently done using `flex` layouts.
 
-For screen widths below 600px, the labels are moved above the inputs.
+For screen widths below 600px, the labels are moved above the inputs. Unfortunately, browsers do not yet support CSS variables in media queries, so if you want to change the `600px` breakpoint, you will need to do that using JavaScript.
+
+Invalid form values are automatically highlighted (using colour `--failure`) and the form buttons are highlighted if the form is invalid (using colour `--warning`).
+
+Some input types have been tweaked to make them look a little nicer. Default text & border colours use `--text3`. Border radius uses `--border-radius`. Select boxes use a variation on `--brand-hue` and that can be tweaked with `--saturation` & `--lightness` - though noting that these CSS variables are shared across the whole brand css file.
+
+Labels for required inputs have ` *` automatically added after the label text.
 
 ## Navigation menus
 
-Basic nav menu formatting is including via the `nav` tag. Including basic horizontal menu (`nav.horizontal` class) formatting. Assumes list embedded in a nav tag and that the list has correct aria roles set.
+Basic nav menu formatting is including via the `nav` tag. Including basic horizontal menu (`nav.horizontal` class) formatting. Assumes list embedded in a nav tag and that the list has correct aria roles set. Structure needs to be `<nav>` > `<ul>` > `<li>` > `<a>`.
+
+The router example flow contains nav menu examples.
+
+### Example accessible menu
+
+```html
+<nav id="main-menu" class="horizontal" aria-labelledby="primary-navigation">
+  <!-- Optional nav heading - advised for accessibility -->
+  <h2 id="primary-navigation">Menu</h2>:
+
+  <ul id="mainmenu" role="menubar" aria-describedby="main-menu">
+  <!-- Aria/class used to track/highlight current page, usually set dynamically
+       tabindex makes menu selectable by keyboard for accessibility
+    -->
+    <li tabindex="0" role="menuitem" aria-current="page" class="currentRoute">
+      <a href="#">Home</a>
+    </li>
+    <li tabindex="0" role="menuitem"><a href="#">Our team</a></li>
+    <li tabindex="0" role="menuitem"><a href="#">Projects</a></li>
+    <li tabindex="0" role="menuitem"><a href="#">Contact</a></li>
+  </ul>
+
+  <!-- Search form another common non-linear way to navigate through website -->
+  <form>
+    <input type="search" name="q" placeholder="Search query" />
+    <input type="submit" value="Go!" />
+  </form>
+</nav>
+```
 
 ## Lists
 
@@ -99,6 +143,7 @@ Designed to be small rounded boxes with a left-hand coloured panel (no text) sho
 * `.border` - Turn on a border with a standard color and corner radius. Margin, padding and corner radius are controlled by variables.
 * `.box` - Similar to border but with internal padding. The box class has matching `h2`-`h6` sub-classes that reduce top margin to 0.5rem.
 * `.centre`, `.center` - Centres blocks within their parent block (by applying left & right auto margins).
+* `.compact`, `button.compact` - Reduces margin and padding.
 * `.emoji` - Apply to a `<span>` containing an emoji to make it look a lot nicer on most platforms.
 * `.noborder` - Turn off a border
 * `.status-side-panel` - A narrow, full-height block designed to show a vertical coloured status bar (no text). Apply one of the standard colour classes as well. Use with `.animate-pulse` to get an eye-catching effect.
@@ -224,10 +269,10 @@ Note that shadows are notoriously difficult to get right in dark modes. The defa
 
     --surface-shadow-light: var(--brand-hue) 10% 20%;
     --shadow-strength-light: .02;
-
+    
     --surface-shadow-dark: var(--brand-hue) 30% 30%;
     --shadow-strength-dark: .1;
-
+    
     --surface-shadow: var(--surface-shadow-light);
     --shadow-strength: var(--shadow-strength-light);
 
@@ -240,6 +285,7 @@ Note that shadows are notoriously difficult to get right in dark modes. The defa
 * `--emoji-fonts` ("Twemoji Mozilla", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", "EmojiOne Color", "Android Emoji", sans-serif) - Use as `font-family: var(--emoji-fonts);` for better emoji's on different platforms.
 * `--font-family` (`sans-serif`) - Sans-serif is much easier to read on-screen, the actual font is left up to the browser/OS.
 * `--grid-fit-min` (`15rem`) - Used by the `.grid-fit` class to specify the minimum child component size. That defines when contents will wrap.
+* `--max-width` (`64rem`) - Used by `article`, `body > main`, `body > header`, `body > footer`, `body > section` to keep the maximum width to a sensible size for easy reading.
 * `--mode` - `light` or `dark` according to the current browser preference or html class override.
 * `--uib-css` - Can be used in JavaScript to know if this style sheet is loaded. See the definition for details on use.
 
