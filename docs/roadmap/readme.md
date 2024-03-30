@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-03-20 08:57:09
+updated: 2024-03-30 13:58:32
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -579,6 +579,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
   * Auto-generate manifest and sw.js - need icon and to set names/urls/etc
   * https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/web-app-manifests
   * Allow push API interface as well as websocket. https://developer.mozilla.org/en-US/docs/Web/API/Push_API
+  * See following about Push Notifications: https://github.com/FlowFuse/node-red-dashboard/issues/589, https://github.com/FlowFuse/node-red-dashboard/pull/708, https://github.com/bartbutenaers/node-red-contrib-ui-web-push/blob/master/web_push_client.js, https://web.dev/articles/push-notifications-overview, https://vite-pwa-org.netlify.app/guide/
   
 * Accessibility
 
