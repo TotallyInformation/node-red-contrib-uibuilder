@@ -27,7 +27,7 @@ const express = require('express')
 const path = require('path')
 const fs = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
 const fg = require('fast-glob') // https://github.com/mrmlnc/fast-glob
-const uiblib = require('./uiblib')  // Utility library for uibuilder
+const fslib = require('./fs')  // Utility library for uibuilder
 const web = require('./web')
 const sockets = require('./socket')
 const packageMgt = require('./package-mgt')
@@ -467,8 +467,7 @@ function adminRouterV3(uib, log) {
             params.type = 'post'
 
             if ( params.cmd === 'replaceTemplate' ) {
-
-                uiblib.replaceTemplate(params.url, params.template, params.extTemplate, params.cmd, templateConf, uib, log)
+                fslib.replaceTemplate(params.url, params.template, params.extTemplate, params.cmd, templateConf, uib, log)
                     .then( resp => {
                         res.statusMessage = resp.statusMessage
                         if ( resp.status === 200 ) res.status(200).json(resp.json)
@@ -495,9 +494,7 @@ function adminRouterV3(uib, log) {
                         res.statusMessage = statusMsg
                         res.status(500).end()
                     } )
-
             } else {
-
                 // Validate folder name - params.folder
                 const chkFldr = chkParamFldr(params)
                 if ( chkFldr.status !== 0 ) {
@@ -563,7 +560,6 @@ function adminRouterV3(uib, log) {
                     'fullname': fullname,
                     'params': params,
                 })
-
             } // end of else
 
         }) // --- End of POST processing --- //
