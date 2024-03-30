@@ -3,7 +3,7 @@
 /**
  * Utility library for uibuilder
  *
- * Copyright (c) 2017-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2024 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -33,12 +33,13 @@
  * typedef {import('socket.io').Socket} socketio.Socket
  */
 
-const path = require('path')
-const fs = require('fs-extra')
-// const tilib = require('./tilib')
-// const { nanoid } = require('nanoid')
-const { promisify } = require('util')
-const crypto = require('crypto')
+const path = require('node:path')
+const { promisify } = require('node:util')
+const crypto = require('node:crypto')
+const { spawn } = require('node:child_process')
+const tiEvents = require('@totallyinformation/ti-common-event-handler') // https://github.com/EventEmitter2/EventEmitter2
+// const fslib = require('./fs')
+const fs = require('fs-extra') // ! TODO Remove
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
 
 /** Encode data in a buffer as Base32 with a url-safe alphabet.
@@ -90,7 +91,7 @@ function nanoId(length) {
 }
 
 module.exports = {
-
+    // ! TODO: Replace fs-extra
     /** Do any complex, custom node closure code here
      * @param {uibNode} node Reference to the node instance object
      * @param {object} uib Reference to the uibuilder master config object
@@ -99,7 +100,6 @@ module.exports = {
      * @param {Function|null} done Default=null, internal node-red function to indicate processing is complete
      */
     instanceClose: function(node, uib, sockets, web, done = null) {
-
         // const RED = /** @type {runtimeRED} */ uib.RED
         const log = uib.RED.log
 
@@ -109,7 +109,6 @@ module.exports = {
         const instances = uib.instances
 
         try { // Wrap this in a try to make sure that everything is working
-
             // Remove url folder if requested
             if ( uib.deleteOnDelete[node.url] === true ) {
                 log.trace(`[uibuilder:uiblib:instanceClose] Deleting instance folder. URL: ${node.url}`)
@@ -117,7 +116,6 @@ module.exports = {
                 // Remove the flag in case someone recreates the same url!
                 delete uib.deleteOnDelete[node.url]
 
-                //! TODO: Replace fs-extra
                 // fsPromises.rm(path, {force:true,recursive:true}), fs.rm(path, {force:true,recursive:true}), callback(err))
                 fs.remove(path.join(uib.rootFolder, node.url))
                     .catch(err => {
@@ -136,7 +134,6 @@ module.exports = {
 
             // Disconnect all Socket.IO clients for this node instance
             sockets.removeNS(node)
-
         } catch (err) {
             log.error(`[uibuilder:uiblib:instanceClose] Error in closure. Error: ${err.message}`, err)
         }
@@ -198,109 +195,6 @@ module.exports = {
         node.status(node.statusDisplay)
     }, // ---- End of setNodeStatus ---- //
 
-    // TODO Move to fs
-    /** Replace template in front-end instance folder
-     * @param {string} url The uib instance URL
-     * @param {string} template Name of one of the built-in templates including 'blank' and 'external'
-     * @param {string|undefined} extTemplate Optional external template name to be passed to degit. See degit options for details.
-     * @param {string} cmd 'replaceTemplate' if called from admin-router:POST, otherwise can be anything descriptive & unique by caller
-     * @param {object} templateConf Template configuration object
-     * @param {object} uib uibuilder's master variables
-     * @param {object} log uibuilder's Log functions (normally points to RED.log)
-     * @returns {Promise} {statusMessage, status, (json)}
-     */
-    replaceTemplate: async function(url, template, extTemplate, cmd, templateConf, uib, log) {
-        const res = {
-            'statusMessage': 'Something went wrong!',
-            'status': 500,
-            'json': undefined,
-        }
-
-        // Load a new template (params url, template, extTemplate)
-        if ( template === 'external' && ( (!extTemplate) || extTemplate.length === 0) ) {
-            const statusMsg = `External template selected but no template name provided. template=external, url=${url}, cmd=${cmd}`
-            log.error(`[uibuilder:uiblib:replaceTemplate]. ${statusMsg}`)
-            res.statusMessage = statusMsg
-            res.status = 500
-            return res
-        }
-
-        const fullname = path.join(uib.rootFolder, url)
-
-        if ( extTemplate ) extTemplate = extTemplate.trim()
-        if ( extTemplate === undefined ) throw new Error('extTemplate is undefined')
-
-        // TODO Move degit processing to its own function. Don't need the emitter on uib
-        // If template="external" & extTemplate not blank - use degit to load
-        if ( template === 'external' ) {
-            const degit = require('degit')
-
-            uib.degitEmitter = degit(extTemplate, {
-                cache: false,  // Fix for Issue #155 part 3 - degit error
-                force: true,
-                verbose: false,
-            })
-
-            uib.degitEmitter.on('info', info => {
-                log.trace(`[uibuilder:uiblib:replaceTemplate] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
-            })
-
-            await uib.degitEmitter.clone(fullname)
-
-            // console.log({myclone})
-            const statusMsg = `Degit successfully copied template '${extTemplate}' to '${fullname}'.`
-            log.info(`[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=${cmd}`)
-            res.statusMessage = statusMsg
-            res.status = 200
-
-            res.json = /** @type {*} */ ({
-                'url': url,
-                'template': template,
-                'extTemplate': extTemplate,
-                'cmd': cmd,
-            })
-            return res
-
-        } else if ( Object.prototype.hasOwnProperty.call(templateConf, template) ) {
-
-            // Otherwise, use internal template
-            const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
-            const srcTemplate = path.join( uib.masterTemplateFolder, template )
-            try {
-                //! TODO: Replace fs-extra - https://github.com/jprichardson/node-fs-extra/blob/HEAD/docs/copy-sync.md
-                //! Must copy full folder - need to wait till node v16.7 - fs.cp/fs.cpSync
-                fs.copySync( srcTemplate, fullname, fsOpts )
-                const statusMsg = `Successfully copied template ${template} to ${url}.`
-                log.info(`[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
-                res.statusMessage = statusMsg
-                res.status = 200
-                res.json = /** @type {*} */ ({
-                    'url': url,
-                    'template': template,
-                    'extTemplate': extTemplate,
-                    'cmd': cmd,
-                })
-                return res
-            } catch (err) {
-                const statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message}.`
-                log.error(`[uibuilder:uiblib:replaceTemplate] ${statusMsg}`, err)
-                res.statusMessage = statusMsg
-                res.status = 500
-                return res
-            }
-
-        } else {
-
-            // Shouldn't ever be able to occur - but still :-)
-            const statusMsg = `Template '${template}' does not exist. url=${url}, cmd=${cmd}.`
-            log.error(`[uibuilder:uiblib:replaceTemplate] ${statusMsg}`)
-            res.statusMessage = statusMsg
-            res.status = 500
-            return res
-        }
-
-    }, // ----- End of replaceTemplate() ----- //
-
     /** Get the client id from req headers cookie string OR, create a new one and return that
      * @param {*} req ExpressJS request object
      * @returns {string} The clientID
@@ -355,6 +249,66 @@ module.exports = {
         }
     },
 
+    /** uibuilder/runOsCmd/log event definition
+     * @event uibuilder/runOsCmd/log
+     * @type {string} A line of log output from the running OS Command
+     */
+
+    /** Run an OS Command - uses the default OS Shell - returns a promise
+     * @fires uibuilder/runOsCmd/log
+     * @param {string} cmd The OS command to run
+     * @param {Array<string>} args Array of argument strings to be passed to the command
+     * @param {object} [opts] Optional. Array of argument strings to be passed to the command. If not present, defaults to running via an OS shell
+     * @returns {Promise} The stdout/stderr output (interleaved) or the commands error reason
+     */
+    runOsCmd: function runOsCmd(cmd, args, opts) {
+        if (!opts) opts = { shell: true, windowsHide: true, }
+        opts.stdio = 'pipe' // force this option
+        const cmdOut = `${cmd} ${args.join(' ')}`
+
+        return new Promise((resolve, reject) => {
+            // Run the command
+            const shell = spawn(cmd, args, opts)
+
+            // Capture all output in 1 place + emit log events
+            let out = ''
+            shell.stdout.on('data', (data) => {
+                const d = data.toString()
+                // Emit log event with data
+                tiEvents.emit('uibuilder/runOsCmd/log', d )
+                out += d
+                // Don't emit chunks of output as this stops the final output from resolving
+            })
+            shell.stderr.on('data', (data) => {
+                const d = data.toString()
+                // Emit log event with data
+                tiEvents.emit('uibuilder/runOsCmd/log', d )
+                out += d
+            })
+
+            shell.on('error', (err) => {
+                err.all = out
+                err.command = cmdOut
+                err.code = 2
+                reject(err)
+            })
+
+            shell.on('close', (code) => {
+                tiEvents.emit('uibuilder/runOsCmd/end', { 'code': code } )
+                // Return complete output
+                if (opts.out === 'bare') {
+                    resolve(out)
+                } else {
+                    resolve({
+                        'all': `\n------------------------------------------------------\n[uibuilder:uiblib:runOsCmd]\nCommand:\n  "${cmdOut}"\n  Completed with code ${code}\n  \n${out}\n------------------------------------------------------\n`,
+                        'code': code,
+                        'command': cmdOut,
+                    })
+                }
+            })
+        })
+    },
+
     /** Sort a uibuilder instances object by url instead of the natural order added
      * @param {*} instances The instances object to sort
      * @returns {*} instances sorted by url
@@ -370,6 +324,7 @@ module.exports = {
             })
         )
     },
+
     /** Sort a uibuilder apps object by url instead of the natural order added
      * @param {*} apps The apps object to sort
      * @returns {*} apps sorted by url
@@ -383,7 +338,6 @@ module.exports = {
             return 0
         })
     },
-
 } // ---- End of module.exports ---- //
 
 // EOF
