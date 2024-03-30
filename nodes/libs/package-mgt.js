@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 /** Manage npm packages
  *
- * Copyright (c) 2021-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2024 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -25,10 +25,10 @@
  * @typedef {import('../../typedefs.js').uibPackageJson} uibPackageJson
  */
 
-const { join } = require('path')
-const { copy, readJsonSync, writeJson, writeJsonSync } = require('fs-extra')
+const { join } = require('node:path')
 const { existsSync } = require('./fs.js')
-const execa = require('execa')
+const { runOsCmd } = require('./uiblib.js')
+const { copy, readJsonSync, writeJson, writeJsonSync } = require('fs-extra')
 
 class UibPackages {
     /** PRIVATE Flag to indicate whether setup() has been run (ignore the false eslint error)
@@ -52,37 +52,48 @@ class UibPackages {
     /** @type {string} Get npm's global install location */
     globalPrefix // set in constructor
 
-    constructor() {
+    // OS Command options for running npm commands - https://nodejs.org/docs/latest-v18.x/api/child_process.html#child_processspawncommand-args-options
+    npmCmdOpts = {
+        cwd: '',
+        shell: true,
+        windowsHide: true,
+        timeout: 300000, // 5min
+        out: '', // uib addition - set to 'bare' when requesting JSON output
+    }
 
+    constructor() {
         /** Get npm's global install location */
         this.globalPrefix = this.npmGetGlobalPrefix()
-
     } // ---- End of constructor ---- //
 
     /** Gets the global install folder for npm & saves to a class variable
      * @returns {string} The npm global install folder name
      */
-    npmGetGlobalPrefix() { // eslint-disable-line class-methods-use-this
+    async npmGetGlobalPrefix() { // eslint-disable-line class-methods-use-this
         // Does not need setup to have run
 
-        const opts = {
-            'all': true,
-        }
+        const opts = this.npmCmdOpts
+        opts.out = 'bare' // returns just the output string
+
         const args = [
             'config',
             'get',
             'prefix',
         ]
 
-        let res
+        /** @type {string} */
+        let out
         try {
-            const all = execa.sync('npm', args, opts)
-            res = all.stdout
+            out = await runOsCmd('npm', args, opts)
         } catch (e) {
-            // console.error('>>>>>', e.all)
-            res = e.all  // Do we need to wrap this in a promise?
+            const myerr = new Error(`runOsCmd/npmGetGlobalPrefix failed. ${e.message}`)
+            myerr.all = ''
+            myerr.code = 3
+            myerr.command = `npm ${args.join(' ')}`
+            throw myerr
         }
-        return res
+
+        return out
     } // ---- End of npmGetGlobalPrefix ---- //
 
     /** Configure this class with uibuilder module specifics
@@ -618,6 +629,7 @@ class UibPackages {
 
     //#region -- Manage Packages via npm --
 
+    // TODO Use tiEvents `uibuilder/runOsCmd/log` as option to show log during install
     /** Install an npm package
      * NOTE: This fn does not update the list of packages
      *       because that is built from the package.json file
@@ -628,7 +640,7 @@ class UibPackages {
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
      * @param {string} [tag] Default=''. Specifier for a version, tag, branch, etc. with leading @ for npm and # for GitHub installs
      * @param {string} [toLocation] Where to install to. Defaults to uibRoot
-     * @returns {Promise<string>} [Combined stdout/stderr, updated list of package details]
+     * @returns {Promise<{all:string, code:number, command:string}>} Combined stdout/stderr, return code
      */
     async npmInstallPackage(url, pkgName, tag = '', toLocation = '') {
         if ( this.log === undefined ) throw this.#logUndefinedError
@@ -642,11 +654,10 @@ class UibPackages {
         if ( this.uib.rootFolder === null ) throw new Error('this.log.rootFolder is null')
         if ( toLocation === '' ) toLocation = this.uib.rootFolder
 
-        // https://github.com/sindresorhus/execa#options
-        const opts = {
-            'cwd': toLocation,
-            'all': true,
-        }
+        const opts = this.npmCmdOpts
+        opts.cwd = toLocation
+        opts.out = ''
+
         const args = [ // `npm install --no-audit --no-update-notifier --save --production --color=false --no-fund --json ${params.package}@latest`
             'install',
             '--no-fund',
@@ -659,18 +670,34 @@ class UibPackages {
             pkgName + tag,
         ]
 
-        // Don't need a try since we don't do any processing on an execa error - if cmd fails, the promise is rejected
-        const { all } = await execa('npm', args, opts)
-        this.log.info(`[uibuilder:UibPackages:npmInstallPackage] npm output: \n ${all}\n `)
+        /** @type {{all:string, code:number, command:string}} */
+        let out
+        try {
+            out = await runOsCmd('npm', args, opts)
+        } catch (e) {
+            const myerr = new Error(`runOsCmd/npmInstallPackage failed. ${e.message}`)
+            myerr.all = ''
+            myerr.code = 3
+            myerr.command = `npm ${args.join(' ')}`
+            throw myerr
+        }
+        if (out.code > 0) {
+            const myerr = new Error(`Install failed. Code: ${out.code}`)
+            myerr.all = out.all
+            myerr.code = out.code
+            myerr.command = out.command
+            throw myerr
+        }
 
-        return /** @type {string} */ (all)
+        this.log.info(`[uibuilder:UibPackages:npmInstallPackage] npm output: \n ${out.all}\n `)
 
+        return out
     } // ---- End of installPackage ---- //
 
     /** Install an npm package
      * NOTE: This fn does not update the list of packages - see install above for reasons.
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
-     * @returns {Promise<string>} Combined stdout/stderr
+     * @returns {Promise<{all:string, code:number, command:string}>} Combined stdout/stderr
      */
     async npmRemovePackage(pkgName) {
         if ( this.log === undefined ) throw this.#logUndefinedError
@@ -682,11 +709,10 @@ class UibPackages {
             return ''
         }
 
-        // https://github.com/sindresorhus/execa#options
-        const opts = {
-            'cwd': this.uib.rootFolder,
-            'all': true,
-        }
+        const opts = this.npmCmdOpts
+        opts.cwd = this.uib.rootFolder
+        opts.out = ''
+
         const args = [
             'uninstall',
             '--save',
@@ -698,12 +724,27 @@ class UibPackages {
             pkgName,
         ]
 
-        // Don't need a try since we don't do any processing on an execa error - if cmd fails, the promise is rejected
-        const { all } = await execa('npm', args, opts)
-        this.log.info(`[uibuilder:UibPackages:npmRemovePackage] npm output: \n ${all}\n `)
+        /** @type {{all:string, code:number, command:string}} */
+        let out
+        try {
+            out = await runOsCmd('npm', args, opts)
+        } catch (e) {
+            const myerr = new Error(`runOsCmd/npmRemovePackage failed. ${e.message}`)
+            myerr.all = ''
+            myerr.code = 3
+            myerr.command = `npm ${args.join(' ')}`
+            throw myerr
+        }
+        if (out.code > 0) {
+            const myerr = new Error(`Removal failed. Code: ${out.code}`)
+            myerr.all = out.all
+            myerr.code = out.code
+            myerr.command = out.command
+            throw myerr
+        }
+        this.log.info(`[uibuilder:UibPackages:npmRemovePackage] npm output: \n ${out.all}\n `)
 
-        return /** @type {string} */ (all)
-
+        return out
     } // ---- End of removePackage ---- //
 
     /** List all npm packages installed at the top-level of a folder
@@ -713,16 +754,10 @@ class UibPackages {
     async npmListInstalled(folder) {
         this.log.trace('[uibuilder:package-mgt:npmListInstalled] npm list installed started')
 
-        // if ( this._isConfigured !== true ) {
-        //     this.log.warn('[uibuilder:UibPackages:npmListInstalled] Cannot run. Setup has not been called.')
-        //     return
-        // }
+        const opts = this.npmCmdOpts
+        opts.cwd = folder
+        opts.out = 'bare' // returns just the output string
 
-        // https://github.com/sindresorhus/execa#options
-        const opts = {
-            'cwd': folder,
-            'all': true,
-        }
         const args = [
             'list',
             '--long',
@@ -730,18 +765,20 @@ class UibPackages {
             '--depth=0',
         ]
 
-        let res
+        /** @type {string} */
+        let out
         try {
-            const { stdout } = await execa('npm', args, opts)
-            // console.log('>>>>>', stdout)
-            res = stdout
+            out = await runOsCmd('npm', args, opts)
         } catch (e) {
-            // console.log('>>>>>', e.message)
-            res = e.stdout
+            const myerr = new Error(`runOsCmd/npmListInstalled failed. ${e.message}`)
+            myerr.all = ''
+            myerr.code = 3
+            myerr.command = `npm ${args.join(' ')}`
+            throw myerr
         }
 
         this.log.trace('[uibuilder:package-mgt:npmListInstalled] npm list installed completed')
-        return res
+        return out // we asked for bare output so out is a string
     } // ---- End of npmListInstalled ---- //
 
     /** Get the latest version string for a package
@@ -758,35 +795,36 @@ class UibPackages {
             return
         }
 
-        // https://github.com/sindresorhus/execa#options
-        const opts = {
-            'cwd': this.uib.rootFolder,
-            'all': true,
-        }
-        const args = [ // `npm remove --no-audit --no-update-notifier --color=false --json ${params.package}` //  --save-prefix="~"
+        const opts = this.npmCmdOpts
+        opts.cwd = this.uib.rootFolder
+        opts.out = 'bare' // returns just the output string
+
+        const args = [
             'outdated',
             '--json',
             pkgName,
         ]
 
-        let res
+        /** @type {string} */
+        let out
         try {
-            const { stdout } = await execa('npm', args, opts)
-            // const {stdout} = execa.sync('npm', args, opts)
-            res = stdout
-        } catch (err) {
-            res = err.stdout
+            out = await runOsCmd('npm', args, opts)
+        } catch (e) {
+            const myerr = new Error(`runOsCmd/npmOutdated failed. ${e.message}`)
+            myerr.all = ''
+            myerr.code = 3
+            myerr.command = `npm ${args.join(' ')}`
+            throw myerr
         }
 
-        this.log.trace(`[uibuilder:UibPackages:npmOutdated] npm output: \n ${res}\n `)
+        this.log.trace(`[uibuilder:UibPackages:npmOutdated] npm output: \n ${out}\n `)
 
-        return res
-
+        return out // we asked for bare output so out is a string
     } // ---- End of npmOutdated ---- //
 
     /** Update an npm package (Not yet in use)
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
-     * @returns {Promise<string>} Combined stdout/stderr
+     * @returns {Promise<{all:string, code:number, command:string}>} Combined stdout/stderr, return code
      */
     async npmUpdate(pkgName) {
         if ( this.log === undefined ) throw this.#logUndefinedError
@@ -801,11 +839,10 @@ class UibPackages {
         // if ( toLocation === '' ) toLocation = this.uib.rootFolder
         const toLocation = this.uib.rootFolder
 
-        // https://github.com/sindresorhus/execa#options
-        const opts = {
-            'cwd': toLocation,
-            'all': true,
-        }
+        const opts = this.npmCmdOpts
+        opts.cwd = toLocation
+        opts.out = ''
+
         const args = [
             'update',
             '--no-fund',
@@ -818,12 +855,29 @@ class UibPackages {
             pkgName,
         ]
 
-        // Don't need a try since we don't do any processing on an execa error - if cmd fails, the promise is rejected
-        const { all } = await execa('npm', args, opts)
-        this.log.info(`[uibuilder:UibPackages:npmUpdate] npm output: \n ${all}\n `)
+        /** @type {{all:string, code:number, command:string}} */
+        let out
+        try {
+            out = await runOsCmd('npm', args, opts)
+        } catch (e) {
+            const myerr = new Error(`runOsCmd/npmInstallPackage failed. ${e.message}`)
+            myerr.all = ''
+            myerr.code = 3
+            myerr.command = `npm ${args.join(' ')}`
+            throw myerr
+        }
+        if (out.code > 0) {
+            const myerr = new Error(`Install failed. Code: ${out.code}`)
+            myerr.all = out.all
+            myerr.code = out.code
+            myerr.command = out.command
+            throw myerr
+        }
 
-        return /** @type {string} */ (all)
+        this.log.info(`[uibuilder:UibPackages:npmUpdate] npm output: \n ${out.all}\n `)
 
+        return out
+        // return /** @type {string} */ (all)
     }
 
     //#endregion -- ---- --
