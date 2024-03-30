@@ -32,10 +32,11 @@
  */
 
 const path = require('node:path')
+// const fsextra = require('fs-extra')
 // Async
 const fs = require('node:fs/promises')
 // Sync
-const { existsSync, accessSync, constants: fsConstants, mkdirSync, readFileSync } = require('fs')
+const { existsSync, accessSync, constants: fsConstants, mkdirSync, readFileSync } = require('node:fs')
 // TODO Remove in future?
 const fg = require('fast-glob')
 // WARNING: Take care not to end up with circular requires. e.g. libs/socket.js cannot be required here
@@ -284,6 +285,107 @@ class UibFs {
         // const chkFolders = existsSync(path.join(uib.rootFolder, params.url))
     }
 
+    // TODO Move degit processing to its own function. Don't need the emitter on uib
+    /** Replace template in front-end instance folder
+     * @param {string} url The uib instance URL
+     * @param {string} template Name of one of the built-in templates including 'blank' and 'external'
+     * @param {string|undefined} extTemplate Optional external template name to be passed to degit. See degit options for details.
+     * @param {string} cmd 'replaceTemplate' if called from admin-router:POST, otherwise can be anything descriptive & unique by caller
+     * @param {object} templateConf Template configuration object
+     * @param {object} uib uibuilder's master variables
+     * @param {object} log uibuilder's Log functions (normally points to RED.log)
+     * @returns {Promise} {statusMessage, status, (json)}
+     */
+    async replaceTemplate(url, template, extTemplate, cmd, templateConf, uib, log) {
+        const res = {
+            'statusMessage': 'Something went wrong!',
+            'status': 500,
+            'json': undefined,
+        }
+
+        // Load a new template (params url, template, extTemplate)
+        if ( template === 'external' && ( (!extTemplate) || extTemplate.length === 0) ) {
+            const statusMsg = `External template selected but no template name provided. template=external, url=${url}, cmd=${cmd}`
+            log.error(`[uibuilder:fs:replaceTemplate]. ${statusMsg}`)
+            res.statusMessage = statusMsg
+            res.status = 500
+            return res
+        }
+
+        /** Destination folder name */
+        const fullname = path.join(uib.rootFolder, url)
+
+        if ( extTemplate ) extTemplate = extTemplate.trim()
+        if ( extTemplate === undefined ) throw new Error('extTemplate is undefined')
+
+        // TODO Move degit processing to its own function. Don't need the emitter on uib
+        // If template="external" & extTemplate not blank - use degit to load
+        if ( template === 'external' ) {
+            const degit = require('degit')
+
+            uib.degitEmitter = degit(extTemplate, {
+                cache: false,  // Fix for Issue #155 part 3 - degit error
+                force: true,
+                verbose: false,
+            })
+
+            uib.degitEmitter.on('info', info => {
+                log.trace(`[uibuilder:fs:replaceTemplate] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
+            })
+
+            await uib.degitEmitter.clone(fullname)
+
+            // console.log({myclone})
+            const statusMsg = `Degit successfully copied template '${extTemplate}' to '${fullname}'.`
+            log.info(`[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=${cmd}`)
+            res.statusMessage = statusMsg
+            res.status = 200
+
+            res.json = /** @type {*} */ ({
+                'url': url,
+                'template': template,
+                'extTemplate': extTemplate,
+                'cmd': cmd,
+            })
+            return res
+        } else if ( Object.prototype.hasOwnProperty.call(templateConf, template) ) {
+            // Otherwise, use internal template - copy whole template folder
+            // const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
+            const fsOpts = { 'force': true, 'preserveTimestamps': true, 'recursive': true }
+            /** Source template folder name */
+            const srcTemplate = path.join( uib.masterTemplateFolder, template )
+            try {
+                // fsextra.copySync( srcTemplate, fullname, fsOpts )
+                // NB: fs.cp is still experimental even in node.js v20 - but seems stable since v16
+                await fs.cp(srcTemplate, fullname, fsOpts)
+                const statusMsg = `Successfully copied template ${template} to ${url}.`
+                log.info(`[uibuilder:fs:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
+                res.statusMessage = statusMsg
+                res.status = 200
+                res.json = /** @type {*} */ ({
+                    'url': url,
+                    'template': template,
+                    'extTemplate': extTemplate,
+                    'cmd': cmd,
+                })
+                return res
+            } catch (err) {
+                const statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message}.`
+                log.error(`[uibuilder:fs:replaceTemplate] ${statusMsg}`, err)
+                res.statusMessage = statusMsg
+                res.status = 500
+                return res
+            }
+        } else {
+            // Shouldn't ever be able to occur - but still :-)
+            const statusMsg = `Template '${template}' does not exist. url=${url}, cmd=${cmd}.`
+            log.error(`[uibuilder:fs:replaceTemplate] ${statusMsg}`)
+            res.statusMessage = statusMsg
+            res.status = 500
+            return res
+        }
+    } // ----- End of replaceTemplate() ----- //
+
     // TODO chk params
     /** Output a file to an instance folder (async/promise)
      * NB: Errors have the fn indicator at the end because this is expected to be a utility fn called from elsewhere
@@ -418,6 +520,7 @@ class UibFs {
     //#endregion ---- ---- ----
 
     /* TODO
+        rm
         moveSync
         copySync
         copy
