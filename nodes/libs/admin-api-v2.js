@@ -715,8 +715,10 @@ function adminRouterV2(uib, log) {
                         return true
                     })
                     .catch((err) => {
-                        // log.warn(`[uibuilder:apiv2:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, err.stdout)
-                        console.dir(err)
+                        // err has extra props: {all:string, code:number, command:string}
+                        // console.log('--------------------------------------------------------')
+                        // console.dir(err)
+                        // console.log('--------------------------------------------------------')
                         log.warn(`[uibuilder:apiv2:uibnpmmanage:install] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
                         res.json({ 'success': false, 'result': err.all })
                         return false
