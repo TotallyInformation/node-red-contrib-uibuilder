@@ -8,7 +8,7 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 1.32 2024-01-01
+ * @version: 1.33 2024-03-28
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -471,7 +471,7 @@
 html {
     line-height: 1.5;
     font-size: 100%;
-    background-color: var(--surface2);
+    background-color: var(--surface1);
     color: var(--text2);
     accent-color: var(--brand);
 }
@@ -569,9 +569,22 @@ body > main, body > header, body > footer, body > section {
     margin-left:auto;
     margin-right: auto;    
 }
+body > main {
+    display: grid;
+    gap: 1rem;
+}
 footer {
     margin-top: 1em;
 }
+/* Put asides inside a main to one side
+   Or, use a section or div to wrap multiple */
+main > article, main .left {
+    grid-column: 1;
+}
+main > aside, main .right {
+    grid-column: 2;
+}
+/* Inline blocks in a summary tag */
 summary > h2, summary > h3, summary > h4, summary > div, summary > p {
     display: inline-block;
 }
@@ -694,7 +707,7 @@ form > label:focus-within {
     font-weight: bold;
 }
 /* Small screen */
-@media screen and (max-width: 600px) {
+@media all and (max-width: 600px) {
     form, form * {
         display:block;
         width:100%;
@@ -716,38 +729,69 @@ nav a {
     background-color: inherit;
 }
 nav li:not([aria-current]):hover {
-    font-weight: bold;
+    text-decoration: underline;
+    filter: brightness(120%);
 }
 nav [aria-current=page] {
 	font-weight: bolder;
-    text-decoration: underline;
+    filter: brightness(130%);
 }
-/* identifiable nav entries (li): nav [data-route] */
+
 /*#region -- Horizontal menu -- */
-nav.horizontal {
+/* nav.horizontal {
     display: inline-block;
     padding: 0.5rem;
+} */
+nav.horizontal {
+    display: flex;
+    padding: 0 0.1rem;
+    align-items: center;
+    background-color: var(--surface3);
 }
-nav.horizontal > h2 {
-    display: inline-block;
-    line-height: inherit;
+nav.horizontal > h2 { /* Menu heading */
     font-size: inherit;
-    margin: 0;
+    font-weight: inherit;
+    padding-left: 0.5rem;
 }
-nav.horizontal [role="menubar"] { /* ul */
+nav.horizontal [role="menubar"], nav.horizontal ul { /* ul */
+    display: flex;
+    flex: 2;
     list-style-type: none;
-    display: inline-block;
     margin: 0;
-    padding: 0 0 0 0.5rem;
-
+    padding: 0;
+    justify-content: flex-start;
 }
 nav.horizontal li { /* [role="menuitem"], [data-route], li */
-    display: inline-block;
-    padding: 0 0.4rem 0 0.1rem;
+    padding: 0.2rem 0.4rem;
 }
-nav.horizontal li:not(:last-child) {
-    border-right: 2px solid;
-    border-right-color: inherit;
+/* Search form */
+nav.horizontal form {
+    flex: 1;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    align-items: center;
+    border: none;
+    margin: inherit;
+    padding: inherit;
+    gap: .2rem;
+}
+nav.horizontal input[type="search"] {
+    flex: 3;
+    filter: brightness(120%);
+}
+nav.horizontal input[type="submit"] {
+    flex: 1;
+    font-size: large;
+    font-weight: bolder;
+    filter: brightness(120%);
+    padding: .5rem 0;
+}
+@media all and (max-width: 600px) {
+    nav.horizontal, nav.horizontal ul {
+        /* On small screens, we are no longer using row direction but column */
+        flex-direction: column;
+    }
 }
 /*#endregion -- ---- -- */
 /*#endregion --- Menus --- */
@@ -777,12 +821,13 @@ li.started {
 
 /*#region ---- Utility ---- */
 
-.emoji { /* Nicer, cross-platform emoji's */
-    font-family: var(--emoji-fonts);
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-
-.noborder {
-    border: none;
+@keyframes pulse {
+    50% {
+        opacity: .5;
+    }
 }
 
 .border {
@@ -801,6 +846,46 @@ li.started {
     margin-top: 0.5rem;
 }
 
+.centre, .center {
+    margin-left:auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.compact {
+    margin: 0;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+}
+button.compact {
+    padding: 2px 5px;
+    border-radius: 0;
+    background: inherit;
+    margin: 2px;
+}
+
+.emoji { /* Nicer, cross-platform emoji's */
+    font-family: var(--emoji-fonts);
+}
+
+.noborder {
+    border: none;
+}
+
+.status-side-panel {
+    border-radius: 9999px;
+    width: .5rem;
+    height: 100%;
+    background-color: var(--surface1);
+}
+
+.text-larger {
+    font-size: larger;
+}
+.text-smaller {
+    font-size: smaller;
+}
+
 /* Apply to headings where you want a sub-title */
 .with-subtitle {
     margin-bottom: 0;
@@ -814,47 +899,6 @@ li.started {
 
 .uppercase {
     text-transform: uppercase;
-}
-
-.centre, .center {
-    margin-left:auto;
-    margin-right: auto;
-    text-align: center;
-}
-
-.animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-@keyframes pulse {
-    50% {
-        opacity: .5;
-    }
-}
-
-.status-side-panel {
-    border-radius: 9999px;
-    width: .5rem;
-    height: 100%;
-    background-color: var(--surface1);
-}
-
-.text-smaller {
-    font-size: smaller;
-}
-.text-larger {
-    font-size: larger;
-}
-
-.compact {
-    margin: 0;
-    padding-top: 0.2rem;
-    padding-bottom: 0.2rem;
-}
-button.compact {
-    padding: 2px 5px;
-    border-radius: 0;
-    background: inherit;
-    margin: 2px;
 }
 
 /*#endregion ---- Utility ---- */
