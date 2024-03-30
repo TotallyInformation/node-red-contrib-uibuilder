@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-03-26 18:04:10
+updated: 2024-03-30 15:56:52
 ---
 
 # Changelog
@@ -17,15 +17,18 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## To Do
 
+* [ ] Remove execa from gulpfile.js & remove from dev deps
 * Update examples:
   * [ ] [started] Update text update example to include new `uib-topic` html attributes
   * [ ] Add to uib-save example: topic example.
   * [ ] Template Examples - remove old library example.
   * [ ] `uib-sender` - remove ref to uibuilderfe and update flows.
+  * [ ] Navigation menu examples. 1x Router, 1x page.
 * [ ] `uib-tag` input fields not resizing correctly.
 * [ ] uib-element forms need some serious TLC! checkbox, radio
 * [ ] Docs
   * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
+  * [ ] Document a dashboard-like grid layout.
 
 ### `uibrouter` FE library
 
@@ -96,6 +99,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 * [ ] Add option for `clientId` - would ensure that the output only goes to the appropriate client.
 * [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
 * [ ] Add new type: `navigation menu` - to work with the router.
+* [ ] Add nav menu example, working with `uib-file-*` nodes.
 
 ### `uib-tag` node
 
@@ -106,10 +110,6 @@ Please see the documentation for archived changelogs - a new archive is produced
 ### `uibuilder` node
 
 * [ ] ?? Filter `clientId` and `pageName` using socket.io rooms?
-
-### `uib-brand.css` styles
-
-* [x] Document new resets and --max-width.
 
 ## Issues
 
@@ -249,6 +249,11 @@ Most of these changes will *not* impact most people but you should check through
 * The `socket.io-client` package is no longer a dependency. It is now only a dev-dependency thanks to the removal of the `uibuilderfe` client library. The current client library versions have it pre-built.
 * The `nanoid` package is no longer a dependency. UIBUILDER now has its own UUID generator function. The nanoid package stopped being useful since it moved to only an ESM release.
 * The `jsdom` package now tracks the current release again thanks to UIBUILDER moving to a node.js baseline in line with Node-RED v4 (Node.js v18)
+* External module `execa` no longer a dependency.
+
+* Documentation
+  * New How-To: Creating a well-structured HTML page
+
 * URL's are now _case sensitive_ when using the custom ExpressJS server feature. 
   
   This can be [turned off in `settings.js`](uib-configuration#settingsjs) using property `uibuilder.serverOptions['case sensitive routing']` set to `false`.
@@ -376,16 +381,37 @@ The `old-blank-client` template and all associated documentation has also been r
 
 ### `libs/uiblib.js` library (uibuilder utilities)
 
+* **NEW FUNCTION** `runOsCmd(cmd, args, opts)` - Run an OS Command. Used for running `npm` commands, replaces the external `execa` library.
 * `nanoid` external library replaced with internal code based on [`foxid`](https://github.com/luavixen/foxid)
+* `replaceTemplate` moved to `libs/fs.js` & fs-extra/cpySync replaced with node:fs/promises/cp
+
+### `libs/fs.js` library (filing system handling)
+
+* `replaceTemplate` moved from `libs/uiblib.js` & fs-extra/cpySync replaced with node:fs/promises/cp
+
+### `libs/package-mgt.js` library
+
+* Replaced `execa` with `uiblib`.`runOsCmd`. `execa` no longer a dependency.
 
 ### `uib-brand.css` styles
 
+* `body` has been given a slightly darker/lighter background. `--surface1` instead of `--surface2` to improve general contrast slightly.
 * `header`, `footer`, and `section` given same basic reset as `main`. So they all have max width and are centered in window. However, the formatting is now restricted only to where they are direct children of `body`.
-* `article` given a border with rounded corners and same max-width as above. It is also given the `--surface3` background colour instead of the default `--surface2`. `h2`-`h4` immediately inside the article have reduced margins and a bottom border. This lets you use `article` as a "card" style visual. `div > article` gets additional left/right margins, same as `div > p` - allows for indented nesting/grouping.
+* `body > main` is now defined as a grid.
+* `main > article` and `main .left` are set to grid column 1. `main > aside` and `main .right` are set to grid column 2.
+* `article` given a border with rounded corners and same max-width as above.
+  
+  It is also given the `--surface3` background colour instead of the default `--surface2`. `h2`-`h4` immediately inside the article have reduced margins and a bottom border. This lets you use `article` as a "card" style visual. `div > article` gets additional left/right margins, same as `div > p` - allows for indented nesting/grouping.
+
 * New variable `--max-width` added & set to `64rem`. This is used in the above resets.
 * Block elements (h2-4, div, p) inside a summary element are now rendered as inline-blocks. Because a summary already creates a block and you usually don't want the other tags to also create nested blocks.
 * Input, button, textarea and select tags given a minimum width of 2em to allow for more flexible form layouts.
 * Minor tweaks to forms for better vertical alignment for check and radio input labels. Also include `form fieldset` and `form output` along with inputs.
+* Major improvements to the `nav` menus. Especially `nav.horizontal`.
+  
+  `nav` menus now use `flex` for layouts.
+
+  Horizontal menus now have the option of including a form for things like search boxes. They also collapse to vertical on screens smaller than 600px wide.
 
 ### Examples
 
