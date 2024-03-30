@@ -218,11 +218,13 @@
 
                         console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
                         RED.notify(`Successful installation of npm package ${packageName} for ${node.url}`, 'success')
+                        RED._debug({topic: 'UIBUILDER Library Install', result: 'success', payload: packageName, output: npmOutput})
 
                         // reset and populate the list
                         $('#node-input-packageList').editableList('empty')
                         // @ts-ignore
                         $('#node-input-packageList').editableList('addItems', Object.keys(packages))
+
                     } else {
                         console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ' )
                         RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
@@ -230,7 +232,6 @@
 
                     // Hide the progress spinner
                     $('i.spinner').hide()
-
                 })
                     .fail(function(_jqXHR, textStatus, errorThrown) {
                         console.error( '[uibuilder:addPackageRow:get] Error ' + textStatus, errorThrown )
@@ -276,7 +277,6 @@
             }
 
             $('i.spinner').hide()
-
         })
             .fail(function(_jqXHR, textStatus, errorThrown) {
                 console.error( '[uibuilder:removePackageRow:get] Error ' + textStatus, errorThrown )
