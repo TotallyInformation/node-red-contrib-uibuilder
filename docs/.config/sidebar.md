@@ -46,6 +46,7 @@
 * [How to](how-to/README.md "A collection of FAQ's, how-to's, hints and tips.")
   * [Change the root folder (uibRoot)](how-to/changing-uibroot.md)
   * [Create instance-specific API's](how-to/instance-apis.md)
+  * [Creating well-structured HTML](how-to/well-structured-html.md "How to code a well-formed HTML page")
   * [CSS Selectors](how-to/css-selectors.md)
   * [How & why to use the sender node](how-to/sender-node.md)
   * [How to use low-code in the browser](how-to/use-low-code-in-fe.md "Define and update elements in the browser using low-code")
