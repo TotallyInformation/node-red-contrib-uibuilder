@@ -1,6 +1,6 @@
 /* eslint-disable block-scoped-var */
 /**
- * Copyright (c) 2017-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2024 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -515,7 +515,6 @@ function nodeInstance(config) {
     if ( !fslib.existsSync(this.customFolder) ) {
         // Does not exist so check whether built-in or external template wanted
         if ( this.templateFolder !== 'external' ) {
-
             // Internal template wanted - so copy it now
             const cpyOpts = { 'preserveTimestamps': true }
 
@@ -527,11 +526,9 @@ function nodeInstance(config) {
                 log.error(`🛑[uibuildernodeInstance] CREATE OF INSTANCE FOLDER '${this.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
                 customFoldersOK = false
             }
-
         } else {
-
-            // External template wanted to try to load it
-            uiblib.replaceTemplate(this.url, this.templateFolder, this.extTemplate, 'startup-CopyTemplate', templateConf, uib, log)
+            // External template wanted so try to load it
+            fslib.replaceTemplate(this.url, this.templateFolder, this.extTemplate, 'startup-CopyTemplate', templateConf, uib, log)
                 .then( () => { // resp => {
                     // resp.statusMessage
                     log.info(`[uibuilder:nodeInstance:${this.url}] Created instance folder ${this.customFolder} and copied external template files from ${this.templateFolder}` )
@@ -548,18 +545,14 @@ function nodeInstance(config) {
                     }
                     log.error(`🛑[uibuilder:nodeInstance:replaceTemplate] ${statusMsg}`, err)
                 } )
-
         }
-
     } else {
-
         try {
             fslib.accessSync(this.customFolder, 'w')
         } catch (e) {
             log.error(`🛑[uibuilder:nodeInstance:${this.url}] Local custom folder ERROR`, e.message)
             customFoldersOK = false
         }
-
     }
 
     // We've checked that the custom folder is there and has the correct structure
