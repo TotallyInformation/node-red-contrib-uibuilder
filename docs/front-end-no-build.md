@@ -4,7 +4,7 @@ description: |
   What ways are there to avoid having a build step (transpile, compile) when developing front-end code?
 created: 2022-02-15 15:27:05
 lastUpdated: 2022-02-15 16:25:08
-updated: 2023-12-30 17:01:41
+updated: 2024-03-30 14:21:27
 ---
 
 A build step is simply a way to take things that your browser wont understand directly (like .vue, .jsx files)
@@ -35,7 +35,7 @@ If you do need to use a build step, please see the [Front-End Build Steps and To
 
 ### VueJS
 
-* [Dynamically load .vue files without a build step [uibuilder WIKI]]( https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Dynamically-load-.vue-files-without-a-build-step)
+* [Dynamically load .vue files without a build step [uibuilder WIKI]](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Load-Vue-(v2-or-v3)-components-without-a-build-step-(modern-browsers-only))
 * [Load Vue components without a build step (modern browsers only) [uibuilder WIKI]](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki/Load-Vue-components-without-a-build-step-(modern-browsers-only))
 * [Vue (v2)](https://www.npmjs.com/package/vue) - tells you which js file to use
 * [Skypack CDN: Vue](https://www.skypack.dev/view/vue) - Skypack is a CDN that intelligently loads the correct library remotely and allows you to use ESM `import` statements making your HTML simpler (no working out what `script` tags to use).
