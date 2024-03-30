@@ -4,7 +4,7 @@ description: |
   Utility library containing methods that support UIBUILDER. The methods it contains are not generic and will require references to Node-RED objects to be passed.
 created: 2021-06-27 21:35:00
 lastUpdated: 2023-12-19 16:20:58
-updated: 2023-12-30 17:01:42
+updated: 2024-03-29 16:21:09
 ---
 
 `nodes/libs/uiblib.js`
@@ -25,6 +25,7 @@ None
 ### getSource - Updates a node with the actual value of a typed input field (async)
 ### inputHandler
 ### processClose
+### runOsCmd
 ### sendControl
 ### setNodeStatus
 ### sortInstances
