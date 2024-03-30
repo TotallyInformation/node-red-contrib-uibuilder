@@ -15,7 +15,6 @@
   "dependencies": {
     "@totallyinformation/ti-common-event-handler": "^1.0.0",
     "degit": "^2.8.4",
-    "execa": "^5",
     "express": "^4.17.1",
     "fast-glob": "^3.2.7",
     "fs-extra": "^11.1.0",
@@ -38,7 +37,8 @@
     "eslint-plugin-n": "^16.0.1",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-sonarjs": "^0",
-    "gulp": "^4.0.2",
+    "execa": "^5",
+    "gulp": "^5.0.0",
     "gulp-clean-css": "^4.3.0",
     "gulp-esbuild": "^0.12.0",
     "gulp-htmlmin": "^5.0.1",
