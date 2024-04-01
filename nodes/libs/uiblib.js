@@ -27,7 +27,7 @@
  * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs').runtimeNode} runtimeNode
  * typedef {import('../typedefs.js')}
- * @typedef {import('node-red')} Red
+ * typedef {import('node-red')} Red
  * @typedef {import('Express')} Express
  * typedef {import('socket.io').Namespace} socketio.Namespace
  * typedef {import('socket.io').Socket} socketio.Socket
@@ -36,7 +36,7 @@
 const path = require('node:path')
 const { promisify } = require('node:util')
 const crypto = require('node:crypto')
-const { spawn } = require('node:child_process')
+const { spawn, spawnSync } = require('node:child_process')
 const tiEvents = require('@totallyinformation/ti-common-event-handler') // https://github.com/EventEmitter2/EventEmitter2
 // const fslib = require('./fs')
 const fs = require('fs-extra') // ! TODO Remove
@@ -254,7 +254,7 @@ module.exports = {
      * @type {string} A line of log output from the running OS Command
      */
 
-    /** Run an OS Command - uses the default OS Shell - returns a promise
+    /** Run an OS Command asynchronously - uses the default OS Shell unless overridden - returns a promise
      * @fires uibuilder/runOsCmd/log
      * @param {string} cmd The OS command to run
      * @param {Array<string>} args Array of argument strings to be passed to the command
@@ -309,13 +309,36 @@ module.exports = {
         })
     },
 
+    /** Run an OS Command synchronously - uses the default OS Shell unless overridden
+     * WARNING: This fn will THROW if the command fails - make sure you trap it.
+     * @fires uibuilder/runOsCmd/log
+     * @param {string} cmd The OS command to run
+     * @param {Array<string>} args Array of argument strings to be passed to the command
+     * @param {object} [opts] Optional. Array of argument strings to be passed to the command. If not present, defaults to running via an OS shell
+     * @returns {object} The stdout/stderr output (interleaved) or the commands error reason
+     */
+    runOsCmdSync: function runOsCmdSync(cmd, args, opts) {
+        if (!opts) opts = { shell: true, windowsHide: true, }
+        // opts.stdio = 'pipe' // force this option
+
+        /** @type {object} */
+        const out = spawnSync(cmd, args, opts)
+
+        if (opts.out === 'bare') {
+            return out.stdout.toString()
+        } else {
+            out.command = `${cmd} ${args.join(' ')}`
+            return out
+        }
+    },
+
     /** Sort a uibuilder instances object by url instead of the natural order added
      * @param {*} instances The instances object to sort
      * @returns {*} instances sorted by url
      */
     sortInstances: function sortInstances(instances) {
         return Object.fromEntries(
-            Object.entries(instances).sort(([,a],[,b]) => {
+            Object.entries(instances).sort(([, a], [, b]) => {
                 const nameA = a.toUpperCase()
                 const nameB = b.toUpperCase()
                 if (nameA < nameB) return -1
