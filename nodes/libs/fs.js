@@ -31,12 +31,12 @@
  * @typedef {import('../../typedefs.js').uibPackageJson} uibPackageJson
  */
 
-const path = require('node:path')
+const { join, relative, normalize } = require('node:path')
 // const fsextra = require('fs-extra')
 // Async
 const fs = require('node:fs/promises')
 // Sync
-const { existsSync, accessSync, constants: fsConstants, mkdirSync, readFileSync } = require('node:fs')
+const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readFileSync } = require('node:fs')
 // TODO Remove in future?
 const fg = require('fast-glob')
 // WARNING: Take care not to end up with circular requires. e.g. libs/socket.js cannot be required here
@@ -117,7 +117,7 @@ class UibFs {
         let files = await fs.readdir(dir)
         // @ts-ignore
         files = await Promise.all(files.map(async file => {
-            const filePath = path.join(dir, file)
+            const filePath = join(dir, file)
             const stats = await fs.stat(filePath)
             if (stats.isDirectory()) {
                 return this.walk(filePath, ftype)
@@ -140,6 +140,34 @@ class UibFs {
 
     // async getAllInstanceUrls
 
+    /** ASYNC Folder or File copy - Will THROW on error
+     * @param {Array<string>|string} src Source. Single string or array of strings that will be `join`d
+     * @param {Array<string>|string} dest Destination. Single string or array of strings that will be `join`d
+     * @param {boolean} [overwrite] Optional. Default=false. Overwrite on copy or fail if dest exists
+     * @param {import('node:fs').CopyOptions} [opts] Optional.
+     * @returns {Promise<boolean>} True if copy succeeded else error thrown
+     */
+    async copy(src, dest, overwrite, opts) {
+        if (!overwrite) overwrite = false
+        if (!opts) {
+            opts = {
+                force: overwrite === true,
+                preserveTimestamps: true,
+            }
+        }
+        // @ts-ignore
+        if (Array.isArray(src)) src = join(src)
+        // @ts-ignore
+        if (Array.isArray(dest)) dest = join(dest)
+
+        try {
+            await fs.cp(src, dest, opts)
+        } catch (e) {
+            throw new Error(`Could not copy '${src}' to '${dest}'. ${e.message}`)
+        }
+        return true
+    }
+
     /** Return list of found files as folder/files and/or urls
      * @param {string} uibId The uibuilder node instance id to search
      * @param {boolean} live If true, the search root will be limited to the currently live served folder
@@ -156,7 +184,7 @@ class UibFs {
 
         // Get node instance paths
         const uibnode = RED.nodes.getNode(uibId)
-        const searchFolder = path.join(uibnode.customFolder, live === true ? uibnode.sourceFolder : '')
+        const searchFolder = join(uibnode.customFolder, live === true ? uibnode.sourceFolder : '')
 
         // Defaults to finding everything in the search folder
         if (!filter) filter = ['*']
@@ -196,9 +224,9 @@ class UibFs {
                 f = f.replace('index.html', '')
             } else {
                 if (fullPrefix) {
-                    f = path.join(searchFolder, f)
+                    f = join(searchFolder, f)
                 } else {
-                    f = path.relative(searchFolder, path.join(searchFolder, f))
+                    f = relative(searchFolder, join(searchFolder, f))
                 }
             }
             srch[i] = `${prefix}${f}`
@@ -215,7 +243,7 @@ class UibFs {
                     fullPrefixOutput: fullPrefix,
                 },
                 uibuilder: {
-                    rootFolder: path.normalize(this.uibRootFolder),
+                    rootFolder: normalize(this.uibRootFolder),
                 },
                 node: {
                     id: uibId,
@@ -261,7 +289,7 @@ class UibFs {
         let folder = ''
         const allFiles = []
 
-        folder = path.join(node.customFolder, node.sourceFolder)
+        folder = join(node.customFolder, node.sourceFolder)
 
         // Get all *.html files recursively
         for await (const p of await this.walk(folder, '.html')) {
@@ -277,12 +305,12 @@ class UibFs {
      * @returns {Promise<string>} The text contents of the file.
      */
     async getTemplateFile(template, fName) {
-        return await fs.readFile( path.join(__dirname, '..', '..', 'templates', template, fName), 'utf8')
+        return await fs.readFile( join(__dirname, '..', '..', 'templates', template, fName), 'utf8')
     }
 
     async getUibInstanceRootFolders() {
         // const chkInstances = Object.values(uib.instances).includes(params.url)
-        // const chkFolders = existsSync(path.join(uib.rootFolder, params.url))
+        // const chkFolders = existsSync(join(uib.rootFolder, params.url))
     }
 
     // TODO Move degit processing to its own function. Don't need the emitter on uib
@@ -313,7 +341,7 @@ class UibFs {
         }
 
         /** Destination folder name */
-        const fullname = path.join(uib.rootFolder, url)
+        const fullname = join(uib.rootFolder, url)
 
         if ( extTemplate ) extTemplate = extTemplate.trim()
         if ( extTemplate === undefined ) throw new Error('extTemplate is undefined')
@@ -353,7 +381,7 @@ class UibFs {
             // const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
             const fsOpts = { 'force': true, 'preserveTimestamps': true, 'recursive': true }
             /** Source template folder name */
-            const srcTemplate = path.join( uib.masterTemplateFolder, template )
+            const srcTemplate = join( uib.masterTemplateFolder, template )
             try {
                 // fsextra.copySync( srcTemplate, fullname, fsOpts )
                 // NB: fs.cp is still experimental even in node.js v20 - but seems stable since v16
@@ -412,7 +440,7 @@ class UibFs {
         if (this.hasFolder(fname)) {
             const splitFname = fname.split(/[/|\\]/)
             fname = splitFname.pop()
-            folder = path.join(folder, ...splitFname)
+            folder = join(folder, ...splitFname)
         }
 
         const uib = this.uib
@@ -420,7 +448,7 @@ class UibFs {
         // TODO check parameters
         // TODO check if uib.rootFolder/url folder exists
 
-        const fullFolder = path.join(uib.rootFolder, url, folder)
+        const fullFolder = join(uib.rootFolder, url, folder)
 
         // Test if folder exists and can be written to. If not, error unless createFolder flag is true
         try {
@@ -438,7 +466,7 @@ class UibFs {
             }
         }
 
-        const fullname = path.join(fullFolder, fname)
+        const fullname = join(fullFolder, fname)
 
         try {
             // https://nodejs.org/docs/latest-v14.x/api/fs.html#fs_fspromises_writefile_file_data_options
@@ -484,6 +512,35 @@ class UibFs {
         accessSync(path, mode)
     }
 
+    /** Synchronous Folder or File copy - Will THROW on error
+     * @param {Array<string>|string} src Source. Single string or array of strings that will be `join`d
+     * @param {Array<string>|string} dest Destination. Single string or array of strings that will be `join`d
+     * @param {boolean} [overwrite] Optional. Default=false. Overwrite on copy or fail if dest exists
+     * @param {import('node:fs').CopySyncOptions} [opts] Optional.
+     * @returns {boolean} True if copy succeeded else false
+     */
+    copySync(src, dest, overwrite, opts) {
+        if (!overwrite) overwrite = false
+        if (!opts) {
+            opts = {
+                force: overwrite === true,
+                preserveTimestamps: true,
+            }
+        }
+        // @ts-ignore
+        if (Array.isArray(src)) src = join(src)
+        // @ts-ignore
+        if (Array.isArray(dest)) dest = join(dest)
+
+        try {
+            cpSync(src, dest, opts)
+        } catch (e) {
+            this.log.error(`Could not copy '${src}' to '${dest}'. ${e.message}`, e)
+            return false
+        }
+        return true
+    }
+
     // ensureFolder({ folder, copyFrom,  }) {
     // const cpyOpts = { 'preserveTimestamps': true }
     // Make sure folder exists, create if not
@@ -491,12 +548,13 @@ class UibFs {
     // If copyFrom not undefined/null/'', copy to folder
     // }
 
-    /** Does the path exist?
-     * @param {string} path FS Path to check
+    /** Does the path exist? Pass 1 or more args which are joined & then checked
+     * param {string} path FS Path to check
      * @returns {boolean} True if path exists
      */
-    existsSync(path) {
-        return existsSync(path)
+    existsSync() {
+        const p = join(...arguments)
+        return existsSync(p)
     }
 
     /** Return a list of files matching the glob specification
