@@ -324,7 +324,7 @@ class UibWeb {
         // Add vendor paths for installed front-end libraries - from `<uibRoot>/package.json`
         this.serveVendorPackages()
         // Add socket.io client (../uibuilder/vendor/socket.io/socket.io.js)
-        this.serveVendorSocketIo()
+        // this.serveVendorSocketIo()
         // Serve the ping endpoint (../uibuilder/ping)
         this.servePing()
 
@@ -420,41 +420,42 @@ class UibWeb {
         }
     } // --- End of setMasterStaticFolder() --- //
 
+    // TODO - REMOVE. No longer needed.
     /** Add ExpressJS Route for Socket.IO client that can be used with an import or build
      * The socket.io server supplies one to use with an html script tag
      */
-    serveVendorSocketIo() {
-        if ( this.#isConfigured !== true ) {
-            this.log.warn('[uibuilder:web.js:serveVendorSocketIo] Cannot run. Setup has not been called.')
-            return
-        }
+    // serveVendorSocketIo() {
+    //     if ( this.#isConfigured !== true ) {
+    //         this.log.warn('[uibuilder:web.js:serveVendorSocketIo] Cannot run. Setup has not been called.')
+    //         return
+    //     }
 
-        // Add socket.io client - look both in uibuilder master folder, then uibRoot, then userDir
-        let sioPath = packageMgt.getPackagePath2( 'socket.io-client', [join(__dirname, '..', '..'), this.uib.rootFolder, this.RED.settings.userDir] )
+    //     // Add socket.io client - look both in uibuilder master folder, then uibRoot, then userDir
+    //     let sioPath = packageMgt.getPackagePath2( 'socket.io-client', [join(__dirname, '..', '..'), this.uib.rootFolder, this.RED.settings.userDir] )
 
-        // If it can't be found the usual way - probably because Docker being used & socket.io not in usual place
-        if ( sioPath === null ) {
-            try {
-                sioPath = join(dirname(require.resolve('socket.io-client')), '..')
-            } catch (e) {
-                this.log.error(`[uibuilder:web:serveVendorSocketIo] Cannot find socket.io-client. ${e.message}`)
-            }
-        }
+    //     // If it can't be found the usual way - probably because Docker being used & socket.io not in usual place
+    //     if ( sioPath === null ) {
+    //         try {
+    //             sioPath = join(dirname(require.resolve('socket.io-client')), '..')
+    //         } catch (e) {
+    //             this.log.error(`[uibuilder:web:serveVendorSocketIo] Cannot find socket.io-client. ${e.message}`)
+    //         }
+    //     }
 
-        if (this.vendorRouter === undefined) throw new Error('this.vendorRouter is undefined')
+    //     if (this.vendorRouter === undefined) throw new Error('this.vendorRouter is undefined')
 
-        if ( sioPath !== null ) {
-            // console.log('>> this.uib.staticOpts >>', this.uib.staticOpts)
-            sioPath += '/dist'
-            this.vendorRouter.use( '/socket.io-client', express.static( sioPath, this.uib.staticOpts ) )
-            this.routers.user.push( { name: 'Socket.IO Client', path: `${this.uib.httpRoot}/uibuilder/vendor/socket.io-client/*`, desc: 'Socket.IO Clients', type: 'Static', folder: sioPath } )
-            // ! No! This never actually worked! :} - The socket.io SERVER actually creates the path for the client used in script tag but that doesn't work with import/build
-            // this.vendorRouter.use( '/socket.io', express.static( sioPath, opts ) )
-        } else {
-            // Error: Can't find Socket.IO
-            this.log.error(`[uibuilder:web.js:serveVendorSocketIo] Cannot find installation of Socket.IO Client. It should be in userDir (${this.RED.settings.userDir}) but is not. Check that uibuilder is installed correctly. Run 'npm ls socket.io-client'.`)
-        }
-    } // --- End of serveVendorSocketIo() --- //
+    //     if ( sioPath !== null ) {
+    //         // console.log('>> this.uib.staticOpts >>', this.uib.staticOpts)
+    //         sioPath += '/dist'
+    //         this.vendorRouter.use( '/socket.io-client', express.static( sioPath, this.uib.staticOpts ) )
+    //         this.routers.user.push( { name: 'Socket.IO Client', path: `${this.uib.httpRoot}/uibuilder/vendor/socket.io-client/*`, desc: 'Socket.IO Clients', type: 'Static', folder: sioPath } )
+    //         // ! No! This never actually worked! :} - The socket.io SERVER actually creates the path for the client used in script tag but that doesn't work with import/build
+    //         // this.vendorRouter.use( '/socket.io', express.static( sioPath, opts ) )
+    //     } else {
+    //         // Error: Can't find Socket.IO
+    //         this.log.error(`[uibuilder:web.js:serveVendorSocketIo] Cannot find installation of Socket.IO Client. It should be in userDir (${this.RED.settings.userDir}) but is not. Check that uibuilder is installed correctly. Run 'npm ls socket.io-client'.`)
+    //     }
+    // } // --- End of serveVendorSocketIo() --- //
 
     /** Add ExpressJS Routes for all installed packages & ensure <uibRoot>/package.json is up-to-date. */
     serveVendorPackages() {
