@@ -17,9 +17,14 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## To Do
 
+* [x] Add a sync version of spawn
+* [x] Try to merge pkgsQuickUpd with updateInstalledPackageDetails - https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/321
+* [ ] Process for showing outdated libraries isn't working.
 * [ ] Remove execa from gulpfile.js & remove from dev deps
+* [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
 * Update examples:
   * [ ] [started] Update text update example to include new `uib-topic` html attributes
+  * [ ] **REMOVE** old client library example
   * [ ] Add to uib-save example: topic example.
   * [ ] Template Examples - remove old library example.
   * [ ] `uib-sender` - remove ref to uibuilderfe and update flows.
@@ -381,17 +386,23 @@ The `old-blank-client` template and all associated documentation has also been r
 
 ### `libs/uiblib.js` library (uibuilder utilities)
 
-* **NEW FUNCTION** `runOsCmd(cmd, args, opts)` - Run an OS Command. Used for running `npm` commands, replaces the external `execa` library.
+* **NEW FUNCTIONS** `runOsCmd(cmd, args, opts)` & `runOsCmdSync(cmd, args, opts)` - Run an OS Command. Used for running `npm` commands, replaces the external `execa` library.
 * `nanoid` external library replaced with internal code based on [`foxid`](https://github.com/luavixen/foxid)
 * `replaceTemplate` moved to `libs/fs.js` & fs-extra/cpySync replaced with node:fs/promises/cp
 
 ### `libs/fs.js` library (filing system handling)
 
 * `replaceTemplate` moved from `libs/uiblib.js` & fs-extra/cpySync replaced with node:fs/promises/cp
+* Added sync and async copy fns
 
 ### `libs/package-mgt.js` library
 
 * Replaced `execa` with `uiblib`.`runOsCmd`. `execa` no longer a dependency.
+* Extensive re-write of the code, especially startup and install/remove. 2 new fns added, 6 old fns removed.
+
+### `libs/web.js` library
+
+* Removed Socket.IO client server - no longer required now that the old FE client has gone.
 
 ### `uib-brand.css` styles
 

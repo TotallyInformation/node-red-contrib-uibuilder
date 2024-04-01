@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-03-30 13:58:32
+updated: 2024-03-31 17:46:35
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -606,6 +606,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 * Add a function to auto-rotate routes.
 * Add a function to go to next/previous route.
 * Update "FE Router Test" example with an auto-rotate flow.
+* Add multi-level routes. [Ref](https://discourse.nodered.org/t/second-stage-of-navigation/86713/3?u=totallyinformation).
 
 ### Web Component: `uib-var` (internal)
 
