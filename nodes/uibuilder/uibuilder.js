@@ -308,7 +308,6 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
         if ( settings.serverOptions ) {
             uib.customServer.serverOptions = Object.assign(uib.customServer.serverOptions, settings.serverOptions)
         }
-
     } // --- end of settings.js --- //
 
     /** Locations for uib config can common folders */
@@ -317,10 +316,10 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
 
     //#endregion -------- Constants -------- //
 
-    // TODO: Move all file handling to separate uibFs lib
-    // Configure the UibFs handler class
+    // (a) Configure the UibFs handler class
     fslib.setup(uib)
 
+    // TODO: Move all file handling to fslib
     //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
 
     /** Check uib root folder: create if needed, writable? */
@@ -378,17 +377,17 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
 
     //#endregion ----- root folder ----- //
 
-    /** Do this before doing the web setup so that the packages can be served */
+    /** (b) Do this before doing the web setup so that the packages can be served but after the folder/file setup */
     packageMgt.setup(uib)
 
-    /** We need an ExpressJS web server to serve the page and vendor packages.
+    /** (c) We need an ExpressJS web server to serve the page and vendor packages.
      * since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
      * since v3.3.0 2021-03-16 Allow independent ExpressJS server/app
      */
-    web.setup(uib) // Singleton wrapper for ExpressJS
+    web.setup(uib)
 
-    /** Pass core objects to the Socket.IO handler module */
-    sockets.setup(uib, web.server) // Singleton wrapper for Socket.IO
+    /** (d) Pass core objects to the Socket.IO handler module */
+    sockets.setup(uib, web.server)
 } // --- end of runtimeSetup --- //
 
 /** 2) All of the initialisation of the Node Instance
