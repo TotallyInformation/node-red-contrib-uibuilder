@@ -90,7 +90,7 @@ function nanoId(length) {
     return encodeNanoId(buffer, length, size)
 }
 
-module.exports = {
+const UibLib = {
     // ! TODO: Replace fs-extra
     /** Do any complex, custom node closure code here
      * @param {uibNode} node Reference to the node instance object
@@ -362,5 +362,7 @@ module.exports = {
         })
     },
 } // ---- End of module.exports ---- //
+
+module.exports = UibLib
 
 // EOF
