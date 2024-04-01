@@ -1,0 +1,15 @@
+{
+    "name": "uib_root",
+    "version": "TEMPLATE",
+    "description": "Root configuration and data folder for uibuilder",
+    "scripts": {},
+    "dependencies": {},
+    "homepage": "",
+    "bugs": "",
+    "author": "",
+    "license": "Apache-2.0",
+    "repository": "",
+    "uibuilder": {
+        "packages": {}
+    }
+}
