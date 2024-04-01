@@ -701,10 +701,11 @@ function adminRouterV2(uib, log) {
                 packageMgt.npmInstallPackage(params.url, params.package, params.tag)
                     .then((npmOutput) => {
                         // Get the updated package.json file into packageMgt.uibPackageJson
-                        packageMgt.getUibRootPackageJson()
-
-                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages() - re-saves the package.json file
+                        packageMgt.uibPackageJson = packageMgt.pkgCheck()
+                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
                         packageMgt.pkgsQuickUpd()
+                        // ASYNC - Update details and re-save the file
+                        packageMgt.updateInstalledPackageDetails()
 
                         // Update the packageList
                         web.serveVendorPackages()
@@ -716,10 +717,7 @@ function adminRouterV2(uib, log) {
                     })
                     .catch((err) => {
                         // err has extra props: {all:string, code:number, command:string}
-                        // console.log('--------------------------------------------------------')
-                        // console.dir(err)
-                        // console.log('--------------------------------------------------------')
-                        log.warn(`[uibuilder:apiv2:uibnpmmanage:install] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+                        log.error(`[uibuilder:apiv2:uibnpmmanage:install] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
                         res.json({ 'success': false, 'result': err.all })
                         return false
                     })
@@ -730,12 +728,11 @@ function adminRouterV2(uib, log) {
                 packageMgt.npmRemovePackage(params.package)
                     .then((npmOutput) => {
                         // Get the updated package.json file into packageMgt.uibPackageJson
-                        packageMgt.getUibRootPackageJson()
-
-                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages() - re-saves the package.json file
+                        packageMgt.uibPackageJson = packageMgt.pkgCheck()
+                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
                         packageMgt.pkgsQuickUpd()
-
-                        // TODO remove - just send back success
+                        // ASYNC - Only need this to re-save the file
+                        packageMgt.updateInstalledPackageDetails()
 
                         // Update the packageList
                         web.serveVendorPackages()
