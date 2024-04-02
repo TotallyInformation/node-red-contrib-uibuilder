@@ -468,6 +468,16 @@
     box-sizing: border-box;
     /* margin: 0; */
 }
+*:focus-visible {
+    outline: 2px solid var(--secondary-fg);
+    outline-offset: 2px;
+}
+@supports not selector(:focus-visible) {
+    *:focus {
+        outline: 1px solid var(--secondary-fg);
+        outline-offset: -4px;
+    }
+}
 html {
     line-height: 1.5;
     font-size: 100%;
@@ -502,7 +512,7 @@ div > p, div > article {
     margin-left: var(--base-margin);
     margin-right: var(--base-margin);
 }
-button, input[type="button" i], input[type="reset" i], input[type="submit" i] {
+button, input[type="button" i], input[type="reset" i], input[type="submit" i], ::file-selector-button {
     /* display: inline-flex; */
     align-items: center;
     justify-content: center;
@@ -527,10 +537,6 @@ button, input[type="button" i], input[type="reset" i], input[type="submit" i] {
 }
 button:hover, input[type="button" i]:hover, input[type="reset" i]:hover, input[type="submit" i]:hover {
     background-color: hsl(var(--info-hsl) / .5);
-}
-button:focus, input[type="button" i]:focus, input[type="reset" i]:focus, input[type="submit" i]:focus {
-    outline: 1px solid var(--text4);
-    outline-offset: -4px;
 }
 button:active, input[type="button" i]:active, input[type="reset" i]:active, input[type="submit" i]:active {
     transform: scale(0.97);
@@ -627,7 +633,6 @@ tbody tr:nth-child(even) {
 }
 /*#endregion --- Tables --- */
 
-/* TODO Try flexbox or grid instead of float? */
 /*#region --- Forms --- */
 form {
     border: 1px solid var(--text3);
