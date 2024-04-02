@@ -34,6 +34,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 * [ ] Docs
   * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
   * [ ] Document a dashboard-like grid layout.
+  * [ ] Document how to use `<instanceRoot>/routes/` properly. [Ref](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/changelog?id=new-features)
 
 ### `uibrouter` FE library
 
@@ -361,6 +362,37 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 
 The `old-blank-client` template and all associated documentation has also been removed.
 
+### `uib-brand.css` styles & variables
+
+* **NEW** Variables
+  * `--max-width` added & set to `64rem`. This is used in the above resets.
+
+* **NEW** Styles
+  * `::file-selector-button` added to the list of formatted buttons.
+  * `header`, `footer`, and `section` given same basic reset as `main`. So they all have max width and are centered in window. However, the formatting is now restricted only to where they are direct children of `body`.
+
+* Amended Styles
+  * `body` has been given a slightly darker/lighter background. `--surface1` instead of `--surface2` to improve general contrast slightly.
+  * `body > main` is now defined as a grid.
+  * `main > article` and `main .left` are set to grid column 1. `main > aside` and `main .right` are set to grid column 2.
+  * `article` given a border with rounded corners and same max-width as above.
+    
+    It is also given the `--surface3` background colour instead of the default `--surface2`. `h2`-`h4` immediately inside the article have reduced margins and a bottom border. This lets you use `article` as a "card" style visual. `div > article` gets additional left/right margins, same as `div > p` - allows for indented nesting/grouping.
+    
+  * Block elements (h2-4, div, p) inside a summary element are now rendered as inline-blocks. Because a summary already creates a block and you usually don't want the other tags to also create nested blocks.
+  * Input, button, textarea and select tags given a minimum width of 2em to allow for more flexible form layouts.
+  * Minor tweaks to forms for better vertical alignment for check and radio input labels. Also include `form fieldset` and `form output` along with inputs.
+  * `*:focus` & `*:focus-visible` given `--secondary-fg` colour variable `:focus` is used as a fallback if `:focus-visible` not supported by the browser.
+  * Major improvements to the `nav` menus. Especially `nav.horizontal`.
+    
+    `nav` menus now use `flex` for layouts.
+    
+    Horizontal menus now have the option of including a form for things like search boxes. They also collapse to vertical on screens smaller than 600px wide.
+
+### Example Flows
+
+* `no-code-examples` - Updated to include dynamic script and css in the HTML passthrough example.
+ 
 ### `uibuilder` node
 
 * **NEW** Previously, a link and button to edit front-end code using VScode would be shown if running on localhost. This has now been changed. There is a field on the Advanced tab that lets you set any URL for any IDE or Code Editor that supports them. In addition, as well as for localhost, uibuilder will try to give a reasonable guess for a remote VSCode edit session. Though there is a good chance you will need to set this up in VScode and adjust the link accordingly.
@@ -404,29 +436,6 @@ The `old-blank-client` template and all associated documentation has also been r
 
 * Removed Socket.IO client server - no longer required now that the old FE client has gone.
 
-### `uib-brand.css` styles
-
-* `body` has been given a slightly darker/lighter background. `--surface1` instead of `--surface2` to improve general contrast slightly.
-* `header`, `footer`, and `section` given same basic reset as `main`. So they all have max width and are centered in window. However, the formatting is now restricted only to where they are direct children of `body`.
-* `body > main` is now defined as a grid.
-* `main > article` and `main .left` are set to grid column 1. `main > aside` and `main .right` are set to grid column 2.
-* `article` given a border with rounded corners and same max-width as above.
-  
-  It is also given the `--surface3` background colour instead of the default `--surface2`. `h2`-`h4` immediately inside the article have reduced margins and a bottom border. This lets you use `article` as a "card" style visual. `div > article` gets additional left/right margins, same as `div > p` - allows for indented nesting/grouping.
-
-* New variable `--max-width` added & set to `64rem`. This is used in the above resets.
-* Block elements (h2-4, div, p) inside a summary element are now rendered as inline-blocks. Because a summary already creates a block and you usually don't want the other tags to also create nested blocks.
-* Input, button, textarea and select tags given a minimum width of 2em to allow for more flexible form layouts.
-* Minor tweaks to forms for better vertical alignment for check and radio input labels. Also include `form fieldset` and `form output` along with inputs.
-* Major improvements to the `nav` menus. Especially `nav.horizontal`.
-  
-  `nav` menus now use `flex` for layouts.
-
-  Horizontal menus now have the option of including a form for things like search boxes. They also collapse to vertical on screens smaller than 600px wide.
-
-### Examples
-
-* `no-code-examples` - Updated to include dynamic script and css in the HTML passthrough example.
 
 ----
 
