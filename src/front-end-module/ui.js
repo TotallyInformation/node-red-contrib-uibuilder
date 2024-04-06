@@ -51,6 +51,8 @@ const Ui = class Ui {
     static mdOpts
     /** Reference to pre-loaded Markdown-IT library */
     static md
+    /** Optional Markdown-IT Plugins */
+    ui_md_plugins
     //#endregion --- class variables ---
 
     /** Called when `new Ui(...)` is called
@@ -110,6 +112,9 @@ const Ui = class Ui {
     _markDownIt() {
         // If Markdown-IT pre-loaded, then configure it now
         if (window['markdownit']) {
+            // If plugins not yet defined, check if uibuilder has set them
+            if (!this.ui_md_plugins && this.window['uibuilder'] && this.window['uibuilder'].ui_md_plugins) this.ui_md_plugins = this.window['uibuilder'].ui_md_plugins
+
             Ui.mdOpts = {
                 html: true,
                 xhtmlOut: false,
@@ -136,6 +141,21 @@ const Ui = class Ui {
                 },
             }
             Ui.md = window['markdownit'](Ui.mdOpts)
+            // Ui.md.use(this.window.markdownitTaskLists, {enabled: true})
+            if (this.ui_md_plugins) {
+                if (!Array.isArray(this.ui_md_plugins)) {
+                    Ui.log('error', 'Ui:_markDownIt:plugins', 'Could not load plugins, ui_md_plugins is not an array')()
+                    return
+                }
+                this.ui_md_plugins.forEach( plugin => {
+                    if (typeof plugin === 'string') {
+                        Ui.md.use(this.window[plugin])
+                    } else {
+                        const name = Object.keys(plugin)[0]
+                        Ui.md.use(this.window[name], plugin[name])
+                    }
+                })
+            }
         }
     }
 

@@ -80,6 +80,8 @@
           // Reference to DOM window - must be passed in the constructor
           // Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
           __publicField(this, "window");
+          /** Optional Markdown-IT Plugins */
+          __publicField(this, "ui_md_plugins");
           if (win)
             this.window = win;
           else {
@@ -125,6 +127,8 @@
         //#region ---- Internal Methods ----
         _markDownIt() {
           if (window["markdownit"]) {
+            if (!this.ui_md_plugins && this.window["uibuilder"] && this.window["uibuilder"].ui_md_plugins)
+              this.ui_md_plugins = this.window["uibuilder"].ui_md_plugins;
             _a2.mdOpts = {
               html: true,
               xhtmlOut: false,
@@ -153,6 +157,20 @@
               }
             };
             _a2.md = window["markdownit"](_a2.mdOpts);
+            if (this.ui_md_plugins) {
+              if (!Array.isArray(this.ui_md_plugins)) {
+                _a2.log("error", "Ui:_markDownIt:plugins", "Could not load plugins, ui_md_plugins is not an array")();
+                return;
+              }
+              this.ui_md_plugins.forEach((plugin) => {
+                if (typeof plugin === "string") {
+                  _a2.md.use(this.window[plugin]);
+                } else {
+                  const name = Object.keys(plugin)[0];
+                  _a2.md.use(this.window[name], plugin[name]);
+                }
+              });
+            }
           }
         }
         /** Show a browser notification if the browser and the user allows it

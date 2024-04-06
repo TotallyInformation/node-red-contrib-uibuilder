@@ -2957,10 +2957,9 @@ if (!window['$$']) {
 }
 
 // Assign `$ui` to global window object unless it is already in use.
-// Note that this is also available as `uibuilder.$$`.
 if (!window['$ui']) {
     /** @type {HTMLElement} */
-    window['$ui'] = window['uibuilder'].$ui // document.querySelectorAll.bind(document)
+    window['$ui'] = window['uibuilder'].$ui
 } else {
     log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$ui`, it is already in use. Use `uibuilder.$ui` or `uib.$ui` instead.')
 }
