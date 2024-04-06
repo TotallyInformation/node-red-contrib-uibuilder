@@ -19,7 +19,6 @@
     "fast-glob": "^3.2.7",
     "fs-extra": "^11.1.0",
     "jsdom": "^24.0.0",
-    "serve-index": "^1.9.1",
     "socket.io": "^4.3.2"
   },
   "devDependencies": {
