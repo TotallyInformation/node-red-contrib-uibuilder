@@ -23,11 +23,9 @@ UIBUILDER for Node-RED allows the easy creation of data-driven front-end web app
 It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces integrated with Node-RED.
 
 > [!NOTE]
-> UIBUILDER triggers a couple of quality warnings in the [Flows scorecard entry](https://flows.nodered.org/node/node-red-contrib-uibuilder/scorecard).
+> UIBUILDER triggers a quality warning in the [Flows scorecard entry](https://flows.nodered.org/node/node-red-contrib-uibuilder/scorecard).
 > 
-> "Number of Dependencies" is >6 - this is due to the large number of features in UIBUILDER and is expected. Even so, v7 only has 9 dependencies.
-> 
-> "Dependencies use latest versions" is due to the use of `execa`, since the author stopped supporting CommonJS modules, trying to force everyone else to do the same but this isn't feasible with Node-RED. We are actively trying to eliminate this annoying package.
+> "Number of Dependencies" is >6 - this is due to the large number of features in UIBUILDER and is expected. Even so, v7 only has 7 dependencies. 1 more is due to be removed in a future release.
 
 ## Installation
 
