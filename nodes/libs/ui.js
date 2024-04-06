@@ -15,6 +15,8 @@ const Ui = class Ui2 {
   static mdOpts;
   /** Reference to pre-loaded Markdown-IT library */
   static md;
+  /** Optional Markdown-IT Plugins */
+  ui_md_plugins;
   //#endregion --- class variables ---
   /** Called when `new Ui(...)` is called
    * @param {globalThis} win Either the browser global window or jsdom dom.window
@@ -67,6 +69,8 @@ const Ui = class Ui2 {
   //#region ---- Internal Methods ----
   _markDownIt() {
     if (window["markdownit"]) {
+      if (!this.ui_md_plugins && this.window["uibuilder"] && this.window["uibuilder"].ui_md_plugins)
+        this.ui_md_plugins = this.window["uibuilder"].ui_md_plugins;
       Ui2.mdOpts = {
         html: true,
         xhtmlOut: false,
@@ -95,6 +99,20 @@ const Ui = class Ui2 {
         }
       };
       Ui2.md = window["markdownit"](Ui2.mdOpts);
+      if (this.ui_md_plugins) {
+        if (!Array.isArray(this.ui_md_plugins)) {
+          Ui2.log("error", "Ui:_markDownIt:plugins", "Could not load plugins, ui_md_plugins is not an array")();
+          return;
+        }
+        this.ui_md_plugins.forEach((plugin) => {
+          if (typeof plugin === "string") {
+            Ui2.md.use(this.window[plugin]);
+          } else {
+            const name = Object.keys(plugin)[0];
+            Ui2.md.use(this.window[name], plugin[name]);
+          }
+        });
+      }
     }
   }
   /** Show a browser notification if the browser and the user allows it
