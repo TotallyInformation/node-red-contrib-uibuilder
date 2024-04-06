@@ -1,27 +1,16 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-03-30 15:56:52
+updated: 2024-04-03 17:16:00
 ---
 
 # Changelog
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
-## v7 Planned Potentially Breaking Changes
-
-* [ ] Will remove `serve-index` dependency if the `uib-file-*` nodes have been delivered.
-
-  I'm really not sure anyone uses this in any case and the new nodes will provide a richer and more controllable experience.
-
-
 ## To Do
 
-* [x] Add a sync version of spawn
-* [x] Try to merge pkgsQuickUpd with updateInstalledPackageDetails - https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/321
-* [ ] Process for showing outdated libraries isn't working.
-* [ ] Remove execa from gulpfile.js & remove from dev deps
-* [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
+* [ ] Add instance descriptions to the index pages
 * Update examples:
   * [ ] [started] Update text update example to include new `uib-topic` html attributes
   * [ ] **REMOVE** old client library example
@@ -35,6 +24,8 @@ Please see the documentation for archived changelogs - a new archive is produced
   * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
   * [ ] Document a dashboard-like grid layout.
   * [ ] Document how to use `<instanceRoot>/routes/` properly. [Ref](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/changelog?id=new-features)
+* [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
+* [ ] Remove execa from gulpfile.js & remove from dev deps
 
 ### `uibrouter` FE library
 
@@ -77,8 +68,12 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### FE `ui` library
 
-* [ ] Check unique ID logic - use the new returnElementId in the uibuilder library
 * [ ] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
+  * [x] ui.js
+  * [ ] uib-router.js
+* [ ] document `ui-md-plugins` managed uib variable
+* [ ] document `ui-md-plugins` ui variable
+* [ ] document `ui-md-plugins` router variable
 
 ### `<uib-var>` custom HTML component
 
@@ -119,6 +114,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## Issues
 
+* [ ] Process for showing outdated libraries ~~isn't working~~ is working sometimes.
 * [ ] `uibuilder` file Editor - sometimes on file change, we get:
   Uncaught Error: Illegal value for lineNumber
   Error: Illegal value for lineNumber
@@ -139,18 +135,12 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### "Outdated" dependencies
 
-Unfortunately, for various reasons, some of the package dependencies that UIBUILDER relies on cannot be updated to their latest versions. These are documented, with the reason, here.
+As of v7, all outdated dependencies have been removed or limited to uibuilder development only, not production use.
+
+The following are only used for developing UIBUILDER:
 
 * `execa` - restricted to v5. Author sindresorhus decided that everyone HAS to use ESM even though his packages are widely used and he must know that it is often impossible to move from CommonJS without a complete rewrite. Node-RED is so complex, when would that be possible? Very annoying.
-* `jsdom` - restricted to v21. Later versions require node.js >v14 but Node-RED is still baselined at v14. Requires update to Node-RED to release this.
-* `nanoid` - restricted to v3. Another annoying sindresorhus node.
-
-These are only used for developing UIBUILDER so somwhat less critical.
-
-* `@types/node` - restricted to v14 to match Node-RED's current baseline.
-* ~~`gulp-debug` - restricted to v4. Another annoying sindresorhus node.~~ Removed in v6.8
-
-I will be trying to eliminate packages that have enforced structural changes. The author's arrogance is palpable.
+* `@types/node` - restricted to v18 to match Node-RED's current baseline.
 
 ## Ideas
 
@@ -184,6 +174,8 @@ Most of these changes will *not* impact most people but you should check through
 * If using uibuilder's custom ExpressJS server feature, **URL's are now case sensitive**
   
   This brings them into line not only with W3C guidance but also with the Socket.IO library. It can be turned off in `settings.js` using property `uibuilder.serverOptions['case sensitive routing']` set to false.
+
+  Note that when using Node-RED's internal ExpressJS web engine, URLs are still case-insensitive because that's how Node-RED has been configured.
 
 * **Minimum node.js now v18** - in line with the release of Node-RED v4, the minimum node.js version has moved from v14 to v18.
 
@@ -225,9 +217,13 @@ Most of these changes will *not* impact most people but you should check through
 
 * A `uibuilder` node cannot be given a URL name of `common` as this would clash with the built-in folder of the same name that holds resources that can be shared with all instances. This was an oversight in previous releases I'm afraid, now fixed.
 
+* The `uibuilder` node, no longer has the "*Show web view of source files (deploy before you can use it)*" option. The supporting external library was also removed. It never looked that good anyway. Please use the new `uib-file-list` node to produce a custom folder/file list and send to your own custom page.
+
 ### 📌 Highlights
 
-* You can now add a `uib-topic="mytopic"` attribute to _ANY_ HTML element. Doing so sets up a message listener. A matching msg.payload will replace the inner HTML of the element and msg.attributes will update corresponding attributes. Making this now one of the easiest ways to define dynamic updates in your UI.
+* You can now add a `uib-topic="mytopic"` attribute to _ANY_ HTML element. Doing so makes that element responsive to messages from Node-RED.
+  
+  For a message with the correct `msg.topic`. The `msg.payload` will replace the inner HTML of the element. `msg.attributes` will update corresponding element attributes. Making this now one of the easiest ways to define dynamic updates in your UI.
 
 * Lots of extensions and improvements to the `uibrouter` front-end routing library in this release:
 
@@ -235,13 +231,26 @@ Most of these changes will *not* impact most people but you should check through
   
   * You can now define route content as Markdown instead of HTML. This makes Notion/Obsidian-like applications feasible using UIBUILDER.
 
+* Markdown improvements.
+  
+  Both the main uibuilder node (via the `ui.js` library) and the `uibrouter` library both accept markdown content (via the external Markdown-IT library) and now they both support Markdown-IT plugins so that you can add features such as checkbox lists, GitHub style callouts, Mermaid diagrams and much more. 
+  
+  There is also a new documentation page dedicated to using Markdown.
+
+  And, the no-code example flow has been extended to demonstrate how to dynamically load all of the libraries, plugins and even how to set up responses back to Node-RED - for example when a checkbox is clicked.
+
 * Wherever you can use no-/low-code features that accept HTML, you can now include `<script>` tags that will be executed on load.
 
 * A new node is available. `uib-file-list` will produce a list of files from a uibuilder instance. It automatically adjusts to the currently served sub-folder and allows filtering. Use this for producing indexes and menus.
 
+* Handling of forms and inputs continue to improve.
+  
+  * Programmatic changes to input values or checked properties now trigger both the `input` and `changed` events - something that HTML normally doesn't do but can be important for data-driven web apps. For example, if using an `<output>` tag to show a combined or calculated input, changes via Node-RED will still update the values.
+  * When using the `eventSend(event)` function on inputs whether inside or outside of a form, the returned values have been improved, especially for checkboxes and radio buttons.
+
 * Security of the UIBUILDER repository on GitHub has been improved.
 
-* The old `uibuilderfe` client library will now issue a user and a console alert on every load. The alert warns that the library will be removed when UIBUILDER v7 is released (which should happen once Node-RED v4 is also released). If you are still using the old client, please switch to the current client library ASAP. The new library has been available for nearly 2 years now, so time to move on.
+* On the `uibuilder` node's "Core" tab, the info buttons bar has changed slightly. The "Docs" button has gone (it is still on the top of panel bar anyway) and been replaced by a new "Apps" button which shows a page *listing ALL uibuilder node instances along with their descriptions where provided*.
 
 ### General Changes
 
@@ -329,8 +338,14 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 ### `ui` library
 
 * **FIXED** small inconsistency when handling a msg._ui who's top level was an object with a `mode` mode property instead of an array.
-* Improved Markdown handling. Should now be more efficient. Also HighlightJS code highlights should be better: Some unnecessary whitespace removed, code brought into line with the latest releases of the HighlightJS library, language guessing now only used if the language is not provided.
+* **NEW** Markdown-IT plugins can now be used. See the new "Using Markdown" documentation page for details.
+
+* Improved Markdown handling.
+  
+  Should now be more efficient. Also HighlightJS code highlights should be better: Some unnecessary whitespace removed, code brought into line with the latest releases of the HighlightJS library, language guessing now only used if the language is not provided.
+
 * Slot HTML content can now contain `<script>` tags that will be executed on load.
+
 * Programmatic changes to input values or checked properties now trigger both `input` and `changed` events. By default, the DOM will not trigger events except for actual user input. This makes it easy to use `<output>` tags for example that automatically update when inputs change.
 
 ### `uibrouter` front-end library
@@ -406,6 +421,14 @@ The `old-blank-client` template and all associated documentation has also been r
 * Removed Pollyfills from uibuilder editor code - shouldn't impact anyone using a browser from the last 5 years or so.
 
 * **FIXED** A `uibuilder` node cannot be given a URL name of `common` as this would clash with the built-in folder of the same name that holds resources that can be shared with all instances. This was an oversight in previous releases I'm afraid, now fixed.
+
+* Template settings made clearer. Now more obvious what is part of the template settings.
+
+* The advanced option "Show web view of source files (deploy before you can use it)" has been removed. The supporting external library was also removed. It never looked that good anyway. Please use the `uib-file-list` node to produce a custom folder/file list and send to your own custom page.
+
+* On the "Core" tab, the info buttons bar has changed slightly. The "Docs" button has gone (it is still on the top of panel bar anyway) and been replaced by a new "Apps" button which shows a page listing ALL uibuilder node instances along with their descriptions where provided. Also the "Full details" button has swapped position with the "Node details" button so that the instance-related buttons are on the left and the all-instances buttons are on the right.
+
+* The help panel has been updated to better reflect the current configurations. Also some additional links added.
 
 ### `uib-list` node
 
