@@ -46,20 +46,6 @@
 
         <dt class="optional">topic <span class="property-type">string</span></dt>
         <dd> Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
-
-        <dt class="optional">script <span class="property-type">string | string[]</span></dt>
-        <dd>
-            Optionally, a string or array of strings containing valid JavaScript.
-            This will be added to the web page dynamically. Currently contains minimal validation so care is required.
-            This feature is <b>off</b> by default, turn on in the Advanced Settings.
-        </dd>
-
-        <dt class="optional">style <span class="property-type">string | string[]</span></dt>
-        <dd>
-            Optionally, a string or array of strings containing valid CSS for styling the front-end page.
-            This will be added to the web page dynamically. Currently contains minimal validation so care is required.
-            This feature is <b>off</b> by default, turn on in the Advanced Settings.
-        </dd>
     </dl>
 
     <h3>Outputs</h3>
@@ -214,25 +200,24 @@
                 If selected, will show the browser clientId, page name and real IP address in standard output (it is always shown in control msgs).
             </dd>
 
-            <dt>Show web view of source files <span class="property-type">check box</span></dt>
+            <dt>Description input boxes</dt>
             <dd>
-                If on, an extra web page is dynamically created at the indicated URL. That page shows an index listing
-                of all files and folders on the server for this node. As this could be a security issue, it is turned off by default.<br>
-                <code>USE WITH EXTREME CAUTION</code><br>
-                A button is exposed if this flag is on. Clicking the button will take you to the index view in a separate tab.
-            </dd>
-            <dt>Allow scripts to be passed to front-end? <span class="property-type">check box</span></dt>
-            <dd>
-                If on, any string(s) in <code>msg.script</code> will be dynamically added to the scripts of the web page.
-                Turn off to prevent scripts from being dynamically added and executed.<br>
-                <b>NOTE</b>: It is better to use UIBUILDER's <code>msg._ui</code> low-code features for passing scripts.
+                The short & long descriptions are used in both the <i>UIBUILDER apps page</i> and the <a href="./uibuilder/uibindex" target="_blank">Detailed Information page</a>.
             </dd>
 
-            <dt>Allow styles to be passed to front-end? <span class="property-type">check box</span></dt>
+            <dt>Code editor URL</dt>
             <dd>
-                If on, any string(s) in <code>msg.style</code> will be dynamically added to the styles of the web page.
-                Turn off to prevent styles from being dynamically added.<br>
-                <b>NOTE</b>: It is better to use UIBUILDER's <code>msg._ui</code> low-code features for passing styles.
+                By default, this will contain UIBUILDERs best guess at a custom URL that allows editing of your front-end code files.
+            </dd>
+            <dd>
+                UIBUILDER only knows about VSCode's URL schema.
+            </dd>
+            <dd>
+                This will be correct if editing code on the same device as Node-RED. 
+                If Node-RED is running on another device, it will be a guess of the VSCode remote edit URL.
+            </dd>
+            <dd>
+                Change as needed for your editor and/or configuration.
             </dd>
 
             <dt>Forward input to output? <span class="property-type">check box</span></dt>
@@ -256,9 +241,9 @@
 
             <dt><i class="fa fa-info-circle" aria-hidden="true"></i> Full details <span class="property-type">link</span></dt>
             <dd>
-                Shows a web page with detailed information about the overall UIBUILDER
-                configuration. Including details of all of the vendor modules that are
-                available and all of the UIBUILDER endpoints along with both server
+                Shows the <a href="./uibuilder/uibindex" target="_blank">Detailed Information page</a>.
+                That includes details of all uibuilder instance apps, of the vendor modules that are
+                available, and all of the UIBUILDER endpoints along with both server
                 and URL paths.
             </dd>
 
@@ -296,36 +281,29 @@
 
     <h3>Admin Index (Details) page</h3>
     <p>
-        The <a href="uibindex" target="_blank">&lt;admin url&gt;/uibindex</a> page lists all of the UIBUILDER endpoints and other details. You can use the following parameters:
+        The <a href="./uibuilder/uibindex" target="_blank">&lt;admin url&gt;/uibindex</a> page lists all of the UIBUILDER endpoints and other details. You can use the following parameters:
     </p>
     <dl class="message-properties">
-        <dt>type <span class="property-type">(string)</span></dt>
+        <dt>type</dt>
         <dd>
-            The type of the data returned.
+            The type of data returned:
             <dl class="message-properties">
-                <dt>html <span class="property-type">(default)</span></dt>
+                <dt><a href="./uibuilder/uibindex?type=html" target="_blank">html</a> <span class="property-type">(default)</span></dt>
                 <dd>
                     Also used if no type parameter is given. 
                     Returns an HTML page showing the details for all deployed UIBUILDER nodes.
                     Shows the server file locations of the instance and for vendor libraries.
                 </dd>
-                <dt>json</dt>
+                <dt><a href="./uibuilder/uibindex?type=json" target="_blank">json</a></dt>
                 <dd>
                     Returns JSON data with both the source node ID's and matching URL's.
                 </dd>
-                <dt>urls</dt>
+                <dt><a href="./uibuilder/uibindex?type=urls" target="_blank">urls</a></dt>
                 <dd>
                     Returns a JSON array of just the URL's in use from deployed UIBUILDER nodes.
                     Used internally to ensure that new nodes use unique url's.
                 </dd>
             </dl>
-        </dd>
-
-        <dt>check <span class="property-type">(string)</span></dt>
-        <dd>
-            Passing a UIBUILDER instance name to the check parameter will result in a boolean (true/false)
-            return. True if it is being delivered by a UIBUILDER instance,
-            false otherwise. e.g. <code>?check=uibuilder</code>
         </dd>
     </dl>
     <ul>
