@@ -9,10 +9,10 @@
 module.exports = {
     // Do not remove this one, it is the default and expected to be there
     blank: {
-        'name': 'Blank template, no framework',
+        'name': 'Minimal template (default)',
         'folder': 'blank',
         'dependencies': [],
-        'description': 'Default blank template. As of v6, uses the iife client.'
+        'description': 'Default minimal template. Uses the IIFE client & no front-end framework library.'
     },
     'iife-blank-client': {
         'name': 'No framework, IIFE client',
