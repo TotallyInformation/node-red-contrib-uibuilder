@@ -854,17 +854,14 @@
      */
     function enableEdit(urlErrors, enable = true) {
         if (enable === true) {
-            // $('#node-dialog-ok')
-            //     .prop('disabled', false)
-            //     .css( 'cursor', 'pointer' )
-            //     .addClass('primary')
-
+            // Enable template changes
             $('#node-input-templateFolder, #btn-load-template')
                 .prop('disabled', false)
                 .css({
                     'cursor': 'pointer',
                 })
 
+            // Enable tabs and links
             $('#red-ui-tab-tab-files, #red-ui-tab-tab-libraries, #red-ui-tab-tab-security, #red-ui-tab-tab-advanced, info')
                 .css({
                     'cursor': 'pointer',
@@ -877,7 +874,8 @@
                     'opacity': 1,
                 })
 
-            $('#uibuilderurl, #uibinstanceconf')
+            // Enable action buttons
+            $('#uibuilderurl, #uibinstanceconf, #uib-apps-list')
                 .prop('disabled', false)
                 .css({
                     // 'pointer-events': 'auto',
@@ -885,22 +883,17 @@
                     'opacity': 1,
                 })
 
+            // Clear the errors
             $('#url-errors').remove()
-
         } else {
-            // Don't disable the Done button if the folder doesn't exist
-            // if (!folderExists)
-            //     $('#node-dialog-ok')
-            //         .prop('disabled', true)
-            //         .css( 'cursor', 'not-allowed' )
-            //         .removeClass('primary')
-
+            // Disable template changes
             $('#node-input-templateFolder, #btn-load-template')
                 .prop('disabled', true)
                 .css({
                     'cursor': 'not-allowed',
                 })
 
+            // Disable tabs and links
             $('#red-ui-tab-tab-files, #red-ui-tab-tab-libraries, #red-ui-tab-tab-security, #red-ui-tab-tab-advanced, info')
                 .css({
                     'cursor': 'not-allowed',
@@ -913,7 +906,8 @@
                     'opacity': 0.3,
                 })
 
-            $('#uibuilderurl, #uibinstanceconf, #btntopopen')
+            // Disable action buttons
+            $('#uibuilderurl, #uibinstanceconf, #btntopopen, #uib-apps-list')
                 .prop('disabled', true)
                 .css({
                     // 'pointer-events': 'none',
@@ -921,14 +915,13 @@
                     'opacity': 0.3,
                 })
 
-            // Show errors
+            // Show the errors
             $('#url-errors').remove()
             $('#url-input').after(`
                 <div id="url-errors" class="form-row" style="color:var(--red-ui-text-color-error)">
                     ${Object.values(urlErrors).join('<br>')} 
                 </div>
             `)
-
         }
 
     } // ---- End of enableEdit ---- //
@@ -1347,15 +1340,14 @@
      * @param {object} node A reference to the panel's `this` object
      */
     function showServerInUse(node) {
-        $('#info-webserver').empty()
+        $('#uib-svr-type').text(uibuilder.serverType)
+        $('#uib-svr').text(uibuilder.urlPrefix).attr('href', `${uibuilder.urlPrefix}${node.url}`)
 
-        $('#info-webserver').append(
-            `<div class="form-tips node-help"><span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> is using ${uibuilder.serverType} webserver at <a href="${uibuilder.urlPrefix}${node.url}" target="_blank" title="Open in new window">${uibuilder.urlPrefix}</a>`
-        )
+        $('#uib-svr-fldr').empty()
         if (node.url) {
             const vslink = vscodeLink(node)
-            $('#info-webserver > .node-help').append(
-                `<br>Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post} </div>`
+            $('#uib-svr-fldr').append(
+                `Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post}`
             )
         }
     } // ---- end of showServerInUse ---- //
@@ -1370,18 +1362,10 @@
         if (thisurl) {
             // Show the root URL
             $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${thisurl}`)
-            // .html(`<i class="fa fa-globe" aria-hidden="true"></i> Open ${node.nodeRoot}${thisurl}`)
+            // Show the apps list URL
+            $('#uib-apps-list').prop('href', `${uibuilder.urlPrefix}uibuilder/apps`)
+            // Show this instances details URL
             $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
-            // NB: The index url link is only shown if the option is turned on
-            $('#show-src-folder-idx-url').empty()
-                .append(
-                    `<div>at 
-                        <a href="${uibuilder.urlPrefix}${thisurl}/idx" target="_blank" 
-                                style="color:var(--red-ui-text-color-link);text-decoration:underline;">
-                            ${node.nodeRoot}${thisurl}/idx
-                        </a>
-                    </div>`
-                )
         }
         showServerInUse(node)
     } // ---- end of urlChange ---- //
@@ -1514,7 +1498,6 @@
         tabs.addTab({ id: 'tab-libraries', label: 'Libraries' })
         // tabs.addTab({ id: 'tab-security',  label: 'Security'  })
         tabs.addTab({ id: 'tab-advanced',  label: 'Advanced'  })
-
     } // ---- End of preTabs ---- //
 
     /** File Editor */
@@ -1789,7 +1772,6 @@
             // }
 
         })
-
     } // ---- End of fileEditor ----
 
     /** Prep for edit
@@ -1810,16 +1792,14 @@
                 window.open('./uibuilder/docs', '_blank')
             })
             .appendTo($('div.red-ui-tray-toolbar'))
-        // If on localhost, add clickable label that opens in vscode
-        if (uibuilder.localHost) {
-            const vsc = vscodeLink(node)
-            $(`<button type="button" title="Open instance code folder in VSCode" aria-label="Link that opens the instance code folder in VSCode." class="ui-button ui-corner-all ui-widget leftButton">${vsc.icon}</button>`)
-                .on('click', (evt) => {
-                    evt.preventDefault()
-                    window.open(vsc.url)
-                })
-                .appendTo($('div.red-ui-tray-toolbar'))
-        }
+        // Add clickable label that opens in vscode
+        const vsc = vscodeLink(node)
+        $(`<button type="button" title="Open instance code folder in VSCode" aria-label="Link that opens the instance code folder in VSCode." class="ui-button ui-corner-all ui-widget leftButton">${vsc.icon}</button>`)
+            .on('click', (evt) => {
+                evt.preventDefault()
+                window.open(vsc.url)
+            })
+            .appendTo($('div.red-ui-tray-toolbar'))
 
         getFolders()
 
@@ -1839,12 +1819,6 @@
         // Set sourceFolder dropdown
         $(`#node-input-sourceFolder option[value="${node.sourceFolder || 'src'}"]`).prop('selected', true)
         $('#node-input-sourceFolder').val(node.sourceFolder || 'src')
-
-        // When the show web view (index) of source files changes
-        $('#node-input-showfolder').on('change', function() {
-            if ($(this).is(':checked') === false) $('#show-src-folder-idx-url').hide()
-            else $('#show-src-folder-idx-url').show()
-        })
 
         // Configure the template dropdown & setup button handlers
         templateSettings(node)
@@ -1959,6 +1933,7 @@
 
         /** Handle window resizing for the editor */
         oneditresize: function() { // (size) {
+            // console.log('UIBUILDER WIDTH: ', $('#red-ui-editor-stack > div > div.red-ui-tray-body-wrapper > div > div:nth-child(2) > div:nth-child(1)').css('width'))
 
             setACEheight()
 
