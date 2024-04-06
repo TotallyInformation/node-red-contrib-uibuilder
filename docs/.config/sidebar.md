@@ -29,6 +29,7 @@
   * [Routing Library](client-docs/fe-router.md "A full-featured front-end router for Single Page Apps and other use")
   * [Troubleshooting](client-docs/troubleshooting.md)
   * [uib-brand Style Sheet](client-docs/uib-brand-css.md "How to use the UIBUILDER standard style sheet uib-brand.css")
+  * [Using Markdown](client-docs/markdown.md "How to render Markdown in UIBUILDER pages")
   * [Variables](client-docs/variables.md)
 * Zero-code element types
   * [Forms](elements/forms.md)

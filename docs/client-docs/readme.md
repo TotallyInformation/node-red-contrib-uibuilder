@@ -4,7 +4,7 @@ description: |
   This is the new uibuilder front-end library initially introduced in v5.1. It provides socket.io message connectivity to and from Node-RED, simplified message handling and a simple event handler for monitoring for new messages along with some helper utility functions. It also allows data-/configuration-driven interfaces to be created from JSON or Node-RED messages. IIFE (UMD) and ESM builds of the client are provided.
 created: 2022-06-11 14:15:26
 lastUpdated: 2023-04-15 17:59:18
-updated: 2024-02-04 15:49:19
+updated: 2024-04-06 13:31:33
 ---
 
 This is the next-generation front-end client for uibuilder. It has some nice new features but at the expense of only working with modern(ish) browsers since early 2019.
@@ -64,54 +64,9 @@ To check whether DOMPurify is active, you can use this function in your front-en
 
 ### 2. Markdown-IT - Converts Markdown markup into HTML
 
-The [Markdown-IT](https://markdown-it.github.io/) library enables [Markdown](https://en.wikipedia.org/wiki/Markdown), a lightweight, text-based markup, to be translated into rich HTML. The uibuilder client supports the use of the Markdown-IT library for that purpose. Once loaded, the uibuilder client will recognise its presence and automatically use it whenever Markdown is used in the `markdownSlot` property of `ui` processing or when using the [`replaceSlotMarkdown()`](client-docs/functions#replaceslotmarkdownel-component-replace-or-add-an-html-element39s-slot-from-a-markdown-string) function.
+The [Markdown-IT](https://markdown-it.github.io/) library enables [Markdown](https://en.wikipedia.org/wiki/Markdown), a lightweight, text-based markup, to be translated into rich HTML. The uibuilder client supports the use of the Markdown-IT library for that purpose. Once loaded, the uibuilder client will recognise its presence and automatically use it whenever Markdown is used in the `markdownSlot` property of `ui` processing or when using the [`replaceSlotMarkdown()`](client-docs/functions#replaceslotmarkdown) function.
 
-You can add the library to uibuilder using the *Library manager tab* (add `martkdown-it`). Then add as per the the code below. Alternatively, if you prefer to use the library from a cloud download (instead of installing via the uibuilder node), replace the location with `https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js`.
-
-If you also wish to use DOMPurify, load that library before this one.
-
-For the IIFE version of the uibuilder client, add the following to the `index.html` file before the script tag that loads the uibuilder client:
-
-```html
-<script defer src="../uibuilder/vendor/markdown-it/dist/markdown-it.min.js"></script>
-```
-
-For the ESM version of the uibuilder client, you need to load the library in your `index.js` file instead of `index.html`. Again, before the uibuilder client import:
-
-```javascript
-import * as markdownit from '../uibuilder/vendor/markdown-it/dist/markdown-it.min.js'
-```
-
-If correctly loaded, `window.markdownit` will exist.
-
-To check whether Markdown-IT is active, you can use this function in your front-end code: `if ( uibuilder.get('markdown') ) ....`. From Node-RED, you can send a msg containing: `{"_uib": {"command":"get","prop":"markdown"}`.
-
-Markdown-IT has a very extensive set of extensions for code highlighting, diagrams and much more. You can load extensions and styles as normal. Extensions should be loaded before the uibuilder client library. For example, to get highlighted code blocks inside the usual back-tick blocks, you can use [HighlightJS](https://highlightjs.org/). Add a reference to the library AND an appropriate CSS file in your index.js file.
-
-To send Markdown from Node-RED, you can use the uibuilder low-code methods. For example with this msg: 
-
-```javascript
-msg._ui = {
-  "method":"replace",
-  "components":[{
-      "type":"div","id":"md","parent":"#more","attributes":{},
-      "slotMarkdown":"## H2 - Markdown input\n\nSome text in a para\n\n* List #1\n* List #2\n"
-  }]
-}
-``` 
-
-You can use the `uibuilder.ui()` function with the same data object if you wish to do the same from custom front-end code.
-
-You may also find Node-RED's core `template` node to be helpful for combining dynamic data from input messages with a Markdown template.
-
->[!NOTE]
-> The Markdown-IT library can be loaded dynamically by sending uibuilder a message:
-> ```javascript
-{
-  "method": "load",
-  "srcScripts": ["https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"]
-}
-> ```
+This is documented more fully in the separate [Using Markdown page](client-docs/markdown).
 
 ### 3. VueJS - Front-end framework
 
