@@ -27,7 +27,7 @@
     "@types/jqueryui": "^1.12.19",
     "@types/node": "^18.19.24",
     "@types/node-red": "*",
-    "eslint": "^8.31.0",
+    "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^8.0.0",
