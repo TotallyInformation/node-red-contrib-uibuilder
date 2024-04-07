@@ -29,8 +29,7 @@
  * @typedef {import('express').Router} ExpressRouter
  */
 
-const { join, dirname, parse } = require('path')
-const serveIndex = require('serve-index')
+const { join, parse } = require('path')
 const express = require('express')
 const socketjs = require('./socket.js')
 // const { getNs } = require('./socket.js') // NO! This gives an error because of incorrect `this` binding
@@ -651,16 +650,6 @@ class UibWeb {
         if ( this.masterStatic !== undefined ) {
             this.instanceRouters[node.url].use( express.static( this.masterStatic, uib.staticOpts ) )
             this.routers.instances[node.url].push( { name: 'Master Code', path: `${this.uib.httpRoot}/${node.url}/`, desc: 'Built-in FE code, same for all instances', type: 'Static', folder: this.masterStatic } )
-        }
-
-        /** (4) If enabled, allow for directory listing of the custom instance folder */
-        if ( node.showfolder === true ) {
-            this.instanceRouters[node.url].use(
-                '/idx',
-                serveIndex( node.customFolder, { 'icons': true, 'view': 'details' } ),
-                express.static( node.customFolder, uib.staticOpts ) // Needed to allow index view to show actual files
-            )
-            this.routers.instances[node.url].push( { name: 'Index Lister', path: `${this.uib.httpRoot}/${node.url}/idx`, desc: 'Custom pages to list server files', type: 'ServeIndex', folder: node.customFolder } )
         }
 
         if (uib.commonFolder === null) throw new Error('uib.commonFolder is null')
