@@ -33,8 +33,8 @@
     "eslint-plugin-html": "^8.0.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jsdoc": "^48.2.1",
-    "eslint-plugin-n": "^16.0.1",
-    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-n": "^17.2.1",
+    "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-sonarjs": "^0",
     "execa": "^5",
     "gulp": "^5.0.0",
@@ -51,7 +51,7 @@
     "socket.io-client": "^4.4.1"
   },
   "node-red": {
-    "version": ">=3",
+    "version": ">=4",
     "nodes": {
       "uibuilder": "nodes/uibuilder/uibuilder.js",
       "uib-cache": "nodes/uib-cache/uib-cache.js",
