@@ -75,51 +75,51 @@ var require_ui = __commonJS({
       }
       //#region ---- Internal Methods ----
       _markDownIt() {
-        if (window["markdownit"]) {
-          if (!this.ui_md_plugins && this.window["uibuilder"] && this.window["uibuilder"].ui_md_plugins)
-            this.ui_md_plugins = this.window["uibuilder"].ui_md_plugins;
-          _a.mdOpts = {
-            html: true,
-            xhtmlOut: false,
-            linkify: true,
-            _highlight: true,
-            _strict: false,
-            _view: "html",
-            langPrefix: "language-",
-            // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
-            highlight: function(str, lang) {
-              if (window["hljs"]) {
-                if (lang && window["hljs"].getLanguage(lang)) {
-                  try {
-                    return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
-                  } finally {
-                  }
-                } else {
-                  try {
-                    const high = window["hljs"].highlightAuto(str);
-                    return `<pre><code class="hljs border language-${high.language}" data-language="${high.language}" title="Source language estimated by HighlightJS: '${high.language}'">${high.value}</code></pre>`;
-                  } finally {
-                  }
+        if (!window["markdownit"])
+          return;
+        if (!this.ui_md_plugins && this.window["uibuilder"] && this.window["uibuilder"].ui_md_plugins)
+          this.ui_md_plugins = this.window["uibuilder"].ui_md_plugins;
+        _a.mdOpts = {
+          html: true,
+          xhtmlOut: false,
+          linkify: true,
+          _highlight: true,
+          _strict: false,
+          _view: "html",
+          langPrefix: "language-",
+          // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
+          highlight: function(str, lang) {
+            if (window["hljs"]) {
+              if (lang && window["hljs"].getLanguage(lang)) {
+                try {
+                  return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+                } finally {
+                }
+              } else {
+                try {
+                  const high = window["hljs"].highlightAuto(str);
+                  return `<pre><code class="hljs border language-${high.language}" data-language="${high.language}" title="Source language estimated by HighlightJS: '${high.language}'">${high.value}</code></pre>`;
+                } finally {
                 }
               }
-              return `<pre><code class="border">${_a.md.utils.escapeHtml(str).trim()}</code></pre>`;
             }
-          };
-          _a.md = window["markdownit"](_a.mdOpts);
-          if (this.ui_md_plugins) {
-            if (!Array.isArray(this.ui_md_plugins)) {
-              _a.log("error", "Ui:_markDownIt:plugins", "Could not load plugins, ui_md_plugins is not an array")();
-              return;
-            }
-            this.ui_md_plugins.forEach((plugin) => {
-              if (typeof plugin === "string") {
-                _a.md.use(this.window[plugin]);
-              } else {
-                const name = Object.keys(plugin)[0];
-                _a.md.use(this.window[name], plugin[name]);
-              }
-            });
+            return `<pre><code class="border">${_a.md.utils.escapeHtml(str).trim()}</code></pre>`;
           }
+        };
+        _a.md = window["markdownit"](_a.mdOpts);
+        if (this.ui_md_plugins) {
+          if (!Array.isArray(this.ui_md_plugins)) {
+            _a.log("error", "Ui:_markDownIt:plugins", "Could not load plugins, ui_md_plugins is not an array")();
+            return;
+          }
+          this.ui_md_plugins.forEach((plugin) => {
+            if (typeof plugin === "string") {
+              _a.md.use(this.window[plugin]);
+            } else {
+              const name = Object.keys(plugin)[0];
+              _a.md.use(this.window[name], plugin[name]);
+            }
+          });
         }
       }
       /** Show a browser notification if the browser and the user allows it

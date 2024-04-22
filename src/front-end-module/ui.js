@@ -111,51 +111,51 @@ const Ui = class Ui {
 
     _markDownIt() {
         // If Markdown-IT pre-loaded, then configure it now
-        if (window['markdownit']) {
-            // If plugins not yet defined, check if uibuilder has set them
-            if (!this.ui_md_plugins && this.window['uibuilder'] && this.window['uibuilder'].ui_md_plugins) this.ui_md_plugins = this.window['uibuilder'].ui_md_plugins
+        if (!window['markdownit']) return
 
-            Ui.mdOpts = {
-                html: true,
-                xhtmlOut: false,
-                linkify: true,
-                _highlight: true,
-                _strict: false,
-                _view: 'html',
-                langPrefix: 'language-',
-                // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
-                highlight: function(str, lang) {
-                    if (window['hljs']) {
-                        if (lang && window['hljs'].getLanguage(lang)) {
-                            try {
-                                return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window['hljs'].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
-                            } finally { } // eslint-disable-line no-empty
-                        } else {
-                            try {
-                                const high = window['hljs'].highlightAuto(str)
-                                return `<pre><code class="hljs border language-${high.language}" data-language="${high.language}" title="Source language estimated by HighlightJS: '${high.language}'">${high.value}</code></pre>`
-                            } finally { } // eslint-disable-line no-empty
-                        }
-                    }
-                    return `<pre><code class="border">${Ui.md.utils.escapeHtml(str).trim()}</code></pre>`
-                },
-            }
-            Ui.md = window['markdownit'](Ui.mdOpts)
-            // Ui.md.use(this.window.markdownitTaskLists, {enabled: true})
-            if (this.ui_md_plugins) {
-                if (!Array.isArray(this.ui_md_plugins)) {
-                    Ui.log('error', 'Ui:_markDownIt:plugins', 'Could not load plugins, ui_md_plugins is not an array')()
-                    return
-                }
-                this.ui_md_plugins.forEach( plugin => {
-                    if (typeof plugin === 'string') {
-                        Ui.md.use(this.window[plugin])
+        // If plugins not yet defined, check if uibuilder has set them
+        if (!this.ui_md_plugins && this.window['uibuilder'] && this.window['uibuilder'].ui_md_plugins) this.ui_md_plugins = this.window['uibuilder'].ui_md_plugins
+
+        Ui.mdOpts = {
+            html: true,
+            xhtmlOut: false,
+            linkify: true,
+            _highlight: true,
+            _strict: false,
+            _view: 'html',
+            langPrefix: 'language-',
+            // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
+            highlight: function(str, lang) {
+                if (window['hljs']) {
+                    if (lang && window['hljs'].getLanguage(lang)) {
+                        try {
+                            return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window['hljs'].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
+                        } finally { } // eslint-disable-line no-empty
                     } else {
-                        const name = Object.keys(plugin)[0]
-                        Ui.md.use(this.window[name], plugin[name])
+                        try {
+                            const high = window['hljs'].highlightAuto(str)
+                            return `<pre><code class="hljs border language-${high.language}" data-language="${high.language}" title="Source language estimated by HighlightJS: '${high.language}'">${high.value}</code></pre>`
+                        } finally { } // eslint-disable-line no-empty
                     }
-                })
+                }
+                return `<pre><code class="border">${Ui.md.utils.escapeHtml(str).trim()}</code></pre>`
+            },
+        }
+        Ui.md = window['markdownit'](Ui.mdOpts)
+        // Ui.md.use(this.window.markdownitTaskLists, {enabled: true})
+        if (this.ui_md_plugins) {
+            if (!Array.isArray(this.ui_md_plugins)) {
+                Ui.log('error', 'Ui:_markDownIt:plugins', 'Could not load plugins, ui_md_plugins is not an array')()
+                return
             }
+            this.ui_md_plugins.forEach( plugin => {
+                if (typeof plugin === 'string') {
+                    Ui.md.use(this.window[plugin])
+                } else {
+                    const name = Object.keys(plugin)[0]
+                    Ui.md.use(this.window[name], plugin[name])
+                }
+            })
         }
     }
 
