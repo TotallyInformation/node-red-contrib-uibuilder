@@ -33,6 +33,7 @@
  * UibRouterConfig
  * @typedef {object} UibRouterConfig Configuration for the UiBRouter class instances
  * @property {routeDefinition[]} routes REQUIRED. Array of route definitions
+ * @property {Array<string|object>} [mdPlugins] OPTIONAL. Array of Markdown-IT plugins
  * @property {string} [defaultRoute] OPTIONAL, default=1st route. If set to a route id, that route will be automatically shown on load
  * @property {string} [routeContainer] OPTIONAL, default='#uibroutecontainer'. CSS Selector for an HTML Element containing routes
  * @property {boolean} [hide] OPTIONAL, default=false. If TRUE, routes will be hidden/shown on change instead of removed/added
@@ -50,7 +51,7 @@
 class UibRouter { // eslint-disable-line no-unused-vars
     //#region --- Variables ---
     /** Class version */
-    static version = '1.3.0' // 2024-02-11
+    static version = '1.4.0' // 2024-04-07
     /** Ensures only 1 class instance on a page */
     static #instanceExists = false
     /** Options for Markdown-IT if available (set in constructor) */
@@ -265,6 +266,8 @@ class UibRouter { // eslint-disable-line no-unused-vars
     /** Set up the MarkdownIT library if loaded */
     _markdownIt() {
         if (!window['markdownit']) return
+        // If plugins not yet defined, check if uibuilder has set them
+        if (!this.config.mdPlugins && window['uibuilder'] && window['uibuilder'].ui_md_plugins) this.config.mdPlugins = window['uibuilder'].ui_md_plugins
         // If Markdown-IT library pre-loaded, set it up now
         UibRouter.mdOpts = {
             html: true,
@@ -292,6 +295,20 @@ class UibRouter { // eslint-disable-line no-unused-vars
             },
         }
         UibRouter.md = window['markdownit'](UibRouter.mdOpts)
+        if (this.config.mdPlugins) {
+            if (!Array.isArray(this.config.mdPlugins)) {
+                console.error('[uibrouter:_markDownIt:plugins] Could not load plugins, config.mdPlugins is not an array')
+                return
+            }
+            this.config.mdPlugins.forEach( plugin => {
+                if (typeof plugin === 'string') {
+                    UibRouter.md.use(window[plugin])
+                } else {
+                    const name = Object.keys(plugin)[0]
+                    UibRouter.md.use(window[name], plugin[name])
+                }
+            })
+        }
     }
 
     /** Normalise route definition arrays
@@ -547,7 +564,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         }
 
         // Then tell the world
-        document.dispatchEvent(new CustomEvent('uibrouter:route-loaded', {routeId: routeId}))
+        document.dispatchEvent(new CustomEvent('uibrouter:route-loaded', { routeId: routeId }))
 
         // If we get here, everything is good
         return true
@@ -746,7 +763,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
     /** Use Markdown-IT to render Markdown to HTML
      * https://markdown-it.github.io/markdown-it
      * @param {string} mdText Markdown string
-     * @returns {string} HTML rendering of the Markdown input
+     * @returns {string|undefined} HTML rendering of the Markdown input
      */
     renderMarkdown(mdText) {
         if (!window['markdownit']) return

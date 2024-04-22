@@ -194,6 +194,8 @@
     _markdownIt() {
       if (!window["markdownit"])
         return;
+      if (!this.config.mdPlugins && window["uibuilder"] && window["uibuilder"].ui_md_plugins)
+        this.config.mdPlugins = window["uibuilder"].ui_md_plugins;
       _UibRouter.mdOpts = {
         html: true,
         xhtmlOut: false,
@@ -222,6 +224,20 @@
         }
       };
       _UibRouter.md = window["markdownit"](_UibRouter.mdOpts);
+      if (this.config.mdPlugins) {
+        if (!Array.isArray(this.config.mdPlugins)) {
+          console.error("[uibrouter:_markDownIt:plugins] Could not load plugins, config.mdPlugins is not an array");
+          return;
+        }
+        this.config.mdPlugins.forEach((plugin) => {
+          if (typeof plugin === "string") {
+            _UibRouter.md.use(window[plugin]);
+          } else {
+            const name = Object.keys(plugin)[0];
+            _UibRouter.md.use(window[name], plugin[name]);
+          }
+        });
+      }
     }
     /** Normalise route definition arrays
      * @param {Array<routeDefinition>} routeDefns Route definitions to normalise
@@ -588,7 +604,7 @@
     /** Use Markdown-IT to render Markdown to HTML
      * https://markdown-it.github.io/markdown-it
      * @param {string} mdText Markdown string
-     * @returns {string} HTML rendering of the Markdown input
+     * @returns {string|undefined} HTML rendering of the Markdown input
      */
     renderMarkdown(mdText) {
       if (!window["markdownit"])
@@ -627,8 +643,8 @@
   // eslint-disable-line no-unused-vars
   //#region --- Variables ---
   /** Class version */
-  __publicField(_UibRouter, "version", "1.3.0");
-  // 2024-02-11
+  __publicField(_UibRouter, "version", "1.4.0");
+  // 2024-04-07
   /** Ensures only 1 class instance on a page */
   __privateAdd(_UibRouter, _instanceExists, false);
   /** Options for Markdown-IT if available (set in constructor) */
