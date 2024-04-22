@@ -101,7 +101,10 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 | Std process for typed inputs |           |           |             |               |          |          |            |         |            |                                     |
 | fs to std lib                |           |           |             | ✔️             |          |          |            |         |            |                                     |
 | buildUi to std lib           | --        | --        |             |               |          | --       | --         |         |            | ??                                  |
+| Object.assign config vars(1) |           |           |             |               |          |          |            |         |            |                                     |
 | Notes                        |           |           |             |               |          |          |            |         |            | check this for other needed updates |
+
+(1) https://github.com/ryanmcdermott/clean-code-javascript?tab=readme-ov-file#set-default-objects-with-objectassign
 
 ---
 
@@ -614,6 +617,10 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 * Add uib.var function as a test of using a proxy to manage vars and work with the uib-var component.
 
 ### Possible New Web Components
+
+> [!NOTE]
+>
+> May want to use auto-adopted stylesheets in components. [Ref](https://southleft.com/insights/development/adopted-stylesheets/).
 
 * `<uib-loop>`. [Ref](https://discourse.nodered.org/t/ui/82818/33?u=totallyinformation) - A web component that takes a variable to loop over. Slot content being used as a template and replicated. Need a way to represent loop properties in the template.
 * lamp - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras)

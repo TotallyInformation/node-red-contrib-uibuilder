@@ -29,6 +29,9 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### `uibrouter` FE library
 
+* [ ] Add MD plugins
+  * [ ] Update router config docs with new mdPlugins prop
+  * [ ] Noting that if config.mdPlugins not set, uibuilder.ui_md_plugins may be used
 * [ ] ? Option to load route config from a file ?
 * [ ] Add md rendering to `loadOther`
 * [ ] Allow config updates from Node-RED
@@ -81,13 +84,14 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### `uib-cache` node
 
-* [ ] Add option to send cache on "route change" control msg
-* [ ] Add option to ONLY send cache on "route change" control msg
+* [ ] Document
+  * [ ] How to send cache on "route change" control msg - use a switch node before the cache
+  * [ ] How to ONLY send cache on "route change" control msg
 * [ ] Add processing for filters - use saved input on `_ui` or `_uib`, process if filter turned on
 * [ ] Add flag & filter for `routerId`
 * [ ] Add flag & filter for `clientId`
 * [ ] Add flag & filter for `pageName`
-* [ ] Add a msg property option to DELAY delivery on cache replay.
+* [ ] Add a msg property option to DELAY delivery on cache replay. Or maybe an option to output replay to 2nd port which would be more flexible. 2nd port could also avoid all the extra options since they could simply be a change node that adds the appropriate `msg._uib` property.
 
 ### `uib-element` node
 
@@ -95,7 +99,10 @@ Please see the documentation for archived changelogs - a new archive is produced
   * [ ] Add hidden error div with suitable id.  [ref](https://discourse.nodered.org/t/dynamic-config-dashboard/84531/31)
   * [ ] Allow definition of error text.
   * [ ] Forms assume only 1 per page (actually probably all the elements do?) - form inputs should have really unique id's.
-  * [ ] 
+* [ ] Enhance List - [Ref](https://flows.nodered.org/node/node-red-node-ui-list)
+  * [ ] Custom icons
+  * [ ] Drag & Drop rearrange
+  * [ ] Action - Click, Button, checkbox, switch, drop (reorder)
 * [ ] Add option for `routerId` - would ensure that the output only goes to the appropriate route.
 * [ ] Add option for `clientId` - would ensure that the output only goes to the appropriate client.
 * [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
