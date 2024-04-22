@@ -464,7 +464,7 @@
 
 /*#region --- Basic reset --- */
 
-* {
+*, *::before, *::after {
     box-sizing: border-box;
     /* margin: 0; */
 }
@@ -572,8 +572,7 @@ body > main, body > header, body > footer, body > section {
     padding-left: var(--base-margin);
     padding-right: var(--base-margin);
     max-width: var(--max-width);
-    margin-left:auto;
-    margin-right: auto;    
+    margin: 0 auto;
 }
 body > main {
     display: grid;
