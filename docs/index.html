@@ -138,7 +138,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-nginx.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/front-matter.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/docsify-mustache/dist/docsify-mustache.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/docsify-plugin-flexible-alerts/dist/docsify-plugin-flexible-alerts.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
@@ -187,13 +186,6 @@
             },
             // notFoundPage: true,
             notFoundPage: '.config/404.md',
-
-            mustache: {
-                noPackage: true,
-                data: {
-                    uib: '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>',
-                },
-            },
 
             plugins: [
                 EditOnGithubPlugin.create('https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/docs/'),
