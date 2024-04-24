@@ -1249,7 +1249,7 @@ class UibWeb {
         })
 
         if (print) {
-            console.log(' \n---- Per-Instance User Facing Routes ----')
+            console.log(' \n---- Per-Instance Client Facing Routes ----')
 
             Object.keys(this.instanceRouters).forEach( url => {
                 console.log(`>> User Instance Routes ${this.uib.nodeRoot}/${url}/* >>`)
@@ -1302,21 +1302,21 @@ class UibWeb {
     dumpUserRoutes(print = true) {
         const routes = { 'app': [], 'uibRouter': [], 'vendorRouter': [] }
 
-        // Get the user-facing routes
+        // Get the client-facing routes
         for ( const layer of this.app._router.stack) { this.summariseRoute(layer, routes.app) }
         if (this.uibRouter) for ( const layer of this.uibRouter.stack) { this.summariseRoute(layer, routes.uibRouter) }
         if (this.vendorRouter) for ( const layer of this.vendorRouter.stack) { this.summariseRoute(layer, routes.vendorRouter) }
 
         if (print) {
-            console.log(' \n---- User Facing Routes ----')
+            console.log(' \n---- Client Facing Routes ----')
 
-            console.log(`>> User App Routes ${this.uib.nodeRoot}/* >>`)
+            console.log(`>> Client App Routes ${this.uib.nodeRoot}/* >>`)
             console.table(routes.app)
 
-            console.log(`>> User uib Routes ${this.uib.nodeRoot}/${this.uib.moduleName}/* >>`)
+            console.log(`>> Client uib Routes ${this.uib.nodeRoot}/${this.uib.moduleName}/* >>`)
             console.table(routes.uibRouter)
 
-            console.log(`>> User vendor Routes ${this.uib.nodeRoot}/${this.uib.moduleName}/vendor/* >>`)
+            console.log(`>> Client vendor Routes ${this.uib.nodeRoot}/${this.uib.moduleName}/vendor/* >>`)
             console.table(routes.vendorRouter)
         }
 
@@ -1336,7 +1336,7 @@ class UibWeb {
 
         if (print) console.log('\n \n[uibuilder:web.js:dumpRoutes] Showing all ExpressJS Routes for uibuilder.\n')
 
-        // Get the user-facing routes
+        // Get the client-facing routes
         o.user = this.dumpUserRoutes(print)
 
         // Get each uibuilder instance's routes

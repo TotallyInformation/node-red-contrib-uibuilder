@@ -387,7 +387,7 @@ function detailsPage(uib, urlPrefix) {
     page += `
         <h2>uibuilder ExpressJS Routes</h2>
         <p>These tables show all of the web URL routes for uibuilder.</p>
-        <h3>User-Facing Routes</h3>
+        <h3>Client-Facing Routes</h3>
         ${web.htmlBuildTable( web.routers.user, ['name', 'desc', 'path', 'type', 'folder'] )}
         <h4>ExpressJS technical route data for admin routes</h4>
         <h5>Application Routes (<code>../*</code>)</h5>
@@ -397,7 +397,7 @@ function detailsPage(uib, urlPrefix) {
         <h5>Vendor Routes (<code>../uibuilder/vendor/*</code>)</h5>
         ${web.htmlBuildTable( routes.user.vendorRouter, ['name', 'path', 'folder', 'route'] )}
         <hr>
-        <h3>Per-Instance User-Facing Routes</h3>
+        <h3>Per-Instance Client-Facing Routes</h3>
     `
     Object.keys(routes.instances).forEach( url => {
         page += `
