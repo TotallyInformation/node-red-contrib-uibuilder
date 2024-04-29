@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+/* eslint-disable no-undef, jsdoc/check-property-names */
 // @ts-nocheck
 /** A simple, vanilla JavaScript front-end router class
  * Included in node-red-contrib-uibuilder but is not dependent on it.
