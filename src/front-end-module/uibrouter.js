@@ -108,7 +108,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         // If Markdown-IT library pre-loaded, set it up now
         if (window['markdownit']) this._markdownIt()
 
-        if (uibuilder) uibuilder.set('uibrouterinstance', this)
+        if (window['uibuilder']) uibuilder.set('uibrouterinstance', this)
 
         // Create/access the route container element, sets this.routeContainerEl
         this._setRouteContainer()

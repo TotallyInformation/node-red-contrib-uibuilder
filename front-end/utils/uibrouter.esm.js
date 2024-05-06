@@ -67,7 +67,7 @@ var _UibRouter = class _UibRouter {
     this._normaliseRouteDefns(this.config.routes);
     if (window["markdownit"])
       this._markdownIt();
-    if (uibuilder)
+    if (window["uibuilder"])
       uibuilder.set("uibrouterinstance", this);
     this._setRouteContainer();
     if (this.config.otherLoad)
