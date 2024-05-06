@@ -74,6 +74,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
     #startDone = false
 
     safety = 0
+    uibuilder = false
     //#endregion --- ----- ---
 
     //#region --- Internal Methods ---
@@ -108,7 +109,10 @@ class UibRouter { // eslint-disable-line no-unused-vars
         // If Markdown-IT library pre-loaded, set it up now
         if (window['markdownit']) this._markdownIt()
 
-        if (window['uibuilder']) uibuilder.set('uibrouterinstance', this)
+        if (window['uibuilder']) {
+            this.uibuilder = true
+            uibuilder.set('uibrouterinstance', this)
+        }
 
         // Create/access the route container element, sets this.routeContainerEl
         this._setRouteContainer()
@@ -192,7 +196,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         // Events on fully loaded ...
         document.dispatchEvent(new CustomEvent('uibrouter:loaded'))
-        if (uibuilder) uibuilder.set('uibrouter', 'loaded') // eslint-disable-line no-undef
+        if (this.uibuilder) uibuilder.set('uibrouter', 'loaded') // eslint-disable-line no-undef
 
         this.#startDone = true // Don't run this again
     }
@@ -406,7 +410,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         if (!newRouteId || !this.routeIds.has(newRouteId)) {
             // Events on route change fail ...
             document.dispatchEvent(new CustomEvent('uibrouter:route-change-failed', { detail: { newRouteId, oldRouteId } }))
-            if (uibuilder) uibuilder.set('uibrouter', 'route change failed') // eslint-disable-line no-undef
+            if (this.uibuilder) uibuilder.set('uibrouter', 'route change failed') // eslint-disable-line no-undef
             // If ID's the same, this happened on load and would keep failing so revert to default
             if (newRouteId === oldRouteId) oldRouteId = ''
             // Don't throw an error here, it stops the menu highlighting from working
@@ -461,7 +465,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         if (routeShown === false) {
             // Events on route change fail ...
             document.dispatchEvent(new CustomEvent('uibrouter:route-change-failed', { detail: { newRouteId, oldRouteId } }))
-            if (uibuilder) uibuilder.set('uibrouter', 'route change failed') // eslint-disable-line no-undef
+            if (this.uibuilder) uibuilder.set('uibrouter', 'route change failed') // eslint-disable-line no-undef
             // If ID's the same, this happened on load and would keep failing so revert to default
             if (newRouteId === oldRouteId) oldRouteId = ''
             // Don't throw an error here, it stops the menu highlighting from working
@@ -674,7 +678,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         this._updateRouteIds()
         // Let everyone know it all finished
         document.dispatchEvent(new CustomEvent('uibrouter:routes-added', { detail: routeDefn }))
-        if (uibuilder) uibuilder.set('uibrouter', 'routes added')
+        if (this.uibuilder) uibuilder.set('uibrouter', 'routes added')
 
         if (this.config.templateLoadAll) {
             // Load all external route templates async in parallel - NB: Object.values works on both arrays and objects
@@ -691,7 +695,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
                     this._updateRouteIds()
                     // Let everyone know it all finished
                     document.dispatchEvent(new CustomEvent('uibrouter:routes-added', { detail: routeDefn }))
-                    if (uibuilder) uibuilder.set('uibrouter', 'routes added')
+                    if (this.uibuilder) uibuilder.set('uibrouter', 'routes added')
                     return true
                 })
                 .catch( reason => {

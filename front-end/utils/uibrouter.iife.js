@@ -46,6 +46,7 @@
       /** Internal only. Set to true when the _start() method has been called */
       __privateAdd(this, _startDone, false);
       __publicField(this, "safety", 0);
+      __publicField(this, "uibuilder", false);
       if (__privateGet(_UibRouter, _instanceExists))
         throw new Error("[uibrouter:constructor] Only 1 instance of a UibRouter may exist on the page.");
       if (!fetch)
@@ -68,8 +69,10 @@
       this._normaliseRouteDefns(this.config.routes);
       if (window["markdownit"])
         this._markdownIt();
-      if (window["uibuilder"])
+      if (window["uibuilder"]) {
+        this.uibuilder = true;
         uibuilder.set("uibrouterinstance", this);
+      }
       this._setRouteContainer();
       if (this.config.otherLoad)
         this.loadOther(this.config.otherLoad);
@@ -131,7 +134,7 @@
       await this.doRoute(this.keepHashFromUrl(window.location.hash));
       window.addEventListener("hashchange", (event) => this._hashChange(event));
       document.dispatchEvent(new CustomEvent("uibrouter:loaded"));
-      if (uibuilder)
+      if (this.uibuilder)
         uibuilder.set("uibrouter", "loaded");
       __privateSet(this, _startDone, true);
     }
@@ -320,7 +323,7 @@
       let routeShown = false;
       if (!newRouteId || !this.routeIds.has(newRouteId)) {
         document.dispatchEvent(new CustomEvent("uibrouter:route-change-failed", { detail: { newRouteId, oldRouteId } }));
-        if (uibuilder)
+        if (this.uibuilder)
           uibuilder.set("uibrouter", "route change failed");
         if (newRouteId === oldRouteId)
           oldRouteId = "";
@@ -358,7 +361,7 @@
       }
       if (routeShown === false) {
         document.dispatchEvent(new CustomEvent("uibrouter:route-change-failed", { detail: { newRouteId, oldRouteId } }));
-        if (uibuilder)
+        if (this.uibuilder)
           uibuilder.set("uibrouter", "route change failed");
         if (newRouteId === oldRouteId)
           oldRouteId = "";
@@ -527,7 +530,7 @@
       this.config.routes.push(...routeDefn);
       this._updateRouteIds();
       document.dispatchEvent(new CustomEvent("uibrouter:routes-added", { detail: routeDefn }));
-      if (uibuilder)
+      if (this.uibuilder)
         uibuilder.set("uibrouter", "routes added");
       if (this.config.templateLoadAll) {
         Promise.allSettled(Object.values(routeDefn).filter((r) => r.type && r.type === "url").map(this._loadExternal)).then((results) => {
@@ -537,7 +540,7 @@
           this.config.routes.push(...routeDefn);
           this._updateRouteIds();
           document.dispatchEvent(new CustomEvent("uibrouter:routes-added", { detail: routeDefn }));
-          if (uibuilder)
+          if (this.uibuilder)
             uibuilder.set("uibrouter", "routes added");
           return true;
         }).catch((reason) => {
