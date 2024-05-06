@@ -326,7 +326,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
     /** Update this.routeIds array from this.config (on start and after add/remove routes) */
     _updateRouteIds() {
-        this.routeIds = new Set(Object.values(routerConfig.routes).map( r => r.id ))
+        this.routeIds = new Set(Object.values(this.config.routes).map( r => r.id ))
     }
 
     /** If uibuilder in use, report on route change

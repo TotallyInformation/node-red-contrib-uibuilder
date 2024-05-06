@@ -32,7 +32,7 @@
     /** Class constructor
      * @param {UibRouterConfig} routerConfig Configuration object
      */
-    constructor(routerConfig2) {
+    constructor(routerConfig) {
       /** Configuration settings @type {UibRouterConfig} */
       __publicField(this, "config");
       /** Reference to the container DOM element - set in setup() @type {HTMLDivElement} */
@@ -50,11 +50,11 @@
         throw new Error("[uibrouter:constructor] Only 1 instance of a UibRouter may exist on the page.");
       if (!fetch)
         throw new Error("[uibrouter:constructor] UibRouter requires `fetch`. Please use a current browser or load a fetch polyfill.");
-      if (!routerConfig2)
+      if (!routerConfig)
         throw new Error("[uibrouter:constructor] No config provided");
-      if (!routerConfig2.routes)
+      if (!routerConfig.routes)
         throw new Error("[uibrouter:constructor] No routes provided in routerConfig");
-      this.config = routerConfig2;
+      this.config = routerConfig;
       if (!this.config.routeContainer)
         this.config.routeContainer = "#uibroutecontainer";
       if (!this.config.defaultRoute && this.config.routes[0] && this.config.routes[0].id)
@@ -78,7 +78,7 @@
         this._start();
       } else {
         console.info("[uibrouter] Pre-loading all external templates");
-        Promise.allSettled(Object.values(routerConfig2.routes).filter((r) => r.type && r.type === "url").map(this._loadExternal)).then((results) => {
+        Promise.allSettled(Object.values(routerConfig.routes).filter((r) => r.type && r.type === "url").map(this._loadExternal)).then((results) => {
           results.filter((res) => res.status === "rejected").forEach((res) => {
             console.error(res.reason);
           });
@@ -255,7 +255,7 @@
     }
     /** Update this.routeIds array from this.config (on start and after add/remove routes) */
     _updateRouteIds() {
-      this.routeIds = new Set(Object.values(routerConfig.routes).map((r) => r.id));
+      this.routeIds = new Set(Object.values(this.config.routes).map((r) => r.id));
     }
     /** If uibuilder in use, report on route change
      * @param {string} newRouteId The route id now shown
