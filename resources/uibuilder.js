@@ -708,7 +708,6 @@
                     .html('<i class="fa fa-compress"></i>')
 
                 uiace.fullscreen = true
-
             } else {
                 // Don't bother if the top of the editor is still auto
                 if ( $('#edit-outer').css('top') === 'auto' ) return
@@ -723,7 +722,6 @@
                     .html('<i class="fa fa-expand"></i>')
 
                 uiace.fullscreen = false
-
             }
 
             // everything but the edit box
@@ -734,19 +732,16 @@
                 height -= $(rows[i]).outerHeight(true)
             }
 
-            // Set the height of the edit box
-            $('#node-input-template-editor').css('height', height + 'px')
+            // Set the height of the edit box - no longer needed, using calc CSS
+            // $('#node-input-template-editor').css('height', height + 'px')
 
             // Get the content to match the edit box size
             uiace.editor.resize()
-
         }
-
     } // --- End of setACEheight --- //
 
     /** Save Edited File */
     function saveFile() {
-
         const authTokens = RED.settings.get('auth-tokens')
 
         // Post the updated content of the file via the admin API
@@ -776,7 +771,6 @@
         // If admin ui is protected with a login, we need to send the access token
         if (authTokens) request.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
         request.send(params)
-
     } // ---- End of saveFile ---- //
 
     /** Create the wrapping HTML string that provides a link to open the instance folder in vscode
