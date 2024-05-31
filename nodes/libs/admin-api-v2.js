@@ -688,7 +688,7 @@ function adminRouterV2(uib, log) {
 
         const folder = RED.settings.userDir
 
-        log.info(`[uibuilder:apiv2:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} with tag/version '${params.tag}'`)
+        log.info(`[uibuilder:apiv2:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} with tag/version '${params.tag ? params.tag : ''}'`)
 
         // delete package lock file as it seems to mess up sometimes - no error if it fails
         fs.removeSync(path.join(folder, 'package-lock.json'))
@@ -698,7 +698,7 @@ function adminRouterV2(uib, log) {
             case 'update':
             case 'install': {
                 // @ts-expect-error
-                packageMgt.npmInstallPackage(params.url, params.package, params.tag)
+                packageMgt.npmInstallPackage(params.url, params.package, params.tag, '', params.cmd)
                     .then((npmOutput) => {
                         // Get the updated package.json file into packageMgt.uibPackageJson
                         packageMgt.uibPackageJson = packageMgt.pkgCheck()
@@ -717,7 +717,7 @@ function adminRouterV2(uib, log) {
                     })
                     .catch((err) => {
                         // err has extra props: {all:string, code:number, command:string}
-                        log.error(`[uibuilder:apiv2:uibnpmmanage:install] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+                        log.error(`[uibuilder:apiv2:uibnpmmanage:${params.cmd}] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
                         res.json({ 'success': false, 'result': err.all })
                         return false
                     })
