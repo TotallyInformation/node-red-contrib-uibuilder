@@ -712,7 +712,7 @@ class UibPackages {
     //#region -- Manage Packages via npm --
 
     // TODO Use tiEvents `uibuilder/runOsCmd/log` as option to show log during install
-    /** Install an npm package
+    /** Install or update an npm package
      * NOTE: This fn does not update the list of packages
      *       because that is built from the package.json file
      *       and that is updated by calling web.serveVendorPackages()
@@ -721,10 +721,11 @@ class UibPackages {
      * @param {string} url Node instance url
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
      * @param {string} [tag] Default=''. Specifier for a version, tag, branch, etc. with leading @ for npm and # for GitHub installs
-     * @param {string} [toLocation] Where to install to. Defaults to uibRoot
+     * @param {string} [toLocation] Where to install to. '' defaults to uibRoot
+     * @param {'install'|'update'} [action] Install or Update. Defaults to install
      * @returns {Promise<{all:string, code:number, command:string}|string>} Combined stdout/stderr, return code
      */
-    async npmInstallPackage(url, pkgName, tag = '', toLocation = '') {
+    async npmInstallPackage(url, pkgName, tag = '', toLocation = '', action = 'install') {
         if ( this.log === undefined ) throw this.#logUndefinedError
 
         if ( this.#isConfigured !== true ) {
@@ -741,7 +742,8 @@ class UibPackages {
         opts.out = ''
 
         const args = [ // `npm install --no-audit --no-update-notifier --save --production --color=false --no-fund --json ${params.package}@latest`
-            'install',
+            action,
+            pkgName + tag,
             '--no-fund',
             '--no-audit',
             '--no-update-notifier',
@@ -749,7 +751,6 @@ class UibPackages {
             '--production',
             '--color=false',
             // '--json',
-            pkgName + tag,
         ]
 
         /** @type {{all:string, code:number, command:string}} */
