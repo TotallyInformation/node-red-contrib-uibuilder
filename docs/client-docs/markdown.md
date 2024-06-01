@@ -3,7 +3,7 @@ title: How to use Markdown with UIBUILDER
 description: |
   The UIBUILDER client library supports the rendering of Markdown using the external Markdown-IT library. This document shows you how to make use of that.
 created: 2024-04-06 12:23:16
-updated: 2024-04-06 17:55:42
+updated: 2024-04-29 17:36:45
 ---
 
 Markdown is a simple and effective way to write rich content without having to worry about HTML or other complex markup. It is easily edited using just a text editor or there are many tools that will provide a rich editing experience (such as VSCode, Typora, or Obsidian for example).
@@ -22,12 +22,11 @@ To use Markdown, you first need to load the [`Markdown-IT` library](https://gith
     <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->
 	<script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@latest/build/highlight.min.js"></script>
 	<script defer src="https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js"></script>
+        <!-- Markdown-IT plugins can also be loaded here -->
+        <script defer src="https://cdn.jsdelivr.net/npm/markdown-it-task-lists@latest/dist/markdown-it-task-lists.min.js"></script>
     <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
     <!-- <script defer src="./index.js">/* OPTIONAL: Put your custom code in that */</script> -->
     <!-- #endregion -->
-
-<script src="https://cdn.jsdelivr.net/npm/markdown-it-task-lists@latest/dist/markdown-it-task-lists.min.js"></script>
-
 ```
 
 > [!TIP]
