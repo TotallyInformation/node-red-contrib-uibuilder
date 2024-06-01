@@ -263,7 +263,7 @@ var _UibRouter = class _UibRouter {
    * @param {string} newRouteId The route id now shown
    */
   _uibRouteChange(newRouteId) {
-    if (!uibuilder || !newRouteId)
+    if (!this.uibuilder || !newRouteId)
       return;
     uibuilder.set("uibrouter", "route changed");
     uibuilder.set("uibrouter_CurrentRoute", newRouteId);
@@ -286,6 +286,8 @@ var _UibRouter = class _UibRouter {
   async doRoute(routeSource) {
     if (this.safety > 10)
       throw new Error("\u{1F6AB} [uibrouter:doRoute] Safety protocol triggered, too many route bounces");
+    if (!this.config.routes || this.config.routes < 1)
+      return;
     if (!routeSource)
       routeSource = this.config.defaultRoute;
     const container = this.routeContainerEl;

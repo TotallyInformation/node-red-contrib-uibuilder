@@ -337,7 +337,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
      * @param {string} newRouteId The route id now shown
      */
     _uibRouteChange(newRouteId) {
-        if (!uibuilder || !newRouteId) return
+        if (!this.uibuilder || !newRouteId) return
         uibuilder.set('uibrouter', 'route changed')
         uibuilder.set('uibrouter_CurrentRoute', newRouteId)
         uibuilder.set('uibrouter_CurrentTitle', this.routeTitle())
@@ -360,6 +360,9 @@ class UibRouter { // eslint-disable-line no-unused-vars
      */
     async doRoute(routeSource) {
         if (this.safety > 10) throw new Error('🚫 [uibrouter:doRoute] Safety protocol triggered, too many route bounces')
+
+        // If no routes at all, just exit (maybe they will be loaded later)
+        if (!this.config.routes || this.config.routes < 1) return
 
         if (!routeSource) routeSource = this.config.defaultRoute
 
