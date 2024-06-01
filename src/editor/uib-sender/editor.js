@@ -38,6 +38,12 @@
         //     data: {
         //         'cmd': 'listinstances',
         //     },
+        // beforeSend: function(jqXHR) {
+        //     const authTokens = RED.settings.get('auth-tokens')
+        //     if (authTokens) {
+        //         jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+        //     }
+        // },
         //     success: function(instances) {
         //         console.log('>> Instances >>', instances, Object.entries(instances) )
 
