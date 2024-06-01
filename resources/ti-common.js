@@ -82,6 +82,12 @@
                     data: {
                         'cmd': 'listinstances',
                     },
+                    beforeSend: function(jqXHR) {
+                        const authTokens = RED.settings.get('auth-tokens')
+                        if (authTokens) {
+                            jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                        }
+                    },
                     success: (instances) => {
                         this.deployedUibInstances = this.sortInstances(instances)
                         // Also pre-populate the editorUibInstances to avoid the problem that
@@ -98,7 +104,7 @@
              */
             sortInstances: function sortInstances(instances) {
                 return Object.fromEntries(
-                    Object.entries(instances).sort(([,a],[,b]) => {
+                    Object.entries(instances).sort(([, a], [, b]) => {
                         const nameA = a.toUpperCase()
                         const nameB = b.toUpperCase()
                         if (nameA < nameB) return -1
@@ -139,6 +145,13 @@
             url: 'uibuilder/uibvendorpackages',
             async: false,
             // data: { url: node.url},
+
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
+            },
 
             success: function(vendorPaths) {
                 uibuilder.packages = vendorPaths
