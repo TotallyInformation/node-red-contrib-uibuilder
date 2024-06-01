@@ -1,4 +1,5 @@
-* [Home](/)
+* [About](/about.md)
+* [Getting Started](/getting-started.md)
 * Using <span class="uib-name"><span class="uib-red">ui</span>builder</span>
   * [A first-timers walkthough](walkthrough1.md "Let's get started!")
   * [Browser auto-refresh](browser-refresh.md "Automatically reload your page after a change")
