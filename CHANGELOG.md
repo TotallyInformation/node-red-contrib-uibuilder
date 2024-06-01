@@ -10,6 +10,8 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## To Do
 
+* [ ] [started] Change all calls to `$.get` into `$.ajax` and add beforeStart to add optional bearer token header
+* [ ] Add Docsify external libraries to `/docs/.config` to allow true offline use of docs. Add new gulp process to update them, possibly pack them all.
 * [ ] Add instance descriptions to the index pages
 * Update examples:
   * [ ] [started] Update text update example to include new `uib-topic` html attributes
@@ -26,6 +28,9 @@ Please see the documentation for archived changelogs - a new archive is produced
   * [ ] Document how to use `<instanceRoot>/routes/` properly. [Ref](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/changelog?id=new-features)
 * [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
 * [ ] Remove execa from gulpfile.js & remove from dev deps
+* [ ] Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
+* [ ] New Node Idea: `uib-meta` - links to a uibuilder node and returns the instance metadata including URL's and folder locations and other settings. (e.g. use with [node-red-cleanup-filesystem](https://discourse.nodered.org/t/announce-node-red-cleanup-filesystem-request-for-testing/88135))
+* [ ] Move the loading of the Editor common CSS/JS to a plugin so they are only loaded once. Remove explicit links from node html files.
 
 ### `uibrouter` FE library
 
@@ -71,9 +76,9 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### FE `ui` library
 
-* [ ] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
+* [x] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
   * [x] ui.js
-  * [ ] uib-router.js
+  * [x] uib-router.js
 * [ ] document `ui-md-plugins` managed uib variable
 * [ ] document `ui-md-plugins` ui variable
 * [ ] document `ui-md-plugins` router variable
@@ -118,33 +123,33 @@ Please see the documentation for archived changelogs - a new archive is produced
 ### `uibuilder` node
 
 * [ ] ?? Filter `clientId` and `pageName` using socket.io rooms?
+* [ ] On uibuilder Libraries tab:
+  * [ ] Process for updating libraries updates EVERYTHING (runs `npm install`) - need to update docs?
+  * [ ] Major version updates are not listed - because of package.json version spec - need to update docs?
+* [ ] uibuilder.packages after an update does not contain the `outdated` prop for each package because the server only does a quick update and so does not call `npmOutdated` (from packge-mgt.js) on each package because it is async and quite slow. This may mean that update flags are not updated until the Editor is next reloaded which isn't ideal. Probably need to fix at some point.
+
 
 ## Issues
 
-* [ ] Process for showing outdated libraries ~~isn't working~~ is working sometimes.
-* [ ] `uibuilder` file Editor - sometimes on file change, we get:
-  Uncaught Error: Illegal value for lineNumber
-  Error: Illegal value for lineNumber
-      at e.getLineMaxColumn (editor.js:5:1743420)
-      at zo.getViewLineMaxColumn (editor.js:5:1161732)
-      at Go.getViewLineMaxColumn (editor.js:5:1174931)
-      at es.getLineMaxColumn (editor.js:5:1196932)
-      at new yn (editor.js:5:1096427)
-      at In._actualRender (editor.js:5:1110215)
-      at editor.js:5:1109784
-      at editor.js:5:1109747
-      at In._renderNow (editor.js:5:1109773)
-      at In._flushAccumulatedAndRenderNow (editor.js:5:1107153)
-      at In._onRenderScheduled (editor.js:5:1109678)
-      at y.execute (editor.js:2:180485)
-      at o (editor.js:2:181412)
-      at editor.js:5:161683
+* [ ] uibuilder library update
+  * [x] Runs `npm install`. Run `npm update` with package name
+  * [x] Running 1 update resets displays for all updatable packages
+
+* [ ] uib-element editor panel
+  * [ ] Heading 2nd drop-down needs to be narrower to account for 1st drop-down
+* [ ] uibuilder editor panel
+  * [ ] info panel fixed width, needs to be expandable
+  * [ ] Text in fieldset is fixed width
+* [ ] uib-cache editor panel
+  * [ ] Some inputs width not consistent
+* [ ] uib-save & uib-file-list editor panels
+  * [ ] URL drop-down width not consistent (check uib-update as this is correct)
 
 ### "Outdated" dependencies
 
 As of v7, all outdated dependencies have been removed or limited to uibuilder development only, not production use.
 
-The following are only used for developing UIBUILDER:
+The following are only used for _**developing**_ UIBUILDER:
 
 * `execa` - restricted to v5. Author sindresorhus decided that everyone HAS to use ESM even though his packages are widely used and he must know that it is often impossible to move from CommonJS without a complete rewrite. Node-RED is so complex, when would that be possible? Very annoying.
 * `@types/node` - restricted to v18 to match Node-RED's current baseline.
@@ -237,10 +242,12 @@ Most of these changes will *not* impact most people but you should check through
   * You can now define a set of external html files (that can include scripts and css just like routes) that are immediately loaded to the page. These can be defined in the initial router config when they will be loaded immediately (before routes) or can be manually loaded later. Use these for things like menu's or other fixed parts of the UI.
   
   * You can now define route content as Markdown instead of HTML. This makes Notion/Obsidian-like applications feasible using UIBUILDER.
+  
+  * You can now use Markdown-IT plugins to enhance your Markdown content.
 
 * Markdown improvements.
   
-  Both the main uibuilder node (via the `ui.js` library) and the `uibrouter` library both accept markdown content (via the external Markdown-IT library) and now they both support Markdown-IT plugins so that you can add features such as checkbox lists, GitHub style callouts, Mermaid diagrams and much more. 
+  Both the main uibuilder node (via the `ui.js` library) and the `uibrouter` library both accept markdown content (via the external Markdown-IT library) and now they both support *Markdown-IT plugins* so that you can add features such as checkbox lists, GitHub style callouts, Mermaid diagrams and much more. 
   
   There is also a new documentation page dedicated to using Markdown.
 
@@ -272,9 +279,13 @@ Most of these changes will *not* impact most people but you should check through
 * The `nanoid` package is no longer a dependency. UIBUILDER now has its own UUID generator function. The nanoid package stopped being useful since it moved to only an ESM release.
 * The `jsdom` package now tracks the current release again thanks to UIBUILDER moving to a node.js baseline in line with Node-RED v4 (Node.js v18)
 * External module `execa` no longer a dependency.
+* On the Detailed Information Page (uibindex) "User-Facing Routes" is changed to "Client-Facing Routes" to make it clearer.
 
 * Documentation
   * New How-To: Creating a well-structured HTML page
+  * Mustache plugin removed from Docksify load. Not used and not required since Docsify supports easy loading of custom Vue components which can do the same work.
+  * Additional uibuilder web path added `./docs/resources` which is mapped to the `/front-end` package folder. Allowing the docs to use the images, router, branding, etc in the future.
+  * The Docsify JS and CSS now split from the main html file for ease of management.
 
 * URL's are now _case sensitive_ when using the custom ExpressJS server feature. 
   
@@ -283,6 +294,9 @@ Most of these changes will *not* impact most people but you should check through
   Socket.IO is already case sensitive but ExpressJS is not. This can cause issues as shown in [Ref](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
 
   [Ref 1](https://stackoverflow.com/questions/21216523/nodejs-express-case-sensitive-urls), [Ref 2](http://expressjs.com/en/api.html). [Ref 3](https://discourse.nodered.org/t/uibuilder-and-url-case-sensitivity/81019/6).
+
+* Node-RED's admin optional auth token is now added to all admin API calls. [Ref](https://github.com/victronenergy/node-red-contrib-victron/blob/ac5e383b727a13d7f613cb02c183f5b205408c1b/src/nodes/victron-nodes.html#L233-L238). This should ensure that, if you are using tokens in your Node-RED authentication, all the UIBUILDER admin API calls should work consistently.
+
 
 ### NEW node - `uib-file-list`
 
@@ -378,7 +392,7 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 * Now enforces only 1 instance of a router on page (would need to change how uib vars work otherwise).
 * Internally, a tracking flag is added to inbound messages from Node-RED to indicate if/where they have been processed by the library. This helps to avoid double-processing. This is important now that there are ever more auto-process features available.
 
-### `uibuilderfe` old front-end library
+### **REMOVED** `uibuilderfe` old front-end library
 
 **REMOVED** - this was deprecated in UIBUILDER v5, it has now been removed completely. Please use `uibuilder.iife.min.js` (for simple `<script>` loading) or `uibuilder.esm.min.js` for ESM module imports.
 
@@ -436,6 +450,8 @@ The `old-blank-client` template and all associated documentation has also been r
 * On the "Core" tab, the info buttons bar has changed slightly. The "Docs" button has gone (it is still on the top of panel bar anyway) and been replaced by a new "Apps" button which shows a page listing ALL uibuilder node instances along with their descriptions where provided. Also the "Full details" button has swapped position with the "Node details" button so that the instance-related buttons are on the left and the all-instances buttons are on the right.
 
 * The help panel has been updated to better reflect the current configurations. Also some additional links added.
+
+* The list of installed libraries now has more reliable behaviour for updates. If there are >1 updates waiting, updating 1 library no longer looses the other indicators.
 
 ### `uib-list` node
 

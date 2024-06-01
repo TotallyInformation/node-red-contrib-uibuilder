@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-03-31 17:46:35
+updated: 2024-04-26 15:20:11
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -174,11 +174,8 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 * Add occasional check for new version of uib being available and give single prompt in editor.
 * Trace report for not loading uibMiddleware.js but not for other middleware files. Doesn't need a stack trace if the file isn't found and probably not at all. Make everything consistent. "uibuilder common Middleware file failed to load. Path: \src\uibRoot\.config\uibMiddleware.js, Reason: Cannot find module '\src\uibRoot\.config\uibMiddleware.js'". "sioUse middleware failed to load for NS" - make sure that middleware does not log warnings if no file is present. [ref](https://discourse.nodered.org/t/uibuilder-question-on-siouse-middleware/75199?u=totallyinformation).
 * Introduce standard events: url-change (so that all uib related nodes can be notified if a uib endpoint changes url).
-* uibindex change "User-Facing Routes" to "Client-Facing Routes".
-* Add index web page for the `common` folder.
 * Auto-generate web manifest.
 * Add actions: open page? open docs? using RED.actions editor API. [ref](https://nodered.org/docs/api/ui/actions/)
-* Remove scripts/css flags from uibuilder panel, no longer in use (not while old client library still in use)
 * Better icons! See https://discourse.nodered.org/t/wish-for-new-nodes/73858/20
 * Consider adding an action for when a `uibuilder` node is selected - would open the web page. https://discourse.nodered.org/t/call-link-from-node-red-editor-ctrl-shift-d/73388/4
 * Add GIT processing? Or maybe just handle via npm scripts?
@@ -245,8 +242,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 #### Libraries tab
 
-* Add Homepage link to each package in the Libraries tab.
-* Add update indicator to Libraries tab.
+* Show warning if `node_modules` is empty, offer to run `npm install` & warn to restart Node-RED. Any way to extend that for missing installs?
 * Trigger indicator to Libraries to show if new major version available when switching to the tab.
 * Add npm package delete confirmation - probably via std NR notifications.
 * When adding a package, make sure that the input field gets focus & add `<keyb>`Enter`</keyb>` & `<keyb>`Esc`</keyb>` key processing.
@@ -759,97 +755,101 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ### Changes needed for future versions of node.js
 
-* Node.js v14 features - code updates to leverage the latest features
+* https://nodejs.org/en/about/releases/, https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V14.md, https://node.green/
 
-  * Replace `||` default value tests with `??` .
-  * Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
-  * https://nodejs.org/en/about/releases/, https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V14.md, https://node.green/
-  * [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
-  * [Nullish Coalescing](https://wiki.developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_Coalescing_Operator)
-  * [Intl.DisplayNames](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisplayNames)
-  * [calendar &amp; numberingSystem for Intl.DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)
-  * Private Class methods (v14.5.1+)
-  * WeakReferences (v14.5.1+)
-  * Array flat and flat map
-  * Optional catch binding
-  * Object.fromEntries (helps make an object either from Map or from a key/value array)
-  * **ESM IS STILL EXPERIMENTAL**
-  * Corepack https://nodejs.org/dist/latest-v14.x/docs/api/corepack.html
-  * Diagnostic reports. https://developer.ibm.com/articles/introducing-report-toolkit-for-nodejs-diagnostic-reports/, https://github.com/IBM/report-toolkit
-* Changes due once Node.js v16 live:
+#### Node.js v14 features - code updates to leverage the latest features
 
-  * Change style of requiring core node modules: `require('node:os')` instead of `require('os')`
-  * JSON Modules (experimental in v14, full in 16.15.0)
-  * **==Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)==**
-  * [Error cause](https://v8.dev/features/error-cause) (16.9.0)
-  * [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0) - allows use of negative indexes.
-  * Stable Timers Promises API, RegExp Match Indices, which provide the start and end indices of the captured string (16.0.0)
+* [ ] ~~Replace `||` default value tests with `??` . Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining), [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining), [Nullish Coalescing](https://wiki.developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_Coalescing_Operator)~~ - started using
+* [ ] ~~Object.fromEntries (helps make an object either from Map or from a key/value array)~~ - already in use
+* [ ] **==Private Class methods==** (v14.5.1+)
+* [ ] **==Optional catch binding==**
+* [ ] [Intl.DisplayNames](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisplayNames)
+* [ ] [calendar &amp; numberingSystem for Intl.DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)
+* [ ] WeakReferences (v14.5.1+)
+* [ ] Array flat and flat map
+* Experimental diagnostic reports. https://developer.ibm.com/articles/introducing-report-toolkit-for-nodejs-diagnostic-reports/, https://github.com/IBM/report-toolkit
 
-  Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s New In Node.js 16?](https://www.howtogeek.com/devops/whats-new-in-node-js-16/)
-* Changes due once Node.js v18 live
+#### Changes due once Node.js v16 live:
 
-  * [Socket.IO with WebTransport](https://socket.io/get-started/webtransport) - requires https
-  * [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
-  * Top-level await (experimental in v14 - behind flag, full in v18)
-  * V8 updates
+* [x] Change style of requiring core node modules: `require('node:os')` instead of `require('os')` - started, ongoing
+* [ ] JSON Modules (experimental in v14, full in 16.15.0)
+* [ ] **==Object.hasOwn is a static alias for Object.prototype.hasOwnProperty.call (16.9.0)==**
+* [ ] [Error cause](https://v8.dev/features/error-cause) (16.9.0)
+* [ ] [Array.prototype.at](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at) (16.6.0) - allows use of negative indexes.
+* [ ] Stable Timers Promises API, RegExp Match Indices, which provide the start and end indices of the captured string (16.0.0)
 
-    * The `findLast()` and `findLastIndex()` array methods.
-    * Improvements to the `Intl.Locale` API.
-    * The `Intl.supportedValuesOf` function.
-    * Improved performance of class fields and private class methods (the initialization of them is now as fast as ordinary property stores).
-  * APIs now exposed on the global scope:
+Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s New In Node.js 16?](https://www.howtogeek.com/devops/whats-new-in-node-js-16/)
 
-    * Blob - https://nodejs.org/api/buffer.html#class-blob
-    * BroadcastChannel - https://nodejs.org/api/worker_threads.html#class-broadcastchannel-extends-eventtarget
-  * Experimental
+#### Changes due once Node.js v18 live (EOL Apr 2025)
 
-    * Fetch
-    * Web Streams API
-    * Test Runner
-    * Experimental watch run mode (restarts the process)
-* Changes due once Node.js v19 live
+* [ ] [Socket.IO with WebTransport](https://socket.io/get-started/webtransport) - requires https
+* [ ] [`findLast` and `findLastIndex` array methods](https://v8.dev/features/finding-in-arrays) (18.0.0)
+* [ ] Top-level await
+* [ ] Improvements to the `Intl.Locale` API.
 
-  * Web crypto: `globalThis.crypto` or `require('node:crypto').webcrypto`
-  * `Intl.NumberFormat` v3 API is a new TC39 ECMA402 stage 3 proposal extending the pre-existing `Intl.NumberFormat`.
-  * npm@8.19.2
-* Changes due once Node.js v20 live
+* [ ] The `Intl.supportedValuesOf` function.
+* [ ] Improved performance of class fields and private class methods (the initialization of them is now as fast as ordinary property stores).
+* APIs now exposed on the global scope:
 
-  * Consider the experimental permission model
-  * Test Runner module
-  * `String.prototype.isWellFormed` and `toWellFormed`
-  * Methods that change Array and TypedArray by copy
-  * Resizable ArrayBuffer and growable SharedArrayBuffer
-  * RegExp v flag
-  * Synchronous import.meta.resolve()
-* Changes due once Node.js v21 live
+  * [ ] Blob - https://nodejs.org/api/buffer.html#class-blob
+  * [ ] BroadcastChannel - https://nodejs.org/api/worker_threads.html#class-broadcastchannel-extends-eventtarget
+* Experimental
 
-  * Stable Fetch
-  * Stable Webstreams
-  * [Array grouping](https://github.com/tc39/proposal-array-grouping)
-  * `ArrayBuffer.prototype.transfer`
-  * Global `navigator` object.
-  * Experimental
+  * Fetch
+  * Web Streams API
+  * Test Runner
+  * watch run mode (restarts the process)
 
-    * experimental browser-compatible WebSocket implementation
-* Changes due once Node.js post v20
+#### Changes due once Node.js v19 live
+
+* [ ] Web crypto: `globalThis.crypto` or `require('node:crypto').webcrypto`
+* [ ] `Intl.NumberFormat` v3 API is a new TC39 ECMA402 stage 3 proposal extending the pre-existing `Intl.NumberFormat`.
+* npm@8.19.2
+
+#### Changes due once Node.js v20 live
+
+* Test Runner module
+* `String.prototype.isWellFormed` and `toWellFormed`
+* Methods that change Array and TypedArray by copy
+* Resizable ArrayBuffer and growable SharedArrayBuffer
+* RegExp v flag
+* Synchronous import.meta.resolve()
+* Consider the experimental permission model
+
+#### Changes due once Node.js v21 live
+
+* [ ] Stable Fetch
+* [ ] Stable Webstreams
+* [ ] [Array grouping](https://github.com/tc39/proposal-array-grouping)
+* `ArrayBuffer.prototype.transfer`
+* [ ] Global `navigator` object.
+
+#### Changes in Node.js v22
+
+* [ ] `glob` and `globSync` - external glob package no longer required
+* [ ] Native WebSocket available
+* [ ] Watch mode `node --watch`
+* Experimental
+  * Ability to `require` ESM's synchronously
+  * `node --run pkg-script` - run without `npm`
+
+
+#### Changes due once Node.js post v20
 
   * Diagnostic channels (experimental in v14)
+
   * AbortController and AbortSignal (experimental in v14)
-  * Fetch (Experimental 16.15.0, 18.0.0)
+
   * Permission model (experimental in v20)
+
+### Other Ideas
+
 * Consider moving all libs to separate repo to reduce number of direct dependencies. (probably requires node v16 for nested mono-repo modules)
 * Restructure to a monorepo? With libs in 1, maybe nodes in their own and the front-end library in another? [ref](https://www.bing.com/search?pglt=161&q=what+is+a+monorepo&cvid=42b295dfc64143cfb64e4061114803fd&aqs=edge.0.0l9.7031j0j1&FORM=ANNTA1&PC=U531)
 * Some way to visually expose a library of JavaScript functions with their args as inputs. Maybe make this a cmd that pulls a doc from Node-RED? (keeps client lib small)
 * Using the above to visually show available uibuilder fns with inputs and outputs.
 * Add optional TELEMETRY output (maybe linked to the log functions) - add mqtt endpoint to uibuilder settings.js (or maybe websocket?)
 * Use `degit` to move default templates and maybe examples to their own repos - allowing more dynamic updates without needing a new version of uibuilder.
-* Change ui.js to create global $ui object, change lib to match. Make sure it works in node.js as well as browser.
-
-  In preparation for the ui library to be used stand-alone and have its own branding. Also allowing option for it to be managed as an independent library.
-
-  Add a version and a version fn.
-
-  Consider making available to Node-RED functions?
 
 ### Thoughts on JavaScript tabular data manipulation and visualisation
 
@@ -866,33 +866,20 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 ### General
 
 * Consider creating a module that uses [gridstck.js](https://gridstackjs.com/#) where each grid entry gets a unique html ID. Needs a way to save the grid as HTML without the amend widgets but also as a gridstack object to allow re-editing.
-* `uib-sender` node not really needed any more - consider putting a "deprecated" node.warn message prior to removing.
-* Remove dependencies on fs-extra library - need to wait for node.js v16.7 to be minimum so that fs.cp/fs.cpSync is available
-
-  * [X] libs/web.js
-  * [ ] libs/package-mgt.js
-  * [ ] uiblib.js
 * Optimise runtime code using esbuild (see node-build.mjs). Reduce runtime dependencies by bundling and move deps to dev deps.
 * Use uibuilder itself to manage docs webpage. Rather than docsify.
 * Allow client id to be set externally.
-* ? Add client identifier chooser to cache node - allowing use of different msg props to identify a specific client
+* ~~Add client identifier chooser to cache node - allowing use of different msg props to identify a specific client~~ *No need for the complexity, can use a switch node to filter*.
 * Change cache & main nodes to use client id rather than socket id where available. Since that is less likely to change.
-* Improve editor panels with better tooltips. [ref](https://kazzkiq.github.io/balloon.css/)
 * Use [chokidar](https://github.com/paulmillr/chokidar) to send a control msg to the fe when files change. Change the front-end to allow the browser to automatically reload (location.reload()). Put everything behind an optional flag and don't load the chokidar library unless the flag is set. May want an auto-rebuild feature as well. Alternatively, try [livereload](https://www.npmjs.com/package/livereload) which is used by rollup.
 * Add package.json `style` property to Instance details page and packages list if it exists.
-* Add Web Reporting API endpoint(s). Set a header to tell the client where to report to. Reports are JSON and so could be directed out of port 2 as a new control msg type. See https://web.dev/reporting-api/ & https://developer.mozilla.org/en-US/docs/Web/API/Reporting_API.
-* Add Notifications API support. See https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API & https://developer.mozilla.org/en-US/docs/Web/API/notification.
 * Add option to log http(s) requests to control output port
 * Switch to [dynamic imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_imports) for require's with low probability of usage. [ref](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_import_expressions).
-* Migrate from commonjs to [ES modules](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_commonjs_json_and_native_modules). (2) [JSON can&#39;t be imported directly in ESMs](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_experimental_json_modules), use createRequire.
-* Add funding link to package.json (see `man 5 package.json`)
-* Maybe switch package.json reads to [npm/read-package-json: The thing npm uses to read package.json files with semantics and defaults and validation and stuff (github.com)](https://github.com/npm/read-package-json)?
+* Migrate from commonjs to [ES modules](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_commonjs_json_and_native_modules). (2) [JSON can&#39;t be imported directly in ESMs](https://nodejs.org/dist/latest-v12.x/docs/api/esm.html#esm_experimental_json_modules), Requires Node.js post v22.
 * Add settings.js options to use different paths/names for middleware files.
-* Once Node-RED's baseline node.js version has moved passed v12.20, can update `execa` and use dynamic imports (and change README notes on scorecard). Once it has moved into v14, can simplify the socket.js class by reinstating the optional chaining.
 * Add socket.io instrumentation server. See https://socket.io/docs/v4/admin-ui/
   {}
-* Move socket.io client to dev deps and remove serve from web.js (new library builds it in) - can't do until uibuilderfe is deprecated? Or updated to include (breaking chg)
-* Consider the use of `RED.comms.publish('uibuilder:some-event-name', data, retainFlag)` to push data to the editor (using RED.comms.subscribe in the Editor)
+* Consider the use of `RED.comms.publish('uibuilder:some-event-name', data, retainFlag)` to push data to the editor (using `RED.comms.subscribe` in the Editor)
 * Consider allowing addition of HTTP request headers to control msgs
 * Consider allowing control msg for each request
 * Consider implementing at Kroki diagram service node - https://kroki.io/ - enables delivery of diagrams from text descriptions using many different libraries.
