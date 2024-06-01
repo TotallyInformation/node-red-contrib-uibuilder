@@ -4,7 +4,7 @@ description: |
   Create `msg._ui` configuration data from simple inputs. This can be easily turned into HTML by the uibuilder client library. All that is needed is to send the data to a uibuilder node and the UI will be built dynamically.
 created: 2023-02-05 16:31:39
 lastUpdated: 2023-02-22 09:01:47
-updated: 2023-12-30 17:01:41
+updated: 2024-04-30 14:46:38
 ---
 
 *(This document is a work-in-progress, it is not complete)*
@@ -21,7 +21,7 @@ Has a single output. Outputs can be chained to more `uib-element` nodes. At the 
 > 
 > This is NOT meant as a *Dashboard* replacement. It is mostly meant for people who need a quick and simple method of dynamically creating UI elements's within a pre-defined HTML design. The element content is rebuilt every time you send data so this is certainly not the most efficient method of working with data-driven UI's. However, it will often be good-enough for relatively simple requirements.
 
-Element types included in this release:
+The element types currently included are:
 
 * [**Simple Table**](elements/tables.md) - Generates a simple HTML table from an input array of objects where the first element of the data array will define the columns. Future enhancements will allow more control over the columns. Future types will be added to allow add/update/remove of individual rows and/or cells.
 * [**Simple Form**](elements/forms.md) - Generate a simple but accessible input form from an array of objects where each object in the array defines the attributes and label.
@@ -29,6 +29,7 @@ Element types included in this release:
 * [**Description List (dl)**](elements/lists.md) - Generates a description list from a simple input array of objects.
 * [**Text box**](elements/other.md) - A simple "card" like article element.
 * [**HTML**](elements/html.md) - Pass-though HTML (e.g. from a Node-RED Template node).
+* [**Markdown**](elements/markdown.md) - Pass-though Markdown (e.g. from a Node-RED Template node).
 * [**Page Title**](elements/other.md) - Change the page HTML title, description and the first H1 tag on the page to all be the same input text. If no H1 tag exists on the page, it will be added. (Note that only 1 H1 tag should ever be on a page)
 
 Where an *ID* is specified in the config, each of the above will attempt to *replace* an existing instance when called again. If *no ID* is specified, they will *always add* a new element.
