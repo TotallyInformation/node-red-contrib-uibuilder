@@ -1,24 +1,17 @@
 ---
 title: Documentation for the modern, modular front-end client `uibuilder.esm.js` and `uibuilder.iife.js`
 description: |
-  This is the new uibuilder front-end library initially introduced in v5.1. It provides socket.io message connectivity to and from Node-RED, simplified message handling and a simple event handler for monitoring for new messages along with some helper utility functions. It also allows data-/configuration-driven interfaces to be created from JSON or Node-RED messages. IIFE (UMD) and ESM builds of the client are provided.
+  This is the uibuilder front-end library. It provides socket.io message connectivity to and from Node-RED, simplified message handling and a simple event handler for monitoring for new messages along with some helper utility functions. It also allows data-/configuration-driven interfaces to be created from JSON or Node-RED messages. IIFE (UMD) and ESM builds of the client are provided.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-04-15 17:59:18
-updated: 2024-04-06 13:31:33
+updated: 2024-04-29 17:30:02
 ---
 
-This is the next-generation front-end client for uibuilder. It has some nice new features but at the expense of only working with modern(ish) browsers since early 2019.
+This is the front-end (browser) client for uibuilder. The client library provides the glue that enables Node-RED to talk to your browser dynamically. For many people, its built-in features are enough that you will need to write only a few lines of code to be able to communicate from/to Node-RED. The various examples and templates available will illustrate this. So while this documentation page is very long and, in places, quite technical, please don't be put off, you may never need to dip into those features. However, if you do, then the library tries to make things as simple as possible.
 
-> [!NOTE]
-> Note that this section refers only to the "new" front-end library for uibuilder, this is now the preferred library. If you are using the original library, please refer to [this page](front-end-library.md). The original library is now functionally stable (no further updates after uibuilder v5) and will eventually be deprecated.
+So for all of its initial simplicity, the library does enable a wealth of features both simple and advanced. Whether watching for and processing messages from Node-RED, sending messages back, watching for key variable changes, advanced console logging, building and changing UI visuals from Node-RED messages that use JSON configuration rather than complex HTML, working with _any_ front-end framework, supporting custom security configurations and more.
 
 > [!TIP]
 > It is recommended NOT to compile/build the uibuilder client library into your own front-end build code. There are few, if any advantages on modern browsers. However, if you really want to do that, you may prefer to use the source-code version of the library which will be found at `~/.node-red/node_modules/node-red-contrib-uibuilder/src/front-end-module/uibuilder.module.js`.
-
-
-The client (front-end) library provides the glue that enables Node-RED to talk to your browser dynamically. For many people, its built-in features are enough that you will need to write only a few lines of code to be able to communicate from/to Node-RED. The various examples and templates available will illustrate this. So while this documentation page is very long and, in places, quite technical, please don't be put off, you may never need to dip into those features. However, if you do, then the library tries to make things as simple as possible.
-
-So for all of its initial simplicity, the library does enable a wealth of features both simple and advanced. Whether watching for and processing messages from Node-RED, sending messages back, watching for key variable changes, advanced console logging, building and changing UI visuals from Node-RED messages that use JSON configuration rather than complex HTML, working with _any_ front-end framework, supporting custom security configurations and more.
 
 ## Further Information
 
@@ -31,10 +24,11 @@ So for all of its initial simplicity, the library does enable a wealth of featur
   - [Variables](client-docs/variables.md)
   - [Custom Events](client-docs/custom-events.md)
   - [Troubleshooting](client-docs/troubleshooting.md)
+  - [Using Markdown](client-docs/markdown.md)
 
 ## Optional helper libraries
 
-While the uibuilder client library works with no other libraries needed, it can optionally make use of the following additional libraries if desired.
+While the uibuilder client library is node dependent on any other libraries, it can optionally make use of the following additional libraries if desired.
 
 ### 1. DOMPurify - Sanitises HTML to ensure safety and security
 
@@ -66,6 +60,8 @@ To check whether DOMPurify is active, you can use this function in your front-en
 
 The [Markdown-IT](https://markdown-it.github.io/) library enables [Markdown](https://en.wikipedia.org/wiki/Markdown), a lightweight, text-based markup, to be translated into rich HTML. The uibuilder client supports the use of the Markdown-IT library for that purpose. Once loaded, the uibuilder client will recognise its presence and automatically use it whenever Markdown is used in the `markdownSlot` property of `ui` processing or when using the [`replaceSlotMarkdown()`](client-docs/functions#replaceslotmarkdown) function.
 
+As of v7, uibuilder clients also support the use of Markdown-IT plugins.
+
 This is documented more fully in the separate [Using Markdown page](client-docs/markdown).
 
 ### 3. VueJS - Front-end framework
@@ -74,11 +70,15 @@ uibuilder has long had an affinity with VueJS and for a long time, it was the pr
 
 However, as it is still commonly used in conjunction with uibuilder and can be useful for more complex apps, the client library does have a check to see if it is loaded. This code in your custom front-end JavaScript will detect if Vue is loaded: `if ( uibuilder.get('isVue') ) ....`. To discover that from Node-RED, send a msg containing: `{"_uib": {"command":"get","prop":"isVue"}`.
 
-Because the VueJS project forced an early default version change from v2 to v3 while many of its extension libraries had not had a chance to migrate, a lot of people can get caught out accidentally loading the wrong version of Vue. Because of this, if the uibuilder client library discovers that Vue is loaded, it will note the version. To get the version from your front-end code: `uibuilder.get('vueVersion')`. Or from Node-RED, send a msg containing: `{"_uib": {"command":"get","prop":"vueVersion"}`
+Because the VueJS project forced an early default version change from v2 to v3 while many of its extension libraries had not had a chance to migrate, a lot of people can get caught out accidentally loading the wrong version of Vue. Because of this, if the uibuilder client library discovers that Vue is loaded, it will note the version. To get the version from your front-end code: `uibuilder.get('vueVersion')`. Or from Node-RED, send a msg containing: `{"_uib": {"command":"get","prop":"vueVersion"}`.
+
+> [!NOTE]
+> 
+> Typically, the no-/low-code capabilities of UIBUILDER will not interact easily with VueJS (or any of the other large frameworks) because those frameworks assume that the whole UI is loaded up-front rather than delivered later. However, that does not prevent you making use of these facilities, you will just need to think about the potential separation between approaches. Of course, you can use the communications and server capabilities of UIBUILDER in your VueJS code.
 
 ## Library size
 
-If the library seems a little large, it is because it comes with the correct version of the Socket.IO client built-in.
+If the library seems a little large, it is because it comes with the following libraries built in: The Socket.IO client. The low-/no-code ui.js library. The `<uib=var>` web component.
 
 ## What was removed compared to the older, non-module version?
 
