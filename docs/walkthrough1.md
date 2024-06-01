@@ -3,27 +3,11 @@ title: A first-timers walkthrough of using UIBUILDER
 description: |
   If you haven't used UIBUILDER before, it can be a little confusing as it brings together concepts from several different worlds. This walkthrough takes you from nothing to a basic data-driven web page.
 created: 2021-09-24 11:02:56
-updated: 2024-03-17 20:12:46
+updated: 2024-05-04 15:31:51
 ---
 
-Like UIBUILDER itself, this walkthrough may look complex. But you should bear in mind that if you follow the 7 steps in the [How to get started](#how-to-get-started-4-steps-to-a-data-driven-web-app) section, that is basically it.
-The rest starts to unpack some of the things that you can then do with UIBUILDER and how to do them. Please consider them as additional walkthroughs.
-
-## What is UIBUILDER
-
-Node-RED's Dashboard and UIBUILDER are both different approaches to the same use-case. How to present data to users in a web browser tab and get information back from them into Node-RED. Remembering that the users browser and the Node-RED server are completely different environments and may be on different devices.
-
-We refer to this as a "data-driven web application".
-
-UIBUILDER was created in order to provide Node-RED users with a flexible alternative to the Dashboard.
-
-Dashboard is extremely simple to start using and great for doing relatively straight-forward UI's very quickly. However, if you want to do more complex things, you quickly hit the brick-wall that is common with many frameworks. Suddenly things go from being simple to very complex.
-
-UIBUILDER takes the opposite approach to Dashboard. Its main purpose is to be a _foundation_ on which you can build whatever you like, however you like.
-
-It does the complex background tasks for you and then gets out of the way.
-
-UIBUILDER is a *bridge* between the Node-RED server and any connected clients (web browser tabs). Each browser tab pointing at the same uibuilder instance is a *client* and you can have many clients running from 1 browser, 1 device/many browsers or different devices - however you like.
+Like UIBUILDER itself, this walkthrough may look complex. But you should bear in mind that if you follow the few steps in the [next](#how-to-get-started-4-steps-to-a-data-driven-web-app) section, that is basically it.
+Everything else on this page starts to unpack some of the things that you can then do with UIBUILDER and how to do them. Please consider them as additional walkthroughs.
 
 ## How to get started - 4 steps to a data-driven web app
 
