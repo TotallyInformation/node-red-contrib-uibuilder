@@ -18,36 +18,39 @@
 <script src="./resources/node-red-contrib-uibuilder/ti-common.js"></script>
 <script src="./resources/node-red-contrib-uibuilder/uibuilder.js"></script>
 
-<script type="text/html" class="ti-edit-panel" data-template-name="uibuilder">
+<script type="text/html" data-template-name="uibuilder">
 
-<div >
+<div id="ti-edit-panel">
 
-    <div class="form-row tabs-row"><ul id="tabs"></ul></div> 
-    <div id="tabs-content" x-style="border-bottom: 1px solid silver; padding-bottom: 1em; margin-bottom: 1em;">
-        <div id="tab-core" class="ti-edit-panel">
+    <div class="tabs-row"><ul id="tabs"></ul></div> 
+    <div id="tabs-content">
+        <div id="tab-core">
             <div id="url-input" aria-label="Home 'page' id. Defines the URL used" class="form-row" title="Make sure this gives a unique URL. Also used as a folder name for resources.">
                 <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
                 <input type="text" id="node-input-url" title="Cannot be 'templates. Cannot contain: space _ / \\ ..'" placeholder="Required. <20 chars. Unique">
             </div>
 
-            <div id="info" aria-label="Information and utility links" class="form-row" style="display: flex; justify-content: space-between; width:450px">
+            <div id="info" aria-label="Information and utility links" class="form-row uib-info-bar">
 
-                <a id="uibuilderurl" title="Open the UIBUILDER web page" href="uibindex" target="_blank" class="red-ui-button editor-button">
+                <a id="uibuilderurl" title="Open the default web page for this uibuilder instance" href="uibindex" target="_blank" class="red-ui-button editor-button">
                     <i class="fa fa-globe" aria-hidden="true"></i> Open
                 </a>
-                <a href="./uibuilder/uibindex" target="_blank" class="red-ui-button editor-button" title="Shows available libraries, configuration and other detailed UIBUILDER information">
-                    <i class="fa fa-info-circle" aria-hidden="true"></i> Full details
-                </a>
-                <a id="uibinstanceconf" href="./uibuilder/instance/_url_?cmd=showinstancesettings" target="_blank" class="red-ui-button editor-button" title="Shows detailed configuration for this instance of UIBUILDER">
+                <a id="uibinstanceconf" href="./uibuilder/instance/_url_?cmd=showinstancesettings" target="_blank" class="red-ui-button editor-button" title="Show detailed configuration for this instance of UIBUILDER">
                     <i class="fa fa-info" aria-hidden="true"></i> Node details
                 </a>
-                <a href="./uibuilder/docs" target="_blank" class="red-ui-button editor-button" title="Shows the UIBUILDER documentation as a new page">
-                    <i class="fa fa-book" aria-hidden="true"></i> Docs
+                <a href="./uibuilder/uibindex" target="_blank" class="red-ui-button editor-button" title="Show available libraries, configuration and other detailed UIBUILDER information">
+                    <i class="fa fa-info-circle" aria-hidden="true"></i> Full details
+                </a>
+                <a id="uib-apps-list" href="#" target="_blank" class="red-ui-button editor-button" title="Show the UIBUILDER Apps list page. All uibuilder instances.">
+                    <i class="fa fa-list" aria-hidden="true"></i> Apps
                 </a>
         
             </div>
 
-            <div id="info-webserver" class="form-row" style="width:450px"></div>
+            <div aria-label="UIBUILDER server info" class="form-tips node-help">
+                <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> is using <span id="uib-svr-type">#</span> webserver at 
+                <a id="uib-svr" href="#" target="_blank" title="Open in new window">#</a><div id="uib-svr-fldr"></div>
+            </div>
 
             <div aria-label="Node Name" class="form-row" title="Node Name (descriptive only)">
                 <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
@@ -59,38 +62,39 @@
                 <input type="text" id="node-input-topic">
             </div>
 
-            <h4>Template Settings</h4>
+            <fieldset>
+                <legend>Template Settings</legend>
 
-            <div aria-label="Template selector" class="form-row">
-                <label for="node-input-templateFolder" style="width:100px;"><i class="fa fa-window-restore"></i> Template</label>
-                <select id="node-input-templateFolder" style="width:70%;"></select>
-            </div>
-
-            <div aria-label="Hidden unless external template is selected above" id="et-input" class="form-row" title="Input a Degit compatible repository name. e.g. totallyinformation&sol;uib-template-test" style="display:none">
-                <label for="node-input-extTemplate"><i class="fa fa-globe"></i> External</label>
-                <input type="text" id="node-input-extTemplate" placeholder="totallyinformation/uib-template-test">
-            </div>
-
-            <div aria-label="Button to load new template" class="form-row">
-                <label for="btn-load-template" style="width:100px;"></label>
-                <button class="btn" id="btn-load-template" style="margin-top: 0.3em;" title="Load selected template, overwriting existing files">
-                    Load &amp; Overwrite Files
-                </button>
-            </div>
-            
-            <div aria-label="How to use the template selector" class="form-row" style="max-width: 450px">
-                <p>
-                    By default, <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> creates an instance root folder with the "Blank" template.
-                    If you wish to use a different template, select and load it here.
-                </p>
-                <p>
-                    Selecting a Template from the drop-down <b>does not</b> load the template
-                </p>
-                <p>
-                    Loading a Template <b><u>will</u> overwrite</b> existing same-named files.
-                </p>
-            </div>
-
+                <div aria-label="Template selector" class="form-row">
+                    <label for="node-input-templateFolder"><i class="fa fa-window-restore"></i> Template</label>
+                    <select id="node-input-templateFolder"></select>
+                </div>
+    
+                <div aria-label="Hidden unless external template is selected above" id="et-input" class="form-row" title="Input a Degit compatible repository name. e.g. totallyinformation&sol;uib-template-test" style="display:none">
+                    <label for="node-input-extTemplate"><i class="fa fa-globe"></i> External</label>
+                    <input type="text" id="node-input-extTemplate" placeholder="totallyinformation/uib-template-test">
+                </div>
+    
+                <div aria-label="Button to load new template" class="form-row">
+                    <label for="btn-load-template"></label>
+                    <button class="btn" id="btn-load-template" title="Load selected template, overwriting existing files">
+                        Load &amp; Overwrite Files
+                    </button>
+                </div>
+                
+                <div aria-label="How to use the template selector" style="max-width: var(--min-editor-panel-width);">
+                    <p>
+                        By default, <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> uses the default minimal template.
+                        If you wish to use a different template, select and load it here.
+                    </p>
+                    <p>
+                        Selecting a Template from the drop-down <b>does not</b> load the template.
+                    </p>
+                    <p>
+                        Loading a Template <b><u>will</u> overwrite</b> existing same-named files.
+                    </p>
+                </div>
+            </fieldset>
         </div>
 
         <div id="tab-files">
@@ -164,9 +168,9 @@
                 </div>
             </div>
 
-            <div aria-label="Edit box editor-tray-content" id="edit-outer" class="form-row node-text-editor-row" style="position:relative">
-                <div style="height: 350px; min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
-                <div style="height: 350px; min-height:150px;display:hidden" id="node-input-template-editor-no-file" >
+            <div aria-label="Edit box editor-tray-content" id="edit-outer" class="node-text-editor-row" style="position:relative">
+                <div style="height: calc(100vh - 28rem); min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
+                <div style="height: calc(100vh - 28rem); min-height:150px; display:hidden;" id="node-input-template-editor-no-file" >
                     No file available, please select a different file or folder.
                 </div>
             </div>
@@ -186,18 +190,20 @@
                         <option value="text">Text</option>
                         <option value="html">HTML</option>
                         <option value="javascript">Javascript</option>
-                        <option value="json">JSON</option>
                         <option value="css">CSS</option>
+                        <option value="json">JSON</option>
                         <option value="scss">SCSS</option>
                         <option value="handlebars">mustache</option>
                         <option value="markdown">Markdown</option>
                         <option value="yaml">YAML</option>
+                        <option value="csv">CSV</option>
+                        <option value="python">Python</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        <div id="tab-libraries" class="ti-edit-panel">
+        <div id="tab-libraries">
             <p>
                 Install, remove or update npm packages that provide front-end libraries such as
                 VueJS, jQuery, MoonJS, etc.<br>
@@ -210,7 +216,7 @@
             </div>
         </div>
 
-        <div id="tab-advanced" class="ti-edit-panel">
+        <div id="tab-advanced">
             <div aria-label="Information" class="form-row form-tips node-help">
                 <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> version: <b id="uib_version">--</b>
             </div>
@@ -251,12 +257,6 @@
             <div aria-label="More description text for this instance" class="form-row">
                 <label for="node-input-title" style="display:block;width:100%;">Long description for this UIBUILDER instance:</label>
                 <textarea id="node-input-descr" style="width:100%;"></textarea>
-            </div>
-
-            <div aria-label="Provide a searchable file index view?" class="form-row" title="If turned on, an index page showing all available files is created. This can be a security vulnerability and not recommended in Production.">
-                <input type="checkbox" id="node-input-showfolder" style="display: inline-block; width: auto; vertical-align: top;">
-                <label for="node-input-showfolder" style="width: 90%;">Show web view of source files (deploy before you can use it)</label>
-                <span id="show-src-folder-idx-url">_</span>.
             </div>
 
             <div aria-label="Forward flag" class="form-row" title="forward inbound msg's direct to the output">
