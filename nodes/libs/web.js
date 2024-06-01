@@ -167,10 +167,27 @@ class UibWeb {
          * @see https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/108
          */
         const techDocsPath = join(__dirname, '..', '..', 'docs')
+
         this.adminRouter.use('/docs', express.static( techDocsPath, this.uib.staticOpts ) )
-        this.routers.admin.push( { name: 'Documentation', path: `${this.RED.settings.httpAdminRoot}uibuilder/docs`, desc: 'Documentation website powered by Docsify', type: 'Static', folder: techDocsPath } )
+        this.routers.admin.push( {
+            name: 'Documentation',
+            path: `${this.RED.settings.httpAdminRoot}uibuilder/docs`,
+            desc: 'Documentation website powered by Docsify',
+            type: 'Static',
+            folder: techDocsPath
+        } )
         this.adminRouter.use('/techdocs', express.static( techDocsPath, this.uib.staticOpts ) )
         this.routers.admin.push( { name: 'Tech Docs', path: `${this.RED.settings.httpAdminRoot}uibuilder/techdocs`, desc: 'Documentation website powered by Docsify', type: 'Static', folder: techDocsPath } )
+
+        const docResources = join(techDocsPath, '..', 'front-end')
+        this.adminRouter.use('/docs/resources', express.static( docResources, this.uib.staticOpts ) )
+        this.routers.admin.push( {
+            name: 'Documentation Resources',
+            path: `${this.RED.settings.httpAdminRoot}uibuilder/front-end`,
+            desc: 'UIBUILDER front-end resources to support documentation display',
+            type: 'Static',
+            folder: docResources
+        } )
 
         // TODO: Move v2 API's to V3
         this.adminRouterV2 = require('./admin-api-v2')(this.uib, this.log)
