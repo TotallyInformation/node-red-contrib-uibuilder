@@ -1,16 +1,48 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-04-03 17:16:00
+updated: 2024-06-04 20:42:08
 ---
 
 # Changelog
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
-## To Do
+## **NEW FEATURE** page metadata
+
+Allows FE to get data about the current page. Mostly the file created and updated timestamps. But consider extending to allow other metadata to be defined - maybe via the instance package.json?
+
+### `nodes/libs/fs.js`
+
+* [x] Fn, `getFileMeta`. Returns at least created & updated timestamps and file size.
+
+### `nodes/libs/socket.js`
+
+* [x] Amend `listenFromClientCtrl`, listen for a control msg `get page meta`, calls `fs.getFileMeta`, sends the output to the FE using the same control msg. Does not output to uibuilder node port #2.
+
+### FE library
+
+* [x] Fn `getPageMeta` to call - sending a uibuilder control msg `get page meta`
+* [x] Fn to listen for a `get page meta` control msg and updating the uibuilder `pageMeta` managed variable
+* [ ] Consider adding a new web component, `<uib-meta type="created">` to display. `created`, `updated`, `crup` (both dates sensibly formatted)
+
+## **NEW FEATURE** Create package.json template for Node-RED projects
+
+[Reference](https://discourse.nodered.org/t/uibuilder-install-default-packages-when-creating-a-node-red-projects/88496/6?u=totallyinformation)
+
+An optional template package.json in `<uibRoot>/.config/projectPackage.json` where the `dependencies` are pre-requisite modules for new Node-RED projects.
+
+Initial thinking is that there will be a new but optional file in the <uibRoot>/.config/ folder, called something like projectPackage.json. It would be, I think a sub-set of a standard package.json A full package.json on 2nd thoughts so that it would be easy to copy/paste your current <uibRoot>/package.json. That will let you include a default version, description, etc if you wish along-side the dependencies.
+
+I will attempt to also trap a new project create to run the install if I can. Otherwise, it will display a notification for the user to run that manually. Not certain whether Node-RED will have to be restarted, I will try to avoid that but it might not be possible. Will have to test.
+
+## In progress
 
 * [ ] [started] Change all calls to `$.get` into `$.ajax` and add beforeStart to add optional bearer token header
+
+## To Do
+
+
 * [ ] Add Docsify external libraries to `/docs/.config` to allow true offline use of docs. Add new gulp process to update them, possibly pack them all.
 * [ ] Add instance descriptions to the index pages
 * Update examples:
@@ -26,8 +58,8 @@ Please see the documentation for archived changelogs - a new archive is produced
   * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
   * [ ] Document a dashboard-like grid layout.
   * [ ] Document how to use `<instanceRoot>/routes/` properly. [Ref](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/changelog?id=new-features)
+  * [ ] Document new `round` and `getPageMeta` functions in FE library
 * [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
-* [ ] Remove execa from gulpfile.js & remove from dev deps
 * [ ] Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
 * [ ] New Node Idea: `uib-meta` - links to a uibuilder node and returns the instance metadata including URL's and folder locations and other settings. (e.g. use with [node-red-cleanup-filesystem](https://discourse.nodered.org/t/announce-node-red-cleanup-filesystem-request-for-testing/88135))
 * [ ] Move the loading of the Editor common CSS/JS to a plugin so they are only loaded once. Remove explicit links from node html files.
@@ -85,7 +117,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### `<uib-var>` custom HTML component
 
-* [ ] Amend to use same processors as the uib-attr process above
+* [ ] Amend to use same processors as the uib-attr
 
 ### `uib-cache` node
 
@@ -123,17 +155,11 @@ Please see the documentation for archived changelogs - a new archive is produced
 ### `uibuilder` node
 
 * [ ] ?? Filter `clientId` and `pageName` using socket.io rooms?
-* [ ] On uibuilder Libraries tab:
-  * [ ] Process for updating libraries updates EVERYTHING (runs `npm install`) - need to update docs?
-  * [ ] Major version updates are not listed - because of package.json version spec - need to update docs?
+* [ ] On uibuilder Libraries tab: Major version updates are not listed - because of package.json version spec - need to update docs?
 * [ ] uibuilder.packages after an update does not contain the `outdated` prop for each package because the server only does a quick update and so does not call `npmOutdated` (from packge-mgt.js) on each package because it is async and quite slow. This may mean that update flags are not updated until the Editor is next reloaded which isn't ideal. Probably need to fix at some point.
 
 
 ## Issues
-
-* [ ] uibuilder library update
-  * [x] Runs `npm install`. Run `npm update` with package name
-  * [x] Running 1 update resets displays for all updatable packages
 
 * [ ] uib-element editor panel
   * [ ] Heading 2nd drop-down needs to be narrower to account for 1st drop-down
@@ -183,11 +209,11 @@ Note that potentially breaking changes are only introduced in major version rele
 
 Most of these changes will *not* impact most people but you should check through them just in case.
 
-* If using uibuilder's custom ExpressJS server feature, **URL's are now case sensitive**
+* If using UIBUILDER's custom ExpressJS server feature (instead of the Node-RED built-in one), **URL's are now case sensitive**
   
   This brings them into line not only with W3C guidance but also with the Socket.IO library. It can be turned off in `settings.js` using property `uibuilder.serverOptions['case sensitive routing']` set to false.
 
-  Note that when using Node-RED's internal ExpressJS web engine, URLs are still case-insensitive because that's how Node-RED has been configured.
+  Note that when using Node-RED's internal ExpressJS web engine (the default), URLs are still case-insensitive because that's how core Node-RED has been configured.
 
 * **Minimum node.js now v18** - in line with the release of Node-RED v4, the minimum node.js version has moved from v14 to v18.
 
@@ -233,9 +259,15 @@ Most of these changes will *not* impact most people but you should check through
 
 ### 📌 Highlights
 
+* Some tweaks to the documentation should make it a little easier to get started with.
+
 * You can now add a `uib-topic="mytopic"` attribute to _ANY_ HTML element. Doing so makes that element responsive to messages from Node-RED.
   
   For a message with the correct `msg.topic`. The `msg.payload` will replace the inner HTML of the element. `msg.attributes` will update corresponding element attributes. Making this now one of the easiest ways to define dynamic updates in your UI.
+
+* The new node `uib-file-list` will produce a list of files from a uibuilder instance. It automatically adjusts to the currently served sub-folder and allows filtering. Use this for producing indexes and menus.
+
+* The new built in `<uib-meta>` web component can be used in your HTML to display facts about the current page such as its file size, when it was created and when it was last updated.
 
 * Lots of extensions and improvements to the `uibrouter` front-end routing library in this release:
 
@@ -244,6 +276,8 @@ Most of these changes will *not* impact most people but you should check through
   * You can now define route content as Markdown instead of HTML. This makes Notion/Obsidian-like applications feasible using UIBUILDER.
   
   * You can now use Markdown-IT plugins to enhance your Markdown content.
+  
+  * You can start with an empty routing list to allow dynamic creation of routes later on.
 
 * Markdown improvements.
   
@@ -255,8 +289,6 @@ Most of these changes will *not* impact most people but you should check through
 
 * Wherever you can use no-/low-code features that accept HTML, you can now include `<script>` tags that will be executed on load.
 
-* A new node is available. `uib-file-list` will produce a list of files from a uibuilder instance. It automatically adjusts to the currently served sub-folder and allows filtering. Use this for producing indexes and menus.
-
 * Handling of forms and inputs continue to improve.
   
   * Programmatic changes to input values or checked properties now trigger both the `input` and `changed` events - something that HTML normally doesn't do but can be important for data-driven web apps. For example, if using an `<output>` tag to show a combined or calculated input, changes via Node-RED will still update the values.
@@ -264,7 +296,13 @@ Most of these changes will *not* impact most people but you should check through
 
 * Security of the UIBUILDER repository on GitHub has been improved.
 
-* On the `uibuilder` node's "Core" tab, the info buttons bar has changed slightly. The "Docs" button has gone (it is still on the top of panel bar anyway) and been replaced by a new "Apps" button which shows a page *listing ALL uibuilder node instances along with their descriptions where provided*.
+* On the `uibuilder` node's "Core" tab, the info buttons bar has changed slightly.
+  
+  The "Docs" button has gone (it is still on the top of panel bar anyway) and been replaced by a new "Apps" button which shows a page *listing ALL uibuilder node instances along with their descriptions where provided*.
+
+  Most of the UIBUILDER nodes have be given a bit of a refresh of their Editor configuration panels. This work is ongoing but should give a more consistent look and feel and make the panels rather more responsive. The layouts are starting to use more modern CSS features. The work isn't complete yet so there are still a few inconsistencies - for example, when you make the panel wider - but we are getting there.
+
+* For front-end developers, there are many new functions added to the `uibuilder` front-end library. Some are standard utility functions such as fast but accurate number rounding or conversion of primitives into objects. Others simplify the use of the DOM.
 
 ### General Changes
 
@@ -335,17 +373,16 @@ The `URL Output?` setting will change the output from a folder/file list to a re
     >
     > Since they are attached to the HTML `Element` class, they cannot be used in `uib-html`.
 
-  * `hasUibRouter()` Returns true if a uibrouter instance is loaded, otherwise returns false. Note that, because the router will be loaded in a page script, it is not available until AFTER the uibuilder library has loaded and socket.io initialised.
-
-  * `returnElementId(el)` Returns the element's existing ID. Or, if not present, attempts to create a page unique id from the name attribute or the attribute type. The last 2 will use a page-unique number to enforce uniqueness.
-  * `getElementClasses(el)` Checks for CSS Classes and return as array if found or undefined if not.
+  * `arrayIntersect(a1, a2)` Returns a new array (which could be empty) of the intersection of the 2 input arrays.
   * `getElementAttributes(el)` Returns an object containing attribute-name/value keypairs (or an empty object).
+  * `getElementClasses(el)` Checks for CSS Classes and return as array if found or undefined if not.
   * `getElementCustomProps(el)` Returns an object containing custom element properties/values (or an empty object). Custom element properties are those set using code that are not standard properties.
   * `getFormElementDetails(el)` Returns an object containing the key properties of a form element such as `value` and `checked`.
-
-  * `arrayIntersect(a1, a2)` Returns a new array (which could be empty) of the intersection of the 2 input arrays.
-  * `makeMeAnObject(thing, property)` in your own code. It returns a valid JavaScript object if given a null or string as an input. `property` defaults to "payload" so that `uibuilder.makeMeAnObject("mystring")` will output `{payload: "mystring"}`.
-
+  * `getPageMeta()` Asks the server for the created/update timestamps and size (in bytes) of the current page. The result from the server is set into the managed `pageMeta` variable. Also used by the new `<uib-meta>` web component.
+  * `hasUibRouter()` Returns true if a uibrouter instance is loaded, otherwise returns false. Note that, because the router will be loaded in a page script, it is not available until AFTER the uibuilder library has loaded and socket.io initialised.
+  * `makeMeAnObject(thing, property)` returns a valid JavaScript object if given a null or string as an input. `property` defaults to "payload" so that `uibuilder.makeMeAnObject("mystring")` will output `{payload: "mystring"}`.
+  * `returnElementId(el)` Returns the element's existing ID. Or, if not present, attempts to create a page unique id from the name attribute or the attribute type. The last 2 will use a page-unique number to enforce uniqueness.
+  * `round(num, dp)` rounds a number to a set number of decimal places using a fast but accurate "commercial" format.
   * `urlJoin()` returns a string that joins all of the arguments with single `/` characters. The result will start with a leading `/` and end without one. If the arguments contain leading/trailing slashes, these are removed.
 
 * Improved handling of stand-alone input changes in the `eventSend` function. Previously, these may not have sent their new values on change events.
