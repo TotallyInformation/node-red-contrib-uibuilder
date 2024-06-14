@@ -1,9 +1,9 @@
 ---
-title: A first-timers walkthrough of using UIBUILDER
+title: A first-timers walkthrough
 description: |
   If you haven't used UIBUILDER before, it can be a little confusing as it brings together concepts from several different worlds. This walkthrough takes you from nothing to a basic data-driven web page.
 created: 2021-09-24 11:02:56
-updated: 2024-05-04 15:31:51
+updated: 2024-06-14 17:33:37
 ---
 
 Like UIBUILDER itself, this walkthrough may look complex. But you should bear in mind that if you follow the few steps in the [next](#how-to-get-started-4-steps-to-a-data-driven-web-app) section, that is basically it.
@@ -25,9 +25,9 @@ It may look complex, but really it isn't. 😊
 
 4. Click on the Node-RED "Deploy" button.
    
-**At this point, you now have a working web app!** However, it doesn't really show anything useful.
+**At this point, you now have a working web app!** However, it doesn't really show anything useful. Re-open the uibuilder node and click on the "Open" button to view the page.
 
-To improve that, re-open the node's settings and change the _Template_ drop-down to "*No framework, IIFE client*". Then click the "Load & Overwrite Files" button.
+To improve this mostly blank page, re-open the node's settings and change the _Template_ drop-down to "*No framework, IIFE client*". Then click the "Load & Overwrite Files" button.
 You will get a warning that you should carefully read and if OK, click on the "OK, overwrite" button. Of course, if you don't want to overwrite things, click on the cancel button (which is the default).
 
 When you now revisit your web page, you will see that there is a bit more to it that will help you understand how to get things done. It has a title, sub-title and a form containing one input field with a button, and one custom button.
@@ -176,7 +176,7 @@ uibuilder.onChange('msg', (msg) => {
 
 To send data back to Node-RED, use one of the [Message Handling functions](client-docs/functions?id=message-handling). Both of these will output a message from the topmost output port of your `uibuilder` node. `uibuilder` node's also have an advanced setting that includes additional details in the output about the client. That can be useful for custom authentication and authorisation flows or splitting flows by source page, etc.
 
-### `uibuilder.send(msg)`
+### `uibuilder.send(msg)` :id=send
 
 Sends a custom message. The message just includes what you send (plus a `msg._uib` object with additional client details if turned on in the node settings).
 
@@ -184,7 +184,7 @@ Sends a custom message. The message just includes what you send (plus a `msg._ui
 uibuilder.send(payload: "Hi there from the client", topic: "from the client")
 ```
 
-### `uibuilder.eventSend(event)`
+### `uibuilder.eventSend(event)` :id=eventSend
 
 <div class="flex-container">
 

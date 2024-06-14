@@ -3,10 +3,10 @@ title: About UIBUILDER for Node-RED
 description: |
   UIBUILDER provides tools for easily creating data-driven web applications using the Node-RED low-code programming platform.
 created: 2024-05-02 11:17:20
-updated: 2024-05-02 19:49:46
+updated: 2024-06-14 15:52:57
 ---
 
-## What is UIBUILDER?
+## What is it?
 
 Node-RED's Dashboard and UIBUILDER are both different approaches to the same use-case. How to present data to users in a web browser tab and get information back from them into Node-RED. Remembering that the users browser and the Node-RED server are completely different environments and may be on different devices.
 
@@ -26,7 +26,7 @@ UIBUILDER is a bridge between the Node-RED server and any connected clients (web
 
 It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces. It utilises standard HTML/CSS and is not a framework. You can use it with a front-end framework if you like, but in many cases you won't need one.
 
-## What are UIBUILDER's main features?
+## What are the main features?
 
 * Easily send data real-time between Node-RED and any connected browser client, and send the other way as well.
 * Easily add any number of web pages and other resources to each uibuilder instance.
@@ -44,7 +44,7 @@ It includes many helper features that can reduce or eliminate the need to write 
 * Option to use uibuilder's [front-end "router"](client-docs/fe-router.md). This enables the creation of Single Page Apps (SPA's) from single or multiple source files. Making complex interfaces much easier to manage.
 * Option to use Markdown for content. Making the creation of web content much simpler and enabling re-use of content from other common sources such as [Obsidian](https://obsidian.md) or [Typora](https://typora.io).
 
-## What does UIBUILDER depend on?
+## What are the dependencies?
 
 ### Node-RED
 

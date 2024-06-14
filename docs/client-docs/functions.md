@@ -3,8 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2024-02-16 13:44:36
-updated: 2024-03-23 12:38:27
+updated: 2024-06-14 16:08:11
 ---
 
 Functions accessible in client-side user code.
@@ -142,7 +141,7 @@ uibuilder.onChange('ping', function(data) {
 > [!NOTE]
 > See [client variables](client-docs/variables) for details of what uibuilder variables are available.
 
-### `copyToClipboard(varToCopy)` - Copy the specified UIBUILDER variable to the browser clipboard :id=copyToClipboard
+### `copyToClipboard(varToCopy)` - Copy the specified uibuilder variable to the browser clipboard :id=copyToClipboard
 
 Can only be used as an event handler because browsers do not allow unrestricted JavaScript access to the browser clipboard.
 
@@ -152,7 +151,7 @@ Can only be used as an event handler because browsers do not allow unrestricted 
 <button onclick="copyToClipboard('version')">Copy UIBUILDER client version string to clipboard</button>
 ```
 
-### `get(prop)` - Get a UIBUILDER property :id=get
+### `get(prop)` - Get a uibuilder property :id=get
 
 This is the preferred method to get an exposed UIBUILDER variable or property. Do not try to access variables and properties directly unless explicitly shared in this documentation. This function can also be called from Node-RED via `msg._uib.command` - `get` with `msg._uib.prop` set to the variable name to get.
 
@@ -162,13 +161,13 @@ This is the preferred method to get an exposed UIBUILDER variable or property. D
 console.log( uibuilder.get('version') )
 ```
 
-### `getManagedVarList()` - Get a list of all UIBUILDER managed variables :id=getManagedVarList
+### `getManagedVarList()` - Get a list of all uibuilder managed variables :id=getManagedVarList
 
 A UIBUILDER managed variable is one that has been created with `uibuilder.set()` (or changed from Node-RED with the equivalent command msg). As such, it can be watched for changes with `uibuilder.onChange()`.
 
 This function can also be called from Node-RED via `msg._uib.command` - `getManagedVarList`. The returned `msg.payload` contains the list. Optionally, you can also add `msg._uib.prop` set to `full` which will return an object where each key/value is the variable name. This can be usefull for some types of processing.
 
-### `getWatchedVars()` - Get a list of all UIBUILDER watched variables :id=getWatchedVars
+### `getWatchedVars()` - Get a list of all uibuilder watched variables :id=getWatchedVars
 
 Shows all variables that are being watched using `uibuilder.onChange()`.
 
@@ -187,14 +186,14 @@ All `id`s have a pre-defined UIBUILDER prefix added to the key name to help ensu
 
 Because the browser storage API only allows strings as values, the data has to be serialised. This function attempts to unserialise (re-hydrate). It should be noted that sometimes, this process results in values that may differ from the original. For example, `uibuilder.setStore('mydate',new Date()); console.log( uibuilder.getStore('mydate') )` will return the saved date as an ISO8602 date string, not a JavaScript Date object.
 
-### `removeStore(id)` - Attempt to remove a UIBUILDER key from browser localStorage :id=removeStore
+### `removeStore(id)` - Attempt to remove a uibuilder key from browser localStorage :id=removeStore
 
 Does not return anything. Does not generate an error if the key does not exist.
 
 > [!WARNING]
 > `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is closed.
 
-### `set(prop, val, store, autoload)` - Set a UIBUILDER property and dispatch a change event :id=set
+### `set(prop, val, store, autoload)` - Set a uibuilder property and dispatch a change event :id=set
 
 This is the preferred method to set an exposed UIBUILDER variable or property. Do not try to set variables and properties directly.
 
@@ -511,7 +510,7 @@ This function can also be called from Node-RED via `msg._uib.command` - `showMsg
 
 Adds/removes `<div id="uib_last_msg">` to/from the page.
 
-### `showStatus(boolean, parent=body)` - Show/hide a card shows the current status of the UIBUILDER client library :id=showStatus
+### `showStatus(boolean, parent=body)` - Show/hide a card shows the current status of the uibuilder client library :id=showStatus
 
 Simply add `uibuilder.showStatus(true)` early in your index.js custom code and a box will be added to the end of your page that will show all of the important settings in the UIBUILDER client. Use `uibuilder.showStatus()` to toggle the display.
 
@@ -601,7 +600,7 @@ You can ensure that the page display looks exactly like the last update upon pag
 > to control whether a specific page, client or browser tab will process an inbound message.
 > Use this where you have multiple pages or clients and need to target a message to a specific one.
 
-### `onChange(prop, callbackFn)` - Register on-change event listeners for UIBUILDER tracked properties :id=onChange
+### `onChange(prop, callbackFn)` - Register on-change event listeners for uibuilder tracked properties :id=onChange
 
 Returns a reference to the callback so that it can be cancelled if needed.
 

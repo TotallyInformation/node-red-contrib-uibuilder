@@ -3,8 +3,7 @@ title: CSS Selectors
 description: |
   How to make use of them with uibuilder and some typical examples.
 created: 2023-04-02 17:34:58
-lastUpdated: 2023-04-02 18:47:50
-updated: 2023-12-30 17:01:41
+updated: 2024-06-14 20:36:25
 ---
 
 [CSS Selectors](https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Selectors) are now the main generic way of selecting one or more specific elements on a web page.
@@ -128,3 +127,6 @@ If you need to account for more than a single `tbody` (which is allowed), use: `
 It is the 2nd child because the table typically has a first child of `thead` where the headings live.
 
 Because tables can also have spanning rows and columns, specific selections can get quite complex. However the dev tools will help identify the correct selector.
+
+> [!TIP]
+> Plain HTML tables can easily be enhanced to include sorting, filtering, formatting, etc. by the use of a 3rd-party library such as the [Datatables](https://datatables.net) library. Other libraries that can do this include: [Grid.js](https://gridjs.io/docs/examples/from) and [action-table](https://github.com/colinaut/action-table).

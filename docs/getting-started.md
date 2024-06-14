@@ -3,7 +3,7 @@ title: Getting started with UIBUILDER for Node-RED
 description: |
   All you need to start making use of UIBUILDER is a `uibuilder` node added to your flows. Select a suitable URL path and deploy. Then click on the "Open url" button to open the new page in a new tab. That's it, batteries are included!
 created: 2024-05-02 19:50:48
-updated: 2024-05-04 15:26:09
+updated: 2024-06-14 17:36:06
 ---
 
 > [!TIP]
@@ -47,5 +47,5 @@ Try out "[A first-timers walkthough of using UIBUILDER](walkthrough1.md)" to wal
 * [Configuring UIBUILDER](uib-configuration.md) - Configure the UIBUILDER platform. Affects all `uibuilder` nodes
 * [Standard messages](pre-defined-msgs.md) - A catalogue of messages and properties
 * [Creating Templates](creating-templates) - Pre-defined and reusable front-end code, dependencies, and optional build steps
-* [Browser auto-refresh](browser-refresh.md) - Automatically reload your page after a change
+* [Browser auto-refresh](how-to/browser-refresh.md) - Automatically reload your page after a change
 * [Zero-code UI creation](using/zero-code-ui.md) - Dynamically creating web UI's

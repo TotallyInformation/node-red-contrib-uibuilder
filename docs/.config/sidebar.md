@@ -2,7 +2,6 @@
 * [Getting Started](/getting-started.md)
 * Using <span class="uib-name"><span class="uib-red">ui</span>builder</span>
   * [A first-timers walkthough](walkthrough1.md "Let's get started!")
-  * [Browser auto-refresh](browser-refresh.md "Automatically reload your page after a change")
   * [Configuring <span class="uib-name"><span class="uib-red">ui</span>builder</span>](uib-configuration.md "Configure the UIBUILDER platform. Affects all uibuilder nodes")
   * [Creating data-driven web apps](web-app-workflow.md "Different styles and workflows you can use")
   * [Creating Templates](creating-templates "Pre-defined and reusable front-end code, dependencies, and optional build steps")
@@ -10,7 +9,8 @@
   * [Standard messages](pre-defined-msgs.md "Catalogue of messages and properties")
   * [Why <span class="uib-name"><span class="uib-red">ui</span>builder</span>?](using/why-uibuilder.md "Why would I want to use UIBUILDER?")
   * [Zero-code UI creation](using/zero-code-ui.md "Dynamically creating web UI's")
-* [The nodes](nodes/README.md)
+* The Nodes
+  * [Introduction](nodes/README.md)
   * [`uib-cache`](nodes/uib-cache.md "Cache data so that (re)loaded pages get the latest")
   * [`uib-element`](nodes/uib-element.md "no-code creation of page elements")
   * [`uib-html`](nodes/uib-html.md "Hydrate low-code JSON UI descriptions into HTML in Node-RED rather than the browser")
@@ -19,6 +19,7 @@
   * [`uib-tag`](nodes/uib-tag.md "no-code creation of ANY HTML tag")
   * [`uib-update`](nodes/uib-update.md "no-code update of any existing HTML page element")
   * [`uibuilder`](nodes/uibuilder.md "The main node")
+  * [Function node enhancements](nodes/function-node.md)
 * The front-end client
   * [Controlling from Node-RED](client-docs/control-from-node-red.md)
   * [Custom Components](client-docs/custom-components.md "The built-in uib-var component, using external components")
@@ -45,7 +46,8 @@
   * [Snowpack as build tool](front-end-build-snowpack.md)
   * [Svelte](svelte.md)
   * [VueJS complexities](vue-complexities.md)
-* [How to](how-to/README.md "A collection of FAQ's, how-to's, hints and tips.")
+* General hints & tips
+  * [Browser auto-refresh](how-to/browser-refresh.md "Automatically reload your page after a change")
   * [Change the root folder (uibRoot)](how-to/changing-uibroot.md)
   * [Create instance-specific API's](how-to/instance-apis.md)
   * [Creating well-structured HTML](how-to/well-structured-html.md "How to code a well-formed HTML page")
@@ -60,22 +62,21 @@
   * [Securing apps using NGINX](security/uib-security-nginx.md "How to use NGINX as a reverse proxy with TLS and identity authentication")
   * [Securing Data](security/securing-data.md "How to use flows and uibiulder middleware to secure your data")
   * [Securing uib web apps](security/security.md "Overview of general web app security with some specifics for Node-RED and UIBUILDER")
-* [Developer documentation](dev/README.md)
-* [REST API's](apis/)
+* Developer documentation
+  * [Details](dev/README.md)
+  * [REST API's](apis/)
 * [Glossary of terms](glossary.md)
-* [Changelog <sup>🔗</sup>](changelog)
-* [Roadmap](roadmap/)
 * [Main readme <sup>🔗</sup>](uibhome)
-* Archives
+* [Apache v2 license <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/LICENSE)
+* [<span class="uib-name"><span class="uib-red">ui</span>builder</span> WIKI <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
+* [Much Ado About IT (Blog) <sup>🔗</sup>](https://it.knightnet.org.uk)
+* [Node-RED <sup>🔗</sup>](https://nodered.org/)
+* Changes
+  * [Live changelog <sup>🔗</sup>](changelog)
+  * [Roadmap](roadmap/)
   * [v6 Changelog](archived/CHANGELOG-v6)
   * [v5 Changelog](archived/CHANGELOG-v5)
   * [v3/4 changelog](archived/CHANGELOG-v3-v4)
   * [v2 breaking changes](archived/v2-breaking-changes)
   * [v2 changelog](archived/CHANGELOG-v2)
   * [v1 changelog](archived/CHANGELOG-v1)
-
-- **Links**
-- [<span class="uib-name"><span class="uib-red">ui</span>builder</span> license <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/LICENSE)
-- [<span class="uib-name"><span class="uib-red">ui</span>builder</span> WIKI <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki)
-- [Much Ado About IT (Blog) <sup>🔗</sup>](https://it.knightnet.org.uk)
-- [Node-RED <sup>🔗</sup>](https://nodered.org/)

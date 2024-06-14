@@ -4,7 +4,7 @@ description: |
   Describes how to make your page refresh automatically when developing front-end code.
 created: 2022-02-15 20:56:20
 lastUpdated: 2023-09-30 13:03:51
-updated: 2023-12-30 17:01:41
+updated: 2024-06-14 17:35:49
 ---
 
 ## Reload message

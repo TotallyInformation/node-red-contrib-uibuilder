@@ -4,7 +4,7 @@ description: |
   Details on the configuration and use of UIBUILDER's front-end router.
 created: 2022-02-01 11:15:27
 lastUpdated: 2024-01-23 17:03:38
-updated: 2024-01-23 19:55:15
+updated: 2024-06-14 20:12:29
 ---
 
 The `uibrouter` front-end library defines a `UibRouter` class. This allows both internal and external content to be dynamically shown, allowing the creation of "Single-Page Apps" (SPA's) or simply keeping parts of the UI hidden from the users until they need them.
@@ -256,7 +256,7 @@ TBC
 * Remember that styles in external templates only exist while that route is loaded. While you can reference that style anywhere on page, it will only apply when the route is loaded. This could be used to get some interesting effects such as having page styles change outside the route display based on the current route (though it would require the route to be unloaded when not in use).
 
 
-## Using with UIBUILDER
+## Using with uibuilder
 
 While not dependent on UIBUILDER, the router class does work nicely with it.
 
