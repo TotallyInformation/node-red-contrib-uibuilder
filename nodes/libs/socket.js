@@ -28,7 +28,7 @@
  */
 
 const { join }     = require('path')
-const { existsSync } = require('./fs')
+const { existsSync, getFileMeta } = require('./fs')
 const socketio = require('socket.io')
 const { urlJoin }    = require('./tilib')    // General purpose library (by Totally Information)
 const { setNodeStatus }   = require('./uiblib')   // Utility library for uibuilder
@@ -264,10 +264,11 @@ class UibSockets {
         const uib = this.uib
         const log = this.log
 
-        if (uib === undefined) throw new Error('uib is undefined')
-        if (log === undefined) throw new Error('log is undefined')
+        if (!uib) throw new Error('uib is undefined')
+        if (!log) throw new Error('log is undefined')
+        if (!url) throw new Error('url is undefined')
 
-        if ( channel === undefined ) channel = uib.ioChannels.client
+        if ( !channel ) channel = uib.ioChannels.client
 
         const ioNs = this.ioNamespaces[url]
 
@@ -285,8 +286,10 @@ class UibSockets {
 
         // TODO: Sending should have some safety validation on it. Is msg an object? Is channel valid?
 
+        // if ( channel === uib.ioChannels.control ) console.log('>> getFileMeta: 4 >> ', msg, url, channel)
+
         // pass the complete msg object to the uibuilder client
-        if (socketId !== undefined) { // Send to specific client
+        if (socketId) { // Send to specific client
             log.trace(`[uibuilder:socket.js:sendToFe:${url}] msg sent on to client ${socketId}. Channel: ${channel}. ${JSON.stringify(msg)}`)
             ioNs.to(socketId).emit(channel, msg)
         } else { // Broadcast
@@ -324,8 +327,10 @@ class UibSockets {
      * Note: this.getClientDetails is used before calling this if client details needed
      * @param {object} msg The message to output
      * @param {uibNode} node Reference to the uibuilder node instance
+     * @param {string} [from] Optional. Trace what source fn triggered the send
      */
-    sendCtrlMsg(msg, node) {
+    sendCtrlMsg(msg, node, from = '') {
+        this.log.trace(`[uibuilder:sendCtrlMsg] FROM: '${from}'`)
         node.send( [null, msg])
     }
 
@@ -402,12 +407,12 @@ class UibSockets {
         }
     }
 
-    /** Socket listener fn for msgs from clients - NOTE that the optional sioUse middleware is also applied before this
+    /** Socket listener fn for standard msgs from clients - NOTE that the optional sioUse middleware is also applied before this
      * @param {object} msg Message object received from a client
      * @param {socketio.Socket} socket Reference to the socket for this node
      * @param {uibNode} node Reference to the uibuilder node instance
      */
-    listenFromClient(msg, socket, node) {
+    listenFromClientStd(msg, socket, node) {
         const log = this.log
         if (log === undefined) throw new Error('log is undefined')
 
@@ -444,7 +449,67 @@ class UibSockets {
         this.sendIt(msg, node)
     } // ---- End of listenFromClient ---- //
 
-    /** Add a new Socket.IO NAMESPACE
+    /** Socket listener fn for control msgs from clients - NOTE that the optional sioUse middleware is also applied before this
+     * @param {object} msg Message object received from a client
+     * @param {socketio.Socket} socket Reference to the socket for this node
+     * @param {uibNode} node Reference to the uibuilder node instance
+     */
+    listenFromClientCtrl(msg, socket, node) {
+        const log = this.log
+        if (log === undefined) throw new Error('log is undefined')
+
+        node.rcvMsgCount++
+        log.trace(`[uibuilder:socket:${node.url}] Control Msg from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
+
+        // Make sure the incoming msg is a correctly formed Node-RED msg
+        switch ( typeof msg ) {
+            case 'string':
+            case 'number':
+            case 'boolean':
+                msg = { 'uibuilderCtrl': msg }
+        }
+
+        // Apply standard client details to the control msg
+        msg = { ...msg, ...this.getClientDetails(socket, node) }
+
+        // Control msgs should say where they came from
+        msg.from = 'client'
+
+        if ( !msg.topic ) msg.topic = node.topic
+
+        // Can we handle a control request directly? If not, send it out of port #2
+        switch (msg.uibuilderCtrl) { // eslint-disable-line sonarjs/no-small-switch
+            case 'get page meta': {
+                // This returns the data straight back to the requesting client, does not output to port #2
+                getFileMeta(join(node.customFolder, node.sourceFolder, msg.pageName))
+                    .then( (fstats) => {
+                        fstats.pageName = msg.pageName
+                        // Send the details back to the FE
+                        const newMsg = {
+                            payload: fstats,
+                            uibuilderCtrl: 'get page meta',
+                            _socketId: msg._socketId,
+                            topic: msg.topic,
+                        }
+                        this.sendToFe( newMsg, node.url, this.uib.ioChannels.control )
+                        return fstats
+                    })
+                    .catch( (err) => {
+                        log.error(err)
+                    })
+
+                break
+            }
+
+            default: {
+                this.sendCtrlMsg(msg, node, 'listenFromClientCtrl')
+                break
+            }
+        }
+
+    }
+
+    /** Add a new Socket.IO NAMESPACE (for each uib instance) - also creates std & ctrl and other listeners on connection
      * Each namespace correstponds to a uibuilder node instance and must have a unique namespace name that matches the unique URL parameter for the node.
      * The namespace is stored in the this.ioNamespaces object against a property name matching the URL so that it can be referenced later.
      * Because this is a Singleton object, any reference to this module can access all of the namespaces (by url).
@@ -542,9 +607,8 @@ class UibSockets {
 
         const that = this
 
-        // When a client connects to the server
+        // When a client connects to the server - create the socket listeners & do other stuff
         ioNs.on('connection', (socket) => {
-
             //#region ----- Event Handlers ----- //
 
             // NOTE: as of sio v4, disconnect seems to be fired AFTER a connect when a client reconnects
@@ -573,7 +637,7 @@ class UibSockets {
                 that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
 
                 // Copy to port#2 for reference
-                that.sendCtrlMsg(ctrlMsg, node)
+                that.sendCtrlMsg(ctrlMsg, node, 'addNS:disconnect')
 
                 // Let other nodes know a client is disconnecting (via custom event manager)
                 tiEvent.emit(`node-red-contrib-uibuilder/${node.url}/clientDisconnect`, ctrlMsg)
@@ -581,31 +645,12 @@ class UibSockets {
 
             // Listen for msgs from clients on standard channel
             socket.on(uib.ioChannels.client, function(msg) {
-                that.listenFromClient(msg, socket, node )
+                that.listenFromClientStd(msg, socket, node)
             }) // --- End of on-connection::on-incoming-client-msg() --- //
 
             // Listen for msgs from clients on control channel
             socket.on(uib.ioChannels.control, function(msg) {
-                node.rcvMsgCount++
-                log.trace(`[uibuilder:socket:${url}] Control Msg from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
-
-                // Make sure the incoming msg is a correctly formed Node-RED msg
-                switch ( typeof msg ) {
-                    case 'string':
-                    case 'number':
-                    case 'boolean':
-                        msg = { 'uibuilderCtrl': msg }
-                }
-
-                // Apply standard client details to the control msg
-                msg = { ...msg, ...that.getClientDetails(socket, node) }
-
-                // Control msgs should say where they came from
-                msg.from = 'client'
-
-                if ( !msg.topic ) msg.topic = node.topic
-
-                that.sendCtrlMsg(msg, node)
+                that.listenFromClientCtrl(msg, socket, node)
             }) // --- End of on-connection::on-incoming-control-msg() --- //
 
             // Listen for socket.io errors - output a control msg
@@ -622,7 +667,7 @@ class UibSockets {
                     ...that.getClientDetails(socket, node),
                 }
 
-                that.sendCtrlMsg(ctrlMsg, node)
+                that.sendCtrlMsg(ctrlMsg, node, 'addNS:error')
             }) // --- End of on-connection::on-error() --- //
 
             // Custom room handling (clientId & pageId rooms are always joined)
@@ -700,7 +745,7 @@ class UibSockets {
             // Let the clients know we are connecting
             that.sendToFe(msgClient, node.url, uib.ioChannels.control)
 
-            // Send client connect control msg (via port #2)
+            // Send initial client connect control msg (via port #2)
             const ctrlMsg = {
                 ...{
                     uibuilderCtrl: 'client connect',
@@ -709,8 +754,7 @@ class UibSockets {
                 },
                 ...that.getClientDetails(socket, node),
             }
-
-            that.sendCtrlMsg(ctrlMsg, node)
+            that.sendCtrlMsg(ctrlMsg, node, 'addNS:connection')
 
             // Let other nodes know a client is connecting (via custom event manager)
             tiEvent.emit(`node-red-contrib-uibuilder/${node.url}/clientConnect`, ctrlMsg)
