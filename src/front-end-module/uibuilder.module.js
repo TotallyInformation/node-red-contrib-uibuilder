@@ -33,6 +33,7 @@
 import Ui from './ui'
 import io from 'socket.io-client'
 import UibVar from '../components/uib-var'
+import UibMeta from '../components/uib-meta'
 
 const version = '7.0.0-src'
 
@@ -894,6 +895,18 @@ export const Uib = class Uib {
         return window.location
     }
 
+    /** Fast but accurate number rounding (https://stackoverflow.com/a/48764436/1309986 solution 2)
+     * Half away from zero method (AKA "commercial" rounding), most common type
+     * @param {number} num The number to be rounded
+     * @param {number} decimalPlaces Number of DP's to round to
+     * @returns Rounded number
+     */
+    round(num, decimalPlaces) {
+        const p = Math.pow(10, decimalPlaces || 0)
+        const n = (num * p) * (1 + Number.EPSILON)
+        return Math.round(n) / p
+    }
+
     /** Set the default originator. Set to '' to ignore. Used with uib-sender.
      * @param {string} [originator] A Node-RED node ID to return the message to
      */
@@ -1247,7 +1260,7 @@ export const Uib = class Uib {
                 }
             }
 
-            // TODO (MAYBE) Process msg.classes and msg.styles
+            // TODO (MAYBE) Process msg.classes and msg.styles. msg.props (for non-string data)?
 
             // Process msg.payload (applied as slot HTML) - NB: Will process <script> & <style>
             if (Object.prototype.hasOwnProperty.call(msg, 'payload')) this.replaceSlot(el, msg.payload)
@@ -1820,6 +1833,12 @@ export const Uib = class Uib {
                 break
             }
 
+            // We requested this page's metadata from the server using getPageMeta() - this handles the response
+            case 'get page meta': {
+                this.set('pageMeta', receivedCtrlMsg.payload)
+                break
+            }
+
             default: {
                 log('trace', `uibuilder:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`)
                 // Anything else to do for other control msgs?
@@ -2165,6 +2184,13 @@ export const Uib = class Uib {
     beaconLog(txtToSend, logLevel) {
         if (!logLevel) logLevel = 'debug'
         navigator.sendBeacon('./_clientLog', `${logLevel}::${txtToSend}`)
+    }
+
+    /** Request the current page's metadata from the server - response is handled automatically in _ctrlMsgFromServer */
+    getPageMeta() {
+        this.sendCtrl({
+            uibuilderCtrl: 'get page meta'
+        })
     }
 
     /** Easily send the entire DOM/HTML msg back to Node-RED
@@ -2921,7 +2947,7 @@ export const Uib = class Uib {
     //#endregion -------- ------------ -------- //
 } // ==== End of Class Uib ====
 
-//#region --- Wrap up - get things started ---
+//#region --- Wrap up - get things started, define globals & web components ---
 
 // Create an instance (we will only ever want one)
 const uibuilder = new Uib()
@@ -3000,8 +3026,9 @@ export default uibuilder
 // Attempt to run start fn
 uibuilder.start()
 
-// Add the class as a new Custom Element to the window object
+// Add built-in web component classes as a new Custom Element to the window object
 customElements.define('uib-var', UibVar)
+customElements.define('uib-meta', UibMeta)
 
 //#endregion --- Wrap up ---
 

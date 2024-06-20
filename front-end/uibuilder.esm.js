@@ -4,6 +4,9 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __defNormalProp = (obj, key, value2) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value: value2 }) : obj[key] = value2;
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
@@ -28,28 +31,11 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
-var __publicField = (obj, key, value2) => {
-  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value2);
-  return value2;
-};
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value2) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value2);
-};
-var __privateSet = (obj, member, value2, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value2) : member.set(obj, value2);
-  return value2;
-};
+var __publicField = (obj, key, value2) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value2);
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value2) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value2);
+var __privateSet = (obj, member, value2, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value2) : member.set(obj, value2), value2);
 var __privateWrapper = (obj, member, setter, getter) => ({
   set _(value2) {
     __privateSet(obj, member, value2, setter);
@@ -81,24 +67,19 @@ var require_ui = __commonJS({
         __publicField(this, "window");
         /** Optional Markdown-IT Plugins */
         __publicField(this, "ui_md_plugins");
-        if (win)
-          this.window = win;
+        if (win) this.window = win;
         else {
           throw new Error("Ui:constructor. Current environment does not include `window`, UI functions cannot be used.");
         }
         this.document = this.window.document;
-        if (extLog)
-          _a2.log = extLog;
-        else
-          _a2.log = function() {
-            return function() {
-            };
+        if (extLog) _a2.log = extLog;
+        else _a2.log = function() {
+          return function() {
           };
-        if (jsonHighlight)
-          this.syntaxHighlight = jsonHighlight;
-        else
-          this.syntaxHighlight = function() {
-          };
+        };
+        if (jsonHighlight) this.syntaxHighlight = jsonHighlight;
+        else this.syntaxHighlight = function() {
+        };
         if (window["markdownit"]) {
           _a2.mdOpts = {
             html: true,
@@ -125,10 +106,8 @@ var require_ui = __commonJS({
       }
       //#region ---- Internal Methods ----
       _markDownIt() {
-        if (!window["markdownit"])
-          return;
-        if (!this.ui_md_plugins && this.window["uibuilder"] && this.window["uibuilder"].ui_md_plugins)
-          this.ui_md_plugins = this.window["uibuilder"].ui_md_plugins;
+        if (!window["markdownit"]) return;
+        if (!this.ui_md_plugins && this.window["uibuilder"] && this.window["uibuilder"].ui_md_plugins) this.ui_md_plugins = this.window["uibuilder"].ui_md_plugins;
         _a2.mdOpts = {
           html: true,
           xhtmlOut: false,
@@ -177,14 +156,10 @@ var require_ui = __commonJS({
        * @returns {Promise} Resolves on close or click event, returns the event.
        */
       _showNotification(config) {
-        if (config.topic && !config.title)
-          config.title = config.topic;
-        if (!config.title)
-          config.title = "uibuilder notification";
-        if (config.payload && !config.body)
-          config.body = config.payload;
-        if (!config.body)
-          config.body = " No message given.";
+        if (config.topic && !config.title) config.title = config.topic;
+        if (!config.title) config.title = "uibuilder notification";
+        if (config.payload && !config.body) config.body = config.payload;
+        if (!config.body) config.body = " No message given.";
         try {
           const notify = new Notification(config.title, config);
           return new Promise((resolve, reject) => {
@@ -250,8 +225,7 @@ var require_ui = __commonJS({
               break;
             }
           }
-          if (!compToAdd.slot && ui.payload)
-            compToAdd.slot = ui.payload;
+          if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload;
           this._uiComposeComponent(newEl, compToAdd);
           let elParent;
           if (compToAdd.parentEl) {
@@ -288,27 +262,21 @@ var require_ui = __commonJS({
       _uiComposeComponent(el, comp) {
         if (comp.attributes) {
           Object.keys(comp.attributes).forEach((attrib) => {
-            if (attrib === "class" && Array.isArray(comp.attributes[attrib]))
-              comp.attributes[attrib].join(" ");
+            if (attrib === "class" && Array.isArray(comp.attributes[attrib])) comp.attributes[attrib].join(" ");
             _a2.log("trace", "_uiComposeComponent:attributes-forEach", `Attribute: '${attrib}', value: '${comp.attributes[attrib]}'`)();
-            if (attrib === "value")
-              el.value = comp.attributes[attrib];
-            if (attrib.startsWith("xlink:"))
-              el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
-            else
-              el.setAttribute(attrib, comp.attributes[attrib]);
+            if (attrib === "value") el.value = comp.attributes[attrib];
+            if (attrib.startsWith("xlink:")) el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
+            else el.setAttribute(attrib, comp.attributes[attrib]);
           });
         }
-        if (comp.id)
-          el.setAttribute("id", comp.id);
+        if (comp.id) el.setAttribute("id", comp.id);
         if (comp.type === "svg") {
           el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.w3.org/2000/svg");
           el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
         }
         if (comp.events) {
           Object.keys(comp.events).forEach((type) => {
-            if (type.toLowerCase === "onclick")
-              type = "click";
+            if (type.toLowerCase === "onclick") type = "click";
             try {
               el.addEventListener(type, (evt) => {
                 new Function("evt", `${comp.events[type]}(evt)`)(evt);
@@ -369,34 +337,29 @@ var require_ui = __commonJS({
        */
       _uiLoad(ui) {
         if (ui.components) {
-          if (!Array.isArray(ui.components))
-            ui.components = [ui.components];
+          if (!Array.isArray(ui.components)) ui.components = [ui.components];
           ui.components.forEach(async (component) => {
             import(component);
           });
         }
         if (ui.srcScripts) {
-          if (!Array.isArray(ui.srcScripts))
-            ui.srcScripts = [ui.srcScripts];
+          if (!Array.isArray(ui.srcScripts)) ui.srcScripts = [ui.srcScripts];
           ui.srcScripts.forEach((script) => {
             this.loadScriptSrc(script);
           });
         }
         if (ui.txtScripts) {
-          if (!Array.isArray(ui.txtScripts))
-            ui.txtScripts = [ui.txtScripts];
+          if (!Array.isArray(ui.txtScripts)) ui.txtScripts = [ui.txtScripts];
           this.loadScriptTxt(ui.txtScripts.join("\n"));
         }
         if (ui.srcStyles) {
-          if (!Array.isArray(ui.srcStyles))
-            ui.srcStyles = [ui.srcStyles];
+          if (!Array.isArray(ui.srcStyles)) ui.srcStyles = [ui.srcStyles];
           ui.srcStyles.forEach((sheet) => {
             this.loadStyleSrc(sheet);
           });
         }
         if (ui.txtStyles) {
-          if (!Array.isArray(ui.txtStyles))
-            ui.txtStyles = [ui.txtStyles];
+          if (!Array.isArray(ui.txtStyles)) ui.txtStyles = [ui.txtStyles];
           this.loadStyleTxt(ui.txtStyles.join("\n"));
         }
       }
@@ -406,13 +369,10 @@ var require_ui = __commonJS({
        * @param {*} msg Standardised msg object containing a _ui property object
        */
       _uiManager(msg) {
-        if (!msg._ui)
-          return;
-        if (!Array.isArray(msg._ui))
-          msg._ui = [msg._ui];
+        if (!msg._ui) return;
+        if (!Array.isArray(msg._ui)) msg._ui = [msg._ui];
         msg._ui.forEach((ui, i2) => {
-          if (ui.mode && !ui.method)
-            ui.method = ui.mode;
+          if (ui.mode && !ui.method) ui.method = ui.mode;
           if (!ui.method) {
             _a2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i2}]. Ignoring. `, ui)();
             return;
@@ -477,10 +437,8 @@ var require_ui = __commonJS({
       _uiRemove(ui, all = false) {
         ui.components.forEach((compToRemove) => {
           let els;
-          if (all !== true)
-            els = [this.document.querySelector(compToRemove)];
-          else
-            els = this.document.querySelectorAll(compToRemove);
+          if (all !== true) els = [this.document.querySelector(compToRemove)];
+          else els = this.document.querySelectorAll(compToRemove);
           els.forEach((el) => {
             try {
               el.remove();
@@ -548,8 +506,7 @@ var require_ui = __commonJS({
        */
       _uiUpdate(ui) {
         _a2.log("trace", "UI:_uiUpdate:update", "Starting _uiUpdate", ui)();
-        if (!ui.components)
-          ui.components = [Object.assign({}, ui)];
+        if (!ui.components) ui.components = [Object.assign({}, ui)];
         ui.components.forEach((compToUpd, i2) => {
           _a2.log("trace", "_uiUpdate:components-forEach", `Start loop #${i2}`, compToUpd)();
           let elToUpd;
@@ -569,8 +526,7 @@ var require_ui = __commonJS({
             return;
           }
           _a2.log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
-          if (!compToUpd.slot && compToUpd.payload)
-            compToUpd.slot = compToUpd.payload;
+          if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload;
           elToUpd.forEach((el, j) => {
             _a2.log("trace", "_uiUpdate:components-forEach", `Updating element #${j}`, el)();
             this._uiComposeComponent(el, compToUpd);
@@ -579,10 +535,8 @@ var require_ui = __commonJS({
               const nc = { _ui: [] };
               compToUpd.components.forEach((nestedComp, k) => {
                 const method = nestedComp.method || compToUpd.method || ui.method;
-                if (nestedComp.method)
-                  delete nestedComp.method;
-                if (!Array.isArray(nestedComp))
-                  nestedComp = [nestedComp];
+                if (nestedComp.method) delete nestedComp.method;
+                if (!Array.isArray(nestedComp)) nestedComp = [nestedComp];
                 _a2.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component #${k}`, nestedComp)();
                 nc._ui.push({
                   method,
@@ -634,10 +588,8 @@ var require_ui = __commonJS({
        * @param {HTMLElement} el HTML Element to add class(es) to
        */
       addClass(classNames, el) {
-        if (!Array.isArray(classNames))
-          classNames = [classNames];
-        if (el)
-          el.classList.add(...classNames);
+        if (!Array.isArray(classNames)) classNames = [classNames];
+        if (el) el.classList.add(...classNames);
       }
       /** Converts markdown text input to HTML if the Markdown-IT library is loaded
        * Otherwise simply returns the text
@@ -645,12 +597,9 @@ var require_ui = __commonJS({
        * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
        */
       convertMarkdown(mdText) {
-        if (!mdText)
-          return "";
-        if (!this.window["markdownit"])
-          return mdText;
-        if (!_a2.md)
-          this._markDownIt();
+        if (!mdText) return "";
+        if (!this.window["markdownit"]) return mdText;
+        if (!_a2.md) this._markDownIt();
         try {
           return _a2.md.render(mdText.trim());
         } catch (e) {
@@ -765,10 +714,8 @@ var require_ui = __commonJS({
         }
         uiOptions.type = "div";
         uiOptions.slot = slot;
-        if (!uiOptions.parent)
-          uiOptions.parent = "body";
-        if (!uiOptions.attributes)
-          uiOptions.attributes = { class: "included" };
+        if (!uiOptions.parent) uiOptions.parent = "body";
+        if (!uiOptions.attributes) uiOptions.attributes = { class: "included" };
         this._uiReplace({
           components: [
             uiOptions
@@ -914,15 +861,13 @@ var require_ui = __commonJS({
             if (attrib.name !== "id") {
               thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
             }
-            if (attrib.name === "class")
-              thisOut.classes = Array.from(node.classList);
+            if (attrib.name === "class") thisOut.classes = Array.from(node.classList);
           }
         }
         if (node.nodeName === "#text") {
           thisOut.text = node.textContent;
         }
-        if (node.validity)
-          thisOut.userInput.validity = {};
+        if (node.validity) thisOut.userInput.validity = {};
         for (const v in node.validity) {
           thisOut.userInput.validity[v] = node.validity[v];
         }
@@ -940,8 +885,7 @@ var require_ui = __commonJS({
         if (typeof config === "string") {
           config = { body: config };
         }
-        if (typeof Notification === "undefined")
-          return Promise.reject(new Error("Notifications not available in this browser"));
+        if (typeof Notification === "undefined") return Promise.reject(new Error("Notifications not available in this browser"));
         let permit = Notification.permission;
         if (permit === "denied") {
           return Promise.reject(new Error("Notifications not permitted by user"));
@@ -964,10 +908,8 @@ var require_ui = __commonJS({
           el.removeAttribute("class");
           return;
         }
-        if (!Array.isArray(classNames))
-          classNames = [classNames];
-        if (el)
-          el.classList.remove(...classNames);
+        if (!Array.isArray(classNames)) classNames = [classNames];
+        if (el) el.classList.remove(...classNames);
       }
       /** Replace or add an HTML element's slot from text or an HTML string
        * WARNING: Executes <script> tags! And will process <style> tags.
@@ -977,10 +919,8 @@ var require_ui = __commonJS({
        * @param {*} slot The slot content we are trying to add/replace (defaults to empty string)
        */
       replaceSlot(el, slot) {
-        if (!el)
-          return;
-        if (!slot)
-          slot = "";
+        if (!el) return;
+        if (!slot) slot = "";
         slot = this.sanitiseHTML(slot);
         const tempFrag = document.createRange().createContextualFragment(slot);
         const elRange = document.createRange();
@@ -995,10 +935,8 @@ var require_ui = __commonJS({
        * @param {*} component The component we are trying to add/replace
        */
       replaceSlotMarkdown(el, component) {
-        if (!el)
-          return;
-        if (!component.slotMarkdown)
-          return;
+        if (!el) return;
+        if (!component.slotMarkdown) return;
         component.slotMarkdown = this.convertMarkdown(component.slotMarkdown);
         component.slotMarkdown = this.sanitiseHTML(component.slotMarkdown);
         el.innerHTML = component.slotMarkdown;
@@ -1009,8 +947,7 @@ var require_ui = __commonJS({
        * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
        */
       sanitiseHTML(html) {
-        if (!this.window["DOMPurify"])
-          return html;
+        if (!this.window["DOMPurify"]) return html;
         return this.window["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
       }
       /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
@@ -1024,30 +961,21 @@ var require_ui = __commonJS({
        */
       showDialog(type, ui, msg) {
         let content = "";
-        if (msg.payload && typeof msg.payload === "string")
-          content += `<div>${msg.payload}</div>`;
-        if (ui.content)
-          content += `<div>${ui.content}</div>`;
+        if (msg.payload && typeof msg.payload === "string") content += `<div>${msg.payload}</div>`;
+        if (ui.content) content += `<div>${ui.content}</div>`;
         if (content === "") {
           _a2.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
           return;
         }
-        if (!ui.title && msg.topic)
-          ui.title = msg.topic;
-        if (ui.title)
-          content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
-        if (ui.noAutohide)
-          ui.noAutoHide = ui.noAutohide;
-        if (ui.noAutoHide)
-          ui.autohide = !ui.noAutoHide;
+        if (!ui.title && msg.topic) ui.title = msg.topic;
+        if (ui.title) content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
+        if (ui.noAutohide) ui.noAutoHide = ui.noAutohide;
+        if (ui.noAutoHide) ui.autohide = !ui.noAutoHide;
         if (ui.autoHideDelay) {
-          if (!ui.autohide)
-            ui.autohide = true;
+          if (!ui.autohide) ui.autohide = true;
           ui.delay = ui.autoHideDelay;
-        } else
-          ui.autoHideDelay = 1e4;
-        if (!Object.prototype.hasOwnProperty.call(ui, "autohide"))
-          ui.autohide = true;
+        } else ui.autoHideDelay = 1e4;
+        if (!Object.prototype.hasOwnProperty.call(ui, "autohide")) ui.autohide = true;
         if (type === "alert") {
           ui.modal = true;
           ui.autohide = false;
@@ -1071,13 +999,11 @@ var require_ui = __commonJS({
         toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
         toast.innerHTML = content;
         toast.setAttribute("role", "alertdialog");
-        if (ui.modal)
-          toast.setAttribute("aria-modal", ui.modal);
+        if (ui.modal) toast.setAttribute("aria-modal", ui.modal);
         toast.onclick = function(evt) {
           evt.stopPropagation();
           toast.remove();
-          if (toaster.childElementCount < 1)
-            toaster.remove();
+          if (toaster.childElementCount < 1) toaster.remove();
         };
         if (type === "alert") {
         }
@@ -1085,8 +1011,7 @@ var require_ui = __commonJS({
         if (ui.autohide === true) {
           setInterval(() => {
             toast.remove();
-            if (toaster.childElementCount < 1)
-              toaster.remove();
+            if (toaster.childElementCount < 1) toaster.remove();
           }, ui.autoHideDelay);
         }
       }
@@ -1096,10 +1021,8 @@ var require_ui = __commonJS({
        */
       ui(json) {
         let msg = {};
-        if (json._ui)
-          msg = json;
-        else
-          msg._ui = json;
+        if (json._ui) msg = json;
+        else msg._ui = json;
         console.log(this);
         this._uiManager(msg);
       }
@@ -1116,8 +1039,7 @@ var require_ui = __commonJS({
         const out = [];
         selection.forEach((node) => {
           if (propName) {
-            if (propName === "classes")
-              propName = "class";
+            if (propName === "classes") propName = "class";
             let prop = node.getAttribute(propName);
             if (prop === void 0 || prop === null) {
               try {
@@ -1126,10 +1048,8 @@ var require_ui = __commonJS({
               }
             }
             if (prop === void 0 || prop === null) {
-              if (propName.toLowerCase() === "value")
-                out.push(node.innerText);
-              else
-                out.push(`Property '${propName}' not found`);
+              if (propName.toLowerCase() === "value") out.push(node.innerText);
+              else out.push(`Property '${propName}' not found`);
             } else {
               const p = {};
               const cType = prop.constructor.name.toLowerCase();
@@ -1145,8 +1065,7 @@ var require_ui = __commonJS({
                   p2[key] = prop[key];
                 }
               }
-              if (p.class)
-                p.classes = Array.from(node.classList);
+              if (p.class) p.classes = Array.from(node.classList);
               out.push(p);
             }
           } else {
@@ -1470,8 +1389,7 @@ var protocol = 4;
 
 // node_modules/@socket.io/component-emitter/lib/esm/index.js
 function Emitter(obj) {
-  if (obj)
-    return mixin(obj);
+  if (obj) return mixin(obj);
 }
 function mixin(obj) {
   for (var key in Emitter.prototype) {
@@ -1500,8 +1418,7 @@ Emitter.prototype.off = Emitter.prototype.removeListener = Emitter.prototype.rem
     return this;
   }
   var callbacks = this._callbacks["$" + event2];
-  if (!callbacks)
-    return this;
+  if (!callbacks) return this;
   if (1 == arguments.length) {
     delete this._callbacks["$" + event2];
     return this;
@@ -4556,54 +4473,42 @@ var _UibVar = class _UibVar extends HTMLElement {
    * @param {string} oldVal The old value of the attribute
    */
   attributeChangedCallback(attrib, oldVal, newVal) {
-    if (oldVal === newVal)
-      return;
+    if (oldVal === newVal) return;
     switch (attrib) {
       case "variable": {
-        if (newVal === "")
-          throw new Error('[uib-var] Attribute "variable" MUST be set to a UIBUILDER managed variable name');
+        if (newVal === "") throw new Error('[uib-var] Attribute "variable" MUST be set to a UIBUILDER managed variable name');
         this.variable = newVal;
         this.doWatch();
         break;
       }
       case "undefined": {
-        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
-          this.undef = true;
-        else
-          this.undef = false;
+        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase())) this.undef = true;
+        else this.undef = false;
         break;
       }
       case "report": {
-        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase()))
-          this.report = true;
-        else
-          this.report = false;
+        if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase())) this.report = true;
+        else this.report = false;
         break;
       }
       case "type": {
-        if (newVal === "" || !this.types.includes(newVal.toLowerCase()))
-          this.type = "plain";
-        else
-          this.type = newVal;
+        if (newVal === "" || !this.types.includes(newVal.toLowerCase())) this.type = "plain";
+        else this.type = newVal;
         break;
       }
       case "topic": {
-        if (!newVal)
-          break;
-        if (!this.uib)
-          break;
+        if (!newVal) break;
+        if (!this.uib) break;
         if (this.variable) {
           console.warn("\u26A0\uFE0F [uib-var] Cannot process both variable and topic attributes, use only 1. Using variable");
           break;
         }
         this.topic = newVal;
-        if (this.topicMonitors[newVal])
-          uibuilder.cancelTopic(newVal, this.topicMonitors[newVal]);
+        if (this.topicMonitors[newVal]) uibuilder.cancelTopic(newVal, this.topicMonitors[newVal]);
         this.topicMonitors[newVal] = uibuilder.onTopic(newVal, (msg) => {
           this.value = msg.payload;
           this.varDom();
-          if (this.report === true)
-            window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
+          if (this.report === true) window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
         });
         this.varDom();
         break;
@@ -4611,8 +4516,7 @@ var _UibVar = class _UibVar extends HTMLElement {
       case "filter": {
         this.filter = void 0;
         this.filterArgs = [];
-        if (!newVal)
-          break;
+        if (!newVal) break;
         this.filter = newVal;
         newVal = newVal.slice(0, 127);
         const f = newVal.replace(/\s/g, "").match(/([a-zA-Z_$][a-zA-Z_$0-9.-]+)(\((.*)\))?/);
@@ -4639,8 +4543,7 @@ var _UibVar = class _UibVar extends HTMLElement {
             return Number(x);
           });
         }
-        if (!this.variable && !this.topic)
-          this.varDom(false);
+        if (!this.variable && !this.topic) this.varDom(false);
         break;
       }
       default: {
@@ -4653,12 +4556,9 @@ var _UibVar = class _UibVar extends HTMLElement {
   // Runs when an instance is added to the DOM
   connectedCallback() {
     if (!this.id) {
-      if (!this.name)
-        this.name = this.getAttribute("name");
-      if (this.name)
-        this.id = this.name.toLowerCase().replace(/\s/g, "_");
-      else
-        this.id = `uib-var-${++_UibVar._iCount}`;
+      if (!this.name) this.name = this.getAttribute("name");
+      if (this.name) this.id = this.name.toLowerCase().replace(/\s/g, "_");
+      else this.id = `uib-var-${++_UibVar._iCount}`;
     }
   }
   // ---- end of connectedCallback ---- //
@@ -4673,15 +4573,13 @@ var _UibVar = class _UibVar extends HTMLElement {
   // ---- end of disconnectedCallback ---- //
   /** Process changes to the required uibuilder variable */
   doWatch() {
-    if (!this.variable)
-      throw new Error("No variable name provided");
+    if (!this.variable) throw new Error("No variable name provided");
     this.value = window["uibuilder"].get(this.variable);
     this.varDom();
     window["uibuilder"].onChange(this.variable, (val) => {
       this.value = val;
       this.varDom();
-      if (this.report === true)
-        window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
+      if (this.report === true) window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
     });
   }
   /** Convert this.value to DOM output (applies output filter if needed)
@@ -4696,8 +4594,7 @@ var _UibVar = class _UibVar extends HTMLElement {
     let out = val;
     switch (this.type) {
       case "markdown": {
-        if (this.uib)
-          out = window["uibuilder"].convertMarkdown(val);
+        if (this.uib) out = window["uibuilder"].convertMarkdown(val);
         break;
       }
       case "object": {
@@ -4717,10 +4614,8 @@ var _UibVar = class _UibVar extends HTMLElement {
         break;
       }
     }
-    if (this.uib)
-      this.shadow.innerHTML = window["uibuilder"].sanitiseHTML(out);
-    else
-      this.shadow.innerHTML = out;
+    if (this.uib) this.shadow.innerHTML = window["uibuilder"].sanitiseHTML(out);
+    else this.shadow.innerHTML = out;
     this.shadow.appendChild(this.css);
   }
   /** Apply value filter if specified
@@ -4737,10 +4632,8 @@ var _UibVar = class _UibVar extends HTMLElement {
           globalFn = globalFn[part];
         });
       }
-      if (!globalFn && this.uib === true)
-        globalFn = globalThis["uibuilder"][splitFilter[0]];
-      if (globalFn && typeof globalFn !== "function")
-        globalFn = void 0;
+      if (!globalFn && this.uib === true) globalFn = globalThis["uibuilder"][splitFilter[0]];
+      if (globalFn && typeof globalFn !== "function") globalFn = void 0;
       if (globalFn) {
         const argList = value2 === void 0 ? [...this.filterArgs] : [value2, ...this.filterArgs];
         value2 = Reflect.apply(globalFn, value2 ?? globalFn, argList);
@@ -4756,6 +4649,203 @@ __publicField(_UibVar, "_iCount", 0);
 /** @type {Array<string>} List of all of the html attribs (props) listened to */
 __publicField(_UibVar, "props", ["filter", "id", "name", "report", "topic", "type", "undefined", "variable"]);
 var UibVar = _UibVar;
+
+// src/components/uib-meta.js
+var _UibMeta = class _UibMeta extends HTMLElement {
+  //#endregion --- Class Properties ---
+  constructor() {
+    super();
+    //#region --- Class Properties ---
+    /** @type {string} Name of the uibuilder mangaged variable to use */
+    __publicField(this, "variable", "pageMeta");
+    /** Current value of the watched variable */
+    __publicField(this, "value");
+    /** Whether to output if the variable is undefined */
+    __publicField(this, "undef", false);
+    /** Whether to send update value to Node-RED on change */
+    __publicField(this, "report", false);
+    /** What is the value type */
+    __publicField(this, "type", "created");
+    /** what are the available types? */
+    __publicField(this, "types", ["created", "updated", "crup", "size", "modified"]);
+    /** Chosen formatting - default to none */
+    __publicField(this, "format", "");
+    /** what are the available formats? */
+    __publicField(this, "formats", ["d", "dt", "t", "k", "m"]);
+    /** Holds uibuilder.onTopic listeners */
+    __publicField(this, "topicMonitors", {});
+    /** Is UIBUILDER loaded? */
+    __publicField(this, "uib", !!window["uibuilder"]);
+    /** Mini jQuery-like shadow dom selector (see constructor) */
+    __publicField(this, "$");
+    this.shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
+    this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot);
+    this.value = window["uibuilder"].get("pageMeta");
+    if (!this.value) window["uibuilder"].getPageMeta();
+    this.doWatch();
+    this.dispatchEvent(new Event("uib-meta:construction", { bubbles: true, composed: true }));
+  }
+  // Makes HTML attribute change watched
+  static get observedAttributes() {
+    return _UibMeta.props;
+  }
+  /** Handle watched attributes
+   * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
+   * Attribute values can only ever be strings
+   * @param {string} attrib The name of the attribute that is changing
+   * @param {string} newVal The new value of the attribute
+   * @param {string} oldVal The old value of the attribute
+   */
+  attributeChangedCallback(attrib, oldVal, newVal) {
+    if (oldVal === newVal) return;
+    switch (attrib) {
+      case "type": {
+        if (newVal === "" || !this.types.includes(newVal.toLowerCase())) this.type = "created";
+        else this.type = newVal;
+        break;
+      }
+      case "format": {
+        if (!this.formats.includes(newVal.toLowerCase())) this.type = "";
+        else this[attrib] = newVal;
+        break;
+      }
+      default: {
+        this[attrib] = newVal;
+        break;
+      }
+    }
+  }
+  // --- end of attributeChangedCallback --- //
+  // Runs when an instance is added to the DOM
+  connectedCallback() {
+    if (!this.id) {
+      if (!this.name) this.name = this.getAttribute("name");
+      if (this.name) this.id = this.name.toLowerCase().replace(/\s/g, "_");
+      else this.id = `uib-meta-${++_UibMeta._iCount}`;
+    }
+  }
+  // ---- end of connectedCallback ---- //
+  // Runs when an instance is removed from the DOM
+  // disconnectedCallback() {
+  //     // Ignore if not using uibuilder
+  //     if (this.uib) {
+  //         Object.keys(this.topicMonitors).forEach( topic => {
+  //             uibuilder.cancelTopic(topic, this.topicMonitors[topic])
+  //         })
+  //     }
+  // } // ---- end of disconnectedCallback ---- //
+  /** Process changes to the required uibuilder variable */
+  doWatch() {
+    this.varDom();
+    window["uibuilder"].onChange(this.variable, (val) => {
+      this.value = val;
+      this.varDom();
+      if (this.report === true) window["uibuilder"].send({ topic: this.variable, payload: this.value || void 0 });
+    });
+  }
+  /** Convert this.value to DOM output (applies output filter if needed)
+   * @param {boolean} chkVal If true (default), check for undefined value. False used to run filter even with no value set.
+   */
+  varDom(chkVal = true) {
+    if (chkVal === true && !this.value && this.undef !== true) {
+      this.shadow.innerHTML = "<slot></slot>";
+      return;
+    }
+    let out;
+    switch (this.type) {
+      case "size": {
+        out = `Size: ${this.doFormat(this.value.size, "num")}b`;
+        break;
+      }
+      case "modified":
+      case "updated": {
+        out = `Updated: ${this.doFormat(this.value.modified, "dt")}`;
+        break;
+      }
+      case "crup": {
+        out = `Created: ${this.doFormat(this.value.created, "dt")}, Updated: ${this.doFormat(this.value.modified, "dt")}`;
+        break;
+      }
+      case "created":
+      default: {
+        out = `Created: ${this.doFormat(this.value.created, "dt")}`;
+        break;
+      }
+    }
+    if (out !== void 0) this.shadow.innerHTML = out;
+  }
+  /** Format a value using this.format
+   * @param {Date|string|number} val Value to format
+   * @param {'num'|'dt'} type Type of of input
+   * @returns {*} Formatted value
+   */
+  doFormat(val, type) {
+    if (this.format === "") return val;
+    let out;
+    switch (this.format) {
+      case "d": {
+        if (type === "dt") out = new Date(val).toLocaleDateString();
+        else out = val;
+        break;
+      }
+      case "t": {
+        if (type === "dt") out = new Date(val).toLocaleTimeString();
+        else out = val;
+        break;
+      }
+      case "dt": {
+        if (type === "dt") out = new Date(val).toLocaleString();
+        else out = val;
+        break;
+      }
+      case "k": {
+        if (type === "num") out = `${uibuilder.round(val / 1024, 1)} k`;
+        else out = val;
+        break;
+      }
+      case "m": {
+        if (type === "num") out = `${uibuilder.round(val / 1048576, 2)} M`;
+        else out = val;
+        break;
+      }
+      default: {
+        out = val;
+      }
+    }
+    return out;
+  }
+  /** Apply value filter if specified
+   * @param {*} value The value to change
+   * @returns {*} The amended value that will be displayed
+   */
+  // doFilter(value) {
+  //     if (this.filter) {
+  //         // Cater for dotted notation functions (e.g. uibuilder.get)
+  //         const splitFilter = this.filter.split('.')
+  //         let globalFn = globalThis[splitFilter[0]]
+  //         if (globalFn && splitFilter.length > 1) {
+  //             const parts = [splitFilter.pop()]
+  //             parts.forEach( part => {
+  //                 globalFn = globalFn[part]
+  //             } )
+  //         }
+  //         if (!globalFn && this.uib === true) globalFn = globalThis['uibuilder'][splitFilter[0]]
+  //         if (globalFn && typeof globalFn !== 'function' ) globalFn = undefined
+  //         if (globalFn) {
+  //             const argList = value === undefined ? [...this.filterArgs] : [value, ...this.filterArgs]
+  //             value = Reflect.apply(globalFn, value ?? globalFn, argList)
+  //         } else {
+  //             console.warn(`⚠️ [uib-var] Filter function "${this.filter}" ${typeof globalFn === 'object' ? 'is an object not a function' : 'not found'}`)
+  //         }
+  //     }
+  //     return value
+  // }
+};
+/** Holds a count of how many instances of this component are on the page */
+__publicField(_UibMeta, "_iCount", 0);
+/** @type {Array<string>} List of all of the html attribs (props) listened to */
+__publicField(_UibMeta, "props", ["type", "format"]);
+var UibMeta = _UibMeta;
 
 // src/front-end-module/uibuilder.module.js
 var version = "7.0.0-esm";
@@ -4818,24 +4908,21 @@ function log() {
   switch (level) {
     case "trace":
     case 5: {
-      if (logLevel < 5)
-        break;
+      if (logLevel < 5) break;
       level = 5;
       strLevel = "trace";
       break;
     }
     case "debug":
     case 4: {
-      if (logLevel < 4)
-        break;
+      if (logLevel < 4) break;
       level = 4;
       strLevel = "debug";
       break;
     }
     case "log":
     case 3: {
-      if (logLevel < 3)
-        break;
+      if (logLevel < 3) break;
       level = 3;
       strLevel = "log";
       break;
@@ -4843,16 +4930,14 @@ function log() {
     case "info":
     case "":
     case 2: {
-      if (logLevel < 2)
-        break;
+      if (logLevel < 2) break;
       level = 2;
       strLevel = "info";
       break;
     }
     case "warn":
     case 1: {
-      if (logLevel < 1)
-        break;
+      if (logLevel < 1) break;
       level = 1;
       strLevel = "warn";
       break;
@@ -4860,8 +4945,7 @@ function log() {
     case "error":
     case "err":
     case 0: {
-      if (logLevel < 0)
-        break;
+      if (logLevel < 0) break;
       level = 0;
       strLevel = "error";
       break;
@@ -4871,9 +4955,8 @@ function log() {
       break;
     }
   }
-  if (strLevel === void 0)
-    return function() {
-    };
+  if (strLevel === void 0) return function() {
+  };
   const head = args.shift();
   return Function.prototype.bind.call(
     console[LOG_STYLES[strLevel].console],
@@ -4989,7 +5072,7 @@ var Uib = (_a = class {
     // Socket.IO channel names
     __publicField(this, "_ioChannels", { control: "uiBuilderControl", client: "uiBuilderClient", server: "uiBuilder" });
     /** setInterval holder for pings @type {function|undefined} */
-    __privateAdd(this, _pingInterval, void 0);
+    __privateAdd(this, _pingInterval);
     // onChange event callbacks
     __privateAdd(this, _propChangeCallbacks, {});
     // onTopic event callbacks
@@ -5003,7 +5086,7 @@ var Uib = (_a = class {
      */
     __privateAdd(this, _timerid, null);
     // Holds the reference ID for the internal msg change event handler so that it can be cancelled
-    __privateAdd(this, _MsgHandler, void 0);
+    __privateAdd(this, _MsgHandler);
     // Placeholder for io.socket - can't make a # var until # fns allowed in all browsers
     __publicField(this, "_socket");
     // Placeholder for an observer that watches the whole DOM for changes - can't make a # var until # fns allowed in all browsers
@@ -5239,8 +5322,7 @@ var Uib = (_a = class {
       this.sendCtrl({ uibuilderCtrl: "visibility", isVisible: this.isVisible });
     });
     document.addEventListener("uibuilder:propertyChanged", (event2) => {
-      if (!__privateGet(this, _isShowStatus))
-        return;
+      if (!__privateGet(this, _isShowStatus)) return;
       if (event2.detail.prop in __privateGet(this, _showStatus)) {
         document.querySelector(`td[data-vartype="${event2.detail.prop}"]`).innerText = JSON.stringify(event2.detail.value);
       }
@@ -5253,8 +5335,7 @@ var Uib = (_a = class {
       const fullPath = window.location.pathname.split("/").filter(function(t) {
         return t.trim() !== "";
       });
-      if (fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith(".html"))
-        fullPath.pop();
+      if (fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith(".html")) fullPath.pop();
       fullPath.pop();
       this.set("httpNodeRoot", `/${fullPath.join("/")}`);
       log("trace", "[Uib:constructor]", `httpNodeRoot set by URL parsing to "${this.httpNodeRoot}". NOTE: This may fail for pages in sub-folders.`)();
@@ -5262,10 +5343,8 @@ var Uib = (_a = class {
     this.set("ioPath", this.urlJoin(this.httpNodeRoot, _a._meta.displayName, "vendor", "socket.io"));
     log("trace", "Uib:constructor", `ioPath: "${this.ioPath}"`)();
     this.set("pageName", window.location.pathname.replace(`${this.ioNamespace}/`, ""));
-    if (this.pageName.endsWith("/"))
-      this.set("pageName", `${this.pageName}index.html`);
-    if (this.pageName === "")
-      this.set("pageName", "index.html");
+    if (this.pageName.endsWith("/")) this.set("pageName", `${this.pageName}index.html`);
+    if (this.pageName === "") this.set("pageName", "index.html");
     try {
       const autoloadVars = this.getStore("_uibAutoloadVars");
       if (Object.keys(autoloadVars).length > 0) {
@@ -5308,8 +5387,7 @@ var Uib = (_a = class {
     }
     this[prop] = val;
     __privateGet(this, _managedVars)[prop] = prop;
-    if (store === true)
-      this.setStore(prop, val, autoload);
+    if (store === true) this.setStore(prop, val, autoload);
     log("trace", "Uib:set", `prop set - prop: ${prop}, val: `, val, ` store: ${store}, autoload: ${autoload}`)();
     this._dispatchCustomEvent("uibuilder:propertyChanged", { "prop": prop, "value": val, "store": store, "autoload": autoload });
     return val;
@@ -5324,12 +5402,9 @@ var Uib = (_a = class {
       log("warn", "Uib:get", `Cannot use get() on protected property "${prop}"`)();
       return;
     }
-    if (prop === "version")
-      return _a._meta.version;
-    if (prop === "msgsCtrl")
-      return this.msgsCtrlReceived;
-    if (prop === "reconnections")
-      return this.connectedNum;
+    if (prop === "version") return _a._meta.version;
+    if (prop === "msgsCtrl") return this.msgsCtrlReceived;
+    if (prop === "reconnections") return this.connectedNum;
     if (this[prop] === void 0) {
       log("warn", "Uib:get", `get() - property "${prop}" is undefined`)();
     }
@@ -5434,10 +5509,8 @@ var Uib = (_a = class {
    * @returns {number} A reference to the callback to cancel, save and pass to uibuilder.cancelChange if you need to remove a listener
    */
   onChange(prop, callback) {
-    if (!__privateGet(this, _propChangeCallbacks)[prop])
-      __privateGet(this, _propChangeCallbacks)[prop] = { _nextRef: 1 };
-    else
-      __privateGet(this, _propChangeCallbacks)[prop]._nextRef++;
+    if (!__privateGet(this, _propChangeCallbacks)[prop]) __privateGet(this, _propChangeCallbacks)[prop] = { _nextRef: 1 };
+    else __privateGet(this, _propChangeCallbacks)[prop]._nextRef++;
     const nextCbRef = __privateGet(this, _propChangeCallbacks)[prop]._nextRef;
     const propChangeCallback = __privateGet(this, _propChangeCallbacks)[prop][nextCbRef] = function propChangeCallback2(e) {
       if (prop === e.detail.prop) {
@@ -5463,10 +5536,8 @@ var Uib = (_a = class {
    * @returns {number} A reference to the callback to cancel, save and pass to uibuilder.cancelTopic if you need to remove a listener
    */
   onTopic(topic, callback) {
-    if (!__privateGet(this, _msgRecvdByTopicCallbacks)[topic])
-      __privateGet(this, _msgRecvdByTopicCallbacks)[topic] = { _nextRef: 1 };
-    else
-      __privateGet(this, _msgRecvdByTopicCallbacks)[topic]._nextRef++;
+    if (!__privateGet(this, _msgRecvdByTopicCallbacks)[topic]) __privateGet(this, _msgRecvdByTopicCallbacks)[topic] = { _nextRef: 1 };
+    else __privateGet(this, _msgRecvdByTopicCallbacks)[topic]._nextRef++;
     const nextCbRef = __privateGet(this, _msgRecvdByTopicCallbacks)[topic]._nextRef;
     const msgRecvdEvtCallback = __privateGet(this, _msgRecvdByTopicCallbacks)[topic][nextCbRef] = function msgRecvdEvtCallback2(e) {
       const msg = e.detail;
@@ -5568,8 +5639,7 @@ var Uib = (_a = class {
   elementExists(cssSelector, msg = true) {
     const el = document.querySelector(cssSelector);
     let exists = false;
-    if (el !== null)
-      exists = true;
+    if (el !== null) exists = true;
     if (msg === true) {
       this.send({
         payload: exists,
@@ -5592,10 +5662,8 @@ var Uib = (_a = class {
       log("error", "formatNumber", `Value must be a number. Value type: "${typeof value2}"`)();
       return "NaN";
     }
-    if (!opts)
-      opts = {};
-    if (!intl)
-      intl = navigator.language ? navigator.language : "en-GB";
+    if (!opts) opts = {};
+    if (!intl) intl = navigator.language ? navigator.language : "en-GB";
     if (decimalPlaces) {
       opts.minimumFractionDigits = decimalPlaces;
       opts.maximumFractionDigits = decimalPlaces;
@@ -5620,8 +5688,7 @@ var Uib = (_a = class {
    * @returns {string} Just the route id
    */
   keepHashFromUrl(url2) {
-    if (!url2)
-      return "";
+    if (!url2) return "";
     return "#" + url2.replace(/^.*#(.*)/, "$1").replace(/\?.*$/, "");
   }
   log() {
@@ -5634,8 +5701,7 @@ var Uib = (_a = class {
    * @returns {!object} _
    */
   makeMeAnObject(thing, property) {
-    if (!property)
-      property = "payload";
+    if (!property) property = "payload";
     if (typeof property !== "string") {
       log("warn", "uibuilder:makeMeAnObject", `WARNING: property parameter must be a string and not: ${typeof property}`)();
       property = "payload";
@@ -5654,9 +5720,19 @@ var Uib = (_a = class {
    * @returns {Location} The new window.location string
    */
   navigate(url2) {
-    if (url2)
-      window.location.href = url2;
+    if (url2) window.location.href = url2;
     return window.location;
+  }
+  /** Fast but accurate number rounding (https://stackoverflow.com/a/48764436/1309986 solution 2)
+   * Half away from zero method (AKA "commercial" rounding), most common type
+   * @param {number} num The number to be rounded
+   * @param {number} decimalPlaces Number of DP's to round to
+   * @returns Rounded number
+   */
+  round(num, decimalPlaces) {
+    const p = Math.pow(10, decimalPlaces || 0);
+    const n = num * p * (1 + Number.EPSILON);
+    return Math.round(n) / p;
   }
   /** Set the default originator. Set to '' to ignore. Used with uib-sender.
    * @param {string} [originator] A Node-RED node ID to return the message to
@@ -5717,12 +5793,9 @@ var Uib = (_a = class {
    */
   truthy(val, deflt) {
     let ret;
-    if (["on", "On", "ON", "true", "True", "TRUE", "1", true, 1].includes(val))
-      ret = true;
-    else if (["off", "Off", "OFF", "false", "False", "FALSE", "0", false, 0].includes(val))
-      ret = false;
-    else
-      ret = deflt;
+    if (["on", "On", "ON", "true", "True", "TRUE", "1", true, 1].includes(val)) ret = true;
+    else if (["off", "Off", "OFF", "false", "False", "FALSE", "0", false, 0].includes(val)) ret = false;
+    else ret = deflt;
     return ret;
   }
   /** Joins all arguments as a URL string
@@ -5900,8 +5973,7 @@ var Uib = (_a = class {
           }
           const intersect = this.arrayIntersect(this.uibAttribs, aNames);
           let uibChildren = [];
-          if (n.querySelectorAll)
-            uibChildren = n.querySelectorAll(__privateGet(this, _uibAttrSel));
+          if (n.querySelectorAll) uibChildren = n.querySelectorAll(__privateGet(this, _uibAttrSel));
           const combi = [...intersect, ...uibChildren];
           if (combi.length > 0) {
             this._uibAttrScanAll(combi);
@@ -5934,19 +6006,14 @@ var Uib = (_a = class {
       const hasValue = Object.prototype.hasOwnProperty.call(msg, "value");
       if (hasValue || hasChecked) {
         if (el.type && (el.type === "checkbox" || el.type === "radio")) {
-          if (hasChecked)
-            el.checked = this.truthy(msg.checked, false);
-          else if (hasValue)
-            el.checked = this.truthy(msg.value, false);
+          if (hasChecked) el.checked = this.truthy(msg.checked, false);
+          else if (hasValue) el.checked = this.truthy(msg.value, false);
         } else {
-          if (hasValue)
-            el.value = msg.value;
-          else if (hasChecked)
-            el.value = this.truthy(msg.checked, false);
+          if (hasValue) el.value = msg.value;
+          else if (hasChecked) el.value = this.truthy(msg.checked, false);
         }
       }
-      if (Object.prototype.hasOwnProperty.call(msg, "payload"))
-        this.replaceSlot(el, msg.payload);
+      if (Object.prototype.hasOwnProperty.call(msg, "payload")) this.replaceSlot(el, msg.payload);
     });
   }
   /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
@@ -5954,8 +6021,7 @@ var Uib = (_a = class {
    * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
    */
   async _uibAttrScanAll(parentEl) {
-    if (!Array.isArray(parentEl))
-      parentEl = [parentEl];
+    if (!Array.isArray(parentEl)) parentEl = [parentEl];
     parentEl.forEach(async (p) => {
       const uibChildren = p.querySelectorAll(__privateGet(this, _uibAttrSel));
       if (uibChildren.length > 0) {
@@ -6009,8 +6075,7 @@ var Uib = (_a = class {
   getElementCustomProps(el) {
     const props = {};
     Object.keys(el).forEach((key) => {
-      if (key.startsWith("_"))
-        return;
+      if (key.startsWith("_")) return;
       props[key] = el[key];
     });
     return props;
@@ -6035,8 +6100,7 @@ var Uib = (_a = class {
     let checked;
     if (el.type === "checkbox" || el.type === "radio") {
       checked = el.checked;
-      if (checked === false)
-        value2 = "";
+      if (checked === false) value2 = "";
     }
     if ("valueAsNumber" in el && !isNaN(el.valueAsNumber)) {
       value2 = el.valueAsNumber;
@@ -6075,8 +6139,7 @@ var Uib = (_a = class {
         valueMissing: v.valueMissing === true ? v.valueMissing : void 0
       };
     }
-    if (Object.keys(el.dataset).length > 0)
-      formDetails.data = el.dataset;
+    if (Object.keys(el.dataset).length > 0) formDetails.data = el.dataset;
     return formDetails;
   }
   /** Show a browser notification if possible.
@@ -6094,8 +6157,7 @@ var Uib = (_a = class {
    * @returns {Promise<Event>|null} A promise that resolves to the click event or null
    */
   notify(config) {
-    if (config.return)
-      return _ui.notification(config);
+    if (config.return) return _ui.notification(config);
     _ui.notification(config).then((res) => {
       log("info", "Uib:notification", "Notification completed event", res)();
     }).catch((err) => {
@@ -6117,10 +6179,8 @@ var Uib = (_a = class {
    * @returns {boolean} True if element was found, false otherwise
    */
   scrollTo(cssSelector, opts) {
-    if (!opts)
-      opts = {};
-    if (!cssSelector || cssSelector === "top" || cssSelector === "start")
-      cssSelector = "body";
+    if (!opts) opts = {};
+    if (!cssSelector || cssSelector === "top" || cssSelector === "start") cssSelector = "body";
     else if (cssSelector === "bottom" || cssSelector === "end") {
       cssSelector = "body";
       opts.block = "end";
@@ -6139,8 +6199,7 @@ var Uib = (_a = class {
    * @returns {boolean} New state
    */
   showMsg(showHide, parent = "body") {
-    if (showHide === void 0)
-      showHide = !__privateGet(this, _isShowMsg);
+    if (showHide === void 0) showHide = !__privateGet(this, _isShowMsg);
     __privateSet(this, _isShowMsg, showHide);
     let slot = "Waiting for a message from Node-RED";
     if (this.msg && Object.keys(this.msg).length > 0) {
@@ -6205,8 +6264,7 @@ var Uib = (_a = class {
    * @returns {boolean} New state
    */
   showStatus(showHide, parent = "body") {
-    if (showHide === void 0)
-      showHide = !__privateGet(this, _isShowStatus);
+    if (showHide === void 0) showHide = !__privateGet(this, _isShowStatus);
     __privateSet(this, _isShowStatus, showHide);
     if (showHide === false) {
       _ui._uiRemove({
@@ -6281,10 +6339,8 @@ var Uib = (_a = class {
       return false;
     }
     if (startStop === "toggle" || startStop === void 0 || startStop === null) {
-      if (__privateGet(this, _uiObservers)[cssSelector])
-        startStop = false;
-      else
-        startStop = true;
+      if (__privateGet(this, _uiObservers)[cssSelector]) startStop = false;
+      else startStop = true;
     }
     const that = this;
     if (startStop === true) {
@@ -6422,6 +6478,10 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         }
         break;
       }
+      case "get page meta": {
+        this.set("pageMeta", receivedCtrlMsg.payload);
+        break;
+      }
       default: {
         log("trace", `uibuilder:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`);
       }
@@ -6451,15 +6511,11 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
   // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
   _msgRcvdEvents(msg) {
     this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
-    if (msg.topic)
-      this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg);
-    if (msg._uib_processed_by)
-      return;
-    else
-      msg._uib_processed_by = "_msgRcvdEvents";
+    if (msg.topic) this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg);
+    if (msg._uib_processed_by) return;
+    else msg._uib_processed_by = "_msgRcvdEvents";
     if (msg._uib) {
-      if (!this._forThis(msg._uib))
-        return;
+      if (!this._forThis(msg._uib)) return;
       if (msg._uib.reload === true) {
         log("trace", "Uib:_msgRcvdEvents:_uib:reload", "reloading")();
         msg._uib_processed_by = "_msgRcvdEvents - reload";
@@ -6481,8 +6537,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       }
     }
     if (msg._ui) {
-      if (!this._forThis(msg._ui))
-        return;
+      if (!this._forThis(msg._ui)) return;
       log("trace", "Uib:_msgRcvdEvents:_ui", "Calling _uiManager")();
       msg._uib_processed_by = "_msgRcvdEvents - _ui";
       this._dispatchCustomEvent("uibuilder:msg:_ui", msg);
@@ -6497,13 +6552,11 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
    * @param {string} [originator] A Node-RED node ID to return the message to
    */
   _send(msgToSend, channel, originator = "") {
-    if (channel === null || channel === void 0)
-      channel = this._ioChannels.client;
+    if (channel === null || channel === void 0) channel = this._ioChannels.client;
     if (channel === this._ioChannels.client) {
       msgToSend = this.makeMeAnObject(msgToSend, "payload");
       if (this.hasUibRouter()) {
-        if (!msgToSend._uib)
-          msgToSend._uib = {};
+        if (!msgToSend._uib) msgToSend._uib = {};
         msgToSend._uib.routeId = this.uibrouter_CurrentRoute;
       }
     } else if (channel === this._ioChannels.control) {
@@ -6512,17 +6565,13 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         msgToSend.uibuilderCtrl = "manual send";
       }
       msgToSend.from = "client";
-      if (this.hasUibRouter())
-        msgToSend.routeId = this.uibrouter_CurrentRoute;
+      if (this.hasUibRouter()) msgToSend.routeId = this.uibrouter_CurrentRoute;
     }
     msgToSend._socketId = this._socket.id;
-    if (originator === "" && this.originator !== "")
-      originator = this.originator;
-    if (originator !== "")
-      Object.assign(msgToSend, { "_uib": { "originator": originator } });
+    if (originator === "" && this.originator !== "") originator = this.originator;
+    if (originator !== "") Object.assign(msgToSend, { "_uib": { "originator": originator } });
     if (!Object.prototype.hasOwnProperty.call(msgToSend, "topic")) {
-      if (this.topic !== void 0 && this.topic !== "")
-        msgToSend.topic = this.topic;
+      if (this.topic !== void 0 && this.topic !== "") msgToSend.topic = this.topic;
       else {
         if (Object.prototype.hasOwnProperty.call(this, "msg") && Object.prototype.hasOwnProperty.call(this.msg, "topic")) {
           msgToSend.topic = this.msg.topic;
@@ -6531,8 +6580,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     }
     if (msgToSend._ui) {
       msgToSend._ui.from = "client";
-      if (this.hasUibRouter())
-        msgToSend._ui.routeId = this.uibrouter_CurrentRoute;
+      if (this.hasUibRouter()) msgToSend._ui.routeId = this.uibrouter_CurrentRoute;
     }
     let numMsgs;
     if (channel === this._ioChannels.client) {
@@ -6555,10 +6603,8 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
    */
   _stdMsgFromServer(receivedMsg) {
     receivedMsg = this.makeMeAnObject(receivedMsg, "payload");
-    if (receivedMsg._uib && !this._forThis(receivedMsg._uib))
-      return;
-    if (receivedMsg._ui && !this._forThis(receivedMsg._ui))
-      return;
+    if (receivedMsg._uib && !this._forThis(receivedMsg._uib)) return;
+    if (receivedMsg._ui && !this._forThis(receivedMsg._ui)) return;
     this._checkTimestamp(receivedMsg);
     this.set("msgsReceived", ++this.msgsReceived);
     this._msgRcvdEvents(receivedMsg);
@@ -6602,17 +6648,13 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         break;
       }
       case "getManagedVarList": {
-        if (prop === "full")
-          response = this.getManagedVarList();
-        else
-          response = Object.values(this.getManagedVarList());
+        if (prop === "full") response = this.getManagedVarList();
+        else response = Object.values(this.getManagedVarList());
         break;
       }
       case "getWatchedVars": {
-        if (prop === "full")
-          response = this.getWatchedVars();
-        else
-          response = Object.values(this.getWatchedVars());
+        if (prop === "full") response = this.getWatchedVars();
+        else response = Object.values(this.getWatchedVars());
         break;
       }
       case "htmlSend": {
@@ -6625,10 +6667,8 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       }
       case "navigate": {
         let newUrl;
-        if (prop)
-          newUrl = prop;
-        else if (value2)
-          newUrl = value2;
+        if (prop) newUrl = prop;
+        else if (value2) newUrl = value2;
         response = this.navigate(newUrl);
         break;
       }
@@ -6640,10 +6680,8 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         let store = false;
         let autoload = false;
         if (msg._uib.options && msg._uib.options.store) {
-          if (msg._uib.options.store === true)
-            store = true;
-          if (msg._uib.options.autoload === true)
-            autoload = true;
+          if (msg._uib.options.store === true) store = true;
+          if (msg._uib.options.autoload === true) autoload = true;
         }
         response = this.set(prop, value2, store, autoload);
         break;
@@ -6681,8 +6719,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         response.then((data) => {
           msg.payload = msg._uib.response = data;
           msg.info = msg._uib.info = info;
-          if (!msg.topic)
-            msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
+          if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
           this.send(msg);
           return true;
         }).catch((err) => {
@@ -6691,8 +6728,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       } else {
         msg.payload = msg._uib.response = response;
         msg.info = msg._uib.info = info;
-        if (!msg.topic)
-          msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
+        if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
         this.send(msg);
       }
     }
@@ -6703,9 +6739,14 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
    * @param {string|undefined} logLevel Log level to use. If not supplied, will default to debug
    */
   beaconLog(txtToSend, logLevel2) {
-    if (!logLevel2)
-      logLevel2 = "debug";
+    if (!logLevel2) logLevel2 = "debug";
     navigator.sendBeacon("./_clientLog", `${logLevel2}::${txtToSend}`);
+  }
+  /** Request the current page's metadata from the server - response is handled automatically in _ctrlMsgFromServer */
+  getPageMeta() {
+    this.sendCtrl({
+      uibuilderCtrl: "get page meta"
+    });
   }
   /** Easily send the entire DOM/HTML msg back to Node-RED
    * @param {string} [originator] A Node-RED node ID to return the message to
@@ -6721,8 +6762,7 @@ ${document.documentElement.outerHTML}`;
       topic: this.topic
     };
     log("trace", "Uib:htmlSend", "Sending full HTML to Node-RED", msg)();
-    if (send === true)
-      this._send(msg, this._ioChannels.client, originator);
+    if (send === true) this._send(msg, this._ioChannels.client, originator);
     return out;
   }
   /** Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
@@ -6769,8 +6809,7 @@ ${document.documentElement.outerHTML}`;
       log("warn", "Uib:eventSend", "Neither the domevent nor the hidden event properties are set. You probably called this function directly rather than applying to an on click event.")();
       return;
     }
-    if (!domevent || !domevent.constructor)
-      domevent = event;
+    if (!domevent || !domevent.constructor) domevent = event;
     if (!domevent.constructor.name.endsWith("Event") || !domevent.currentTarget) {
       log("warn", "Uib:eventSend", `ARGUMENT NOT A DOM EVENT - use data attributes not function arguments to pass data. Arg Type: ${domevent.constructor.name}`, domevent)();
       return;
@@ -6787,8 +6826,7 @@ ${document.documentElement.outerHTML}`;
         valid: target.form.checkValidity()
       };
       Object.values(target.form).forEach((frmEl, i2) => {
-        if (["fieldset", "object"].includes(frmEl.type))
-          return;
+        if (["fieldset", "object"].includes(frmEl.type)) return;
         const details = this.getFormElementDetails(frmEl);
         if (details) {
           formDetails[details.id] = details;
@@ -6797,8 +6835,7 @@ ${document.documentElement.outerHTML}`;
       });
     }
     const classes = this.getElementClasses(target);
-    if (Object.keys(target.dataset).length > 0)
-      payload = { ...payload, ...target.dataset };
+    if (Object.keys(target.dataset).length > 0) payload = { ...payload, ...target.dataset };
     let nprops;
     if (Object.prototype.toString.call(target) === "[object Notification]") {
       payload = `notification-${target.userAction}`;
@@ -6898,8 +6935,7 @@ ${document.documentElement.outerHTML}`;
       const u = window.location.pathname.split("/").filter(function(t) {
         return t.trim() !== "";
       });
-      if (u.length > 0 && u[u.length - 1].endsWith(".html"))
-        u.pop();
+      if (u.length > 0 && u[u.length - 1].endsWith(".html")) u.pop();
       ioNamespace = u.pop();
       log("trace", "uibuilder.module.js:getIOnamespace", `Socket.IO namespace found via url path: ${ioNamespace}`)();
     } else {
@@ -6918,12 +6954,9 @@ ${document.documentElement.outerHTML}`;
    * @returns {boolean|undefined} Whether or not Socket.IO is connected to uibuilder in Node-RED
    */
   _checkConnect(delay, factor, depth = 1) {
-    if (navigator.onLine === false)
-      return;
-    if (!delay)
-      delay = this.retryMs;
-    if (!factor)
-      factor = this.retryFactor;
+    if (navigator.onLine === false) return;
+    if (!delay) delay = this.retryMs;
+    if (!factor) factor = this.retryFactor;
     log("trace", "Uib:checkConnect", `Checking connection. Connected: ${this._socket.connected}. Timer: ${__privateGet(this, _timerid)}. Depth: ${depth}. Delay: ${delay}. Factor: ${factor}`, this._socket)();
     if (this._socket.connected === true) {
       if (__privateGet(this, _timerid)) {
@@ -6935,8 +6968,7 @@ ${document.documentElement.outerHTML}`;
       return true;
     }
     this.set("ioConnected", false);
-    if (__privateGet(this, _timerid))
-      window.clearTimeout(__privateGet(this, _timerid));
+    if (__privateGet(this, _timerid)) window.clearTimeout(__privateGet(this, _timerid));
     __privateSet(this, _timerid, window.setTimeout(() => {
       log("warn", "Uib:checkConnect:setTimeout", `Socket.IO reconnection attempt. Current delay: ${delay}. Depth: ${depth}`)();
       this._socket.disconnect();
@@ -6992,8 +7024,7 @@ Namespace: ${this.ioNamespace}`)();
     this._socket.on(this._ioChannels.control, this._ctrlMsgFromServer.bind(this));
     this._socket.on("disconnect", this._onDisconnect.bind(this));
     this._socket.on("connect_error", (err) => {
-      if (navigator.onLine === false)
-        return;
+      if (navigator.onLine === false) return;
       log("error", "Uib:ioSetup:connect_error", `\u274C Socket.IO Connect Error. Reason: ${err.message}`, err)();
       this.set("ioConnected", false);
       this.set("socketError", err);
@@ -7023,8 +7054,7 @@ Namespace: ${this.ioNamespace}`)();
   /** Manually disconnect socket.io and stop any auto-reconnect timer */
   disconnect() {
     this._socket.disconnect();
-    if (__privateGet(this, _timerid))
-      window.clearTimeout(__privateGet(this, _timerid));
+    if (__privateGet(this, _timerid)) window.clearTimeout(__privateGet(this, _timerid));
   }
   /** Start up Socket.IO comms and listeners
    * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
@@ -7035,8 +7065,7 @@ Namespace: ${this.ioNamespace}`)();
    */
   start(options) {
     log("trace", "Uib:start", "Starting")();
-    if (__privateGet(this, _MsgHandler))
-      this.cancelChange("msg", __privateGet(this, _MsgHandler));
+    if (__privateGet(this, _MsgHandler)) this.cancelChange("msg", __privateGet(this, _MsgHandler));
     if (this.started === true) {
       log("info", "Uib:start", "Start function already called. Resetting Socket.IO and msg handler.")();
     }
@@ -7045,12 +7074,9 @@ Client ID: ${this.clientId}`)();
     log("trace", "Uib:start", "ioNamespace: ", this.ioNamespace, `
 ioPath: ${this.ioPath}`)();
     if (options) {
-      if (options.ioNamespace)
-        this.set("ioNamespace", options.ioNamespace);
-      if (options.ioPath)
-        this.set("ioPath", options.ioPath);
-      if (options.nopolling && this.socketOptions.transports[0] === "polling")
-        this.socketOptions.transports.shift();
+      if (options.ioNamespace) this.set("ioNamespace", options.ioNamespace);
+      if (options.ioPath) this.set("ioPath", options.ioPath);
+      if (options.nopolling && this.socketOptions.transports[0] === "polling") this.socketOptions.transports.shift();
     }
     const [entry] = performance.getEntriesByType("navigation");
     this.set("lastNavType", entry.type);
@@ -7086,8 +7112,7 @@ ioPath: ${this.ioPath}`)();
     this.onChange("msg", (msg) => {
       if (__privateGet(this, _isShowMsg) === true) {
         const eMsg = document.getElementById("uib_last_msg");
-        if (eMsg)
-          eMsg.innerHTML = this.syntaxHighlight(msg);
+        if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg);
       }
     });
     this._uibAttrScanAll(document);
@@ -7165,6 +7190,7 @@ try {
 var uibuilder_module_default = uibuilder2;
 uibuilder2.start();
 customElements.define("uib-var", UibVar);
+customElements.define("uib-meta", UibMeta);
 export {
   Uib,
   uibuilder_module_default as default,
