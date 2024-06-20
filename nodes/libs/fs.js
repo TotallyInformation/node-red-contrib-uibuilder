@@ -168,98 +168,28 @@ class UibFs {
         return true
     }
 
-    /** Return list of found files as folder/files and/or urls
-     * @param {string} uibId The uibuilder node instance id to search
-     * @param {boolean} live If true, the search root will be limited to the currently live served folder
-     * @param {[string]} filter A fast-glob search filter array (or string)
-     * @param {[string]} exclude A fast-glob exclude filter array (or string)
-     * @param {boolean} urlOut Output will include a url list (relative to the current uib instance root)
-     * @param {boolean} fullPrefix Output will be prefixed with the full path for both file and url outputs
-     * @returns {Promise<any>} List of found files
+    /** Returns the create/amend timestamps (as JS Date objects) & file size
+     * @param {string} fname File name to examine
+     * @returns {Promise< {created:Date,modified:Date,size:number,[pageName:string]} | {error:string,[originalError:string]} >} File stats
      */
-    async searchInstance(uibId, live, filter, exclude, urlOut, fullPrefix) {
-        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [uibuilder:UibFs:searchInstance]')
-        if ( this.uib.RED === null ) throw new Error('uib.RED is null [uibuilder:UibFs:searchInstance] ')
-        const RED = this.uib.RED
+    async getFileMeta(fname) {
+        if (!fname) return { error: 'No file provided' }
 
-        // Get node instance paths
-        const uibnode = RED.nodes.getNode(uibId)
-        const searchFolder = join(uibnode.customFolder, live === true ? uibnode.sourceFolder : '')
-
-        // Defaults to finding everything in the search folder
-        if (!filter) filter = ['*']
-        if (!Array.isArray(filter)) filter = [filter]
-
-        // Remove dangerous ../ segments from filters
-        filter.forEach( (f, i) => {
-            filter[i] = f.replace(/\.\.\//g, '')
-        })
-
-        const opts = {
-            cwd: searchFolder,
-            suppressErrors: true,
-            unique: true,
-            deep: 10, // restrict to max 10 deep sub-folders (prevent recursion)
-            // caseSensitiveMatch: true, // default
-            // dot: false, // default
-        }
-        if (exclude) opts.ignore = exclude
-
-        const srch = await fg.async(filter, opts)
-
-        const isCustom = this.uib.customServer.isCustom
-
-        let prefix = ''
-        if (urlOut) {
-            if (fullPrefix) {
-                if (isCustom || (!isCustom && !this.uib.httpRoot)) prefix = `./${uibnode.url}/`
-                else prefix = `./${this.uib.httpRoot}/${uibnode.url}/`
-            } else {
-                prefix = './'
+        let stat
+        try {
+            const fstat = await fs.stat(fname)
+            stat = {
+                created: fstat.birthtime,
+                modified: fstat.mtime,
+                size: fstat.size,
+            }
+        } catch (e) {
+            stat = {
+                error: 'Could not get file metadata',
+                originalError: e.message // take care not to leak this to end users
             }
         }
-        srch.forEach( (f, i) => {
-            // If output as urls required, replace `index.html`
-            if (urlOut) {
-                f = f.replace('index.html', '')
-            } else {
-                if (fullPrefix) {
-                    f = join(searchFolder, f)
-                } else {
-                    f = relative(searchFolder, join(searchFolder, f))
-                }
-            }
-            srch[i] = `${prefix}${f}`
-        })
-
-        const out = {
-            results: srch,
-            config: {
-                filter: {
-                    searchRoot: searchFolder,
-                    filter: filter,
-                    exclude: exclude,
-                    urlOutput: urlOut,
-                    fullPrefixOutput: fullPrefix,
-                },
-                uibuilder: {
-                    rootFolder: normalize(this.uibRootFolder),
-                },
-                node: {
-                    id: uibId,
-                    name: uibnode.url,
-                    customFolder: uibnode.customFolder,
-                    liveFolder: uibnode.sourceFolder,
-                }
-            },
-        }
-        if (!isCustom) {
-            out.config.uibuilder.httpRoot = this.uib.httpRoot
-        } else {
-            out.config.uibuilder.customServer = this.uib.customServer
-        }
-
-        return out
+        return stat
     }
 
     /** Return all of the *.html files from the served folder for a specific instance
@@ -413,6 +343,100 @@ class UibFs {
             return res
         }
     } // ----- End of replaceTemplate() ----- //
+
+    /** Return list of found files as folder/files and/or urls
+     * @param {string} uibId The uibuilder node instance id to search
+     * @param {boolean} live If true, the search root will be limited to the currently live served folder
+     * @param {[string]} filter A fast-glob search filter array (or string)
+     * @param {[string]} exclude A fast-glob exclude filter array (or string)
+     * @param {boolean} urlOut Output will include a url list (relative to the current uib instance root)
+     * @param {boolean} fullPrefix Output will be prefixed with the full path for both file and url outputs
+     * @returns {Promise<any>} List of found files
+     */
+    async searchInstance(uibId, live, filter, exclude, urlOut, fullPrefix) {
+        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [uibuilder:UibFs:searchInstance]')
+        if ( this.uib.RED === null ) throw new Error('uib.RED is null [uibuilder:UibFs:searchInstance] ')
+        const RED = this.uib.RED
+
+        // Get node instance paths
+        const uibnode = RED.nodes.getNode(uibId)
+        const searchFolder = join(uibnode.customFolder, live === true ? uibnode.sourceFolder : '')
+
+        // Defaults to finding everything in the search folder
+        if (!filter) filter = ['*']
+        if (!Array.isArray(filter)) filter = [filter]
+
+        // Remove dangerous ../ segments from filters
+        filter.forEach( (f, i) => {
+            filter[i] = f.replace(/\.\.\//g, '')
+        })
+
+        const opts = {
+            cwd: searchFolder,
+            suppressErrors: true,
+            unique: true,
+            deep: 10, // restrict to max 10 deep sub-folders (prevent recursion)
+            // caseSensitiveMatch: true, // default
+            // dot: false, // default
+        }
+        if (exclude) opts.ignore = exclude
+
+        const srch = await fg.async(filter, opts)
+
+        const isCustom = this.uib.customServer.isCustom
+
+        let prefix = ''
+        if (urlOut) {
+            if (fullPrefix) {
+                if (isCustom || (!isCustom && !this.uib.httpRoot)) prefix = `./${uibnode.url}/`
+                else prefix = `./${this.uib.httpRoot}/${uibnode.url}/`
+            } else {
+                prefix = './'
+            }
+        }
+        srch.forEach( (f, i) => {
+            // If output as urls required, replace `index.html`
+            if (urlOut) {
+                f = f.replace('index.html', '')
+            } else {
+                if (fullPrefix) {
+                    f = join(searchFolder, f)
+                } else {
+                    f = relative(searchFolder, join(searchFolder, f))
+                }
+            }
+            srch[i] = `${prefix}${f}`
+        })
+
+        const out = {
+            results: srch,
+            config: {
+                filter: {
+                    searchRoot: searchFolder,
+                    filter: filter,
+                    exclude: exclude,
+                    urlOutput: urlOut,
+                    fullPrefixOutput: fullPrefix,
+                },
+                uibuilder: {
+                    rootFolder: normalize(this.uibRootFolder),
+                },
+                node: {
+                    id: uibId,
+                    name: uibnode.url,
+                    customFolder: uibnode.customFolder,
+                    liveFolder: uibnode.sourceFolder,
+                }
+            },
+        }
+        if (!isCustom) {
+            out.config.uibuilder.httpRoot = this.uib.httpRoot
+        } else {
+            out.config.uibuilder.customServer = this.uib.customServer
+        }
+
+        return out
+    }
 
     // TODO chk params
     /** Output a file to an instance folder (async/promise)
