@@ -1,30 +1,12 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-06-04 20:42:08
+updated: 2024-06-20 17:01:00
 ---
 
 # Changelog
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
-
-## **NEW FEATURE** page metadata
-
-Allows FE to get data about the current page. Mostly the file created and updated timestamps. But consider extending to allow other metadata to be defined - maybe via the instance package.json?
-
-### `nodes/libs/fs.js`
-
-* [x] Fn, `getFileMeta`. Returns at least created & updated timestamps and file size.
-
-### `nodes/libs/socket.js`
-
-* [x] Amend `listenFromClientCtrl`, listen for a control msg `get page meta`, calls `fs.getFileMeta`, sends the output to the FE using the same control msg. Does not output to uibuilder node port #2.
-
-### FE library
-
-* [x] Fn `getPageMeta` to call - sending a uibuilder control msg `get page meta`
-* [x] Fn to listen for a `get page meta` control msg and updating the uibuilder `pageMeta` managed variable
-* [ ] Consider adding a new web component, `<uib-meta type="created">` to display. `created`, `updated`, `crup` (both dates sensibly formatted)
 
 ## **NEW FEATURE** Create package.json template for Node-RED projects
 
@@ -58,7 +40,6 @@ I will attempt to also trap a new project create to run the install if I can. Ot
   * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
   * [ ] Document a dashboard-like grid layout.
   * [ ] Document how to use `<instanceRoot>/routes/` properly. [Ref](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/changelog?id=new-features)
-  * [ ] Document new `round` and `getPageMeta` functions in FE library
 * [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
 * [ ] Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
 * [ ] New Node Idea: `uib-meta` - links to a uibuilder node and returns the instance metadata including URL's and folder locations and other settings. (e.g. use with [node-red-cleanup-filesystem](https://discourse.nodered.org/t/announce-node-red-cleanup-filesystem-request-for-testing/88135))
@@ -117,7 +98,8 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 ### `<uib-var>` custom HTML component
 
-* [ ] Amend to use same processors as the uib-attr
+* [ ] Amend to use same processors as the uib-topic?
+* [ ] Add ability to directly amend the tag's attributes.
 
 ### `uib-cache` node
 
@@ -259,7 +241,7 @@ Most of these changes will *not* impact most people but you should check through
 
 ### 📌 Highlights
 
-* Some tweaks to the documentation should make it a little easier to get started with.
+* Some tweaks to the documentation should make it a little easier to get started with. The menu and UX has also been tweeked. There are new pages covering easy UI updates, common design patterns, creating well-structured HTML pages, and troubleshooting.
 
 * You can now add a `uib-topic="mytopic"` attribute to _ANY_ HTML element. Doing so makes that element responsive to messages from Node-RED.
   
@@ -320,10 +302,15 @@ Most of these changes will *not* impact most people but you should check through
 * On the Detailed Information Page (uibindex) "User-Facing Routes" is changed to "Client-Facing Routes" to make it clearer.
 
 * Documentation
-  * New How-To: Creating a well-structured HTML page
+  * New How-To: Creating a well-structured HTML page.
+  * New page: Easy UI updates - explaining the different ways you can easily and dynamically update content.
+  * New page: Common design patterns - the most common ways of working with Node-RED and UIBUILDER.
+  * New page: Troubleshooting - some thoughts on issues that might happen, how to spot them and fix them.
   * Mustache plugin removed from Docksify load. Not used and not required since Docsify supports easy loading of custom Vue components which can do the same work.
   * Additional uibuilder web path added `./docs/resources` which is mapped to the `/front-end` package folder. Allowing the docs to use the images, router, branding, etc in the future.
   * The Docsify JS and CSS now split from the main html file for ease of management.
+  * Tweaks to Docsify layout and UX for improved readability. A Table of Contents sidebar added that lists h2/h3 headings. The menu is simplified and only shows h1 entries.
+  * Lots of minor updates and standardisation.
 
 * URL's are now _case sensitive_ when using the custom ExpressJS server feature. 
   
@@ -357,6 +344,8 @@ The `URL Output?` setting will change the output from a folder/file list to a re
   Note however, that this uses the native HTML Mutation Observer API, when used on very large, complex pages and on a limited performance client device, this might occassionally cause performance issues. Therefore it will be made optional (but on by default as the code is quite efficient and should be unnoticeable in most cases).
 
   Use this feature as an alternative to using the `<uib-var>` custom web component.
+
+* **NEW Web Component** - `<uib-meta>` - display's the page's file created/updated timestamps and file size.
 
 * **NEW FUNCTIONS**
 
@@ -498,6 +487,7 @@ The `old-blank-client` template and all associated documentation has also been r
 
 * If a client msg received with a msg._uib property but the `uibuilder` node hasn't requested that they are shown, delete it before sending on to flow.
 * Removed serving of the socket.io client library as this is no longer required (client library is pre-built into the uibuilder library).
+* Amended `listenFromClientCtrl`, now listens for a control msg `get page meta`, calls `fs.getFileMeta`, sends the output to the FE using the same control msg. Does not output to uibuilder node port #2.
 
 ### `libs/uiblib.js` library (uibuilder utilities)
 
@@ -507,6 +497,7 @@ The `old-blank-client` template and all associated documentation has also been r
 
 ### `libs/fs.js` library (filing system handling)
 
+* **NEW FUNCTION** `getFileMeta` - Returns at least created & updated timestamps and file size.
 * `replaceTemplate` moved from `libs/uiblib.js` & fs-extra/cpySync replaced with node:fs/promises/cp
 * Added sync and async copy fns
 
