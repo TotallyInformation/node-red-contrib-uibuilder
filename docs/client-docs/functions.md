@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2024-06-14 16:08:11
+updated: 2024-06-20 17:01:52
 ---
 
 Functions accessible in client-side user code.
@@ -84,6 +84,12 @@ This has the advantage of working even if Socket.IO is not connected. It uses a 
 However, only text strings can be sent and messages need to be kept short. It only works with modern browsers that support the web beacon API.
 
 The `logLevel` matches both Node-RED and UIBUILDER defined log levels (e.g. error, warn, info, debug, trace ).
+
+### `getPageMeta()` - Requests the current page's static file metadata from the server :id=getpagemeta
+
+This is handled as a uibuilder control message. The return data is also a control message handled by the internal function `uibuilder._ctrlMsgFromServer()`.
+
+The returned data is set into the uibuilder [managed variable `pageMeta`](/client-docs/variables#read-only).
 
 ### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED :id=htmlSend
 
@@ -760,6 +766,12 @@ without reloading the page.
 Putting a hash on the end of a full or relative URL will
 trigger the route on the resulting page load.
 
+### `round(num, decimalPlaces)` - Round a number to a set number of decimal places :id=round
+
+Fast but accurate number rounding (https://stackoverflow.com/a/48764436/1309986 solution 2) using the "half away from zero" method (AKA "commercial" rounding), the most common type.
+
+Inputs must be numbers otherwise an error is generated.
+
 ### `truthy(val, [default])` - Returns true or false or the optional default value depending on the value :id=truthy
 
 True accepts 'on', 'On', 'ON', 'true', 'True', 'TRUE', '1', true, 1
@@ -826,6 +838,7 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`formatNumber`](#formatNumber)
 * [`get`](#get)*
 * [`getManagedVarList`](#getManagedVarList)*
+* [`getPageMeta`](#getPageMeta)
 * [`getStore`](#getStore)
 * [`getWatchedVars`](#getWatchedVars)*
 * [`htmlSend`](#htmlSend)*
@@ -850,6 +863,7 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`replaceSlot`](#replaceSlot)§
 * [`replaceSlotMarkdown`](#replaceSlotMarkdown)§
 * [`restoreHtmlFromCache`](#restoreHtmlFromCache)
+* [`round`](#round)
 * [`sanitiseHTML`](#sanitiseHTML)
 * [`saveHtmlCache`](#savehtmlcache)
 * [`scrollTo`](#scrollTo)*

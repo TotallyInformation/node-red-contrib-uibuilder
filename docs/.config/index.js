@@ -24,6 +24,8 @@ window.$docsify = { //  eslint-disable-line no-undef
         '/dev/web-js.*': '/dev/server-libs/web.md',
         // '/roadmap.*': '/roadmap/readme.md',
 
+        '.*?/.config/(.*)': '/.config/$1',
+        '.*?/images/(.*)': '/images/$1',
         '.*?/changelog': 'https://raw.githubusercontent.com/TotallyInformation/node-red-contrib-uibuilder/main/CHANGELOG.md',
         '.*?/uibhome': 'https://raw.githubusercontent.com/TotallyInformation/node-red-contrib-uibuilder/main/README.md',
         '/docs/(.*)': '/$1',

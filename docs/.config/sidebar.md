@@ -1,7 +1,9 @@
 * [About](/about.md)
-* [Getting Started](/getting-started.md)
+* [Getting Started](/using/getting-started.md)
 * Using <span class="uib-name"><span class="uib-red">ui</span>builder</span>
   * [A first-timers walkthough](walkthrough1.md "Let's get started!")
+  * [Easy UI updates](/using/easy-ui-updates.md "Updating web UI content and attributes dynamically from Node-RED")
+  * [Common design patterns](/using/design-patterns.md "Common ways to create web apps and dashboards with Node-RED and UIBUILDER")
   * [Configuring <span class="uib-name"><span class="uib-red">ui</span>builder</span>](uib-configuration.md "Configure the UIBUILDER platform. Affects all uibuilder nodes")
   * [Creating data-driven web apps](web-app-workflow.md "Different styles and workflows you can use")
   * [Creating Templates](creating-templates "Pre-defined and reusable front-end code, dependencies, and optional build steps")
@@ -9,6 +11,7 @@
   * [Standard messages](pre-defined-msgs.md "Catalogue of messages and properties")
   * [Why <span class="uib-name"><span class="uib-red">ui</span>builder</span>?](using/why-uibuilder.md "Why would I want to use UIBUILDER?")
   * [Zero-code UI creation](using/zero-code-ui.md "Dynamically creating web UI's")
+  * [Troubleshooting](using/troubleshooting.md "Dealing with things that aren't working properly")
 * The Nodes
   * [Introduction](nodes/README.md)
   * [`uib-cache`](nodes/uib-cache.md "Cache data so that (re)loaded pages get the latest")

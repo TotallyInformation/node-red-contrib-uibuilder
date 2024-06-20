@@ -3,15 +3,13 @@ title: Variables used in the modern client
 description: |
   Details about the variables used in the uibuilder modern front-end client library. Some variables are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-10-30 17:18:40
-updated: 2024-02-20 16:15:58
+updated: 2024-06-20 17:00:37
 ---
 
 ## Read/write
 
 Always use `uibuilder.set('varname', value)` to change these.
 
-* 
 * `logLevel` - Sets the current logging level. The default is `2` ('error' and 'warn'). Increase to see more detailed logging.
   
   NOTE: This is one of the few properties it is safe to change directly `uibuilder.logLevel = 5`. That is because it has a dedicated getter and setter in the Class.
@@ -42,6 +40,7 @@ Always use `uibuilder.get('varname', value)` to obtain the value of these. You c
 * `msgsSentCtrl` - The number of control messages sent to server since page load
 * `msgsCtrlReceived` - The number of control messages received from server since page load
 * `online` - Is the client browser online (true) or offline (false)?
+* `pageMeta` - The current page's static file metadata (timestamps & size) requested from the server by the [`getPageMeta()` function](/client-docs/functions#getPageMeta)
 * `pageName` - Actual name of the current page
 * `sentCtrlMsg` - The last control msg object sent via uibuilder.send()
 * `sentMsg` - The last std msg object sent via uibuilder.send()

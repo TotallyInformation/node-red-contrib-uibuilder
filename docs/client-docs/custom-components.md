@@ -3,36 +3,38 @@ title: Custom web components
 description: |
   Web components built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2024-03-09 14:55:14
+updated: 2024-06-20 17:00:46
 ---
 
 UIBUILDER can work with front-end frameworks such as REACT, VueJS, etc. However, it does not need them. But one thing that these frameworks often have are collections of components that you can add to your HTML. Each component will produce something useful in your web page such as an information card, tabbed interface, navigation menu, etc.
 
-For more modern browsers though, there is an alternative to a framework and that is "[web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_Components)". These are a W3C international standard and they are defined using JavaScript.
+For more modern browsers though, there is an alternative to a framework and that is "[web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_Components)". These are a W3C international standard and they are defined using JavaScript. The [`uib-var`](#uib-var) & [`uib-meta`](#uib-meta) built-in components are examples of such components.
 
-The [`uib-var`](#uib-var-include-a-managed-variable-in-the-page) built-in component is an example of such a component.
-
-To make use of a web component, all that is needed is to load it. Web components are written as ES Modules (ESM). In this form, you can only use them with the ESM version of the uibuilder client library and they will need loading as an `import` statement in your module `index.js` just like the client library itself. (`uib-var` is loaded for you, you don't have to do anything).
+To make use of a web component, all that is needed is to load it as a library. Web components are written as ES Modules (ESM). In this form, you can only use them with the ESM version of the uibuilder client library and they will need loading as an `import` statement in your module `index.js` just like the client library itself. (`uib-var` & `uib-meta` are loaded for you though, you don't have to do anything).
 
 However, some components may also be built so that they can be loaded as a linked script. This is easily done using a build tool such as [`esbuild`](https://esbuild.github.io/). When built this way, they can be used with the standard IIFE version of the uibuilder client library. A well-crafted component will often include a version for loading this way but it is up to the author to make this available. Check the component's documentation for details.
 
+Needless to say, any web components written by [TotallyInformation](https://github.com/TotallyInformation) and certainly any included with UIBUILDER will be written such that their library can simply be linked with no other code needed to make them work. However, they will also be usable as standard ES modules. Again though, the built-in components are loaded for you automatically by the uibuilder client library, you don't load them yourself.
+
 > [!NOTE]
-> UIBUILDER's no-code `uib-element` node currently sends out low-code JSON data that describes each element. While this is reasonably efficient since no actual HTML/JavaScript code is sent, it could be even more efficient by having a corresponding web component for each element. This is something that is likely to happen in a future release.
+> UIBUILDER's no-code `uib-element` node currently sends out low-code JSON data that describes each element, the uibuilder client library converts (hydrates) this configuration into HTML and inserts to or updates the page. While this is reasonably efficient since no actual HTML/JavaScript code is sent, it could be even more efficient by having a corresponding *web component* for each element. This is something that is likely to happen in a future release.
 
-## Built-in components: `uib-var` - include easily updated output in the page :id=uib-var
+## Built-in components: `uib-var` :id=uib-var
 
-This component provides another way to make it easy to include dynamic data in your web UI and to update it. It is roughly equivalent to the "mustache" style brackets found in many front-end frameworks (<code>&#123;{myvariable}}</code>). However, unlike those, it is 100% standard HTML. The component reference is replaced in the web page by a uibuilder managed variable value, msg topic payload, or the returned value of a filter function - depending on the attributes provided.
+Include easily updated output on a web page.
+
+This component provides another way to make it easy to include dynamic data in your web UI and to update it. It is roughly equivalent to the "mustache" style brackets found in many front-end frameworks (<code>&#123;{myvariable}}</code>). However, unlike those, `<uib-var>` is 100% standard HTML. The component reference is replaced in the web page by a uibuilder managed variable value, msg topic payload, or the returned value of a filter function - depending on the attributes provided.
 
 Included in your page using the `<uib-var>`, see the examples below on how to include this in your HTML. You can also use the no-code `uib-tag` node to add it to your HTML. 
 
 There is no need to separately load the component, that is done automatically by the uibuilder client library.
 
 
-### Attributes
+### Attributes :id=uib-var-attribs
 
 These attributes can be added to the `<uib-var>` tag. Noting that attributes must always have _string_ values, e.g. `topic="my/topic/#1"`.
 
-#### `topic` :id=topic
+#### topic :id=uib-var-topic
 
 Adds a background "listener" for messages from Node-RED via UIBUILDER that have the `topic` property matching this attribute. For example, the HTML `<uib-var topic="my/topic/#1"></uib-var>` will be automatically updated to show `42` when the corresponding uibuilder node is sent a message containing `{topic: 'my/topic/#1', payload: 42}`.
 
@@ -42,13 +44,13 @@ This approach is especially useful to be able to display MQTT topic values in yo
 
 > Cannot be used in conjunction with the `variable` attribute.
 
-#### `variable` :id=variable
+#### variable :id=uib-var-variable
 
 Displays the *value* of the given variable name in your web page and *dynamically updates* as long as the variable is changed using `uibuilder.set()`; or from Node-RED using the appropriate uib set command, e.g. `msg = {"command":"set","prop":"myVar","value":"42"}`. By default, the tag inserts the variable value inline with other text. Class and Style attributes can be added as for any other HTML.
 
 > Cannot be used in conjunction with the `topic` attribute.
 
-#### `filter` :id=filter
+#### filter :id=uib-var-filter
 
 Takes a string representation of a function to run before display. It can be used on its own or in conjunction with either the `variable` or `topic` attributes.
 
@@ -82,17 +84,17 @@ Generally, it will be best to define your own function. Further standard filters
   <!-- #endregion -->
 > ```
 
-#### `undefined` :id=undefined
+#### undefined :id=uib-var-undefined
 
 If present or set to `on`, or `true`, the component will show even if the variable is undefined. 
   
 If not present or set to anything else, an undefined variable will show the _slot content_ (anything put between the open and close tag). This lets you have an initial value showing that is replaced as soon as the variable is actually set.
 
-#### `report` :id=report
+#### report :id=uib-var-report
 
 If present or set to `on`, or `true`, the component will return a standard message back to Node-RED when the variable changes value.
 
-#### `type` :id=type
+#### type :id=uib-var-type
 
 Must be one of 'plain', 'html', 'markdown', or 'object'. `plain` and `html` simply insert the variable as-is. `markdown` allows the insertion of Markdown as long as the Markdown-IT library is loaded (it will also sanitise the resulting HTML if the DOMPurify library is loaded). `object` does some basic formatting to allow object or array variables to be more easily read.
 
@@ -110,11 +112,14 @@ This is the standard method for UIBUILDER instances but this feature is not depe
 
 ### Useful filter functions
 
-#### `uibuilder.formatNumber` :id=format-number
+#### formatNumber :id=uib-var-format-number
 
 Formats a number to a given locale and optionally, a set number of decimal places.
 
-Example, formatting to 2dp using the Japanese locale: `<uib-var topic="mynumber" filter="uibuilder.formatNumber(2, 'ja-JP')"></uib-var>`.
+Example, formatting to 2dp using the Japanese locale: 
+```html
+<uib-var topic="mynumber" filter="uibuilder.formatNumber(2, 'ja-JP')"></uib-var>
+```
 
 Note that the value is passed automatically so the first provided argument is the number of decimal places.
 
@@ -122,7 +127,13 @@ Parameters: `formatNumber(value, decimalPlaces, intl, opts)`. Where `opts` is an
 
 See details in the [client functions doc](client-docs/functions#formatNumber).
 
-### Examples
+#### Other pre-defined filters
+
+Check out the [uibuilder client library functions documentation](client-docs/functions) which contains other functions that may be of use.
+
+### Examples :id=uib-var-examples
+
+#### Show the uibuilder client library version
 
 ```html
 <p>
@@ -131,14 +142,21 @@ See details in the [client functions doc](client-docs/functions#formatNumber).
 </p>
 ```
 
+#### Show the last message send/received to/from Node-RED
+
 ```html
-<p>Last msg received: "<uib-var variable="sentMsg" type="object"></uib-var>".</p>
+<p>Last msg sent: "<uib-var variable="sentMsg" type="object"></uib-var>".</p>
+<p>Last msg received: "<uib-var variable="msg" type="object"></uib-var>".</p>
 ```
+
+#### Show undefined variable and report to Node-RED when variable changes
 
 ```html
 <!-- Shows the value even if undefined. Sends a msg to Node-RED when myVar is changed -->
 <p>The answer is <code><uib-var variable="myVar" undefined report></uib-var></code>.</p>
 ```
+
+#### Using in Markdown content
 
 ```markdown
 ## My Heading
@@ -147,11 +165,62 @@ The version of the uibuilder client library currently
 loaded is `<uib-var variable="version"></uib-var>`.
 ```
 
-#### Adding a tag to your page using no-code from Node-RED
+#### Adding a `uib-var` tag to your page using no-code from Node-RED
 
 Use a `uib-tag` node:
 
 ![example uib-tag node](image.png)
+
+## Built-in components: `uib-meta` :id=uib-meta
+
+Display metadata information about the containing page.
+
+This web component will output page data such as the created/last-updated dates and the page size. The outputs have some simple formatting options available.
+
+The uibuilder client library will automatically request this data from the uibuilder node which gets the data from the server's filing system.
+
+> [!NOTE]
+> This component could easily be extended to get things like the uibuilder node's title and description and other information if required.
+
+### Attributes :id=uib-meta
+
+#### type :id=uib-meta-type
+
+* `created` - the date/time the page's static file was created. This is the default output if `type` is not specified.
+* `updated` (AKA `modified`) - the last date/time the page's static file was updated.
+* `crup` - Both the created and updated date/times.
+* `size` - The size of the page's static file in bytes.
+
+> [!NOTE]
+> The data is from the static file and so does not include updates/sizes from dynamic updates.
+> This makes it less useful for highly dynamic, data-driven pages. It is more useful for static wiki/blog/news style pages.
+
+#### format :id=uib-meta-format
+
+For date/time output:
+
+* `d` - Date only.
+* `dt` - Date and time.
+* `t` - Time only.
+
+Date and time values use the browser's locale specific outputs.
+
+For size output:
+
+* `k` - kilobytes (_bytes/1024_) to 1 decimal place.
+* `m` - megabytes (_bytes/(1024*1024)_) to 2 decimal places.
+
+### Examples :id=uib-meta-examples
+
+```html
+<div id="more">
+  <uib-meta type="created" format="t"></uib-meta><br>
+  <uib-meta format="d"></uib-meta><br>
+  <uib-meta type="updated" format="dt"></uib-meta><br>
+  <uib-meta type="crup" format="d"></uib-meta><br>
+  <uib-meta type="size" format="k"></uib-meta><br>
+</div>
+ ```
 
 ## External components
 
@@ -169,7 +238,7 @@ Totally Information has a (so far experimental) set of web components that work 
 
 A nice looking gauge was gifted to the community by Node-RED forum contributor HotNiPi and this also works with or without UIBUILDER. See [HotNipi Gauge Web Component](https://github.com/TotallyInformation/gauge-hotnipi) for details. In line with UIBUILDER standards, the gauge component is available in both ESM and IIFE formats for ease of use.
 
-### Other components and libraries
+### Other web components and component libraries
 
 There are many web components and web component libraries available. All should work with UIBUILDER.
 

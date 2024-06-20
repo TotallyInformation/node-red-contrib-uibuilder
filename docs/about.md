@@ -3,7 +3,7 @@ title: About UIBUILDER for Node-RED
 description: |
   UIBUILDER provides tools for easily creating data-driven web applications using the Node-RED low-code programming platform.
 created: 2024-05-02 11:17:20
-updated: 2024-06-14 15:52:57
+updated: 2024-06-14 21:55:34
 ---
 
 ## What is it?
@@ -20,15 +20,15 @@ UIBUILDER takes the opposite approach to Dashboard. Its main purpose is to be a 
 
 It does the complex background tasks for you and then gets out of the way.
 
-Better still, it requires no complex frameworks, though it will work with them if required, but instead simple enhances native browser HTML, CSS and JavaScript capabilities.
+Better still, it requires no complex frameworks, though it will work with them if required, but instead simply enhances native browser HTML, CSS and JavaScript capabilities and levels out some inconsistencies making things easier and more consistent to use.
 
-UIBUILDER is a bridge between the Node-RED server and any connected clients (web browser tabs). Each browser tab pointing at the same uibuilder instance is a client and you can have many clients running from 1 browser, 1 device/many browsers or different devices - however you like.
+UIBUILDER is a bridge between the Node-RED server and any connected clients (web browser tabs). Each browser tab pointing at the same uibuilder instance is a client and you can have many clients running from 1 browser, 1 device/many browsers or different devices, or different users - however you like. It lets you filter communications by client ID, uibuilder url, page name, Socket ID, IP address, and browser tabs. So true multi-user applications can be built.
 
 It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces. It utilises standard HTML/CSS and is not a framework. You can use it with a front-end framework if you like, but in many cases you won't need one.
 
 ## What are the main features?
 
-* Easily send data real-time between Node-RED and any connected browser client, and send the other way as well.
+* Easily send data real-time between Node-RED and any connected browser client, and send the other way as well. Target communications to/from specific user ID's, URL's, page names, Socket ID's, IP Addresses or browser tabs.
 * Easily add any number of web pages and other resources to each uibuilder instance.
 * Use simple HTML attributes to enable dynamically updated web elements (eliminating one of the key reasons to use a framework).
 * Option to use standard web development tools when developing your own front-end code.
@@ -78,6 +78,7 @@ It is used by the `uib-html` node to hydrate low-code configuration data into fu
 
 A few other dependencies are used to support the development of UIBUILDER but are not required for its use. They include:
 
+* ESBUILD is used to generate efficient runtime versions of client libraries.
 * ESLINT is used to help eliminate many JavaScript, HTML and CSS coding errors and ensure a consistent code style throughout.
 * GULP is used to automate build and deploy tasks.
 * VSCode is used to do all code editing.
