@@ -52,6 +52,7 @@
 * General hints & tips
   * [Browser auto-refresh](how-to/browser-refresh.md "Automatically reload your page after a change")
   * [Change the root folder (uibRoot)](how-to/changing-uibroot.md)
+  * [Comparison with Dashboard 2](using/compare-d2.md)
   * [Create instance-specific API's](how-to/instance-apis.md)
   * [Creating well-structured HTML](how-to/well-structured-html.md "How to code a well-formed HTML page")
   * [CSS Selectors](how-to/css-selectors.md)
