@@ -320,7 +320,7 @@
             types: stdStrTypes,
             default: 'str',
             typeField: $('#node-input-headingSourceType'),
-        }).typedInput('width', '56.5%')
+        }).typedInput('width', '40%')
 
         // @ts-ignore core data typed input
         $('#node-input-data').typedInput({

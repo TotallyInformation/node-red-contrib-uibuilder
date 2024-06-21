@@ -1,5 +1,5 @@
 <!--
-    Copyright (c) 2023-2023 Julian Knight (Totally Information)
+    Copyright (c) 2023-2024 Julian Knight (Totally Information)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
     limitations under the License.
 -->
 
-<link type="text/css" rel="stylesheet" href="./resources/node-red-contrib-uibuilder/ti-common.css" media="all">
-<script src="./resources/node-red-contrib-uibuilder/ti-common.js"></script>
 <script src="./resources/node-red-contrib-uibuilder/uib-tag.js"></script>
 
 <script type="text/html" class="uib-tooltip" data-template-name="uib-tag">
@@ -53,7 +51,7 @@
     </div>
     <div aria-label="Input content is Markdown rather than HTML?" class="form-row">
         <label for="node-input-slotPropMarkdown">Markdown?</label>
-        <input type="checkbox" id="node-input-slotPropMarkdown">
+        <input type="checkbox" id="node-input-slotPropMarkdown" style="width: auto;vertical-align: top;">
         <span id="slotPropMarkdown-unchecked" style="font-size:smaller;"> &nbsp; Input can be an HTML string</span>
         <span id="slotPropMarkdown-checked" style="display:none;font-size:smaller;"> &nbsp; Markdown-It library must be loaded in browser</span>
     </div>
@@ -65,9 +63,11 @@
         <input type="text" id="node-input-attribsSource" placeholder="Source data to update elements attributes">
         <input type="hidden" id="node-input-attribsSourceType">
     </div>
-    <div aria-label="Additional information" class="form-row form-tips node-help">
+    <div aria-label="Additional information" class="form-row form-tips node-help" style="width:89%">
+        <p style="font-size: smaller;">
             The attributes source data must be an object containing attribute name keys. e.g.
             <code>{"class": "class1 class2", <br>"style": "color:red; border: 1px solid silver;"}</code>
+        </p>    
     </div>
 
     <hr>

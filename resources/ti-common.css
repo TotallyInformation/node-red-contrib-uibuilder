@@ -42,7 +42,8 @@
 
 #ti-edit-panel .form-tips {
     margin-bottom: 1rem;
-    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 #ti-edit-panel .red-ui-typedInput-container {
@@ -69,10 +70,10 @@
     vertical-align: top;
 }
 
-#ti-edit-panel .form-row {
-    /* width: 100%; */
-    /* display: inline-block */
-}
+/* #ti-edit-panel .form-row {
+    width: 100%;
+    display: inline-block
+} */
 #ti-edit-panel .form-row label {
     width: 100px;
 }
@@ -91,8 +92,15 @@
     width: var(--min-editor-panel-width);
 } */
 
+#node-input-heading ~ .red-ui-typedInput-container {
+    /* uib-element heading typedInput override */
+    width: calc(100% - 160px) !important;
+}
+
 .uib-info-bar {
     display: flex;
     justify-content: space-between;
     width: var(--min-editor-panel-width);
+    margin-left: auto;
+    margin-right: auto;
 }
