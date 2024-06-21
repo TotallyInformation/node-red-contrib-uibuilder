@@ -63,7 +63,10 @@
       "uib-tag": "nodes/uib-tag/customNode.js",
       "uib-update": "nodes/uib-update/customNode.js"
     },
-    "notyetnodes": {}
+    "notyetnodes": {},
+    "plugins": {
+       "uib-plugin": "nodes/uib-plugin.html"
+     }
   },
   "engines": {
     "node": ">=18"
