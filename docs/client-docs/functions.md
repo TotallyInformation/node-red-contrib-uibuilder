@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2024-06-20 17:01:52
+updated: 2024-06-21 10:10:44
 ---
 
 Functions accessible in client-side user code.
@@ -114,6 +114,12 @@ The `originator` is optional and if used, should match the id from a `uib-sender
 The message will be assessed by UIBUILDER and passed to its #2 (bottom) output port if considered acceptible.
 
 This lets you create your own control custom messages should you wish to. Use with caution.
+
+### `sendCustom(channel, msg)` - Send a message to a custom socket.io channel :id=sendcustom
+
+This allows for front-end browser code to send a message back to Node-RED on any arbitrary Socket.IO channel.
+
+This is only really useful for custom extension nodes for UIBUILDER.
 
 ### `sendRoom(room, msg)` - Send a message to an arbitrary socket.io room :id=sendRoom
 
@@ -869,6 +875,7 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`scrollTo`](#scrollTo)*
 * [`send`](#send)
 * [`sendCtrl`](#sendCtrl)
+* [`sendCustom`](#sendcustom)
 * [`sendRoom(room, msg)`](#sendRoom) - Send a message to an arbitrary socket.io room
 * [`set`](#set)*
 * [`setOriginator`](#setOriginator)
