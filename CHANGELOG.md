@@ -20,10 +20,9 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 ## In progress
 
-* [ ] [started] Change all calls to `$.get` into `$.ajax` and add beforeStart to add optional bearer token header
+* [ ] [started] Change all Editor calls to `$.get` into `$.ajax` and add beforeStart to add optional bearer token header
 
 ## To Do
-
 
 * [ ] Add Docsify external libraries to `/docs/.config` to allow true offline use of docs. Add new gulp process to update them, possibly pack them all.
 * [ ] Add instance descriptions to the index pages
@@ -43,7 +42,6 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 * [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
 * [ ] Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
 * [ ] New Node Idea: `uib-meta` - links to a uibuilder node and returns the instance metadata including URL's and folder locations and other settings. (e.g. use with [node-red-cleanup-filesystem](https://discourse.nodered.org/t/announce-node-red-cleanup-filesystem-request-for-testing/88135))
-* [ ] Move the loading of the Editor common CSS/JS to a plugin so they are only loaded once. Remove explicit links from node html files.
 
 ### `uibrouter` FE library
 
@@ -143,10 +141,7 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 ## Issues
 
-* [ ] uib-element editor panel
-  * [ ] Heading 2nd drop-down needs to be narrower to account for 1st drop-down
 * [ ] uibuilder editor panel
-  * [ ] info panel fixed width, needs to be expandable
   * [ ] Text in fieldset is fixed width
 * [ ] uib-cache editor panel
   * [ ] Some inputs width not consistent
@@ -300,12 +295,14 @@ Most of these changes will *not* impact most people but you should check through
 * The `jsdom` package now tracks the current release again thanks to UIBUILDER moving to a node.js baseline in line with Node-RED v4 (Node.js v18)
 * External module `execa` no longer a dependency.
 * On the Detailed Information Page (uibindex) "User-Facing Routes" is changed to "Client-Facing Routes" to make it clearer.
+* The Node-RED Editor utility resources `ti-common.css` and `ti-common.js` are now loaded only once using a new utility plugin. Previously they were loaded multiple times by each node.
 
 * Documentation
   * New How-To: Creating a well-structured HTML page.
   * New page: Easy UI updates - explaining the different ways you can easily and dynamically update content.
   * New page: Common design patterns - the most common ways of working with Node-RED and UIBUILDER.
   * New page: Troubleshooting - some thoughts on issues that might happen, how to spot them and fix them.
+  * New page: Comparision between UIBUILDER and Dashboard 2.
   * Mustache plugin removed from Docksify load. Not used and not required since Docsify supports easy loading of custom Vue components which can do the same work.
   * Additional uibuilder web path added `./docs/resources` which is mapped to the `/front-end` package folder. Allowing the docs to use the images, router, branding, etc in the future.
   * The Docsify JS and CSS now split from the main html file for ease of management.
