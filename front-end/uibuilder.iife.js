@@ -6919,6 +6919,14 @@ ${document.documentElement.outerHTML}`;
     sendCtrl(msg) {
       this._send(msg, this._ioChannels.control);
     }
+    /**
+     * Send a message to Node-RED on a custom channel - use for UIBUILDER 3rd-party custom nodes
+     * @param {string} channel The custom channel name to use
+     * @param {object} msg The message to send
+     */
+    sendCustom(channel, msg) {
+      this._socket.emit(channel, msg);
+    }
     //#endregion -------- ------------ -------- //
     //#region ------- Socket.IO -------- //
     /** Return the Socket.IO namespace
