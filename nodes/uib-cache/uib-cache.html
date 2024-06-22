@@ -41,13 +41,13 @@
             Use 0 for unlimited but take care not to run out of memory.
         </div>
     
-        <div aria-label="Select which context store and variable to use" class="form-row">
-            <label for="node-input-storeName" style="width:25%"><i class="fa fa-database"></i> Store</label>
-            <label for="node-input-storeContext" style="width:25%"><i class="fa fa-database"></i> Type</label>
-            <label for="node-input-varName" style="width:41%"><i class="fa fa-tag"></i> Variable Name</label><br>
-            <input type="text" id="node-input-storeName" style="width:25%">
-            <input type="text" id="node-input-storeContext" style="width:25%">
-            <input type="text" id="node-input-varName" value="uib_cache" title="Can only change if Type is not 'Node'" placeholder="REQD: Context variable name" style="width:41%">
+        <div aria-label="Select which context store and variable to use" class="form-row uib-context-select">
+            <label for="node-input-storeName"><i class="fa fa-database"></i> Store</label>
+            <label for="node-input-storeContext"><i class="fa fa-database"></i> Type</label>
+            <label for="node-input-varName"><i class="fa fa-tag"></i> Variable Name</label>
+            <input type="text" id="node-input-storeName">
+            <input type="text" id="node-input-storeContext">
+            <input type="text" id="node-input-varName" value="uib_cache" title="Can only change if Type is not 'Node'" placeholder="REQD: Context variable name">
         </div>
     
         <div aria-label="Info for context store" class="form-row form-tips node-help" style="width:89%">

@@ -9,6 +9,7 @@
     --uib-blue: hsl(204 89% 55% / 70%); 
     --uib-red: hsl(0 100% 45% / 70%); /* #8f0000; */
     --min-editor-panel-width: 450px;
+    --typedInput-width-adjust: 105px;
 }
 
 /* For the UIBUILDER formatted name */
@@ -47,7 +48,7 @@
 }
 
 #ti-edit-panel .red-ui-typedInput-container {
-    width: calc(100% - 105px) !important;
+    width: calc(100% - var(--typedInput-width-adjust)) !important;
 }
 
 #ti-edit-panel fieldset {
@@ -92,9 +93,9 @@
     width: var(--min-editor-panel-width);
 } */
 
+/* uib-element heading typedInput override */
 #node-input-heading ~ .red-ui-typedInput-container {
-    /* uib-element heading typedInput override */
-    width: calc(100% - 160px) !important;
+    --typedInput-width-adjust: 160px;
 }
 
 .uib-info-bar {
@@ -103,4 +104,18 @@
     width: var(--min-editor-panel-width);
     margin-left: auto;
     margin-right: auto;
+}
+
+/* Context selectors () e.g. uib-cache */
+.uib-context-select {
+    --typedInput-width-adjust: 0px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr;
+    gap: 0.5em 0.5em;
+    grid-auto-flow: row;
+    height: 4em;
+    margin-bottom: 1.6em;
+}
+.uib-context-select label, .uib-context-select input {
+    width: 100% !important;
 }
