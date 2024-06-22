@@ -49,46 +49,56 @@
      * @param {JQuery.ClickEvent<HTMLElement, undefined, HTMLElement, HTMLElement>} evt jQuery Click Event
      */
     function doPkgUpd(evt) {
-        // ! TODO
-        log('>>>> do update', evt.data.pkgName)
-
         const packageName = evt.data.pkgName
         const node = evt.data.node
+        const displayVer = evt.target.nextElementSibling
 
         RED.notify('Installing npm package ' + packageName)
 
         // Call the npm installPackage v2 API (it updates the package list)
-        // $.get( `uibuilder/uibnpmmanage?cmd=update&package=${packageName}&url=${node.url}&tag=${packageTag}`, function(data) {
-        $.get( `uibuilder/uibnpmmanage?cmd=update&package=${packageName}&url=${node.url}`, function(data) {
-            const npmOutput = data.result[0]
+        $.ajax({
+            url: 'uibuilder/uibnpmmanage',
+            method: 'GET',
+            dataType: 'json', // Expect JSON data
+            data: { // converted to URL parameters
+                cmd: 'update',
+                package: packageName,
+                url: node.url,
+            },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
+            },
+            success: function(data) {
+                const npmOutput = data.result[0]
 
-            if ( data.success === true) {
-                packages = uibuilder.packages = data.result[1]
+                if (data.success === true) {
+                    packages = uibuilder.packages = data.result[1]
 
-                console.log('[uibuilder:doPkgUpd:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
-                RED.notify(`Successful update of npm package ${packageName}`, 'success')
+                    console.log('[uibuilder:doPkgUpd:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
+                    RED.notify(`Successful update of npm package ${packageName}`, 'success')
+                    displayVer.innerHTML = data.result[1][packageName].installedVersion
+                    $(evt.target).remove() // removes the update button
+                } else {
+                    console.log('[uibuilder:doPkgUpd:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ')
+                    RED.notify(`FAILED update of npm package ${packageName}`, 'error')
+                }
 
-                // reset and populate the list
-                $('#node-input-packageList').editableList('empty')
-                $('#node-input-packageList').editableList('addItems', Object.keys(packages))
-
-            } else {
-                console.log('[uibuilder:doPkgUpd:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ' )
-                RED.notify(`FAILED update of npm package ${packageName}`, 'error')
-            }
-
-            // Hide the progress spinner
-            $('i.spinner').hide()
-
-        })
-            .fail(function(_jqXHR, textStatus, errorThrown) {
-                console.error( '[uibuilder:doPkgUpd:get] Error ' + textStatus, errorThrown )
+                // Hide the progress spinner
+                $('i.spinner').hide()
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('[uibuilder:doPkgUpd:get] Error ' + textStatus, errorThrown)
                 RED.notify(`FAILED update of npm package ${packageName}`, 'error')
 
                 $('i.spinner').hide()
+
                 return 'addPackageRow failed'
                 // TODO otherwise highlight input
-            })
+            }
+        })
 
         $.ajax({
             type: 'PUT',
@@ -97,6 +107,12 @@
             data: {
                 'cmd': 'updatepackage',
                 'pkgName': evt.data.pkgName,
+            },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
             },
         })
             .done(function(data, _textStatus, jqXHR) {
@@ -210,28 +226,49 @@
                 RED.notify('Installing npm package ' + packageName)
 
                 // Call the npm installPackage v2 API (it updates the package list)
-                $.get( `uibuilder/uibnpmmanage?cmd=install&package=${packageName}&url=${node.url}&tag=${packageTag}`, function(data) {
-                    const npmOutput = data.result[0]
+                $.ajax({
+                    url: 'uibuilder/uibnpmmanage',
+                    method: 'GET',
+                    dataType: 'json', // Expect JSON data
+                    data: { // converted to URL parameters
+                        cmd: 'install',
+                        package: packageName,
+                        url: node.url,
+                        tag: packageTag,
+                    },
+                    beforeSend: function(jqXHR) {
+                        const authTokens = RED.settings.get('auth-tokens')
+                        if (authTokens) {
+                            jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                        }
+                    },
+                    success: function(data) {
+                        const npmOutput = data.result[0]
 
-                    if ( data.success === true) {
-                        packages = uibuilder.packages = data.result[1]
+                        if ( data.success === true) {
+                            packages = uibuilder.packages = data.result[1]
 
-                        console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
-                        RED.notify(`Successful installation of npm package ${packageName} for ${node.url}`, 'success')
-                        RED._debug({topic: 'UIBUILDER Library Install', result: 'success', payload: packageName, output: npmOutput})
+                            console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
+                            RED.notify(`Successful installation of npm package ${packageName} for ${node.url}`, 'success')
+                            RED._debug({topic: 'UIBUILDER Library Install', result: 'success', payload: packageName, output: npmOutput})
 
-                        // reset and populate the list
-                        $('#node-input-packageList').editableList('empty')
-                        // @ts-ignore
-                        $('#node-input-packageList').editableList('addItems', Object.keys(packages))
+                            // reset and populate the list
+                            $('#node-input-packageList').editableList('empty')
+                            // @ts-ignore
+                            $('#node-input-packageList').editableList('addItems', Object.keys(packages))
 
-                    } else {
-                        console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ' )
+                        } else {
+                            console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ' )
+                            RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
+                        }
+
+                        // Hide the progress spinner
+                        $('i.spinner').hide()
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', textStatus, '\n ', errorThrown, '\n ' )
                         RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
                     }
-
-                    // Hide the progress spinner
-                    $('i.spinner').hide()
                 })
                     .fail(function(_jqXHR, textStatus, errorThrown) {
                         console.error( '[uibuilder:addPackageRow:get] Error ' + textStatus, errorThrown )
@@ -242,9 +279,7 @@
                         // TODO otherwise highlight input
                     })
             } // else Do nothing
-
         }) // -- end of button click -- //
-
     } // --- End of addPackageRow() ---- //
 
     /** RemoveItem function for package list
@@ -263,20 +298,39 @@
         $('i.spinner').show()
 
         // Call the npm installPackage API (it updates the package list)
-        $.get( 'uibuilder/uibnpmmanage?cmd=remove&package=' + packageName, function(data) {
+        $.ajax({
+            url: 'uibuilder/uibnpmmanage',
+            method: 'GET',
+            dataType: 'json', // Expect JSON data
+            data: { // converted to URL parameters
+                cmd: 'remove',
+                package: packageName,
+            },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
+            },
+            success: function(data) {
 
-            if ( data.success === true) {
-                console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
-                RED.notify('Successfully uninstalled npm package ' + packageName, 'success')
-                if ( packages[packageName] ) delete packages[packageName]
-            } else {
-                console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
-                RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
-                // Put the entry back again
-                $('#node-input-packageList').editableList('addItem', packageName)
+                if ( data.success === true) {
+                    console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
+                    RED.notify('Successfully uninstalled npm package ' + packageName, 'success')
+                    if ( packages[packageName] ) delete packages[packageName]
+                } else {
+                    console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
+                    RED.notify(`FAILED to uninstall npm package ${packageName}`, 'error')
+                    // Put the entry back again
+                    $('#node-input-packageList').editableList('addItem', packageName)
+                }
+
+                $('i.spinner').hide()
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', packageName, '\n\n', textStatus, '\n ', errorThrown, '\n ' )
+                RED.notify(`FAILED to uninstall npm package ${packageName}`, 'error')
             }
-
-            $('i.spinner').hide()
         })
             .fail(function(_jqXHR, textStatus, errorThrown) {
                 console.error( '[uibuilder:removePackageRow:get] Error ' + textStatus, errorThrown )
@@ -397,27 +451,40 @@
         $('#node-input-format').val(filetype)
 
         // Get the file contents via API defined in uibuilder.js
-        $.get( 'uibuilder/uibgetfile?url=' + url + '&fname=' + fname + '&folder=' + folder, function(data) {
-            $('#node-input-template-editor').show()
-            $('#node-input-template-editor-no-file').hide()
-            // Add the fetched data to the editor
-            uiace.editorSession.setValue(data)
-            // Set the editor file mode
-            uiace.editorSession.setMode({
-                path: 'ace/mode/' + filetype, v: Date.now()
-            })
-            // Mark the current session as clean
-            uiace.editorSession.getUndoManager().isClean()
-            // Position the cursor in the edit area
-            uiace.editor.focus()
-
+        $.ajax({
+            url: 'uibuilder/uibgetfile',
+            method: 'GET',
+            data: { // converted to URL parameters
+                'url': url,
+                'fname': fname,
+                'folder': folder,
+            },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
+            },
+            success: function(data) {
+                $('#node-input-template-editor').show()
+                $('#node-input-template-editor-no-file').hide()
+                // Add the fetched data to the editor
+                uiace.editorSession.setValue(data)
+                // Set the editor file mode
+                uiace.editorSession.setMode({
+                    path: 'ace/mode/' + filetype, v: Date.now()
+                })
+                // Mark the current session as clean
+                uiace.editorSession.getUndoManager().isClean()
+                // Position the cursor in the edit area
+                uiace.editor.focus()
+            },
         })
             .fail(function(_jqXHR, textStatus, errorThrown) {
                 console.error( '[uibuilder:getFileContents:get] Error ' + textStatus, errorThrown )
                 uiace.editorSession.setValue('')
                 $('#node-input-template-editor').hide()
                 $('#node-input-template-editor-no-file').show()
-
             })
             .always(function() {
                 fileIsClean(true)
@@ -460,6 +527,12 @@
             url: './uibuilder/admin/' + url,
             data: {
                 'cmd': 'listall',
+            },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
             },
         })
             // eslint-disable-next-line no-unused-vars
@@ -543,6 +616,12 @@
             data: {
                 'cmd': 'listfolders',
             },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
+            },
         })
 
         folders = data.responseJSON
@@ -568,10 +647,16 @@
         $.ajax({
             type: 'POST',
             dataType: 'json',
-            url: './uibuilder/admin/' + url,
+            url: `./uibuilder/admin/${url}`,
             data: {
                 'folder': folder,
                 'cmd': 'newfolder',
+            },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
             },
         })
             .done(function() { // data, textStatus, jqXHR) {
@@ -601,11 +686,17 @@
         $.ajax({
             type: 'POST',
             dataType: 'json',
-            url: './uibuilder/admin/' + url,
+            url: `./uibuilder/admin/${url}`,
             data: {
                 'folder': folder,
                 'fname': fname,
                 'cmd': 'newfile',
+            },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
             },
         })
             .done(function() { // data, textStatus, jqXHR) {
@@ -633,10 +724,16 @@
         $.ajax({
             type: 'DELETE',
             dataType: 'json',
-            url: './uibuilder/admin/' + url,
+            url: `./uibuilder/admin/${url}`,
             data: {
                 'folder': folder,
                 'cmd': 'deletefolder',
+            },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
             },
         })
             .done(function() { // data, textStatus, jqXHR) {
@@ -666,11 +763,17 @@
         $.ajax({
             type: 'DELETE',
             dataType: 'json',
-            url: './uibuilder/admin/' + url,
+            url: `./uibuilder/admin/${url}`,
             data: {
                 'folder': folder,
                 'fname': fname,
                 'cmd': 'deletefile',
+            },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
             },
         })
             .done(function() { // data, textStatus, jqXHR) {
@@ -829,6 +932,12 @@
             data: {
                 'cmd': 'checkfolder',
             },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
+            },
             success: function(data) {
                 check = data
             },
@@ -917,7 +1026,6 @@
                 </div>
             `)
         }
-
     } // ---- End of enableEdit ---- //
 
     /** Show key data for URL changes
@@ -1215,13 +1323,19 @@
         $.ajax({
             type: 'POST',
             dataType: 'json',
-            url: './uibuilder/admin/' + url,
+            url: `./uibuilder/admin/${url}`,
             data: {
                 'template': template,
                 'extTemplate': extTemplate,
                 'cmd': 'replaceTemplate',
                 'reload': reload,
                 'url': url,
+            },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
             },
         })
             .done(function(data, textStatus, jqXHR) {
@@ -1237,7 +1351,6 @@
 
     /** Load a new template */
     function btnTemplate() {
-
         // Check first
         const myNotification = RED.notify(
             `WARNING<br /><br />
@@ -1267,14 +1380,12 @@
                 ]
             }
         )
-
     } // --- End of btnTemplate() --- //
 
     /** Configure the template dropdown & setup button handlers (called from onEditPrepare)
      * @param {object} node A reference to the panel's `this` object
      */
     function templateSettings(node) {
-
         $('#adv-templ').hide()
         $('#show-templ-props').css( 'cursor', 'pointer' )
         $('#show-templ-props').on('click', function() { // (e) {
@@ -1308,7 +1419,6 @@
             e.preventDefault() // don't trigger normal click event
             btnTemplate()
         })
-
     }
 
     //#endregion ==== Template Management Functions ==== //
@@ -1964,6 +2074,12 @@
                                     url: './uibuilder/admin/' + that.url,  // v3 api
                                     data: {
                                         'cmd': 'deleteondelete',
+                                    },
+                                    beforeSend: function(jqXHR) {
+                                        const authTokens = RED.settings.get('auth-tokens')
+                                        if (authTokens) {
+                                            jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                                        }
                                     },
                                 })
                                     .fail(function(jqXHR, textStatus, errorThrown) {
