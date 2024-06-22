@@ -18,10 +18,6 @@ Initial thinking is that there will be a new but optional file in the <uibRoot>/
 
 I will attempt to also trap a new project create to run the install if I can. Otherwise, it will display a notification for the user to run that manually. Not certain whether Node-RED will have to be restarted, I will try to avoid that but it might not be possible. Will have to test.
 
-## In progress
-
-* [ ] [started] Change all Editor calls to `$.get` into `$.ajax` and add beforeStart to add optional bearer token header
-
 ## To Do
 
 * [ ] Add Docsify external libraries to `/docs/.config` to allow true offline use of docs. Add new gulp process to update them, possibly pack them all.
