@@ -277,7 +277,6 @@ function nodeInstance(config) {
      * Other: credentials, id, type, z, wires, x, y
      * + any props added manually from config, typically at least name and topic
      */
-    // console.log('>>>> TI GLOBAL <<<<', global.totallyInformationShared)
 }
 
 //#endregion ----- Module-level support functions ----- //

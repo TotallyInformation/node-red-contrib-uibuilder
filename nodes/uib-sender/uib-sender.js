@@ -63,10 +63,10 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
     // NOTE: Several ways to do this.
     //  1) Most direct would be to directly ref the uibuilder node via RED.nodes - but this is tight coupling
     //  2) 2nd most direct would be to use global uibsockets ref - but this is also fairly tight coupling
-    //  3) Least coupling is to use the TI events module
+    //  3) Least coupling is to use the TI events module or RED.events
 
     if ( mod.useEvents === false && global['totallyInformationShared'] ) {
-        // TODO send the msg to the front-end
+        // TODO DEPRECATE this part
         const sockets = global['totallyInformationShared'].uibsockets
         msg._fromSender = true
         if ( global['totallyInformationShared'].uibsockets ) {

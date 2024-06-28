@@ -37,7 +37,6 @@ const path = require('node:path')
 const { promisify } = require('node:util')
 const crypto = require('node:crypto')
 const { spawn, spawnSync } = require('node:child_process')
-const tiEvents = require('@totallyinformation/ti-common-event-handler') // https://github.com/EventEmitter2/EventEmitter2
 // const fslib = require('./fs')
 const fs = require('fs-extra') // ! TODO Remove
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
@@ -275,14 +274,14 @@ const UibLib = {
             shell.stdout.on('data', (data) => {
                 const d = data.toString()
                 // Emit log event with data
-                tiEvents.emit('uibuilder/runOsCmd/log', d )
+                // RED.events.emit('node-red-contrib-uibuilder/runOsCmd/log', d )
                 out += d
                 // Don't emit chunks of output as this stops the final output from resolving
             })
             shell.stderr.on('data', (data) => {
                 const d = data.toString()
                 // Emit log event with data
-                tiEvents.emit('uibuilder/runOsCmd/log', d )
+                // RED.events.emit('node-red-contrib-uibuilder/runOsCmd/log', d )
                 out += d
             })
 
@@ -294,7 +293,7 @@ const UibLib = {
             })
 
             shell.on('close', (code) => {
-                tiEvents.emit('uibuilder/runOsCmd/end', { 'code': code } )
+                // RED.events.emit('node-red-contrib-uibuilder/runOsCmd/end', { 'code': code } )
                 // Return complete output
                 if (opts.out === 'bare') {
                     resolve(out)
