@@ -8,7 +8,31 @@ updated: 2024-06-20 17:01:00
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
-## **NEW FEATURE** Create package.json template for Node-RED projects
+## Can Wait
+
+* [ ] Add Docsify external libraries to `/docs/.config` to allow true offline use of docs. Add new gulp process to update them, possibly pack them all.
+* [ ] Add instance descriptions to the index pages
+* [ ] Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
+* [ ] New Node Idea: `uib-meta` - links to a uibuilder node and returns the instance metadata including URL's and folder locations and other settings. (e.g. use with [node-red-cleanup-filesystem](https://discourse.nodered.org/t/announce-node-red-cleanup-filesystem-request-for-testing/88135))
+* [ ] uibuilder editor panel
+  * [ ] Text in fieldset is fixed width
+* [ ] uib-cache editor panel
+  * [ ] Some inputs width not consistent
+* [ ] uib-save & uib-file-list editor panels
+  * [ ] URL drop-down width not consistent (check uib-update as this is correct)
+
+### `uibuilder` node
+
+* [ ] ?? Filter `clientId` and `pageName` using socket.io rooms?
+* [ ] On uibuilder Libraries tab: Major version updates are not listed - because of package.json version spec - need to update docs?
+* [ ] uibuilder.packages after an update does not contain the `outdated` prop for each package because the server only does a quick update and so does not call `npmOutdated` (from packge-mgt.js) on each package because it is async and quite slow. This may mean that update flags are not updated until the Editor is next reloaded which isn't ideal. Probably need to fix at some point.
+
+### `<uib-var>` custom HTML component
+
+* [ ] Amend to use same processors as the uib-topic?
+* [ ] Add ability to directly amend the tag's attributes.
+
+### **NEW FEATURE** Create package.json template for Node-RED projects
 
 [Reference](https://discourse.nodered.org/t/uibuilder-install-default-packages-when-creating-a-node-red-projects/88496/6?u=totallyinformation)
 
@@ -20,8 +44,6 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 ## To Do
 
-* [ ] Add Docsify external libraries to `/docs/.config` to allow true offline use of docs. Add new gulp process to update them, possibly pack them all.
-* [ ] Add instance descriptions to the index pages
 * Update examples:
   * [ ] [started] Update text update example to include new `uib-topic` html attributes
   * [ ] **REMOVE** old client library example
@@ -32,22 +54,25 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 * [ ] `uib-tag` input fields not resizing correctly.
 * [ ] uib-element forms need some serious TLC! checkbox, radio
 * [ ] Docs
+  * [ ] Document new `globalThis['ti-uibuilder']` that contains `libs.tiEvents` and `uib`
   * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
   * [ ] Document a dashboard-like grid layout.
   * [ ] Document how to use `<instanceRoot>/routes/` properly. [Ref](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/changelog?id=new-features)
+  * [ ] Are all common event handler events documented?
+  * [ ] Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
+* [ ] Add endpoint creation apis
 * [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
-* [ ] Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
-* [ ] New Node Idea: `uib-meta` - links to a uibuilder node and returns the instance metadata including URL's and folder locations and other settings. (e.g. use with [node-red-cleanup-filesystem](https://discourse.nodered.org/t/announce-node-red-cleanup-filesystem-request-for-testing/88135))
+* [ ] Remove all tiEvents - swap to RED.events.
+  * [ ] uibuilder: function externalEvents
+  * [ ] uibuilder: this.on('close'
+  * [ ] uib-sender
+  * [ ] package.json
 
 ### `uibrouter` FE library
 
-* [ ] Add MD plugins
-  * [ ] Update router config docs with new mdPlugins prop
-  * [ ] Noting that if config.mdPlugins not set, uibuilder.ui_md_plugins may be used
 * [ ] ? Option to load route config from a file ?
 * [ ] Add md rendering to `loadOther`
 * [ ] Allow config updates from Node-RED
-* [ ] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
 
 * [ ] Add external command listeners for:
   * [ ] `msg._uibRoute.load`. With the value being a route definition or an array of route definitions. (and update the eg flows)
@@ -60,7 +85,6 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 * [ ] Find a way to include a first-show marker if not unloading routes
 * [ ] Update router example (code changes, remove remote cmd example).
 * [ ] Route menu added from Node-RED not auto-highlighting.
-* [ ] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
 
 * [ ] Update documentation:
 
@@ -68,10 +92,15 @@ I will attempt to also trap a new project create to run the install if I can. Ot
   * [ ] Remove doc for `unload` flag.
   * [ ] Document the `unloadTemplate` and `deleteTemplates` methods.
   * [ ] Make [this](https://discourse.nodered.org/t/urgent-regression/84197/15) and [this](https://discourse.nodered.org/t/uibuilder-front-end-routing-example/83319/9?u=totallyinformation) into some use-cases.
+  * [ ] Update router config docs with new mdPlugins prop
+  * [ ] Noting that if config.mdPlugins not set, uibuilder.ui_md_plugins may be used
+  * [ ] document `ui-md-plugins` router variable
+
 
 ### FE Client library
 
 * [ ] Document `hasUibRouter` and other new functions.
+* [ ] document `ui-md-plugins` managed uib variable
 * [ ] eventSend: Add form file handling. Not sure how as yet, will delay.
 * [ ] [STARTED] uib-attr process
   * [ ] Add processors for classes, styles, _ui. Need std innerHTML process to account for MD and sanitize.
@@ -83,17 +112,7 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 ### FE `ui` library
 
-* [x] Allow Markdown-IT plugins ([list](https://www.npmjs.com/search?q=keywords:markdown-it-plugin)) & additional config. [ref](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load)
-  * [x] ui.js
-  * [x] uib-router.js
-* [ ] document `ui-md-plugins` managed uib variable
 * [ ] document `ui-md-plugins` ui variable
-* [ ] document `ui-md-plugins` router variable
-
-### `<uib-var>` custom HTML component
-
-* [ ] Amend to use same processors as the uib-topic?
-* [ ] Add ability to directly amend the tag's attributes.
 
 ### `uib-cache` node
 
@@ -128,21 +147,8 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 * [ ] Add option for `clientId` - would ensure that the output only goes to the appropriate client.
 * [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
 
-### `uibuilder` node
-
-* [ ] ?? Filter `clientId` and `pageName` using socket.io rooms?
-* [ ] On uibuilder Libraries tab: Major version updates are not listed - because of package.json version spec - need to update docs?
-* [ ] uibuilder.packages after an update does not contain the `outdated` prop for each package because the server only does a quick update and so does not call `npmOutdated` (from packge-mgt.js) on each package because it is async and quite slow. This may mean that update flags are not updated until the Editor is next reloaded which isn't ideal. Probably need to fix at some point.
-
 
 ## Issues
-
-* [ ] uibuilder editor panel
-  * [ ] Text in fieldset is fixed width
-* [ ] uib-cache editor panel
-  * [ ] Some inputs width not consistent
-* [ ] uib-save & uib-file-list editor panels
-  * [ ] URL drop-down width not consistent (check uib-update as this is correct)
 
 ### "Outdated" dependencies
 
@@ -154,6 +160,16 @@ The following are only used for _**developing**_ UIBUILDER:
 * `@types/node` - restricted to v18 to match Node-RED's current baseline.
 
 ## Ideas
+
+* Change runtime parameter passes of `uib` to `globalThis['ti-uibuilder'].uib`
+* Consider moving all handling of uib's package.json into a single lib. Only allow a single function to read/write/update
+* ?New web component? - `<template-to template="templateId">` Similar to Vue's Teleport feature auto-insert a template.
+* Add Vue-style dynamic attributes: [ref1](https://claude.ai/chat/0c494f54-758c-4f14-a8c7-90dbe6b2c5d7), [ref2](https://chatgpt.com/c/7b797547-4e7e-455d-927b-926de42171aa).
+* Provide a common location and some standards to enable people to craft and share custom elements. Install using library mgr? Or as an NR plugin?
+* Consider adding an Editor plugin that adds a sidebar tab to show: All uibuilder instances (with links to the node AND the page), All library and other standard endpoint references.
+  * enableOnEdit (optional) If set to true, this tab will be accessible whilst the edit dialog is open. Default: false.
+* Consider adding a uibuilder custom library - [ref](https://github.com/node-red/node-red-library-file-store)
+
 
 ### `uibrouter` FE library
 
@@ -277,6 +293,12 @@ Most of these changes will *not* impact most people but you should check through
 
 * For front-end developers, there are many new functions added to the `uibuilder` front-end library. Some are standard utility functions such as fast but accurate number rounding or conversion of primitives into objects. Others simplify the use of the DOM.
 
+* For node developers. New events are now available using `RED.events` that track the setup of uibuilder, the setup of each uibuilder node instance and node instance url renames.
+
+  This allows 3rd-party extensions to UIBUILDER to be more easily created. The events pass references to all of the information you might need. [New documentation also now available for contributors](dev/3rd-party-extensions.md) showing the various ways to easily build new content and features through custom nodes and web components.
+
+* Connection headers have been added to the client details that are shown on control messages and on standard messages if the uibuilder "Include msg._uib in standard msg output." advanced flag is turned on. These may be particularly useful if using 3rd-party identity (authentication and authorisation) tooling which may put validated data into custom headings. Note however that these are "connection" headers, ongoing communications between the clients and the server do not update the headers (not possible over websockets) but will be updated if the client reconnects or reloads.
+
 ### General Changes
 
 * The minimum supported version of Node.JS is now v18.
@@ -374,6 +396,7 @@ The `URL Output?` setting will change the output from a folder/file list to a re
   File inputs still do not yet upload the file but they do return a special URL which could download the chosen file(s).
 
 * Auto-load of the brand css (when no other CSS was loaded) has been removed. This could occasionally suffer from a race condition.
+* Markdown-IT plugins can now be used when using Markdown. See the new "Using Markdown" documentation page for details.
 
 ### `ui` library
 
@@ -401,6 +424,7 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 * **NEW** Router config property `otherLoad` and router function `loadOther` added. These let you load other external HTML template files on startup or manually (respectively). Used for external menu definitions and other fixed parts of the UI.
 * **NEW** *External route content can now be Markdown instead of HTML*. The router route config property `format` has been added. By default the content for route templates is HTML, this property lets you optionally define template content as Markdown. In that case, if you have the *Markdown-IT* library pre-loaded, the Markdown template will be rendered as HTML automatically. This allows you to define route content using Markdown instead of writing HTML. If the *HighlightJS* library and CSS is also pre-loaded, code blocks will be nicely rendered.
 * **NEW** If using uibuilder, added a new uibuilder managed variable `uibrouterinstance` which has a reference to the router instance. Will alow the uibuilder client library to auto-update things & will allow easier remote control from Node-RED.
+* **NEW** Markdown-IT plugins can now be used if using Markdown. See the new "Using Markdown" documentation page for details.
 
 * Refactored some of the router methods, now exposing:
   * `loadRoute(routeId, routeParentEl)` - Loads template content to the page. Will load an external template if not already loaded. Calls `ensureTemplate`. Async, throws errors.
@@ -472,15 +496,24 @@ The `old-blank-client` template and all associated documentation has also been r
 
 * The list of installed libraries now has more reliable behaviour for updates. If there are >1 updates waiting, updating 1 library no longer looses the other indicators.
 
+* Connection headers have been added to the client details that are shown on control messages and on standard messages if the uibuilder "Include msg._uib in standard msg output." advanced flag is turned on. These may be particularly useful if using 3rd-party identity (authentication and authorisation) tooling which may put validated data into custom headings. Note however that these are "connection" headers, ongoing communications between the clients and the server do not update the headers (not possible over websockets) but will be updated if the client reconnects or reloads.
+
+* Replaced custom event handlers with `RED.events`. All uibuilder events are prefixed with `node-red-contrib-uibuilder/` to ensure that there are no name clashes with other nodes or Node-RED core.
+
 ### `uib-list` node
 
 **REMOVED** - this node was deprecated in UIBUILDER v6. It has now been removed. Use the `uib-element` node with one of the list element types.
+
+### `uib-sender` node
+
+* Changed custom event hander to `RED.events`.
 
 ### `libs/socket.js` library
 
 * If a client msg received with a msg._uib property but the `uibuilder` node hasn't requested that they are shown, delete it before sending on to flow.
 * Removed serving of the socket.io client library as this is no longer required (client library is pre-built into the uibuilder library).
 * Amended `listenFromClientCtrl`, now listens for a control msg `get page meta`, calls `fs.getFileMeta`, sends the output to the FE using the same control msg. Does not output to uibuilder node port #2.
+* Connection headers have been added to the client details.
 
 ### `libs/uiblib.js` library (uibuilder utilities)
 
@@ -502,8 +535,16 @@ The `old-blank-client` template and all associated documentation has also been r
 ### `libs/web.js` library
 
 * Removed Socket.IO client server - no longer required now that the old FE client has gone.
+* Added new route `./docs/resources` mapped to the `/front-end/` folder to allow use of uib FE images, brand, router, etc in the docs.
+* All filing system access moved to `libs/fs.js`
 
+### All nodes Editor common JS/CSS
 
-----
+* All nodes now use the common `resources/ti-common.js` and `resources/ti-common.css` resource files in the Node-RED editor.
+* Moved node-specific styling in HTML to the common CSS.
+* Standardised styling to make it consistent across nodes.
+* Added optional Node-RED auth token to admin API calls.
+
+## Older changes
 
 Older changes can be found in the Archived section of the UIBUILDER documentation.
