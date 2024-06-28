@@ -2,9 +2,18 @@
  * Load as: ./resources/node-red-contrib-uibuilder/ti-common.js
  */
 
+/** TODO
+ * Now this is loaded as a plugin, should really use
+ *   RED.plugins.registerPlugin('uib-plugin', { onadd: function() { ... } } )
+ * to register and run.
+ * https://github.com/node-red/nrlint/blob/bb60347c4a11e5e0bbc77ea20e75535677c5bddd/src/nrlint-core.html#L344
+ * Also note that RED is available here
+ */
+
 ;(function () { // eslint-disable-line sonarjs/cognitive-complexity
     'use strict'
 
+    // TODO The run-check not strictly needed now we load once only via a plugin
     if (!window['uibuilder']) {
         let _dbg = false
 
