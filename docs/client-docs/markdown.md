@@ -3,7 +3,7 @@ title: How to use Markdown with UIBUILDER
 description: |
   The UIBUILDER client library supports the rendering of Markdown using the external Markdown-IT library. This document shows you how to make use of that.
 created: 2024-04-06 12:23:16
-updated: 2024-04-29 17:36:45
+updated: 2024-06-22 17:05:41
 ---
 
 Markdown is a simple and effective way to write rich content without having to worry about HTML or other complex markup. It is easily edited using just a text editor or there are many tools that will provide a rich editing experience (such as VSCode, Typora, or Obsidian for example).
@@ -111,11 +111,11 @@ Or, you can use the [`uibuilder.ui()`](client-docs/functions#ui) function with l
 
 ## Extending Markdown-IT with plugins
 
-Markdown-IT has a very extensive set of plugins for code highlighting, diagrams and much more.
+Markdown-IT has a very extensive set of plugins for code highlighting, diagrams and [much more](https://github.com/markdown-it/markdown-it?tab=readme-ov-file#plugins-load).
 
 UIBUILDER already caters for code highlighting and you only need to load the library as shown earlier.
 
-Most plugins should be searchable on `npm` using the [#markdown-it tag](https://www.npmjs.com/search?q=markdown-it).
+Most plugins should be searchable on `npm` using the [#markdown-it tag](https://www.npmjs.com/search?q=keywords:markdown-it-plugin).
 
 To make use of other plugins, you need to both load the plugin using a `<script>` tag (or `import` if using ESM) **and** tell the uibuilder client library to use it and how to configure it. Configuration is done by giving the client library a configuration object that looks like this:
 
