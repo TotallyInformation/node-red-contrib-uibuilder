@@ -67,6 +67,7 @@
   * [Securing Data](security/securing-data.md "How to use flows and uibiulder middleware to secure your data")
   * [Securing uib web apps](security/security.md "Overview of general web app security with some specifics for Node-RED and UIBUILDER")
 * Developer documentation
+  * [Developing 3rd-party extensions](dev/3rd-party-extensions.md "How to create extension nodes that work with UIBUILDER")
   * [Details](dev/README.md)
   * [REST API's](apis/)
 * [Glossary of terms](glossary.md)
