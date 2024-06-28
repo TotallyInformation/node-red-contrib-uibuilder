@@ -11,15 +11,19 @@ Please see the documentation for archived changelogs - a new archive is produced
 ## Can Wait
 
 * [ ] Add Docsify external libraries to `/docs/.config` to allow true offline use of docs. Add new gulp process to update them, possibly pack them all.
+  * [ ] How to create a single bundle?
 * [ ] Add instance descriptions to the index pages
 * [ ] Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
 * [ ] New Node Idea: `uib-meta` - links to a uibuilder node and returns the instance metadata including URL's and folder locations and other settings. (e.g. use with [node-red-cleanup-filesystem](https://discourse.nodered.org/t/announce-node-red-cleanup-filesystem-request-for-testing/88135))
-* [ ] uibuilder editor panel
-  * [ ] Text in fieldset is fixed width
-* [ ] uib-cache editor panel
-  * [ ] Some inputs width not consistent
-* [ ] uib-save & uib-file-list editor panels
-  * [ ] URL drop-down width not consistent (check uib-update as this is correct)
+* `uibuilder` node
+  * Editor panel
+    * [ ] Text in fieldset is fixed width
+* `uib-cache` node
+  * Editor panel
+    * [ ] Some inputs width not consistent
+* `uib-save` & `uib-file-list`
+  *  editor panels
+     * [ ] URL drop-down width not consistent (check uib-update as this is correct)
 
 ### `uibuilder` node
 
@@ -67,6 +71,9 @@ I will attempt to also trap a new project create to run the install if I can. Ot
   * [ ] uibuilder: this.on('close'
   * [ ] uib-sender
   * [ ] package.json
+* [ ] uibuilder node: 
+  * [ ] On first setup, after typing in a url, the folder name shows an `undefined` folder name. That needs to update or not be shown.
+  * [ ] If user types in a full url, give a better warning and disallow.
 
 ### `uibrouter` FE library
 
@@ -299,6 +306,10 @@ Most of these changes will *not* impact most people but you should check through
 
 * Connection headers have been added to the client details that are shown on control messages and on standard messages if the uibuilder "Include msg._uib in standard msg output." advanced flag is turned on. These may be particularly useful if using 3rd-party identity (authentication and authorisation) tooling which may put validated data into custom headings. Note however that these are "connection" headers, ongoing communications between the clients and the server do not update the headers (not possible over websockets) but will be updated if the client reconnects or reloads.
 
+* Documentation improvements
+  * Access to the documentation inside Node-RED is now available fully offline, no Internet needed.
+  * There are lots of new and update pages to explore.
+
 ### General Changes
 
 * The minimum supported version of Node.JS is now v18.
@@ -316,6 +327,7 @@ Most of these changes will *not* impact most people but you should check through
 * The Node-RED Editor utility resources `ti-common.css` and `ti-common.js` are now loaded only once using a new utility plugin. Previously they were loaded multiple times by each node.
 
 * Documentation
+  * Now available fully offline in Node-RED. Library code also now bundled for improved performance.
   * New How-To: Creating a well-structured HTML page.
   * New page: Easy UI updates - explaining the different ways you can easily and dynamically update content.
   * New page: Common design patterns - the most common ways of working with Node-RED and UIBUILDER.
