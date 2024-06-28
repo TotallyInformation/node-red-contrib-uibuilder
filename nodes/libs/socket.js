@@ -376,6 +376,7 @@ class UibSockets {
             /** When the client connected to the server */
             'connectedTimestamp': (new Date(socket.handshake.issued)).toISOString(),
             // 'browserConnectTimestamp': socket.handshake.auth.browserConnectTimestamp,
+            'connectHeaders': socket.request.headers,
         }
 
         // @ts-ignore
