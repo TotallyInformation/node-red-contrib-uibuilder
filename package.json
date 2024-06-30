@@ -4,13 +4,12 @@
   "description": "Easily create data-driven web UI's for Node-RED using any (or no) front-end library.",
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",
-    "build": "gulp",
-    "buildfe": "gulp packfe",
     "watch": "gulp watch",
     "listbin": "ls ./node_modules/bin",
     "docs": "docsify serve ./docs",
     "edit-docs": "%LOCALAPPDATA%/Programs/Typora/Typora.exe ./",
-    "buildSidebar": "node ./bin/docsify-auto-sidebar.js"
+    "buildSidebar": "node ./bin/docsify-auto-sidebar.js",
+    "graph": "madge --image ./docs/dev/runtime-deps.svg ./nodes"
   },
   "dependencies": {
     "@totallyinformation/ti-common-event-handler": "^1.0.0",
@@ -34,6 +33,7 @@
     "docsify-plugin-flexible-alerts": "^1.1.1",
     "docsify-plugin-toc": "^1.3.2",
     "docsify-themeable": "^0.9.0",
+    "esbuild": "^0.21.5",
     "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-es": "^4.1.0",
