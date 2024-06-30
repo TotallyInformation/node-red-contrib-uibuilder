@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-06-20 17:01:00
+updated: 2024-06-30 18:15:49
 ---
 
 # Changelog
@@ -24,6 +24,9 @@ Please see the documentation for archived changelogs - a new archive is produced
 * `uib-save` & `uib-file-list`
   *  editor panels
      * [ ] URL drop-down width not consistent (check uib-update as this is correct)
+* Documentation
+  * [ ] Document a dashboard-like grid layout.
+
 
 ### `uibuilder` node
 
@@ -46,6 +49,12 @@ Initial thinking is that there will be a new but optional file in the <uibRoot>/
 
 I will attempt to also trap a new project create to run the install if I can. Otherwise, it will display a notification for the user to run that manually. Not certain whether Node-RED will have to be restarted, I will try to avoid that but it might not be possible. Will have to test.
 
+
+### **NEW COMPONENT** `<show-template>`
+
+Starting with the code from the router, apply ANY `<template>` anywhere in the HTML.
+
+
 ## To Do
 
 * Update examples:
@@ -57,13 +66,6 @@ I will attempt to also trap a new project create to run the install if I can. Ot
   * [ ] Navigation menu examples. 1x Router, 1x page.
 * [ ] `uib-tag` input fields not resizing correctly.
 * [ ] uib-element forms need some serious TLC! checkbox, radio
-* [ ] Docs
-  * [ ] Document new `globalThis['ti-uibuilder']` that contains `libs.tiEvents` and `uib`
-  * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
-  * [ ] Document a dashboard-like grid layout.
-  * [ ] Document how to use `<instanceRoot>/routes/` properly. [Ref](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/changelog?id=new-features)
-  * [ ] Are all common event handler events documented?
-  * [ ] Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
 * [ ] Add endpoint creation apis
 * [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
 * [ ] Remove all tiEvents - swap to RED.events.
@@ -74,6 +76,15 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 * [ ] uibuilder node: 
   * [ ] On first setup, after typing in a url, the folder name shows an `undefined` folder name. That needs to update or not be shown.
   * [ ] If user types in a full url, give a better warning and disallow.
+* [ ] `RED.util.uib.listAllApps()` - add uibuilder meta-data (e.g. the full url). Also update `nodes/function-node.md`
+
+### Documentation
+
+* [ ] Update compare-d2 with Joe's comments.
+* [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
+* [ ] Document new ui & fe fn `applyTemplate`
+* [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
+
 
 ### `uibrouter` FE library
 
@@ -94,7 +105,7 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 * [ ] Route menu added from Node-RED not auto-highlighting.
 
 * [ ] Update documentation:
-
+  * [ ] Document how to use `<instanceRoot>/routes/` properly. [Ref](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/changelog?id=new-features)
   * [ ] `templateUnload` and `templateLoadAll` flags.
   * [ ] Remove doc for `unload` flag.
   * [ ] Document the `unloadTemplate` and `deleteTemplates` methods.
@@ -106,8 +117,6 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 ### FE Client library
 
-* [ ] Document `hasUibRouter` and other new functions.
-* [ ] document `ui-md-plugins` managed uib variable
 * [ ] eventSend: Add form file handling. Not sure how as yet, will delay.
 * [ ] [STARTED] uib-attr process
   * [ ] Add processors for classes, styles, _ui. Need std innerHTML process to account for MD and sanitize.
@@ -116,6 +125,9 @@ I will attempt to also trap a new project create to run the install if I can. Ot
   * [ ] Allow msg.value - including for checkboxes (to avoid el.checked confusion)
   * [ ] MAYBE: Allow msg.classes
   * [ ] MAYBE: Allow msg.styles
+* Documentation
+  * [ ] Document `hasUibRouter` and other new functions.
+  * [ ] document `ui-md-plugins` managed uib variable
 
 ### FE `ui` library
 
@@ -263,7 +275,10 @@ Most of these changes will *not* impact most people but you should check through
 
 * The new node `uib-file-list` will produce a list of files from a uibuilder instance. It automatically adjusts to the currently served sub-folder and allows filtering. Use this for producing indexes and menus.
 
-* The new built in `<uib-meta>` web component can be used in your HTML to display facts about the current page such as its file size, when it was created and when it was last updated.
+* New built in *web components* which can be used in your HTML without the need for writing JavaScript
+  
+  *  `<uib-meta>` Display's facts about the current page such as its file size, when it was created and when it was last updated.
+  *  `<apply-template>` Takes the content of a `<template>` HTML tag and appends that content as children of itself. Allowing you to re-use standard, repeatable HTML without the need for JavaScript coding and without the need of sending potentially lengthy HTML from Node-RED every time it is needed.
 
 * Lots of extensions and improvements to the `uibrouter` front-end routing library in this release:
 
@@ -374,6 +389,8 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 
 * **NEW Web Component** - `<uib-meta>` - display's the page's file created/updated timestamps and file size.
 
+* **NEW Web Component** - `<apply-template>` Takes the content of a `<template>` HTML tag and appends that content as children of itself. Allowing you to re-use standard, repeatable HTML without the need for JavaScript coding and without the need of sending potentially lengthy HTML from Node-RED every time it is needed.
+
 * **NEW FUNCTIONS**
 
   * `Element.prototype.query(cssSelector)` and `Element.prototype.queryAll(cssSelector)` Similar to `$(cssSelector)` and `$$(cssSelector)` respectively. However, instead of searching the whole document, they search a sub-set of the document within the given element.
@@ -389,6 +406,7 @@ The `URL Output?` setting will change the output from a folder/file list to a re
     >
     > Since they are attached to the HTML `Element` class, they cannot be used in `uib-html`.
 
+  * `applyTemplate(sourceId, targetId, onceOnly)` Applies `<template>` tag contents as appended children of the target. Similar to the new `<apply-template>` web component so that you can do the same thing from both JavaScript and HTML.
   * `arrayIntersect(a1, a2)` Returns a new array (which could be empty) of the intersection of the 2 input arrays.
   * `getElementAttributes(el)` Returns an object containing attribute-name/value keypairs (or an empty object).
   * `getElementClasses(el)` Checks for CSS Classes and return as array if found or undefined if not.
