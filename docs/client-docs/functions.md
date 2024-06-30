@@ -265,6 +265,21 @@ In addition, internal message handling will recognise standard messages from nod
 
 For functions with no descriptions, please refer to the code. In general, these will not need to be used in your own code.
 
+### `applyTemplate(sourceId, targetId, onceOnly)` - Apply template element content to the page :id=applyTemplate
+
+This takes HTML (including styles and scripts) from a `<template>` tag. Templates are not active parts of the page but can be applied to a page, potentially multiple times. Great if you have some standard content that you might need to dynamically add to the page (a new list entry or table row for example).
+
+`sourceId` (required) must be the HTML id attribute value of a `<template>` tag on-page.
+
+`targetId` (required) must be the id of an on-page element to which the template contents will be _appended_ as children.
+
+`onceOnly` (optional) if set to `true`, the contents of the template will be consumed and can not be re-used. Otherwise, the template may be reused as often as needed.
+
+> [!NOTE]
+> If the template contains `<style>` content, this becomes global to the page once it has been applied once.
+>
+> If the template contains `<script>` content, this is **run every time the template is applied**. So make sure you wrap any code in a test that will prevent it from re-running if that is important.
+
 ### `addClass(classNames, el)` - Add one or more classes to an element :id=addClass
 
 `classNames` can be a string to add a single class or an array of strings for multiple classes.
@@ -822,7 +837,7 @@ Those marked with `*` can be triggered with a command message from Node-RED flow
 
 If examining the library code, please remember that functions starting with `_` are for *internal* use.
 
-### `uibuilder` functions
+### `uibuilder` functions :id=uibuilder-fns
 
 Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 
@@ -830,6 +845,7 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`$$`](#dollar2) - Alias of `document.querySelectAll`
 * `$ui`§ - Reference to the ui.js library, not a function
 * [`addClass`](#addClass)§
+* [`applyTemplate`](#applyTemplate)§
 * [`arrayIntersect`](#arrayIntersect)
 * [`beaconLog`](#beaconLog)
 * [`cancelChange`](#cancelChange)
@@ -895,7 +911,7 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`watchDom`](#watchDom)
 * [`watchUrlHash`](#watchUrlHash)*
 
-### Global (`window`) functions
+### Global (`window`) functions :id=global-fns
 
 These are attached to the `window` (AKA `globalThis`) object if they can be.
 
@@ -908,7 +924,7 @@ They will not be attached if there is a name clash to avoid issues with other li
 * `uib` - Alias of `uibuilder`.
 * `uibuilder` - the loaded instance of the client library.
 
-### Extended `Element` class functions
+### Extended HTML `Element` class methods :id=element-class-methods
 
 These are added to the prototype of the [`Element` built-in HTML class](https://developer.mozilla.org/en-US/docs/Web/API/Element). This enables them to be used in any case that returns an HTML object based on the `Element` class. For example, the `$(cssSelector)` function will return something useful such that `$('#custom-drag').on('wheel', (e) => console.log('wheel', e))` will add an event listener to the HTML element with an id of `custom-drag`.
 
@@ -921,6 +937,6 @@ As with the global functions, these are only attached if they don't already exis
 * `query` - Alias of `<element>.querySelect`
 * `queryAll` - Alias of `<element>.querySelectAll`
 
-### Extended `document` functions
+### Extended HTML `document` object methods :id=html-document-methods
 
 * `on` - Alias of `document.addEventListener`
