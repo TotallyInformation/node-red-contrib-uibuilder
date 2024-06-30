@@ -1,5 +1,5 @@
 name: 🆕 Request a feature
-description: File a bug/issue on the core of Node-RED
+description: Request for something new or improved
 labels: [needs-triage]
 body:
 - type: markdown
