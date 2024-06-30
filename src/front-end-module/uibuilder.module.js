@@ -34,6 +34,7 @@ import Ui from './ui'
 import io from 'socket.io-client'
 import UibVar from '../components/uib-var'
 import UibMeta from '../components/uib-meta'
+import ApplyTemplate from '../components/apply-template'
 
 const version = '7.0.0-src'
 
@@ -1046,6 +1047,17 @@ export const Uib = class Uib {
      * @param {HTMLElement} el HTML Element to add class(es) to
      */
     addClass = _ui.addClass
+
+    /** Apply a source template tag to a target html element
+     * NOTES:
+     * - styles in ALL templates are accessible to all templates.
+     * - scripts in templates are run AT TIME OF APPLICATION (so may run multiple times).
+     * - scripts in templates are applied in order of application, so variables may not yet exist if defined in subsequent templates
+     * @param {HTMLElement} source The source element
+     * @param {HTMLElement} target The target element
+     * @param {boolean} onceOnly If true, the source will be adopted (the source is moved)
+     */
+    applyTemplate = _ui.applyTemplate
 
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
@@ -3038,6 +3050,7 @@ uibuilder.start()
 // Add built-in web component classes as a new Custom Element to the window object
 customElements.define('uib-var', UibVar)
 customElements.define('uib-meta', UibMeta)
+customElements.define('apply-template', ApplyTemplate)
 
 //#endregion --- Wrap up ---
 

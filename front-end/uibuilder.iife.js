@@ -592,6 +592,32 @@
           if (!Array.isArray(classNames)) classNames = [classNames];
           if (el) el.classList.add(...classNames);
         }
+        /** Apply a source template tag to a target html element
+         * NOTES:
+         * - styles in ALL templates are accessible to all templates.
+         * - scripts in templates are run AT TIME OF APPLICATION (so may run multiple times).
+         * - scripts in templates are applied in order of application, so variables may not yet exist if defined in subsequent templates
+         * @param {string} sourceId The HTML ID of the source element
+         * @param {string} targetId The HTML ID of the target element
+         * @param {boolean} onceOnly If true, the source will be adopted (the source is moved)
+         */
+        applyTemplate(sourceId, targetId, onceOnly) {
+          const template = document.getElementById(sourceId);
+          const target = document.getElementById(targetId);
+          if (template && target) {
+            try {
+              let content;
+              if (onceOnly !== true) content = document.importNode(template.content, true);
+              else content = document.adoptNode(template.content);
+              target.appendChild(content);
+            } catch (e) {
+              _a2.log("error", "Ui:applyTemplate", `Source must be a <template>. id='${sourceId}'`)();
+            }
+          } else {
+            if (!template) _a2.log("error", "Ui:applyTemplate", `Source not found: id='${sourceId}'`)();
+            if (!target) _a2.log("error", "Ui:applyTemplate", `Target not found: id='${targetId}'`)();
+          }
+        }
         /** Converts markdown text input to HTML if the Markdown-IT library is loaded
          * Otherwise simply returns the text
          * @param {string} mdText The input markdown string
@@ -4848,6 +4874,62 @@
   __publicField(_UibMeta, "props", ["type", "format"]);
   var UibMeta = _UibMeta;
 
+  // src/components/apply-template.js
+  var uib = window["uibuilder"];
+  var _ApplyTemplate = class _ApplyTemplate extends HTMLElement {
+    //#endregion --- Class Properties ---
+    constructor() {
+      super();
+      __publicField(this, "once", false);
+      this.dispatchEvent(new Event("apply-template:construction", { bubbles: true, composed: true }));
+    }
+    // Makes HTML attribute change watched
+    static get observedAttributes() {
+      return _ApplyTemplate.props;
+    }
+    /** Handle watched attributes
+     * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
+     * Attribute values can only ever be strings
+     * @param {string} attrib The name of the attribute that is changing
+     * @param {string} newVal The new value of the attribute
+     * @param {string} oldVal The old value of the attribute
+     */
+    attributeChangedCallback(attrib, oldVal, newVal) {
+      if (oldVal === newVal) return;
+      this[attrib] = newVal;
+    }
+    // --- end of attributeChangedCallback --- //
+    // Runs when an instance is added to the DOM
+    connectedCallback() {
+      const templateId = this["template-id"];
+      const onceOnly = this["once"];
+      if (templateId) {
+        const template = document.getElementById(templateId);
+        if (template) {
+          let content;
+          if (onceOnly === false) {
+            console.log("importing", onceOnly);
+            content = document.importNode(template.content, true);
+          } else {
+            console.log("adopting", onceOnly);
+            content = document.adoptNode(template.content);
+          }
+          this.appendChild(content);
+        } else {
+          uib.log("error", "ApplyTemplate", `Source not found: id='${templateId}'`)();
+        }
+      } else {
+        uib.log("error", "ApplyTemplate", "Template id attribute not provided. Template must be identified by an id attribute.")();
+      }
+    }
+  };
+  //#region --- Class Properties ---
+  /** Holds a count of how many instances of this component are on the page */
+  __publicField(_ApplyTemplate, "_iCount", 0);
+  /** @type {Array<string>} List of all of the html attribs (props) listened to */
+  __publicField(_ApplyTemplate, "props", ["template-id", "once"]);
+  var ApplyTemplate = _ApplyTemplate;
+
   // src/front-end-module/uibuilder.module.js
   var version = "7.0.0-iife";
   var isMinified = !/param/.test(function(param) {
@@ -5288,6 +5370,16 @@
        * @param {HTMLElement} el HTML Element to add class(es) to
        */
       __publicField(this, "addClass", _ui.addClass);
+      /** Apply a source template tag to a target html element
+       * NOTES:
+       * - styles in ALL templates are accessible to all templates.
+       * - scripts in templates are run AT TIME OF APPLICATION (so may run multiple times).
+       * - scripts in templates are applied in order of application, so variables may not yet exist if defined in subsequent templates
+       * @param {HTMLElement} source The source element
+       * @param {HTMLElement} target The target element
+       * @param {boolean} onceOnly If true, the source will be adopted (the source is moved)
+       */
+      __publicField(this, "applyTemplate", _ui.applyTemplate);
       /** Remove All, 1 or more class names from an element
        * @param {undefined|null|""|string|string[]} classNames Single or array of classnames. If undefined, "" or null, remove all classes
        * @param {HTMLElement} el HTML Element to add class(es) to
@@ -7200,4 +7292,5 @@ ioPath: ${this.ioPath}`)();
   uibuilder2.start();
   customElements.define("uib-var", UibVar);
   customElements.define("uib-meta", UibMeta);
+  customElements.define("apply-template", ApplyTemplate);
 })();
