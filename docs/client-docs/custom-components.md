@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2024-06-20 17:00:46
+updated: 2024-06-30 17:45:43
 ---
 
 UIBUILDER can work with front-end frameworks such as REACT, VueJS, etc. However, it does not need them. But one thing that these frameworks often have are collections of components that you can add to your HTML. Each component will produce something useful in your web page such as an information card, tabbed interface, navigation menu, etc.
@@ -19,7 +19,7 @@ Needless to say, any web components written by [TotallyInformation](https://gith
 > [!NOTE]
 > UIBUILDER's no-code `uib-element` node currently sends out low-code JSON data that describes each element, the uibuilder client library converts (hydrates) this configuration into HTML and inserts to or updates the page. While this is reasonably efficient since no actual HTML/JavaScript code is sent, it could be even more efficient by having a corresponding *web component* for each element. This is something that is likely to happen in a future release.
 
-## Built-in components: `uib-var` :id=uib-var
+## Built-in: `uib-var` :id=uib-var
 
 Include easily updated output on a web page.
 
@@ -171,7 +171,7 @@ Use a `uib-tag` node:
 
 ![example uib-tag node](image.png)
 
-## Built-in components: `uib-meta` :id=uib-meta
+## Built-in: `uib-meta` :id=uib-meta
 
 Display metadata information about the containing page.
 
@@ -182,7 +182,7 @@ The uibuilder client library will automatically request this data from the uibui
 > [!NOTE]
 > This component could easily be extended to get things like the uibuilder node's title and description and other information if required.
 
-### Attributes :id=uib-meta
+### Attributes :id=uib-meta-attribs
 
 #### type :id=uib-meta-type
 
@@ -221,6 +221,86 @@ For size output:
   <uib-meta type="size" format="k"></uib-meta><br>
 </div>
  ```
+
+## Built-in: `apply-template` :id=apply-template
+
+This small but powerful component allows you to keep "templates" in your HTML that are copied to another place. The referenced template's content will be _appended_ to the contents of the `<apply-template>` tag.
+
+I've never understood why this isn't a standard HTML feature! Doing this by hand requires some significant knowledge. As always, UIBUILDER is here to make life easier but it still uses "just" standard HTML, CSS and JavaScript.
+
+> [!NOTE]
+> The uibuilder front-end library also has a built-in function [`uibuilder.applyTemplate((sourceId, targetId, onceOnly)`](client-docs/functions#applyTemplate). It does the same thing as this component but does it in JavaScript code so you can do `uib.applyTemplate('template-1', 'more')` in code to get a similar effect. The main difference being that you must supply the id of an element to which the template contents will be appended.
+
+### Attributes :id=apply-template-attribs
+
+#### template-id
+
+This attribute is required. The value must be the HTML id attribute value of the required `<template id="xxxx">....</template>` tag ("xxxx" in this example).
+
+This defines the source template. The contents of which will be copied ("applied") to replace the content of the `<apply-template>` tag.
+
+#### once
+
+If this attribute is present (it does not need a value), the source template will be emptied and cannot be re-used.
+
+This is helpful if you need to ensure that the source template can only ever be applied once.
+
+Technically, the content of the template is ["adopted"](https://developer.mozilla.org/en-US/docs/Web/API/Document/adoptNode) and so is not longer available in the template.
+
+### Examples  :id=apply-template-examples
+
+```html
+<!doctype html><html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../uibuilder/images/node-blue.ico">
+  <title>Apply-Template example - Node-RED uibuilder</title>
+  <meta name="description" content="Node-RED uibuilder - Apply-Template example">
+  <link type="text/css" rel="stylesheet" href="./index.css" media="all">
+  <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+
+  <!-- Define some templates -->
+  <template id="template-1">
+    <!-- Templates are not "live" on a page. Styles and scripts
+         are not active. The content does not show. -->
+    <style>
+      /* styles become global once applied */
+      .t1-green {
+        color:chartreuse
+      }
+    </style>
+    <h1 class="t1-green">Template 1</h1>
+    <p class="warn">This is the content of template 1.</p>
+    <script>
+      /** Scripts are run in order of application of the template
+       * to the live page. They are run EVERY TIME the template
+       * is applied so may run more than once. */
+      console.log('template-1')
+      if (!window['template1']) {
+        /** This will only ever run once */
+        const myvar = 1
+        window['template1'] = true
+      }
+    </script>
+  </template>
+</head><body>
+  <h1 class="with-subtitle">Apply-Template Example</h1>
+  <div role="doc-subtitle">Using the uibuilder IIFE library.</div>
+
+  <div id="more">
+    <apply-template template-id="template-1">
+      <p>Something interesting within - template content added after this...</p>
+    </apply-template>
+    <apply-template template-id="template-1">
+      <p>
+        ... Yes, you can apply a template >1 time as long as 
+        you haven't used the "once" attribute...
+      </p>
+    </apply-template>
+  </div>
+</body></html>
+```
 
 ## External components
 
