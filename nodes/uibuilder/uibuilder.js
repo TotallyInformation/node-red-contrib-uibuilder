@@ -202,6 +202,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     if ( uib.RED === null ) return
     const RED = uib.RED
 
+    // TODO Move to a runtime plugin
     // Add deep find utility function to RED.util so it can be used inside function nodes
     RED.util.uib = {
         /** Recursive object deep find
@@ -219,12 +220,23 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
                 }
             }
         },
+        /** Format a number to a given locale and decimal places
+         * @param {number} inp Input number
+         * @param {number} dp Number of output decimal places required (default=1)
+         * @param {string} int Locale to use for number format (default=en-GB)
+         * @returns {string} Formatted number as a string
+         */
+        dp: (inp, dp, int) => {
+            if (!int) int = 'en-GB'
+            if (!dp) dp = 1
+            return inp.toLocaleString(int, { 'minimumFractionDigits': dp, 'maximumFractionDigits': dp })
+        },
         /** Return a list of all instances
          * @returns {object} List of all registered uibuilder instances
          */
         listAllApps: () => {
             return uib.apps
-        }
+        },
     }
 
     //#region ----- back-end debugging ----- //
