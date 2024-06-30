@@ -3,7 +3,7 @@ title: A first-timers walkthrough
 description: |
   If you haven't used UIBUILDER before, it can be a little confusing as it brings together concepts from several different worlds. This walkthrough takes you from nothing to a basic data-driven web page.
 created: 2021-09-24 11:02:56
-updated: 2024-06-20 17:02:27
+updated: 2024-06-30 12:33:30
 ---
 
 Like UIBUILDER itself, this walkthrough may look complex. But you should bear in mind that if you follow the few steps in the [next](#how-to-get-started-4-steps-to-a-data-driven-web-app) section, that is basically it.
@@ -16,37 +16,46 @@ It may look complex, but really it isn't. 😊
 1. Install node-red-contrib-uibuilder via Node-RED's "Manage palette" menu.
 
 2. Add a new flow consisting of: `inject -> uibuilder -> debug` nodes connected in that order. 
+
+   ![simple uibuilder flow](images/simple-uibuilder-flow.png)
+   
    Add debug nodes to both of the output ports of the `uibuilder` node and set them both to show the full msg.
 
    > [!note]
    > You can import a working example using Node-RED's import menu. Look in the examples section under uibuilder.
+   >
+   > Don't forget to set the uibuilder node's "URL" (its name) and then Deploy before doing anything else.
 
 3. Double-click on the `uibuilder` node and change it's URL to `uibtest`. Click on the "Done" button.
 
 4. Click on the Node-RED "Deploy" button.
    
-**At this point, you now have a working web app!** So, *re-open the uibuilder node and click on the "Open" button* to view the page.
-
+**At this point, you now have a working web app!** So, *re-open the uibuilder node and click on the "Open" button* to view the page. This opens a new browser tab showing you your web page.
 
 However, the page doesn't really show or do anything useful yet.
+
+![blank-uibuilder-page](images/blank-uibuilder-page.png)
 
 To improve this mostly blank page, re-open the node's settings again and change the _Template_ drop-down to "*No framework, IIFE client*". Then click the "Load & Overwrite Files" button.
 You will get a warning that you should carefully read and if OK, click on the "OK, overwrite" button. Of course, if you don't want to overwrite things, click on the cancel button (which is the default).
 
 The rest is really now just testing and getting familiar with the details of how things work.
 
-1. Re-open the `uibuilder` node and click on the "Open" button.
-   
-   This opens a new browser tab showing you your web page. It has a title, a couple of buttons showing ways to get data back to Node-RED and a panel that shows the latest message sent from Node-RED.
+1. Either reload the page or re-open the `uibuilder` node and click on the "Open" button. This shows the updated page (the template contains all the code).
+
+  ![no framework template](images/no-framework-template.png)
 
 2. In the Editor, cancel the `uibuilder` node's configuration panel and click on the inject node's input button.
    Then check your web page again.
    
+   ![msg-from-nr>](images/msg-from-nr.png)
+
    You should now see a nicely formatted presentation of the message that the inject node sent to the `uibuilder` node which, in turn, passed it to your front-end client (the browser).
 
    _So at this point, you know that you can communicate from Node-RED to your browser. If this isn't working, please see the troubleshooting section below._
 
 3. Now check the debug panel in Node-RED.
+   ![no-framework-template-debug-msgs>](images/no-framework-template-debug-msgs.png)
    
    You should see several messages listed there. If you check, you will see that they all come from the second output port of the `uibuilder` node.
 
@@ -60,8 +69,6 @@ The rest is really now just testing and getting familiar with the details of how
    > Remember that the Node-RED server and the browser client page run in completely *separate contexts* (even if they both run on the same device). The only communication between them happens because the `uibuilder` node talks to the uibuilder client library.
 
 4. Send information back to Node-RED from the browser
-
-   Now that you have seen how Node-RED can send a message to the browser, it is time to send your own message back.
 
    The loaded template has a web FORM pre-defined. You can enter data into the form and press the "eventSend" button. Check out the debug panel in the Node-RED editor and you will see a new message there. Hover over it to see that it came out of the top port of the `uibuilder` node. This is the standard message port. Messages you send from the browser appear here.
 
