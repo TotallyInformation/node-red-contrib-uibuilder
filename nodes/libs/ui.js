@@ -24,24 +24,19 @@ const Ui = class Ui2 {
    * @param {Function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
    */
   constructor(win, extLog, jsonHighlight) {
-    if (win)
-      this.window = win;
+    if (win) this.window = win;
     else {
       throw new Error("Ui:constructor. Current environment does not include `window`, UI functions cannot be used.");
     }
     this.document = this.window.document;
-    if (extLog)
-      Ui2.log = extLog;
-    else
-      Ui2.log = function() {
-        return function() {
-        };
+    if (extLog) Ui2.log = extLog;
+    else Ui2.log = function() {
+      return function() {
       };
-    if (jsonHighlight)
-      this.syntaxHighlight = jsonHighlight;
-    else
-      this.syntaxHighlight = function() {
-      };
+    };
+    if (jsonHighlight) this.syntaxHighlight = jsonHighlight;
+    else this.syntaxHighlight = function() {
+    };
     if (window["markdownit"]) {
       Ui2.mdOpts = {
         html: true,
@@ -68,10 +63,8 @@ const Ui = class Ui2 {
   }
   //#region ---- Internal Methods ----
   _markDownIt() {
-    if (!window["markdownit"])
-      return;
-    if (!this.ui_md_plugins && this.window["uibuilder"] && this.window["uibuilder"].ui_md_plugins)
-      this.ui_md_plugins = this.window["uibuilder"].ui_md_plugins;
+    if (!window["markdownit"]) return;
+    if (!this.ui_md_plugins && this.window["uibuilder"] && this.window["uibuilder"].ui_md_plugins) this.ui_md_plugins = this.window["uibuilder"].ui_md_plugins;
     Ui2.mdOpts = {
       html: true,
       xhtmlOut: false,
@@ -120,14 +113,10 @@ const Ui = class Ui2 {
    * @returns {Promise} Resolves on close or click event, returns the event.
    */
   _showNotification(config) {
-    if (config.topic && !config.title)
-      config.title = config.topic;
-    if (!config.title)
-      config.title = "uibuilder notification";
-    if (config.payload && !config.body)
-      config.body = config.payload;
-    if (!config.body)
-      config.body = " No message given.";
+    if (config.topic && !config.title) config.title = config.topic;
+    if (!config.title) config.title = "uibuilder notification";
+    if (config.payload && !config.body) config.body = config.payload;
+    if (!config.body) config.body = " No message given.";
     try {
       const notify = new Notification(config.title, config);
       return new Promise((resolve, reject) => {
@@ -193,8 +182,7 @@ const Ui = class Ui2 {
           break;
         }
       }
-      if (!compToAdd.slot && ui.payload)
-        compToAdd.slot = ui.payload;
+      if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload;
       this._uiComposeComponent(newEl, compToAdd);
       let elParent;
       if (compToAdd.parentEl) {
@@ -231,27 +219,21 @@ const Ui = class Ui2 {
   _uiComposeComponent(el, comp) {
     if (comp.attributes) {
       Object.keys(comp.attributes).forEach((attrib) => {
-        if (attrib === "class" && Array.isArray(comp.attributes[attrib]))
-          comp.attributes[attrib].join(" ");
+        if (attrib === "class" && Array.isArray(comp.attributes[attrib])) comp.attributes[attrib].join(" ");
         Ui2.log("trace", "_uiComposeComponent:attributes-forEach", `Attribute: '${attrib}', value: '${comp.attributes[attrib]}'`)();
-        if (attrib === "value")
-          el.value = comp.attributes[attrib];
-        if (attrib.startsWith("xlink:"))
-          el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
-        else
-          el.setAttribute(attrib, comp.attributes[attrib]);
+        if (attrib === "value") el.value = comp.attributes[attrib];
+        if (attrib.startsWith("xlink:")) el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
+        else el.setAttribute(attrib, comp.attributes[attrib]);
       });
     }
-    if (comp.id)
-      el.setAttribute("id", comp.id);
+    if (comp.id) el.setAttribute("id", comp.id);
     if (comp.type === "svg") {
       el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.w3.org/2000/svg");
       el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
     }
     if (comp.events) {
       Object.keys(comp.events).forEach((type) => {
-        if (type.toLowerCase === "onclick")
-          type = "click";
+        if (type.toLowerCase === "onclick") type = "click";
         try {
           el.addEventListener(type, (evt) => {
             new Function("evt", `${comp.events[type]}(evt)`)(evt);
@@ -312,34 +294,29 @@ const Ui = class Ui2 {
    */
   _uiLoad(ui) {
     if (ui.components) {
-      if (!Array.isArray(ui.components))
-        ui.components = [ui.components];
+      if (!Array.isArray(ui.components)) ui.components = [ui.components];
       ui.components.forEach(async (component) => {
         import(component);
       });
     }
     if (ui.srcScripts) {
-      if (!Array.isArray(ui.srcScripts))
-        ui.srcScripts = [ui.srcScripts];
+      if (!Array.isArray(ui.srcScripts)) ui.srcScripts = [ui.srcScripts];
       ui.srcScripts.forEach((script) => {
         this.loadScriptSrc(script);
       });
     }
     if (ui.txtScripts) {
-      if (!Array.isArray(ui.txtScripts))
-        ui.txtScripts = [ui.txtScripts];
+      if (!Array.isArray(ui.txtScripts)) ui.txtScripts = [ui.txtScripts];
       this.loadScriptTxt(ui.txtScripts.join("\n"));
     }
     if (ui.srcStyles) {
-      if (!Array.isArray(ui.srcStyles))
-        ui.srcStyles = [ui.srcStyles];
+      if (!Array.isArray(ui.srcStyles)) ui.srcStyles = [ui.srcStyles];
       ui.srcStyles.forEach((sheet) => {
         this.loadStyleSrc(sheet);
       });
     }
     if (ui.txtStyles) {
-      if (!Array.isArray(ui.txtStyles))
-        ui.txtStyles = [ui.txtStyles];
+      if (!Array.isArray(ui.txtStyles)) ui.txtStyles = [ui.txtStyles];
       this.loadStyleTxt(ui.txtStyles.join("\n"));
     }
   }
@@ -349,13 +326,10 @@ const Ui = class Ui2 {
    * @param {*} msg Standardised msg object containing a _ui property object
    */
   _uiManager(msg) {
-    if (!msg._ui)
-      return;
-    if (!Array.isArray(msg._ui))
-      msg._ui = [msg._ui];
+    if (!msg._ui) return;
+    if (!Array.isArray(msg._ui)) msg._ui = [msg._ui];
     msg._ui.forEach((ui, i) => {
-      if (ui.mode && !ui.method)
-        ui.method = ui.mode;
+      if (ui.mode && !ui.method) ui.method = ui.mode;
       if (!ui.method) {
         Ui2.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i}]. Ignoring. `, ui)();
         return;
@@ -420,10 +394,8 @@ const Ui = class Ui2 {
   _uiRemove(ui, all = false) {
     ui.components.forEach((compToRemove) => {
       let els;
-      if (all !== true)
-        els = [this.document.querySelector(compToRemove)];
-      else
-        els = this.document.querySelectorAll(compToRemove);
+      if (all !== true) els = [this.document.querySelector(compToRemove)];
+      else els = this.document.querySelectorAll(compToRemove);
       els.forEach((el) => {
         try {
           el.remove();
@@ -491,8 +463,7 @@ const Ui = class Ui2 {
    */
   _uiUpdate(ui) {
     Ui2.log("trace", "UI:_uiUpdate:update", "Starting _uiUpdate", ui)();
-    if (!ui.components)
-      ui.components = [Object.assign({}, ui)];
+    if (!ui.components) ui.components = [Object.assign({}, ui)];
     ui.components.forEach((compToUpd, i) => {
       Ui2.log("trace", "_uiUpdate:components-forEach", `Start loop #${i}`, compToUpd)();
       let elToUpd;
@@ -512,8 +483,7 @@ const Ui = class Ui2 {
         return;
       }
       Ui2.log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
-      if (!compToUpd.slot && compToUpd.payload)
-        compToUpd.slot = compToUpd.payload;
+      if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload;
       elToUpd.forEach((el, j) => {
         Ui2.log("trace", "_uiUpdate:components-forEach", `Updating element #${j}`, el)();
         this._uiComposeComponent(el, compToUpd);
@@ -522,10 +492,8 @@ const Ui = class Ui2 {
           const nc = { _ui: [] };
           compToUpd.components.forEach((nestedComp, k) => {
             const method = nestedComp.method || compToUpd.method || ui.method;
-            if (nestedComp.method)
-              delete nestedComp.method;
-            if (!Array.isArray(nestedComp))
-              nestedComp = [nestedComp];
+            if (nestedComp.method) delete nestedComp.method;
+            if (!Array.isArray(nestedComp)) nestedComp = [nestedComp];
             Ui2.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component #${k}`, nestedComp)();
             nc._ui.push({
               method,
@@ -577,10 +545,34 @@ const Ui = class Ui2 {
    * @param {HTMLElement} el HTML Element to add class(es) to
    */
   addClass(classNames, el) {
-    if (!Array.isArray(classNames))
-      classNames = [classNames];
-    if (el)
-      el.classList.add(...classNames);
+    if (!Array.isArray(classNames)) classNames = [classNames];
+    if (el) el.classList.add(...classNames);
+  }
+  /** Apply a source template tag to a target html element
+   * NOTES:
+   * - styles in ALL templates are accessible to all templates.
+   * - scripts in templates are run AT TIME OF APPLICATION (so may run multiple times).
+   * - scripts in templates are applied in order of application, so variables may not yet exist if defined in subsequent templates
+   * @param {string} sourceId The HTML ID of the source element
+   * @param {string} targetId The HTML ID of the target element
+   * @param {boolean} onceOnly If true, the source will be adopted (the source is moved)
+   */
+  applyTemplate(sourceId, targetId, onceOnly) {
+    const template = document.getElementById(sourceId);
+    const target = document.getElementById(targetId);
+    if (template && target) {
+      try {
+        let content;
+        if (onceOnly !== true) content = document.importNode(template.content, true);
+        else content = document.adoptNode(template.content);
+        target.appendChild(content);
+      } catch (e) {
+        Ui2.log("error", "Ui:applyTemplate", `Source must be a <template>. id='${sourceId}'`)();
+      }
+    } else {
+      if (!template) Ui2.log("error", "Ui:applyTemplate", `Source not found: id='${sourceId}'`)();
+      if (!target) Ui2.log("error", "Ui:applyTemplate", `Target not found: id='${targetId}'`)();
+    }
   }
   /** Converts markdown text input to HTML if the Markdown-IT library is loaded
    * Otherwise simply returns the text
@@ -588,12 +580,9 @@ const Ui = class Ui2 {
    * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
    */
   convertMarkdown(mdText) {
-    if (!mdText)
-      return "";
-    if (!this.window["markdownit"])
-      return mdText;
-    if (!Ui2.md)
-      this._markDownIt();
+    if (!mdText) return "";
+    if (!this.window["markdownit"]) return mdText;
+    if (!Ui2.md) this._markDownIt();
     try {
       return Ui2.md.render(mdText.trim());
     } catch (e) {
@@ -708,10 +697,8 @@ const Ui = class Ui2 {
     }
     uiOptions.type = "div";
     uiOptions.slot = slot;
-    if (!uiOptions.parent)
-      uiOptions.parent = "body";
-    if (!uiOptions.attributes)
-      uiOptions.attributes = { class: "included" };
+    if (!uiOptions.parent) uiOptions.parent = "body";
+    if (!uiOptions.attributes) uiOptions.attributes = { class: "included" };
     this._uiReplace({
       components: [
         uiOptions
@@ -857,15 +844,13 @@ const Ui = class Ui2 {
         if (attrib.name !== "id") {
           thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
         }
-        if (attrib.name === "class")
-          thisOut.classes = Array.from(node.classList);
+        if (attrib.name === "class") thisOut.classes = Array.from(node.classList);
       }
     }
     if (node.nodeName === "#text") {
       thisOut.text = node.textContent;
     }
-    if (node.validity)
-      thisOut.userInput.validity = {};
+    if (node.validity) thisOut.userInput.validity = {};
     for (const v in node.validity) {
       thisOut.userInput.validity[v] = node.validity[v];
     }
@@ -883,8 +868,7 @@ const Ui = class Ui2 {
     if (typeof config === "string") {
       config = { body: config };
     }
-    if (typeof Notification === "undefined")
-      return Promise.reject(new Error("Notifications not available in this browser"));
+    if (typeof Notification === "undefined") return Promise.reject(new Error("Notifications not available in this browser"));
     let permit = Notification.permission;
     if (permit === "denied") {
       return Promise.reject(new Error("Notifications not permitted by user"));
@@ -907,10 +891,8 @@ const Ui = class Ui2 {
       el.removeAttribute("class");
       return;
     }
-    if (!Array.isArray(classNames))
-      classNames = [classNames];
-    if (el)
-      el.classList.remove(...classNames);
+    if (!Array.isArray(classNames)) classNames = [classNames];
+    if (el) el.classList.remove(...classNames);
   }
   /** Replace or add an HTML element's slot from text or an HTML string
    * WARNING: Executes <script> tags! And will process <style> tags.
@@ -920,10 +902,8 @@ const Ui = class Ui2 {
    * @param {*} slot The slot content we are trying to add/replace (defaults to empty string)
    */
   replaceSlot(el, slot) {
-    if (!el)
-      return;
-    if (!slot)
-      slot = "";
+    if (!el) return;
+    if (!slot) slot = "";
     slot = this.sanitiseHTML(slot);
     const tempFrag = document.createRange().createContextualFragment(slot);
     const elRange = document.createRange();
@@ -938,10 +918,8 @@ const Ui = class Ui2 {
    * @param {*} component The component we are trying to add/replace
    */
   replaceSlotMarkdown(el, component) {
-    if (!el)
-      return;
-    if (!component.slotMarkdown)
-      return;
+    if (!el) return;
+    if (!component.slotMarkdown) return;
     component.slotMarkdown = this.convertMarkdown(component.slotMarkdown);
     component.slotMarkdown = this.sanitiseHTML(component.slotMarkdown);
     el.innerHTML = component.slotMarkdown;
@@ -952,8 +930,7 @@ const Ui = class Ui2 {
    * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
    */
   sanitiseHTML(html) {
-    if (!this.window["DOMPurify"])
-      return html;
+    if (!this.window["DOMPurify"]) return html;
     return this.window["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
   }
   /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
@@ -967,30 +944,21 @@ const Ui = class Ui2 {
    */
   showDialog(type, ui, msg) {
     let content = "";
-    if (msg.payload && typeof msg.payload === "string")
-      content += `<div>${msg.payload}</div>`;
-    if (ui.content)
-      content += `<div>${ui.content}</div>`;
+    if (msg.payload && typeof msg.payload === "string") content += `<div>${msg.payload}</div>`;
+    if (ui.content) content += `<div>${ui.content}</div>`;
     if (content === "") {
       Ui2.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
       return;
     }
-    if (!ui.title && msg.topic)
-      ui.title = msg.topic;
-    if (ui.title)
-      content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
-    if (ui.noAutohide)
-      ui.noAutoHide = ui.noAutohide;
-    if (ui.noAutoHide)
-      ui.autohide = !ui.noAutoHide;
+    if (!ui.title && msg.topic) ui.title = msg.topic;
+    if (ui.title) content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
+    if (ui.noAutohide) ui.noAutoHide = ui.noAutohide;
+    if (ui.noAutoHide) ui.autohide = !ui.noAutoHide;
     if (ui.autoHideDelay) {
-      if (!ui.autohide)
-        ui.autohide = true;
+      if (!ui.autohide) ui.autohide = true;
       ui.delay = ui.autoHideDelay;
-    } else
-      ui.autoHideDelay = 1e4;
-    if (!Object.prototype.hasOwnProperty.call(ui, "autohide"))
-      ui.autohide = true;
+    } else ui.autoHideDelay = 1e4;
+    if (!Object.prototype.hasOwnProperty.call(ui, "autohide")) ui.autohide = true;
     if (type === "alert") {
       ui.modal = true;
       ui.autohide = false;
@@ -1014,13 +982,11 @@ const Ui = class Ui2 {
     toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
     toast.innerHTML = content;
     toast.setAttribute("role", "alertdialog");
-    if (ui.modal)
-      toast.setAttribute("aria-modal", ui.modal);
+    if (ui.modal) toast.setAttribute("aria-modal", ui.modal);
     toast.onclick = function(evt) {
       evt.stopPropagation();
       toast.remove();
-      if (toaster.childElementCount < 1)
-        toaster.remove();
+      if (toaster.childElementCount < 1) toaster.remove();
     };
     if (type === "alert") {
     }
@@ -1028,8 +994,7 @@ const Ui = class Ui2 {
     if (ui.autohide === true) {
       setInterval(() => {
         toast.remove();
-        if (toaster.childElementCount < 1)
-          toaster.remove();
+        if (toaster.childElementCount < 1) toaster.remove();
       }, ui.autoHideDelay);
     }
   }
@@ -1039,10 +1004,8 @@ const Ui = class Ui2 {
    */
   ui(json) {
     let msg = {};
-    if (json._ui)
-      msg = json;
-    else
-      msg._ui = json;
+    if (json._ui) msg = json;
+    else msg._ui = json;
     console.log(this);
     this._uiManager(msg);
   }
@@ -1059,8 +1022,7 @@ const Ui = class Ui2 {
     const out = [];
     selection.forEach((node) => {
       if (propName) {
-        if (propName === "classes")
-          propName = "class";
+        if (propName === "classes") propName = "class";
         let prop = node.getAttribute(propName);
         if (prop === void 0 || prop === null) {
           try {
@@ -1069,10 +1031,8 @@ const Ui = class Ui2 {
           }
         }
         if (prop === void 0 || prop === null) {
-          if (propName.toLowerCase() === "value")
-            out.push(node.innerText);
-          else
-            out.push(`Property '${propName}' not found`);
+          if (propName.toLowerCase() === "value") out.push(node.innerText);
+          else out.push(`Property '${propName}' not found`);
         } else {
           const p = {};
           const cType = prop.constructor.name.toLowerCase();
@@ -1088,8 +1048,7 @@ const Ui = class Ui2 {
               p2[key] = prop[key];
             }
           }
-          if (p.class)
-            p.classes = Array.from(node.classList);
+          if (p.class) p.classes = Array.from(node.classList);
           out.push(p);
         }
       } else {
