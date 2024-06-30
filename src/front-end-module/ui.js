@@ -772,6 +772,36 @@ const Ui = class Ui {
         if (el) el.classList.add(...classNames)
     }
 
+    /** Apply a source template tag to a target html element
+     * NOTES:
+     * - styles in ALL templates are accessible to all templates.
+     * - scripts in templates are run AT TIME OF APPLICATION (so may run multiple times).
+     * - scripts in templates are applied in order of application, so variables may not yet exist if defined in subsequent templates
+     * @param {string} sourceId The HTML ID of the source element
+     * @param {string} targetId The HTML ID of the target element
+     * @param {boolean} onceOnly If true, the source will be adopted (the source is moved)
+     */
+    applyTemplate(sourceId, targetId, onceOnly) {
+
+        const template = document.getElementById(sourceId)
+        const target = document.getElementById(targetId)
+
+        if (template && target) {
+            try {
+                let content
+                if (onceOnly !== true) content = document.importNode(template.content, true)
+                else content = document.adoptNode(template.content)
+                // NB content.childElementCount = 0 after adoption
+                target.appendChild(content)
+            } catch (e) {
+                Ui.log('error', 'Ui:applyTemplate', `Source must be a <template>. id='${sourceId}'`)()
+            }
+        } else {
+            if (!template) Ui.log('error', 'Ui:applyTemplate', `Source not found: id='${sourceId}'`)()
+            if (!target) Ui.log('error', 'Ui:applyTemplate', `Target not found: id='${targetId}'`)()
+        }
+    }
+
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
      * @param {string} mdText The input markdown string
