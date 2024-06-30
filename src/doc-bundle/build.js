@@ -1,11 +1,11 @@
 /**
- * Build a bundle using ESBUILD for Docsify and plugins to allow offline use
+ * Build bundles using ESBUILD for Docsify and plugins to allow offline use.
  */
 
-// import esbuild from 'esbuild'
 const esbuild = require('esbuild')
 const { resolve } = require('path')
 
+/** Build a single output app.js from docsify & all needed plugins */
 esbuild.build({
     entryPoints: [
         'bundle-input.js'
@@ -30,6 +30,10 @@ esbuild.build({
         process.exit(1)
     })
 
+/** Use separate outputs for CSS because we need to be able to
+ *  specify alternate stylesheets for light/dark.
+ *  Doesn't work if we bundle into a single app.css output.
+ */
 esbuild.build({
     entryPoints: [
         'docsify-darklight-theme/dist/docsify-themeable/style.min.css',
