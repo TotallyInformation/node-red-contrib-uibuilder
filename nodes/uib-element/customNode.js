@@ -2,7 +2,7 @@
 /** Send a dynamic UI config to the uibuilder front-end library.
  * The FE library will update the UI accordingly.
  *
- * Copyright (c) 2022-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2022-2024 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -420,6 +420,7 @@ function buildTable(node, msg, parent) {
     // Add the table and thead/tbody tags
     parent.components.push({
         'type': node.elementtype,
+        'id': `${node.elementId}-table`,
         'components': [
             {
                 'type': 'thead',
@@ -439,7 +440,6 @@ function buildTable(node, msg, parent) {
 
     // Walk through the inbound msg payload (works as both object or array)
     Object.keys(tbl).forEach( (row, i) => {
-
         // TODO Allow for msg.cols to be used as override
         // Build the columns from the first set of entries & add the thead
         if (i === 0) {
@@ -478,11 +478,10 @@ function buildTable(node, msg, parent) {
                     'slot': colName
                 })
             } )
-
         }
 
         // Track the data row offset
-        // const rowNum = i + 1
+        const rowNum = i + 1
 
         // Create the data row
         const rLen = tbody.components.push( {
@@ -497,6 +496,8 @@ function buildTable(node, msg, parent) {
         //     'data-row-index': rLen,
         //     // 'class': (rLen % 2  === 0) ? 'even' : 'odd'
         // }
+        // Add row id class
+        tbody.components[rLen - 1].attributes.class = `r${rowNum}`
         // Add a row name attrib from the object key if the input is an object
         if ( node.data !== null && node.data.constructor.name === 'Object' ) {
             tbody.components[rLen - 1].attributes['data-row-name'] = row
@@ -517,11 +518,11 @@ function buildTable(node, msg, parent) {
                     // NB: Making all indexes 1-based for consistency
                     'data-col-index': colNum,
                     'data-col-name': colName,
+                    'class': `r${rowNum} c${colNum}`,
                 },
                 'slot': tbl[row][colName],
             })
         } )
-
     } )
 
     return err
