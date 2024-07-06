@@ -265,7 +265,7 @@ In addition, internal message handling will recognise standard messages from nod
 
 For functions with no descriptions, please refer to the code. In general, these will not need to be used in your own code.
 
-### `applyTemplate(sourceId, targetId, onceOnly)` - Apply template element content to the page :id=applyTemplate
+### `applyTemplate(sourceId, targetId, config)` - Apply template element content to the page :id=applyTemplate
 
 This takes HTML (including styles and scripts) from a `<template>` tag. Templates are not active parts of the page but can be applied to a page, potentially multiple times. Great if you have some standard content that you might need to dynamically add to the page (a new list entry or table row for example).
 
@@ -273,12 +273,17 @@ This takes HTML (including styles and scripts) from a `<template>` tag. Template
 
 `targetId` (required) must be the id of an on-page element to which the template contents will be _appended_ as children.
 
-`onceOnly` (optional) if set to `true`, the contents of the template will be consumed and can not be re-used. Otherwise, the template may be reused as often as needed.
+`config` (optional) is an object with 2 possible properties:
+
+* `config.onceOnly` (optional) if set to `true`, the contents of the template will be consumed and can not be re-used. Otherwise, the template may be reused as often as needed.
+* `config.attributes` (optional) if provided, must be an object containing attribute-name:value pairs. These will be applied to the **first child element** of the template allowing any attribute (e.g. `id`, `class`, etc) to be set.
 
 > [!NOTE]
 > If the template contains `<style>` content, this becomes global to the page once it has been applied once.
 >
 > If the template contains `<script>` content, this is **run every time the template is applied**. So make sure you wrap any code in a test that will prevent it from re-running if that is important.
+
+See the Node-RED example library "Dynamic SVG Example" flow for an example using this function.
 
 ### `addClass(classNames, el)` - Add one or more classes to an element :id=addClass
 
