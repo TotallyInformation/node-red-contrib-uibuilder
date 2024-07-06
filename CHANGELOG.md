@@ -10,14 +10,22 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## Can Wait
 
-* [ ] Add Docsify external libraries to `/docs/.config` to allow true offline use of docs. Add new gulp process to update them, possibly pack them all.
-  * [ ] How to create a single bundle?
 * [ ] Add instance descriptions to the index pages
 * [ ] Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
-* [ ] New Node Idea: `uib-meta` - links to a uibuilder node and returns the instance metadata including URL's and folder locations and other settings. (e.g. use with [node-red-cleanup-filesystem](https://discourse.nodered.org/t/announce-node-red-cleanup-filesystem-request-for-testing/88135))
+* [ ] uib-element forms need some serious TLC! checkbox, radio
+* [ ] Add endpoint creation apis
+* [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
+* [ ] Enhance JSON viewing using my own interpretation of the [json-view](https://github.com/pgrabovets/json-view) library.
+* [ ] `ui.js` `applyTemplate` - Allow slot content to be changed.
+* [ ] Remove all tiEvents - swap to RED.events.
+  * [ ] uibuilder: function externalEvents
+  * [ ] uibuilder: this.on('close'
+  * [ ] uib-sender
+  * [ ] package.json
 * `uibuilder` node
   * Editor panel
-    * [ ] Text in fieldset is fixed width
+    * [ ] Inputs on Files tab don't expand correctly
+    * [ ] Text in Template settings fieldset is fixed width
 * `uib-cache` node
   * Editor panel
     * [ ] Some inputs width not consistent
@@ -27,6 +35,15 @@ Please see the documentation for archived changelogs - a new archive is produced
 * Documentation
   * [ ] Document a dashboard-like grid layout.
 
+### Ideas
+
+* Change runtime parameter passes of `uib` to `globalThis['ti-uibuilder'].uib`
+* Consider moving all handling of uib's package.json into a single lib. Only allow a single function to read/write/update
+* Add Vue-style dynamic attributes: [ref1](https://claude.ai/chat/0c494f54-758c-4f14-a8c7-90dbe6b2c5d7), [ref2](https://chatgpt.com/c/7b797547-4e7e-455d-927b-926de42171aa).
+* Provide a common location and some standards to enable people to craft and share custom elements. Install using library mgr? Or as an NR plugin?
+* Consider adding an Editor plugin that adds a sidebar tab to show: All uibuilder instances (with links to the node AND the page), All library and other standard endpoint references.
+  * enableOnEdit (optional) If set to true, this tab will be accessible whilst the edit dialog is open. Default: false.
+* Consider adding a uibuilder custom library - [ref](https://github.com/node-red/node-red-library-file-store).
 
 ### `uibuilder` node
 
@@ -50,10 +67,6 @@ Initial thinking is that there will be a new but optional file in the <uibRoot>/
 I will attempt to also trap a new project create to run the install if I can. Otherwise, it will display a notification for the user to run that manually. Not certain whether Node-RED will have to be restarted, I will try to avoid that but it might not be possible. Will have to test.
 
 
-### **NEW COMPONENT** `<show-template>`
-
-Starting with the code from the router, apply ANY `<template>` anywhere in the HTML.
-
 
 ## To Do
 
@@ -64,33 +77,18 @@ Starting with the code from the router, apply ANY `<template>` anywhere in the H
   * [ ] Template Examples - remove old library example.
   * [ ] `uib-sender` - remove ref to uibuilderfe and update flows.
   * [ ] Navigation menu examples. 1x Router, 1x page.
-* [ ] `uib-tag` input fields not resizing correctly.
-* [ ] uib-element forms need some serious TLC! checkbox, radio
-* [ ] Add endpoint creation apis
-* [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
-* [ ] Remove all tiEvents - swap to RED.events.
-  * [ ] uibuilder: function externalEvents
-  * [ ] uibuilder: this.on('close'
-  * [ ] uib-sender
-  * [ ] package.json
-* [ ] uibuilder node: 
-  * [ ] On first setup, after typing in a url, the folder name shows an `undefined` folder name. That needs to update or not be shown.
-  * [ ] If user types in a full url, give a better warning and disallow.
-* [ ] `RED.util.uib.listAllApps()` - add uibuilder meta-data (e.g. the full url). Also update `nodes/function-node.md`
 
 ### Documentation
 
-* [ ] Update compare-d2 with Joe's comments.
 * [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
-* [ ] Document new ui & fe fn `applyTemplate`
 * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
-
 
 ### `uibrouter` FE library
 
 * [ ] ? Option to load route config from a file ?
 * [ ] Add md rendering to `loadOther`
 * [ ] Allow config updates from Node-RED
+* [ ] Add function that returns the route config schema
 
 * [ ] Add external command listeners for:
   * [ ] `msg._uibRoute.load`. With the value being a route definition or an array of route definitions. (and update the eg flows)
@@ -135,6 +133,10 @@ Starting with the code from the router, apply ANY `<template>` anywhere in the H
 
 ### `uib-cache` node
 
+* Add cache replay filtering. Option flags need adding for control. Filter by:
+  * `routeId`
+  * `clientId`
+  * `pageName`
 * [ ] Document
   * [ ] How to send cache on "route change" control msg - use a switch node before the cache
   * [ ] How to ONLY send cache on "route change" control msg
@@ -167,9 +169,14 @@ Starting with the code from the router, apply ANY `<template>` anywhere in the H
 * [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
 
 
+### Other
+
+* gauge tiles - web component or new element? [ref](https://discourse.nodered.org/t/dashboard-2-beta-development/83550/133?u=totallyinformation)
+
+
 ## Issues
 
-### "Outdated" dependencies
+### "Outdated" dependencies (Resolved)
 
 As of v7, all outdated dependencies have been removed or limited to uibuilder development only, not production use.
 
@@ -177,33 +184,6 @@ The following are only used for _**developing**_ UIBUILDER:
 
 * `execa` - restricted to v5. Author sindresorhus decided that everyone HAS to use ESM even though his packages are widely used and he must know that it is often impossible to move from CommonJS without a complete rewrite. Node-RED is so complex, when would that be possible? Very annoying.
 * `@types/node` - restricted to v18 to match Node-RED's current baseline.
-
-## Ideas
-
-* Change runtime parameter passes of `uib` to `globalThis['ti-uibuilder'].uib`
-* Consider moving all handling of uib's package.json into a single lib. Only allow a single function to read/write/update
-* ?New web component? - `<template-to template="templateId">` Similar to Vue's Teleport feature auto-insert a template.
-* Add Vue-style dynamic attributes: [ref1](https://claude.ai/chat/0c494f54-758c-4f14-a8c7-90dbe6b2c5d7), [ref2](https://chatgpt.com/c/7b797547-4e7e-455d-927b-926de42171aa).
-* Provide a common location and some standards to enable people to craft and share custom elements. Install using library mgr? Or as an NR plugin?
-* Consider adding an Editor plugin that adds a sidebar tab to show: All uibuilder instances (with links to the node AND the page), All library and other standard endpoint references.
-  * enableOnEdit (optional) If set to true, this tab will be accessible whilst the edit dialog is open. Default: false.
-* Consider adding a uibuilder custom library - [ref](https://github.com/node-red/node-red-library-file-store)
-
-
-### `uibrouter` FE library
-
-* Add function that returns the route config schema
-
-### `uib-cache` node
-
-  * Add cache replay filtering. Option flags need adding for control. Filter by:
-    * `routeId`
-    * `clientId`
-    * `pageName`
-
-### Other
-
-* gauge tiles - web component or new element? [ref](https://discourse.nodered.org/t/dashboard-2-beta-development/83550/133?u=totallyinformation)
 
 ------------
 
@@ -325,6 +305,9 @@ Most of these changes will *not* impact most people but you should check through
   * Access to the documentation inside Node-RED is now available fully offline, no Internet needed.
   * There are lots of new and update pages to explore.
 
+* New example flows: client-side code/Dynamic SVG - A rework of an example from the flows library showing how to overlay interactive lamp icons on an SVG plan backdrop. Turn on/off lights from the web and from Node-RED.
+* Updated example flows: Simple Flow - index.(html|js|css) can now be populated from a flow that uses uib-save. low-code/report-builder - The required Markdown-IT library is now auto-loaded from the Internet.
+
 ### General Changes
 
 * The minimum supported version of Node.JS is now v18.
@@ -340,9 +323,11 @@ Most of these changes will *not* impact most people but you should check through
 * External module `execa` no longer a dependency.
 * On the Detailed Information Page (uibindex) "User-Facing Routes" is changed to "Client-Facing Routes" to make it clearer.
 * The Node-RED Editor utility resources `ti-common.css` and `ti-common.js` are now loaded only once using a new utility plugin. Previously they were loaded multiple times by each node.
+* New example flows: client-side code/Dynamic SVG - A rework of an example from the flows library showing how to overlay interactive lamp icons on an SVG plan backdrop. Turn on/off lights from the web and from Node-RED.
+* Updated example flows: Simple Flow - index.(html|js|css) can now be populated from a flow that uses uib-save. low-code/report-builder - The required Markdown-IT library is now auto-loaded from the Internet.
 
 * Documentation
-  * Now available fully offline in Node-RED. Library code also now bundled for improved performance.
+  * **Now available fully offline** in Node-RED. Library code also now bundled for improved performance.
   * New How-To: Creating a well-structured HTML page.
   * New page: Easy UI updates - explaining the different ways you can easily and dynamically update content.
   * New page: Common design patterns - the most common ways of working with Node-RED and UIBUILDER.
@@ -529,6 +514,13 @@ The `old-blank-client` template and all associated documentation has also been r
 * Connection headers have been added to the client details that are shown on control messages and on standard messages if the uibuilder "Include msg._uib in standard msg output." advanced flag is turned on. These may be particularly useful if using 3rd-party identity (authentication and authorisation) tooling which may put validated data into custom headings. Note however that these are "connection" headers, ongoing communications between the clients and the server do not update the headers (not possible over websockets) but will be updated if the client reconnects or reloads.
 
 * Replaced custom event handlers with `RED.events`. All uibuilder events are prefixed with `node-red-contrib-uibuilder/` to ensure that there are no name clashes with other nodes or Node-RED core.
+
+### `uib-element` node
+
+* Table element enhanced:
+  
+  * Added class names to body cells (`r1 c1`, etc) & body rows (`r1`). Note that these class identifiers will get out of step if dynamic updates are made to the table.
+  * Added `id` to table `${divId}-table`
 
 ### `uib-list` node
 

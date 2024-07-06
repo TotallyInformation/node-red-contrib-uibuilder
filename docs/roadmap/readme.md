@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-04-26 15:20:11
+updated: 2024-07-04 12:01:10
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -95,14 +95,15 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ### Node Runtime Refactoring
 
-| Refactor / Node:             | uibuilder | uib-cache | uib-element | uib-file-list | uib-html | uib-save | uib-sender | uib-tag | uib-update | *uib-uplot*                         |
-| ---------------------------- | --------- | --------- | ----------- | ------------- | -------- | -------- | ---------- | ------- | ---------- | ----------------------------------- |
-| getSource                    |           |           | ✔️           |               |          |          |            | ✔️       |            |                                     |
-| Std process for typed inputs |           |           |             |               |          |          |            |         |            |                                     |
-| fs to std lib                |           |           |             | ✔️             |          |          |            |         |            |                                     |
-| buildUi to std lib           | --        | --        |             |               |          | --       | --         |         |            | ??                                  |
-| Object.assign config vars(1) |           |           |             |               |          |          |            |         |            |                                     |
-| Notes                        |           |           |             |               |          |          |            |         |            | check this for other needed updates |
+| Refactor / Node:                              | uibuilder | uib-cache | uib-element | uib-file-list | uib-html | uib-save | uib-sender | uib-tag | uib-update | *uib-uplot*                         |
+| --------------------------------------------- | --------- | --------- | ----------- | ------------- | -------- | -------- | ---------- | ------- | ---------- | ----------------------------------- |
+| getSource                                     |           |           | ✔️           |               |          |          |            | ✔️       |            |                                     |
+| Std process for typed inputs                  |           |           |             |               |          |          |            |         |            |                                     |
+| Move all fs access to fs lib, remove fs-extra |           |           |             | ✔️             |          |          |            |         |            |                                     |
+| buildUi to std lib                            | --        | --        |             |               |          | --       | --         |         |            | ??                                  |
+| Object.assign config vars(1)                  |           |           |             |               |          |          |            |         |            |                                     |
+| Replace tiEvents with RED.events              |           |           |             |               |          |          |            |         |            |                                     |
+| Notes                                         |           |           |             |               |          |          |            |         |            | check this for other needed updates |
 
 (1) https://github.com/ryanmcdermott/clean-code-javascript?tab=readme-ov-file#set-default-objects-with-objectassign
 
@@ -112,13 +113,14 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ### Possible New Nodes
 
-* [x] `uib-file-list` - Return a list of files (or URLs, or both) for a specific uibuilder instance. Allow folder choice, filtering (via fast-glob). Use for automating links and menu's in the front-end.
-* `uib-template` -  New node to take a `msg._ui` template input and update parts of it before sending (e.g. parent, id, ...). Alt. name ideas: `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation).
-* `uib-event` - Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance.
-* `uib-ctrl` - route different types of control msgs to different output ports: `cache` ("client connect"), `network` ("client connect", "client disconnect"), `visibilty`, `routing` ("route change").
-* `uib-file-change` - Watches for changes to files for a specific uibuilder instance. Allow folder choice, filtering (via fast-glob). Triggers an output on-change. Output can be a folder/file list OR a URL list (or maybe both).
-* `uib-file-read` - Reads a file for a specific uibuilder instance. Allows, for example, the file to be passed to the FE for editing.
+* [x] `uib-file-list` - Return a list of files (or URLs, or both) for a specific uibuilder instance. Allow folder choice, filtering (via fast-glob). Use for automating links and menu's in the front-end. Delivered in v7.
 * `uib-read-file-meta` - Reads a folder recursively and compiles all YAML Front-Matter entries into a single return. Use with `uib-file-change` to update when files change.
+* `uib-meta` - links to a uibuilder node and returns the instance metadata including URL's and folder locations and other settings. (e.g. use with [node-red-cleanup-filesystem](https://discourse.nodered.org/t/announce-node-red-cleanup-filesystem-request-for-testing/88135) for example).
+* `uib-template` -  New node to take a `msg._ui` template input and update parts of it before sending (e.g. parent, id, ...). Alt. name ideas: `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation).
+* `uib-file-change` - Watches for changes to files for a specific uibuilder instance. Allow folder choice, filtering (via fast-glob). Triggers an output on-change. Output can be a folder/file list OR a URL list (or maybe both). Could then be used to simply reload any connected clients automatically, trigger backups or something else entirely.
+* `uib-ctrl` - route different types of control msgs to different output ports: `cache` ("client connect"), `network` ("client connect", "client disconnect"), `visibilty`, `routing` ("route change").
+* `uib-event` - Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance. May be helpful to some people to simplify flows without using lots of link nodes.
+* `uib-file-read` - Reads a file for a specific uibuilder instance. Allows, for example, the file to be passed to the FE for editing.
 
 #### Maybe
 
@@ -145,54 +147,81 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ### Node: `uibuilder`
 
+* [ ] **FIX NEEDED** On first setup, after typing in a url, the folder name shows an `undefined` folder name. That needs to update or not be shown.
+
 * [ ] **FIX NEEDED** Loading template - if it fails due to a missing dependency, the template isn't loaded but the Template shows the new one. Need to revert the name if loading fails.
+
 * [ ] **IMPROVEMENT NEEDED** in code editor. Needs bringing up to latest Node-RED code standards. [Ref](https://discourse.nodered.org/t/json-typed-into-with-schema-validation/84499/11?u=totallyinformation).
+
+* [ ] **IMPROVEMENT NEEDED** - If user types in a full url (e.g. with `http:` or a domain/ip), give a better warning and disallow.
+
 * Allow file uploads
-* Add instance title and description fields. Extend record of instances to include these and update the `apps` page.
+
+* Extend record of instances to include instance title & description and update the `apps` page.
+
 * Use alt logging for websocket disconnects, sleep, error, etc
-* [ ] [**STARTED**] Move all filing system handling to a separate library module `libs/fs.js`. Should help work out how to support implementations with limited filing systems.
+
 * Move all uibRoot package.json handling to `libs/package-mgt.js`
+
 * Runtime API's - a new set of runtime API's
 
   * List all URL's
   * List all *.html files for instance serve folder
   * List all *.html for all URL's
   * _started_ Add api to query if a specific uib library is installed and return version. Optionally return estimated base path. Allow calling from front-end.
+  
 * Add API test harness using VScode restbook.
+
 * Add option to process a crafted msg from the FE that returns a JSON list of all files/folders (optionally recursive) - needs change to FE library & editor.
 
   * In Editor, set the top-level permitted folder - relative to the `Serve` folder (e.g. If serving `<instanceRoot>/src`, that would be the default root but allow a sub-folder to be set, e.g. `content` so that only `<instanceRoot>/src/content` and below could be queried). This is to facilitate the creation of content management systems.
   * Possibly also needs option as to whether data can be written back. Including options to create/delete as well as amend. To begin with, just output any changed data to port 1 and let people create their own write-back logic.
+  
 * Gracefully handle when rename cannot (re)move original folder (e.g. held open by browser).
 
   * Improve checks for rename failures. `[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal.` - these should clear after restart but sometimes don't.
+  
 * Files: Changing filetype in editor does not change the highlighting. May need the editor to be re-engineered.
+
 * Ensure that uibRoot is set to a project folder if projects in use. See [PR#47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) and [Issue #44](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/44)
+
 * Improve handling for when Node-RED changes projects.
+
 * Allow instance npm installs to be served (would allow both vue 2 and vue 3 for example). Instance serves to take preference. Would need extension to editor libraries tab to differentiate the locations.
+
 * Centralise the list of control messages in use.
+
 * Add occasional check for new version of uib being available and give single prompt in editor.
+
 * Trace report for not loading uibMiddleware.js but not for other middleware files. Doesn't need a stack trace if the file isn't found and probably not at all. Make everything consistent. "uibuilder common Middleware file failed to load. Path: \src\uibRoot\.config\uibMiddleware.js, Reason: Cannot find module '\src\uibRoot\.config\uibMiddleware.js'". "sioUse middleware failed to load for NS" - make sure that middleware does not log warnings if no file is present. [ref](https://discourse.nodered.org/t/uibuilder-question-on-siouse-middleware/75199?u=totallyinformation).
+
 * Introduce standard events: url-change (so that all uib related nodes can be notified if a uib endpoint changes url).
+
 * Auto-generate web manifest.
+
 * Add actions: open page? open docs? using RED.actions editor API. [ref](https://nodered.org/docs/api/ui/actions/)
+
 * Better icons! See https://discourse.nodered.org/t/wish-for-new-nodes/73858/20
+
 * Consider adding an action for when a `uibuilder` node is selected - would open the web page. https://discourse.nodered.org/t/call-link-from-node-red-editor-ctrl-shift-d/73388/4
+
 * Add GIT processing? Or maybe just handle via npm scripts?
 
   * Is git command available?
   * is front-end src folder a git repository?
   * git commit
   * git push
+  
 * Investigate use of WebWorkers to have a shared websocket that allows retained connection on page reload and between pages in the same `uibuilder` node.
 
   * https://crossbario.com/blog/Websocket-Persistent-Connections/
   * https://stackoverflow.com/questions/10886910/how-to-maintain-a-websockets-connection-between-pages
+  
 * [ ] **[STARTED]** Provide option to switch from static to rendering to allow dynamic content using ExpressJS Views.
 
   Currently available by adding the appropriate ExpressJS option in settings.js.
 
-#### Editor (`uibuilder.html`)
+#### Editor Panel
 
 * Server info box doesn't update if nr restarts with different setting but editor not reloaded. Need to switch to an API call.
 * When a template changes, optionally install required front-end packages. Probably use a new property in package.json - note, don't use the dependencies property as these are for local dependencies not for packages that uibuilder will make available to the front-end via ExpressJS. Or possibly make this a button for easy install?
@@ -276,6 +305,10 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 * Add optional sidebar (or drop-down menu on NR header bar) displaying list of all uib URLs (and link to nodes).
 
+#### Function node enhanced utilities
+
+* `RED.util.uib.listAllApps()` - add uibuilder meta-data (e.g. the full url). Also update `nodes/function-node.md`.
+
 #### NEW TAB: `Build` - run npm scripts, install instance libraries (for dev or dependencies - just dev initially)
 
 * Add all local package.json script entries as links/buttons so they can be run from the editor panel.
@@ -310,11 +343,35 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ### Node: `uib-element`
 
-* Add width setting
-* Add new element: Layout
+* Re-engineering: For editor, move list of types to a var passed in runtime settings. Move templates for adv config for each element to separate resources. For runtime, read list of types from node.js module. move each element definition to its own node.js module.
 
-  * Start with grid layout
-* Forms:
+* Add width setting
+
+* Add input to allow restriction by pageName/clientId/tabId. `_ui.pageName`, `_ui.clientId`, and/or `_ui.tabId`
+
+* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
+
+* New Types for CSS and JS files?
+
+* New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
+
+* Disable or hide inputs when unused for a specific type.
+
+* As more element types are added, group into types: main, add, form, etc
+
+* ? Have JSON input msg templates for each type with links to copy to clipboard ?
+
+* Check out: https://www.w3.org/WAI/ARIA/apg/patterns/
+
+* Think about having a `linkInputs([idList])` fn that allows easy linking of different inputs?
+
+* Consider adding the ability to have some tag other than `div` as the wrapper. [ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions/210)
+
+* Element improvements:
+
+  * "Text Box" type - allow msg.payload to be an array with each entry being a new para.
+
+* Forms improvements:
 
   * Check if textarea sizes can be changed - specifically the number of lines. Similarly for select-multiple.
   * Add option for blank line.
@@ -327,19 +384,13 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
   * Add Auto-complete for text inputs
   * If no button added, make each input send changes direct - or possibly add that as an optional setting.
   * Rich text edit (Markdown? HTML?)
-* Add new element: Multi-state switch (AKA button row). [ref](https://discourse.nodered.org/t/dashboard-2-multi-state-switch/85168/14)
-* Add input to allow restriction by pageName/clientId/tabId. `_ui.pageName`, `_ui.clientId`, and/or `_ui.tabId`
-* Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
-* New Types for CSS and JS files?
-* New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
-* "Text Box" type - allow msg.payload to be an array with each entry being a new para.
-* Disable or hide inputs when unused for a specific type.
-* As more element types are added, group into types: main, add, form, etc
-* ? Have JSON input msg templates for each type with links to copy to clipboard ?
-* Check out: https://www.w3.org/WAI/ARIA/apg/patterns/
-* Think about having a `linkInputs([idList])` fn that allows easy linking of different inputs?
-* Consider adding the ability to have some tag other than `div` as the wrapper. [ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions/210)
+
 * Add more elements:
+
+  * Multi-state switch (AKA button row). [ref](https://discourse.nodered.org/t/dashboard-2-multi-state-switch/85168/14)
+  * Layout
+
+    * Start with grid layout
 
   * Buttons
 
@@ -367,28 +418,30 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
        As for [ui-iframe](https://flows.nodered.org/node/node-red-node-ui-iframe)
 
   * [ ] Charts
-  
+
     * [ ] Sparkline. Refs: [1](https://github.com/fnando/sparkline/blob/main/src/sparkline.js), [2](https://www.codedrome.com/sparklines-in-javascript/), [3](https://github.com/CodeDrome/sparklines-javascript/blob/master/sparklinedemo.htm), [4](https://github.com/rikukissa/node-red-contrib-image-output/blob/master/image/image.html), [5](https://github.com/mblackstock/node-red-contrib-data-view)
   * [ ] Gauges
-  
+
     Refs: [1](https://github.com/johnebgood/node-red-contrib-inline-gauge/blob/main/gauge/gauge.html)
   * [x] List (ul, ol, dl)
-  
+
     * Future improvements:
-  
+
       * Better validation of input data
       * list-style-type (add to outer) - several options plus text (incl emoji's)
       * Collapsable list style. [ref](https://github.com/mdn/web-components-examples/blob/main/expanding-list-web-component)
       * ? Optional list leading/trailing text ?
   * [x] Card/Article
-  
+
     * Future improvements:
-  
+
       * Better layout, more optional internal structure (footer, etc)
   * [x] Table
-  
+
     * Future improvements:
-  
+
+      * Add class names to body cells (`r1 c1`, etc) & body rows (`r1`).
+      * Add id to table `${divId}-table`
       * Additional field definitions in input data
       * Better validation of input data
       * Caption
@@ -426,9 +479,9 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
   * [ ] Accordian.
     [ref](https://css-tricks.com/quick-reminder-that-details-summary-is-the-easiest-way-ever-to-make-an-accordion/)
   * [ ] Map - Leaflet
-  
+
   * Completed
-  
+
     * [X] Markdown
       Allow raw Markdown to be sent similar to the HTML element. Will require the Markdown-IT library to be loaded as per other uibuilder Markdown support.
     * [X] Simple Form - Input types: button, checkbox, color, date, datetime-local, email, hidden, month, number, password, radio, range, tel, text, time, url, week
@@ -436,9 +489,11 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
     * [X] Page Title
     * [X] tr - Add a row to an existing table
     * [X] li - Add a row to an existing ul/ol list
+
 * Other thoughts:
 
   * Pill list, scrollable search - https://www.w3.org/WAI/ARIA/apg/patterns/grid/examples/layout-grids/
+
 * ??? How to allow EXTERNAL element definitions ??? e.g. Someone else's contributed package.
 
 ### Node: `uib-html`
@@ -844,12 +899,12 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
 
 ### Other Ideas
 
-* Consider moving all libs to separate repo to reduce number of direct dependencies. (probably requires node v16 for nested mono-repo modules)
-* Restructure to a monorepo? With libs in 1, maybe nodes in their own and the front-end library in another? [ref](https://www.bing.com/search?pglt=161&q=what+is+a+monorepo&cvid=42b295dfc64143cfb64e4061114803fd&aqs=edge.0.0l9.7031j0j1&FORM=ANNTA1&PC=U531)
-* Some way to visually expose a library of JavaScript functions with their args as inputs. Maybe make this a cmd that pulls a doc from Node-RED? (keeps client lib small)
-* Using the above to visually show available uibuilder fns with inputs and outputs.
-* Add optional TELEMETRY output (maybe linked to the log functions) - add mqtt endpoint to uibuilder settings.js (or maybe websocket?)
 * Use `degit` to move default templates and maybe examples to their own repos - allowing more dynamic updates without needing a new version of uibuilder.
+* Restructure to a monorepo? With libs in 1, maybe nodes in their own and the front-end library in another? [ref](https://www.bing.com/search?pglt=161&q=what+is+a+monorepo&cvid=42b295dfc64143cfb64e4061114803fd&aqs=edge.0.0l9.7031j0j1&FORM=ANNTA1&PC=U531)
+* Some way to visually expose (to clients) a library of JavaScript functions with their args as inputs. Maybe make this a cmd that pulls a doc from Node-RED? (keeps client lib small)
+  * Using the above to visually show available uibuilder fns with inputs and outputs.
+
+* Add optional TELEMETRY output (maybe linked to the log functions) - add mqtt endpoint to uibuilder settings.js (or maybe websocket?)
 
 ### Thoughts on JavaScript tabular data manipulation and visualisation
 
@@ -908,6 +963,8 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
 
 ### uib-cache node
 
+* Consider allowing an option for separate state and data stores ([D2 ref](https://discourse.nodered.org/t/how-to-sync-the-full-config-between-server-and-client-side-state/89252/4?u=totallyinformation))
+* Improve docs by describing common use-cases: replay all or last 1, replay only on initial load, ...
 * On close, delete cache
 
 ## *Maybe*
