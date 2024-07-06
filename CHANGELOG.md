@@ -77,6 +77,10 @@ I will attempt to also trap a new project create to run the install if I can. Ot
   * [ ] Template Examples - remove old library example.
   * [ ] `uib-sender` - remove ref to uibuilderfe and update flows.
   * [ ] Navigation menu examples. 1x Router, 1x page.
+  * [x] jQuery
+  * [x] Client side/Dynamic SVG
+  * [x] Low code/report builder
+  * [x] Simple flow
 
 ### Documentation
 
