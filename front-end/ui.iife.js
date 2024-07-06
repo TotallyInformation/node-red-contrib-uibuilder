@@ -560,19 +560,32 @@
          * - scripts in templates are applied in order of application, so variables may not yet exist if defined in subsequent templates
          * @param {string} sourceId The HTML ID of the source element
          * @param {string} targetId The HTML ID of the target element
-         * @param {boolean} onceOnly If true, the source will be adopted (the source is moved)
+         * @param {object} config Configuration options
+         * @param {boolean=} config.onceOnly If true, the source will be adopted (the source is moved)
+         * @param {object=} config.attributes A set of key:value pairs that will be applied as attributes to the target
          */
-        applyTemplate(sourceId, targetId, onceOnly) {
+        applyTemplate(sourceId, targetId, config) {
+          if (!config) config = { onceOnly: false };
           const template = document.getElementById(sourceId);
           const target = document.getElementById(targetId);
           if (template && target) {
+            let content;
             try {
-              let content;
-              if (onceOnly !== true) content = document.importNode(template.content, true);
+              if (config.onceOnly !== true) content = document.importNode(template.content, true);
               else content = document.adoptNode(template.content);
-              target.appendChild(content);
             } catch (e) {
               _a.log("error", "Ui:applyTemplate", `Source must be a <template>. id='${sourceId}'`)();
+              return;
+            }
+            if (content) {
+              if (config.attributes) {
+                const el = content.firstElementChild;
+                console.log(el, content);
+                Object.keys(config.attributes).forEach((attrib) => {
+                  el.setAttribute(attrib, config.attributes[attrib]);
+                });
+              }
+              target.appendChild(content);
             }
           } else {
             if (!template) _a.log("error", "Ui:applyTemplate", `Source not found: id='${sourceId}'`)();
