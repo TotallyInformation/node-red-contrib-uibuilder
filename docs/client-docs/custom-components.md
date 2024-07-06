@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2024-06-30 17:45:43
+updated: 2024-07-01 20:02:52
 ---
 
 UIBUILDER can work with front-end frameworks such as REACT, VueJS, etc. However, it does not need them. But one thing that these frameworks often have are collections of components that you can add to your HTML. Each component will produce something useful in your web page such as an information card, tabbed interface, navigation menu, etc.
@@ -229,7 +229,7 @@ This small but powerful component allows you to keep "templates" in your HTML th
 I've never understood why this isn't a standard HTML feature! Doing this by hand requires some significant knowledge. As always, UIBUILDER is here to make life easier but it still uses "just" standard HTML, CSS and JavaScript.
 
 > [!NOTE]
-> The uibuilder front-end library also has a built-in function [`uibuilder.applyTemplate((sourceId, targetId, onceOnly)`](client-docs/functions#applyTemplate). It does the same thing as this component but does it in JavaScript code so you can do `uib.applyTemplate('template-1', 'more')` in code to get a similar effect. The main difference being that you must supply the id of an element to which the template contents will be appended.
+> The uibuilder front-end library also has a built-in function [`uibuilder.applyTemplate((sourceId, targetId, config)`](client-docs/functions#applyTemplate). It does the same thing as this component but does it in JavaScript code so you can do `uib.applyTemplate('template-1', 'more')` in code to get a similar effect. The main differences being that: You must supply the id of an element to which the template contents will be appended. And you can apply attributes to the _1st child element_ using the `config` parameter.
 
 ### Attributes :id=apply-template-attribs
 
