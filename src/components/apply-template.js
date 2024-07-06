@@ -42,7 +42,10 @@ export default class ApplyTemplate extends HTMLElement {
     static _iCount = 0
     /** @type {Array<string>} List of all of the html attribs (props) listened to */
     static props = ['template-id', 'once']
+    // Holder for once attribute
     once = false
+    // Holder for uibuilder log
+    log
     //#endregion --- Class Properties ---
 
     constructor() {
@@ -63,6 +66,8 @@ export default class ApplyTemplate extends HTMLElement {
         // if (!this.value) window['uibuilder'].getPageMeta()
         // this.doWatch()
 
+        if (!window['uibuilder']) throw new Error('uibuilder client library not available')
+        this.log = window['uibuilder'].log
         this.dispatchEvent(new Event('apply-template:construction', { bubbles: true, composed: true }))
     }
 
@@ -102,13 +107,13 @@ export default class ApplyTemplate extends HTMLElement {
                     // NB content.childElementCount = 0 after adoption
                     this.appendChild(content)
                 } catch (e) {
-                    uib.log('error', 'ApplyTemplate', `Source must be a <template>. id='${templateId}'`)()
+                    this.log('error', 'ApplyTemplate', `Source must be a <template>. id='${templateId}'`)
                 }
             } else {
-                uib.log('error', 'ApplyTemplate', `Source not found: id='${templateId}'`)()
+                this.log('error', 'ApplyTemplate', `Source not found: id='${templateId}'`)
             }
         } else {
-            uib.log('error', 'ApplyTemplate', 'Template id attribute not provided. Template must be identified by an id attribute.')()
+            this.log('error', 'ApplyTemplate', 'Template id attribute not provided. Template must be identified by an id attribute.')
         }
     }
 }
