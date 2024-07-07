@@ -3,7 +3,7 @@ title: Features of the modern, modular front-end client `uibuilder.esm.js` and `
 description: |
   Description of the main features.
 created: 2022-06-11 14:15:26
-updated: 2024-03-23 16:44:11
+updated: 2024-07-07 15:59:02
 ---
 
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)
@@ -435,6 +435,7 @@ This information is also built into the `uib-cache` node from v5.1 to reduce unn
 {
     "uibuilderCtrl": "client connect",
     "from": "server",
+    "maxHttpBufferSize": 1048576,
     "_socketId": "D2ynn6nsx7sIQkijAAAF",
     "version": "6.5.0-iife.min",
     "ip": "::ffff:127.0.0.1",
@@ -472,6 +473,7 @@ See [Pre-defined UIBUILDER messages](pre-defined-msgs) for details.
 {
     "uibuilderCtrl": "client connect",
     "from": "server",
+    "maxHttpBufferSize": 1048576,
     "_socketId": "D2ynn6nsx7sIQkijAAAF",
     "version": "6.5.0-iife.min",
     "ip": "::ffff:127.0.0.1",
@@ -530,10 +532,12 @@ Unfortunately, due to the asynchronous nature of the Socket.IO client and server
     "uibuilderCtrl": "client connect",
     "_socketId": "RV1Zo5NKm2vNOSdsAAA2",
     "from": "server",
+    // Lets the client auto-calculate the time difference from the server
     "serverTimestamp": "2022-06-28T17:04:34.491Z",
-
     // New for v5.1 - the server uibuilder version
-    "version": "5.1.0-prerelease"
+    "version": "5.1.0-prerelease",
+    // Let the client know the max msg size (in bytes) that can be sent, default=1MB
+    "maxHttpBufferSize": 1048576
 }
 ```
 
