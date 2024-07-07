@@ -82,7 +82,7 @@ const Ui = class Ui {
         else this.syntaxHighlight = function() {}
 
         // If Markdown-IT pre-loaded, then configure it now
-        if (window['markdownit']) {
+        if (this.window['markdownit']) {
             Ui.mdOpts = {
                 html: true,
                 xhtmlOut: false,
@@ -103,7 +103,7 @@ const Ui = class Ui {
                     return `<pre class="hljs border"><code>${Ui.md.utils.escapeHtml(str).trim()}</code></pre>`
                 },
             }
-            Ui.md = window['markdownit'](Ui.mdOpts)
+            Ui.md = this.window['markdownit'](Ui.mdOpts)
         }
     }
 
@@ -111,7 +111,7 @@ const Ui = class Ui {
 
     _markDownIt() {
         // If Markdown-IT pre-loaded, then configure it now
-        if (!window['markdownit']) return
+        if (!this.window['markdownit']) return
 
         // If plugins not yet defined, check if uibuilder has set them
         if (!this.ui_md_plugins && this.window['uibuilder'] && this.window['uibuilder'].ui_md_plugins) this.ui_md_plugins = this.window['uibuilder'].ui_md_plugins
@@ -141,7 +141,7 @@ const Ui = class Ui {
                 return `<pre><code class="border">${Ui.md.utils.escapeHtml(str).trim()}</code></pre>`
             },
         }
-        Ui.md = window['markdownit'](Ui.mdOpts)
+        Ui.md = this.window['markdownit'](Ui.mdOpts)
         // Ui.md.use(this.window.markdownitTaskLists, {enabled: true})
         if (this.ui_md_plugins) {
             if (!Array.isArray(this.ui_md_plugins)) {
@@ -736,7 +736,7 @@ const Ui = class Ui {
      */
     $(cssSelector) {
         /** @type {*} Some kind of HTML element */
-        let el = document.querySelector(cssSelector)
+        let el = this.document.querySelector(cssSelector)
 
         if (!el) {
             Ui.log(1, 'Uib:$', `No element found for CSS selector ${cssSelector}`)()
@@ -760,7 +760,7 @@ const Ui = class Ui {
      * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
      */
     $$(cssSelector) {
-        return Array.from(document.querySelectorAll(cssSelector))
+        return Array.from(this.document.querySelectorAll(cssSelector))
     }
 
     /** Add 1 or several class names to an element
@@ -786,14 +786,14 @@ const Ui = class Ui {
     applyTemplate(sourceId, targetId, config) {
         if (!config) config = { onceOnly: false }
 
-        const template = document.getElementById(sourceId)
-        const target = document.getElementById(targetId)
+        const template = this.document.getElementById(sourceId)
+        const target = this.document.getElementById(targetId)
 
         if (template && target) {
             let content
             try {
-                if (config.onceOnly !== true) content = document.importNode(template.content, true)
-                else content = document.adoptNode(template.content)
+                if (config.onceOnly !== true) content = this.document.importNode(template.content, true)
+                else content = this.document.adoptNode(template.content)
                 // NB content.childElementCount = 0 after adoption
             } catch (e) {
                 Ui.log('error', 'Ui:applyTemplate', `Source must be a <template>. id='${sourceId}'`)()
@@ -803,7 +803,6 @@ const Ui = class Ui {
                 // Apply config.attributes to the 1st element of the template content
                 if (config.attributes) {
                     const el = content.firstElementChild
-                    console.log(el, content)
                     Object.keys(config.attributes).forEach( attrib => {
                         // Apply each attribute and value
                         el.setAttribute(attrib, config.attributes[attrib])
@@ -1193,10 +1192,10 @@ const Ui = class Ui {
         slot = this.sanitiseHTML(slot)
 
         // Create doc frag and apply html string (msg.payload or the slot property)
-        const tempFrag = document.createRange().createContextualFragment(slot)
+        const tempFrag = this.document.createRange().createContextualFragment(slot)
 
         // Remove content of el and replace with tempFrag
-        const elRange = document.createRange()
+        const elRange = this.document.createRange()
         elRange.selectNodeContents(el)
         elRange.deleteContents()
         el.append(tempFrag)
@@ -1335,7 +1334,6 @@ const Ui = class Ui {
         if (json._ui) msg = json
         else msg._ui = json
 
-        console.log(this)
         this._uiManager(msg)
     }
 

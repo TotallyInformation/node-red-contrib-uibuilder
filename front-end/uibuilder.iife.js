@@ -81,7 +81,7 @@
           if (jsonHighlight) this.syntaxHighlight = jsonHighlight;
           else this.syntaxHighlight = function() {
           };
-          if (window["markdownit"]) {
+          if (this.window["markdownit"]) {
             _a2.mdOpts = {
               html: true,
               xhtmlOut: false,
@@ -102,12 +102,12 @@
                 return `<pre class="hljs border"><code>${_a2.md.utils.escapeHtml(str).trim()}</code></pre>`;
               }
             };
-            _a2.md = window["markdownit"](_a2.mdOpts);
+            _a2.md = this.window["markdownit"](_a2.mdOpts);
           }
         }
         //#region ---- Internal Methods ----
         _markDownIt() {
-          if (!window["markdownit"]) return;
+          if (!this.window["markdownit"]) return;
           if (!this.ui_md_plugins && this.window["uibuilder"] && this.window["uibuilder"].ui_md_plugins) this.ui_md_plugins = this.window["uibuilder"].ui_md_plugins;
           _a2.mdOpts = {
             html: true,
@@ -136,7 +136,7 @@
               return `<pre><code class="border">${_a2.md.utils.escapeHtml(str).trim()}</code></pre>`;
             }
           };
-          _a2.md = window["markdownit"](_a2.mdOpts);
+          _a2.md = this.window["markdownit"](_a2.mdOpts);
           if (this.ui_md_plugins) {
             if (!Array.isArray(this.ui_md_plugins)) {
               _a2.log("error", "Ui:_markDownIt:plugins", "Could not load plugins, ui_md_plugins is not an array")();
@@ -562,7 +562,7 @@
          * @returns {HTMLElement|null} Selected HTML element or null
          */
         $(cssSelector) {
-          let el = document.querySelector(cssSelector);
+          let el = this.document.querySelector(cssSelector);
           if (!el) {
             _a2.log(1, "Uib:$", `No element found for CSS selector ${cssSelector}`)();
             return null;
@@ -582,7 +582,7 @@
          * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
          */
         $$(cssSelector) {
-          return Array.from(document.querySelectorAll(cssSelector));
+          return Array.from(this.document.querySelectorAll(cssSelector));
         }
         /** Add 1 or several class names to an element
          * @param {string|string[]} classNames Single or array of classnames
@@ -605,13 +605,13 @@
          */
         applyTemplate(sourceId, targetId, config) {
           if (!config) config = { onceOnly: false };
-          const template = document.getElementById(sourceId);
-          const target = document.getElementById(targetId);
+          const template = this.document.getElementById(sourceId);
+          const target = this.document.getElementById(targetId);
           if (template && target) {
             let content;
             try {
-              if (config.onceOnly !== true) content = document.importNode(template.content, true);
-              else content = document.adoptNode(template.content);
+              if (config.onceOnly !== true) content = this.document.importNode(template.content, true);
+              else content = this.document.adoptNode(template.content);
             } catch (e) {
               _a2.log("error", "Ui:applyTemplate", `Source must be a <template>. id='${sourceId}'`)();
               return;
@@ -619,7 +619,6 @@
             if (content) {
               if (config.attributes) {
                 const el = content.firstElementChild;
-                console.log(el, content);
                 Object.keys(config.attributes).forEach((attrib) => {
                   el.setAttribute(attrib, config.attributes[attrib]);
                 });
@@ -962,8 +961,8 @@
           if (!el) return;
           if (!slot) slot = "";
           slot = this.sanitiseHTML(slot);
-          const tempFrag = document.createRange().createContextualFragment(slot);
-          const elRange = document.createRange();
+          const tempFrag = this.document.createRange().createContextualFragment(slot);
+          const elRange = this.document.createRange();
           elRange.selectNodeContents(el);
           elRange.deleteContents();
           el.append(tempFrag);
@@ -1063,7 +1062,6 @@
           let msg = {};
           if (json._ui) msg = json;
           else msg._ui = json;
-          console.log(this);
           this._uiManager(msg);
         }
         /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
