@@ -1,7 +1,7 @@
 /** Manage Socket.IO on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
  *
- * Copyright (c) 2017-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2024 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -731,6 +731,7 @@ class UibSockets {
                 'topic': node.topic || undefined,
                 'version': uib.version,  // Let the front-end know what v of uib is in use
                 '_socketId': socket.id,
+                'maxHttpBufferSize': this.io.opts.maxHttpBufferSize || 1048576, // Let the client know the max msg size that can be sent, default=1MB
             }
             // msgClient.ip = getClientRealIpAddress(socket)
             // msgClient.clientId = socket.handshake.auth.clientId
@@ -752,6 +753,7 @@ class UibSockets {
                     uibuilderCtrl: 'client connect',
                     topic: node.topic || undefined,
                     from: 'server',
+                    maxHttpBufferSize: msgClient.maxHttpBufferSize,
                 },
                 ...that.getClientDetails(socket, node),
             }
