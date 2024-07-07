@@ -95,7 +95,7 @@
         "id": "0f3fbb9e84943e6b",
         "type": "group",
         "z": "3badb0a6906eef7f",
-        "name": "Create a table from simple input. \\n ",
+        "name": "Create a table from simple input. (Cell content can contain HTML)\\n ",
         "style": {
             "fill": "#dbcbe7",
             "fill-opacity": "0.3",
@@ -107,12 +107,15 @@
             "d58b7efe68a2da4d",
             "d52bbc4c5096d4ba",
             "4ce558165663c95b",
-            "f38d46523be0c1fe"
+            "f38d46523be0c1fe",
+            "ae31874849f0bc47",
+            "bb2e25bc515bcbd6"
         ],
         "x": 34,
         "y": 1203,
         "w": 662,
-        "h": 178
+        "h": 218,
+        "info": "https://totallyinformation.github.io/node-red-contrib-uibuilder/#/elements/tables\r\n"
     },
     {
         "id": "8049618125109f32",
@@ -135,7 +138,7 @@
             "f042b949d4143ac6"
         ],
         "x": 34,
-        "y": 2463,
+        "y": 2483,
         "w": 1002,
         "h": 214
     },
@@ -179,7 +182,7 @@
             "d94e668db5709de3"
         ],
         "x": 34,
-        "y": 2183,
+        "y": 2203,
         "w": 662,
         "h": 98
     },
@@ -187,7 +190,7 @@
         "id": "65795642cec1af50",
         "type": "group",
         "z": "3badb0a6906eef7f",
-        "name": "Dynamically add a row to an existing table \\n ",
+        "name": "Dynamically add a row to an existing table (WARNING: Throws out row numbering) \\n ",
         "style": {
             "fill": "#dbcbe7",
             "fill-opacity": "0.32",
@@ -197,14 +200,12 @@
         "nodes": [
             "58968670b8adf81b",
             "b8338b38fa0f261f",
-            "a05186890868f6cb",
-            "bb2e25bc515bcbd6",
-            "ae31874849f0bc47"
+            "a05186890868f6cb"
         ],
         "x": 94,
-        "y": 1383,
+        "y": 1423,
         "w": 602,
-        "h": 138
+        "h": 98
     },
     {
         "id": "42a2b3e7d6c165bf",
@@ -224,7 +225,7 @@
             "6e5aada95fc82d83"
         ],
         "x": 34,
-        "y": 2303,
+        "y": 2323,
         "w": 662,
         "h": 138
     },
@@ -373,13 +374,37 @@
             "271b10261bd319ca",
             "e5dcec35b5e548c7",
             "e27c29b27c5a40a4",
-            "d0efb576969483cb",
-            "d540dc9e97a27458"
+            "1d7802f639185464",
+            "e3b63569eda8257b",
+            "d0cdbf247bef8fab"
         ],
         "x": 34,
-        "y": 1947,
+        "y": 1955,
         "w": 662,
-        "h": 194
+        "h": 226
+    },
+    {
+        "id": "3e42b1855c402af7",
+        "type": "group",
+        "z": "3badb0a6906eef7f",
+        "name": "Front-end Code - Run after the uibuilder node has been deployed. \\n Sets up FE code, reloads connected clients.",
+        "style": {
+            "label": true,
+            "stroke": "#a4a4a4",
+            "fill-opacity": "0.33",
+            "color": "#000000",
+            "fill": "#ffffff"
+        },
+        "nodes": [
+            "47e9160d0427b2ac",
+            "0f8a0a530cc8b3e6",
+            "155db4715be2a6a3",
+            "96d99a427ee71879"
+        ],
+        "x": 864,
+        "y": 743,
+        "w": 602,
+        "h": 98
     },
     {
         "id": "195a61f93a912086",
@@ -422,12 +447,12 @@
         ]
     },
     {
-        "id": "d540dc9e97a27458",
+        "id": "1d7802f639185464",
         "type": "junction",
         "z": "3badb0a6906eef7f",
         "g": "cc417b2a9e6fa0e7",
-        "x": 580,
-        "y": 2020,
+        "x": 560,
+        "y": 2040,
         "wires": [
             [
                 "44bf335d96f7c8ca"
@@ -665,7 +690,7 @@
         "topic": "auto-create-table-from-object",
         "payload": "{\"ROW1\":{\"COL1\":\"R1C1\",\"COL2\":\"R1C2\"},\"ROW2\":{\"COL1\":\"R2C1\",\"COL2\":\"R2C2\"}}",
         "payloadType": "json",
-        "x": 170,
+        "x": 210,
         "y": 1260,
         "wires": [
             [
@@ -693,9 +718,9 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "auto-create-table-from-array",
-        "payload": "[{\"COL1\":\"R1C1\",\"COL2\":\"R1C2\",\"COL3\":\"R1C3\"},{\"COL1\":\"R2C1\",\"COL2\":\"R2C2\",\"COL3\":\"R2C3\"},{\"COL1\":\"R3C1\",\"COL2\":\"R3C2\",\"COL3\":\"R3C3\"}]",
+        "payload": "[{\"COL1\":\"R1C1\",\"COL2\":\"R1C2\",\"COL3\":\"R1C3\"},{\"COL1\":\"R2C1\",\"COL2\":\"R2C2\",\"COL3\":\"R2C\"},{\"COL1\":\"R3C1\",\"COL2\":\"R3C2\",\"COL3\":\"R3C3\"}]",
         "payloadType": "json",
-        "x": 170,
+        "x": 210,
         "y": 1300,
         "wires": [
             [
@@ -724,7 +749,7 @@
         "to": "",
         "reg": false,
         "x": 520,
-        "y": 2520,
+        "y": 2540,
         "wires": [
             [
                 "d3a95abaddc5c013"
@@ -754,7 +779,7 @@
         "payload": "[\"LI One\",\"LI Two\",\"LI Three\",\"LI Four\"]",
         "payloadType": "json",
         "x": 140,
-        "y": 2520,
+        "y": 2540,
         "wires": [
             [
                 "ec046fe7e55e944c"
@@ -783,7 +808,7 @@
         "positionSourceType": "str",
         "passthrough": false,
         "confData": {},
-        "x": 500,
+        "x": 440,
         "y": 1300,
         "wires": [
             [
@@ -814,7 +839,7 @@
         "passthrough": false,
         "confData": {},
         "x": 760,
-        "y": 2520,
+        "y": 2540,
         "wires": [
             [
                 "f042b949d4143ac6"
@@ -874,7 +899,7 @@
         "passthrough": false,
         "confData": {},
         "x": 330,
-        "y": 2520,
+        "y": 2540,
         "wires": [
             [
                 "14ded4d1dc70efbf"
@@ -899,7 +924,7 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 200,
+        "x": 240,
         "y": 1340,
         "wires": [
             [
@@ -1102,7 +1127,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 140,
-        "y": 2560,
+        "y": 2580,
         "wires": [
             [
                 "ec046fe7e55e944c"
@@ -1117,7 +1142,7 @@
         "name": "Limitation: we have to resend everything just to update one thing. \\n Instead, consider using this to create the HTML then copy the HTML using your browser's developer tools \\n then save the HTML into the index.html file. \\n You can still update using a uib-element node with the same ID or you can use a uib-update node as appropriate.",
         "info": "",
         "x": 620,
-        "y": 2600,
+        "y": 2620,
         "wires": []
     },
     {
@@ -1215,7 +1240,7 @@
             "c203417099e22d29"
         ],
         "x": 995,
-        "y": 2520,
+        "y": 2540,
         "wires": []
     },
     {
@@ -1361,7 +1386,7 @@
         "passthrough": false,
         "confData": {},
         "x": 500,
-        "y": 2240,
+        "y": 2260,
         "wires": [
             [
                 "7ed058d7900e3daa"
@@ -1379,7 +1404,7 @@
             "c203417099e22d29"
         ],
         "x": 655,
-        "y": 2240,
+        "y": 2260,
         "wires": []
     },
     {
@@ -1405,7 +1430,7 @@
         "passthrough": false,
         "confData": {},
         "x": 390,
-        "y": 1440,
+        "y": 1480,
         "wires": [
             [
                 "b8338b38fa0f261f"
@@ -1423,7 +1448,7 @@
             "c203417099e22d29"
         ],
         "x": 655,
-        "y": 1440,
+        "y": 1480,
         "wires": []
     },
     {
@@ -1449,7 +1474,7 @@
         "payload": "{\"COL1\":\"**\",\"COL2\":\"**\"}",
         "payloadType": "json",
         "x": 190,
-        "y": 1440,
+        "y": 1480,
         "wires": [
             [
                 "58968670b8adf81b"
@@ -1479,7 +1504,7 @@
         "payload": "\"[\" & $formatInteger($random() * 100, \"#00\") & \"] Dynamic title\"",
         "payloadType": "jsonata",
         "x": 130,
-        "y": 2240,
+        "y": 2260,
         "wires": [
             [
                 "9b8878a8a530e1b9"
@@ -1509,7 +1534,7 @@
         "passthrough": false,
         "confData": {},
         "x": 480,
-        "y": 2360,
+        "y": 2380,
         "wires": [
             [
                 "0ff90fd3f27b33be"
@@ -1527,7 +1552,7 @@
             "c203417099e22d29"
         ],
         "x": 655,
-        "y": 2360,
+        "y": 2380,
         "wires": []
     },
     {
@@ -1553,7 +1578,7 @@
         "payload": "Some <b><u>HTML</u></b> inserted dynamically.",
         "payloadType": "str",
         "x": 160,
-        "y": 2360,
+        "y": 2380,
         "wires": [
             [
                 "e1795c2c54ee3880"
@@ -2132,7 +2157,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 180,
-        "y": 2400,
+        "y": 2420,
         "wires": [
             [
                 "e1795c2c54ee3880"
@@ -2334,65 +2359,6 @@
         "wires": [
             [
                 "2663180282c358a6"
-            ]
-        ]
-    },
-    {
-        "id": "bb2e25bc515bcbd6",
-        "type": "inject",
-        "z": "3badb0a6906eef7f",
-        "g": "65795642cec1af50",
-        "name": "Update specific cell (R2C2)",
-        "props": [
-            {
-                "p": "cell",
-                "v": "#eltest-tbl tbody:nth-child(2) > tr:nth-child(2) > td:nth-child(2)",
-                "vt": "str"
-            },
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "auto-update-r2c2",
-        "payload": "Updated R2C2",
-        "payloadType": "str",
-        "x": 250,
-        "y": 1480,
-        "wires": [
-            [
-                "ae31874849f0bc47"
-            ]
-        ]
-    },
-    {
-        "id": "ae31874849f0bc47",
-        "type": "uib-update",
-        "z": "3badb0a6906eef7f",
-        "g": "65795642cec1af50",
-        "name": "",
-        "topic": "",
-        "mode": "update",
-        "modeSourceType": "update",
-        "cssSelector": "cell",
-        "cssSelectorType": "msg",
-        "slotSourceProp": "payload",
-        "slotSourcePropType": "msg",
-        "attribsSource": "",
-        "attribsSourceType": "jsonata",
-        "slotPropMarkdown": false,
-        "x": 450,
-        "y": 1480,
-        "wires": [
-            [
-                "b8338b38fa0f261f"
             ]
         ]
     },
@@ -3060,7 +3026,7 @@
         "passthrough": false,
         "confData": {},
         "x": 470,
-        "y": 2080,
+        "y": 2120,
         "wires": [
             [
                 "44bf335d96f7c8ca"
@@ -3078,7 +3044,7 @@
             "c203417099e22d29"
         ],
         "x": 655,
-        "y": 2080,
+        "y": 2120,
         "wires": []
     },
     {
@@ -3104,7 +3070,7 @@
         "payload": "{\t    \"mystring\": \"Boo-hoo\",\t    \"mynumber\": $formatInteger($random() * 100, \"#00\")\t}\t    ",
         "payloadType": "jsonata",
         "x": 130,
-        "y": 2060,
+        "y": 2100,
         "wires": [
             [
                 "e27c29b27c5a40a4"
@@ -3130,7 +3096,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 140,
-        "y": 2100,
+        "y": 2140,
         "wires": [
             [
                 "67e8e62079ccf664"
@@ -3142,15 +3108,15 @@
         "type": "template",
         "z": "3badb0a6906eef7f",
         "g": "cc417b2a9e6fa0e7",
-        "name": "",
+        "name": "Markdown template with some data dynamically injected from the incoming msg.payload",
         "field": "payload",
         "fieldType": "msg",
         "format": "markdown",
         "syntax": "mustache",
-        "template": "## An h2 heading\n\nThis is the payload: \n\n_{{payload.mystring}}_,\n\n**{{payload.mynumber}}**.\n\nAnd a list for good measure:\n\n* List #1\n* List #2\n\n### Language given as \"js\"\n\n```js\nconst x = 42\n[1, 2, 3].forEach( i => {\n    console.log('>>>', x * i)\n})\n```\n\n### No language given (HighlightJS guesses it)\n\n```\n<div>\n  This is <b>html</b>\n</div>\n```",
+        "template": "## Testing Markdown support\n\nThis is the payload: _{{payload.mystring}}_, **{{payload.mynumber}}**.\n\nA list:\n\n* List #1\n* List #2\n\nCheckboxes require a Markdown-IT plugin\n\n1. [ ] Check 1\n2. [ ] Check 2\n\nGFM Callouts also require a plugin\n\n> [!NOTE]\n>\n> You will need to load the  [markdown-it-github-alert](https://www.npmjs.com/package/markdown-it-github-alert) or similar plugin for this to work correctly.\n\n## Auto-linking\n\nhttps://totallyinformation.github.io/node-red-contrib-uibuilder\n\n## Code Highlighting\n\nJust needs the highlightjs library pre-loaded\n\n### Language given as \"js\"\n\n```js\nconst x = 42\n[1, 2, 3].forEach( i => {\n    console.log('>>>', x * i)\n})\n```\n\n### No language given (HighlightJS guesses it)\n\n```\n<div>\n  This is <b>html</b>\n</div>\n```",
         "output": "str",
         "x": 235,
-        "y": 2060,
+        "y": 2100,
         "wires": [
             [
                 "67e8e62079ccf664"
@@ -3159,16 +3125,190 @@
         "l": false
     },
     {
-        "id": "d0efb576969483cb",
+        "id": "828bae0b5c32fd46",
+        "type": "comment",
+        "z": "3badb0a6906eef7f",
+        "name": "Example updated: 2024-07-06",
+        "info": "",
+        "x": 580,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "47e9160d0427b2ac",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "3e42b1855c402af7",
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "setup all FE files",
+        "x": 925,
+        "y": 800,
+        "wires": [
+            [
+                "96d99a427ee71879"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "0f8a0a530cc8b3e6",
+        "type": "template",
+        "z": "3badb0a6906eef7f",
+        "g": "3e42b1855c402af7",
+        "name": "form.html",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "plain",
+        "template": "<!doctype html>\n<html lang=\"en\">\n\n<head>\n\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <link rel=\"icon\" href=\"../uibuilder/images/node-blue.ico\">\n\n    <title>Updating text examples - Node-RED uibuilder</title>\n    <meta name=\"description\" content=\"Node-RED uibuilder - Updating text examples\">\n\n    <!-- Your own CSS (defaults to loading uibuilders css)-->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\"></script>\n    <!-- <script defer src=\"./index.js\"></script> -->\n    <!-- #endregion -->\n\n</head>\n\n<body class=\"uib\">\n\n    <h1 class=\"with-subtitle\">Different ways of updating UI text</h1>\n    <div role=\"doc-subtitle\">Using the UIBUILDER IIFE library.</div>\n\n    <% footon %>\n\n    <div id=\"more\">\n        <!-- '#more' is used as a parent for dynamic HTML content in examples -->\n    </div>\n\n    <form>\n        <div title=\"Type: text\">\n            <label for=\"r1-text\">Text Input:</label>\n            <input id=\"r1-text\" type=\"text\" required=\"false\" value=\"Foo\"\n                name=\"r1-text\" title=\"Type: text\">\n        </div>\n        <div title=\"Required. You can add your own popup info\" class=\"required\">\n            <label for=\"r6-email-req\">Email:</label>\n            <input id=\"r6-email-req\" type=\"email\"\n                title=\"Required. You can add your own popup info\" required=\"true\"\n                name=\"r6-email-req\">\n        </div>\n        <div title=\"Type: color\">\n            <label for=\"r2-color\">Colour:</label>\n            <input id=\"r2-color\" type=\"color\" value=\"#427798\"\n                name=\"r2-color\" title=\"Type: color\">\n        </div>\n        <div title=\"Required. Type: date\" class=\"required\">\n            <label for=\"r3-date-req\">date:</label>\n            <input id=\"r3-date-req\" type=\"date\" required=\"true\"\n                name=\"r3-date-req\" title=\"Required. Type: date\">\n        </div>\n        <div title=\"Disabled. Type: month\">\n            <label for=\"r3-date-month\">month:</label>\n            <input id=\"r3-date-month\" type=\"month\" disabled=\"false\"\n                name=\"r3-date-month\" title=\"Disabled. Type: month\">\n        </div>\n        <div title=\"Type: range\">\n            <label for=\"r4-range\">Range (0-100):</label>\n            <input id=\"r4-range\" type=\"range\" required=\"false\"\n                value=\"20\" min=\"0\" max=\"100\" name=\"r4-range\" title=\"Type: range\">\n        </div>\n        <div title=\"Type: file\">\n            <label for=\"r3-file\">file:</label>\n            <input id=\"r3-file\" type=\"file\" name=\"r3-file\" title=\"Type: file\">\n        </div>\n        <div title=\"Type: file\">\n            <label for=\"r3a-file\">file:</label>\n            <input id=\"r3a-file\" type=\"file\" multiple name=\"r3-file\" title=\"Type: file\">\n        </div>\n        <div title=\"Type: checkbox\">\n            <label for=\"r4-check\">Checkbox (true/false):</label>\n            <input id=\"r4-check\" type=\"checkbox\" value=\"IWASNOTCHECKED\"\n                name=\"r4-check\" title=\"Type: checkbox\">\n        </div>\n        <div title=\"Type: checkbox\">\n            <label for=\"r5-check\">Checkbox selected (true/false):</label>\n            <input id=\"r5-check\"type=\"checkbox\" checked\n                value=\"IWASCHECKED\" name=\"r5-check\" title=\"Type: checkbox\">\n        </div>\n        <div title=\"Type: number\">\n            <label for=\"r5-number\">Range (0-100):</label>\n            <input id=\"r5-number\" type=\"range\" required=\"false\"\n                value=\"20\" min=\"0\" max=\"100\" name=\"r4-range\" title=\"Type: range\">\n        </div>\n        <div title=\"Type: checkbox\">\n            <label></label>\n            <fieldset>\n                <input id=\"r5-check\"type=\"checkbox\" checked value=\"IWASCHECKED\" name=\"r5-check\" title=\"Type: checkbox\">\n                <label for=\"r5-check\">Checkbox selected (true/false):</label>\n            </fieldset>\n        </div>\n        <div>\n            <label></label>\n            <fieldset>\n                <legend>Select a maintenance drone:</legend>\n            \n                <input type=\"radio\" name=\"drone\" value=\"huey\" checked />\n                <label for=\"huey\">Huey</label>,\n                \n                <input type=\"radio\" name=\"drone\" value=\"dewey\" />\n                <label for=\"dewey\">Dewey</label>,\n                \n                <input type=\"radio\" name=\"drone\" value=\"louie\" />\n                <label for=\"louie\">Louie</label>\n            </fieldset>\n        </div>\n\n        <div title=\"Type: textarea\">\n            <label for=\"r5a-textarea\">Text area:</label>\n            <textarea id=\"r5a-textarea\" name=\"r5-textarea\" title=\"Type: textarea\">\n                Some text. Sorry, no HTML. And more text to make the text wrap around to a new line.\n            </textarea>\n        </div>\n        <div title=\"Type: select\">\n            <label for=\"r6-select\">Select (two):</label>\n            <select id=\"r6-select\" name=\"r6-select\" title=\"Type: select\">\n                <option value=\"one\">Option 1</option>\n                <option value=\"two\" selected>Option 2</option>\n                <option>Option 3</option>\n            </select>\n        </div>\n        <div title=\"Type: select\">\n            <label for=\"r7-select\">Select (multi):</label>\n            <select id=\"r7-select\" multiple name=\"r7-select\" title=\"Type: select\">\n                <option value=\"one a\">Option 1a</option>\n                <option value=\"two a\">Option 2a</option>\n                <option value=\"three a\" selected>Option 3a</option>\n            </select>\n        </div>\n        <div>\n            <button type=\"button\" title=\"Send the form data back to Node-RED\" id=\"sform1-btn-send\" onclick=\"uib.eventSend(event)\">Send</button>\n            <button type=\"button\" title=\"Reset the form\" id=\"sform1-btn-reset\">Reset</button>\n        </div>\n    </form>\n\n</body></html>",
+        "output": "str",
+        "x": 1120,
+        "y": 800,
+        "wires": [
+            [
+                "155db4715be2a6a3"
+            ]
+        ]
+    },
+    {
+        "id": "155db4715be2a6a3",
+        "type": "uib-save",
+        "z": "3badb0a6906eef7f",
+        "g": "3e42b1855c402af7",
+        "url": "uib-element-test",
+        "uibId": "90794d03f65a40d4",
+        "folder": "src",
+        "fname": "",
+        "createFolder": false,
+        "reload": false,
+        "usePageName": false,
+        "encoding": "utf8",
+        "mode": 438,
+        "name": "",
+        "topic": "",
+        "x": 1360,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "96d99a427ee71879",
+        "type": "change",
+        "z": "3badb0a6906eef7f",
+        "g": "3e42b1855c402af7",
+        "name": "index.html",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "form.html",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1015,
+        "y": 800,
+        "wires": [
+            [
+                "0f8a0a530cc8b3e6"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "d0cdbf247bef8fab",
+        "type": "function",
+        "z": "3badb0a6906eef7f",
+        "g": "cc417b2a9e6fa0e7",
+        "name": "Dynamic load of MarkdownIT & plugins \\n & add event listener to report on checklists",
+        "func": "/**\n * This function sends several messages to a uibuilder\n * node.\n * \n * NOTE that we add topics to each sent message in case we\n * want to use the `uib-cache` node to save and replay\n * on reload.\n * \n * OK so it might seem like I'm cheating here since this is\n * obviously not \"no-code\". 😊 However, you CAN do all of\n * this without code, it's just a bit more messy in the flow\n * and this example flow is already very large.\n * \n * Really, this is just sending 3 different messages, nothing else.\n * So it is mostly data and not really code. 😉\n */\n\n/**\n * Dynamically load the MarkdownIT library to allow\n * rendering of Markdown. Also load the HightlightJS\n * & markdownTaskLists plugins.\n * \n * We are loading from the Internet here. Use uibuilder's\n * library manager to install locally and then change URL's\n * to start with `../uibuilder/vendor/` instead of\n * `https://cdn.jsdelivr.net/gh/` or `https://cdn.jsdelivr.net/npm/`\n * and remove `@latest`.\n * \n * This uses uibuilder's low-code UI feature.\n */\nnode.send({\n    \"topic\": \"load-markdownit-cdn\",\n    \"_ui\": { \n        \"method\": \"load\", \n        \"srcStyles\": [\n            // The styles for code highlighting\n            \"https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@latest/build/styles/hybrid.min.css\"\n        ],\n        \"srcScripts\": [\n            // The plugin for highlighting\n            \"https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@latest/build/highlight.min.js\",\n            // Markdown-IT itself\n            \"https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js\",\n            // A plugin for GitHub style task lists\n            \"https://cdn.jsdelivr.net/npm/markdown-it-task-lists@latest/dist/markdown-it-task-lists.min.js\"\n        ]\n    }\n})\n\n/**\n * Now add the task list plugin to the list of used MarkdownIT\n * plugins. Note that we don't have to do that for the Highlight\n * plugin because MarkdownIT does that internally.\n * \n * This is a uibuilder remote command.\n */\nnode.send({\n    \"topic\": \"use-markdownit-plugins\",\n    \"_uib\": { \n        // We are setting a uib managed variable in the browser\n        \"command\": \"set\",\n        // This variable name is reserved for loading MarkdownIT plugins\n        \"prop\": \"ui_md_plugins\",\n        // The value must be an ARRAY\n        \"value\": [\n            { \"markdownitTaskLists\": { \"enabled\": true } }\n        ],\n        // Set this otherwise the command result is replayed to us\n        \"quiet\": true\n    }\n})\n\n/**\n * Now lets get clever and dynamically add some browser code\n * that will report back to Node-RED when a task list entry\n * is clicked.\n * \n * We have to send the code as text so we set that up first.\n * The UI command adds a new `<script>` tag in the attached clients\n * which runs immediately it is loaded. It adds a \"change\" event\n * listener to the `<body>` tag that listens for changes to the\n * checkboxes that the markdownitTaskLists plugin dynamically\n * creates when the markdown is converted to HTML.\n * \n * We do it this way so that it doesn't matter WHEN the markdown\n * is rendered. Even if we add new checkboxes later, they will\n * still respond.\n * \n * The returned payload tells us whether the entry is (un-)checked,\n * What the text of the changed list entry is, and what number\n * entry in the list was changed.\n */\nconst mycode = `\n// Add to body element so that checkboxes added late are still picked up\n$('body').addEventListener('change', (event) => {\n    /** @type {HTMLInputElement} */\n    const el = event.target\n    if (el.classList.contains('task-list-item-checkbox')) {\n        const changedList = el.closest('.contains-task-list')\n        const changedListItem = el.closest('.task-list-item')\n        const changedEntryNumber = Array.from(changedList.children).indexOf(changedListItem) + 1;\n\n        // console.log([el.checked, el.nextSibling.textContent, changedEntryNumber ])\n        \n        uibuilder.send({\n            'topic': 'markdown-checkbox-clicked',\n            payload: {\n                'checked': el.checked,\n                'entryText': el.nextSibling.textContent,\n                'entryOffset': changedEntryNumber\n            }\n        })\n    }\n})\n`\nnode.send({\n    \"topic\": \"add-listener-script\",\n    // Another uibuilder low-code command\n    \"_ui\": {\n        \"method\": \"load\",\n        \"txtScripts\": [\n            mycode,\n        ]\n    }\n})\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 2040,
+        "wires": [
+            [
+                "1d7802f639185464"
+            ]
+        ]
+    },
+    {
+        "id": "e3b63569eda8257b",
         "type": "inject",
         "z": "3badb0a6906eef7f",
         "g": "cc417b2a9e6fa0e7",
-        "name": "Dynamic load HighlightJS & MarkdownIT from CDN",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 95,
+        "y": 2040,
+        "wires": [
+            [
+                "d0cdbf247bef8fab"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "ae31874849f0bc47",
+        "type": "uib-update",
+        "z": "3badb0a6906eef7f",
+        "g": "0f3fbb9e84943e6b",
+        "name": "",
+        "topic": "",
+        "mode": "update",
+        "modeSourceType": "update",
+        "cssSelector": "cell",
+        "cssSelectorType": "msg",
+        "slotSourceProp": "payload",
+        "slotSourcePropType": "msg",
+        "attribsSource": "",
+        "attribsSourceType": "jsonata",
+        "slotPropMarkdown": false,
+        "x": 490,
+        "y": 1380,
+        "wires": [
+            [
+                "f38d46523be0c1fe"
+            ]
+        ]
+    },
+    {
+        "id": "bb2e25bc515bcbd6",
+        "type": "inject",
+        "z": "3badb0a6906eef7f",
+        "g": "0f3fbb9e84943e6b",
+        "name": "Update specific cell (R2C2)",
         "props": [
             {
-                "p": "_ui",
-                "v": "{\"method\":\"load\",\"srcStyles\":[\"https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@latest/build/styles/hybrid.min.css\"],\"srcScripts\":[\"https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@latest/build/highlight.min.js\",\"https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js\"]}",
-                "vt": "json"
+                "p": "cell",
+                "v": "#eltest-tbl-table > tbody > tr:nth-child(1) > td:nth-child(2)",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
             },
             {
                 "p": "topic",
@@ -3179,23 +3319,16 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "topic": "load-markdownit-cdn",
-        "x": 270,
-        "y": 2020,
+        "topic": "auto-update-r2c2",
+        "payload": "<span style=\"color:red;\">Updated</span> R2C2",
+        "payloadType": "str",
+        "x": 190,
+        "y": 1380,
         "wires": [
             [
-                "d540dc9e97a27458"
+                "ae31874849f0bc47"
             ]
-        ]
-    },
-    {
-        "id": "828bae0b5c32fd46",
-        "type": "comment",
-        "z": "3badb0a6906eef7f",
-        "name": "Example updated: 2024-03-06",
-        "info": "",
-        "x": 580,
-        "y": 40,
-        "wires": []
+        ],
+        "info": "CSS Selectors can be used in different ways. In this case\r\nyou can use either of:\r\n\r\n```css\r\n#eltest-tbl-table > tbody > tr.r2 > td.r2.c2\r\n```\r\nor\r\n```css\r\n#eltest-tbl tbody:nth-child(2) > tr:nth-child(2) > td:nth-child(2)\r\n```\r\n\r\nHowever, using the `r2`, `c2` class names can be \r\nfragile if dynamically changing the size of the \r\ntable because those class names are not updated\r\nautomatically.\r\n\r\nGet CSS Selector ideas from your browsers dev tools.\r\n\r\nTest selectors using the `$('...')` helper function\r\nin the dev tools console. e.g.\r\n\r\n```js\r\n$('#eltest-tbl-table > tbody > tr.r2 > td.r2.c2')\r\n```\r\n"
     }
 ]
