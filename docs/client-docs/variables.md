@@ -3,7 +3,7 @@ title: Variables used in the modern client
 description: |
   Details about the variables used in the uibuilder modern front-end client library. Some variables are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2024-06-20 17:00:37
+updated: 2024-07-07 14:30:52
 ---
 
 ## Read/write
@@ -24,33 +24,34 @@ Always use `uibuilder.set('varname', value)` to change these.
 
 Always use `uibuilder.get('varname', value)` to obtain the value of these. You can also use `uibuilder.onChange('varname', (val)=>{})` to watch for changes to them. Or you can also use the custom `document` event `uibuilder:propertyChanged` if you really want to.
 
-* `clientId` - Client ID set by uibuilder on connect
-* `connectedNum` - How many times the page has had to reconnect to Socket.IO
-* `cookies` - The collection of cookies provided by uibuilder
-* `ctrlMsg` - Copy of last control msg object received from sever
+* `clientId` - Client ID set by uibuilder on connect.
+* `connectedNum` - How many times the page has had to reconnect to Socket.IO.
+* `cookies` - The collection of cookies provided by uibuilder.
+* `ctrlMsg` - Copy of last control msg object received from sever.
 * `ioConnected` - Is Socket.IO client connected to the server?
-* `isMinified` - Whether or not the library was loaded from a minified version
-* `isVisible` - Whether or not, the current page is showing to the user
+* `isMinified` - Whether or not the library was loaded from a minified version.
+* `isVisible` - Whether or not, the current page is showing to the user.
 * `isVue` - Has the VueJS framework library been loaded?
-* `lastNavType` - Remember the last page (re)load/navigation type (navigate, reload, back_forward, prerender)
-* `meta` - module metadata {version, type, displayName}
-* `msg` - Last std msg received from Node-RED
-* `msgsSent` - The number of messages sent to server since page load
-* `msgsReceived` - The number of messages received from server since page load
-* `msgsSentCtrl` - The number of control messages sent to server since page load
-* `msgsCtrlReceived` - The number of control messages received from server since page load
+* `lastNavType` - Remember the last page (re)load/navigation type (navigate, reload, back_forward, prerender).
+* `maxHttpBufferSize` - The maximum size of message that can be sent back to Node-RED over Socket.IO (in bytes).
+* `meta` - module metadata {version, type, displayName}.
+* `msg` - Last std msg received from Node-RED.
+* `msgsSent` - The number of messages sent to server since page load.
+* `msgsReceived` - The number of messages received from server since page load.
+* `msgsSentCtrl` - The number of control messages sent to server since page load.
+* `msgsCtrlReceived` - The number of control messages received from server since page load.
 * `online` - Is the client browser online (true) or offline (false)?
-* `pageMeta` - The current page's static file metadata (timestamps & size) requested from the server by the [`getPageMeta()` function](/client-docs/functions#getPageMeta)
-* `pageName` - Actual name of the current page
-* `sentCtrlMsg` - The last control msg object sent via uibuilder.send()
-* `sentMsg` - The last std msg object sent via uibuilder.send()
-* `serverTimeOffset` - Time offset between browser clock and server clock
-* `socketError` - Holds the details of the last socket error
-* `tabId` - Identifier for the current browser tab
-* `url` - The instance URL fragment (name) for this instance of uibuilder
+* `pageMeta` - The current page's static file metadata (timestamps & size) requested from the server by the [`getPageMeta()` function](/client-docs/functions#getPageMeta).
+* `pageName` - Actual name of the current page.
+* `sentCtrlMsg` - The last control msg object sent via uibuilder.send().
+* `sentMsg` - The last std msg object sent via uibuilder.send().
+* `serverTimeOffset` - Time offset between browser clock and server clock.
+* `socketError` - Holds the details of the last socket error.
+* `tabId` - Identifier for the current browser tab.
+* `url` - The instance URL fragment (name) for this instance of uibuilder.
 * `urlHash` Set on load and updated as it changes. URL Hashes are used by front-end routing for Single-Page-Apps (SPA's). They do not reload the page.
-* `version` - accessible via `uibuilder.get('version')` or `uibuilder.get('meta')` only - the uibuilder client version in use
-* `vueVersion` - if the VueJS front-end library is loaded, this _may_ tell you the version (does not work for all versions of VueJS)
+* `version` - accessible via `uibuilder.get('version')` or `uibuilder.get('meta')` only - the uibuilder client version in use.
+* `vueVersion` - if the VueJS front-end library is loaded, this _may_ tell you the version (does not work for all versions of VueJS).
 
 In addition, `uibuilder.logLevel` will automatically be retrieved via its own getter, use as `console.log(uibuilder.logLevel)`.
 
