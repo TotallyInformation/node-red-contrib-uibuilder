@@ -366,6 +366,8 @@ export const Uib = class Uib {
     isVisible = false
     // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
     lastNavType = ''
+    // Max msg size that can be sent over Socket.IO - updated by "client connect" msg receipt
+    maxHttpBufferSize = 1048576
     /** Last std msg received from Node-RED */
     msg = {}
     /** number of messages sent to server since page load */
@@ -844,6 +846,18 @@ export const Uib = class Uib {
             return 'NaN'
         }
         return out
+    }
+
+    /** Attempt to get rough size of an object
+     * @param {*} obj Any serialisable object
+     * @returns {number|undefined} Rough size of object in bytes or undefined
+     */
+    getObjectSize(obj) {
+        let size
+        try {
+            JSON.stringify(obj)
+        } catch (e) {}
+        return size
     }
 
     /** Returns true if a uibrouter instance is loaded, otherwise returns false
@@ -1345,7 +1359,6 @@ export const Uib = class Uib {
         return props
     }
 
-    // TODO - Handle files - How?
     // ! TODO - Handle radio buttons - require them to be in a fieldset?
     /** For HTML Form elements (e.g. input, textarea, select), return the details
      * @param {HTMLFormElement} el Source form element
@@ -1382,6 +1395,7 @@ export const Uib = class Uib {
         // For multi file input, get the file details as the value
         // el.files is a FileList type & each entry is a File type - have to process these manually - stupid HTML!
         // https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications
+        // NOTE: The eventSend fn calls uploadFiles if files present in form.
         if (el.type === 'file' && el.files.length > 0) {
             value = []
             // Walk through each file in the FileList
@@ -1396,9 +1410,11 @@ export const Uib = class Uib {
                 props.tempUrl = window.URL.createObjectURL(file)
 
                 value.push(props)
+
+                // Auto-upload to Node-RED over Socket.IO
+                this.uploadFile(file)
             }
         }
-        // TODO: Use FileReader() to read the file and send to Node-RED
 
         const formDetails = {
             'id': id,
@@ -1825,8 +1841,8 @@ export const Uib = class Uib {
 
             /** We are connected to the server - 1st msg from server */
             case 'client connect': {
-                log('trace', `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server')()
-                log('info', `Uib:ioSetup:${this._ioChannels.control}`, `✅ Server connected. Version: ${receivedCtrlMsg.version}\nServer time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours`)()
+                log('trace', `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server', receivedCtrlMsg)()
+                log('info', `Uib:ioSetup:${this._ioChannels.control}`, `✅ Server connected. Version: ${receivedCtrlMsg.version}\nServer time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours. Max msg size: ${receivedCtrlMsg.maxHttpBufferSize}`)()
 
                 if ( !Uib._meta.version.startsWith(receivedCtrlMsg.version.split('-')[0]) ) {
                     log('warn', `Uib:ioSetup:${this._ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${Uib._meta.version})`)()
@@ -1841,6 +1857,9 @@ export const Uib = class Uib {
                     //     'cacheControl': 'REPLAY',
                     // }, this._ioChannels.control)
                 }
+
+                // Save the current server max msg size - defaults to 1mb, change in settings.js
+                this.maxHttpBufferSize = receivedCtrlMsg.maxHttpBufferSize
 
                 break
             }
@@ -1994,6 +2013,12 @@ export const Uib = class Uib {
         if (msgToSend._ui) {
             msgToSend._ui.from = 'client'
             if (this.hasUibRouter()) msgToSend._ui.routeId = this.uibrouter_CurrentRoute
+        }
+
+        // Check size and warn if may be too large
+        const approxMsgSize = this.getObjectSize(msgToSend)
+        if (approxMsgSize >= this.maxHttpBufferSize) {
+            log('error', 'Uib:_send', `Message may be too large to send. Approx msg size: ${approxMsgSize}. Max msg size: ${this.maxHttpBufferSize}`)()
         }
 
         // Track how many messages have been sent & last msg sent
@@ -2435,6 +2460,33 @@ export const Uib = class Uib {
         this._socket.emit(channel, msg)
     }
 
+    /** Upload a file to Node-RED over Socket.IO
+     * https://developer.mozilla.org/en-US/docs/Web/API/FileReader
+     * @param {File} file Reference to File API object to upload
+     */
+    uploadFile(file) {
+        // Create a new FileReader instance
+        const reader = new FileReader()
+
+        // Define the onload event for the FileReader
+        reader.onload = (e) => {
+            // Get the binary content of the file
+            const arrayBuffer = e.target.result
+
+            // Send the binary content to the server
+            this.send({
+                topic: this.topic || 'file-upload',
+                payload: arrayBuffer,
+                fileName: file.name,
+                type: file.type,
+                lastModified: file.lastModifiedDate,
+                size: file.size,
+            })
+        }
+
+        // Read the file as an ArrayBuffer
+        reader.readAsArrayBuffer(file)
+    }
     //#endregion -------- ------------ -------- //
 
     //#region ------- Socket.IO -------- //

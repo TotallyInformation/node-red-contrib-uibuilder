@@ -5265,6 +5265,8 @@ var Uib = (_a = class {
     __publicField(this, "isVisible", false);
     // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
     __publicField(this, "lastNavType", "");
+    // Max msg size that can be sent over Socket.IO - updated by "client connect" msg receipt
+    __publicField(this, "maxHttpBufferSize", 1048576);
     /** Last std msg received from Node-RED */
     __publicField(this, "msg", {});
     /** number of messages sent to server since page load */
@@ -5787,6 +5789,18 @@ var Uib = (_a = class {
     }
     return out;
   }
+  /** Attempt to get rough size of an object
+   * @param {*} obj Any serialisable object
+   * @returns {number|undefined} Rough size of object in bytes or undefined
+   */
+  getObjectSize(obj) {
+    let size;
+    try {
+      JSON.stringify(obj);
+    } catch (e) {
+    }
+    return size;
+  }
   /** Returns true if a uibrouter instance is loaded, otherwise returns false
    * @returns {boolean} true if uibrouter instance loaded else false
    */
@@ -6190,7 +6204,6 @@ var Uib = (_a = class {
     });
     return props;
   }
-  // TODO - Handle files - How?
   // ! TODO - Handle radio buttons - require them to be in a fieldset?
   /** For HTML Form elements (e.g. input, textarea, select), return the details
    * @param {HTMLFormElement} el Source form element
@@ -6224,6 +6237,7 @@ var Uib = (_a = class {
         }
         props.tempUrl = window.URL.createObjectURL(file);
         value2.push(props);
+        this.uploadFile(file);
       }
     }
     const formDetails = {
@@ -6577,15 +6591,16 @@ var Uib = (_a = class {
         break;
       }
       case "client connect": {
-        log("trace", `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server')();
+        log("trace", `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server', receivedCtrlMsg)();
         log("info", `Uib:ioSetup:${this._ioChannels.control}`, `\u2705 Server connected. Version: ${receivedCtrlMsg.version}
-Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours`)();
+Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours. Max msg size: ${receivedCtrlMsg.maxHttpBufferSize}`)();
         if (!_a._meta.version.startsWith(receivedCtrlMsg.version.split("-")[0])) {
           log("warn", `Uib:ioSetup:${this._ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${_a._meta.version})`)();
         }
         if (this.autoSendReady === true) {
           log("trace", `Uib:ioSetup:${this._ioChannels.control}/client connect`, "Auto-sending ready-for-content/replay msg to server");
         }
+        this.maxHttpBufferSize = receivedCtrlMsg.maxHttpBufferSize;
         break;
       }
       case "get page meta": {
@@ -6691,6 +6706,10 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     if (msgToSend._ui) {
       msgToSend._ui.from = "client";
       if (this.hasUibRouter()) msgToSend._ui.routeId = this.uibrouter_CurrentRoute;
+    }
+    const approxMsgSize = this.getObjectSize(msgToSend);
+    if (approxMsgSize >= this.maxHttpBufferSize) {
+      log("error", "Uib:_send", `Message may be too large to send. Approx msg size: ${approxMsgSize}. Max msg size: ${this.maxHttpBufferSize}`)();
     }
     let numMsgs;
     if (channel === this._ioChannels.client) {
@@ -7035,6 +7054,25 @@ ${document.documentElement.outerHTML}`;
    */
   sendCustom(channel, msg) {
     this._socket.emit(channel, msg);
+  }
+  /** Upload a file to Node-RED over Socket.IO
+   * https://developer.mozilla.org/en-US/docs/Web/API/FileReader
+   * @param {File} file Reference to File API object to upload
+   */
+  uploadFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const arrayBuffer = e.target.result;
+      this.send({
+        topic: this.topic || "file-upload",
+        payload: arrayBuffer,
+        fileName: file.name,
+        type: file.type,
+        lastModified: file.lastModifiedDate,
+        size: file.size
+      });
+    };
+    reader.readAsArrayBuffer(file);
   }
   //#endregion -------- ------------ -------- //
   //#region ------- Socket.IO -------- //
