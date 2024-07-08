@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-06-30 18:15:49
+updated: 2024-07-07 16:06:35
 ---
 
 # Changelog
@@ -70,13 +70,15 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 ## To Do
 
+* Extend SVG example to download and save the svg from the gist
 * Update examples:
   * [ ] [started] Update text update example to include new `uib-topic` html attributes
-  * [ ] **REMOVE** old client library example
-  * [ ] Add to uib-save example: topic example.
   * [ ] Template Examples - remove old library example.
   * [ ] `uib-sender` - remove ref to uibuilderfe and update flows.
-  * [ ] Navigation menu examples. 1x Router, 1x page.
+  * [ ] Navigation *menu* examples. 1x Router, 1x page.
+  * [x] uib-element tests
+  * [x] **REMOVE** old client library example
+  * [x] uib-save example
   * [x] jQuery
   * [x] Client side/Dynamic SVG
   * [x] Low code/report builder
@@ -311,6 +313,7 @@ Most of these changes will *not* impact most people but you should check through
 
 * New example flows: client-side code/Dynamic SVG - A rework of an example from the flows library showing how to overlay interactive lamp icons on an SVG plan backdrop. Turn on/off lights from the web and from Node-RED.
 * Updated example flows: Simple Flow - index.(html|js|css) can now be populated from a flow that uses uib-save. low-code/report-builder - The required Markdown-IT library is now auto-loaded from the Internet.
+* File uploads from client browser to Node-RED are enabled. When using a form on a page and using `<input type="file">`, if a file is selected by the client and the file is less than the size of the maximum message size, the file will be automatically uploaded to Node-RED when the form is submitted (assuming you use `uibuilder.eventSend(event)` to submit the form). The upload is a message with file details and the file itself as a buffer in `msg.payload`.
 
 ### General Changes
 
@@ -410,12 +413,12 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 
 * Improved handling of stand-alone input changes in the `eventSend` function. Previously, these may not have sent their new values on change events.
 
-* `eventSend()` extensively rewritten and refactored. Auto-naming of form elements has changed slightly. Now handles file, and checkbox inputs much better. Handles radio inputs a little better. Handling of inputs inside and outside of forms should now be a lot more consistent.
+* `eventSend()` extensively rewritten and refactored. Auto-naming of form elements has changed slightly. Now handles file, and checkbox inputs much better. Handles radio inputs a little better. Handling of inputs inside and outside of forms should now be a lot more consistent. File inputs are auto-uploaded.
   
-  File inputs still do not yet upload the file but they do return a special URL which could download the chosen file(s).
-
+* File inputs submitted with `eventSend` now auto-upload the files in separate messages (if they aren't too large, change the Socket.IO buffer size in settings.js if needed).
 * Auto-load of the brand css (when no other CSS was loaded) has been removed. This could occasionally suffer from a race condition.
 * Markdown-IT plugins can now be used when using Markdown. See the new "Using Markdown" documentation page for details.
+* On first connection, Node-RED informs the client of the maximum allowed message size.
 
 ### `ui` library
 
@@ -521,10 +524,18 @@ The `old-blank-client` template and all associated documentation has also been r
 
 ### `uib-element` node
 
+* Form element enhanced:
+
+  * File input type now sends a separate message containing each selected file as a buffer that can be given directly to the `uib-save` node or to any other node that accepts a file buffer. Includes additional details, file name, size, last updated, and file (mime) type.
+
 * Table element enhanced:
   
   * Added class names to body cells (`r1 c1`, etc) & body rows (`r1`). Note that these class identifiers will get out of step if dynamic updates are made to the table.
   * Added `id` to table `${divId}-table`
+
+### `uib-save` node
+
+* Message inputs now allow `msg.fname`, `msg.filename` or `msg.fileName` instead of just `msg.fname`. Makes it compatible with file type inputs and the `eventSend` function.
 
 ### `uib-list` node
 
