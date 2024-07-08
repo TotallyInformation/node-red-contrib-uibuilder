@@ -855,8 +855,14 @@ export const Uib = class Uib {
     getObjectSize(obj) {
         let size
         try {
-            JSON.stringify(obj)
-        } catch (e) {}
+            const jsonString = JSON.stringify(obj)
+            // Encode the string to a Uint8Array and measure its length
+            const encoder = new TextEncoder()
+            const uint8Array = encoder.encode(jsonString)
+            size = uint8Array.length
+        } catch (e) {
+            log('error', 'uibuilder:getObjectSize', 'Could not stringify, cannot determine size', obj, e)
+        }
         return size
     }
 
@@ -1310,6 +1316,31 @@ export const Uib = class Uib {
         })
     }
 
+    /** Given a FileList array, send each file to Node-RED and return file metadata
+     * @param {FileList} files FileList array
+     * @param {boolean=} noSend If true, don't send the file to Node-RED. Default is to send.
+     * @returns {Array<object>} Metadata values from all files
+     */
+    _processFilesInput(files, noSend = false) {
+        const value = []
+        for (const file of files) {
+            const props = {}
+            // Walk through each file property
+            for (const prop in file) {
+                props[prop] = file[prop]
+            }
+            // Create a temp URL allowing access to download the file
+            // Automatically destroyed on page reload
+            props.tempUrl = window.URL.createObjectURL(file)
+
+            value.push(props)
+
+            // Auto-upload to Node-RED over Socket.IO
+            if (noSend !== true) this.uploadFile(file)
+        }
+        return value
+    }
+
     /** Attempt to get target attributs - can fail for certain target types, if so, returns empty object
      * @param {HTMLElement} el Target element
      * @returns {object} Array of key/value HTML attribute objects
@@ -1397,23 +1428,8 @@ export const Uib = class Uib {
         // https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications
         // NOTE: The eventSend fn calls uploadFiles if files present in form.
         if (el.type === 'file' && el.files.length > 0) {
-            value = []
-            // Walk through each file in the FileList
-            for (const file of el.files) {
-                const props = {}
-                // Walk through each file property
-                for (const prop in file) {
-                    props[prop] = file[prop]
-                }
-                // Create a temp URL allowing access to download the file
-                // Automatically destroyed on page reload
-                props.tempUrl = window.URL.createObjectURL(file)
-
-                value.push(props)
-
-                // Auto-upload to Node-RED over Socket.IO
-                this.uploadFile(file)
-            }
+            // Walk through each file in the FileList, get the details and send the file to Node-RED
+            value = this._processFilesInput(el.files)
         }
 
         const formDetails = {
@@ -2015,11 +2031,12 @@ export const Uib = class Uib {
             if (this.hasUibRouter()) msgToSend._ui.routeId = this.uibrouter_CurrentRoute
         }
 
-        // Check size and warn if may be too large
-        const approxMsgSize = this.getObjectSize(msgToSend)
-        if (approxMsgSize >= this.maxHttpBufferSize) {
-            log('error', 'Uib:_send', `Message may be too large to send. Approx msg size: ${approxMsgSize}. Max msg size: ${this.maxHttpBufferSize}`)()
-        }
+        // Check size and warn if may be too large - doesn't work if obj contains a buffer
+        // const approxMsgSize = this.getObjectSize(msgToSend)
+        // console.log(approxMsgSize, this.maxHttpBufferSize, approxMsgSize >= this.maxHttpBufferSize, msgToSend, this.getObjectSize(msgToSend))
+        // if (approxMsgSize >= this.maxHttpBufferSize) {
+        //     log('error', 'Uib:_send', `Message may be too large to send. Approx msg size: ${approxMsgSize}. Max msg size: ${this.maxHttpBufferSize}`)()
+        // }
 
         // Track how many messages have been sent & last msg sent
         let numMsgs
@@ -2333,6 +2350,7 @@ export const Uib = class Uib {
                 // Ignore <fieldset>, <object> - they don't have values
                 if (['fieldset', 'object'].includes(frmEl.type)) return
 
+                // NB: If type=files, this also sends the file to Node-RED
                 const details = this.getFormElementDetails(frmEl)
                 if (details) {
                     formDetails[details.id] = details
@@ -2340,6 +2358,11 @@ export const Uib = class Uib {
                     payload[details.id] = details.value
                 }
             })
+        } else {
+            if (target.type === 'file') {
+                // Walk through each file in the FileList, get the details and send the file to Node-RED
+                payload = this._processFilesInput(target.files)
+            }
         }
 
         // Check for CSS Classes
@@ -2474,14 +2497,25 @@ export const Uib = class Uib {
             const arrayBuffer = e.target.result
 
             // Send the binary content to the server
-            this.send({
+            const msg = {
                 topic: this.topic || 'file-upload',
                 payload: arrayBuffer,
                 fileName: file.name,
                 type: file.type,
                 lastModified: file.lastModifiedDate,
                 size: file.size,
-            })
+            }
+
+            // Only send if content not too large
+            const maxSize = this.maxHttpBufferSize - 500
+            if (arrayBuffer.byteLength >= maxSize) {
+                msg.payload = undefined
+                msg.error = `File is too large to send. File size: ${arrayBuffer.byteLength}. Max msg size: ${maxSize}`
+                log('error', 'Uib:uploadFile', msg.error)()
+
+            }
+
+            this.send(msg)
         }
 
         // Read the file as an ArrayBuffer

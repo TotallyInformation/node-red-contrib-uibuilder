@@ -5797,8 +5797,12 @@
     getObjectSize(obj) {
       let size;
       try {
-        JSON.stringify(obj);
+        const jsonString = JSON.stringify(obj);
+        const encoder = new TextEncoder();
+        const uint8Array = encoder.encode(jsonString);
+        size = uint8Array.length;
       } catch (e) {
+        log("error", "uibuilder:getObjectSize", "Could not stringify, cannot determine size", obj, e);
       }
       return size;
     }
@@ -6156,6 +6160,24 @@
         }
       });
     }
+    /** Given a FileList array, send each file to Node-RED and return file metadata
+     * @param {FileList} files FileList array
+     * @param {boolean=} noSend If true, don't send the file to Node-RED. Default is to send.
+     * @returns {Array<object>} Metadata values from all files
+     */
+    _processFilesInput(files, noSend = false) {
+      const value2 = [];
+      for (const file of files) {
+        const props = {};
+        for (const prop in file) {
+          props[prop] = file[prop];
+        }
+        props.tempUrl = window.URL.createObjectURL(file);
+        value2.push(props);
+        if (noSend !== true) this.uploadFile(file);
+      }
+      return value2;
+    }
     /** Attempt to get target attributs - can fail for certain target types, if so, returns empty object
      * @param {HTMLElement} el Target element
      * @returns {object} Array of key/value HTML attribute objects
@@ -6230,16 +6252,7 @@
         value2 = el.valueAsNumber;
       }
       if (el.type === "file" && el.files.length > 0) {
-        value2 = [];
-        for (const file of el.files) {
-          const props = {};
-          for (const prop in file) {
-            props[prop] = file[prop];
-          }
-          props.tempUrl = window.URL.createObjectURL(file);
-          value2.push(props);
-          this.uploadFile(file);
-        }
+        value2 = this._processFilesInput(el.files);
       }
       const formDetails = {
         "id": id,
@@ -6708,10 +6721,6 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         msgToSend._ui.from = "client";
         if (this.hasUibRouter()) msgToSend._ui.routeId = this.uibrouter_CurrentRoute;
       }
-      const approxMsgSize = this.getObjectSize(msgToSend);
-      if (approxMsgSize >= this.maxHttpBufferSize) {
-        log("error", "Uib:_send", `Message may be too large to send. Approx msg size: ${approxMsgSize}. Max msg size: ${this.maxHttpBufferSize}`)();
-      }
       let numMsgs;
       if (channel === this._ioChannels.client) {
         this.set("sentMsg", msgToSend);
@@ -6963,6 +6972,10 @@ ${document.documentElement.outerHTML}`;
             payload[details.id] = details.value;
           }
         });
+      } else {
+        if (target.type === "file") {
+          payload = this._processFilesInput(target.files);
+        }
       }
       const classes = this.getElementClasses(target);
       if (Object.keys(target.dataset).length > 0) payload = { ...payload, ...target.dataset };
@@ -7064,14 +7077,21 @@ ${document.documentElement.outerHTML}`;
       const reader = new FileReader();
       reader.onload = (e) => {
         const arrayBuffer = e.target.result;
-        this.send({
+        const msg = {
           topic: this.topic || "file-upload",
           payload: arrayBuffer,
           fileName: file.name,
           type: file.type,
           lastModified: file.lastModifiedDate,
           size: file.size
-        });
+        };
+        const maxSize = this.maxHttpBufferSize - 500;
+        if (arrayBuffer.byteLength >= maxSize) {
+          msg.payload = void 0;
+          msg.error = `File is too large to send. File size: ${arrayBuffer.byteLength}. Max msg size: ${maxSize}`;
+          log("error", "Uib:uploadFile", msg.error)();
+        }
+        this.send(msg);
       };
       reader.readAsArrayBuffer(file);
     }
