@@ -2,7 +2,7 @@
 /** Send an update to a specific front-end element.
  * The FE library will update the UI accordingly.
  *
- * Copyright (c) 2023-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2024 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
     if (!msg.payload) {
         this.counters.fail++
         statusColor = 'red'
-        this.error('🛑 msg.payload not present or empty. File not saved.')
+        this.error('⛔ msg.payload not present or empty. File not saved.')
     } else {
         let folder = this.folder
         let fname = this.fname
@@ -78,34 +78,54 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
                 fname = msg._uib ? msg._uib.pageName : msg._ui.pageName
                 folder = srcNode.sourceFolder
             } else {
-                this.warn('Use pageName requested but neither msg._uib nor msg._ui exists')
+                this.warn('⚠️ Use pageName requested but neither msg._uib nor msg._ui exists.')
             }
         }
 
         // If msg.fname or msg.folder provided, override the static setting but only if the static setting is blank
         if (!folder && msg.folder) folder = msg.folder
-        if (!fname && msg.fname) fname = msg.fname
+        if (!fname) {
+            if (msg.fname) fname = msg.fname
+            else if (msg.filename) fname = msg.filename
+            else if (msg.fileName) fname = msg.fileName
+        }
 
-        // Call uibuilder shared library to save file (optional sub-folder creation and client reload)
-        try {
-            await fslib.writeInstanceFile(this.url, folder, fname, msg.payload, this.createFolder, this.reload)
-            if (this.reload === true ) {
-                // Reload connected clients if required by sending them a reload msg
-                srcNode.sendToFe(
-                    {
-                        _ui: { 'method': 'reload' },
-                        topic: 'uib-save reload'
-                    },
-                    this.url,
-                    'uiBuilder'
-                )
+        // Don't allow .. (which would let paths escape the instanceRoot)
+        if (folder.includes('..')) {
+            this.warn('⚠️ Folder name contains ".." which has been removed.')
+            folder = folder.replace(/\.\./g, '')
+        }
+        if (fname.includes('..')) {
+            this.warn('⚠️ File name contains ".." which has been removed.')
+            fname = fname.replace(/\.\./g, '')
+        }
+
+        if (fname) {
+            // Call uibuilder shared library to save file (optional sub-folder creation and client reload)
+            try {
+                await fslib.writeInstanceFile(this.url, folder, fname, msg.payload, this.createFolder, this.reload)
+                if (this.reload === true ) {
+                    // Reload connected clients if required by sending them a reload msg
+                    srcNode.sendToFe(
+                        {
+                            _ui: { 'method': 'reload' },
+                            topic: 'uib-save reload'
+                        },
+                        this.url,
+                        'uiBuilder'
+                    )
+                }
+                this.counters.success++
+                statusColor = 'green'
+            } catch (err) {
+                this.counters.fail++
+                statusColor = 'red'
+                this.error(`⛔ ${err.message}`, err)
             }
-            this.counters.success++
-            statusColor = 'green'
-        } catch (err) {
+        } else {
             this.counters.fail++
             statusColor = 'red'
-            this.error(`🛑 ${err.message}`, err)
+            this.error('⛔ No file name found. Provide in node or use msg.fname, msg.filename, or msg.fileName. File not saved.')
         }
     }
 
