@@ -62,16 +62,13 @@ var require_ui = __commonJS({
         // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
         __publicField(this, "sanitiseExtraTags", ["uib-var"]);
         __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
-        // Reference to DOM window - must be passed in the constructor
-        // Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
-        __publicField(this, "window");
         /** Optional Markdown-IT Plugins */
         __publicField(this, "ui_md_plugins");
-        if (win) this.window = win;
+        if (win) _a2.win = win;
         else {
           throw new Error("Ui:constructor. Current environment does not include `window`, UI functions cannot be used.");
         }
-        this.document = this.window.document;
+        _a2.doc = _a2.win.document;
         if (extLog) _a2.log = extLog;
         else _a2.log = function() {
           return function() {
@@ -80,7 +77,7 @@ var require_ui = __commonJS({
         if (jsonHighlight) this.syntaxHighlight = jsonHighlight;
         else this.syntaxHighlight = function() {
         };
-        if (this.window["markdownit"]) {
+        if (_a2.win["markdownit"]) {
           _a2.mdOpts = {
             html: true,
             xhtmlOut: false,
@@ -101,13 +98,13 @@ var require_ui = __commonJS({
               return `<pre class="hljs border"><code>${_a2.md.utils.escapeHtml(str).trim()}</code></pre>`;
             }
           };
-          _a2.md = this.window["markdownit"](_a2.mdOpts);
+          _a2.md = _a2.win["markdownit"](_a2.mdOpts);
         }
       }
       //#region ---- Internal Methods ----
       _markDownIt() {
-        if (!this.window["markdownit"]) return;
-        if (!this.ui_md_plugins && this.window["uibuilder"] && this.window["uibuilder"].ui_md_plugins) this.ui_md_plugins = this.window["uibuilder"].ui_md_plugins;
+        if (!_a2.win["markdownit"]) return;
+        if (!this.ui_md_plugins && _a2.win["uibuilder"] && _a2.win["uibuilder"].ui_md_plugins) this.ui_md_plugins = _a2.win["uibuilder"].ui_md_plugins;
         _a2.mdOpts = {
           html: true,
           xhtmlOut: false,
@@ -135,7 +132,7 @@ var require_ui = __commonJS({
             return `<pre><code class="border">${_a2.md.utils.escapeHtml(str).trim()}</code></pre>`;
           }
         };
-        _a2.md = this.window["markdownit"](_a2.mdOpts);
+        _a2.md = _a2.win["markdownit"](_a2.mdOpts);
         if (this.ui_md_plugins) {
           if (!Array.isArray(this.ui_md_plugins)) {
             _a2.log("error", "Ui:_markDownIt:plugins", "Could not load plugins, ui_md_plugins is not an array")();
@@ -143,10 +140,10 @@ var require_ui = __commonJS({
           }
           this.ui_md_plugins.forEach((plugin) => {
             if (typeof plugin === "string") {
-              _a2.md.use(this.window[plugin]);
+              _a2.md.use(_a2.win[plugin]);
             } else {
               const name = Object.keys(plugin)[0];
-              _a2.md.use(this.window[name], plugin[name]);
+              _a2.md.use(_a2.win[name], plugin[name]);
             }
           });
         }
@@ -185,7 +182,7 @@ var require_ui = __commonJS({
       //     // must be Vue
       //     // must have only 1 root element
       //     const compToAdd = ui.components[0]
-      //     const newEl = this.document.createElement(compToAdd.type)
+      //     const newEl = Ui.doc.createElement(compToAdd.type)
       //     if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
       //     this._uiComposeComponent(newEl, compToAdd)
       //     // If nested components, go again - but don't pass payload to sub-components
@@ -211,17 +208,17 @@ var require_ui = __commonJS({
           switch (compToAdd.type) {
             case "html": {
               compToAdd.ns = "html";
-              newEl = this.document.createElement("div");
+              newEl = _a2.doc.createElement("div");
               break;
             }
             case "svg": {
               compToAdd.ns = "svg";
-              newEl = this.document.createElementNS("http://www.w3.org/2000/svg", "svg");
+              newEl = _a2.doc.createElementNS("http://www.w3.org/2000/svg", "svg");
               break;
             }
             default: {
               compToAdd.ns = "dom";
-              newEl = this.document.createElement(compToAdd.type);
+              newEl = _a2.doc.createElement(compToAdd.type);
               break;
             }
           }
@@ -233,13 +230,13 @@ var require_ui = __commonJS({
           } else if (ui.parentEl) {
             elParent = ui.parentEl;
           } else if (compToAdd.parent) {
-            elParent = this.document.querySelector(compToAdd.parent);
+            elParent = _a2.doc.querySelector(compToAdd.parent);
           } else if (ui.parent) {
-            elParent = this.document.querySelector(ui.parent);
+            elParent = _a2.doc.querySelector(ui.parent);
           }
           if (!elParent) {
             _a2.log("info", "Ui:_uiAdd", "No parent found, adding to body")();
-            elParent = this.document.querySelector("body");
+            elParent = _a2.doc.querySelector("body");
           }
           if (compToAdd.position && compToAdd.position === "first") {
             elParent.insertBefore(newEl, elParent.firstChild);
@@ -317,11 +314,11 @@ var require_ui = __commonJS({
             newEl = parentEl;
             this.replaceSlot(parentEl, compToAdd.slot);
           } else if (compToAdd.ns === "svg") {
-            newEl = this.document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
+            newEl = _a2.doc.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
             this._uiComposeComponent(newEl, compToAdd);
             parentEl.appendChild(newEl);
           } else {
-            newEl = this.document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
+            newEl = _a2.doc.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
             this._uiComposeComponent(newEl, compToAdd);
             parentEl.appendChild(newEl);
           }
@@ -437,8 +434,8 @@ var require_ui = __commonJS({
       _uiRemove(ui, all = false) {
         ui.components.forEach((compToRemove) => {
           let els;
-          if (all !== true) els = [this.document.querySelector(compToRemove)];
-          else els = this.document.querySelectorAll(compToRemove);
+          if (all !== true) els = [_a2.doc.querySelector(compToRemove)];
+          else els = _a2.doc.querySelectorAll(compToRemove);
           els.forEach((el) => {
             try {
               el.remove();
@@ -458,13 +455,13 @@ var require_ui = __commonJS({
           _a2.log("trace", `Ui:_uiReplace:components-forEach:${i2}`, "Component to replace: ", compToReplace)();
           let elToReplace;
           if (compToReplace.id) {
-            elToReplace = this.document.getElementById(compToReplace.id);
+            elToReplace = _a2.doc.getElementById(compToReplace.id);
           } else if (compToReplace.selector || compToReplace.select) {
-            elToReplace = this.document.querySelector(compToReplace.selector);
+            elToReplace = _a2.doc.querySelector(compToReplace.selector);
           } else if (compToReplace.name) {
-            elToReplace = this.document.querySelector(`[name="${compToReplace.name}"]`);
+            elToReplace = _a2.doc.querySelector(`[name="${compToReplace.name}"]`);
           } else if (compToReplace.type) {
-            elToReplace = this.document.querySelector(compToReplace.type);
+            elToReplace = _a2.doc.querySelector(compToReplace.type);
           }
           _a2.log("trace", `Ui:_uiReplace:components-forEach:${i2}`, "Element to replace: ", elToReplace)();
           if (elToReplace === void 0 || elToReplace === null) {
@@ -476,17 +473,17 @@ var require_ui = __commonJS({
           switch (compToReplace.type) {
             case "html": {
               compToReplace.ns = "html";
-              newEl = this.document.createElement("div");
+              newEl = _a2.doc.createElement("div");
               break;
             }
             case "svg": {
               compToReplace.ns = "svg";
-              newEl = this.document.createElementNS("http://www.w3.org/2000/svg", "svg");
+              newEl = _a2.doc.createElementNS("http://www.w3.org/2000/svg", "svg");
               break;
             }
             default: {
               compToReplace.ns = "dom";
-              newEl = this.document.createElement(compToReplace.type);
+              newEl = _a2.doc.createElement(compToReplace.type);
               break;
             }
           }
@@ -513,13 +510,13 @@ var require_ui = __commonJS({
           if (compToUpd.parentEl) {
             elToUpd = compToUpd.parentEl;
           } else if (compToUpd.id) {
-            elToUpd = this.document.querySelectorAll(`#${compToUpd.id}`);
+            elToUpd = _a2.doc.querySelectorAll(`#${compToUpd.id}`);
           } else if (compToUpd.selector || compToUpd.select) {
-            elToUpd = this.document.querySelectorAll(compToUpd.selector);
+            elToUpd = _a2.doc.querySelectorAll(compToUpd.selector);
           } else if (compToUpd.name) {
-            elToUpd = this.document.querySelectorAll(`[name="${compToUpd.name}"]`);
+            elToUpd = _a2.doc.querySelectorAll(`[name="${compToUpd.name}"]`);
           } else if (compToUpd.type) {
-            elToUpd = this.document.querySelectorAll(compToUpd.type);
+            elToUpd = _a2.doc.querySelectorAll(compToUpd.type);
           }
           if (elToUpd === void 0 || elToUpd.length < 1) {
             _a2.log("warn", "Ui:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
@@ -561,7 +558,7 @@ var require_ui = __commonJS({
        * @returns {HTMLElement|null} Selected HTML element or null
        */
       $(cssSelector) {
-        let el = this.document.querySelector(cssSelector);
+        let el = _a2.doc.querySelector(cssSelector);
         if (!el) {
           _a2.log(1, "Uib:$", `No element found for CSS selector ${cssSelector}`)();
           return null;
@@ -581,7 +578,7 @@ var require_ui = __commonJS({
        * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
        */
       $$(cssSelector) {
-        return Array.from(this.document.querySelectorAll(cssSelector));
+        return Array.from(_a2.doc.querySelectorAll(cssSelector));
       }
       /** Add 1 or several class names to an element
        * @param {string|string[]} classNames Single or array of classnames
@@ -604,13 +601,13 @@ var require_ui = __commonJS({
        */
       applyTemplate(sourceId, targetId, config) {
         if (!config) config = { onceOnly: false };
-        const template = this.document.getElementById(sourceId);
-        const target = this.document.getElementById(targetId);
+        const template = _a2.doc.getElementById(sourceId);
+        const target = _a2.doc.getElementById(targetId);
         if (template && target) {
           let content;
           try {
-            if (config.onceOnly !== true) content = this.document.importNode(template.content, true);
-            else content = this.document.adoptNode(template.content);
+            if (config.onceOnly !== true) content = _a2.doc.importNode(template.content, true);
+            else content = _a2.doc.adoptNode(template.content);
           } catch (e) {
             _a2.log("error", "Ui:applyTemplate", `Source must be a <template>. id='${sourceId}'`)();
             return;
@@ -629,6 +626,51 @@ var require_ui = __commonJS({
           if (!target) _a2.log("error", "Ui:applyTemplate", `Target not found: id='${targetId}'`)();
         }
       }
+      /** Builds an HTML table from an array (or object) of objects
+       * 1st row is used for columns. If an object of objects, the outer keys
+       * are used as row ID's (prefixed with "r-").
+       * @param {Array<object>|Object} data Input data array or object
+       * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
+       */
+      buildHtmlTable(data) {
+        let keys;
+        if (!Array.isArray(data)) {
+          if (typeof data === "object") {
+            keys = Object.keys(data);
+            data = Object.values(data);
+          }
+          if (!Array.isArray(data)) {
+            const out = document.createElement("p");
+            out.textContent = "Input data is not an array or an object, cannot create a table.";
+            return out;
+          }
+        }
+        const tbl = document.createElement("table");
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+        const headers = Object.keys(data[0]);
+        headers.forEach((header) => {
+          const th = document.createElement("th");
+          th.textContent = header;
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        tbl.appendChild(thead);
+        const tbody = document.createElement("tbody");
+        data.forEach((item, i2) => {
+          const row = document.createElement("tr");
+          if (keys) row.id = `r-${keys[i2]}`;
+          headers.forEach((header) => {
+            const cell = document.createElement("td");
+            cell.innerHTML = this.sanitiseHTML(item[header]);
+            row.appendChild(cell);
+          });
+          tbody.appendChild(row);
+        });
+        tbl.appendChild(tbody);
+        console.log("\u{1F526} tbl \u27EB", tbl);
+        return tbl;
+      }
       /** Converts markdown text input to HTML if the Markdown-IT library is loaded
        * Otherwise simply returns the text
        * @param {string} mdText The input markdown string
@@ -636,7 +678,7 @@ var require_ui = __commonJS({
        */
       convertMarkdown(mdText) {
         if (!mdText) return "";
-        if (!this.window["markdownit"]) return mdText;
+        if (!_a2.win["markdownit"]) return mdText;
         if (!_a2.md) this._markDownIt();
         try {
           return _a2.md.render(mdText.trim());
@@ -723,7 +765,7 @@ var require_ui = __commonJS({
           case "image": {
             data = await response.blob();
             slot = `<img src="${URL.createObjectURL(data)}">`;
-            if (this.window["DOMPurify"]) {
+            if (_a2.win["DOMPurify"]) {
               txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
               _a2.log("warn", "Ui:include:image", txtReturn)();
             }
@@ -732,7 +774,7 @@ var require_ui = __commonJS({
           case "video": {
             data = await response.blob();
             slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`;
-            if (this.window["DOMPurify"]) {
+            if (_a2.win["DOMPurify"]) {
               txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
               _a2.log("warn", "Ui:include:video", txtReturn)();
             }
@@ -743,7 +785,7 @@ var require_ui = __commonJS({
           default: {
             data = await response.blob();
             slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`;
-            if (this.window["DOMPurify"]) {
+            if (_a2.win["DOMPurify"]) {
               txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
               _a2.log("warn", `Ui:include:${type}`, txtReturn)();
             }
@@ -769,10 +811,10 @@ var require_ui = __commonJS({
        * @param {string} url The url to be used in the script src attribute
        */
       loadScriptSrc(url2) {
-        const newScript = this.document.createElement("script");
+        const newScript = _a2.doc.createElement("script");
         newScript.src = url2;
         newScript.async = false;
-        this.document.head.appendChild(newScript);
+        _a2.doc.head.appendChild(newScript);
       }
       /** Attach a new text script to the end of HEAD synchronously
        * NOTE: It takes too long for most scripts to finish loading
@@ -780,10 +822,10 @@ var require_ui = __commonJS({
        * @param {string} textFn The text to be loaded as a script
        */
       loadScriptTxt(textFn) {
-        const newScript = this.document.createElement("script");
+        const newScript = _a2.doc.createElement("script");
         newScript.async = false;
         newScript.textContent = textFn;
-        this.document.head.appendChild(newScript);
+        _a2.doc.head.appendChild(newScript);
       }
       /** Attach a new remote stylesheet link to the end of HEAD synchronously
        * NOTE: It takes too long for most scripts to finish loading
@@ -791,11 +833,11 @@ var require_ui = __commonJS({
        * @param {string} url The url to be used in the style link href attribute
        */
       loadStyleSrc(url2) {
-        const newStyle = this.document.createElement("link");
+        const newStyle = _a2.doc.createElement("link");
         newStyle.href = url2;
         newStyle.rel = "stylesheet";
         newStyle.type = "text/css";
-        this.document.head.appendChild(newStyle);
+        _a2.doc.head.appendChild(newStyle);
       }
       /** Attach a new text stylesheet to the end of HEAD synchronously
        * NOTE: It takes too long for most scripts to finish loading
@@ -803,9 +845,9 @@ var require_ui = __commonJS({
        * @param {string} textFn The text to be loaded as a stylesheet
        */
       loadStyleTxt(textFn) {
-        const newStyle = this.document.createElement("style");
+        const newStyle = _a2.doc.createElement("style");
         newStyle.textContent = textFn;
-        this.document.head.appendChild(newStyle);
+        _a2.doc.head.appendChild(newStyle);
       }
       /** Load a dynamic UI from a JSON web reponse
        * @param {string} url URL that will return the ui JSON
@@ -866,7 +908,7 @@ var require_ui = __commonJS({
           }
         };
         if (["UL", "OL"].includes(node.nodeName)) {
-          const listEntries = this.document.querySelectorAll(`${cssSelector} li`);
+          const listEntries = _a2.doc.querySelectorAll(`${cssSelector} li`);
           if (listEntries) {
             thisOut.list = {
               "entries": listEntries.length
@@ -874,7 +916,7 @@ var require_ui = __commonJS({
           }
         }
         if (node.nodeName === "DL") {
-          const listEntries = this.document.querySelectorAll(`${cssSelector} dt`);
+          const listEntries = _a2.doc.querySelectorAll(`${cssSelector} dt`);
           if (listEntries) {
             thisOut.list = {
               "entries": listEntries.length
@@ -882,9 +924,9 @@ var require_ui = __commonJS({
           }
         }
         if (node.nodeName === "TABLE") {
-          const bodyEntries = this.document.querySelectorAll(`${cssSelector} > tbody > tr`);
-          const headEntries = this.document.querySelectorAll(`${cssSelector} > thead > tr`);
-          const cols = this.document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
+          const bodyEntries = _a2.doc.querySelectorAll(`${cssSelector} > tbody > tr`);
+          const headEntries = _a2.doc.querySelectorAll(`${cssSelector} > thead > tr`);
+          const cols = _a2.doc.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
           if (bodyEntries || headEntries || cols) {
             thisOut.table = {
               "headRows": headEntries ? headEntries.length : 0,
@@ -960,8 +1002,8 @@ var require_ui = __commonJS({
         if (!el) return;
         if (!slot) slot = "";
         slot = this.sanitiseHTML(slot);
-        const tempFrag = this.document.createRange().createContextualFragment(slot);
-        const elRange = this.document.createRange();
+        const tempFrag = _a2.doc.createRange().createContextualFragment(slot);
+        const elRange = _a2.doc.createRange();
         elRange.selectNodeContents(el);
         elRange.deleteContents();
         el.append(tempFrag);
@@ -985,8 +1027,8 @@ var require_ui = __commonJS({
        * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
        */
       sanitiseHTML(html) {
-        if (!this.window["DOMPurify"]) return html;
-        return this.window["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
+        if (!_a2.win["DOMPurify"]) return html;
+        return _a2.win["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
       }
       /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
        * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
@@ -1019,9 +1061,9 @@ var require_ui = __commonJS({
           ui.autohide = false;
           content = `<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> ${content}`;
         }
-        let toaster = this.document.getElementById("toaster");
+        let toaster = _a2.doc.getElementById("toaster");
         if (toaster === null) {
-          toaster = this.document.createElement("div");
+          toaster = _a2.doc.createElement("div");
           toaster.id = "toaster";
           toaster.title = "Click to clear all notifcations";
           toaster.setAttribute("class", "toaster");
@@ -1030,9 +1072,9 @@ var require_ui = __commonJS({
           toaster.onclick = function() {
             toaster.remove();
           };
-          this.document.body.insertAdjacentElement("afterbegin", toaster);
+          _a2.doc.body.insertAdjacentElement("afterbegin", toaster);
         }
-        const toast = this.document.createElement("div");
+        const toast = _a2.doc.createElement("div");
         toast.title = "Click to clear this notifcation";
         toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
         toast.innerHTML = content;
@@ -1071,7 +1113,7 @@ var require_ui = __commonJS({
       uiGet(cssSelector, propName = null) {
         const selection = (
           /** @type {NodeListOf<HTMLInputElement>} */
-          this.document.querySelectorAll(cssSelector)
+          _a2.doc.querySelectorAll(cssSelector)
         );
         const out = [];
         selection.forEach((node) => {
@@ -1120,7 +1162,12 @@ var require_ui = __commonJS({
         this._uiComposeComponent(el, comp);
       }
       //#endregion ---- -------- ----
-    }, /** Log function - passed in constructor or will be a dummy function
+    }, /** Reference to DOM window - must be passed in the constructor
+     * Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
+     * @type {Window}
+     */
+    __publicField(_a2, "win"), /** Reference to the DOM top-level window.document for convenience - set in constructor @type {Document} */
+    __publicField(_a2, "doc"), /** Log function - passed in constructor or will be a dummy function
      * @type {Function}
      */
     __publicField(_a2, "log"), /** Options for Markdown-IT if available (set in constructor) */
@@ -4483,7 +4530,7 @@ var _UibVar = class _UibVar extends HTMLElement {
     /** What is the value type */
     __publicField(this, "type", "plain");
     /** what are the available types? */
-    __publicField(this, "types", ["plain", "html", "markdown", "object"]);
+    __publicField(this, "types", ["plain", "html", "markdown", "object", "json", "table", "list", "array"]);
     /** Holds uibuilder.onTopic listeners */
     __publicField(this, "topicMonitors", {});
     /** Is UIBUILDER loaded? */
@@ -4627,15 +4674,31 @@ var _UibVar = class _UibVar extends HTMLElement {
       this.shadow.innerHTML = "<slot></slot>";
       return;
     }
-    const val = chkVal ? this.doFilter(this.value) : this.doFilter();
+    let val = chkVal ? this.doFilter(this.value) : this.doFilter();
     let out = val;
     switch (this.type) {
       case "markdown": {
         if (this.uib) out = window["uibuilder"].convertMarkdown(val);
         break;
       }
+      case "json":
       case "object": {
         out = `<pre class="syntax-highlight">${this.uib ? window["uibuilder"].syntaxHighlight(val) : val}</pre>`;
+        break;
+      }
+      case "table": {
+        console.log("\u{1F526} val \u27EB", val);
+        out = window["uibuilder"].sanitiseHTML(window["uibuilder"].buildHtmlTable(val).outerHTML);
+        break;
+      }
+      case "array":
+      case "list": {
+        if (!Array.isArray(val)) val = [val];
+        out = "<ul>";
+        val.forEach((li) => {
+          out += `<li>${window["uibuilder"].sanitiseHTML(li)}</li>`;
+        });
+        out += "</ul>";
         break;
       }
       case "plain":
@@ -5368,6 +5431,8 @@ var Uib = (_a = class {
     //#region ------- UI handlers --------- //
     //#region -- Direct to _ui --
     // ! NOTE: Direct assignments change the target `this` to here. Use with caution
+    // However, also note that the window/jsdom and the window.document
+    // references are now static in _ui so not impacted by this.
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
      * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
      * If the selected element is a <template>, returns the first child element.
@@ -5399,6 +5464,7 @@ var Uib = (_a = class {
      * @param {boolean} onceOnly If true, the source will be adopted (the source is moved)
      */
     __publicField(this, "applyTemplate", _ui.applyTemplate);
+    __publicField(this, "buildHtmlTable", _ui.buildHtmlTable);
     /** Remove All, 1 or more class names from an element
      * @param {undefined|null|""|string|string[]} classNames Single or array of classnames. If undefined, "" or null, remove all classes
      * @param {HTMLElement} el HTML Element to add class(es) to
