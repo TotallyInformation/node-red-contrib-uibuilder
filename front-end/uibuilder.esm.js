@@ -4686,7 +4686,6 @@ var _UibVar = class _UibVar extends HTMLElement {
         break;
       }
       case "table": {
-        console.log("\u{1F526} val \u27EB", val);
         out = window["uibuilder"].sanitiseHTML(window["uibuilder"].buildHtmlTable(val).outerHTML);
         break;
       }
