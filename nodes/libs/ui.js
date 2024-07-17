@@ -604,35 +604,34 @@ const Ui = class Ui2 {
         data = Object.values(data);
       }
       if (!Array.isArray(data)) {
-        const out = document.createElement("p");
+        const out = Ui2.doc.createElement("p");
         out.textContent = "Input data is not an array or an object, cannot create a table.";
         return out;
       }
     }
-    const tbl = document.createElement("table");
-    const thead = document.createElement("thead");
-    const headerRow = document.createElement("tr");
+    const tbl = Ui2.doc.createElement("table");
+    const thead = Ui2.doc.createElement("thead");
+    const headerRow = Ui2.doc.createElement("tr");
     const headers = Object.keys(data[0]);
     headers.forEach((header) => {
-      const th = document.createElement("th");
+      const th = Ui2.doc.createElement("th");
       th.textContent = header;
       headerRow.appendChild(th);
     });
     thead.appendChild(headerRow);
     tbl.appendChild(thead);
-    const tbody = document.createElement("tbody");
+    const tbody = Ui2.doc.createElement("tbody");
     data.forEach((item, i) => {
-      const row = document.createElement("tr");
+      const row = Ui2.doc.createElement("tr");
       if (keys) row.id = `r-${keys[i]}`;
       headers.forEach((header) => {
-        const cell = document.createElement("td");
+        const cell = Ui2.doc.createElement("td");
         cell.innerHTML = this.sanitiseHTML(item[header]);
         row.appendChild(cell);
       });
       tbody.appendChild(row);
     });
     tbl.appendChild(tbody);
-    console.log("\u{1F526} tbl \u27EB", tbl);
     return tbl;
   }
   /** Converts markdown text input to HTML if the Markdown-IT library is loaded

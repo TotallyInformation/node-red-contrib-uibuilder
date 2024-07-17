@@ -641,35 +641,34 @@
               data = Object.values(data);
             }
             if (!Array.isArray(data)) {
-              const out = document.createElement("p");
+              const out = _a2.doc.createElement("p");
               out.textContent = "Input data is not an array or an object, cannot create a table.";
               return out;
             }
           }
-          const tbl = document.createElement("table");
-          const thead = document.createElement("thead");
-          const headerRow = document.createElement("tr");
+          const tbl = _a2.doc.createElement("table");
+          const thead = _a2.doc.createElement("thead");
+          const headerRow = _a2.doc.createElement("tr");
           const headers = Object.keys(data[0]);
           headers.forEach((header) => {
-            const th = document.createElement("th");
+            const th = _a2.doc.createElement("th");
             th.textContent = header;
             headerRow.appendChild(th);
           });
           thead.appendChild(headerRow);
           tbl.appendChild(thead);
-          const tbody = document.createElement("tbody");
+          const tbody = _a2.doc.createElement("tbody");
           data.forEach((item, i2) => {
-            const row = document.createElement("tr");
+            const row = _a2.doc.createElement("tr");
             if (keys) row.id = `r-${keys[i2]}`;
             headers.forEach((header) => {
-              const cell = document.createElement("td");
+              const cell = _a2.doc.createElement("td");
               cell.innerHTML = this.sanitiseHTML(item[header]);
               row.appendChild(cell);
             });
             tbody.appendChild(row);
           });
           tbl.appendChild(tbody);
-          console.log("\u{1F526} tbl \u27EB", tbl);
           return tbl;
         }
         /** Converts markdown text input to HTML if the Markdown-IT library is loaded
