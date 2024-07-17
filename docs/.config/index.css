@@ -95,6 +95,13 @@ img[alt$="><"] {
     float: none !important;
 }
 
+figcaption {
+  font-style: italic;
+}
+figcaption::before {
+  content: "Figure: ";
+}
+
 .markdown-section h1,
 .markdown-section h2 {
     color: var(--sidebar-nav-link-color--active, var(--sidebar-nav-link-color));
