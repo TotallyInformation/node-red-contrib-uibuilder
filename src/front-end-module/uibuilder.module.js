@@ -1042,6 +1042,8 @@ export const Uib = class Uib {
 
     //#region -- Direct to _ui --
     // ! NOTE: Direct assignments change the target `this` to here. Use with caution
+    // However, also note that the window/jsdom and the window.document
+    // references are now static in _ui so not impacted by this.
 
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
      * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
@@ -1078,6 +1080,8 @@ export const Uib = class Uib {
      * @param {boolean} onceOnly If true, the source will be adopted (the source is moved)
      */
     applyTemplate = _ui.applyTemplate
+
+    buildHtmlTable = _ui.buildHtmlTable
 
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
