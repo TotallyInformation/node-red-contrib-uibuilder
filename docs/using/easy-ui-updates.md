@@ -3,7 +3,7 @@ title: Updating web UI content and attributes dynamically from Node-RED
 description: |
   A quick FAQ explaining the different ways to include and dynamically change data on your web pages from Node-RED.
 created: 2024-06-19 10:29:37
-updated: 2024-06-20 17:03:28
+updated: 2024-07-17 17:12:00
 ---
 
 > [!TIP]
@@ -15,7 +15,24 @@ The structure of a UI in HTML is defined using `elements` which are represented 
 
 UIBUILDER has a number of easy methods for updating your web pages based on data from Node-RED or on processing in the browser. Some of these methods will require you to be able to identify an element based on a [CSS Selector](/how-to/css-selectors). Others allow updates based on a Node-RED message `topic` property or on a local variable managed by uibuilder.
 
-## Using the `uib-topic` attribute :id=uibtopic
+There are basically 4 options for easy page content updates:
+
+In HTML:
+
+1. The custom `uib-topic` attribute on any HTML tag will auto-process incoming data.
+2. The custom `<uib-var>` component also auto-processes data and has some additional rendering options: text, HTML, Markdown, json, table, and list.
+
+In front-end JavaScript:
+
+3. Front-end JavaScript code can listen for incoming data manually using the `uibuilder.onChange('msg', (msg)=>{...})` or `uibuilder.onTopic('topicname', (msg)=>{...})` functions. JavaScript code can easily update your web page using standard web API functions or uibuilder helper functions.
+
+In Node-RED:
+
+4. No-code and low-code nodes can directly update identifiable on-page elements.
+
+Options 1 and 2 are described here. Option 3 is described in the client documentation [onChange](/client-docs/features#onchangecancelchange-functions)/[onTopic](/client-docs/features#ontopiccanceltopic-functions) and option 4 in [Dynamic, config-driven UI's](/client-docs/config-driven-ui)/[uib-update](/nodes/uib-update)
+
+## 1) Using the `uib-topic` attribute :id=uibtopic
 
 UIBUILDER introduces a custom attribute `uib-topic` (or `data-uib-topic` if you prefer) for any HTML element.
 
@@ -30,7 +47,7 @@ Include a `msg.attributes` property to automatically update the elements attribu
 >
 > Using the `uib-topic` attribute allows text or HTML content in `msg.payload`, it does not allow Markdown content. However, content is still sanitised if the [DOMPurify library](/client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) is loaded.
 
-## Using the `uib-var` custom web component :id=uibvar
+## 2) Using the `uib-var` custom web component :id=uibvar
 
 UIBUILDER also includes its own *custom* web element [`<uib-var>`](/client-docs/custom-components#uib-var). 
 
