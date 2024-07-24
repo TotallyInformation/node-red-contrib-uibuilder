@@ -68,3 +68,16 @@ document.addEventListener('uibuilder:stdMsgReceived', evt => {
 ```
 
 See [Custom Events](technical-reference.md#custom-events) for details.
+
+## Browser logging
+
+You can turn up the client library's log level using `uibuilder.logLevel = 5` on the browser developer tools console or in your `index.js` or other front-end script. You can also send a command from Node-RED to change the log level. Search for "logLevel" in the docs for more detail.
+
+Levels run from the default 0 (error) up to 5 (trace).
+
+> [!TIP]
+> If you want to see what is happening in the uibuilder library's startup processing, you can add a `logLevel` attribute to the script tag. E.g.:
+> ```
+> <script defer src="../uibuilder/uibuilder.iife.min.js" logLevel="2"></script>
+> ```
+> This is mostly only useful for debugging the library itself. Note that you can only use numeric settings here.
