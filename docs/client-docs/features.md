@@ -3,7 +3,7 @@ title: Features of the modern, modular front-end client `uibuilder.esm.js` and `
 description: |
   Description of the main features.
 created: 2022-06-11 14:15:26
-updated: 2024-07-07 15:59:02
+updated: 2024-07-21 15:29:57
 ---
 
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)
@@ -292,11 +292,18 @@ Internal logging is much improved over previous versions of this library. There 
 
 You can alter the amount of information that the uibuilder library outputs to the console by changing the `logLevel` with `uibuilder.logLevel = 4` where the number should be between 0 and 5. you can set that at any time in your code, however it will generally be most useful set _before_ calling `uibuilder.start()`.
 
-The default level is set to 1 (warn). The levels are: 0 'error', 1 'warn', 2 'info', 3 'log', 4 'debug', 5 'trace'.
+The default level is set to 0 (error). The levels are: 0 'error', 1 'warn', 2 'info', 3 'log', 4 'debug', 5 'trace'.
 
 Changing the log level outputs an info note to the console telling you what the level is.
 
 The log function is also available to your own code as `uibuilder.log(level, prefix, ...outputs)`.
+
+> [!TIP]
+> If you want to see what is happening in the uibuilder library's startup processing, you can add a `logLevel` attribute to the script tag. E.g.:
+> ```
+> <script defer src="../uibuilder/uibuilder.iife.min.js" logLevel="2"></script>
+> ```
+> This is mostly only useful for debugging the library itself. Note that you can only use numeric settings here.
 
 ## document-level events
 
