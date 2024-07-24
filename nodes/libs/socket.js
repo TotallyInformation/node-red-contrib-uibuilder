@@ -253,20 +253,43 @@ class UibSockets {
         return this._isConfigured
     }
 
+    /** Run socket related hooks if present
+     * Hooks must be a function and must return true or false, if not present, return true
+     * @param {string} hookName Name of the hook function to call
+     * @param {object} msg The message to output, include msg._socketId to send to a single client
+     * @param {uibNode} node Reference to the uibuilder node instance (Might only contain node.url)
+     * @returns {boolean} True to allow message flow, false to block
+     */
+    hooks(hookName, msg, node) {
+        if (!this.uib) throw new Error('uib is undefined')
+
+        const RED = this.RED
+
+        if (RED?.settings?.uibuilder?.hooks[hookName]) {
+            const hook = RED.settings.uibuilder.hooks[hookName]
+            if (typeof hook === 'function') return RED.settings.uibuilder.hooks[hookName](msg, node)
+            else return true
+        }
+
+        return true
+    }
+
     // ? Consider adding isConfigured checks on each method?
 
     /** Output a msg to the front-end.
      * @param {object} msg The message to output, include msg._socketId to send to a single client
-     * @param {string} url THe uibuilder id
+     * @param {uibNode} node Reference to the uibuilder node instance
      * @param {string=} channel Optional. Which channel to send to (see uib.ioChannels) - defaults to client
      */
-    sendToFe( msg, url, channel ) {
+    sendToFe( msg, node, channel ) {
         const uib = this.uib
         const log = this.log
 
-        if (!uib) throw new Error('uib is undefined')
-        if (!log) throw new Error('log is undefined')
-        if (!url) throw new Error('url is undefined')
+        const url = node.url
+
+        if (!uib) throw new Error('uib is undefined. UibSockets:sendToFe')
+        if (!log) throw new Error('log is undefined. UibSockets:sendToFe')
+        if (!url) throw new Error('url is undefined. UibSockets:sendToFe')
 
         if ( !channel ) channel = uib.ioChannels.client
 
@@ -276,6 +299,11 @@ class UibSockets {
 
         // Control msgs should say where they came from
         if ( channel === uib.ioChannels.control && !msg.from ) msg.from = 'server'
+
+        // Run uibuilder.hooks.msgSending hook
+        if (this.hooks('msgSending', msg, node) === false) {
+            log.warn(`[uibuilder:socket:sendToFe] outbound msg blocked for "${node.url}" by "uibuilder.hooks.msgSending" hook in settings.js`)
+        }
 
         // Process outbound middleware (middleware is loaded in this.setup)
         try {
@@ -298,40 +326,55 @@ class UibSockets {
         }
     } // ---- End of sendToFe ---- //
 
-    /** Output a normal msg to the front-end. Can override socketid
-     * Currently only used for the auto-reload on edit in admin-api-v2.js
+    /** Output a normal msg to the front-end. Can override socketid. NOTE:
+     *    Applies the msgReceived hook if present
+     *    Currently only used for the auto-reload on edit in admin-api-v2.js and Post:replaceTemplate in admin-api-v3.js
      * @param {object} msg The message to output
-     * @param {object} url The uibuilder instance url - will be unique. Used to lookup the correct Socket.IO namespace for sending.
+     * @param {uibNode} node WARNING: Not a full reference to a node instance, only node.url is available
      * @param {string=} socketId Optional. If included, only send to specific client id (mostly expecting this to be on msg._socketID so not often required)
      */
-    sendToFe2(msg, url, socketId) { // eslint-disable-line class-methods-use-this
+    sendToFe2(msg, node, socketId) { // eslint-disable-line class-methods-use-this
         const uib = this.uib
-        const ioNs = this.ioNamespaces[url]
+
+        const ioNs = this.ioNamespaces[node.url]
 
         if (uib === undefined) throw new Error('uib is undefined')
         if (this.log === undefined) throw new Error('this.log is undefined')
 
         if (socketId) msg._socketId = socketId
 
+        // Run uibuilder.hooks.msgSending hook
+        if (this.hooks('msgSending', msg, node) === false) {
+            this.log.warn(`[uibuilder:socket:sendToFe2] outbound msg blocked for "${node.url}" by "uibuilder.hooks.msgSending" hook in settings.js`)
+        }
+
         // TODO: This should have some safety validation on it
         if (msg._socketId) {
-            this.log.trace(`[uibuilder:socket:sendToFe2:${url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
+            this.log.trace(`[uibuilder:socket:sendToFe2:${node.url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.to(msg._socketId).emit(uib.ioChannels.server, msg)
         } else {
-            this.log.trace(`[uibuilder:socket:sendToFe2:${url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
+            this.log.trace(`[uibuilder:socket:sendToFe2:${node.url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.emit(uib.ioChannels.server, msg)
         }
     } // ---- End of sendToFe2 ---- //
 
-    /** Send a uibuilder control message out of port #2
-     * Note: this.getClientDetails is used before calling this if client details needed
+    /** Send a uibuilder control message out of port #2. NOTE:
+     *    Applies the msgReceived hook if present
+     *    this.getClientDetails is used before calling this if client details needed
      * @param {object} msg The message to output
      * @param {uibNode} node Reference to the uibuilder node instance
      * @param {string} [from] Optional. Trace what source fn triggered the send
      */
     sendCtrlMsg(msg, node, from = '') {
         this.log.trace(`[uibuilder:sendCtrlMsg] FROM: '${from}'`)
-        node.send( [null, msg])
+
+        // Run uibuilder.hooks.msgReceived hook
+        if (this.hooks('msgReceived', msg, node) === false) {
+            this.log.warn(`[uibuilder:socket:sendToFe] Control msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
+            return
+        }
+
+        node.send( [null, msg] )
     }
 
     /** Get client details for including in Node-RED messages
@@ -395,11 +438,18 @@ class UibSockets {
         return this.ioNamespaces[url]
     }
 
-    /** Send a node-red msg either directly out of the node instance OR via return event name
+    /** Send a node-red msg either directly out of the node instance OR via return event name. NOTE:
+     *    Applies the msgReceived hook if present
      * @param {object} msg Message object received from a client
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     sendIt(msg, node) {
+        // Run uibuilder.hooks.msgReceived hook
+        if (this.hooks('msgReceived', msg, node) === false) {
+            this.log.warn(`[uibuilder:socket:sendToFe] msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
+            return
+        }
+
         if ( msg._uib && msg._uib.originator && (typeof msg._uib.originator === 'string') ) {
             // const eventName = `node-red-contrib-uibuilder/return/${msg._uib.originator}`
             tiEvent.emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
@@ -408,7 +458,9 @@ class UibSockets {
         }
     }
 
-    /** Socket listener fn for standard msgs from clients - NOTE that the optional sioUse middleware is also applied before this
+    /** Socket listener fn for standard msgs from clients - NOTE:
+     *    The optional sioUse middleware is applied BEFORE this
+     *    The optional msgReceived hook is applied AFTER this
      * @param {object} msg Message object received from a client
      * @param {socketio.Socket} socket Reference to the socket for this node
      * @param {uibNode} node Reference to the uibuilder node instance
@@ -450,7 +502,9 @@ class UibSockets {
         this.sendIt(msg, node)
     } // ---- End of listenFromClient ---- //
 
-    /** Socket listener fn for control msgs from clients - NOTE that the optional sioUse middleware is also applied before this
+    /** Socket listener fn for control msgs from clients - NOTE:
+     *    The optional sioUse middleware is applied BEFORE this
+     *    The optional msgReceived hook is applied AFTER this
      * @param {object} msg Message object received from a client
      * @param {socketio.Socket} socket Reference to the socket for this node
      * @param {uibNode} node Reference to the uibuilder node instance
@@ -492,13 +546,12 @@ class UibSockets {
                             _socketId: msg._socketId,
                             topic: msg.topic,
                         }
-                        this.sendToFe( newMsg, node.url, this.uib.ioChannels.control )
+                        this.sendToFe( newMsg, node, this.uib.ioChannels.control )
                         return fstats
                     })
                     .catch( (err) => {
                         log.error(err)
                     })
-
                 break
             }
 
@@ -635,7 +688,7 @@ class UibSockets {
                     ...that.getClientDetails(socket, node),
                 }
 
-                that.sendToFe(ctrlMsg, node.url, uib.ioChannels.control)
+                that.sendToFe(ctrlMsg, node, uib.ioChannels.control)
 
                 // Copy to port#2 for reference
                 that.sendCtrlMsg(ctrlMsg, node, 'addNS:disconnect')
@@ -731,6 +784,7 @@ class UibSockets {
                 'topic': node.topic || undefined,
                 'version': uib.version,  // Let the front-end know what v of uib is in use
                 '_socketId': socket.id,
+                // @ts-ignore
                 'maxHttpBufferSize': this.io.opts.maxHttpBufferSize || 1048576, // Let the client know the max msg size that can be sent, default=1MB
             }
             // msgClient.ip = getClientRealIpAddress(socket)
@@ -745,7 +799,7 @@ class UibSockets {
             // }
 
             // Let the clients know we are connecting
-            that.sendToFe(msgClient, node.url, uib.ioChannels.control)
+            that.sendToFe(msgClient, node, uib.ioChannels.control)
 
             // Send initial client connect control msg (via port #2)
             const ctrlMsg = {

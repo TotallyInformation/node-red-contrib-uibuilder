@@ -65,6 +65,7 @@
  * @property {object} [uibuilder.serverOptions] Optional ExpressJS server options for uib custom server
  * @property {object} [uibuilder.socketOptions] Override Socket.IO options if desired. See https://socket.io/docs/v4/server-options/
  * @property {boolean} [uibuilder.instanceApiAllowed] Allow instance-level custom API's to be loaded. Could be a security issue so it is controlled in settings.js
+ * @property {Function} [uibuilder.hooks] Provide hook functions
  *
  * @property {string} coreNodesDir Folder containing Node-RED core nodes
  * @property {string} version Node-RED version

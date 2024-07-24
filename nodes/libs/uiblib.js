@@ -185,6 +185,12 @@ const UibLib = {
         return ans || defaultAnswer
     }, // ---- End of getProps ---- //
 
+    // hooks: function(hookName) {
+    //     if (RED.settings.uibuilder && RED.settings.uibuilder.hooks && RED.settings.uibuilder.hooks[hookName]) {
+    //         return RED.settings.uibuilder.hooks[hookName]
+    //     }
+    // },
+
     /** Simple fn to set a node status in the admin interface
      * fill: red, green, yellow, blue or grey
      * shape: ring, dot

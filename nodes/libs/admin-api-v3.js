@@ -474,11 +474,17 @@ function adminRouterV3(uib, log) {
                         else res.status(resp.status).end()
                         // Reload connected clients if required by sending them a reload msg
                         if ( params.reload === 'true' ) {
-                            sockets.sendToFe2({
-                                '_uib': {
-                                    'reload': true,
+                            sockets.sendToFe2(
+                                {
+                                    '_uib': {
+                                        'reload': true,
+                                    }
+                                },
+                                // @ts-ignore
+                                {
+                                    url: params.url
                                 }
-                            }, params.url)
+                            )
                         }
                         return true
                     })

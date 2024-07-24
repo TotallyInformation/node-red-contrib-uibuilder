@@ -145,7 +145,7 @@ function externalEvents(node) {
     const sender = (msg) => {
         // this.send(msg)
         // console.log('>> EVENT tofe: ', msg )
-        sockets.sendToFe(msg, node.url, uib.ioChannels.server)
+        sockets.sendToFe(msg, node, uib.ioChannels.server)
     }
 
     // Create new listener for the given topic, they are removed on close
@@ -694,7 +694,7 @@ function inputMsgHandler (msg, send, done) {
 
     // pass the complete msg object to the uibuilder client
     if ( (!Object.prototype.hasOwnProperty.call(msg, 'topic')) && (this.topic !== '') ) msg.topic = this.topic
-    sockets.sendToFe( msg, this.url, uib.ioChannels.server )
+    sockets.sendToFe( msg, this, uib.ioChannels.server )
 
     // Pass on to output port 1 if wanted
     if (this.fwdInMessages) {
