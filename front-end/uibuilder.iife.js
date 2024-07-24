@@ -5013,7 +5013,7 @@
   var version = "7.0.0-iife";
   var isMinified = !/param/.test(function(param) {
   });
-  var logLevel = isMinified ? 0 : 1;
+  var logLevel = 0;
   var LOG_STYLES = {
     // 0
     error: {
@@ -5469,6 +5469,14 @@
        * @param {HTMLElement} el HTML Element to add class(es) to
        */
       __publicField(this, "removeClass", _ui.removeClass);
+      const scriptElement = document.currentScript;
+      if (scriptElement) {
+        const ll = Number(scriptElement.getAttribute("logLevel"));
+        if (isNaN(ll)) {
+          log(0, "Uib:constructor", `Cannot set logLevel to "${scriptElement.getAttribute("logLevel")}". Defaults to 0 (error).`)();
+          this.logLevel = 0;
+        } else this.logLevel = ll;
+      }
       log("trace", "Uib:constructor", "Starting")();
       window.addEventListener("offline", (e) => {
         this.set("online", false);
@@ -6155,6 +6163,7 @@
      */
     async _uibAttribObserver(mutations) {
       mutations.forEach(async (m) => {
+        log("trace", "uibuilder:_uibAttribObserver", "Mutations ", m)();
         if (m.attributeName && (m.attributeName.startsWith("uib") || m.attributeName.startsWith("data-uib"))) {
           this._uibAttrScanOne(m.target);
         } else if (m.addedNodes.length > 0) {
@@ -6165,12 +6174,14 @@
             } catch (e) {
             }
             const intersect = this.arrayIntersect(this.uibAttribs, aNames);
+            intersect.forEach(async (el) => {
+              this._uibAttrScanOne(el);
+            });
             let uibChildren = [];
             if (n.querySelectorAll) uibChildren = n.querySelectorAll(__privateGet(this, _uibAttrSel));
-            const combi = [...intersect, ...uibChildren];
-            if (combi.length > 0) {
-              this._uibAttrScanAll(combi);
-            }
+            uibChildren.forEach(async (el) => {
+              this._uibAttrScanOne(el);
+            });
           });
         }
       });
@@ -6183,8 +6194,10 @@
      * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
      */
     async _uibAttrScanOne(el) {
+      log("trace", "uibuilder:_uibAttrScanOne", "Setting up auto-processor for: ", el)();
       const topic = el.getAttribute("uib-topic") || el.getAttribute("data-uib-topic");
       this.onTopic(topic, (msg) => {
+        log("trace", "uibuilder:_uibAttrScanOne", `Msg with topic "${topic}" received. msg content: `, msg)();
         msg._uib_processed_by = "_uibAttrScanOne";
         if (Object.prototype.hasOwnProperty.call(msg, "attributes")) {
           try {
@@ -6291,7 +6304,25 @@
       });
       return props;
     }
-    // ! TODO - Handle radio buttons - require them to be in a fieldset?
+    /** Check for el.value and el.checked. el.checked will also set the value return for ease of use.
+     * Only 2 input types use el.checked, different from all other input types - this is annoying.
+     * @param {HTMLElement} el HTML Element to be checked
+     * @returns {{value:boolean|null, checked:boolean|null}} Return null if properties not present, else the appropriate value
+     */
+    getFormElementValue(el) {
+      let value2 = null;
+      let checked = null;
+      if (Object.prototype.hasOwnProperty.call(el, "value")) value2 = el.value;
+      if (Object.prototype.hasOwnProperty.call(el, "checked") || el.type === "checkbox" || el.type === "radio") {
+        value2 = checked = el.checked;
+        if (checked === false) value2 = "";
+      }
+      if (Object.prototype.hasOwnProperty.call(el, "valueAsNumber") && !isNaN(el.valueAsNumber)) {
+        value2 = el.valueAsNumber;
+      }
+      return { value: value2, checked };
+    }
+    // ! TODO - Handle fieldsets
     /** For HTML Form elements (e.g. input, textarea, select), return the details
      * @param {HTMLFormElement} el Source form element
      * @returns {object|null} Form element key details
@@ -6306,26 +6337,18 @@
         log(1, "uibuilder:getFormElementDetails", "Cannot get form element details as no id is present and could not be generated")();
         return null;
       }
-      let value2 = el.value;
-      let checked;
-      if (el.type === "checkbox" || el.type === "radio") {
-        checked = el.checked;
-        if (checked === false) value2 = "";
-      }
-      if ("valueAsNumber" in el && !isNaN(el.valueAsNumber)) {
-        value2 = el.valueAsNumber;
-      }
+      let { value: value2, checked } = this.getFormElementValue(el);
       if (el.type === "file" && el.files.length > 0) {
         value2 = this._processFilesInput(el.files);
       }
       const formDetails = {
         "id": id,
         "name": el.name,
-        "value": value2,
-        "checked": checked,
         "valid": el.checkValidity(),
         "type": el.type
       };
+      if (value2 !== null) formDetails.value = value2;
+      if (checked !== null) formDetails.checked = checked;
       if (formDetails.valid === false) {
         const v = el.validity;
         formDetails.validity = {
@@ -7043,6 +7066,9 @@ ${document.documentElement.outerHTML}`;
       }
       const classes = this.getElementClasses(target);
       if (Object.keys(target.dataset).length > 0) payload = { ...payload, ...target.dataset };
+      const { value: value2, checked } = this.getFormElementValue(target);
+      if (value2 !== null) payload.value = value2;
+      if (checked !== null) payload.checked = checked;
       let nprops;
       if (Object.prototype.toString.call(target) === "[object Notification]") {
         payload = `notification-${target.userAction}`;

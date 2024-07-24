@@ -47,7 +47,8 @@ const isMinified = !(/param/).test(function (param) { })
 //#region --- print/console - debugging output functions --- //
 
 /** Default log level - Error & Warn */
-let logLevel = isMinified ? 0 : 1  // When using minified lib, assume production and only log errors otherwise also log warn
+// let logLevel = isMinified ? 0 : 1  // When using minified lib, assume production and only log errors otherwise also log warn
+let logLevel = 0
 // function changeLogLevel(level) {
 //     logLevel = level
 //     console.trace = logLevel < 4 ? function(){} : console.trace
@@ -1231,6 +1232,7 @@ export const Uib = class Uib {
      */
     async _uibAttribObserver(mutations/* , observer */) {
         mutations.forEach( async m => { // async so process does not wait
+            log('trace', 'uibuilder:_uibAttribObserver', 'Mutations ', m)()
             // Deal with attribute changes
             if (m.attributeName && (m.attributeName.startsWith('uib') || m.attributeName.startsWith('data-uib'))) {
                 // log(0, 'attribute mutation', m.attributeName, m.target.getAttribute(m.attributeName), m.oldValue, m )()
@@ -1246,14 +1248,17 @@ export const Uib = class Uib {
                     } catch (e) {}
                     // Get any added elements that have uib attribs
                     const intersect = this.arrayIntersect(this.uibAttribs, aNames)
-                    // And get any children that have uib attribs (a node might not have querySelectorAll method)
+                    // Process them
+                    intersect.forEach( async el => {
+                        this._uibAttrScanOne(el)
+                    })
+                    // And get any children of the added elements that have uib attribs (a node might not have querySelectorAll method)
                     let uibChildren = []
                     if (n.querySelectorAll) uibChildren = n.querySelectorAll(this.#uibAttrSel)
-                    // We want them all.
-                    const combi = [...intersect, ...uibChildren]
-                    if (combi.length > 0) {
-                        this._uibAttrScanAll(combi) // async so process does not wait
-                    }
+                    // Process them
+                    uibChildren.forEach( async el => {
+                        this._uibAttrScanOne(el)
+                    })
                 })
             }
         })
@@ -1267,9 +1272,11 @@ export const Uib = class Uib {
      * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
      */
     async _uibAttrScanOne(el) {
+        log('trace', 'uibuilder:_uibAttrScanOne', 'Setting up auto-processor for: ', el)()
         const topic = el.getAttribute('uib-topic') || el.getAttribute('data-uib-topic')
         // Create a topic listener
         this.onTopic(topic, (msg) => {
+            log('trace', 'uibuilder:_uibAttrScanOne', `Msg with topic "${topic}" received. msg content: `, msg)()
             msg._uib_processed_by = '_uibAttrScanOne' // record that this has already been processed
             // Process msg.attributes
             if (Object.prototype.hasOwnProperty.call(msg, 'attributes')) {
@@ -1311,6 +1318,7 @@ export const Uib = class Uib {
         if (!Array.isArray(parentEl)) parentEl = [parentEl]
         parentEl.forEach( async p => { // async so process does not wait
             const uibChildren = p.querySelectorAll(this.#uibAttrSel)
+            // log('trace', 'uibuilder:_uibAttrScanAll:forEach:children', 'p, uibChildren: ', p, uibChildren)()
             if (uibChildren.length > 0) {
                 // console.log('existing elements uib attrib', uibChildren)
                 uibChildren.forEach( el => {
@@ -1394,7 +1402,33 @@ export const Uib = class Uib {
         return props
     }
 
-    // ! TODO - Handle radio buttons - require them to be in a fieldset?
+    /** Check for el.value and el.checked. el.checked will also set the value return for ease of use.
+     * Only 2 input types use el.checked, different from all other input types - this is annoying.
+     * @param {HTMLElement} el HTML Element to be checked
+     * @returns {{value:boolean|null, checked:boolean|null}} Return null if properties not present, else the appropriate value
+     */
+    getFormElementValue(el) {
+        let value = null
+        let checked = null
+
+        if (Object.prototype.hasOwnProperty.call(el, 'value')) value = el.value
+
+        if (Object.prototype.hasOwnProperty.call(el, 'checked') || el.type === 'checkbox' || el.type === 'radio' ) {
+            value = checked = el.checked
+            // HTML does not normally return any value if not checked,
+            // We will return an empty string
+            if (checked === false) value = ''
+        }
+
+        // If the value is a valid number, use that instead of the text version
+        if (Object.prototype.hasOwnProperty.call(el, 'valueAsNumber') && !isNaN(el.valueAsNumber)) {
+            value = el.valueAsNumber
+        }
+
+        return { value, checked }
+    }
+
+    // ! TODO - Handle fieldsets
     /** For HTML Form elements (e.g. input, textarea, select), return the details
      * @param {HTMLFormElement} el Source form element
      * @returns {object|null} Form element key details
@@ -1412,20 +1446,7 @@ export const Uib = class Uib {
             return null
         }
 
-        let value = el.value
-
-        let checked
-        if (el.type === 'checkbox' || el.type === 'radio' ) {
-            checked = el.checked
-            // HTML does not normally return any value if not checked,
-            // We will return an empty string
-            if (checked === false) value = ''
-        }
-
-        // If the value is a valid number, use that instead of the text version
-        if ('valueAsNumber' in el && !isNaN(el.valueAsNumber)) {
-            value = el.valueAsNumber
-        }
+        let { value, checked } = this.getFormElementValue(el)
 
         // For multi file input, get the file details as the value
         // el.files is a FileList type & each entry is a File type - have to process these manually - stupid HTML!
@@ -1439,11 +1460,11 @@ export const Uib = class Uib {
         const formDetails = {
             'id': id,
             'name': el.name,
-            'value': value,
-            'checked': checked,
             'valid': el.checkValidity(),
             'type': el.type,
         }
+        if (value !== null) formDetails.value = value
+        if (checked !== null) formDetails.checked = checked
 
         // If the form element has invalid content, try to report why
         if (formDetails.valid === false) {
@@ -2375,6 +2396,11 @@ export const Uib = class Uib {
         // Each `data-xxxx` attribute is added as a property
         if (Object.keys(target.dataset).length > 0) payload = { ...payload, ...target.dataset }
 
+        // Check for element value/check props
+        const { value, checked } = this.getFormElementValue(target)
+        if (value !== null) payload.value = value
+        if (checked !== null) payload.checked = checked
+
         // Handle Notification events
         let nprops
         if ( Object.prototype.toString.call(target) === '[object Notification]') {
@@ -2851,6 +2877,16 @@ export const Uib = class Uib {
     //#region ------- Class construction & startup method -------- //
 
     constructor() {
+        const scriptElement = document.currentScript
+        // Check if the script element was found and get the data-log-level attribute
+        if (scriptElement) {
+            const ll = Number(scriptElement.getAttribute('logLevel'))
+            if (isNaN(ll)) {
+                log(0, 'Uib:constructor', `Cannot set logLevel to "${scriptElement.getAttribute('logLevel')}". Defaults to 0 (error).`)()
+                this.logLevel = 0
+            } else this.logLevel = ll
+        }
+
         log('trace', 'Uib:constructor', 'Starting')()
 
         // Track whether the client is online or offline
