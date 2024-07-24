@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-07-04 12:01:10
+updated: 2024-07-21 15:44:10
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -125,6 +125,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 #### Maybe
 
 * `uib-custom` - Like `uib-element` but only using custom web components.
+* `uib-parse` - Use Cheerio or DOMParser to convert HTML to low-code JSON. [Ref](https://blog.apify.com/javascript-parse-html/). Could be extended to form the basis of automated no-/low-code -> HTML -> and back testing. Or for accessibility testing.
 
 ### Possible New Web Components
 
@@ -333,10 +334,12 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
 * Add DELAY and EXPIRY features.
+* Add ROUTE-specific caching. And route filtering
 * Output node.warn msg if recv input with no "Cache by" msg prop. (e.g. no msg.topic for default setting)
 * Add cache clear button to complement the cache clear control msg
 * Add optional page filter - a cache with a page filter will only send the cache if the replay request is from that page. Page filters need to allow a list of pages and ideally wildcards.
 * Allow send to client id - would need clientId to _socketId map to be maintained by uibuilder.
+* Document client-specific caching.
 * Add checks to prevent non-string cache by property values.
 * Add empty cache button.
 * Think about impact of a cache clear (affects all connected clients)
@@ -542,6 +545,8 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
   
 
+* Consider adding a template literal renderer. [Ref](https://github.com/WebReflection/hyperHTML/tree/master).
+
 * Add pre-config variable option. Allowing `window.uibConfig` as an object containing configuration settings. Adjust the start fn to look for it. Allow comms settings (e.g. turn off websocket or polling), pre-setup of managed uib variables, options to turn off "heavy" options such as the observers. Early loading of UI (e.g. from a JSON resource). Maybe early loading of dependency libraries?
 
 * Add client msg filter for URL Hash. To allow sending of data only to a specific router route.
@@ -596,7 +601,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 * Add a `jsonImport` option to the _ui `load` method. The `jsonImport` property being an object where the keys are variable names to load to and the values are the URL's to load the JSON from.
 
-* Add treeview formatting to syntaxHighlight. [ref](https://iamkate.com/code/tree-views/).
+* Add JSON treeview formatting to syntaxHighlight. [ref1](https://iamkate.com/code/tree-views/), [ref2](https://github.com/williamtroup/JsonTree.js).
 
 * Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change). `url` variable already added in preparation.
 
@@ -655,7 +660,8 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ### Library: `uibrouter.js` (FE router)
 
-* Option to auto-unload external route templates after use - for example, use with a library of markdown files to produce something similar to Obsidian. Will need change to doRoute to reload the template when needed
+* Check against [router](https://github.com/beforesemicolon/router?tab=readme-ov-file#page-route) for ideas.
+* Option to auto-unload external route templates after use - for example, use with a library of markdown files to produce something similar to Obsidian. Will need change to doRoute to reload the template when needed.
 * Add option to auto scroll to a css selector on route change.
 * Add a function to auto-rotate routes.
 * Add a function to go to next/previous route.
@@ -905,6 +911,8 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
   * Using the above to visually show available uibuilder fns with inputs and outputs.
 
 * Add optional TELEMETRY output (maybe linked to the log functions) - add mqtt endpoint to uibuilder settings.js (or maybe websocket?)
+
+* Extend optional attributes on the uibuilder script tag to override start options. Would reduce the need for custom `uibuilder.start(...)` when serving from odd web servers.
 
 ### Thoughts on JavaScript tabular data manipulation and visualisation
 

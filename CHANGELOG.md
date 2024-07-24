@@ -55,6 +55,16 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 * [ ] Amend to use same processors as the uib-topic?
 * [ ] Add ability to directly amend the tag's attributes.
+* [x] Add TABLE renderer
+* [x] Add LIST renderer
+* [x] Add Markdown rendered
+* [ ] New Example: Easy Updates
+  * [ ] Add uib-topic attrib examples
+* [ ] Update docs: 
+  * [ ] custom-components
+  * [ ] functions
+  * [ ] config-driven-ui
+  * [ ] easy-ui-updates
 
 ### **NEW FEATURE** Create package.json template for Node-RED projects
 
@@ -71,6 +81,7 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 ## To Do
 
 * Extend SVG example to download and save the svg from the gist
+* [ ] Check ui.js fns that are direct referenced in the fe lib for use of `this`. Change to use static vars if possible.
 * Update examples:
   * [ ] [started] Update text update example to include new `uib-topic` html attributes
   * [ ] Template Examples - remove old library example.
@@ -127,15 +138,33 @@ I will attempt to also trap a new project create to run the install if I can. Ot
   * [ ] ? Add uib-var processor?
 * `uib-topic` attribute processing
   * [ ] Allow msg.value - including for checkboxes (to avoid el.checked confusion)
+  * [ ] Add TABLE renderer
+  * [ ] Add LIST renderer
   * [ ] MAYBE: Allow msg.classes
   * [ ] MAYBE: Allow msg.styles
 * Documentation
   * [ ] Document `hasUibRouter` and other new functions.
   * [ ] document `ui-md-plugins` managed uib variable
+  * [ ] document `buildHtmlTable` fn
 
 ### FE `ui` library
 
 * [ ] document `ui-md-plugins` ui variable
+* [ ] document `buildHtmlTable` fn
+
+### `<uib-var>` custom HTML component
+
+* [ ] Amend to use same processors as the uib-topic?
+* [ ] Add ability to directly amend the tag's attributes.
+* [x] Add TABLE renderer
+* [x] Add LIST renderer
+* [ ] New Example: Easy UI Updates
+  * [ ] Add uib-topic attrib examples
+* [ ] Update docs: 
+  * [ ] custom-components
+  * [ ] functions
+  * [ ] config-driven-ui
+  * [ ] easy-ui-updates
 
 ### `uib-cache` node
 
@@ -255,26 +284,32 @@ Most of these changes will *not* impact most people but you should check through
 
 * Some tweaks to the documentation should make it a little easier to get started with. The menu and UX has also been tweeked. There are new pages covering easy UI updates, common design patterns, creating well-structured HTML pages, and troubleshooting.
 
-* You can now add a `uib-topic="mytopic"` attribute to _ANY_ HTML element. Doing so makes that element responsive to messages from Node-RED.
+* For anyone even vaguely comfortable with HTML:
   
-  For a message with the correct `msg.topic`. The `msg.payload` will replace the inner HTML of the element. `msg.attributes` will update corresponding element attributes. Making this now one of the easiest ways to define dynamic updates in your UI.
+  * You can now add a `uib-topic="mytopic"` attribute to _ANY_ HTML element. Doing so makes that element responsive to messages from Node-RED.
+    
+    For a message with the correct `msg.topic`. The `msg.payload` will replace the inner HTML of the element. `msg.attributes` will update corresponding element attributes. Making this now one of the easiest ways to define dynamic updates in your UI.
+
+  * The built-in `<uib-var>` web component has been updated to be able to directly output HTML _tables_ and _lists_, simply send the appropriate data & set the `type` attribute.
+  
+  * A new library example has been added to illustrate the different ways to easily update your web pages using this component and the `uib-topic` attribute.
+
+  * New built in *web components* which can be used in your HTML without the need for writing JavaScript
+    
+    *  `<uib-meta>` Display's facts about the current page such as its file size, when it was created and when it was last updated.
+    *  `<apply-template>` Takes the content of a `<template>` HTML tag and appends that content as children of itself. Allowing you to re-use standard, repeatable HTML without the need for JavaScript coding and without the need of sending potentially lengthy HTML from Node-RED every time it is needed.
+
+  * Lots of extensions and improvements to the `uibrouter` front-end routing library in this release:
+
+    * You can now define a set of external html files (that can include scripts and css just like routes) that are immediately loaded to the page. These can be defined in the initial router config when they will be loaded immediately (before routes) or can be manually loaded later. Use these for things like menu's or other fixed parts of the UI.
+    
+    * You can now define route content as Markdown instead of HTML. This makes Notion/Obsidian-like applications feasible using UIBUILDER.
+    
+    * You can now use Markdown-IT plugins to enhance your Markdown content.
+    
+    * You can start with an empty routing list to allow dynamic creation of routes later on.
 
 * The new node `uib-file-list` will produce a list of files from a uibuilder instance. It automatically adjusts to the currently served sub-folder and allows filtering. Use this for producing indexes and menus.
-
-* New built in *web components* which can be used in your HTML without the need for writing JavaScript
-  
-  *  `<uib-meta>` Display's facts about the current page such as its file size, when it was created and when it was last updated.
-  *  `<apply-template>` Takes the content of a `<template>` HTML tag and appends that content as children of itself. Allowing you to re-use standard, repeatable HTML without the need for JavaScript coding and without the need of sending potentially lengthy HTML from Node-RED every time it is needed.
-
-* Lots of extensions and improvements to the `uibrouter` front-end routing library in this release:
-
-  * You can now define a set of external html files (that can include scripts and css just like routes) that are immediately loaded to the page. These can be defined in the initial router config when they will be loaded immediately (before routes) or can be manually loaded later. Use these for things like menu's or other fixed parts of the UI.
-  
-  * You can now define route content as Markdown instead of HTML. This makes Notion/Obsidian-like applications feasible using UIBUILDER.
-  
-  * You can now use Markdown-IT plugins to enhance your Markdown content.
-  
-  * You can start with an empty routing list to allow dynamic creation of routes later on.
 
 * Markdown improvements.
   
@@ -291,6 +326,10 @@ Most of these changes will *not* impact most people but you should check through
   * Programmatic changes to input values or checked properties now trigger both the `input` and `changed` events - something that HTML normally doesn't do but can be important for data-driven web apps. For example, if using an `<output>` tag to show a combined or calculated input, changes via Node-RED will still update the values.
   * When using the `eventSend(event)` function on inputs whether inside or outside of a form, the returned values have been improved, especially for checkboxes and radio buttons.
 
+* File uploads from client browser to Node-RED are now enabled.
+  
+  When using a form on a page and using `<input type="file">`, if a file is selected by the client and the file is less than the size of the maximum message size, the file will be automatically uploaded to Node-RED when the form is submitted (assuming you use `uibuilder.eventSend(event)` to submit the form). The upload is a message with file details and the file itself as a buffer in `msg.payload`.
+
 * Security of the UIBUILDER repository on GitHub has been improved.
 
 * On the `uibuilder` node's "Core" tab, the info buttons bar has changed slightly.
@@ -298,6 +337,12 @@ Most of these changes will *not* impact most people but you should check through
   The "Docs" button has gone (it is still on the top of panel bar anyway) and been replaced by a new "Apps" button which shows a page *listing ALL uibuilder node instances along with their descriptions where provided*.
 
   Most of the UIBUILDER nodes have be given a bit of a refresh of their Editor configuration panels. This work is ongoing but should give a more consistent look and feel and make the panels rather more responsive. The layouts are starting to use more modern CSS features. The work isn't complete yet so there are still a few inconsistencies - for example, when you make the panel wider - but we are getting there.
+
+* UIBUILDER now has its own "hooks" feature. For now, these can be used for allowing/blocking or debugging messages. More hooks may be added.
+
+  By adding `uibuilder.hooks(...)` to Node-RED's `settings.js` and adding either of the functions `msgReceived` or `msgSending`, those functions will run when msgs are received from the client or about to be sent to the client respectively. Both functions need a return value of either `true` or `false`. `true` allows the msg through, `false` blocks the msg. You can also use the functions to alter the msg and, of course, to report on it to the Node-RED log. The functions receive `msg` and `node` as the arguments. So you can filter on the node's URL, socket id, client id, page name, etc.
+
+  As well as debugging or msg altering, you can use these to help with message filtering, especially useful as part of authentication and authorisation processes. And somewhat simpler to use than Socket.IO middleware (which is still available).
 
 * For front-end developers, there are many new functions added to the `uibuilder` front-end library. Some are standard utility functions such as fast but accurate number rounding or conversion of primitives into objects. Others simplify the use of the DOM.
 
@@ -313,7 +358,6 @@ Most of these changes will *not* impact most people but you should check through
 
 * New example flows: client-side code/Dynamic SVG - A rework of an example from the flows library showing how to overlay interactive lamp icons on an SVG plan backdrop. Turn on/off lights from the web and from Node-RED.
 * Updated example flows: Simple Flow - index.(html|js|css) can now be populated from a flow that uses uib-save. low-code/report-builder - The required Markdown-IT library is now auto-loaded from the Internet.
-* File uploads from client browser to Node-RED are enabled. When using a form on a page and using `<input type="file">`, if a file is selected by the client and the file is less than the size of the maximum message size, the file will be automatically uploaded to Node-RED when the form is submitted (assuming you use `uibuilder.eventSend(event)` to submit the form). The upload is a message with file details and the file itself as a buffer in `msg.payload`.
 
 ### General Changes
 
@@ -373,11 +417,15 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 
 ### uibuilder front-end library
 
-* **NEW FEATURE** - The library now actively monitors for `uib-topic` and `data-uib-topic` attributes on **ANY** HTML tag. Where present, a message listener is set up. Messages from Node-RED that match the topic will have their `msg.payload` inserted as the content of the tag (replacing any previous content) and any `msg.attributes` (key/value object) will add/replace attributes on the tag.
+* **BUG FIX** - `uib-topic` attribute processing was not working for routes added with `uib-router`. Now fixed.
+
+* **NEW FEATURE** - The library now actively monitors for `uib-topic` or `data-uib-topic` attributes on **ANY** HTML tag. Where present, a message listener is set up. Messages from Node-RED that match the topic will have their `msg.payload` inserted as the content of the tag (replacing any previous content) and any `msg.attributes` (key/value object) will add/replace attributes on the tag.
   
   Note however, that this uses the native HTML Mutation Observer API, when used on very large, complex pages and on a limited performance client device, this might occassionally cause performance issues. Therefore it will be made optional (but on by default as the code is quite efficient and should be unnoticeable in most cases).
 
   Use this feature as an alternative to using the `<uib-var>` custom web component.
+
+* **NEW FEATURE** - You can now set the library's `logLevel` using an attribute on the script link itself. E.g. `<script defer src="../uibuilder/uibuilder.iife.min.js" logLevel="2"></script>` - this lets you see what is happening in the library much earlier than previously possible.
 
 * **NEW Web Component** - `<uib-meta>` - display's the page's file created/updated timestamps and file size.
 
@@ -411,14 +459,16 @@ The `URL Output?` setting will change the output from a folder/file list to a re
   * `round(num, dp)` rounds a number to a set number of decimal places using a fast but accurate "commercial" format.
   * `urlJoin()` returns a string that joins all of the arguments with single `/` characters. The result will start with a leading `/` and end without one. If the arguments contain leading/trailing slashes, these are removed.
 
-* Improved handling of stand-alone input changes in the `eventSend` function. Previously, these may not have sent their new values on change events.
-
-* `eventSend()` extensively rewritten and refactored. Auto-naming of form elements has changed slightly. Now handles file, and checkbox inputs much better. Handles radio inputs a little better. Handling of inputs inside and outside of forms should now be a lot more consistent. File inputs are auto-uploaded.
+* Improvements to the `eventSend()` function:
+  * It has been extensively rewritten and refactored.
+  * Auto-naming of form elements has changed slightly.
+  * Handling of input values inside and outside of forms should now be a lot more consistent. Previously, these may not have sent their new values on change events & sometimes they didn't pick up a value at all.
+  * File inputs are auto-uploaded to Node-RED in separate messages (if they aren't too large, change the Socket.IO buffer size in settings.js if needed).
+  * Handles radio and checkbox inputs better.
   
-* File inputs submitted with `eventSend` now auto-upload the files in separate messages (if they aren't too large, change the Socket.IO buffer size in settings.js if needed).
 * Auto-load of the brand css (when no other CSS was loaded) has been removed. This could occasionally suffer from a race condition.
-* Markdown-IT plugins can now be used when using Markdown. See the new "Using Markdown" documentation page for details.
-* On first connection, Node-RED informs the client of the maximum allowed message size.
+* **Markdown-IT plugins** can now be used when using Markdown. See the new "Using Markdown" documentation page for details.
+* On first connection, Node-RED informs the client of the maximum allowed message size. This can be altered with the `uibuilder.socketOptions.maxHttpBufferSize` property in Node-RED's `settings.js` file.
 
 ### `ui` library
 
