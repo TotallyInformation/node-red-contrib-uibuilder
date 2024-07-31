@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-07-21 15:44:10
+updated: 2024-07-29 15:55:53
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -120,6 +120,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 * `uib-file-change` - Watches for changes to files for a specific uibuilder instance. Allow folder choice, filtering (via fast-glob). Triggers an output on-change. Output can be a folder/file list OR a URL list (or maybe both). Could then be used to simply reload any connected clients automatically, trigger backups or something else entirely.
 * `uib-ctrl` - route different types of control msgs to different output ports: `cache` ("client connect"), `network` ("client connect", "client disconnect"), `visibilty`, `routing` ("route change").
 * `uib-event` - Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance. May be helpful to some people to simplify flows without using lots of link nodes.
+* `uib-fe-event` - captures actual front-end events (e.g. custom events) and forwards them to Node-RED either as std or ctrl (?messages.
 * `uib-file-read` - Reads a file for a specific uibuilder instance. Allows, for example, the file to be passed to the FE for editing.
 
 #### Maybe

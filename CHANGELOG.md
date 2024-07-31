@@ -37,6 +37,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### Ideas
 
+* Consider adding 2nd parameter to `$` and `$$` to allow returning something other than the found element. [Ref](https://www.npmjs.com/package/x-ray#xrayurl-selectorfn) - e.g. `text`, `html`, `attributes`
 * Change runtime parameter passes of `uib` to `globalThis['ti-uibuilder'].uib`
 * Consider moving all handling of uib's package.json into a single lib. Only allow a single function to read/write/update
 * Add Vue-style dynamic attributes: [ref1](https://claude.ai/chat/0c494f54-758c-4f14-a8c7-90dbe6b2c5d7), [ref2](https://chatgpt.com/c/7b797547-4e7e-455d-927b-926de42171aa).
@@ -44,6 +45,9 @@ Please see the documentation for archived changelogs - a new archive is produced
 * Consider adding an Editor plugin that adds a sidebar tab to show: All uibuilder instances (with links to the node AND the page), All library and other standard endpoint references.
   * enableOnEdit (optional) If set to true, this tab will be accessible whilst the edit dialog is open. Default: false.
 * Consider adding a uibuilder custom library - [ref](https://github.com/node-red/node-red-library-file-store).
+
+### `uib-router` library
+
 
 ### `uibuilder` node
 
@@ -55,10 +59,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 * [ ] Amend to use same processors as the uib-topic?
 * [ ] Add ability to directly amend the tag's attributes.
-* [x] Add TABLE renderer
-* [x] Add LIST renderer
-* [x] Add Markdown rendered
-* [ ] New Example: Easy Updates
+* [x] New Example: Easy Updates
   * [ ] Add uib-topic attrib examples
 * [ ] Update docs: 
   * [ ] custom-components
@@ -82,6 +83,23 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 * Extend SVG example to download and save the svg from the gist
 * [ ] Check ui.js fns that are direct referenced in the fe lib for use of `this`. Change to use static vars if possible.
+* [ ] Use of `msg._client`
+  * [ ] Msgs from FE client
+    * [x] Check headers for:
+      * [x] FlowFuse auth
+      * [x] CloudFlare auth
+      * [x] Authelia auth
+    * [x] Create `msg._client` and populate with std props, add to output msg - for both std and ctrl msgs
+  * [ ] Msgs from node-red flows
+    * [ ] ??
+  * [ ] Msgs to FE client
+    * [ ] ??
+  * [ ] Example?
+  * [ ] Documentation
+    * [ ] Describe what headers are understood, where they come from.
+    * [ ] Describe `msg._client` properties
+    * [ ] How to block in/out client msgs based on `msg._client` - e.g. use of the new hooks.
+    * [ ] How to redirect un-auth web requests to login page
 * Update examples:
   * [ ] [started] Update text update example to include new `uib-topic` html attributes
   * [ ] Template Examples - remove old library example.
@@ -101,6 +119,9 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
 
 ### `uibrouter` FE library
+
+* breaking change - load external routes into `<template>` tags, default to load all external routes immediately (with flag to change)
+* Add optional attribute to `<script>` tags in routes. `runonce` or `data-runonce` will only ever be run once for a page load. Consider if `runload` and/or `runall` might also be useful.
 
 * [ ] ? Option to load route config from a file ?
 * [ ] Add md rendering to `loadOther`
@@ -267,7 +288,7 @@ Most of these changes will *not* impact most people but you should check through
   At least 1 person hit a race condition. [ref](https://discourse.nodered.org/t/uib-brand-css-sometimes-injected/78876). So this is best removed.
 
 * `jsdom` (using in the `uib-html` node) now tracks the latest releases again
- 
+
   Shouldn't be breaking at all but you might still want to review things since the new versions of `jsdom` are likely to have better available features. We were restricted to jsdom v21 previously as newer versions required node.js v18+.
 
 * `ejs` package removed
@@ -431,6 +452,8 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 
 * **NEW Web Component** - `<apply-template>` Takes the content of a `<template>` HTML tag and appends that content as children of itself. Allowing you to re-use standard, repeatable HTML without the need for JavaScript coding and without the need of sending potentially lengthy HTML from Node-RED every time it is needed.
 
+* **UPDATED Web Component** - `<uib-var>` now "table" and "list" output types to go with the existing "text", "html" and "markdown" types.
+
 * **NEW FUNCTIONS**
 
   * `Element.prototype.query(cssSelector)` and `Element.prototype.queryAll(cssSelector)` Similar to `$(cssSelector)` and `$$(cssSelector)` respectively. However, instead of searching the whole document, they search a sub-set of the document within the given element.
@@ -543,7 +566,7 @@ The `old-blank-client` template and all associated documentation has also been r
 ### Example Flows
 
 * `no-code-examples` - Updated to include dynamic script and css in the HTML passthrough example.
- 
+
 ### `uibuilder` node
 
 * **NEW** Previously, a link and button to edit front-end code using VScode would be shown if running on localhost. This has now been changed. There is a field on the Advanced tab that lets you set any URL for any IDE or Code Editor that supports them. In addition, as well as for localhost, uibuilder will try to give a reasonable guess for a remote VSCode edit session. Though there is a good chance you will need to set this up in VScode and adjust the link accordingly.
