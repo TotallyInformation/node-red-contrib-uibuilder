@@ -738,9 +738,10 @@ const Ui = class Ui {
      * If the selected element is a <template>, returns the first child element.
      * type {HTMLElement}
      * @param {string} cssSelector A CSS Selector that identifies the element to return
-     * @returns {HTMLElement|null} Selected HTML element or null
+     * @param {"el"|"text"|"html"|"attributes"|"attr"} [output] Optional. What type of output to return. Defaults to "el", the DOM element reference
+     * @returns {HTMLElement|string|InnerHTML|array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
      */
-    $(cssSelector) {
+    $(cssSelector, output) {
         /** @type {*} Some kind of HTML element */
         let el = Ui.doc.querySelector(cssSelector)
 
@@ -757,7 +758,41 @@ const Ui = class Ui {
             }
         }
 
-        return el
+        if (!output) output = 'el'
+        let out
+
+        try {
+            switch (output.toLowerCase()) {
+                case 'text': {
+                    out = el.innerText
+                    break
+                }
+
+                case 'html': {
+                    out = el.innerHTML
+                    break
+                }
+
+                case 'attr':
+                case 'attributes': {
+                    out = {}
+                    for (const attr of el.attributes) {
+                        out[attr.name] = attr.value
+                    }
+                    break
+                }
+
+                default: {
+                    out = el
+                    break
+                }
+            }
+        } catch (e) {
+            out = el
+            Ui.log(1, 'Uib:$', `Could not process output type "${output}" for CSS selector ${cssSelector}, returned the DOM element. ${e.message}`, e)()
+        }
+
+        return out
     }
 
     /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.

@@ -37,7 +37,6 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ### Ideas
 
-* Consider adding 2nd parameter to `$` and `$$` to allow returning something other than the found element. [Ref](https://www.npmjs.com/package/x-ray#xrayurl-selectorfn) - e.g. `text`, `html`, `attributes`
 * Change runtime parameter passes of `uib` to `globalThis['ti-uibuilder'].uib`
 * Consider moving all handling of uib's package.json into a single lib. Only allow a single function to read/write/update
 * Add Vue-style dynamic attributes: [ref1](https://claude.ai/chat/0c494f54-758c-4f14-a8c7-90dbe6b2c5d7), [ref2](https://chatgpt.com/c/7b797547-4e7e-455d-927b-926de42171aa).
@@ -320,6 +319,8 @@ Most of these changes will *not* impact most people but you should check through
     *  `<uib-meta>` Display's facts about the current page such as its file size, when it was created and when it was last updated.
     *  `<apply-template>` Takes the content of a `<template>` HTML tag and appends that content as children of itself. Allowing you to re-use standard, repeatable HTML without the need for JavaScript coding and without the need of sending potentially lengthy HTML from Node-RED every time it is needed.
 
+  * The `$` function now allows a second parameter to change the output. Previously the output would always be the DOM Element. Now you can return the inner text, inner HTML or a list of attributes of the element. e.g. `$('.myelement', 'text')`
+  
   * Lots of extensions and improvements to the `uibrouter` front-end routing library in this release:
 
     * You can now define a set of external html files (that can include scripts and css just like routes) that are immediately loaded to the page. These can be defined in the initial router config when they will be loaded immediately (before routes) or can be manually loaded later. Use these for things like menu's or other fixed parts of the UI.
@@ -437,6 +438,8 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 > Use with the front-end router library. Use this node to dynamically create a navigation menu or sidebar index for example.
 
 ### uibuilder front-end library
+
+* The `$` function now allows a second parameter to change the output. Previously the output would always be the DOM Element. Now you can return the inner text, inner HTML or a list of attributes of the element. e.g. `$('.myelement', 'text')`
 
 * **BUG FIX** - `uib-topic` attribute processing was not working for routes added with `uib-router`. Now fixed.
 
