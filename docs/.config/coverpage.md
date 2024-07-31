@@ -20,6 +20,6 @@ for Node-RED
 - Can integrate with existing web development workflows
 
 [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
-[Get Started](#uibuilder-documentation)
+[Get Started](about)
 [Quick Start](walkthrough1)
 
