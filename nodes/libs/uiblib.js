@@ -129,7 +129,7 @@ const UibLib = {
             this.setNodeStatus(node)
 
             // Let all the clients know we are closing down
-            sockets.sendToFe({ 'uibuilderCtrl': 'shutdown' }, node.url, uib.ioChannels.control)
+            sockets.sendToFe({ 'uibuilderCtrl': 'shutdown' }, node, uib.ioChannels.control)
 
             // Disconnect all Socket.IO clients for this node instance
             sockets.removeNS(node)

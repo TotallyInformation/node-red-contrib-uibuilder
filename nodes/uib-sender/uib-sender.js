@@ -70,7 +70,7 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
         const sockets = global['totallyInformationShared'].uibsockets
         msg._fromSender = true
         if ( global['totallyInformationShared'].uibsockets ) {
-            sockets.sendToFe(msg, this.url, sockets.uib.ioChannels.server)
+            sockets.sendToFe(msg, this, sockets.uib.ioChannels.server)
         }
     } else {
         // Use events to send msg to uibuilder front-end.

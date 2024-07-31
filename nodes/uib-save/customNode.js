@@ -111,7 +111,7 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
                             _ui: { 'method': 'reload' },
                             topic: 'uib-save reload'
                         },
-                        this.url,
+                        this,
                         'uiBuilder'
                     )
                 }
