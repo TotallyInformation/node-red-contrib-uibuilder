@@ -4,7 +4,7 @@ description: |
   UIBUILDER should generally be very stable and reliable since it sticks as closely as possible to standards.
   However, if something isn't working as expected, please start here to look for issues.
 created: 2024-06-20 15:17:49
-updated: 2024-07-21 15:52:17
+updated: 2024-08-06 17:21:15
 ---
 
 ## Software versions
@@ -51,8 +51,17 @@ In the browser, you may need to turn up the uibuilder client library logging. By
 If you are having issues with uibuilder nodes in the Node-RED editor, please open the dev console in the browser for that page as well. If you are running the browser on the same device as the Node-RED server (in a development envionment for example), the uibuilder nodes will output additional information.
 
 > [!TIP]
-> If you want to see what is happening in the uibuilder client library's startup processing, you can add a `logLevel` attribute to the script tag. E.g.:
-> ```
+> If you want to see what is happening in the uibuilder client library's startup processing, you can add a `logLevel` attribute to the script tag.
+>
+> For the IIFE client version:
+> 
+> ```html
 > <script defer src="../uibuilder/uibuilder.iife.min.js" logLevel="5"></script>
 > ```
+> Or for the ESM client version:
+> 
+> ```javascript
+> import '../uibuilder/uibuilder.iife.min.js?logLevel=5'
+> ```
+>
 > This will give a lot more information on your browser's developer tools console. This is mostly only useful for debugging the library itself. Note that you can only use numeric settings here.
