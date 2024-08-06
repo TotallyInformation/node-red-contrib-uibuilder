@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-07-07 16:06:35
+updated: 2024-08-06 17:15:58
 ---
 
 # Changelog
@@ -81,13 +81,13 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 ## To Do
 
 * Extend SVG example to download and save the svg from the gist
-* [ ] Check ui.js fns that are direct referenced in the fe lib for use of `this`. Change to use static vars if possible.
 * [ ] Use of `msg._client`
   * [ ] Msgs from FE client
     * [x] Check headers for:
       * [x] FlowFuse auth
       * [x] CloudFlare auth
       * [x] Authelia auth
+      * [x] Authentik auth
     * [x] Create `msg._client` and populate with std props, add to output msg - for both std and ctrl msgs
   * [ ] Msgs from node-red flows
     * [ ] ??
@@ -95,9 +95,9 @@ I will attempt to also trap a new project create to run the install if I can. Ot
     * [ ] ??
   * [ ] Example?
   * [ ] Documentation
-    * [ ] Describe what headers are understood, where they come from.
-    * [ ] Describe `msg._client` properties
-    * [ ] How to block in/out client msgs based on `msg._client` - e.g. use of the new hooks.
+    * [x] Describe what headers are understood, where they come from.
+    * [x] Describe `msg._client` properties
+    * [x] How to block in/out client msgs based on `msg._client` - e.g. use of the new hooks.
     * [ ] How to redirect un-auth web requests to login page
 * Update examples:
   * [ ] [started] Update text update example to include new `uib-topic` html attributes
@@ -300,36 +300,11 @@ Most of these changes will *not* impact most people but you should check through
 
 * The `uibuilder` node, no longer has the "*Show web view of source files (deploy before you can use it)*" option. The supporting external library was also removed. It never looked that good anyway. Please use the new `uib-file-list` node to produce a custom folder/file list and send to your own custom page.
 
+* Not really a breaking change but worth noting - if you use the Svelte template, that has been updated to use the latest versions of Svelte and Rollup. Those are both at least 2 major versions newer. In doing so, I had to replace a dev dependency and make changes to the config and npm scripts.
+
 ### 📌 Highlights
 
 * Some tweaks to the documentation should make it a little easier to get started with. The menu and UX has also been tweeked. There are new pages covering easy UI updates, common design patterns, creating well-structured HTML pages, and troubleshooting.
-
-* For anyone even vaguely comfortable with HTML:
-  
-  * You can now add a `uib-topic="mytopic"` attribute to _ANY_ HTML element. Doing so makes that element responsive to messages from Node-RED.
-    
-    For a message with the correct `msg.topic`. The `msg.payload` will replace the inner HTML of the element. `msg.attributes` will update corresponding element attributes. Making this now one of the easiest ways to define dynamic updates in your UI.
-
-  * The built-in `<uib-var>` web component has been updated to be able to directly output HTML _tables_ and _lists_, simply send the appropriate data & set the `type` attribute.
-  
-  * A new library example has been added to illustrate the different ways to easily update your web pages using this component and the `uib-topic` attribute.
-
-  * New built in *web components* which can be used in your HTML without the need for writing JavaScript
-    
-    *  `<uib-meta>` Display's facts about the current page such as its file size, when it was created and when it was last updated.
-    *  `<apply-template>` Takes the content of a `<template>` HTML tag and appends that content as children of itself. Allowing you to re-use standard, repeatable HTML without the need for JavaScript coding and without the need of sending potentially lengthy HTML from Node-RED every time it is needed.
-
-  * The `$` function now allows a second parameter to change the output. Previously the output would always be the DOM Element. Now you can return the inner text, inner HTML or a list of attributes of the element. e.g. `$('.myelement', 'text')`
-  
-  * Lots of extensions and improvements to the `uibrouter` front-end routing library in this release:
-
-    * You can now define a set of external html files (that can include scripts and css just like routes) that are immediately loaded to the page. These can be defined in the initial router config when they will be loaded immediately (before routes) or can be manually loaded later. Use these for things like menu's or other fixed parts of the UI.
-    
-    * You can now define route content as Markdown instead of HTML. This makes Notion/Obsidian-like applications feasible using UIBUILDER.
-    
-    * You can now use Markdown-IT plugins to enhance your Markdown content.
-    
-    * You can start with an empty routing list to allow dynamic creation of routes later on.
 
 * The new node `uib-file-list` will produce a list of files from a uibuilder instance. It automatically adjusts to the currently served sub-folder and allows filtering. Use this for producing indexes and menus.
 
@@ -366,12 +341,6 @@ Most of these changes will *not* impact most people but you should check through
 
   As well as debugging or msg altering, you can use these to help with message filtering, especially useful as part of authentication and authorisation processes. And somewhat simpler to use than Socket.IO middleware (which is still available).
 
-* For front-end developers, there are many new functions added to the `uibuilder` front-end library. Some are standard utility functions such as fast but accurate number rounding or conversion of primitives into objects. Others simplify the use of the DOM.
-
-* For node developers. New events are now available using `RED.events` that track the setup of uibuilder, the setup of each uibuilder node instance and node instance url renames.
-
-  This allows 3rd-party extensions to UIBUILDER to be more easily created. The events pass references to all of the information you might need. [New documentation also now available for contributors](dev/3rd-party-extensions.md) showing the various ways to easily build new content and features through custom nodes and web components.
-
 * Connection headers have been added to the client details that are shown on control messages and on standard messages if the uibuilder "Include msg._uib in standard msg output." advanced flag is turned on. These may be particularly useful if using 3rd-party identity (authentication and authorisation) tooling which may put validated data into custom headings. Note however that these are "connection" headers, ongoing communications between the clients and the server do not update the headers (not possible over websockets) but will be updated if the client reconnects or reloads.
 
 * Documentation improvements
@@ -379,7 +348,44 @@ Most of these changes will *not* impact most people but you should check through
   * There are lots of new and update pages to explore.
 
 * New example flows: client-side code/Dynamic SVG - A rework of an example from the flows library showing how to overlay interactive lamp icons on an SVG plan backdrop. Turn on/off lights from the web and from Node-RED.
+
 * Updated example flows: Simple Flow - index.(html|js|css) can now be populated from a flow that uses uib-save. low-code/report-builder - The required Markdown-IT library is now auto-loaded from the Internet.
+
+* For anyone even vaguely comfortable with HTML or front-end development:
+  
+  * You can now add a `uib-topic="mytopic"` attribute to _ANY_ HTML element. Doing so makes that element responsive to messages from Node-RED.
+    
+    For a message with the correct `msg.topic`. The `msg.payload` will replace the inner HTML of the element. `msg.attributes` will update corresponding element attributes. Making this now one of the easiest ways to define dynamic updates in your UI.
+
+  * The built-in `<uib-var>` web component has been updated to be able to directly output HTML _tables_ and _lists_, simply send the appropriate data & set the `type` attribute.
+  
+  * A new library example has been added to illustrate the different ways to easily update your web pages using this component and the `uib-topic` attribute.
+
+  * New built in *web components* which can be used in your HTML without the need for writing JavaScript
+    
+    *  `<uib-meta>` Display's facts about the current page such as its file size, when it was created and when it was last updated.
+    *  `<apply-template>` Takes the content of a `<template>` HTML tag and appends that content as children of itself. Allowing you to re-use standard, repeatable HTML without the need for JavaScript coding and without the need of sending potentially lengthy HTML from Node-RED every time it is needed.
+
+  * The `$` function now allows a second parameter to change the output. Previously the output would always be the DOM Element. Now you can return the inner text, inner HTML or a list of attributes of the element. e.g. `$('.myelement', 'text')`. Remember though that `$()` returns a DOM element by default so all DOM element API's are available, e.g. `$('#myid').dataset` will return all `data-*` attributes.
+  
+  * Lots of extensions and improvements to the `uibrouter` front-end routing library in this release:
+
+    * You can now define a set of external html files (that can include scripts and css just like routes) that are immediately loaded to the page. These can be defined in the initial router config when they will be loaded immediately (before routes) or can be manually loaded later. Use these for things like menu's or other fixed parts of the UI.
+    
+    * You can now define route content as Markdown instead of HTML. This makes Notion/Obsidian-like applications feasible using UIBUILDER.
+    
+    * You can now use Markdown-IT plugins to enhance your Markdown content.
+    
+    * You can start with an empty routing list to allow dynamic creation of routes later on.
+
+  * There are many new functions added to the `uibuilder` front-end library. Some are standard utility functions such as fast but accurate number rounding or conversion of primitives into objects. Others simplify the use of the DOM.
+
+  * Console logging level can now be set when loading the uibuilder client library. This allows the startup configuration of the library to be debugged.
+
+* For node developers
+  * New events are now available using `RED.events` that track the setup of uibuilder, the setup of each uibuilder node instance and node instance url renames.
+
+  This allows 3rd-party extensions to UIBUILDER to be more easily created. The events pass references to all of the information you might need. [New documentation also now available for contributors](dev/3rd-party-extensions.md) showing the various ways to easily build new content and features through custom nodes and web components.
 
 ### General Changes
 
@@ -449,7 +455,10 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 
   Use this feature as an alternative to using the `<uib-var>` custom web component.
 
-* **NEW FEATURE** - You can now set the library's `logLevel` using an attribute on the script link itself. E.g. `<script defer src="../uibuilder/uibuilder.iife.min.js" logLevel="2"></script>` - this lets you see what is happening in the library much earlier than previously possible.
+* **NEW FEATURE** - You can now set the library's `logLevel` using an attribute on the script link itself. This lets you see what is happening in the library much earlier than previously possible. Particularly useful for debugging library config and startup.
+  
+  For the IIFE library: `<script defer src="../uibuilder/uibuilder.iife.min.js" logLevel="2"></script>`
+  For the ESM library: `import '../uibuilder/uibuilder.iife.min.js?logLevel=2'`
 
 * **NEW Web Component** - `<uib-meta>` - display's the page's file created/updated timestamps and file size.
 
@@ -487,10 +496,11 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 
 * Improvements to the `eventSend()` function:
   * It has been extensively rewritten and refactored.
-  * Auto-naming of form elements has changed slightly.
+  * Auto-id'ing of form elements has changed slightly.
   * Handling of input values inside and outside of forms should now be a lot more consistent. Previously, these may not have sent their new values on change events & sometimes they didn't pick up a value at all.
-  * File inputs are auto-uploaded to Node-RED in separate messages (if they aren't too large, change the Socket.IO buffer size in settings.js if needed).
-  * Handles radio and checkbox inputs better.
+  * **File inputs are auto-uploaded to Node-RED in separate messages** (if they aren't too large, change the Socket.IO buffer size in settings.js if needed).
+  * Handles radio and checkbox inputs better. Will return both `value` and `checked` properties.
+  * Multi-select inputs now always return an array containing the selected options (could be an empty array).
   
 * Auto-load of the brand css (when no other CSS was loaded) has been removed. This could occasionally suffer from a race condition.
 * **Markdown-IT plugins** can now be used when using Markdown. See the new "Using Markdown" documentation page for details.
@@ -508,6 +518,8 @@ The `URL Output?` setting will change the output from a folder/file list to a re
 * Slot HTML content can now contain `<script>` tags that will be executed on load.
 
 * Programmatic changes to input values or checked properties now trigger both `input` and `changed` events. By default, the DOM will not trigger events except for actual user input. This makes it easy to use `<output>` tags for example that automatically update when inputs change.
+
+* The `$` function now allows a second parameter to change the output. Previously the output would always be the DOM Element. Now you can return the inner text, inner HTML or a list of attributes of the element. e.g. `$('.myelement', 'text')`.
 
 ### `uibrouter` front-end library
 
@@ -620,6 +632,10 @@ The `old-blank-client` template and all associated documentation has also been r
 ### `uib-sender` node
 
 * Changed custom event hander to `RED.events`.
+
+### uibuilder templates
+
+* Svelte template - Has been updated to use the latest versions of Svelte and Rollup. Those are both at least 2 major versions newer. In doing so, I had to replace a dev dependency and make changes to the config and npm scripts.
 
 ### `libs/socket.js` library
 
