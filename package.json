@@ -43,7 +43,7 @@
     "eslint-plugin-jsdoc": "^48.2.1",
     "eslint-plugin-n": "^16.0.1",
     "eslint-plugin-promise": "^6.0.0",
-    "eslint-plugin-sonarjs": "^0",
+    "eslint-plugin-sonarjs": "^1",
     "gulp": "^5.0.0",
     "gulp-clean-css": "^4.3.0",
     "gulp-esbuild": "^0.12.0",
