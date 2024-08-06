@@ -5040,11 +5040,77 @@
   var ApplyTemplate = _ApplyTemplate;
 
   // src/front-end-module/uibuilder.module.js
+  var import_meta = {};
   var version = "7.0.0-iife";
   var isMinified = !/param/.test(function(param) {
   });
-  var logLevel = 0;
-  var LOG_STYLES = {
+  function log() {
+    const args = Array.prototype.slice.call(arguments);
+    let level = args.shift();
+    let strLevel;
+    switch (level) {
+      case "trace":
+      case 5: {
+        if (log.level < 5) break;
+        level = 5;
+        strLevel = "trace";
+        break;
+      }
+      case "debug":
+      case 4: {
+        if (log.level < 4) break;
+        level = 4;
+        strLevel = "debug";
+        break;
+      }
+      case "log":
+      case 3: {
+        if (log.level < 3) break;
+        level = 3;
+        strLevel = "log";
+        break;
+      }
+      case "info":
+      case "":
+      case 2: {
+        if (log.level < 2) break;
+        level = 2;
+        strLevel = "info";
+        break;
+      }
+      case "warn":
+      case 1: {
+        if (log.level < 1) break;
+        level = 1;
+        strLevel = "warn";
+        break;
+      }
+      case "error":
+      case "err":
+      case 0: {
+        if (log.level < 0) break;
+        level = 0;
+        strLevel = "error";
+        break;
+      }
+      default: {
+        level = -1;
+        break;
+      }
+    }
+    if (strLevel === void 0) return function() {
+    };
+    const head = args.shift();
+    return Function.prototype.bind.call(
+      console[log.LOG_STYLES[strLevel].console],
+      console,
+      `%c${log.LOG_STYLES[strLevel].pre}${strLevel}%c [${head}]`,
+      `${log.LOG_STYLES.level} ${log.LOG_STYLES[strLevel].css}`,
+      `${log.LOG_STYLES.head} ${log.LOG_STYLES[strLevel].txtCss}`,
+      ...args
+    );
+  }
+  log.LOG_STYLES = {
     // 0
     error: {
       css: "background: red; color: black;",
@@ -5093,72 +5159,28 @@
     head: "font-weight:bold; font-style:italic;",
     level: "font-weight:bold; border-radius: 3px; padding: 2px 5px; display:inline-block;"
   };
-  function log() {
-    const args = Array.prototype.slice.call(arguments);
-    let level = args.shift();
-    let strLevel;
-    switch (level) {
-      case "trace":
-      case 5: {
-        if (logLevel < 5) break;
-        level = 5;
-        strLevel = "trace";
-        break;
-      }
-      case "debug":
-      case 4: {
-        if (logLevel < 4) break;
-        level = 4;
-        strLevel = "debug";
-        break;
-      }
-      case "log":
-      case 3: {
-        if (logLevel < 3) break;
-        level = 3;
-        strLevel = "log";
-        break;
-      }
-      case "info":
-      case "":
-      case 2: {
-        if (logLevel < 2) break;
-        level = 2;
-        strLevel = "info";
-        break;
-      }
-      case "warn":
-      case 1: {
-        if (logLevel < 1) break;
-        level = 1;
-        strLevel = "warn";
-        break;
-      }
-      case "error":
-      case "err":
-      case 0: {
-        if (logLevel < 0) break;
-        level = 0;
-        strLevel = "error";
-        break;
-      }
-      default: {
-        level = -1;
-        break;
-      }
-    }
-    if (strLevel === void 0) return function() {
-    };
-    const head = args.shift();
-    return Function.prototype.bind.call(
-      console[LOG_STYLES[strLevel].console],
-      console,
-      `%c${LOG_STYLES[strLevel].pre}${strLevel}%c [${head}]`,
-      `${LOG_STYLES.level} ${LOG_STYLES[strLevel].css}`,
-      `${LOG_STYLES.head} ${LOG_STYLES[strLevel].txtCss}`,
-      ...args
-    );
+  log.default = 0;
+  var ll;
+  try {
+    const scriptElement2 = document.currentScript;
+    ll = scriptElement2.getAttribute("logLevel");
+  } catch (e) {
   }
+  if (ll === void 0) {
+    try {
+      const url2 = new URL(import_meta.url).searchParams;
+      ll = url2.get("logLevel");
+    } catch (e) {
+    }
+  }
+  if (ll !== void 0) {
+    ll = Number(ll);
+    if (isNaN(ll)) {
+      console.warn(`[Uib:constructor] Cannot set logLevel to "${scriptElement.getAttribute("logLevel")}". Defaults to 0 (error).`);
+      log.default = 0;
+    } else log.default = ll;
+  }
+  log.level = log.default;
   function syntaxHighlight(json) {
     if (json === void 0) {
       json = '<span class="undefined">undefined</span>';
@@ -5499,14 +5521,6 @@
        * @param {HTMLElement} el HTML Element to add class(es) to
        */
       __publicField(this, "removeClass", _ui.removeClass);
-      const scriptElement = document.currentScript;
-      if (scriptElement) {
-        const ll = Number(scriptElement.getAttribute("logLevel"));
-        if (isNaN(ll)) {
-          log(0, "Uib:constructor", `Cannot set logLevel to "${scriptElement.getAttribute("logLevel")}". Defaults to 0 (error).`)();
-          this.logLevel = 0;
-        } else this.logLevel = ll;
-      }
       log("trace", "Uib:constructor", "Starting")();
       window.addEventListener("offline", (e) => {
         this.set("online", false);
@@ -5577,11 +5591,11 @@
     //#region ------- Getters and Setters ------- //
     // Change logging level dynamically (affects both console. and print.)
     set logLevel(level) {
-      logLevel = level;
-      console.log("%c\u2757 info%c [logLevel]", `${LOG_STYLES.level} ${LOG_STYLES.info.css}`, `${LOG_STYLES.head} ${LOG_STYLES.info.txtCss}`, `Set to ${level} (${LOG_STYLES.names[level]})`);
+      log.level = level;
+      console.log("%c\u2757 info%c [logLevel]", `${log.LOG_STYLES.level} ${log.LOG_STYLES.info.css}`, `${log.LOG_STYLES.head} ${log.LOG_STYLES.info.txtCss}`, `Set to ${level} (${log.LOG_STYLES.names[level]})`);
     }
     get logLevel() {
-      return logLevel;
+      return log.level;
     }
     get meta() {
       return _a._meta;
@@ -6342,13 +6356,26 @@
     getFormElementValue(el) {
       let value2 = null;
       let checked = null;
-      if (Object.prototype.hasOwnProperty.call(el, "value")) value2 = el.value;
-      if (Object.prototype.hasOwnProperty.call(el, "checked") || el.type === "checkbox" || el.type === "radio") {
-        value2 = checked = el.checked;
-        if (checked === false) value2 = "";
-      }
-      if (Object.prototype.hasOwnProperty.call(el, "valueAsNumber") && !isNaN(el.valueAsNumber)) {
-        value2 = el.valueAsNumber;
+      switch (el.type) {
+        case "checkbox":
+        case "radio": {
+          value2 = checked = el.checked;
+          break;
+        }
+        case "select-multiple": {
+          value2 = Array.from(el.selectedOptions).map((option) => option.value);
+          break;
+        }
+        default: {
+          if (el.value) value2 = el.value;
+          if (el.checked) {
+            value2 = checked = el.checked;
+          }
+          if (el.valueAsNumber && !isNaN(el.valueAsNumber)) {
+            value2 = el.valueAsNumber;
+          }
+          break;
+        }
       }
       return { value: value2, checked };
     }
@@ -6994,9 +7021,9 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
      * @param {string} txtToSend Text string to send
      * @param {string|undefined} logLevel Log level to use. If not supplied, will default to debug
      */
-    beaconLog(txtToSend, logLevel2) {
-      if (!logLevel2) logLevel2 = "debug";
-      navigator.sendBeacon("./_clientLog", `${logLevel2}::${txtToSend}`);
+    beaconLog(txtToSend, logLevel) {
+      if (!logLevel) logLevel = "debug";
+      navigator.sendBeacon("./_clientLog", `${logLevel}::${txtToSend}`);
     }
     /** Request the current page's metadata from the server - response is handled automatically in _ctrlMsgFromServer */
     getPageMeta() {

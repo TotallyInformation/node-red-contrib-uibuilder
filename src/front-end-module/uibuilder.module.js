@@ -46,20 +46,90 @@ const isMinified = !(/param/).test(function (param) { })
 
 //#region --- print/console - debugging output functions --- //
 
-/** Default log level - Error & Warn */
-// let logLevel = isMinified ? 0 : 1  // When using minified lib, assume production and only log errors otherwise also log warn
-let logLevel = 0
-// function changeLogLevel(level) {
-//     logLevel = level
-//     console.trace = logLevel < 4 ? function(){} : console.trace
-//     console.debug = logLevel < 2 ? function(){} : console.debug
-//     if ( logLevel < 1 ) {
-//         console.log = console.group = console.groupEnd =  function(){}
-//     }
-// }
+/** Custom logging. e.g. log(2, 'here:there', 'jiminy', {fred:'jim'})()
+ * @returns {Function} Log function @example log(2, 'here:there', 'jiminy', {fred:'jim'})()
+ */
+function log() {
+    // Get the args
+    const args = Array.prototype.slice.call(arguments)
 
-// Experimental
-const LOG_STYLES = {
+    // 1st arg is the log level/type
+    let level = args.shift()
+    let strLevel
+    switch (level) {
+        case 'trace':
+        case 5: {
+            if (log.level < 5) break
+            level = 5 // make sure level is numeric
+            strLevel = 'trace'
+            break
+        }
+
+        case 'debug':
+        case 4: {
+            if (log.level < 4) break
+            level = 4
+            strLevel = 'debug'
+            break
+        }
+
+        case 'log':
+        case 3: {
+            if (log.level < 3) break
+            level = 3
+            strLevel = 'log'
+            break
+        }
+
+        case 'info':
+        case '':
+        case 2: {
+            if (log.level < 2) break
+            level = 2
+            strLevel = 'info'
+            break
+        }
+
+        case 'warn':
+        case 1: {
+            if (log.level < 1) break
+            level = 1
+            strLevel = 'warn'
+            break
+        }
+
+        case 'error':
+        case 'err':
+        case 0: {
+            if (log.level < 0) break
+            level = 0
+            strLevel = 'error'
+            break
+        }
+
+        default: {
+            level = -1
+            break
+        }
+    }
+
+    // If set to something unknown, no log output
+    if (strLevel === undefined) return function () { }
+
+    // 2nd arg is a heading that will be colour highlighted
+    const head = args.shift()
+
+    // Bind back to console.log (could use console[strLevel] but some levels ignore some formatting, use console.xxx directly or dedicated fn)
+    return Function.prototype.bind.call(
+        console[log.LOG_STYLES[strLevel].console],
+        console,
+        `%c${log.LOG_STYLES[strLevel].pre}${strLevel}%c [${head}]`, `${log.LOG_STYLES.level} ${log.LOG_STYLES[strLevel].css}`, `${log.LOG_STYLES.head} ${log.LOG_STYLES[strLevel].txtCss}`,
+        ...args
+    )
+}
+
+// Nice console styling
+log.LOG_STYLES = {
     // 0
     error: {
         css: 'background: red; color: black;',
@@ -108,88 +178,39 @@ const LOG_STYLES = {
     head: 'font-weight:bold; font-style:italic;',
     level: 'font-weight:bold; border-radius: 3px; padding: 2px 5px; display:inline-block;',
 }
-/** Custom logging. e.g. log(2, 'here:there', 'jiminy', {fred:'jim'})()
- * @returns {Function} Log function @example log(2, 'here:there', 'jiminy', {fred:'jim'})()
- */
-function log() {
-    // Get the args
-    const args = Array.prototype.slice.call(arguments)
 
-    // 1st arg is the log level/type
-    let level = args.shift()
-    let strLevel
-    switch (level) {
-        case 'trace':
-        case 5: {
-            if (logLevel < 5) break
-            level = 5 // make sure level is numeric
-            strLevel = 'trace'
-            break
-        }
+/** Default log level - Error */
+log.default = 0
+let ll
 
-        case 'debug':
-        case 4: {
-            if (logLevel < 4) break
-            level = 4
-            strLevel = 'debug'
-            break
-        }
+// Check if the script element was found and get the data-log-level attribute (only numeric levels allowed here)
+try {
+    const scriptElement = document.currentScript
+    ll = scriptElement.getAttribute('logLevel')
+} catch (e) {}
 
-        case 'log':
-        case 3: {
-            if (logLevel < 3) break
-            level = 3
-            strLevel = 'log'
-            break
-        }
-
-        case 'info':
-        case '':
-        case 2: {
-            if (logLevel < 2) break
-            level = 2
-            strLevel = 'info'
-            break
-        }
-
-        case 'warn':
-        case 1: {
-            if (logLevel < 1) break
-            level = 1
-            strLevel = 'warn'
-            break
-        }
-
-        case 'error':
-        case 'err':
-        case 0: {
-            if (logLevel < 0) break
-            level = 0
-            strLevel = 'error'
-            break
-        }
-
-        default: {
-            level = -1
-            break
-        }
-
-    }
-
-    // If set to something unknown, no log output
-    if (strLevel === undefined) return function () { }
-
-    // 2nd arg is a heading that will be colour highlighted
-    const head = args.shift()
-
-    // Bind back to console.log (could use console[strLevel] but some levels ignore some formatting, use console.xxx directly or dedicated fn)
-    return Function.prototype.bind.call(
-        console[LOG_STYLES[strLevel].console],
-        console,
-        `%c${LOG_STYLES[strLevel].pre}${strLevel}%c [${head}]`, `${LOG_STYLES.level} ${LOG_STYLES[strLevel].css}`, `${LOG_STYLES.head} ${LOG_STYLES[strLevel].txtCss}`,
-        ...args
-    )
+// Otherwise check if the import url (for ESM only) has a logLevel query param
+if (ll === undefined) {
+    try {
+        const url = new URL(import.meta.url).searchParams
+        ll = url.get('logLevel')
+    } catch (e) {}
 }
+
+// If either found, check numeric and set default level if so
+if (ll !== undefined) {
+    ll = Number(ll)
+    if (isNaN(ll)) {
+        console.warn( `[Uib:constructor] Cannot set logLevel to "${scriptElement.getAttribute('logLevel')}". Defaults to 0 (error).`)
+        log.default = 0
+    } else log.default = ll
+}
+
+// Set current level to default
+log.level = log.default
+
+// log.default = isMinified ? 0 : 1  // When using minified lib, assume production and only log errors otherwise also log warn
+
 //#endregion
 
 /** A hack to dynamically load a remote module and wait until it is loaded
@@ -469,8 +490,8 @@ export const Uib = class Uib {
     //#region ------- Getters and Setters ------- //
 
     // Change logging level dynamically (affects both console. and print.)
-    set logLevel(level) { logLevel = level; console.log('%c❗ info%c [logLevel]', `${LOG_STYLES.level} ${LOG_STYLES.info.css}`, `${LOG_STYLES.head} ${LOG_STYLES.info.txtCss}`, `Set to ${level} (${LOG_STYLES.names[level]})`) /* changeLogLevel(level)*/ }
-    get logLevel() { return logLevel }
+    set logLevel(level) { log.level = level; console.log('%c❗ info%c [logLevel]', `${log.LOG_STYLES.level} ${log.LOG_STYLES.info.css}`, `${log.LOG_STYLES.head} ${log.LOG_STYLES.info.txtCss}`, `Set to ${level} (${log.LOG_STYLES.names[level]})`) /* changeLogLevel(level)*/ }
+    get logLevel() { return log.level }
 
     get meta() { return Uib._meta }
 
@@ -1411,18 +1432,36 @@ export const Uib = class Uib {
         let value = null
         let checked = null
 
-        if (Object.prototype.hasOwnProperty.call(el, 'value')) value = el.value
+        switch (el.type) {
+            case 'checkbox':
+            case 'radio': {
+                value = checked = el.checked
+                // HTML does not normally return any value if not checked but we do for ease of use,
+                break
+            }
 
-        if (Object.prototype.hasOwnProperty.call(el, 'checked') || el.type === 'checkbox' || el.type === 'radio' ) {
-            value = checked = el.checked
-            // HTML does not normally return any value if not checked,
-            // We will return an empty string
-            if (checked === false) value = ''
-        }
+            case 'select-multiple': {
+                // value = Array.from(el.selectedOptions).forEach( (sel) => sel.value )
+                value = Array.from(el.selectedOptions).map(option => option.value)
+                break
+            }
 
-        // If the value is a valid number, use that instead of the text version
-        if (Object.prototype.hasOwnProperty.call(el, 'valueAsNumber') && !isNaN(el.valueAsNumber)) {
-            value = el.valueAsNumber
+            default: {
+                if (el.value) value = el.value
+
+                // Probably not really needed
+                if (el.checked) {
+                    value = checked = el.checked
+                    // HTML does not normally return any value if not checked but we do for ease of use,
+                }
+
+                // If the value is a valid number, use that instead of the text version - probably only applies to range inputs
+                if (el.valueAsNumber && !isNaN(el.valueAsNumber)) {
+                    value = el.valueAsNumber
+                }
+
+                break
+            }
         }
 
         return { value, checked }
@@ -2877,16 +2916,6 @@ export const Uib = class Uib {
     //#region ------- Class construction & startup method -------- //
 
     constructor() {
-        const scriptElement = document.currentScript
-        // Check if the script element was found and get the data-log-level attribute
-        if (scriptElement) {
-            const ll = Number(scriptElement.getAttribute('logLevel'))
-            if (isNaN(ll)) {
-                log(0, 'Uib:constructor', `Cannot set logLevel to "${scriptElement.getAttribute('logLevel')}". Defaults to 0 (error).`)()
-                this.logLevel = 0
-            } else this.logLevel = ll
-        }
-
         log('trace', 'Uib:constructor', 'Starting')()
 
         // Track whether the client is online or offline
