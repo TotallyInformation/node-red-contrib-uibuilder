@@ -34,6 +34,9 @@ Please see the documentation for archived changelogs - a new archive is produced
      * [ ] URL drop-down width not consistent (check uib-update as this is correct)
 * Documentation
   * [ ] Document a dashboard-like grid layout.
+  * [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
+  * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
+
 
 ### Ideas
 
@@ -101,9 +104,9 @@ I will attempt to also trap a new project create to run the install if I can. Ot
     * [ ] How to redirect un-auth web requests to login page
 * Update examples:
   * [ ] [started] Update text update example to include new `uib-topic` html attributes
-  * [ ] Template Examples - remove old library example.
   * [ ] `uib-sender` - remove ref to uibuilderfe and update flows.
   * [ ] Navigation *menu* examples. 1x Router, 1x page.
+  * [x] Template Examples - remove old library example.
   * [x] uib-element tests
   * [x] **REMOVE** old client library example
   * [x] uib-save example
@@ -111,11 +114,6 @@ I will attempt to also trap a new project create to run the install if I can. Ot
   * [x] Client side/Dynamic SVG
   * [x] Low code/report builder
   * [x] Simple flow
-
-### Documentation
-
-* [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
-* [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
 
 ### `uibrouter` FE library
 
@@ -152,7 +150,7 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 ### FE Client library
 
-* [ ] eventSend: Add form file handling. Not sure how as yet, will delay.
+* [x] eventSend: Add form file handling. Not sure how as yet, will delay.
 * [ ] [STARTED] uib-attr process
   * [ ] Add processors for classes, styles, _ui. Need std innerHTML process to account for MD and sanitize.
   * [ ] ? Add uib-var processor?
