@@ -509,15 +509,16 @@ class UibSockets {
         if (headers['cf-access-authenticated-user-email']) authProvider = 'CloudFlare Access'
         else if (handshake.auth?.user?.userId) authProvider = 'FlowFuse'
         else if (headers['x-user-id']) authProvider = 'Keycloak'
+        else if (headers['x-authentik-uid']) authProvider = 'Authentik'
         else if (headers['remote-user'] || headers['x-remote-user']) authProvider = 'Custom'
         else if (headers['x-forwarded-user']) authProvider = 'Proxied Custom'
 
-        const userID = headers['cf-access-user'] || headers['cf-access-authenticated-user-email'] || handshake.auth?.user?.userId || headers['remote-user'] || headers['x-remote-user'] || headers['x-forwarded-user'] || headers['x-user-id'] || undefined
+        const userID = headers['cf-access-user'] || headers['cf-access-authenticated-user-email'] || handshake.auth?.user?.userId || headers['x-authentik-uid'] || headers['remote-user'] || headers['x-remote-user'] || headers['x-forwarded-user'] || headers['x-user-id'] || undefined
 
         // client._client is ONLY added for recognised authenticated clients
         if (authProvider !== undefined && userID !== undefined) {
-            const email = headers['cf-access-authenticated-user-email'] || headers['remote-email'] || headers['x-user-email'] || undefined
-            const name = headers['remote-name'] || headers['x-remote-name'] || handshake.auth?.user?.name
+            const email = headers['cf-access-authenticated-user-email'] || headers['x-authentik-email'] || headers['remote-email'] || headers['x-user-email'] || undefined
+            const name = headers['x-authentik-name'] || headers['remote-name'] || headers['x-remote-name'] || handshake.auth?.user?.name
             client._client = {
                 userId: userID,
                 socketId: socket.id,
@@ -529,6 +530,8 @@ class UibSockets {
                 name: name,
             }
             if (headers['x-forwarded-groups']) client._client.groups = headers['x-forwarded-groups']
+            if (headers['x-authentik-groups']) client._client.groups = headers['x-authentik-groups']
+            if (headers['x-authentik-username']) client._client.username = headers['x-authentik-username']
             if (headers['x-user-role']) client._client.role = headers['x-user-role']
             if (handshake.auth?.user?.image) client._client.image = handshake.auth.user.image
         }
