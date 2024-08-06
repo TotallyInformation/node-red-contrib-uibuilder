@@ -63,6 +63,7 @@
   * [Use Fn nodes to change msg._ui](how-to/function-node.md)
   * [Use the cache node](how-to/cache-node.md)
 * Security
+  * [Authenticated client properties](security/authenticated-client-properties.md "A standardised msg._client message property added to both UIBUILDER and Dashboard 2.0 outputs when an authenticated client is detected")
   * [Securing apps using NGINX](security/uib-security-nginx.md "How to use NGINX as a reverse proxy with TLS and identity authentication")
   * [Securing Data](security/securing-data.md "How to use flows and uibiulder middleware to secure your data")
   * [Securing uib web apps](security/security.md "Overview of general web app security with some specifics for Node-RED and UIBUILDER")
