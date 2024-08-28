@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2024-07-07 15:59:16
+updated: 2024-08-25 15:20:01
 ---
 
 Functions accessible in client-side user code.
@@ -311,6 +311,12 @@ See also [removeClass](#removeClass). Uses [`el.classList.add`](https://develope
 
 Note that if you want to _toggle_ a class on/off, use the HTML DOM: `$('#more').classList.toggle('myclass')`. See [MDN DOMTokenList/toggle](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/toggle) for details.
 
+### `buildHtmlTable(data)` - Builds an HTML table from an array (or object) of objects :id=buildHtmlTable
+
+The first row of data is also used to define the columns.
+
+If the data is an object of objects, the outer keys are used as row ID's (prefixed with "r-").
+
 ### `convertMarkdown(mdText)` - Convert's Markdown text input to HTML :id=convertMarkdown
 
 Returns an HTML string converted from the Markdown input text. Only if the Markdown-IT library is loaded, otherwise just returns the input text.
@@ -342,6 +348,40 @@ Notes:
 * The element has to exist on the page before it can be observed.
 * Turn on the optional `msg._uib` feature in the UIBUILDER node to see which client is sending the messages.
 * Due to the nature of the IntersectionObserver API, this fn is not available as a command for now.
+
+### `getElementAttributes(el)` - Returns an object containing attribute-name/value keypairs (or an empty object) :id=getElementAttributes
+
+`el` = Target element.
+
+Attempts to get target elements attributes. This can fail for certain target types, if so, returns empty object. Ignores `class`, `id` and `name` attributes.
+
+Returns an array of key/value HTML attribute objects.
+  
+### `getElementClasses(el)` - Checks for CSS Classes and return as array if found or undefined if not :id=getElementClasses
+
+`el` = Target element.
+
+Checks for CSS Classes and returns them as an array if found or undefined if not.
+
+### `getElementCustomProps(el)` - Returns an object containing an elements custom property/value pairs :id=getElementCustomProps
+
+An elements custom properties are those set using code that are not standard properties. Unlike an elements attributes, they can contain any valid JavaScript data.
+
+Excludes any properties that start with `_`.
+
+### `getFormElementDetails(el)` Returns an object containing the key properties of a form element :id=getFormElementDetails
+
+For HTML Form elements (e.g. input, textarea, select), returns the key properties/attributes such as `value` and `checked`.
+
+The details are quite comprehensive and are designed to level out some of the inconsistencies normally found in HTML inputs.
+
+This function is also used by the `uibuilder.eventSend(event)` function.
+
+### `getFormElementValue(el)` Check for el.value and el.checked, return as an object :id=getFormElementValue
+
+If found, `el.checked` will also set the `value` property in the returned object for ease of use.
+
+HTML only uses the `checked` property on 2 input types. Where it is used, the `value` property is not used. This inconsistency results in extra code or hard to find errors. This function therefore returns both properties where `checked` is used.
 
 ### `htmlSend()` - Sends the whole DOM/HTML back to Node-RED :id=htmlSend2
 
@@ -494,6 +534,10 @@ The [Markdown-IT](client-docs/readme#_2-markdown-it-converts-markdown-markup-int
 Will use [DOMPurify](client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) if that library has been loaded.
 
 Directly calls `_ui.replaceSlotMarkdown` from the `ui.js` library.
+
+### `returnElementId(el)` - Return elements existing ID or, add a new unique id to the element and return it :id=returnElementId
+
+Returns the element's existing ID. Or, if not present, attempts to create a page unique id from the name attribute or the attribute type. The last 2 will use a page-unique number to enforce uniqueness.
 
 ### `sanitiseHTML(htmlText)` - Ensures that input HTML text is safe :id=sanitiseHTML
 
@@ -755,6 +799,10 @@ The `opts` argument allows passing INTL number formatting options, for example: 
 > [!NOTE]
 > This function is compatible with the [`uib-var` web component's `filter` attribute](client-docs/custom-components#filter). e.g. `<uib-var topic="mytopic/#1" filter="uibuilder.formatNumber(2, 'de-DE')">[...]</uib-var>`
 
+### `hasUibRouter` - Returns true if a uibrouter instance is loaded, otherwise returns false :id=hasUibRouter
+
+Note that, because the router will be loaded in a page script, it is not available until AFTER the uibuilder library has loaded and socket.io initialised.
+
 ### `log` - output log messages like the library does :id=log
 
 Use as `uibuilder.log(1, 'my:prefix', 'Some text', {some:'optional data'})` which produces:
@@ -857,33 +905,40 @@ If examining the library code, please remember that functions starting with `_` 
 
 Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 
-* [`$`](#dollar) - Alias of `document.querySelect`
-* [`$$`](#dollar2) - Alias of `document.querySelectAll`
-* `$ui`§ - Reference to the ui.js library, not a function
-* [`addClass`](#addClass)§
-* [`applyTemplate`](#applyTemplate)§
-* [`arrayIntersect`](#arrayIntersect)
+* [`$`](#dollar) - Alias of `document.querySelect`.
+* [`$$`](#dollar2) - Alias of `document.querySelectAll`.
+* `$ui`§ - Reference to the ui.js library, not a function.
+* [`addClass`](#addClass)§ - Adds a class name to an HTML element.
+* [`applyTemplate`](#applyTemplate)§ - Applies `<template>` tag contents as appended children of the target.
+* [`arrayIntersect`](#arrayIntersect) - Return new array of the intersection of the 2 input arrays.
 * [`beaconLog`](#beaconLog)
-* [`cancelChange`](#cancelChange)
-* [`cancelTopic`](#cancelTopic)
+* [`buildHtmlTable`](#buildHtmlTable) - Create an HTML table from an array/object input.
+* [`cancelChange`](#cancelChange) - Cancel a managed variable event watcher.
+* [`cancelTopic`](#cancelTopic) - Cancel a topic event watcher.
 * [`clearHtmlCache`](#clearHtmlCache)
-* [`connect()`]() - Manually (re)connect Socket.IO communications between the browser and Node-RED
-* [`convertMarkdown`](#convertMarkdown)
+* [`connect()`]() - Manually (re)connect Socket.IO communications between the browser and Node-RED.
+* [`convertMarkdown`](#convertMarkdown) - Convert a Markdown string to HTML.
 * [`copyToClipboard`](#copyToClipboard)
 * [`elementExists`](#elementExists)*
-* ~~[`elementIsVisible`](#elementIsVisible)~~ - Temporarily deprecated
-* [`eventSend`](#eventSend)
-* [`formatNumber`](#formatNumber)
-* [`get`](#get)*
-* [`getManagedVarList`](#getManagedVarList)*
-* [`getPageMeta`](#getPageMeta)
+* ~~[`elementIsVisible`](#elementIsVisible)~~ - Temporarily deprecated.
+* [`eventSend`](#eventSend) - Returns standardised data to Node-RED. For form inputs or other events.
+* [`formatNumber`](#formatNumber) - Outputs a number as a formatted string.
+* [`get`](#get)* - Return the value of a managed variable.
+* [`getElementAttributes`](#getElementAttributes) - Return object containing attribute-name/value keypairs (or an empty object).
+* [`getElementClasses`](#getElementClasses) - Checks for CSS Classes and return as array if found or undefined if not.
+* [`getElementCustomProps`](#getElementCustomProps) - Return object containing an elements custom property/value pairs.
+* [`getFormElementDetails`](#getFormElementDetails) - Return object containing the key properties of a form element.
+* [`getFormElementValue`](#getFormElementValue) - Check for el.value and el.checked, return as an object.
+* [`getManagedVarList`](#getManagedVarList)* - Returns list of all managed variables.
+* [`getPageMeta`](#getPageMeta) - Asks the server for the created/update timestamps and size (in bytes) of the current page.
 * [`getStore`](#getStore)
-* [`getWatchedVars`](#getWatchedVars)*
-* [`htmlSend`](#htmlSend)*
+* [`getWatchedVars`](#getWatchedVars)* - Returns list of all managed variables.
+* [`hasUibRouter`](#hasUibRouter)
+* [`htmlSend`](#htmlSend)* - Sends the current page's full HTML back to Node-RED.
 * [`include`](#include)*
-* [`joinRoom(room)`](#joinRoom) - join an arbitrary socket.io room to receive messages from it
+* [`joinRoom(room)`](#joinRoom) - join an arbitrary socket.io room to receive messages from it.
 * [`keepHashFromUrl`](#keepHashFromUrl)
-* [`leaveRoom(room)`](#leaveRoom) - leave an arbitrary socket.io room to stop receiving messages from it
+* [`leaveRoom(room)`](#leaveRoom) - leave an arbitrary socket.io room to stop receiving messages from it.
 * [`loadScriptSrc`](#load)§
 * [`loadScriptTxt`](#load)§
 * [`loadStyleSrc`](#load)§
@@ -891,8 +946,8 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`loadui`](#loadui)§
 * [`log`](#log)
 * [`logToServer`](#logToServer)
-* [`makeMeAnObject`](#makeMeAnObject)
-* [`navigate`](#navigate)*
+* [`makeMeAnObject`](#makeMeAnObject) - Returns the input as an object.
+* [`navigate`](#navigate)* - Forces the browser to change URL.
 * [`notify`](#notify)
 * [`onChange`](#onChange)
 * [`onTopic`](#onTopic)
@@ -901,15 +956,16 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`replaceSlot`](#replaceSlot)§
 * [`replaceSlotMarkdown`](#replaceSlotMarkdown)§
 * [`restoreHtmlFromCache`](#restoreHtmlFromCache)
-* [`round`](#round)
-* [`sanitiseHTML`](#sanitiseHTML)
+* [`returnElementId`](#returnElementId) - Return elements existing ID or, add a new unique id to the element and return it.
+* [`round`](#round) - Rounds the input number to a given set of decimal places.
+* [`sanitiseHTML`](#sanitiseHTML) - Ensures that the input HTML is safe.
 * [`saveHtmlCache`](#savehtmlcache)
 * [`scrollTo`](#scrollTo)*
-* [`send`](#send)
-* [`sendCtrl`](#sendCtrl)
-* [`sendCustom`](#sendcustom)
-* [`sendRoom(room, msg)`](#sendRoom) - Send a message to an arbitrary socket.io room
-* [`set`](#set)*
+* [`send`](#send) - Sends a custom message back to Node-RED.
+* [`sendCtrl`](#sendCtrl) - Sends a control message back to Node-RED.
+* [`sendCustom`](#sendcustom) - Sends a message to a specified Socket.IO channel.
+* [`sendRoom(room, msg)`](#sendRoom) - Send a message to an arbitrary socket.io room.
+* [`set`](#set)* - Create/update a uibuilder managed variable.
 * [`setOriginator`](#setOriginator)
 * [`setPing`](#setPing)
 * [`setStore`](#setStore)
@@ -924,7 +980,7 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`uiGet`](#uiGet)*
 * [`uiWatch`](#uiWatch)*
 * ['uploadFile'](#uploadFile)
-* [`urlJoin`](#urlJoin) - Join arguments as a valid URL path string
+* [`urlJoin`](#urlJoin) - Join arguments as a valid URL path string.
 * [`watchDom`](#watchDom)
 * [`watchUrlHash`](#watchUrlHash)*
 
@@ -943,7 +999,7 @@ They will not be attached if there is a name clash to avoid issues with other li
 
 ### Extended HTML `Element` class methods :id=element-class-methods
 
-These are added to the prototype of the [`Element` built-in HTML class](https://developer.mozilla.org/en-US/docs/Web/API/Element). This enables them to be used in any case that returns an HTML object based on the `Element` class. For example, the `$(cssSelector)` function will return something useful such that `$('#custom-drag').on('wheel', (e) => console.log('wheel', e))` will add an event listener to the HTML element with an id of `custom-drag`.
+These are added to the prototype of the [`Element` built-in HTML class](https://developer.mozilla.org/en-US/docs/Web/API/Element). This enables them to be used in any case that returns an HTML object based on the `Element` class. For example, the `$(cssSelector)` function will return something useful such that `$('#custom-drag').on('wheel', (e) => console.log('wheel', e))` will add an event listener to the HTML element with an id of `custom-drag`. `$$(cssSelector)` will return an array of elements.
 
 > [!TIP]
 > SVG's and MathML elements also inherit from this class and so these utility functions will work on them as well.

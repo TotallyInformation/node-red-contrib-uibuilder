@@ -41,7 +41,7 @@
   * [Headings, text boxes, etc.](elements/other.md)
   * [HTML](elements/html.md)
   * [Lists](elements/lists.md)
-  * [Markdown](elements/Markdown.md)
+  * [Markdown](elements/markdown.md)
   * [Tables](elements/tables.md)
 * UI frameworks & builds
   * [Avoiding a build step](front-end-no-build.md)

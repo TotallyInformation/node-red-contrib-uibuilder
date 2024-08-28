@@ -3,7 +3,7 @@ title: Variables used in the modern client
 description: |
   Details about the variables used in the uibuilder modern front-end client library. Some variables are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2024-07-07 14:30:52
+updated: 2024-08-25 15:08:40
 ---
 
 ## Read/write
@@ -19,6 +19,8 @@ Always use `uibuilder.set('varname', value)` to change these.
   NOTE: It is preferable to set this via the specific function `uibuilder.setOriginator(...)`.
 
 * `topic` - Sets a default `msg.topic` that will be added to all outbound messages if nothing takes preference. Set to an empty string to turn it off.
+
+* `ui_md_plugins` - [Optional Markdown-IT plugins](client-docs/markdown?id=extending-markdown-it-with-plugins).
 
 ## Read only
 
