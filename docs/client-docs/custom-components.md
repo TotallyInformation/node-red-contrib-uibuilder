@@ -3,12 +3,20 @@ title: Custom web components
 description: |
   Web components built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2024-07-01 20:02:52
+updated: 2024-08-25 15:31:21
 ---
+
+The following custom web components are built into UIBUILDER:
+
+* [`<apply-template>`](#apply-template) - Apply the content of an HTML `<template>` to the UI without the need for JavaScript.
+* [`<uib-meta>`](#uib-meta) - Display page metadata such as the created/last-updated timestamp or size. Taken from the physical page file.
+* [`<uib-var>`](#uib-var) - Substitute dynamic data into the UI (similar to `{{varname}}` in frameworks).
+
+## Introduction
 
 UIBUILDER can work with front-end frameworks such as REACT, VueJS, etc. However, it does not need them. But one thing that these frameworks often have are collections of components that you can add to your HTML. Each component will produce something useful in your web page such as an information card, tabbed interface, navigation menu, etc.
 
-For more modern browsers though, there is an alternative to a framework and that is "[web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_Components)". These are a W3C international standard and they are defined using JavaScript. The [`uib-var`](#uib-var) & [`uib-meta`](#uib-meta) built-in components are examples of such components.
+For more modern browsers though, *there is an alternative to a framework and that is "[web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_Components)"*. These are a W3C international standard and they are defined using JavaScript. The [`uib-var`](#uib-var) & [`uib-meta`](#uib-meta) built-in components are examples of such components.
 
 To make use of a web component, all that is needed is to load it as a library. Web components are written as ES Modules (ESM). In this form, you can only use them with the ESM version of the uibuilder client library and they will need loading as an `import` statement in your module `index.js` just like the client library itself. (`uib-var` & `uib-meta` are loaded for you though, you don't have to do anything).
 
