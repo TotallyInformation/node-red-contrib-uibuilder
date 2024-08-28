@@ -139,3 +139,4 @@ package-lock.json
 #
 tmp/_*
 docs/docs.md
+docs/.config/doctest.md
