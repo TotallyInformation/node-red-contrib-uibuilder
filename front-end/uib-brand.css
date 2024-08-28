@@ -562,6 +562,11 @@ article {
     margin: 1rem var(--border-margin);
     background-color: var(--surface3);
 }
+article > h1::before {
+    font-size: 50%;
+    color: hsl( var(--failure-hue) 100% 50% );
+    content: "⛔ Do not use H1 headings in articles. "
+}
 article > h2, article > h3, article > h4 {
     margin-block-start: 0;
     border-bottom: 1px solid var(--text3);
