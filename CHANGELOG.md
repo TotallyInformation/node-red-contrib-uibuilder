@@ -10,6 +10,8 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## Can Wait
 
+* Extend SVG example to download and save the svg from the gist
+* [ ] NEW NODE: uib-component - like uib-element but auto-installs a web component library.
 * [ ] Add instance descriptions to the index pages
 * [ ] Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
 * [ ] uib-element forms need some serious TLC! checkbox, radio
@@ -36,6 +38,9 @@ Please see the documentation for archived changelogs - a new archive is produced
   * [ ] Document a dashboard-like grid layout.
   * [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
   * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
+  * [ ] "Islands" concept. [Ref.](https://docs.astro.build/en/concepts/islands/#a-brief-history).
+    
+    > The general idea of an “Islands” architecture is deceptively simple: render HTML pages on the server, and inject placeholders or slots around highly dynamic regions […] that can then be “hydrated” on the client into small self-contained widgets, reusing their server-rendered initial HTML.
 
 
 ### Ideas
@@ -47,79 +52,12 @@ Please see the documentation for archived changelogs - a new archive is produced
 * Consider adding an Editor plugin that adds a sidebar tab to show: All uibuilder instances (with links to the node AND the page), All library and other standard endpoint references.
   * enableOnEdit (optional) If set to true, this tab will be accessible whilst the edit dialog is open. Default: false.
 * Consider adding a uibuilder custom library - [ref](https://github.com/node-red/node-red-library-file-store).
+* gauge tiles - web component or new element? [ref](https://discourse.nodered.org/t/dashboard-2-beta-development/83550/133?u=totallyinformation)
 
-### `uib-router` library
-
-
-### `uibuilder` node
-
-* [ ] ?? Filter `clientId` and `pageName` using socket.io rooms?
-* [ ] On uibuilder Libraries tab: Major version updates are not listed - because of package.json version spec - need to update docs?
-* [ ] uibuilder.packages after an update does not contain the `outdated` prop for each package because the server only does a quick update and so does not call `npmOutdated` (from packge-mgt.js) on each package because it is async and quite slow. This may mean that update flags are not updated until the Editor is next reloaded which isn't ideal. Probably need to fix at some point.
-
-### `<uib-var>` custom HTML component
-
-* [ ] Amend to use same processors as the uib-topic?
-* [ ] Add ability to directly amend the tag's attributes.
-* [x] New Example: Easy Updates
-  * [ ] Add uib-topic attrib examples
-* [ ] Update docs: 
-  * [ ] custom-components
-  * [ ] functions
-  * [ ] config-driven-ui
-  * [ ] easy-ui-updates
-
-### **NEW FEATURE** Create package.json template for Node-RED projects
-
-[Reference](https://discourse.nodered.org/t/uibuilder-install-default-packages-when-creating-a-node-red-projects/88496/6?u=totallyinformation)
-
-An optional template package.json in `<uibRoot>/.config/projectPackage.json` where the `dependencies` are pre-requisite modules for new Node-RED projects.
-
-Initial thinking is that there will be a new but optional file in the <uibRoot>/.config/ folder, called something like projectPackage.json. It would be, I think a sub-set of a standard package.json A full package.json on 2nd thoughts so that it would be easy to copy/paste your current <uibRoot>/package.json. That will let you include a default version, description, etc if you wish along-side the dependencies.
-
-I will attempt to also trap a new project create to run the install if I can. Otherwise, it will display a notification for the user to run that manually. Not certain whether Node-RED will have to be restarted, I will try to avoid that but it might not be possible. Will have to test.
-
-
-
-## To Do
-
-* Extend SVG example to download and save the svg from the gist
-* [ ] Use of `msg._client`
-  * [ ] Msgs from FE client
-    * [x] Check headers for:
-      * [x] FlowFuse auth
-      * [x] CloudFlare auth
-      * [x] Authelia auth
-      * [x] Authentik auth
-    * [x] Create `msg._client` and populate with std props, add to output msg - for both std and ctrl msgs
-  * [ ] Msgs from node-red flows
-    * [ ] ??
-  * [ ] Msgs to FE client
-    * [ ] ??
-  * [ ] Example?
-  * [ ] Documentation
-    * [x] Describe what headers are understood, where they come from.
-    * [x] Describe `msg._client` properties
-    * [x] How to block in/out client msgs based on `msg._client` - e.g. use of the new hooks.
-    * [ ] How to redirect un-auth web requests to login page
-* Update examples:
-  * [ ] [started] Update text update example to include new `uib-topic` html attributes
-  * [ ] `uib-sender` - remove ref to uibuilderfe and update flows.
-  * [ ] Navigation *menu* examples. 1x Router, 1x page.
-  * [x] Template Examples - remove old library example.
-  * [x] uib-element tests
-  * [x] **REMOVE** old client library example
-  * [x] uib-save example
-  * [x] jQuery
-  * [x] Client side/Dynamic SVG
-  * [x] Low code/report builder
-  * [x] Simple flow
 
 ### `uibrouter` FE library
 
-* breaking change - load external routes into `<template>` tags, default to load all external routes immediately (with flag to change)
 * Add optional attribute to `<script>` tags in routes. `runonce` or `data-runonce` will only ever be run once for a page load. Consider if `runload` and/or `runall` might also be useful.
-
 * [ ] ? Option to load route config from a file ?
 * [ ] Add md rendering to `loadOther`
 * [ ] Allow config updates from Node-RED
@@ -145,38 +83,19 @@ I will attempt to also trap a new project create to run the install if I can. Ot
   * [ ] Make [this](https://discourse.nodered.org/t/urgent-regression/84197/15) and [this](https://discourse.nodered.org/t/uibuilder-front-end-routing-example/83319/9?u=totallyinformation) into some use-cases.
   * [ ] Update router config docs with new mdPlugins prop
   * [ ] Noting that if config.mdPlugins not set, uibuilder.ui_md_plugins may be used
-  * [ ] document `ui-md-plugins` router variable
 
 
-### FE Client library
+### `uibuilder` node
 
-* [x] eventSend: Add form file handling. Not sure how as yet, will delay.
-* [ ] [STARTED] uib-attr process
-  * [ ] Add processors for classes, styles, _ui. Need std innerHTML process to account for MD and sanitize.
-  * [ ] ? Add uib-var processor?
-* `uib-topic` attribute processing
-  * [ ] Allow msg.value - including for checkboxes (to avoid el.checked confusion)
-  * [ ] Add TABLE renderer
-  * [ ] Add LIST renderer
-  * [ ] MAYBE: Allow msg.classes
-  * [ ] MAYBE: Allow msg.styles
-* Documentation
-  * [ ] Document `hasUibRouter` and other new functions.
-  * [ ] document `ui-md-plugins` managed uib variable
-  * [ ] document `buildHtmlTable` fn
-
-### FE `ui` library
-
-* [ ] document `ui-md-plugins` ui variable
-* [ ] document `buildHtmlTable` fn
+* [ ] ?? Filter `clientId` and `pageName` using socket.io rooms?
+* [ ] On uibuilder Libraries tab: Major version updates are not listed - because of package.json version spec - need to update docs?
+* [ ] uibuilder.packages after an update does not contain the `outdated` prop for each package because the server only does a quick update and so does not call `npmOutdated` (from packge-mgt.js) on each package because it is async and quite slow. This may mean that update flags are not updated until the Editor is next reloaded which isn't ideal. Probably need to fix at some point.
 
 ### `<uib-var>` custom HTML component
 
 * [ ] Amend to use same processors as the uib-topic?
 * [ ] Add ability to directly amend the tag's attributes.
-* [x] Add TABLE renderer
-* [x] Add LIST renderer
-* [ ] New Example: Easy UI Updates
+* [x] New Example: Easy Updates
   * [ ] Add uib-topic attrib examples
 * [ ] Update docs: 
   * [ ] custom-components
@@ -184,20 +103,11 @@ I will attempt to also trap a new project create to run the install if I can. Ot
   * [ ] config-driven-ui
   * [ ] easy-ui-updates
 
-### `uib-cache` node
+### `uib-tag` node
 
-* Add cache replay filtering. Option flags need adding for control. Filter by:
-  * `routeId`
-  * `clientId`
-  * `pageName`
-* [ ] Document
-  * [ ] How to send cache on "route change" control msg - use a switch node before the cache
-  * [ ] How to ONLY send cache on "route change" control msg
-* [ ] Add processing for filters - use saved input on `_ui` or `_uib`, process if filter turned on
-* [ ] Add flag & filter for `routerId`
-* [ ] Add flag & filter for `clientId`
-* [ ] Add flag & filter for `pageName`
-* [ ] Add a msg property option to DELAY delivery on cache replay. Or maybe an option to output replay to 2nd port which would be more flexible. 2nd port could also avoid all the extra options since they could simply be a change node that adds the appropriate `msg._uib` property.
+* [ ] Add option for `routerId` - would ensure that the output only goes to the appropriate route.
+* [ ] Add option for `clientId` - would ensure that the output only goes to the appropriate client.
+* [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
 
 ### `uib-element` node
 
@@ -215,16 +125,86 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 * [ ] Add new type: `navigation menu` - to work with the router.
 * [ ] Add nav menu example, working with `uib-file-*` nodes.
 
-### `uib-tag` node
 
-* [ ] Add option for `routerId` - would ensure that the output only goes to the appropriate route.
-* [ ] Add option for `clientId` - would ensure that the output only goes to the appropriate client.
-* [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
+### `uib-cache` node
+
+* [ ] Add cache replay filtering. Option flags need adding for control. Filter by:
+  * [ ] `routeId`
+  * [ ] `clientId`
+  * [ ] `pageName`
+* [ ] Document
+  * [ ] How to send cache on "route change" control msg - use a switch node before the cache
+  * [ ] How to ONLY send cache on "route change" control msg
+* [ ] Add processing for filters - use saved input on `_ui` or `_uib`, process if filter turned on
+* [ ] Add a msg property option to DELAY delivery on cache replay. Or maybe an option to output replay to 2nd port which would be more flexible. 2nd port could also avoid all the extra options since they could simply be a change node that adds the appropriate `msg._uib` property.
 
 
-### Other
+### **NEW FEATURE** Create package.json template for Node-RED projects
 
-* gauge tiles - web component or new element? [ref](https://discourse.nodered.org/t/dashboard-2-beta-development/83550/133?u=totallyinformation)
+[Reference](https://discourse.nodered.org/t/uibuilder-install-default-packages-when-creating-a-node-red-projects/88496/6?u=totallyinformation)
+
+An optional template package.json in `<uibRoot>/.config/projectPackage.json` where the `dependencies` are pre-requisite modules for new Node-RED projects.
+
+Initial thinking is that there will be a new but optional file in the <uibRoot>/.config/ folder, called something like projectPackage.json. It would be, I think a sub-set of a standard package.json A full package.json on 2nd thoughts so that it would be easy to copy/paste your current <uibRoot>/package.json. That will let you include a default version, description, etc if you wish along-side the dependencies.
+
+I will attempt to also trap a new project create to run the install if I can. Otherwise, it will display a notification for the user to run that manually. Not certain whether Node-RED will have to be restarted, I will try to avoid that but it might not be possible. Will have to test.
+
+
+
+## To Do
+
+* [-] Use of `msg._client`
+  * [ ] Msgs from FE client
+    * [x] Check headers for:
+      * [x] FlowFuse auth
+      * [x] CloudFlare auth
+      * [x] Authelia auth
+      * [x] Authentik auth
+    * [x] Create `msg._client` and populate with std props, add to output msg - for both std and ctrl msgs
+  * [ ] Msgs from node-red flows
+    * [ ] ??
+  * [ ] Msgs to FE client
+    * [ ] ??
+  * [ ] Example?
+  * [ ] Documentation
+    * [x] Describe what headers are understood, where they come from.
+    * [x] Describe `msg._client` properties
+    * [x] How to block in/out client msgs based on `msg._client` - e.g. use of the new hooks.
+    * [ ] How to redirect un-auth web requests to login page
+* Update examples:
+  * [-] [started] Update text update example to include new `uib-topic` html attributes
+  * [ ] `uib-sender` - remove ref to uibuilderfe and update flows.
+  * [ ] Navigation *menu* examples. 1x Router, 1x page.
+  * [x] Template Examples - remove old library example.
+  * [x] uib-element tests
+  * [x] **REMOVE** old client library example
+  * [x] uib-save example
+  * [x] jQuery
+  * [x] Client side/Dynamic SVG
+  * [x] Low code/report builder
+  * [x] Simple flow
+
+### FE Client library
+
+* `uib-topic` attribute processing
+  * [ ] Need std innerHTML process to account for MD and sanitize. Align with `<uib-var>`
+  * [ ] Allow msg.value - including for checkboxes (to avoid el.checked confusion)
+  * [ ] Add TABLE renderer
+  * [ ] Add LIST renderer
+  * [ ] MAYBE: Allow msg.classes
+  * [ ] MAYBE: Allow msg.styles
+  * [ ] MAYBE: Allow msg._ui
+
+### `<uib-var>` custom HTML component
+
+* [ ] Amend to use same processors as the uib-topic?
+* [ ] Add ability to directly amend the tag's attributes.
+* [ ] New Example: Easy UI Updates
+  * [ ] Add uib-topic attrib examples
+* [ ] Update docs: 
+  * [ ] config-driven-ui
+  * [ ] easy-ui-updates
+
 
 
 ## Issues
@@ -485,6 +465,7 @@ The `URL Output?` setting will change the output from a folder/file list to a re
   * `getElementClasses(el)` Checks for CSS Classes and return as array if found or undefined if not.
   * `getElementCustomProps(el)` Returns an object containing custom element properties/values (or an empty object). Custom element properties are those set using code that are not standard properties.
   * `getFormElementDetails(el)` Returns an object containing the key properties of a form element such as `value` and `checked`.
+  * `getFormElementValue(el)` Check for el.value and el.checked. el.checked will also set the value return for ease of use.
   * `getPageMeta()` Asks the server for the created/update timestamps and size (in bytes) of the current page. The result from the server is set into the managed `pageMeta` variable. Also used by the new `<uib-meta>` web component.
   * `hasUibRouter()` Returns true if a uibrouter instance is loaded, otherwise returns false. Note that, because the router will be loaded in a page script, it is not available until AFTER the uibuilder library has loaded and socket.io initialised.
   * `makeMeAnObject(thing, property)` returns a valid JavaScript object if given a null or string as an input. `property` defaults to "payload" so that `uibuilder.makeMeAnObject("mystring")` will output `{payload: "mystring"}`.
@@ -557,6 +538,7 @@ The `old-blank-client` template and all associated documentation has also been r
 * **NEW** Styles
   * `::file-selector-button` added to the list of formatted buttons.
   * `header`, `footer`, and `section` given same basic reset as `main`. So they all have max width and are centered in window. However, the formatting is now restricted only to where they are direct children of `body`.
+  * `article > h1::before` Adds a warning not to use H1 tags in articles - only a single H1 tag should be used on a web page. Use H2, 3, or 4.
 
 * Amended Styles
   * `body` has been given a slightly darker/lighter background. `--surface1` instead of `--surface2` to improve general contrast slightly.
