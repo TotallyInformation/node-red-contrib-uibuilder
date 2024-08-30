@@ -367,6 +367,8 @@ The `old-blank-client` template and all associated documentation has also been r
   * `::file-selector-button` added to the list of formatted buttons.
   * `header`, `footer`, and `section` given same basic reset as `main`. So they all have max width and are centered in window. However, the formatting is now restricted only to where they are direct children of `body`.
   * `article > h1::before` Adds a warning not to use H1 tags in articles - only a single H1 tag should be used on a web page. Use H2, 3, or 4.
+  * `td hr` reduced margin for when you want to use an hr inside a table cell (mostly markdown).
+  * `td br` & `th br` increased top margin/line height. Mostly for Markdown tables where using paras might be difficult.
 
 * Amended Styles
   * `body` has been given a slightly darker/lighter background. `--surface1` instead of `--surface2` to improve general contrast slightly.

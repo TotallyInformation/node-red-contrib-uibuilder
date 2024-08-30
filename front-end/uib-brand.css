@@ -635,6 +635,18 @@ tbody tr:nth-child(even) {
     background-color: var(--surface3);
     background-blend-mode: lighten;
 }
+/* In case you want to use an hr in a table, reduced top/bottom margins */
+td hr {
+    margin-top:0.5em;
+    margin-bottom:0.5em;
+}
+/* Extra line spacing for <br> in tables, mainly for use in markdown */
+td br, th br {
+    display:block;
+    content:"";
+    margin-top:0.8em;
+    line-height:190%;
+}
 /*#endregion --- Tables --- */
 
 /*#region --- Forms --- */

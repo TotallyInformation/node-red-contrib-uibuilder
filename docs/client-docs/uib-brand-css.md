@@ -3,7 +3,7 @@ title: Documentation for the uibuilder standard CSS file
 description: |
   Details of the different styles and their usage.
 created: 2023-02-25 13:54:50
-updated: 2024-03-28 17:27:12
+updated: 2024-08-30 17:27:12
 ---
 
 This style sheet is light/dark adaptive and has a basic style reset for the most commonly used HTML tags.
@@ -334,7 +334,7 @@ I've tried to keep the resets to a minimum so that browsers can retain some pers
 
 You should make every effort **NEVER** to use fixed (e.g. pixel) sizing for any size measurements. Doing so, severely restricts the usefulness of your pages on different sized screens and gives a poor accessibility experience for users who need to adjust things (poor vision, etc).
 
-So always strive to use percentage, "em" or "rem" measurements.
+So always strive to use percentage, "em", "rem" or other appropriate _relative_ measurements. `px` or other absolute measures should very rarely be used.
 
 * Percentage (%) is often good for horizontal measurements. It may be useful vertically inside certain types of set sized containers.
 * "em" - Measures relative to the font size of the parent element.
