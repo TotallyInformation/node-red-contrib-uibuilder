@@ -146,7 +146,7 @@
         // outputLabels: ['HTML payload'],
         icon: 'font-awesome/fa-floppy-o',
         label: function () {
-            return this.name || this.url || moduleName
+            return this.name || this.url || 'choose uibuilder node'
         },
         paletteLabel: moduleName,
         category: uibuilder.paletteCategory,

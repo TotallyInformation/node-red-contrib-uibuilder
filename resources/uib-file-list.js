@@ -138,7 +138,7 @@
         outputLabels: ['Search output'],
         icon: 'font-awesome/fa-search',
         label: function () {
-            return this.name || this.url ? `Srch '${this.url}'` : undefined || moduleName
+            return this.name || this.url ? `Srch '${this.url}'` : undefined || 'choose uibuilder node'
         },
         paletteLabel: moduleName,
         category: uibuilder.paletteCategory,
