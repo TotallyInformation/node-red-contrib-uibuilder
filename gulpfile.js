@@ -770,22 +770,6 @@ function minifyBrandCSS(cb) {
 
 //#region ---- Build node panels ----
 
-/** Combine the parts of uib-sender.html */
-function buildPanelSender(cb) {
-    try {
-        src('src/editor/uib-sender/main.html')
-            .pipe(include())
-            .pipe(once())
-            .pipe(rename('uib-sender.html'))
-            .pipe(htmlmin({ collapseWhitespace: true, removeComments: true, minifyJS: true }))
-            .pipe(dest(`${nodeDest}/uib-sender/`))
-    } catch (e) {
-        console.error('buildPanelSender failed', e)
-    }
-
-    cb()
-}
-
 /** Build the uib-element panel */
 function buildPanelUibElement(cb) {
     try {
@@ -878,7 +862,7 @@ function buildPanelHTML(cb) {
 
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
 const buildme = parallel(
-    buildPanelSender,
+    // buildPanelSender,
     buildPanelUibElement,
     buildPanelUpdate,
     buildPanelTag,
@@ -924,7 +908,7 @@ function watchme(cb) {
     watch('src/front-end-module/uibrouter.js', parallel(buildUibRouterIIFE, buildUibRouterIIFEmin, buildUibRouterESM, buildUibRouterESMmin))
     watch('src/components/uib-var.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     watch(['src/front-end-module/ui.js'], parallel(packUiNode, packUiEsmMin, packUiEsm, packUiIIFEmin, packUiIIFE, packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
-    watch('src/editor/uib-sender/*', buildPanelSender)
+    // watch('src/editor/uib-sender/*', buildPanelSender)
     watch('src/editor/uib-element/*', buildPanelUibElement)
     watch('src/editor/uib-update/*', buildPanelUpdate)
     watch('src/editor/uib-tag/*', buildPanelTag)

@@ -1,0 +1,53 @@
+<script type="text/html" data-help-name="uib-sender">
+    <p>
+        An easy method of sending messages to your uibuilder front-end from anywhere in your flows 
+        and a method of easily getting a response back again.
+    </p>
+    <p>
+        See <a href="./uibuilder/techdocs/#/sender-node" target="_blank">Documentation: Using the sender node</a> for more detail.
+    </p>
+    
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt class="optional">payload <span class="property-type">string | buffer</span></dt>
+        <dd> Optionally, the payload of the message to send to all connected client browser tabs. </dd>
+    
+        <dt class="optional">topic <span class="property-type">string</span></dt>
+        <dd> Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
+    </dl>
+    
+    <h3>Outputs</h3>
+    <p>
+        If <code>Pass input msg to output?</code> is set, the input message is sent to the output.
+    </p>
+    <p>
+        If <code>Allow return messages?</code> is set, any message send from the matching uibuilder front-end app
+        and containing the right <code>_uib.originator</code> property is sent to the output.
+    </p>
+    
+    <h3>Node Settings</h3>
+    <dl class="message-properties">
+        <dt>URL <span class="property-type">string (dropdown)</span></dt>
+        <dd>An existing uibuilder node.</dd>
+    
+        <dt>Name <span class="property-type">string</span></dt>
+        <dd>A short description shown in the admin interface.</dd>
+    
+        <dt>Topic <span class="property-type">string</span></dt>
+        <dd>A topic name to use if the incoming msg does not contain one.</dd>
+    
+        <dt>Pass input msg to output? <span class="property-type">boolean</span></dt>
+        <dd>
+            If selected, an output port will appear and any input msg will be also delivered to the output.
+            This allows you to use the node in-line with a flow.
+        </dd>
+    
+        <dt>Allow return messages? <span class="property-type">boolean</span></dt>
+        <dd>
+            If selected, an output port will appear.
+            This allows you to get return messages back from your uibuilder front-end app.
+            When returning a message, include the <code>_uib.originator</code> property with a value of
+            the sender node's node ID. You can get that by sending a message through the sender node.
+        </dd>
+    </dl>    
+</script>
