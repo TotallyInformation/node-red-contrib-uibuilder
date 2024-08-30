@@ -44,73 +44,18 @@ const mod = {
 
 //#endregion ----- Module level variables ---- //
 
-//#region ----- Module-level support functions ----- //
-
-/** Build the output and send the msg (clone input msg and add _ui prop)
- * @param {*} msg The input or custom event msg data
- * @param {runtimeNode & uibElNode} node reference to node instance
+/** 1) Complete module definition for our Node. This is where things actually start.
+ * @param {runtimeRED} RED The Node-RED runtime object
  */
-function emitMsg(msg, node) {
-    if ( node._ui === undefined && node.passthrough === true) return
+function ModuleDefinition(RED) {
+    // As a module-level named function, it will inherit `mod` and other module-level variables
 
-    // Merge input msg and ._ui to create new output msg
-    const msg2 = {
-        ...msg,
-        ...{
-            _ui: node._ui,
-        }
-    }
+    // Save a reference to the RED runtime for convenience
+    mod.RED = RED
 
-    // Remove payload unless requested
-    if (node.passthrough !== true) delete msg2.payload
-
-    // Add default topic if defined and if not overridden by input msg
-    // NB: Needs to be unique if using uib-cache
-    if (!msg2.topic && node.topic !== '') msg2.topic = node.topic
-
-    node.send(msg2)
+    /** Register a new instance of the specified node type (2) */
+    RED.nodes.registerType(mod.nodeName, nodeInstance)
 }
-
-/** 3) Run whenever a node instance receives a new input msg
- * NOTE: `this` context is still the parent (nodeInstance).
- * See https://nodered.org/blog/2019/09/20/node-done
- * @param {object} msg The msg object received.
- * @param {Function} send Per msg send function, node-red v1+
- * @param {Function} done Per msg finish function, node-red v1+
- * @this {runtimeNode & uibElNode}
- */
-async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
-    const RED = mod.RED
-
-    // TODO: Accept cache-replay and cache-clear
-    // Is this a uib control msg? If so, ignore it since this is connected to uib via event handler
-    if ( msg.uibuilderCtrl ) {
-        // this.warn('Received a uibuilder control msg, ignoring')
-        done()
-        return
-    }
-
-    // If msg has _ui property - is it from the client? If so, remove it.
-    if (msg._ui && msg._ui.from && msg._ui.from === 'client') delete msg._ui
-
-    // Get all of the typed input values (in parallel)
-    await Promise.all([
-        getSource('parent', this, msg, RED),
-        getSource('elementId', this, msg, RED),
-        getSource('heading', this, msg, RED),
-        getSource('data', this, msg, RED), // contains core data
-        getSource('position', this, msg, RED),
-    ])
-
-    // Save the last input msg for replay to new client connections, creates/update this._ui
-    await buildUi(msg, this)
-
-    // Emit the list (sends to the matching uibuilder instance) or fwd to output depending on settings
-    emitMsg(msg, this)
-
-    // We are done
-    done()
-} // ----- end of inputMsgHandler ----- //
 
 /** 2) This is run when an actual instance of our node is committed to a flow
  * type {function(this:runtimeNode&senderNode, runtimeNodeConfig & senderNode):void}
@@ -166,9 +111,218 @@ function nodeInstance(config) {
     this.on('input', inputMsgHandler)
 } // ---- End of nodeInstance ---- //
 
+/** 3) Run whenever a node instance receives a new input msg
+ * NOTE: `this` context is still the parent (nodeInstance).
+ * See https://nodered.org/blog/2019/09/20/node-done
+ * @param {object} msg The msg object received.
+ * @param {Function} send Per msg send function, node-red v1+
+ * @param {Function} done Per msg finish function, node-red v1+
+ * @this {runtimeNode & uibElNode}
+ */
+async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
+    const RED = mod.RED
+
+    // TODO: Accept cache-replay and cache-clear
+    // Is this a uib control msg? If so, ignore it since this is connected to uib via event handler
+    if ( msg.uibuilderCtrl ) {
+        // this.warn('Received a uibuilder control msg, ignoring')
+        done()
+        return
+    }
+
+    // If msg has _ui property - is it from the client? If so, remove it.
+    if (msg._ui && msg._ui.from && msg._ui.from === 'client') delete msg._ui
+
+    // Get all of the typed input values (in parallel)
+    await Promise.all([
+        getSource('parent', this, msg, RED),
+        getSource('elementId', this, msg, RED),
+        getSource('heading', this, msg, RED),
+        getSource('data', this, msg, RED), // contains core data
+        getSource('position', this, msg, RED),
+    ])
+
+    // Save the last input msg for replay to new client connections, creates/update this._ui
+    await buildUi(msg, this)
+
+    // Emit the list (sends to the matching uibuilder instance) or fwd to output depending on settings
+    emitMsg(msg, this)
+
+    // We are done
+    done()
+} // ----- end of inputMsgHandler ----- //
+
+//#region ----- Module-level support functions ----- //
+
+/** Build the output and send the msg (clone input msg and add _ui prop)
+ * @param {*} msg The input or custom event msg data
+ * @param {runtimeNode & uibElNode} node reference to node instance
+ */
+function emitMsg(msg, node) {
+    if ( node._ui === undefined && node.passthrough === true) return
+
+    // Merge input msg and ._ui to create new output msg
+    const msg2 = {
+        ...msg,
+        ...{
+            _ui: node._ui,
+        }
+    }
+
+    // Remove payload unless requested
+    if (node.passthrough !== true) delete msg2.payload
+
+    // Add default topic if defined and if not overridden by input msg
+    // NB: Needs to be unique if using uib-cache
+    if (!msg2.topic && node.topic !== '') msg2.topic = node.topic
+
+    node.send(msg2)
+}
+
 //#endregion ----- Module-level support functions ----- //
 
 //#region ----- UI definition builders ----- //
+
+/** Create/update the _ui object and retain for replay
+ * @param {*} msg incoming msg
+ * @param {runtimeNode & uibElNode} node reference to node instance
+ */
+async function buildUi(msg, node) {
+
+    // Allow combination of msg._ui and this node allowing chaining of the nodes
+    if ( msg._ui ) {
+        if (!Array.isArray(msg._ui)) msg._ui = [msg._ui]
+        node._ui = msg._ui
+    } else node._ui = []
+
+    // If no mode specified, we assume the desire is to update (since a removal attempt with nothing to remove is safe)
+    // ! TODO This should be replace not update
+    if ( !msg.mode ) msg.mode = 'update'
+
+    // If mode is remove, then simply do that and return
+    if ( msg.mode === 'delete' || msg.mode === 'remove' ) {
+        if (!node.elementId) {
+            node.warn('[uib-element:buildUi] Cannot remove element as no HTML ID provided')
+            return
+        }
+
+        node._ui.push({
+            'method': 'removeAll',
+            'components': [
+                `#${node.elementId}`,
+            ]
+        })
+        return
+    }
+
+    // If no HMTL ID is specified & not deleting & type isn't "title", then always ADD
+    if (node.elementtype !== 'title' && !node.elementId) {
+        msg.mode = 'add'
+    }
+
+    // Otherwise ...
+
+    // Add the outer component which is always a div
+    node._ui.push({
+        'method': msg.mode === 'add' ? 'add' : 'replace',
+        'components': [],
+    } )
+    let parent = node._ui[node._ui.length - 1]
+
+    // Keep track of the next set of components to add to the hierarchy
+    // let nextComponents = node._ui[node._ui.length - 1].components
+    // TODO if heading, unshift new component object into nextComponents
+    // Get the component array for the actual element we are adding
+    // nextComponents = nextComponents[nextComponents.length - 1].components
+
+    // ! What type to process?
+    let err = ''
+    switch (node.elementtype) {
+        case 'article': {
+            parent = addDiv(parent, node)
+            parent = addHeading(parent, node)
+            err = buildArticle(node, msg, parent)
+            break
+        }
+
+        case 'list':
+        case 'ol':
+        case 'ul': {
+            parent = addDiv(parent, node)
+            parent = addHeading(parent, node)
+            err = buildUlOlList(node, msg, parent)
+            break
+        }
+
+        case 'dl': {
+            parent = addDiv(parent, node)
+            parent = addHeading(parent, node)
+            err = buildDlList(node, msg, parent)
+            break
+        }
+
+        case 'table': {
+            parent = addDiv(parent, node)
+            parent = addHeading(parent, node)
+            err = buildTable(node, msg, parent)
+            break
+        }
+
+        case 'sform': {
+            parent = addDiv(parent, node)
+            parent = addHeading(parent, node)
+            err = buildSForm(node, msg, parent)
+            break
+        }
+
+        case 'html': {
+            // parent = addDiv(parent, node)
+            // parent = addHeading(parent, node)
+            err = buildHTML(node, msg, parent, false)
+            break
+        }
+
+        case 'markdown': {
+            // parent = addDiv(parent, node)
+            // parent = addHeading(parent, node)
+            err = buildHTML(node, msg, parent, true)
+            break
+        }
+
+        case 'title': {
+            // In this case, we do not want a wrapping div
+            err = buildTitle(node, msg, parent)
+            break
+        }
+
+        case 'tr': {
+            err = buildTableRow(node, msg, parent)
+            break
+        }
+
+        case 'li': {
+            err = buildUlOlRow(node, msg, parent)
+            break
+        }
+
+        case 'tag': {
+            parent = addDiv(parent, node)
+            parent = addHeading(parent, node)
+            err = buildTag(node, msg, parent)
+            break
+        }
+
+        // Unknown type. Issue warning and exit
+        default: {
+            err = `Type "${node.elementtype}" is unknown. Cannot process.`
+            break
+        }
+    }
+
+    if (err.length > 0) {
+        node.error(err, node)
+    }
+} // -- end of buildUI -- //
 
 /** Build the UI config instructions for the ARTICLE element
  * @param {runtimeNode & uibElNode} node reference to node instance
@@ -215,7 +369,7 @@ function buildHTML(node, msg, parent, md = false) {
     // No wrapping div at this end - done in the client, so deal with parent/position here
     parent.components.push( {
         'id': node.elementId,
-        'type': node.elementtype,
+        'type': md === true ? 'div' : node.elementtype,
         'parent': node.parent,
         'position': node.position,
         'slot': md !== true ? data : undefined,
@@ -849,161 +1003,7 @@ function addHeading(parent, node) {
     return parent
 }
 
-/** Create/update the _ui object and retain for replay
- * @param {*} msg incoming msg
- * @param {runtimeNode & uibElNode} node reference to node instance
- */
-async function buildUi(msg, node) {
-
-    // Allow combination of msg._ui and this node allowing chaining of the nodes
-    if ( msg._ui ) {
-        if (!Array.isArray(msg._ui)) msg._ui = [msg._ui]
-        node._ui = msg._ui
-    } else node._ui = []
-
-    // If no mode specified, we assume the desire is to update (since a removal attempt with nothing to remove is safe)
-    // ! TODO This should be replace not update
-    if ( !msg.mode ) msg.mode = 'update'
-
-    // If mode is remove, then simply do that and return
-    if ( msg.mode === 'delete' || msg.mode === 'remove' ) {
-        if (!node.elementId) {
-            node.warn('[uib-element:buildUi] Cannot remove element as no HTML ID provided')
-            return
-        }
-
-        node._ui.push({
-            'method': 'removeAll',
-            'components': [
-                `#${node.elementId}`,
-            ]
-        })
-        return
-    }
-
-    // If no HMTL ID is specified & not deleting & type isn't "title", then always ADD
-    if (node.elementtype !== 'title' && !node.elementId) {
-        msg.mode = 'add'
-    }
-
-    // Otherwise ...
-
-    // Add the outer component which is always a div
-    node._ui.push({
-        'method': msg.mode === 'add' ? 'add' : 'replace',
-        'components': [],
-    } )
-    let parent = node._ui[node._ui.length - 1]
-
-    // Keep track of the next set of components to add to the hierarchy
-    // let nextComponents = node._ui[node._ui.length - 1].components
-    // TODO if heading, unshift new component object into nextComponents
-    // Get the component array for the actual element we are adding
-    // nextComponents = nextComponents[nextComponents.length - 1].components
-
-    // ! What type to process?
-    let err = ''
-    switch (node.elementtype) {
-        case 'article': {
-            parent = addDiv(parent, node)
-            parent = addHeading(parent, node)
-            err = buildArticle(node, msg, parent)
-            break
-        }
-
-        case 'list':
-        case 'ol':
-        case 'ul': {
-            parent = addDiv(parent, node)
-            parent = addHeading(parent, node)
-            err = buildUlOlList(node, msg, parent)
-            break
-        }
-
-        case 'dl': {
-            parent = addDiv(parent, node)
-            parent = addHeading(parent, node)
-            err = buildDlList(node, msg, parent)
-            break
-        }
-
-        case 'table': {
-            parent = addDiv(parent, node)
-            parent = addHeading(parent, node)
-            err = buildTable(node, msg, parent)
-            break
-        }
-
-        case 'sform': {
-            parent = addDiv(parent, node)
-            parent = addHeading(parent, node)
-            err = buildSForm(node, msg, parent)
-            break
-        }
-
-        case 'html': {
-            // parent = addDiv(parent, node)
-            // parent = addHeading(parent, node)
-            err = buildHTML(node, msg, parent, false)
-            break
-        }
-
-        case 'markdown': {
-            // parent = addDiv(parent, node)
-            // parent = addHeading(parent, node)
-            err = buildHTML(node, msg, parent, true)
-            break
-        }
-
-        case 'title': {
-            // In this case, we do not want a wrapping div
-            err = buildTitle(node, msg, parent)
-            break
-        }
-
-        case 'tr': {
-            err = buildTableRow(node, msg, parent)
-            break
-        }
-
-        case 'li': {
-            err = buildUlOlRow(node, msg, parent)
-            break
-        }
-
-        case 'tag': {
-            parent = addDiv(parent, node)
-            parent = addHeading(parent, node)
-            err = buildTag(node, msg, parent)
-            break
-        }
-
-        // Unknown type. Issue warning and exit
-        default: {
-            err = `Type "${node.elementtype}" is unknown. Cannot process.`
-            break
-        }
-    }
-
-    if (err.length > 0) {
-        node.error(err, node)
-    }
-} // -- end of buildUI -- //
-
 //#endregion ----- ui functions ----- //
-
-/** 1) Complete module definition for our Node. This is where things actually start.
- * @param {runtimeRED} RED The Node-RED runtime object
- */
-function ModuleDefinition(RED) {
-    // As a module-level named function, it will inherit `mod` and other module-level variables
-
-    // Save a reference to the RED runtime for convenience
-    mod.RED = RED
-
-    /** Register a new instance of the specified node type (2) */
-    RED.nodes.registerType(mod.nodeName, nodeInstance)
-}
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = ModuleDefinition
