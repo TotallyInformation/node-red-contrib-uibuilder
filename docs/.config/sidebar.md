@@ -80,9 +80,4 @@
 * Changes
   * [Live changelog <sup>🔗</sup>](changelog)
   * [Roadmap](roadmap/)
-  * [v6 Changelog](archived/CHANGELOG-v6)
-  * [v5 Changelog](archived/CHANGELOG-v5)
-  * [v3/4 changelog](archived/CHANGELOG-v3-v4)
-  * [v2 breaking changes](archived/v2-breaking-changes)
-  * [v2 changelog](archived/CHANGELOG-v2)
-  * [v1 changelog](archived/CHANGELOG-v1)
+  * [Archived changelogs](archived/changelog-archive.md)
