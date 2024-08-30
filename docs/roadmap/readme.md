@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-08-07 11:24:37
+updated: 2024-08-30 13:48:32
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -14,6 +14,37 @@ For more information about the future of UIBUILDER, please see the [Futures page
 ## In Progress
 
 To see what is currently being developed, please look at the "Unreleased" section of the [Changelog](changelog) for the latest branch. Anything else in this section is work-in-progress.
+
+* [-] Use of `msg._client`
+  * [ ] Msgs from FE client
+    * [x] Check headers for:
+      * [x] FlowFuse auth
+      * [x] CloudFlare auth
+      * [x] Authelia auth
+      * [x] Authentik auth
+    * [x] Create `msg._client` and populate with std props, add to output msg - for both std and ctrl msgs
+  * [ ] Msgs from node-red flows
+    * [ ] ??
+  * [ ] Msgs to FE client
+    * [ ] ??
+  * [ ] Example?
+  * [ ] Documentation
+    * [x] Describe what headers are understood, where they come from.
+    * [x] Describe `msg._client` properties
+    * [x] How to block in/out client msgs based on `msg._client` - e.g. use of the new hooks.
+    * [ ] How to redirect un-auth web requests to login page
+* Update examples:
+  * [-] [started] Update text update example to include new `uib-topic` html attributes
+  * [ ] `uib-sender` - remove ref to uibuilderfe and update flows.
+  * [ ] Navigation *menu* examples. 1x Router, 1x page.
+  * [x] Template Examples - remove old library example.
+  * [x] uib-element tests
+  * [x] **REMOVE** old client library example
+  * [x] uib-save example
+  * [x] jQuery
+  * [x] Client side/Dynamic SVG
+  * [x] Low code/report builder
+  * [x] Simple flow
 
 ### Comms
 * Socket.IO rooms. [ref](https://socket.io/docs/v4/rooms/) - Rooms can be used to filter messages for specific destinations (e.g. client or page id) or to create client-to-client comms.
@@ -81,17 +112,18 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 | Refactor / Node:                 | uibuilder | uib-cache | uib-element             | uib-file-list | uib-html | uib-save | uib-sender | uib-tag | uib-update | *uib-uplot*                         |
 | -------------------------------- | --------- | --------- | ----------------------- | ------------- | -------- | -------- | ---------- | ------- | ---------- | ----------------------------------- |
-| Ref ti-common.js/css             | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        |            | ✔️       | ✔️          |                                     |
-| Mv src editor.js to resources    | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        |            | ✔️       | ✔️          |                                     |
-| jQ Tooltips                      | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        |            | ✔️       | ✔️          |                                     |
+| Mv src editor.js to resources    | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        | ✔️          | ✔️       | ✔️          |                                     |
+| jQ Tooltips                      | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        | ✔️          | ✔️       | ✔️          |                                     |
 | rename template.html             | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        | ✔️          |         | ✔️          |                                     |
 | ==jQ TI class not id==           | ✔️         | ✔️         | ✔️                       |               |          | ✔️        |            |         |            |                                     |
-| Mv help to locales/en-US         | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        |            |         |            |                                     |
-| Remove build & src/editor folder | ✔️         | ✔️         | 🚫(templates need build) | ✔️             |          | ✔️        |            |         |            |                                     |
+| Mv help to locales/en-US         | ✔️         | ✔️         | ✔️                       | ✔️             |          | ✔️        | ✔️          |         |            |                                     |
+| Remove build & src/editor folder | ✔️         | ✔️         | 🚫(templates need build) | ✔️             |          | ✔️        | ✔️          |         |            |                                     |
 | checkbox's remove style          |           |           |                         | ✔️             |          |          |            |         |            |                                     |
 | Notes                            |           |           | mv combobox styles?     |               |          |          |            |         |            | check this for other needed updates |
 
 Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId].
+
+*Ref ti-common.js/css* - now moved to a plugin so only loaded once.
 
 ### Node Runtime Refactoring
 
@@ -108,6 +140,150 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 (1) https://github.com/ryanmcdermott/clean-code-javascript?tab=readme-ov-file#set-default-objects-with-objectassign
 
 ---
+
+## Can Wait for post v7.0.0
+
+These are things that ended up as possibilities in the v7.0.0 changelog but have been deferred. Will rationalise with the other lists here at some point.
+
+* Extend SVG example to download and save the svg from the gist
+* [ ] NEW NODE: uib-component - like uib-element but auto-installs a web component library.
+* [ ] Add instance descriptions to the index pages
+* [ ] Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
+* [ ] uib-element forms need some serious TLC! checkbox, radio
+* [ ] Add endpoint creation apis
+* [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
+* [ ] Enhance JSON viewing using my own interpretation of the [json-view](https://github.com/pgrabovets/json-view) library.
+* [ ] `ui.js` `applyTemplate` - Allow slot content to be changed.
+* [ ] Remove all tiEvents - swap to RED.events.
+  * [ ] uibuilder: function externalEvents
+  * [ ] uibuilder: this.on('close'
+  * [ ] uib-sender
+  * [ ] package.json
+* `uibuilder` node
+  * Editor panel
+    * [ ] Inputs on Files tab don't expand correctly
+    * [ ] Text in Template settings fieldset is fixed width
+* `uib-cache` node
+  * Editor panel
+    * [ ] Some inputs width not consistent
+* `uib-save` & `uib-file-list`
+  *  editor panels
+     * [ ] URL drop-down width not consistent (check uib-update as this is correct)
+* Documentation
+  * [ ] Document a dashboard-like grid layout.
+  * [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
+  * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
+  * [ ] "Islands" concept. [Ref.](https://docs.astro.build/en/concepts/islands/#a-brief-history).
+    
+    > The general idea of an “Islands” architecture is deceptively simple: render HTML pages on the server, and inject placeholders or slots around highly dynamic regions […] that can then be “hydrated” on the client into small self-contained widgets, reusing their server-rendered initial HTML.
+
+
+### Ideas
+
+* Change runtime parameter passes of `uib` to `globalThis['ti-uibuilder'].uib`
+* Consider moving all handling of uib's package.json into a single lib. Only allow a single function to read/write/update
+* Add Vue-style dynamic attributes: [ref1](https://claude.ai/chat/0c494f54-758c-4f14-a8c7-90dbe6b2c5d7), [ref2](https://chatgpt.com/c/7b797547-4e7e-455d-927b-926de42171aa).
+* Provide a common location and some standards to enable people to craft and share custom elements. Install using library mgr? Or as an NR plugin?
+* Consider adding an Editor plugin that adds a sidebar tab to show: All uibuilder instances (with links to the node AND the page), All library and other standard endpoint references.
+  * enableOnEdit (optional) If set to true, this tab will be accessible whilst the edit dialog is open. Default: false.
+* Consider adding a uibuilder custom library - [ref](https://github.com/node-red/node-red-library-file-store).
+* gauge tiles - web component or new element? [ref](https://discourse.nodered.org/t/dashboard-2-beta-development/83550/133?u=totallyinformation)
+* 
+
+
+### `uibrouter` FE library
+
+* Add optional attribute to `<script>` tags in routes. `runonce` or `data-runonce` will only ever be run once for a page load. Consider if `runload` and/or `runall` might also be useful.
+* [ ] ? Option to load route config from a file ?
+* [ ] Add md rendering to `loadOther`
+* [ ] Allow config updates from Node-RED
+* [ ] Add function that returns the route config schema
+
+* [ ] Add external command listeners for:
+  * [ ] `msg._uibRoute.load`. With the value being a route definition or an array of route definitions. (and update the eg flows)
+  * [ ] `msg._uibRoute.loadOther`
+  * [ ] `msg._uibRoute.rotate`
+  * [ ] `msg._uibRoute.next`
+  * [ ] `msg._uibRoute.previous`
+
+* [ ] Add `defaultRouteOnLoad` flag (default=false) to allow for dynamically added routes to have been pre-selected on page load.
+* [ ] Find a way to include a first-show marker if not unloading routes
+* [ ] Update router example (code changes, remove remote cmd example).
+* [ ] Route menu added from Node-RED not auto-highlighting.
+
+* [ ] Update documentation:
+  * [ ] Document how to use `<instanceRoot>/routes/` properly. [Ref](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/changelog?id=new-features)
+  * [ ] `templateUnload` and `templateLoadAll` flags.
+  * [ ] Remove doc for `unload` flag.
+  * [ ] Document the `unloadTemplate` and `deleteTemplates` methods.
+  * [ ] Make [this](https://discourse.nodered.org/t/urgent-regression/84197/15) and [this](https://discourse.nodered.org/t/uibuilder-front-end-routing-example/83319/9?u=totallyinformation) into some use-cases.
+  * [ ] Update router config docs with new mdPlugins prop
+  * [ ] Noting that if config.mdPlugins not set, uibuilder.ui_md_plugins may be used
+
+
+### `uibuilder` node
+
+* [ ] ?? Filter `clientId` and `pageName` using socket.io rooms?
+* [ ] On uibuilder Libraries tab: Major version updates are not listed - because of package.json version spec - need to update docs?
+* [ ] uibuilder.packages after an update does not contain the `outdated` prop for each package because the server only does a quick update and so does not call `npmOutdated` (from packge-mgt.js) on each package because it is async and quite slow. This may mean that update flags are not updated until the Editor is next reloaded which isn't ideal. Probably need to fix at some point.
+
+### `<uib-var>` custom HTML component
+
+* [ ] Amend to use same processors as the uib-topic?
+* [ ] Add ability to directly amend the tag's attributes.
+* [x] New Example: Easy Updates
+  * [ ] Add uib-topic attrib examples
+* [ ] Update docs: 
+  * [ ] custom-components
+  * [ ] functions
+  * [ ] config-driven-ui
+  * [ ] easy-ui-updates
+
+### `uib-tag` node
+
+* [ ] Add option for `routerId` - would ensure that the output only goes to the appropriate route.
+* [ ] Add option for `clientId` - would ensure that the output only goes to the appropriate client.
+* [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
+
+### `uib-element` node
+
+* [ ] Forms
+  * [ ] Add hidden error div with suitable id.  [ref](https://discourse.nodered.org/t/dynamic-config-dashboard/84531/31)
+  * [ ] Allow definition of error text.
+  * [ ] Forms assume only 1 per page (actually probably all the elements do?) - form inputs should have really unique id's.
+* [ ] Enhance List - [Ref](https://flows.nodered.org/node/node-red-node-ui-list)
+  * [ ] Custom icons
+  * [ ] Drag & Drop rearrange
+  * [ ] Action - Click, Button, checkbox, switch, drop (reorder)
+* [ ] Add option for `routerId` - would ensure that the output only goes to the appropriate route.
+* [ ] Add option for `clientId` - would ensure that the output only goes to the appropriate client.
+* [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
+* [ ] Add new type: `navigation menu` - to work with the router.
+* [ ] Add nav menu example, working with `uib-file-*` nodes.
+
+
+### `uib-cache` node
+
+* [ ] Add cache replay filtering. Option flags need adding for control. Filter by:
+  * [ ] `routeId`
+  * [ ] `clientId`
+  * [ ] `pageName`
+* [ ] Document
+  * [ ] How to send cache on "route change" control msg - use a switch node before the cache
+  * [ ] How to ONLY send cache on "route change" control msg
+* [ ] Add processing for filters - use saved input on `_ui` or `_uib`, process if filter turned on
+* [ ] Add a msg property option to DELAY delivery on cache replay. Or maybe an option to output replay to 2nd port which would be more flexible. 2nd port could also avoid all the extra options since they could simply be a change node that adds the appropriate `msg._uib` property.
+
+
+### **NEW FEATURE** Create package.json template for Node-RED projects
+
+[Reference](https://discourse.nodered.org/t/uibuilder-install-default-packages-when-creating-a-node-red-projects/88496/6?u=totallyinformation)
+
+An optional template package.json in `<uibRoot>/.config/projectPackage.json` where the `dependencies` are pre-requisite modules for new Node-RED projects.
+
+Initial thinking is that there will be a new but optional file in the <uibRoot>/.config/ folder, called something like projectPackage.json. It would be, I think a sub-set of a standard package.json A full package.json on 2nd thoughts so that it would be easy to copy/paste your current <uibRoot>/package.json. That will let you include a default version, description, etc if you wish along-side the dependencies.
+
+I will attempt to also trap a new project create to run the install if I can. Otherwise, it will display a notification for the user to run that manually. Not certain whether Node-RED will have to be restarted, I will try to avoid that but it might not be possible. Will have to test.
 
 ## Next - things that may be needed
 
@@ -133,6 +309,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 * `<include-fragment src="/tips">` [ref]([github/include-fragment-element: A client-side includes tag.](https://github.com/github/include-fragment-element/))
 * Light controller. With options for on/off, brightness and colour.
+* Pop-down menu. Icon & menu list that pops down when the icon is clicked. Icon defaults to a cog. Common use: configuration or control menu.
 
 ### General changes
 
@@ -534,6 +711,10 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 * Add `isNew` flag that indicates if a node instance has not yet been deployed. (e.g. new paste or import or drag from palatte)
 
+### uib-brand.css
+
+* Add nav menu formatting. include `header nav` & `aside nav` variants.
+
 ### Library: FE Client
 
 * [ ] [**STARTED**] Ability to visually show all uibuilder managed variables.
@@ -546,6 +727,8 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
   * [ ] [**STARTED**] (manual request is done) Send to Node-RED as a control msg (whole HTML or from a CSS Selector)
 
   
+
+* Add `getPages()` function - sends control msg to Node-RED to fetch all of the current folders & html files. Will allow menu's to be created. Consider adding a `createMenu(entries)` function as well which would create a nav menu.
 
 * Consider adding a template literal renderer. [Ref](https://github.com/WebReflection/hyperHTML/tree/master).
 
