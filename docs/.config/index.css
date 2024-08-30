@@ -321,3 +321,25 @@ figcaption::before {
     text-indent: 60px;
   }
   /*#endregion TOC */
+
+tr {
+  vertical-align: top;
+}
+
+/* Extra line spacing for <br>, mainly for use in markdown tables */
+br {
+    display:block;
+    content:"";
+    margin-top:0.8em;
+    line-height:190%;
+}
+
+/* In case you want to use an hr in a table, reduced top/bottom margins */
+td hr {
+  margin-top:0.5em;
+  margin-bottom:0.5em;
+}
+
+td ol {
+  padding-left: 0 !important;
+}
