@@ -3,28 +3,38 @@ title: About UIBUILDER for Node-RED
 description: |
   UIBUILDER provides tools for easily creating data-driven web applications using the Node-RED low-code programming platform.
 created: 2024-05-02 11:17:20
-updated: 2024-06-14 21:55:34
+updated: 2024-08-28 18:17:15
 ---
 
 ## What is it?
 
-Node-RED's Dashboard and UIBUILDER are both different approaches to the same use-case. How to present data to users in a web browser tab and get information back from them into Node-RED. Remembering that the users browser and the Node-RED server are completely different environments and may be on different devices.
+How can Node-RED be used to present data to users in a web browser tab and get information back from them? Remembering that the users browser and the Node-RED server are completely different environments and may be on different devices.
 
-We refer to this as a "data-driven web application".
+We refer to this as a "*data-driven web application*".
 
-UIBUILDER was created in order to provide Node-RED users with a flexible alternative to the Dashboard.
+UIBUILDER and Node-RED's Dashboard are both different approaches to this use-case.
 
-Dashboard is extremely simple to start using and great for doing relatively straight-forward UI's very quickly. However, if you want to do more complex things, you quickly hit the brick-wall that is common with many frameworks. Suddenly things go from being simple to very complex.
+> UIBUILDER's main purpose is **to be a foundation** on which you can build any web app or user interface and enhance that with data from Node-RED.
 
-UIBUILDER takes the opposite approach to Dashboard. Its main purpose is to be a foundation on which you can build whatever you like, however you like.
+It provides 2-way data communications between Node-RED and browser clients. Provides some scaffolding to make the creation and management of web pages easy, including the management of any dependencies.
 
-It does the complex background tasks for you and then gets out of the way.
+It helps minimise or eliminate the need for writing front-end code but where code is desired, provides helpers to make things simpler and smooth out the inconsistencies in HTML. But, for people or teams with even a little web development knowledge, it enhances existing web development workflows and supports existing tooling.
 
-Better still, it requires no complex frameworks, though it will work with them if required, but instead simply enhances native browser HTML, CSS and JavaScript capabilities and levels out some inconsistencies making things easier and more consistent to use.
+It *requires no complex frameworks*, though it will work with them if you wish. Instead it simply *enhances native browser HTML, CSS and JavaScript capabilities* and *levels out some inconsistencies* making things easier and more consistent to use.
 
-UIBUILDER is a bridge between the Node-RED server and any connected clients (web browser tabs). Each browser tab pointing at the same uibuilder instance is a client and you can have many clients running from 1 browser, 1 device/many browsers or different devices, or different users - however you like. It lets you filter communications by client ID, uibuilder url, page name, Socket ID, IP address, and browser tabs. So true multi-user applications can be built.
+> UIBUILDER is a bridge between the Node-RED server and any connected clients (web browser tabs).
+
+Each browser tab pointing at the same uibuilder instance is a client and you can have many clients running from 1 browser, 1 device/many browsers, many different devices, or different users - however you like. It lets you filter communications by client ID, uibuilder url, page name, Socket ID, IP address, and browser tabs. So true multi-user applications can be built. v7 also introduces support for the same authenticated client data as Dashboard 2.0.
 
 It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces. It utilises standard HTML/CSS and is not a framework. You can use it with a front-end framework if you like, but in many cases you won't need one.
+
+> UIBUILDER provides Node-RED users with a flexible alternative to the Dashboard.
+
+Dashboard was extremely simple to start using and great for doing relatively straight-forward UI's very quickly. However, if you want to do more complex things, you may quickly hit the brick-wall that is common with many frameworks. Suddenly things can go from being simple to very complex.
+
+UIBUILDER simply does the complex background tasks for you and then gets out of the way.
+> [!TIP]
+> You can compare the main features of uibuilder with those of Dashboard 2.0 in the [Comparison with Dashboard 2](using/compare-d2.md) document.
 
 ## What are the main features?
 
