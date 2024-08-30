@@ -1,13 +1,14 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-08-30 17:05:35
+updated: 2024-08-30 17:39:34
 ---
 
 # Changelog
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
+* `uib-element` allow the outer tag to be anything, not just `div`, also allow attributes to be set.
 
 ### FE Client library
 
@@ -33,6 +34,8 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 
 ## Current Issues
+
+* In the uibuilder node, advanced settings, if you change the URL (name), the Code Editor URL does NOT change. You have to change it manually. This will be fixed in a future release.
 
 ### "Outdated" dependencies (Resolved)
 
@@ -431,6 +434,8 @@ The `old-blank-client` template and all associated documentation has also been r
   
   * Added class names to body cells (`r1 c1`, etc) & body rows (`r1`). Note that these class identifiers will get out of step if dynamic updates are made to the table.
   * Added `id` to table `${divId}-table`
+
+* **FIXED** Markdown output was being wrapped in a `<markdown>` tag which should have been a `<div>` tag. Now fixed.
 
 ### `uib-save` node
 
