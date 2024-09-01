@@ -15,6 +15,8 @@ For more information about the future of UIBUILDER, please see the [Futures page
 
 To see what is currently being developed, please look at the "Unreleased" section of the [Changelog](changelog) for the latest branch. Anything else in this section is work-in-progress.
 
+* Re-work eslint - use uibuilder-web-components-node as the new reference. To get rid of the crazy issues introduced by the latest version of eslint which is NOT backwards compatible and has conflicts still with add-ons - and the eslint cli install doesn't even install the latest version!
+  
 * [-] FE: `moveElement`
   * [ ] Finish coding in ui.js
   * [ ] Add reference to client library

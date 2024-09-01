@@ -26,6 +26,7 @@ Make sure version numbers are correct and aligned:
 
 ## 03) Do a final commit & push to the dev branch
 
+* Do a final `npm outdated` check.
 * Check DeepScan results and resolve any issues.
 
 ## 04) Merge GitHub dev branch to main
