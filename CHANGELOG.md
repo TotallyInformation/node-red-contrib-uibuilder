@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-08-30 17:39:34
+updated: 2024-09-01 16:52:21
 ---
 
 # Changelog
@@ -28,9 +28,13 @@ The following are only used for _**developing**_ UIBUILDER:
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.0...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.1...main)
 
 Nothing currently.
+
+## [v7.0.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.1...v7.0.0)
+
+Bug fix only. New optional hooks failing if not present in settings.js.
 
 ## [v7.0.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.0...v6.8.2)
 

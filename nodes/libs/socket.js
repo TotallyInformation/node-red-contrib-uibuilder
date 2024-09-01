@@ -332,16 +332,16 @@ class UibSockets {
         const RED = this.RED
         let out = true
 
-        if (RED?.settings?.uibuilder?.hooks[hookName]) {
-            const hook = RED.settings.uibuilder.hooks[hookName]
-            if (typeof hook === 'function') {
-                try {
-                    out = RED.settings.uibuilder.hooks[hookName](data)
-                } catch (e) {
-                    this.log.warn(`[uibuilder:socket:hooks] Could not run 'uibuilder.hooks.${hookName}' hook in settings.js. ${e.message}`, { e, data })
-                    // this.log.debug(`[uibuilder:socket:hooks:${hookName}] \n ${inspect(data)}`)
-                    // console.warn(`[uibuilder:socket:hooks:${hookName}]`, { data })
-                }
+        if (!RED?.settings?.uibuilder?.hooks?.[hookName]) return
+
+        const hook = RED.settings.uibuilder.hooks[hookName]
+        if (typeof hook === 'function') {
+            try {
+                out = RED.settings.uibuilder.hooks[hookName](data)
+            } catch (e) {
+                this.log.warn(`[uibuilder:socket:hooks] Could not run 'uibuilder.hooks.${hookName}' hook in settings.js. ${e.message}`, { e, data })
+                // this.log.debug(`[uibuilder:socket:hooks:${hookName}] \n ${inspect(data)}`)
+                // console.warn(`[uibuilder:socket:hooks:${hookName}]`, { data })
             }
         }
 
