@@ -26,9 +26,12 @@ Make sure version numbers are correct and aligned:
 
 ## 03) Do a final commit & push to the dev branch
 
+* Check DeepScan results and resolve any issues.
+
 ## 04) Merge GitHub dev branch to main
 
-Do a pull request, dev branch to main.
+* Do a pull request, dev branch to main.
+* If any conflicts, do `git merge main` on VSCode command line (in the dev branch).
 
 Remember to switch branches in VS Code before continuing.
 
