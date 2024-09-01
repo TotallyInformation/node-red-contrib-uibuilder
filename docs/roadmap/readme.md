@@ -154,7 +154,7 @@ These are things that ended up as possibilities in the v7.0.0 changelog but have
 * FE: Create a **`moveElement`** function that moves an element from 1 place to another. [Ref](https://chatgpt.com/share/872cede6-2fd6-44b2-891b-a152a0798c77).
 * Transfer the formats from the dashboard layout example to uib-brand.css
 * Look at the uib-router menu handling js and copy to FE.
-* **Collapsible list**: Either built-in class/js or a web component. [Ref](https://chatgpt.com/share/e32ce7f8-7b86-45e7-ae9d-69d167c37a14).
+* **Collapsible list**: Either built-in class/js or a web component. [Ref](https://chatgpt.com/share/e32ce7f8-7b86-45e7-ae9d-69d167c37a14). NB: Allow for nav menus as well as normal lists. Also consider collapsible para's.
 * **FE: Drag/drop**: draggable class, drag-container class (to constrain drag area). Use `moveElement` fn. On drop, send change notice to Node-RED as control msg.
 
 * Extend SVG example to download and save the svg from the gist
@@ -1155,6 +1155,7 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
 * Consider implementing at Kroki diagram service node - https://kroki.io/ - enables delivery of diagrams from text descriptions using many different libraries.
 * Create a `uib-router` node. This would connect a route handler flow to an existing `uibuilder` node. A bit like an `http-in` node but not needing an `http-out` because the out is via the `uibuilder` node. Would allow wildcard routing and ability to restrict by method. The defined path(s) would be added as a new router to the uibuilder routes. Consider whether this needs to be a `uib-router-in`/`uib-router-out` pair instead?
 * Revisit `elementIsVisible` - requires probably 2 fns at least. A monitor and a one-off check. One-off requires a separate observer function for each.
+* Consider moving source code to ESM instead of CJS. [Ref1](https://discourse.nodered.org/t/new-structure-for-building-node-red-nodes/90538), [Ref2](https://github.com/AllanOricil/node-red-node-es-template), [Ref3](https://github.com/AllanOricil/node-red-node).
 
 ### Templates
 

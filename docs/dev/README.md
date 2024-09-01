@@ -99,6 +99,10 @@ These libraries provide common Node-RED Editor data, functions and styling for a
 
 * [Using ESBUILD to control output formats](dev/build-steps.md).
 
+## Deployment steps
+
+* [How to release a new version of UIBUILDER](dev/release-steps.md).
+
 ## Testing
 
 Some information on testing uibuilder. Unfortunately, I have no real clue about automated testing and TLD, if you would like to contribute something, please do!
