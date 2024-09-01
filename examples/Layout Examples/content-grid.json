@@ -16,12 +16,15 @@
             "37c5ea9212d472d6",
             "e4bb79221cd4d494",
             "d87282975afb0ff0",
-            "e68ff082f08f4e09"
+            "e68ff082f08f4e09",
+            "9dce05a892338fb0",
+            "fd4bef967d319a77",
+            "33596b16c79744cf"
         ],
-        "x": 68,
+        "x": 57,
         "y": 39,
-        "w": 724,
-        "h": 288
+        "w": 1004,
+        "h": 380
     },
     {
         "id": "abd74b7c71705183",
@@ -123,7 +126,7 @@
         "g": "4609ab6ec2568455",
         "name": "Design",
         "info": "A fairly common blog-style or content heavy\nlayout.\n\n```\n+-------------------------------------------+\n| Title (h1)                                |\n| Sub-title (div                            |\n| Nav1 Nav2 Nav2 (menu)                     |\n+-------------------------------------------+\n+ Sidebar + Main (for articles)             |\n| (aside) |                                 |\n|         | +-----------------------------+ |\n|         | | Article title (h2)          | |\n|         | +-----------------------------+ |\n|         | | Article body                | |\n|         | +-----------------------------+ |\n|         | +-----------------------------+ |\n|         | | Article title (h2)          | |\n|         | +-----------------------------+ |\n|         | | Article body                | |\n|         | +-----------------------------+ |\n|         |                                 |\n|         +---------------------------------+\n|         | Footer                          |\n+---------+---------------------------------+\n```\n\nUses a CSS Grid with named grid template areas.\nThis makes it simple to adjust.\n\nThe areas for the layout above are:\n\n```css\ngrid-template-areas: \n    \"header header\"\n    \"sidebar main\"\n    \"sidebar footer\";\n```\n\nTo make the footer full width, use:\n\n```css\ngrid-template-areas: \n    \"header header\"\n    \"sidebar main\"\n    \"footer footer\";\n```\n\nTo move the sidebar to the right, use:\n\n```css\ngrid-template-areas: \n    \"header header\"\n    \"main sidebar\"\n    \"footer sidebar\";\n```\n\nThe example has a breakpoint for narrow\nscreens (set at 512px) where it switches to\na single column with the sidebar below the \nmain area.",
-        "x": 670,
+        "x": 750,
         "y": 80,
         "wires": []
     },
@@ -147,8 +150,8 @@
             "d0f6781d12dddb92",
             "49b428fbb525f866"
         ],
-        "x": 94,
-        "y": 179,
+        "x": 85,
+        "y": 169,
         "w": 672,
         "h": 122
     },
@@ -161,11 +164,11 @@
         "field": "payload",
         "fieldType": "msg",
         "format": "html",
-        "syntax": "plain",
-        "template": "<!doctype html>\n<html lang=\"en\"><head>\n\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <link rel=\"icon\" href=\"../uibuilder/images/node-blue.ico\">\n\n    <title>Grid Layout - Node-RED uibuilder</title>\n    <meta name=\"description\" content=\"Node-RED uibuilder - Grid Layout\">\n\n    <!-- Your own CSS (defaults to loading uibuilders css)-->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\"></script>\n    <!-- <script defer src=\"./index.js\">/* <= OPTIONAL: Put your custom code in that */</script> -->\n    <!-- #endregion -->\n\n</head><body>\n\n    <div class=\"container\">\n        <header class=\"header\">\n            <h1 class=\"with-subtitle\">Grid Layout Example</h1>\n            <div role=\"doc-subtitle\">Using the uibuilder IIFE library.</div>\n            <nav class=\"nav-main\">\n                <ul>\n                    <li><a href=\"#nav1\">Nav 1</a></li>\n                    <li><a href=\"#nav2\">Nav 2</a></li>\n                    <li><a href=\"#nav3\">Nav 3</a></li>\n                </ul>\n            </nav>\n        </header>\n\n        <main>\n            <div id=\"more\">\n                <!-- '#more' is used as a parent for dynamic HTML content in examples -->\n            </div>\n\n            <article class=\"content\">\n                <h2>Example blog-style layout</h2>\n                <p>\n                    A grid of 2 columns and 3 rows. Right column and middle row are larger than the others.\n                </p>\n            </article>\n\n            <article class=\"content\">\n                <h2>Article 2</h2>\n                <p>\n                    We use a well structured HTML 5 tag structure to define the layout.\n                </p>\n            </article>\n        </main>\n\n        <aside class=\"sidebar\">\n            Sidebar wider still\n        </aside>\n\n        <footer>\n            The footer\n            <div>2nd footer</div>\n        </footer>\n    </div>\n\n</body></html>",
+        "syntax": "mustache",
+        "template": "<!doctype html>\n<html lang=\"en\"><head>\n\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <link rel=\"icon\" href=\"../uibuilder/images/node-blue.ico\">\n\n    <title>Grid Layout - Node-RED uibuilder</title>\n    <meta name=\"description\" content=\"Node-RED uibuilder - Grid Layout\">\n\n    <!-- Your own CSS (defaults to loading uibuilders css)-->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->\n    <script defer src=\"https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js\"></script>\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\"></script>\n    <!-- <script defer src=\"./index.js\">/* <= OPTIONAL: Put your custom code in that */</script> -->\n    <!-- #endregion -->\n\n</head><body>\n\n    <div class=\"container\">\n        <header class=\"header\">\n            <h1 class=\"with-subtitle\">Grid Layout Example</h1>\n            <div role=\"doc-subtitle\">Using the uibuilder IIFE library.</div>\n            <nav class=\"nav-main\">\n                <ul>\n                    <li><a href=\"#nav1\">Nav 1</a></li>\n                    <li><a href=\"#nav2\">Nav 2</a></li>\n                    <li><a href=\"#nav3\">Nav 3</a></li>\n                </ul>\n            </nav>\n        </header>\n\n        <main id=\"more\"><!-- '#more' is used as a parent for dynamic HTML content in examples -->\n            <article>\n                <h2>Example blog-style layout</h2>\n                <p>\n                    A grid of 2 columns and 3 rows. Right column and middle row are larger than the others.\n                </p>\n            </article>\n\n            <article>\n                <h2>Article 2</h2>\n                <p>\n                    We use a well structured HTML 5 tag structure to define the layout.\n                </p>\n            </article>\n        </main>\n\n        <aside class=\"sidebar\">\n            Sidebar wider still\n        </aside>\n\n        <footer>\n            The footer\n            <div>2nd footer</div>\n        </footer>\n    </div>\n\n</body></html>",
         "output": "str",
-        "x": 470,
-        "y": 220,
+        "x": 461,
+        "y": 210,
         "wires": [
             [
                 "a58da542c04e47b9"
@@ -189,8 +192,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "setup all FE files",
-        "x": 155,
-        "y": 220,
+        "x": 146,
+        "y": 210,
         "wires": [
             [
                 "ae59ccb45c3e20ac",
@@ -219,8 +222,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 310,
-        "y": 220,
+        "x": 301,
+        "y": 210,
         "wires": [
             [
                 "84807a7720ef4d0f"
@@ -243,8 +246,8 @@
         "mode": 438,
         "name": "",
         "topic": "",
-        "x": 670,
-        "y": 220,
+        "x": 661,
+        "y": 210,
         "wires": []
     },
     {
@@ -267,8 +270,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 300,
-        "y": 260,
+        "x": 291,
+        "y": 250,
         "wires": [
             [
                 "49b428fbb525f866"
@@ -284,15 +287,243 @@
         "field": "payload",
         "fieldType": "msg",
         "format": "css",
-        "syntax": "plain",
-        "template": "/* Load defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-brand.min.css`\n * This version auto-adjusts for light/dark browser settings.\n */\n@import url(\"../uibuilder/uib-brand.min.css\");\n\n/* CSS variables to make it easier to control */\n:root {\n    --container-max-width: 1000px;\n    --container-grid-col-gap: 1rem;\n    --container-grid-row-gap: 0.5rem;\n    --main-width: repeat(12, 1fr);\n    /* 1fr; */\n    --sidebar-max-width: 1fr;\n    --sidebar-min-width: 0.1fr;\n}\n\n/* The outer container div */\n.container {\n    width: 100%;\n    max-width: var(--container-max-width);\n    margin: 0 auto;\n    /* Center the container horizontally */\n    display: grid;\n    gap: var(--container-grid-row-gap) var(--container-grid-col-gap);\n\n    /* 2 cols x 3 rows layout. Middle row & right column are larger. Left col is constrained min/max */\n    grid-template-columns: minmax(var(--sidebar-min-width), var(--sidebar-max-width)) var(--main-width);\n    /* grid-template-columns: var(--sidebar-min-width) var(--main-width); */\n    grid-template-rows: 0fr 1fr 0fr;\n    grid-template-areas:\n        \"header header\"\n        \"sidebar main\"\n        \"sidebar footer\";\n    justify-items: stretch;\n}\n\n/* Assign the main areas to the grid */\nmain {\n    /* Where you put your content */\n    grid-area: main;\n    border: 1px dashed silver;\n    /* these just for easier understanding */\n}\n\nheader {\n    /* Headings, nav, etc */\n    grid-area: header;\n    border: 1px dashed gold;\n}\n\nfooter {\n    /* at the bottom, (c), dates, etc */\n    grid-area: footer;\n    border: 1px dashed green;\n    margin-top: 0;\n}\n\n/* We might want other sidebars so be more explicit for this */\naside.sidebar {\n    /* stuff to one side of the main content */\n    grid-area: sidebar;\n    border: 1px dashed violet;\n}\n\n/* Simple horizontal navigation main menu (in the header) */\n.nav-main {\n    background-color: var(--surface3);\n}\n\n.nav-main ul {\n    /* Remove bullet points */\n    list-style-type: none;\n    /* Remove default padding */\n    padding: 0;\n    /* Remove default margin */\n    margin: 0;\n    /* Use Flexbox to align items horizontally */\n    display: flex;\n}\n\n/* Add space between menu items */\n.nav-main li {\n    margin-right: 1rem;\n}\n\n/* Remove margin on the last item */\n.nav-main li:last-child {\n    margin-right: 0;\n}\n\n.nav-main a {\n    /* Remove underline from links */\n    text-decoration: none;\n    /* Add padding for better click area */\n    padding: var(--border-pad);\n    /* Ensure the entire area is clickable */\n    display: block;\n}\n\n/* Highlight on hover */\n.nav-main a:hover {\n    background-color: var(--surface5);\n    /* Optional: Add rounded corners */\n    border-radius: var(--border-radius);\n}\n\n/* Adapt for narrow screens */\n@media only screen and (max-width: 512px) {\n    /* Very simple adaption example, a single column, 4 rows */\n    .container {\n        gap: 0.5rem;\n\n        /* 1 cols x 4 rows layout. 2nd row is larger */\n        grid-template-columns: 1fr;\n        grid-template-rows: 0.1fr 1fr 0.1fr 0.1fr;\n        grid-template-areas:\n            \"header\"\n            \"main\"\n            \"sidebar\"\n            \"footer\";\n    }\n}",
+        "syntax": "mustache",
+        "template": "/* Load defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-brand.min.css`\n * This version auto-adjusts for light/dark browser settings.\n */\n@import url(\"../uibuilder/uib-brand.min.css\");\n\n/* CSS variables to make it easier to control */\n:root {\n    --container-max-width: 1000px;\n    --container-grid-col-gap: 1rem;\n    --container-grid-row-gap: 0.5rem;\n    --main-width: repeat(12, 1fr);\n    /* 1fr; */\n    --sidebar-max-width: 1fr;\n    --sidebar-min-width: 0.1fr;\n}\n\n/* The outer container div */\n.container {\n    width: 100%;\n    max-width: var(--container-max-width);\n    margin: 0 auto;\n    /* Center the container horizontally */\n    display: grid;\n    gap: var(--container-grid-row-gap) var(--container-grid-col-gap);\n\n    /* 2 cols x 3 rows layout. Middle row & right column are larger. Left col is constrained min/max */\n    grid-template-columns: minmax(var(--sidebar-min-width), var(--sidebar-max-width)) var(--main-width);\n    /* grid-template-columns: var(--sidebar-min-width) var(--main-width); */\n    grid-template-rows: 0fr 1fr 0fr;\n    grid-template-areas:\n        \"header header\"\n        \"sidebar main\"\n        \"sidebar footer\";\n    justify-items: stretch;\n}\n\n/* Assign the main areas to the grid */\nmain {\n    /* Where you put your content */\n    grid-area: main;\n    border: 1px dashed silver;\n    /* these just for easier understanding */\n}\n\n/* Set a child div to have same format as an article */\nmain > div {\n    /* max-width: var(--max-width); */\n    border: 1px solid var(--text3);\n    border-radius: var(--border-radius);\n    padding: var(--border-pad);\n    margin: 1rem var(--border-margin);\n    background-color: var(--surface3);\n}\nmain > div > h2, main > div > h3, main > div > h4 {\n    margin-block-start: 0;\n    border-bottom: 1px solid var(--text3);\n    padding-block-end: var(--border-pad);\n}\n\nheader {\n    /* Headings, nav, etc */\n    grid-area: header;\n    border: 1px dashed gold;\n}\n\nfooter {\n    /* at the bottom, (c), dates, etc */\n    grid-area: footer;\n    border: 1px dashed green;\n    margin-top: 0;\n}\n\n/* We might want other sidebars so be more explicit for this */\naside.sidebar {\n    /* stuff to one side of the main content */\n    grid-area: sidebar;\n    border: 1px dashed violet;\n}\n\n/* Simple horizontal navigation main menu (in the header) */\n.nav-main {\n    background-color: var(--surface3);\n}\n\n.nav-main ul {\n    /* Remove bullet points */\n    list-style-type: none;\n    /* Remove default padding */\n    padding: 0;\n    /* Remove default margin */\n    margin: 0;\n    /* Use Flexbox to align items horizontally */\n    display: flex;\n}\n\n/* Add space between menu items */\n.nav-main li {\n    margin-right: 1rem;\n}\n\n/* Remove margin on the last item */\n.nav-main li:last-child {\n    margin-right: 0;\n}\n\n.nav-main a {\n    /* Remove underline from links */\n    text-decoration: none;\n    /* Add padding for better click area */\n    padding: var(--border-pad);\n    /* Ensure the entire area is clickable */\n    display: block;\n}\n\n/* Highlight on hover */\n.nav-main a:hover {\n    background-color: var(--surface5);\n    /* Optional: Add rounded corners */\n    border-radius: var(--border-radius);\n}\n\n/* Adapt for narrow screens */\n@media only screen and (max-width: 512px) {\n    /* Very simple adaption example, a single column, 4 rows */\n    .container {\n        gap: 0.5rem;\n\n        /* 1 cols x 4 rows layout. 2nd row is larger */\n        grid-template-columns: 1fr;\n        grid-template-rows: 0.1fr 1fr 0.1fr 0.1fr;\n        grid-template-areas:\n            \"header\"\n            \"main\"\n            \"sidebar\"\n            \"footer\";\n    }\n}\n\n\n/* The rest is not needed if using \n   UIBUILDER v7 since that has an updated\n   uib-brand.css that includes this */\n/* This lets us use an article like a card display */\narticle {\n    max-width: var(--max-width);\n    border: 1px solid var(--text3);\n    border-radius: var(--border-radius);\n    padding: var(--border-pad);\n    margin: 1rem var(--border-margin);\n    background-color: var(--surface3);\n}\narticle>h1::before {\n    font-size: 50%;\n    color: hsl(var(--failure-hue) 100% 50%);\n    content: \"⛔ Do not use H1 headings in articles. \"\n}\narticle>h2,\narticle>h3,\narticle>h4 {\n    margin-block-start: 0;\n    border-bottom: 1px solid var(--text3);\n    padding-block-end: var(--border-pad);\n}",
         "output": "str",
-        "x": 480,
-        "y": 260,
+        "x": 471,
+        "y": 250,
         "wires": [
             [
                 "a58da542c04e47b9"
             ]
         ]
+    },
+    {
+        "id": "9dce05a892338fb0",
+        "type": "group",
+        "z": "7e598dbf2e556452",
+        "g": "4609ab6ec2568455",
+        "name": "Add dynamic data - 2 added widgets, 1 markdown and 1 list",
+        "style": {
+            "label": true,
+            "fill": "#ffffbf",
+            "fill-opacity": "0.22",
+            "color": "#000000"
+        },
+        "nodes": [
+            "4afed1a987617465",
+            "9d5eedc93c184d9d",
+            "e443a7981ad81665",
+            "102ec190f356b60f",
+            "42b94d2393565e2f",
+            "0f6958e3d7f65b61",
+            "20927207b979703a"
+        ],
+        "x": 83,
+        "y": 311,
+        "w": 952,
+        "h": 82
+    },
+    {
+        "id": "4afed1a987617465",
+        "type": "uib-element",
+        "z": "7e598dbf2e556452",
+        "g": "9dce05a892338fb0",
+        "name": "Markdown article",
+        "topic": "",
+        "elementtype": "markdown",
+        "parent": "#more",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "md1",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
+        "position": "last",
+        "positionSourceType": "str",
+        "passthrough": false,
+        "confData": {},
+        "x": 449,
+        "y": 352,
+        "wires": [
+            [
+                "0f6958e3d7f65b61"
+            ]
+        ]
+    },
+    {
+        "id": "9d5eedc93c184d9d",
+        "type": "link out",
+        "z": "7e598dbf2e556452",
+        "g": "9dce05a892338fb0",
+        "name": "to uib input",
+        "mode": "link",
+        "links": [
+            "fd4bef967d319a77"
+        ],
+        "x": 994,
+        "y": 352,
+        "wires": []
+    },
+    {
+        "id": "e443a7981ad81665",
+        "type": "inject",
+        "z": "7e598dbf2e556452",
+        "g": "9dce05a892338fb0",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "$formatInteger($random() * 100, \"#00\")",
+        "payloadType": "jsonata",
+        "x": 144,
+        "y": 352,
+        "wires": [
+            [
+                "102ec190f356b60f"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "102ec190f356b60f",
+        "type": "template",
+        "z": "7e598dbf2e556452",
+        "g": "9dce05a892338fb0",
+        "name": "Markdown",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "markdown",
+        "syntax": "mustache",
+        "template": "## Markdown Card\n\nDynamically added from a Node-RED/UIBUILDER no-code node.\n\nRandom number: {{payload}}",
+        "output": "str",
+        "x": 269,
+        "y": 352,
+        "wires": [
+            [
+                "4afed1a987617465"
+            ]
+        ]
+    },
+    {
+        "id": "42b94d2393565e2f",
+        "type": "uib-element",
+        "z": "7e598dbf2e556452",
+        "g": "9dce05a892338fb0",
+        "name": "List",
+        "topic": "",
+        "elementtype": "ul",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "ul1",
+        "elementIdSourceType": "str",
+        "heading": "A List",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
+        "position": "last",
+        "positionSourceType": "str",
+        "passthrough": false,
+        "confData": {},
+        "x": 749,
+        "y": 352,
+        "wires": [
+            [
+                "20927207b979703a"
+            ]
+        ]
+    },
+    {
+        "id": "0f6958e3d7f65b61",
+        "type": "change",
+        "z": "7e598dbf2e556452",
+        "g": "9dce05a892338fb0",
+        "name": "List",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[\"I was dynamically\",\"inserted by a\",\"Node-RED/UIBUILDER\",\"no-code flow\"]",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 629,
+        "y": 352,
+        "wires": [
+            [
+                "42b94d2393565e2f"
+            ]
+        ]
+    },
+    {
+        "id": "20927207b979703a",
+        "type": "uib-update",
+        "z": "7e598dbf2e556452",
+        "g": "9dce05a892338fb0",
+        "name": "List width",
+        "topic": "",
+        "mode": "update",
+        "modeSourceType": "update",
+        "cssSelector": "#ul1",
+        "cssSelectorType": "str",
+        "slotSourceProp": "",
+        "slotSourcePropType": "msg",
+        "attribsSource": "{\"style\":\"--article-width: 6;\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 879,
+        "y": 352,
+        "wires": [
+            [
+                "9d5eedc93c184d9d"
+            ]
+        ]
+    },
+    {
+        "id": "fd4bef967d319a77",
+        "type": "link in",
+        "z": "7e598dbf2e556452",
+        "g": "4609ab6ec2568455",
+        "name": "uib input",
+        "links": [
+            "9d5eedc93c184d9d"
+        ],
+        "x": 185,
+        "y": 140,
+        "wires": [
+            [
+                "1e31ada9e399ea1b"
+            ]
+        ]
+    },
+    {
+        "id": "33596b16c79744cf",
+        "type": "comment",
+        "z": "7e598dbf2e556452",
+        "g": "4609ab6ec2568455",
+        "name": "Version: 2024-09-01",
+        "info": "This layout is designed to roughly replicate\nthe Node-RED Dashboard grid layout.\n\nIt keeps the outer layout from the content/blog\nstyle (header, footer, left-sidebar, main).\n\nBut the sidebar now has the navigation menu\ninstead of the header.\n\nThe main content area is now a sub-grid. It has\nthe `id` of `more` which means that you can\neasily add new content using uibuilder's \nno-code nodes.\n\nEach `<article>` or `<div>` tag in the main \ncontent sub-grid can be considered the \nequivalent of a \"widget\" in Node-RED Dashboard \nterms. It can contain whatever you want it to.\nIt has a slightly different background colour\nand a rounded border.\n\nIn the example all of the layout can be\ncontrolled from the CSS variables in `:root`.\n\nThe sub-grid has 12 columns by default, you\ncan change that to whatever is useful to you.\n\nThe articles have a default width of 3. You can\neasily override a single article by adding:\n`--article-width: 6` or however many columns\nyou want it to take up.\n\nBy default, specific grid rows are undefined\n(set to `auto`) so articles take up whatever\nheight they need. If you want to define the\nrows, you can easily do so by changing\n`--main-rows` to `repeat(12, 1fr)` or some\nother number. You have lots of control over the\ncolumn/row layout but it can get a bit complex\nso you are advised to keep it simple, at least\nto start with.\n\n-----------------\n\n## NOTES\n\nIt is very likely that much of the\ndefined CSS in this example will be incorporated\ninto UIBUILDER's `uib-brand.css` in the \nfuture.\n\nThe Markdown-IT library has been included in\n`index.html`, loaded from a public Internet\nCDN. Install & use the library locally using \nUIBUILDER's library manager if you prefer.\nOr remove completely if you don't need to use\nMarkdown dynamic content.",
+        "x": 930,
+        "y": 80,
+        "wires": []
     }
 ]
