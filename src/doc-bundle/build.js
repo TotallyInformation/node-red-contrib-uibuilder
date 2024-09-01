@@ -8,7 +8,7 @@ const { resolve } = require('path')
 /** Build a single output app.js from docsify & all needed plugins */
 esbuild.build({
     entryPoints: [
-        'bundle-input.js'
+        'src/doc-bundle/bundle-input.js'
     ],
     format: 'iife',
     bundle: true,
@@ -27,7 +27,7 @@ esbuild.build({
 })
     .catch((error) => {
         console.error(error)
-        process.exit(1)
+        process.exit(1) // eslint-disable-line n/no-process-exit
     })
 
 /** Use separate outputs for CSS because we need to be able to
@@ -47,5 +47,8 @@ esbuild.build({
 })
     .catch((error) => {
         console.error(error)
-        process.exit(1)
+        process.exit(1) // eslint-disable-line n/no-process-exit
     })
+
+console.log('App target: ', resolve('../../docs/.config/app.js',))
+console.log('ESBUILD Bundle input: ', resolve('src/doc-bundle/bundle-input.js',))

@@ -8,6 +8,7 @@
     "listbin": "ls ./node_modules/bin",
     "docs": "docsify serve ./docs",
     "edit-docs": "%LOCALAPPDATA%/Programs/Typora/Typora.exe ./",
+    "buildDocBundle": "node ./src/doc-bundle/build.js",
     "buildSidebar": "node ./bin/docsify-auto-sidebar.js",
     "graph": "madge --image ./docs/dev/runtime-deps.svg ./nodes"
   },

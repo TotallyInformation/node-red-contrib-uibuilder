@@ -768,6 +768,9 @@ function minifyBrandCSS(cb) {
     // cb()
 }
 
+/** See the buildDocBundle script in package.json for building the Docsify bundle for offline use */
+// function buildDocsApp(cb) {}
+
 //#region ---- Build node panels ----
 
 /** Build the uib-element panel */

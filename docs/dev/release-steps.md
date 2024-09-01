@@ -3,7 +3,7 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2024-09-01 11:56:07
+updated: 2024-09-01 15:44:31
 ---
 
 This assumes all main updates have been done for this release and that local testing is complete.
@@ -24,19 +24,34 @@ Make sure version numbers are correct and aligned:
 * src\front-end-module\ui.js
 * src\front-end-module\uibuilder.module.js
 
-## 03) Do a final commit & push to the dev branch
+## 03) Do a dependency update
 
-* Do a final `npm outdated` check.
-* Check DeepScan results and resolve any issues.
+* `npm outdated` & `npm update`.
+* Also check any templates that have dependencies defined (currently only the Svelte template).
+* After updates, run `npm run buildDocBundle` to ensure that Docsify is up-to-date.
 
-## 04) Merge GitHub dev branch to main
+## 04) Do a final commit & push to the dev branch
+
+* Check DeepScan and Snyk results and resolve any issues.
+
+## 05) Merge GitHub dev branch to main
 
 * Do a pull request, dev branch to main.
 * If any conflicts, do `git merge main` on VSCode command line (in the dev branch).
 
-Remember to switch branches in VS Code before continuing.
+For conflicts that can't be merged in GitHub web interface, use VSCode command line:
 
-## 05) Do a test upgrade install to existing uibuilder environment
+```bash
+git switch main
+git pull origin main
+git switch v7.0.0
+git merge main
+```
+Now the Source Control panel in VSCode will have any files with conflicts marked. Click on them to view the conflict and resolve. Then do another commit and push.
+
+Remember to switch branches to the version branch in VS Code before continuing.
+
+## 06) Do a test upgrade install to existing uibuilder environment
 
 * Install manually from GitHub main branch.
 * Check everything works - see [Regression Tests](dev/regression-tests.md).
@@ -44,17 +59,17 @@ Remember to switch branches in VS Code before continuing.
 * Do a final doc check/update.
 * Do a final commit/push to main.
 
-## 06) Create a new GitHub tag & release
+## 07) Create a new GitHub tag & release
 
 * Run `gulp createTag` from VSCode terminal (making sure to use main branch).
 * On GitHub, create a release from the tag and paste the version changelog notes into the release notes.
 
-## 07) Publish new version to npm
+## 08) Publish new version to npm
 
 * Run `npm publish --access public` from VSCode terminal (making sure to use main branch).
 * Check https://www.npmjs.com/package/node-red-contrib-uibuilder to make sure it has updated.
 
-## 08) Update Node-RED flows and forum
+## 09) Update Node-RED flows and forum
 
 * Run "check for update" on https://flows.nodered.org/node/node-red-contrib-uibuilder.
 * Post to forum:
