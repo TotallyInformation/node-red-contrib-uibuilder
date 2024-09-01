@@ -3,15 +3,16 @@ title: Using NGNX to secure uibuilder apps
 description: |
   An outline on securing uibuilder web UI's using NGINX as a reverse proxy server.
 created: 2022-02-18 16:05:17
-lastUpdated: 2022-02-21 11:24:19
-updated: 2023-12-30 17:01:42
+updated: 2024-03-23 16:53:34
 ---
 
-?> This page is DRAFT. I realise that it will confuse more than help as it stands. However, if you can be bothered to read through it a couple of times, you will realise that it already gives you many pointers on how to secure a uibuilder front-end web app using NGINX. Indeed it gives lots of information for securing any web site or web app using NGINX. 😁<br>I will be creating a step-by-step guide at some point and that should help simplify things.
+> [!NOTE]
+> This page is DRAFT. I realise that it will confuse more than help as it stands. However, if you can be bothered to read through it a couple of times, you will realise that it already gives you many pointers on how to secure a uibuilder front-end web app using NGINX. Indeed it gives lots of information for securing any web site or web app using NGINX. 😁<br>I will be creating a step-by-step guide at some point and that should help simplify things.
 
-!> This page is offered as a set of ideas for securing Node-RED and uibuilder using NGINX, it comes with no guarantee or warrantee of accuracy or security.
+> [!WARNING]
+> This page is offered as a set of ideas for securing Node-RED and uibuilder using NGINX, it comes with no guarantee or warrantee of accuracy or security.
 
-?> Please refer to the [Securing uib web apps page](security.md) for an overview of security, terminology and securing uibuilder and Node-RED.
+Please refer to the [Securing uib web apps page](Programming/uibuilder/docs/security/security.md) for an overview of security, terminology and securing uibuilder and Node-RED.
 
 This page does not attempt to be a full tutorial about creating a secure front-end for Node-RED and uibuilder. It simply presents the things you need to think about and will want to implement to meet basic and more advanced security.
 
@@ -40,11 +41,13 @@ Things to think about:
 * Include any useful additional modules (such as LUA for scripting). The NAXSI WAP module would be a great addition.
 * Set the desired user and group for running NGINX. The default install uses `nginx`/`nginx` but some people prefer the older style `www-data`/`www-data`.
 
-!> Do remember that, if you go down this route, you need to make sure that you periodically udpate the sources and recompile to ensure that you stay current. Don't skip this or you will end up with an old version with security issues.
+> [!NOTE]
+> Do remember that, if you go down this route, you need to make sure that you periodically udpate the sources and recompile to ensure that you stay current. Don't skip this or you will end up with an old version with security issues.
 
 ## Basic Security
 
-?> The [OWASP org](https://owasp.org/) produce international standards for securing web (and other application) servers from all manner of threats. Wherever possible, you should use guides, tutorials, and tools that implement their standards. Security threats change over time so it is important that your web security is able to also change with minimal input from yourself. See [bunkerity/bunkerized-nginx: 🛡️ Make your web services secure by default !](https://github.com/bunkerity/bunkerized-nginx) as an example (I've not tried this at the time of writing so please test it carefully)
+> [!TIP]
+> The [OWASP org](https://owasp.org/) produce international standards for securing web (and other application) servers from all manner of threats. Wherever possible, you should use guides, tutorials, and tools that implement their standards. Security threats change over time so it is important that your web security is able to also change with minimal input from yourself. See [bunkerity/bunkerized-nginx: 🛡️ Make your web services secure by default !](https://github.com/bunkerity/bunkerized-nginx) as an example (I've not tried this at the time of writing so please test it carefully)
 
 There are a great many good tutorials and configuration guides on securing NGINX and making it into a secure reverse proxy for microservice applications such as Node-RED. Please refer to those for step-by-step guides.
 

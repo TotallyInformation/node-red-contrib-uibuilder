@@ -10,7 +10,7 @@
 	<!-- A form is an easy way to input data to send to Node-RED -->
 	<form>
 		<div>
-			This is a form element, it is an easy way to get input and send it back to Node-RED.
+			This is a form element. It is an easy way to get input and send it back to Node-RED.
 		</div>
 
 		<div><!-- Accessible form element -->
@@ -24,14 +24,14 @@
 				`data-*` attributes, keyboard modifiers, etc. Also works with other event types. -->
 			<button on:click={uibsend} data-greeting="{myGreeting}"  data-type="eventSend" data-foo="Bah" type="button"
 					title="Uses the uibuilder.eventSend fn and sents both static and dynamic data back to Node-RED">
-				eventSend
+				Send form details back to Node-RED using uibuilder.eventSend
 			</button>
 		</div>
 	</form>
 
 	<!-- Another way to send custom data back to Node-RED. fnSendToNR is defined in index.js,
 		it uses the standard `uibuilder.send` function -->
-	<button on:click={ e => sendToNR('A message from the sharp end!') } type="button">Send a msg back to Node-RED</button>
+	<button on:click={ e => sendToNR('A message from the sharp end!') } type="button">Send a msg back to Node-RED using a custom function and uibuilder.send</button>
 
 </main>
 

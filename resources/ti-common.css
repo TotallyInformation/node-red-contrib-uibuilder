@@ -8,8 +8,11 @@
     --uib-node-colour: hsl(248 100% 91%);
     --uib-blue: hsl(204 89% 55% / 70%); 
     --uib-red: hsl(0 100% 45% / 70%); /* #8f0000; */
+    --min-editor-panel-width: 450px;
+    --typedInput-width-adjust: 105px;
 }
 
+/* For the UIBUILDER formatted name */
 .uib-name {
     display:inline !important;
     font-weight: 600;
@@ -19,10 +22,6 @@
 .uib-red {
     color: var(--uib-red) !important;
     font-weight: 800;
-}
-
-#uib-el .red-ui-typedInput-container {
-    width:69% !important;
 }
 
 .ui-tooltip { /* Better tooltips */
@@ -42,14 +41,81 @@
         sans-serif;
 }
 
+#ti-edit-panel .form-tips {
+    margin-bottom: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#ti-edit-panel .red-ui-typedInput-container {
+    width: calc(100% - var(--typedInput-width-adjust)) !important;
+}
+
 #ti-edit-panel fieldset {
     border-style: groove;
     border-color: var(--red-ui-primary-background);
     border-width: 2px;
     padding-left: .3em;
+    min-inline-size: calc(var(--min-editor-panel-width) - 8px);
+    /* display: inline-block; */
 }
 #ti-edit-panel legend {
     width:fit-content;
     padding-left: .2em;
     padding-right: .2em;
+    color: inherit;
+}
+#ti-edit-panel input[type="checkbox"] {
+    display: inline-block;
+    width: auto; 
+    vertical-align: top;
+}
+
+/* #ti-edit-panel .form-row {
+    width: 100%;
+    display: inline-block
+} */
+#ti-edit-panel .form-row label {
+    width: 100px;
+}
+#ti-edit-panel .form-row input:not(.red-ui-typedInput-input), #ti-edit-panel .form-row select {
+    width: calc(100% - 105px);
+}
+#ti-edit-panel fieldset input, #ti-edit-panel fieldset select {
+    width: calc(100% - 117px) !important;
+}
+#ti-edit-panel input[type="checkbox" i], #ti-edit-panel input[type="radio" i] {
+    width:1rem !important;
+    height:1rem;
+    vertical-align: text-bottom;
+}
+/* #ti-edit-panel {
+    width: var(--min-editor-panel-width);
+} */
+
+/* uib-element heading typedInput override */
+#node-input-heading ~ .red-ui-typedInput-container {
+    --typedInput-width-adjust: 160px;
+}
+
+.uib-info-bar {
+    display: flex;
+    justify-content: space-between;
+    width: var(--min-editor-panel-width);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Context selectors () e.g. uib-cache */
+.uib-context-select {
+    --typedInput-width-adjust: 0px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr;
+    gap: 0.5em 0.5em;
+    grid-auto-flow: row;
+    height: 4em;
+    margin-bottom: 1.6em;
+}
+.uib-context-select label, .uib-context-select input {
+    width: 100% !important;
 }

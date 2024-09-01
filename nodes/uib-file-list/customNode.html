@@ -1,0 +1,81 @@
+<!--
+    Copyright (c) 2024-2024 Julian Knight (Totally Information)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<script src="./resources/node-red-contrib-uibuilder/uib-file-list.js"></script>
+
+<script type="text/html" data-template-name="uib-file-list">
+
+    <div id="ti-edit-panel">
+        
+        <div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
+            <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+            <select id="node-input-url" style="width:70%">
+                <option value="" name="">--choose a uibuilder instance--</option>
+            </select>
+        </div>
+        <div class="form-tips">
+            Search root folder: <b id="srch-root"></b>
+        </div>
+
+        <!-- <div aria-label="Folder to save to (relative to node instance root folder). Leave blank to use `msg.folder`. `..` not allowed." class="form-row" id="folder">
+            <label for="node-input-folder"><i class="fa fa-folder-open-o"></i> Sub-folder</label>
+            <input type="text" id="node-input-folder" placeholder="Optional subfolder">
+        </div>
+        <div class="form-tips">This will always be added to the folder shown above. Escaping using <code>../</code> is not permitted. No wildcard allowed here, use filter specs instead.</div> -->
+
+        <div aria-label="Use glob wildcards. See fast-glob for details." class="form-row" id="filter">
+            <label for="node-input-filter"><i class="fa fa-file-code-o"></i> Filter</label>
+            <input type="text" id="node-input-filter" placeholder="Inclusion wildcard(s)" list="filters">
+        </div>
+        <div class="form-tips">Uses <code><a href="https://www.npmjs.com/package/fast-glob" target="_blank">fast-glob</a></code>, please see its documentation for filter and exclusion formats.</div>
+
+        <div aria-label="Use glob wildcards. See fast-glob for details." class="form-row" id="exclude">
+            <label for="node-input-exclude"><i class="fa fa-file-code-o"></i> Exclude</label>
+            <input type="text" id="node-input-exclude" placeholder="Exclusion wildcard(s)">
+        </div>
+
+        <div aria-label="Output url data?." class="form-row">
+            <label for="node-input-urlOut">URL Output?</label>
+            <input type="checkbox" id="node-input-urlOut">
+        </div>
+
+        <div aria-label="Set the search root to the folder that is being currently served. Without this, the search root is the instance root folder" class="form-row">
+            <label for="node-input-live">Use live served folder?</label>
+            <input type="checkbox" id="node-input-live">
+        </div>
+
+        <div aria-label="Returns an absolute rather than relative path" class="form-row">
+            <label for="node-input-fullPrefix">Use full prefix?</label>
+            <input type="checkbox" id="node-input-fullPrefix">
+        </div>
+
+        <hr>
+        <div aria-label="Default msg topic." class="form-row">
+            <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+            <input type="text" id="node-input-topic">
+        </div>
+        <div aria-label="Node name (descriptive only)" class="form-row">
+            <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+            <input type="text" id="node-input-name">
+        </div>        
+    </div>
+
+    <datalist id="filters">
+        <option value="**/*.html">All HTML files in search root and sub-folders</option>
+        <option value="*.html">All HTML files in search root</option>
+        <option value="** ">All files in search root and sub-folders</option>
+    </datalist>
+</script>

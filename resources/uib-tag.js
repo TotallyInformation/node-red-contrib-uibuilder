@@ -1,7 +1,7 @@
 /* eslint-disable strict, sonarjs/no-duplicate-string */
 
 // Isolate this code
-(function () {
+;(function () {
     'use strict'
 
     // NOTE: window.uibuilder is added - see `resources` folder
@@ -170,5 +170,10 @@
 
         /** Prepares the Editor panel */
         oneditprepare: function () { onEditPrepare(this) },
+
+        /** Handle window resizing for the editor */
+        // oneditresize: function() { // (size) {
+        //     console.log('uib-tag WIDTH: ', $('#red-ui-editor-stack > div > div.red-ui-tray-body-wrapper > div > div:nth-child(2) > div:nth-child(1)').css('width'))
+        // }, // ---- End of oneditcancel ---- //
     }) // ---- End of registerType() ---- //
 }())

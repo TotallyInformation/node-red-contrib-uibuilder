@@ -1,0 +1,771 @@
+[
+    {
+        "id": "1678f3c7ab967e39",
+        "type": "group",
+        "z": "ff9704678e3a4b61",
+        "name": "UIBUILDER Dynamic SVG Example - Interactive bulb icons linked to Node-RED, minimal coding required (Updated 2024-07-01) \\n ",
+        "style": {
+            "label": true,
+            "color": "#000000",
+            "fill": "#ffffff",
+            "fill-opacity": "0.21"
+        },
+        "nodes": [
+            "18b02b8e78a54427",
+            "68208d9442bc03c1",
+            "5f6a472f6435e598",
+            "389e05735379ed2e",
+            "3feb6c0d7c1c07b2",
+            "8ce7dd9a5d97b83b",
+            "891a5f86c7c89917",
+            "3939b0bbde991557",
+            "5eb220cde9614fee",
+            "8653c6e164389a3a",
+            "9ca3a3da680721e7",
+            "bf47991b0cd95827"
+        ],
+        "x": 74,
+        "y": 879,
+        "w": 1172,
+        "h": 508
+    },
+    {
+        "id": "18b02b8e78a54427",
+        "type": "uibuilder",
+        "z": "ff9704678e3a4b61",
+        "g": "1678f3c7ab967e39",
+        "name": "",
+        "topic": "",
+        "url": "uib-dynamic-svg-eg",
+        "okToGo": true,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.2.0-dev",
+        "showMsgUib": true,
+        "editurl": "vscode://file/src/uibRoot/uib-dynamic-svg-eg/?windowId=_blank",
+        "x": 720,
+        "y": 1040,
+        "wires": [
+            [
+                "95af327f377fa565"
+            ],
+            [
+                "5f6a472f6435e598"
+            ]
+        ]
+    },
+    {
+        "id": "68208d9442bc03c1",
+        "type": "debug",
+        "z": "ff9704678e3a4b61",
+        "g": "1678f3c7ab967e39",
+        "name": "Std output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 1105,
+        "y": 1100,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "5f6a472f6435e598",
+        "type": "debug",
+        "z": "ff9704678e3a4b61",
+        "d": true,
+        "g": "1678f3c7ab967e39",
+        "name": "Ctrl output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 885,
+        "y": 1100,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "389e05735379ed2e",
+        "type": "comment",
+        "z": "ff9704678e3a4b61",
+        "g": "1678f3c7ab967e39",
+        "name": "Vanilla HTML, no framework needed. \\n Updated version of old example that used VueJS & update again for UIBUILDER v7 \\n Read this comment for details.",
+        "info": "This example demonstrates how to use uibuilder\nwith SVG images to create a dynamic home\nlighting dashboard.\n\nUse a background-image (see index.css) and\nthen clone the included \"bulb\" SVG \n(see index.html `<template>`) and change the\nproperties of each bulb using uibuilder's \nreduced-code functions. Colours, size, position,\netc are all controlled by CSS classes.\n\n## To use the example\n\nAs always deploy your flow after adding a\nuibuilder node, making sure the url setting \nis unique.\n\nThen update the `index.html`, `index.js` and \n`index.css` files with the flow provided.\n\nOpen the resulting page and play with\ncontrolling from Node-RED and try clicking\non the bulb symbols on the page to see \nhow all the interactions work.\n\nThis example demonstrates a hybrid way of \nworking with uibuilder to create web pages.\n\nThere is some code and some Node-RED flow.\n\nHopefully, this illustrates how a little code \ncan go a long way and that you are not \nconstrained to use just one approach but can \nmix and match as desired.\n\nAnd, it also demonstrates that you really do\nnot need a 3rd-party front-end framework like\nVueJS or REACT to produce reactive front-end\nsolutions.",
+        "x": 390,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "3feb6c0d7c1c07b2",
+        "type": "debug",
+        "z": "ff9704678e3a4b61",
+        "g": "1678f3c7ab967e39",
+        "name": "Std output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 1185,
+        "y": 980,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "8ce7dd9a5d97b83b",
+        "type": "link in",
+        "z": "ff9704678e3a4b61",
+        "g": "1678f3c7ab967e39",
+        "name": "link in 10",
+        "links": [
+            "a4fb2160fb46d36c",
+            "06fa35d1c6063d4c",
+            "bf47991b0cd95827"
+        ],
+        "x": 555,
+        "y": 1080,
+        "wires": [
+            [
+                "18b02b8e78a54427"
+            ]
+        ]
+    },
+    {
+        "id": "891a5f86c7c89917",
+        "type": "group",
+        "z": "ff9704678e3a4b61",
+        "g": "1678f3c7ab967e39",
+        "name": "Control lights from Node-RED",
+        "style": {
+            "fill": "#ffbfbf",
+            "fill-opacity": "0.23",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "ad6de73ba713120d",
+            "b2b85b92b1cf7da5",
+            "77193b09f79ec310",
+            "4c9d8f9adc268c35",
+            "f86567acf2326bad",
+            "36595c40107736a2"
+        ],
+        "x": 114,
+        "y": 1019,
+        "w": 302,
+        "h": 242
+    },
+    {
+        "id": "ad6de73ba713120d",
+        "type": "inject",
+        "z": "ff9704678e3a4b61",
+        "g": "891a5f86c7c89917",
+        "name": "LIGHTS (random)",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "LIGHTS",
+        "x": 250,
+        "y": 1060,
+        "wires": [
+            [
+                "b2b85b92b1cf7da5"
+            ]
+        ]
+    },
+    {
+        "id": "b2b85b92b1cf7da5",
+        "type": "change",
+        "z": "ff9704678e3a4b61",
+        "g": "891a5f86c7c89917",
+        "name": "Randomly turn on/off all bulbs",
+        "rules": [
+            {
+                "t": "set",
+                "p": "_ui",
+                "pt": "msg",
+                "to": "(\t  /* Generate a true/false for each bulb */\t  $b1 := $random() >= 0.5;\t  $b2 := $random() >= 0.5;\t  $b3 := $random() >= 0.5;\t  $b4 := $random() >= 0.5;\t  /* Apply to msg._ui to randomly update all bulbs */\t  [\t    {\t      \"method\":\"update\",\t      \"components\": [\t        {\t          \"id\":\"bulb1\",\t          \"attributes\": {\t            /* NB: Give this one a different colour to the others */\t            \"class\":\"bulb posn1 \" & ($b1 ? \"bulb-fail\" : \"\"),\t            /* We use a data attribute to make it easier to track on/off state */\t            \"data-state\": ($b1 ? \"on\" : \"off\")\t          }\t        }\t      ]\t    },\t    {\t      \"method\":\"update\",\t      \"components\": [\t        {\t          \"id\":\"bulb2\",\t          \"attributes\": {\t            \"class\":\"bulb posn2 \" & ($b2 ? \"bulb-warn\" : \"\"),\t            \"data-state\": ($b2 ? \"on\" : \"off\")\t          }\t        }\t      ]\t    },\t    {\t      \"method\":\"update\",\t      \"components\": [\t        {\t          \"id\":\"bulb3\",\t          \"attributes\": {\t            \"class\":\"bulb posn3 \" & ($b3 ? \"bulb-warn\" : \"\"),\t            \"data-state\": ($b3 ? \"on\" : \"off\")\t          }\t        }\t      ]\t    },\t    {\t      \"method\":\"update\",\t      \"components\": [\t          {\t              \"id\":\"bulb4\",\t              \"attributes\": {\t                \"class\":\"bulb posn4 \" & ($b4 ? \"bulb-warn\" : \"\"),\t                \"data-state\": ($b4 ? \"on\" : \"off\")\t              }\t          }\t      ]\t    }\t  ]\t)",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 375,
+        "y": 1060,
+        "wires": [
+            [
+                "8653c6e164389a3a"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "77193b09f79ec310",
+        "type": "inject",
+        "z": "ff9704678e3a4b61",
+        "g": "891a5f86c7c89917",
+        "name": "LIGHT 1 on",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "[{\"method\":\"update\",\"components\":[{\"id\":\"bulb1\",\"attributes\":{\"class\":\"bulb posn1 bulb-fail\",\"data-state\":\"on\"}}]}]",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "LIGHT-1",
+        "x": 270,
+        "y": 1100,
+        "wires": [
+            [
+                "8653c6e164389a3a"
+            ]
+        ]
+    },
+    {
+        "id": "4c9d8f9adc268c35",
+        "type": "inject",
+        "z": "ff9704678e3a4b61",
+        "g": "891a5f86c7c89917",
+        "name": "LIGHT 1 off",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "[{\"method\":\"update\",\"components\":[{\"id\":\"bulb1\",\"attributes\":{\"class\":\"bulb posn1\",\"data-state\":\"off\"}}]}]",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "LIGHT-1",
+        "x": 270,
+        "y": 1140,
+        "wires": [
+            [
+                "8653c6e164389a3a"
+            ]
+        ]
+    },
+    {
+        "id": "f86567acf2326bad",
+        "type": "inject",
+        "z": "ff9704678e3a4b61",
+        "g": "891a5f86c7c89917",
+        "name": "LIGHT 2 on",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "[{\"method\":\"update\",\"components\":[{\"id\":\"bulb2\",\"attributes\":{\"class\":\"bulb posn2 bulb-warn\",\"data-state\":\"on\"}}]}]",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "LIGHT-2",
+        "x": 270,
+        "y": 1180,
+        "wires": [
+            [
+                "8653c6e164389a3a"
+            ]
+        ]
+    },
+    {
+        "id": "36595c40107736a2",
+        "type": "inject",
+        "z": "ff9704678e3a4b61",
+        "g": "891a5f86c7c89917",
+        "name": "LIGHT 2 off",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "[{\"method\":\"update\",\"components\":[{\"id\":\"bulb2\",\"attributes\":{\"class\":\"bulb posn2\",\"data-state\":\"off\"}}]}]",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "LIGHT-2",
+        "x": 270,
+        "y": 1220,
+        "wires": [
+            [
+                "8653c6e164389a3a"
+            ]
+        ]
+    },
+    {
+        "id": "3939b0bbde991557",
+        "type": "group",
+        "z": "ff9704678e3a4b61",
+        "g": "1678f3c7ab967e39",
+        "name": "User clicks turn on/off",
+        "style": {
+            "fill": "#e3f3d3",
+            "fill-opacity": "0.26",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "95af327f377fa565",
+            "c3bec95c24885417",
+            "a4fb2160fb46d36c"
+        ],
+        "x": 894,
+        "y": 959,
+        "w": 252,
+        "h": 109.5
+    },
+    {
+        "id": "95af327f377fa565",
+        "type": "switch",
+        "z": "ff9704678e3a4b61",
+        "g": "3939b0bbde991557",
+        "name": "Switch out bulb clicks",
+        "property": "payload.state",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "on",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "off",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 3,
+        "x": 935,
+        "y": 1020,
+        "wires": [
+            [
+                "c3bec95c24885417"
+            ],
+            [
+                "c3bec95c24885417"
+            ],
+            [
+                "68208d9442bc03c1"
+            ]
+        ],
+        "outputLabels": [
+            "A bulb is currently ON",
+            "A bulb is currently OFF",
+            "Anything else"
+        ],
+        "l": false
+    },
+    {
+        "id": "c3bec95c24885417",
+        "type": "change",
+        "z": "ff9704678e3a4b61",
+        "g": "3939b0bbde991557",
+        "name": "Toggle clicked bulb state",
+        "rules": [
+            {
+                "t": "set",
+                "p": "_ui",
+                "pt": "msg",
+                "to": "(\t  [\t    {\t      \"method\":\"update\",\t      \"components\":[\t        {\t          \"id\": _ui.id,\t          \"attributes\":{\t            /* Toggle fill colour */\t            \"class\":\"bulb \" & payload.posn & \" \" & (payload.state = \"off\" ? \"bulb-warn\" : \"\"),\t            /* Toggle state */\t            \"data-state\": (payload.state = \"on\" ? \"off\" : \"on\")\t          }\t        }\t      ]\t    }\t]\t)",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1005,
+        "y": 1000,
+        "wires": [
+            [
+                "3feb6c0d7c1c07b2",
+                "a4fb2160fb46d36c"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "a4fb2160fb46d36c",
+        "type": "link out",
+        "z": "ff9704678e3a4b61",
+        "g": "3939b0bbde991557",
+        "name": "Loop back to uibuilder node input",
+        "mode": "link",
+        "links": [
+            "8ce7dd9a5d97b83b"
+        ],
+        "x": 1105,
+        "y": 1020,
+        "wires": []
+    },
+    {
+        "id": "5eb220cde9614fee",
+        "type": "group",
+        "z": "ff9704678e3a4b61",
+        "g": "1678f3c7ab967e39",
+        "name": "Run this to update the front-end code files (after setting the uibuilder url name)",
+        "style": {
+            "fill": "#ffffff",
+            "fill-opacity": "0.31",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "4f4b2563ed01b96a",
+            "2ae5e4c81a6d9d60",
+            "3bc7cd6653cb521c",
+            "5a1578bc66134fda",
+            "5003f0c412d3fccb",
+            "e0ae3e10d4c8573e",
+            "d52529f420959f1d",
+            "6174f2357fd373d1",
+            "768c8273347df9fa",
+            "5dce296a96d3f95e"
+        ],
+        "x": 524,
+        "y": 1159,
+        "w": 682,
+        "h": 202
+    },
+    {
+        "id": "4f4b2563ed01b96a",
+        "type": "inject",
+        "z": "ff9704678e3a4b61",
+        "g": "5eb220cde9614fee",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 585,
+        "y": 1200,
+        "wires": [
+            [
+                "5a1578bc66134fda",
+                "5003f0c412d3fccb",
+                "d52529f420959f1d",
+                "768c8273347df9fa"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "2ae5e4c81a6d9d60",
+        "type": "template",
+        "z": "ff9704678e3a4b61",
+        "g": "5eb220cde9614fee",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "mustache",
+        "template": "<!doctype html>\n<html lang=\"en\"><head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <link rel=\"icon\" href=\"../uibuilder/images/node-blue.ico\">\n\n    <title>Dynamic SVG Example - Node-RED UIBUILDER</title>\n    <meta name=\"description\" content=\"Node-RED UIBUILDER - Dynamic SVG Example\">\n\n    <!-- Your own CSS (defaults to loading uibuilders css)-->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\"></script>\n    <script defer src=\"./index.js\"></script>\n    <!-- #endregion -->\n</head><body>\n    <!-- This template defines a reusable bulb icon component. It is applied in the JavaScript code -->\n    <template id=\"bulb-template\">\n        <svg id=\"mybulb\" class=\"bulb\" height=\"3rem\" viewBox=\"0 0 1024 1024\" version=\"1.1\"\n            xmlns=\"http://www.w3.org/2000/svg\">\n            <defs>\n                <filter id=\"shadow\">\n                    <feDropShadow dx=\"1\" dy=\"1\" stdDeviation=\"5\" flood-opacity=\"50%\" />\n                </filter>\n                <filter id=\"glow\" filterUnits=\"userSpaceOnUse\" x=\"-50%\" y=\"-50%\" width=\"200%\" height=\"200%\">\n                    <!-- blur the text at different levels-->\n                    <feGaussianBlur in=\"SourceGraphic\" stdDeviation=\"5\" result=\"blur5\" />\n                    <feGaussianBlur in=\"SourceGraphic\" stdDeviation=\"10\" result=\"blur10\" />\n                    <feGaussianBlur in=\"SourceGraphic\" stdDeviation=\"20\" result=\"blur20\" />\n                    <feGaussianBlur in=\"SourceGraphic\" stdDeviation=\"30\" result=\"blur30\" />\n                    <feGaussianBlur in=\"SourceGraphic\" stdDeviation=\"50\" result=\"blur50\" />\n                    <!-- merge all the blurs except for the first one -->\n                    <feMerge result=\"blur-merged\">\n                        <feMergeNode in=\"blur10\" />\n                        <feMergeNode in=\"blur20\" />\n                        <feMergeNode in=\"blur30\" />\n                        <feMergeNode in=\"blur50\" />\n                    </feMerge>\n                    <!-- recolour the merged blurs red-->\n                    <feColorMatrix result=\"red-blur\" in=\"blur-merged\" type=\"matrix\" values=\"1 0 0 0 0\n                                            0 0.06 0 0 0\n                                            0 0 0.44 0 0\n                                            0 0 0 1 0\" />\n                    <feMerge>\n                        <!--<feMergeNode in=\"red-blur\"/>        largest blurs coloured red -->\n                        <feMergeNode in=\"blur-merged\" />\n                        <feMergeNode in=\"blur5\" /> <!-- smallest blur left white -->\n                        <feMergeNode in=\"SourceGraphic\" /> <!-- original -->\n                    </feMerge>\n                </filter>\n            </defs>\n            <title>TITLE</title>\n            <path name=\"icon\"\n                d=\"M511.549861 803.293331H408.419043a73.232959 73.232959 0 0 1-67.1862-41.991375 59.795719 59.795719 0 0 1-6.71862-30.569722 207.60536 207.60536 0 0 0-33.593101-113.88061 196.519637 196.519637 0 0 0-27.882273-33.5931A463.248853 463.248853 0 0 1 217.274302 504.314738a399.086031 399.086031 0 0 1-36.95241-75.248544 242.542184 242.542184 0 0 1-15.116895-77.264131 349.032312 349.032312 0 0 1 8.062344-84.990544 314.76735 314.76735 0 0 1 51.733375-114.888403A367.172586 367.172586 0 0 1 361.724634 34.011334 327.532728 327.532728 0 0 1 433.949799 8.144647 369.524103 369.524103 0 0 1 528.682342 0.418234a333.579486 333.579486 0 0 1 126.310057 29.225997 326.860866 326.860866 0 0 1 70.881442 44.678824A382.625412 382.625412 0 0 1 808.848799 168.383736a314.095488 314.095488 0 0 1 41.991375 105.146403 312.751764 312.751764 0 0 1 6.382689 92.045095 275.799353 275.799353 0 0 1-20.15586 76.256338 449.139751 449.139751 0 0 1-61.139443 107.16199 497.513815 497.513815 0 0 1-33.5931 39.639858 160.575019 160.575019 0 0 0-31.241583 48.038134 215.331773 215.331773 0 0 0-18.812136 55.428615c-1.679655 11.757585 0 23.179239-2.687448 33.5931a171.660742 171.660742 0 0 1-3.695241 25.194826 69.873649 69.873649 0 0 1-33.593101 40.647651 74.576683 74.576683 0 0 1-39.639858 10.07793zM490.050277 88.768088c-11.085723 0-22.171446 2.351517-33.5931 4.031172a210.96467 210.96467 0 0 0-74.240752 26.538549 244.221839 244.221839 0 0 0-55.428616 44.342893 222.386324 222.386324 0 0 0-43.335099 63.82689 230.784599 230.784599 0 0 0-19.483998 94.732543 28.218204 28.218204 0 0 0 33.5931 28.890066 28.890066 28.890066 0 0 0 22.171446-26.202618v-13.773171a167.965501 167.965501 0 0 1 9.406068-49.045927 184.762052 184.762052 0 0 1 64.834684-83.98275 167.965501 167.965501 0 0 1 93.72475-33.593101 142.770676 142.770676 0 0 0 18.140274 0 23.851101 23.851101 0 0 0 19.148067-15.452826 33.5931 33.5931 0 0 0 0-19.483998 23.51517 23.51517 0 0 0-20.491791-18.140274 122.950747 122.950747 0 0 0-15.116895 0zM647.601917 943.040628a15.788757 15.788757 0 0 1-13.773171 15.116895H400.356699a17.468412 17.468412 0 0 1-16.460619-8.734206 18.812136 18.812136 0 0 1 0-20.15586 16.124688 16.124688 0 0 1 16.460619-4.703034h227.089358a19.148067 19.148067 0 0 1 19.148067 20.827722zM405.731595 899.369598a18.140274 18.140274 0 0 1-16.460619-12.765378 17.804343 17.804343 0 0 1 15.452826-23.851101H635.508401a18.812136 18.812136 0 0 1 17.804343 13.773171 19.819929 19.819929 0 0 1-10.749792 21.499584 24.187032 24.187032 0 0 1-8.734206 0H423.535938zM437.64504 1022.992207a17.132481 17.132481 0 0 1-15.452826-9.406068 18.140274 18.140274 0 0 1 15.116895-26.202618h139.411367a19.819929 19.819929 0 0 1 19.483998 17.804343 16.124688 16.124688 0 0 1-8.734206 15.788757 19.148067 19.148067 0 0 1-9.741999 3.023379H442.348074z\" />\n            <!-- <circle name=\"default\" cx=\"50\" cy=\"50\" r=\"50\"></circle> -->\n        </svg>\n    </template>\n\n    <h1 class=\"with-subtitle\">Dynamic SVG Example</h1>\n    <div role=\"doc-subtitle\">Using the UIBUILDER IIFE library.</div>\n\n    <p>\n        This is a UIBUILDER example showing how easy it is to create a dynamic view of IoT devices in a building\n        using SVG images both for the background (floor-plan) and device indicators.\n    </p>\n\n    <div id=\"more\"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>\n\n    <h2>My House, Ground Floor</h2>\n    <div id=\"floorplan\" class=\"plan\">\n        <!-- \n            Bulb icons are dynamically inserted here by the JavaScript code.\n            The plan class provides the background plan image.\n        -->\n    </div>\n</body></html>",
+        "output": "str",
+        "x": 860,
+        "y": 1200,
+        "wires": [
+            [
+                "3bc7cd6653cb521c"
+            ]
+        ]
+    },
+    {
+        "id": "3bc7cd6653cb521c",
+        "type": "uib-save",
+        "z": "ff9704678e3a4b61",
+        "g": "5eb220cde9614fee",
+        "url": "uib-dynamic-svg-eg",
+        "uibId": "18b02b8e78a54427",
+        "folder": "src",
+        "fname": "",
+        "createFolder": false,
+        "reload": false,
+        "usePageName": false,
+        "encoding": "utf8",
+        "mode": 438,
+        "name": "",
+        "topic": "",
+        "x": 1090,
+        "y": 1200,
+        "wires": []
+    },
+    {
+        "id": "5a1578bc66134fda",
+        "type": "change",
+        "z": "ff9704678e3a4b61",
+        "g": "5eb220cde9614fee",
+        "name": "index.html",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.html",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 710,
+        "y": 1200,
+        "wires": [
+            [
+                "2ae5e4c81a6d9d60"
+            ]
+        ]
+    },
+    {
+        "id": "5003f0c412d3fccb",
+        "type": "change",
+        "z": "ff9704678e3a4b61",
+        "g": "5eb220cde9614fee",
+        "name": "index.js",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.js",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 700,
+        "y": 1240,
+        "wires": [
+            [
+                "e0ae3e10d4c8573e"
+            ]
+        ]
+    },
+    {
+        "id": "e0ae3e10d4c8573e",
+        "type": "template",
+        "z": "ff9704678e3a4b61",
+        "g": "5eb220cde9614fee",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "javascript",
+        "syntax": "mustache",
+        "template": "// @ts-nocheck\n/** Dynamic SVG example */\n\n// uibuilder.logLevel = 1\n\n// The Template tag in index.html contains a template \"bulb\" SVG image\n// Here, we clone that multiple times and set some properties.\n// Note that `htmlClone` is a function that will land in the uibuilder client in v6.2\n// Also, the $ function is improved in v6.2 so a copy of that is included here for convenience.\n//\n// We track state and position class on data-* attributes so that it is much easier to process\n// click events in Node-RED without having to create a custom click handler, we can just use the standard eventSend.\n// CSS classes do all the clever stuff 😁\n\nuibuilder.applyTemplate('bulb-template', 'floorplan', {\n    attributes: {\n        id: 'bulb1',\n        // Apply base bulb class and a positioning class\n        class: 'bulb posn1',\n        // Track the on/off state separately - makes processing in Node-RED easier\n        'data-state': 'off',\n        // Track the position class separately - makes processing in Node-RED easier\n        'data-posn': 'posn1',\n        // We have to add event handlers after a clone, they cannot be included in the template\n        onclick: 'uibuilder.eventSend(event)'\n    }\n})\nuibuilder.applyTemplate('bulb-template', 'floorplan', {\n    attributes: {\n        id: 'bulb2',\n        // Apply base bulb class and a positioning class\n        class: 'bulb posn2',\n        // Track the on/off state separately - makes processing in Node-RED easier\n        'data-state': 'off',\n        // Track the position class separately - makes processing in Node-RED easier\n        'data-posn': 'posn2',\n        // We have to add event handlers after a clone, they cannot be included in the template\n        onclick: 'uibuilder.eventSend(event)'\n    }\n})\nuibuilder.applyTemplate('bulb-template', 'floorplan', {\n    attributes: {\n        id: 'bulb3',\n        // Apply base bulb class and a positioning class\n        class: 'bulb posn3',\n        // Track the on/off state separately - makes processing in Node-RED easier\n        'data-state': 'off',\n        // Track the position class separately - makes processing in Node-RED easier\n        'data-posn': 'posn3',\n        // We have to add event handlers after a clone, they cannot be included in the template\n        onclick: 'uibuilder.eventSend(event)'\n    }\n})\nuibuilder.applyTemplate('bulb-template', 'floorplan', {\n    attributes: {\n        id: 'bulb4',\n        // Apply base bulb class and a positioning class\n        class: 'bulb posn4',\n        // Track the on/off state separately - makes processing in Node-RED easier\n        'data-state': 'off',\n        // Track the position class separately - makes processing in Node-RED easier\n        'data-posn': 'posn4',\n        // We have to add event handlers after a clone, they cannot be included in the template\n        onclick: 'uibuilder.eventSend(event)'\n    }\n})\n\n// htmlClone($('#bulb-template'), $('#floorplan'), {\n//     // As always, we set a unique ID for every created element so it can be updated easily later\n//     id: 'bulb1',\n//     // You only need this if you want to choose 'first' or a position number,\n//     // the clone will be added at the specified child position of the parent.\n//     // position: 'last', \n//     attributes: {\n//         // Apply base bulb class and a positioning class\n//         class: 'bulb posn1',\n//         // Track the on/off state separately - makes processing in Node-RED easier\n//         'data-state': 'off',\n//         // Track the position class separately - makes processing in Node-RED easier\n//         'data-posn': 'posn1'\n//     },\n//     // We have to add event handlers after a clone, they cannot be included in the template\n//     events: {\n//         click: 'uibuilder.eventSend'\n//     }\n// })\n\n// htmlClone(mySelector('#bulb-template'), mySelector('#floorplan'), {\n//     id: 'bulb2',\n//     attributes: {\n//         class: 'bulb posn2',\n//         'data-state': 'off',\n//         'data-posn': 'posn2'\n//     },\n//     events: {\n//         click: 'uibuilder.eventSend'\n//     }\n// })\n\n// htmlClone(mySelector('#bulb-template'), mySelector('#floorplan'), {\n//     id: 'bulb3',\n//     attributes: {\n//         class: 'bulb posn3',\n//         'data-state': 'off',\n//         'data-posn': 'posn3'\n//     },\n//     events: {\n//         click: 'uibuilder.eventSend'\n//     }\n// })\n\n// htmlClone(mySelector('#bulb-template'), mySelector('#floorplan'), {\n//     id: 'bulb4',\n//     attributes: {\n//         class: 'bulb posn4',\n//         'data-state': 'off',\n//         'data-posn': 'posn4'\n//     },\n//     events: {\n//         click: 'uibuilder.eventSend'\n//     },\n// })\n",
+        "output": "str",
+        "x": 860,
+        "y": 1240,
+        "wires": [
+            [
+                "3bc7cd6653cb521c"
+            ]
+        ]
+    },
+    {
+        "id": "d52529f420959f1d",
+        "type": "change",
+        "z": "ff9704678e3a4b61",
+        "g": "5eb220cde9614fee",
+        "name": "index.css",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.css",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 700,
+        "y": 1280,
+        "wires": [
+            [
+                "6174f2357fd373d1"
+            ]
+        ]
+    },
+    {
+        "id": "6174f2357fd373d1",
+        "type": "template",
+        "z": "ff9704678e3a4b61",
+        "g": "5eb220cde9614fee",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "css",
+        "syntax": "mustache",
+        "template": "/* Load defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-brand.css`\n * This version auto-adjusts for light/dark browser settings but might not be as complete.\n */\n@import url(\"../uibuilder/uib-brand.css\");\n\n/* These variables build on existing variables in uib-brand.css\n * They will be incorporated into that file in uibuilder v6.2\n */\n:root {\n    --warning-intense: hsl(var(--warning-hue) 100% 50%);\n    --failure-intense: hsl(var(--failure-hue) 100% 50%);\n    --surface5: hsl(\n            /* additional background shade */\n            var(--brand-hue) calc(100% * var(--surfaces-saturation)) calc(100% * (var(--surfaces-lightness) - (var(--surfaces-factor) * .20) + (var(--surfaces-factor) * var(--surfaces-bias)))));\n}\n\n\n/* Bulb classes control look, colour and position */\n\n.bulb {\n    /* Default \"off\" class plus standard style */\n    z-index: 9999 !important;\n    /* Bulbs HAVE to be in the top z-layer */\n    cursor: pointer;\n    position: absolute;\n    /* allows exact positioning within the parent div */\n    transition: filter 2s ease-in-out 0s;\n    background-color: rgba(0, 0, 0, 0.001);\n    /* transparent background */\n    filter: url(\"#shadow\");\n    /* selects the shadow filter */\n}\n\n.bulb path {\n    fill: grey;\n}\n\n.bulb-warn {\n    /* Standard \"on\" class */\n    filter: url('#glow');\n    /* selects the glow filter instead of shadow */\n}\n\n.bulb-warn path {\n    fill: var(--warning-intense);\n}\n\n.bulb-fail {\n    /* Alternative \"on\" class with different colour */\n    filter: url('#glow');\n}\n\n.bulb-fail path {\n    fill: var(--failure-intense);\n}\n\n/* Bulb position classes, change as needed\n * Positions are relative to the parent floorplan div\n */\n.posn1 {\n    top: 100px;\n    left: 100px;\n}\n\n.posn2 {\n    top: 120px;\n    left: 270px;\n}\n\n.posn3 {\n    top: 120px;\n    left: 650px;\n}\n\n.posn4 {\n    top: 270px;\n    left: 250px;\n}\n\n/* floorplan div class change anything\n * except the position:relative.\n * The background image location is relative\n * to your uibuilder front-end files.\n */\n.plan {\n    position: relative;\n    width: 99%;\n    height: 30rem;\n    background-color: var(--surface5);\n    background-repeat: no-repeat;\n    background-image: url(\"./background.svg\");\n    /* Sadly, can't use a GIST directly here. Copy this file to the local folder instead: */\n    /* background: url(\"https://gist.github.com/TotallyInformation/02eb3716157db586f3f5b8a85c241009#file-background-svg\"); */\n}\n",
+        "output": "str",
+        "x": 860,
+        "y": 1280,
+        "wires": [
+            [
+                "3bc7cd6653cb521c"
+            ]
+        ]
+    },
+    {
+        "id": "768c8273347df9fa",
+        "type": "change",
+        "z": "ff9704678e3a4b61",
+        "g": "5eb220cde9614fee",
+        "name": "background.svg",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "background.svg",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 720,
+        "y": 1320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5dce296a96d3f95e",
+        "type": "comment",
+        "z": "ff9704678e3a4b61",
+        "g": "5eb220cde9614fee",
+        "name": "background.svg",
+        "info": "Can't include this directly here otherwise\nthe flow cannot be posted to the forum.\n\nThe example background file can be obtained\nhere:\n\nhttps://gist.github.com/TotallyInformation/02eb3716157db586f3f5b8a85c241009#file-background-svg\n\nCopy the text out of it and paste into a new \nfile, `background1.svg` in the same location \nas your `index.html` file.\n",
+        "x": 900,
+        "y": 1320,
+        "wires": []
+    },
+    {
+        "id": "8653c6e164389a3a",
+        "type": "junction",
+        "z": "ff9704678e3a4b61",
+        "g": "1678f3c7ab967e39",
+        "x": 520,
+        "y": 1040,
+        "wires": [
+            [
+                "18b02b8e78a54427"
+            ]
+        ]
+    },
+    {
+        "id": "9ca3a3da680721e7",
+        "type": "inject",
+        "z": "ff9704678e3a4b61",
+        "g": "1678f3c7ab967e39",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 230,
+        "y": 1320,
+        "wires": [
+            [
+                "bf47991b0cd95827"
+            ]
+        ]
+    },
+    {
+        "id": "bf47991b0cd95827",
+        "type": "link out",
+        "z": "ff9704678e3a4b61",
+        "g": "1678f3c7ab967e39",
+        "name": "Send to uibuilder node",
+        "mode": "link",
+        "links": [
+            "8ce7dd9a5d97b83b"
+        ],
+        "x": 395,
+        "y": 1320,
+        "wires": []
+    }
+]
+

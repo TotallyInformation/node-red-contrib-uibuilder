@@ -3,8 +3,7 @@ title: The main uibuilder node
 description: |
   Usage and configuration.
 created: 2023-02-05 16:31:39
-lastUpdated: 2023-02-05 16:31:46
-updated: 2023-12-30 17:01:41
+updated: 2024-06-28 14:43:57
 ---
 
 > [!note]
@@ -17,13 +16,15 @@ A uibuilder node that has been added to a flow is configured using its Editor co
 
 The panel is split into several tabs: Core, Files, Libraries, and Advanced.
 
-## Core Tab
+## Node configuration
+
+### Core Tab
 
 ![uibuilder node configuration panel >](../images/uibuilder-config-core.jpg)
 
 This is the main tab.
 
-### URL
+#### URL
 
 The URL field defines the last part of the URL for this uibuilder instance. 
 
@@ -43,7 +44,7 @@ URL's have some other requirements that must be met, if you don't meet the requi
 
 If copying and pasting a uibuilder node or a flow containing a node, upon pasting, the URL is reset to blank. Since this is an error, the node will be marked with a red triangle and attempting to deploy will give an error.
 
-### Buttons
+#### Buttons
 
 The buttons below the URL field will each open a new browser tab. The Open button has already been described.
 
@@ -53,32 +54,62 @@ The `Instance Details` button opens a page with a summary of the configuration a
 
 The `Docs` button opens the local copy of this documentation.
 
-### Info panel
+#### Info panel
 
 Under the buttons is the information panel. This shows you the detail for the webserver that uibuilder is currently using. This ensures that you know what URL prefix to use in front of the URL defined above.
 
-### Name and Topic
+#### Name and Topic
 
 These are optional. If you set a Name, it will show in the icon in the flow along side the URL. This is the standard Node-RED name field.
 
 The Topic string will be added to messages being sent to the front-end if the inbound message to the node does not contain a topic field. So consider it a default entry.
 
-### Template Settings
+#### Template Settings
 
-!> Changing the template overwrites existing files with the same names in your `<uibRoot>/<url>` server folder. So make sure you take copies before pressing the Load button if you don't want to loose them.
+> [!NOTE]
+> Changing the template overwrites existing files with the same names in your `<uibRoot>/<url>` server folder. So make sure you take copies before pressing the Load button if you don't want to loose them.
 
 uibuilder Templates let you have a rapid prototype for your front-end code. The Templates load a complete set of front-end files along with a README and an npm style `package.json` file. This allows a template to be a complete working model, ready to go.
 
 As at uibuilder v5, there are 4 built-in Templates plus the ability to load external templates from GitHub and elsewhere. More information on templates can be found in the [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) page and in the [Creating Templates](creating-templates) page.
 
-## Files Tab
+### Files Tab
 
 tbc.
 
-## Libraries Tab
+### Libraries Tab
 
 tbc.
 
-## Advanced Tab
+### Advanced Tab
 
 tbc.
+
+## Message inputs
+
+Any message sent to a uibuilder node input will be forwarded direct to connected clients. With a few exceptions:
+
+* Control messages - Any control message received by a uibuilder node is assumed to be in error and is ignored. If you send a message and it is being ignored, check that it does not have a `msg.uibuilderCtrl` property.
+
+Messages for clients should have the same structure as other Node-RED messages. However, there are some specific formats that the uibuilder client will recognise and automatically process for you. See the [Standard Messages page](pre-defined-msgs) for details. 
+
+Most notably, any message containing a `msg._ui` property will not make it through to front-end user code. It is processed automatically by the uibuilder front-end library. That is the standard property used by uibuilder's [low-code capability](client-docs/config-driven-ui.md).
+
+## Message outputs
+
+uibuilder nodes have two output ports. 
+
+### Standard messages
+The upper port (#1) outputs "standard" messages. Typically these are messages that come from client activities such as button presses or form inputs. Any front-end process or code that use either the `uibuilder.eventSend(event)` or the `uibuilder.send({...})` functions.
+
+If the advanced flag "Include msg._uib in standard msg output." is on, uibuilder automatically adds client details to the output under `msg._uib`. Those details may be used for identity and access management flows.
+
+### Control messages
+
+The lower port (#2) outputs "control" messages. These are described in the [Standard messages documentation](pre-defined-msgs#control-message-overview). The messages include client connect and disconnect and visibility change messages.
+
+The most common use of control messages is to loop back to a `uib-cache` nodes so that the cache is replayed to new or reloading clients.
+
+![Example of using uib-cache](uib-cache-example.png)
+
+But they can also be used for doing authentication and authorisation controls.

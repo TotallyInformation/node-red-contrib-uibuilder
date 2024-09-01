@@ -3,14 +3,13 @@ title: Future multi-node communications
 description: |
   Initially, UIBUILDER was a single node. However, there was always the intent to offer wider communications from other packages and nodes to UIBUILDER-based front-end's. This document lays out a proposal for how that may happen.
 created: 2021-09-29 20:04:36
-lastUpdated: 2023-09-30 13:09:32
-updated: 2023-12-30 17:01:41
+updated: 2024-06-27 15:54:10
 ---
 
 Status: **Draft**
 
-UIBUILDER v5 will use the Node.js package [ti-common-event-handler](https://github.com/TotallyInformation/ti-common-event-handler) to create a shareable event handler
-that facilitates communications between 3rd-party Node-RED nodes and `uibuilder` node instances (and back again).
+UIBUILDER uses a Node.js package [ti-common-event-handler](https://github.com/TotallyInformation/ti-common-event-handler) to create a shareable event handler
+that facilitates communications between 3rd-party Node-RED nodes and `uibuilder` node instances (and back again). This is exposed, along with some core uibuilder data using a global variable `ti-
 
 Each UIBUILDER instance will act as a hub for sending data to its connected web clients and receiving messages back and routing them back to the originating node.
 
@@ -39,8 +38,6 @@ Note that the component node does not _need_ to define any front-end components.
 However, there _will_ be a set of standards that will allow a component node to make resources available to uibuilder-based front-ends. 
 
 The important thing is that messages will be automatically routed both to and from the front-end.
-
-It is likely that there will be a mechanism in the `uibuilderfe.js` front-end library that will enable it to auto-load defined resources. Details to be defined later.
 
 ## How it works - the `uibuilder` node
 
@@ -102,3 +99,50 @@ However, it _does_ lay a foundation that will let nodes be created that _will_ a
 This means that this approach is the first step towards a low-/no-code, simple to use, node-based web ui builder.
 
 And yet, despite that, it does not break the core design principal of uibuilder which is to be framework agnostic and unopinionated.
+
+## uibuilder standard events
+
+### Emitters
+
+* `RED.events.emit('node-red-contrib-uibuilder/runtimeSetupComplete', uib)`
+  
+  Emitted when the uibuilder module completes runtime setup which means that all of the core settings, methods and classes are now available. But **not** yet any instance data.
+
+  The passed `uib` data is a reference to the global uibuilder settings. This includes references to master folder locations, the uibuilder package.json, standard file names, socket.io channels, custom ExpressJS server settings, etc.
+
+  This can be used by non-uibuilder contributed nodes to ensure that the uibuilder runtime is installed and configured and to obtain a reference to the key settings.
+  
+
+* `RED.events.emit(`node-red-contrib-uibuilder/instanceSetupComplete/${this.url}`, this)` and `RED.events.emit('node-red-contrib-uibuilder/instanceSetupComplete', this)`
+  
+  Emitted when each instance (uibuilder node) completes its setup. At this point, data for this instance is fully available. The passed `this` is a reference to the defined node with all settings and methods.
+
+  The first variation allows for monitoring of ANY instance, the second allows for monitoring of a specific instance.
+
+  This can be used by _any_ node (part of uibuilder or non-uibuilder contributed nodes) to know when a specific uibuilder node instance runtime is installed and configured and to obtain a reference to the node.
+
+  > [!NOTE]
+  > Due to the way that Node-RED works, it is not possible to have an event that fires when all instances are completed.
+
+
+* `RED.events.emit(`node-red-contrib-uibuilder/URL-change`, { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )` and `RED.events.emit(`node-red-contrib-uibuilder/URL-change/${this.oldUrl}`, { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )`
+  
+  Emitted if a uibuilder node instance is renamed. e.g. its URL property is changed which also results in the instance folder changing names.
+
+
+* `tiEvents.emit( `node-red-contrib-uibuilder/${node.url}`, { ...msg, ...{ _uib: { originator: this.id } } } )` [`uib-sender` node]
+  
+  Emitted when the `uib-sender` node gets a Node-RED message to enable sending to clients. This is 1 of 2 methods that could be used.
+
+
+### Listeners
+
+* `node-red-contrib-uibuilder/${node.url}`
+
+  If an event is emitted targetted at a specific instance (url), the event is automatically forwarded to connected clients. The forwarded message contains the data attached to the event.
+
+  This event is emitted by the `uib-sender` node.
+
+* `tiEvents.on(`node-red-contrib-uibuilder/return/${this.id}`, (msg) => { this.send(msg) })` [`uib-sender` node]
+  
+  If the `uib-sender` node has been used to tunnel messages to clients and if the "return" flag is set, this is the listener that will process returned messages.

@@ -1,5 +1,5 @@
 <!--
-    Copyright (c) 2023-2023 Julian Knight (Totally Information)
+    Copyright (c) 2023-2024 Julian Knight (Totally Information)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
     limitations under the License.
 -->
 
-<link type="text/css" rel="stylesheet" href="./resources/node-red-contrib-uibuilder/ti-common.css" media="all">
-<script src="./resources/node-red-contrib-uibuilder/ti-common.js"></script>
 <script src="./resources/node-red-contrib-uibuilder/uib-tag.js"></script>
 
 <script type="text/html" class="uib-tooltip" data-template-name="uib-tag">
@@ -84,119 +82,5 @@
     </div>
     
 </div>
-
-</script>
-
-<script type="text/html" data-help-name="uib-tag">
-
-<p>
-    Zero-code UI builder. Creates a sing HTML or web component element (tag) from simple input data.<br><br>
-    Requires the "new" front-end client library (either the IIFE or ESM version).
-</p>
-<p>
-    Please try out the example in the import library. <a href="./uibuilder/docs/#/nodes/uib-tag" target="_blank">Documentation</a>.
-</p>
-
-<h3>Inputs</h3>
-<dl class="message-properties">
-    <dt>mode <span class="property-type">string</span></dt>
-    <dd>
-        If the <code>msg.mode</code> option is chosen in settings, this property can be set to either "update" or "delete".
-    </dd>
-
-    <dt class="optional">Other <span class="property-type">various</span></dt>
-    <dd>
-        Other msg properties may be passed into the <i>CSS Selector</i>, <i>Content Source</i> and <i>Attributes Source</i> fields if set in the settings.
-    </dd>
-</dl>
-
-<h3>Outputs</h3>
-<dl class="message-properties">
-    <dt>_ui <span class="property-type">object</span></dt>
-    <dd>
-        The _ui configuration properties that defines the creation of the element.<br>
-        Use this in your own flows or in a JSON input for an initial setup of the UI if desired.
-        <p>
-            Most commonly, simply send to the input of a <code>uibuilder</code> node or a <code>uib-cache</code>
-            node. uibuilder will automatically create the desired HTML in the client browser.
-        </p>
-    </dd>
-
-    <dt>topic <span class="property-type">string</span></dt>
-    <dd>
-        The input topic.
-    </dd>
-    <dd>
-        When chaining <code>uib-element</code>/<code>uib-update</code> nodes together, make sure that at least the final
-        output has a unique topic string so that caching using the <code>uib-cache</code> node is
-        easier.
-    </dd>
-    
-</dl>
-
-<h3>Node Settings</h3>
-<dl class="message-properties">
-    <dt>Mode <span class="property-type">selection</span></dt>
-    <dd>
-        The mode of operation.
-    </dd>
-    <dd>
-        Must be one of 'update' or 'delete'. Can also be set to <code>msg.mode</code>.
-    </dd>
-
-    <dt>CSS Selector <span class="property-type">string</span></dt>
-    <dd>
-        Required. A <a href="https://developer.mozilla.org/en-US/docs/web/css/css_selectors" target="_blank">CSS selector</a> that the node will update.
-    </dd>
-    <dd>
-        Note that <b>ALL</b> matching elements will be updated/deleted not just the first.
-    </dd>
-
-    <dt class="optional">Content Source <span class="property-type">string</span></dt>
-    <dd>
-        Optional. Text, HTML or Markdown that will replace the slot content of the selected element.
-    </dd>
-    <dd>
-        If specified, the result must be a string.
-    </dd>
-
-    <dt class="optional">Markdown? <span class="property-type">boolean</span></dt>
-    <dd>
-        If set, the <i>Content Source</i> will be treated as Markdown <i>IF</i> the <a href="https://markdown-it.github.io/" target="_blank">Markdown-IT</a> library is loaded into the client web page.
-    </dd>
-
-    <dt class="optional">Attribs Source <span class="property-type">object</span></dt>
-    <dd>
-        Optional. An object containing attribute-name/value keypairs.
-    </dd>
-    <dd>
-        e.g. <code>{"class":"myclass", "data-foo":"bah"}</code>
-    </dd>
-
-    <dt>Topic <span class="property-type">string</span></dt>
-    <dd>
-        Fixed topic string. Only used if the input <code>msg</code> does not
-        contain a <code>topic</code> property.
-    </dd>
-
-    <dt class="optional">Name <span class="property-type">string</span></dt>
-    <dd>Optional short description shown in the admin interface</dd>
-</dl>
-
-<h3>Details</h3>
-<p>
-    Select the mode of operation (update or delete), provide a CSS Selector that will identify the element(s) to work on.
-    If updating, provide updated slot content and/or attributes. Then send the 
-    output to a uibuilder node to update/remove the element(s).
-</p>
-<p>
-    Multiple <code>uib-update</code> and <code>uib-element</code> nodes can be chained together for more complex needs.
-</p>
-<p>
-    The resulting output produces the dynamic, configuration-driven, low-code <code>msg._ui</code>
-    JSON configuration data used by the uibuilder front-end client library to automatically
-    create HTML on your page. So this can be further processed, saved for future use or sent 
-    direct to a uibuilder node (via a <code>uib-cache</code> node if desired).
-</p>
 
 </script>

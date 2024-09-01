@@ -1,6 +1,6 @@
 ---
 created: 2023-10-21 15:30:26
-updated: 2023-12-30 17:01:41
+updated: 2024-09-01 15:40:16
 ---
 # How to manage UIBUILDER documentation using Docksify.
 
@@ -8,24 +8,22 @@ The UIBUILDER documentation is made available as a GitHub web site and locally i
 
 Docksify works using a single, main `docs/index.html` file.
 
+## Build process
+
+The Docsify configuration, styles and extensions are optimised for offline use when used in Node-RED.
+
+Run `npm run buildDocBundle` from the uibuilder source folder. (Only for uibuilder developers)
+
 ## Included Docksify Extensions
 
-All Docksify extensions are loaded externally from the `jsdelivr` CDN website. So Internet access is required for everything to work correctly.
+The following Docsify extensions are bundled into this package:
 
-```html
-<script src="https://cdn.jsdelivr.net/npm/docsify-edit-on-github/index.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify-darklight-theme/dist/docsify-themeable/main.min.js" type="text/javascript"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify-darklight-theme/dist/docsify-themeable/index.min.js" type="text/javascript"></script>
-<script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-nginx.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/front-matter.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify-mustache/dist/docsify-mustache.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify-plugin-flexible-alerts/dist/docsify-plugin-flexible-alerts.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
-```
+* `docsify-copy-code`
+* `docsify-darklight-theme`
+* `docsify-pagination`
+* `docsify-plugin-flexible-alerts`
+* `docsify-plugin-toc`
+* `docsify-themeable`
 
 ## Custom Code
 
@@ -39,21 +37,44 @@ The before and after page rendering hooks are used to:
 ### Docksify themes
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-darklight-theme/dist/docsify-themeable/style.min.css" type="text/css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable/dist/css/theme-simple.css" title="light">
-<link rel="stylesheet alternative" href="https://cdn.jsdelivr.net/npm/docsify-themeable/dist/css/theme-simple-dark.css" title="dark">
+<link rel="stylesheet" type="text/css" href="./.config/docsify-darklight-theme/dist/docsify-themeable/style.min.css">
+<link rel="stylesheet" type="text/css" href="./.config/docsify-themeable/dist/css/theme-simple.css" title="light">
+<link rel="stylesheet alternative" type="text/css" href="./.config/docsify-themeable/dist/css/theme-simple-dark.css" title="dark">
+<link rel="stylesheet" type="text/css" href="./.config/index.css">
 ```
 
 ### Custom theming
 
-The `<style>` section in the `index.html` head contains a number of style overrides.
+`./.config/index.css` contains a large number of style overrides.
 
-#### Image alignment
+#### Image alignment & sizing
+
+Align images:
 
 ```markdown
 ![image alt >](/image-right.jpg) - aligns an image right
 ![image alt <](/image-left.jpg) - aligns an image left
 ![image alt ><](/image-centre.jpg) - aligns an image centre
+```
+
+Size overrides for images:
+
+```markdown
+![logo](https://docsify.js.org/_media/icon.svg ':size=WIDTHxHEIGHT')
+![logo](https://docsify.js.org/_media/icon.svg ':size=50x100')
+![logo](https://docsify.js.org/_media/icon.svg ':size=100')
+```
+
+You can also add a custom CSS class if needed:
+
+```markdown
+![logo](https://docsify.js.org/_media/icon.svg ':class=someCssClass')
+```
+
+You can also customise the HTML ID:
+
+```markdown
+![logo](https://docsify.js.org/_media/icon.svg ':id=someCssId')
 ```
 
 ## Information/Callout Boxes
@@ -66,19 +87,13 @@ The ["Flexible Alerts"](https://github.com/fzankl/docsify-plugin-flexible-alerts
 > [!TIP]
 
 > [!WARNING]
-
-> [!ATTENTION]
 ```
 
 Additional types can be defined in `index.html` and the layout/style can be adjusted. See the plugin documentation for details.
 
-The following Docsify native callouts can also be used but are not recommended as they do not render well in all circumstances:
+Note that the 3 listed match the callouts allowed in GitHub markdown as well. They are also supported in Obsidian (via ) and natively in Typora.
 
-```
-!> Callout with red exclamation mark
-
-?> Callout with blue information mark
-```
+Docsify native callouts (`!>`, `?>`) are not recommended as they do not match the commonly used GitHub callouts.
 
 ## UIBUILDER Major Version Changes
 

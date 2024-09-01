@@ -3,8 +3,7 @@ title: Features of the modern, modular front-end client `uibuilder.esm.js` and `
 description: |
   Description of the main features.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-10-08 13:39:09
-updated: 2023-12-30 17:01:41
+updated: 2024-07-21 15:29:57
 ---
 
 - [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)
@@ -47,7 +46,8 @@ uibuilder adds the global `$` and `$$` functions when loaded if it can (it won't
 
 The `$` function acts in a similar way to the version provided by jQuery and the same as in your browser dev console. It is actually bound to [`document.querySelector`](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) which lets you get a reference to an HTML element using a CSS selector. If multiple elements match the selection, the element returned will be the first one found.
 
-!> Note that this function will only ever return a **single** element which is different to jQuery but the same as the dev console.
+> [!NOTE]
+> This function will only ever return a **single** element which is different to jQuery but the same as the dev console.
 
 Example. With the HTML `<button id="button1">Press me</button>` and the JavaScript `$('#button1').innerHTML = 'boo!'`. The label on the button will change from "Press me" to "Boo!".
 
@@ -59,20 +59,22 @@ See the [MDN documentation on CSS query selectors](https://developer.mozilla.org
 
 ## onChange/cancelChange functions
 
-The `onChange` function will be familiar if you have used previous versions of the `uibuilderfe.js` library. However, it works in a very different way now. The most important change is that it now returns a reference value that can be used to cancel the listener if you need to.
+The `onChange` function lets you monitor for changes to variables that are managed by the uibuilder client library. Changes to variables are managed using the `uibuilder.set` function both in your own code and within the library. By adding an `onChange` callback function, it will be run whenever `uibuilder.set` is called against the monitored variable name.
+
+By caputuring the returned reference, you can also cancel `onChange` callbacks.
 
 Here are some useful examples:
 
 ```javascript
-let ocRef = uibuilder.onChange('msg', function(msg) {
+let ocRef = uibuilder.onChange('msg', (msg) => {
     console.log('>> onChange `msg` >>', this, msg)
     // ... do something useful with the msg here ...
 })
-let ocRefPing = uibuilder.onChange('ping', function(data) {
+let ocRefPing = uibuilder.onChange('ping', (data) => {
     console.log('>> onChange `ping` >>', data)
     // ... do something useful with the msg here ...
 })
-uibuilder.onChange('ioConnected', function(isConnected) {
+uibuilder.onChange('ioConnected', (isConnected) => {
     console.log('>> onChange `ioConnected` >>', isConnected)
     // ... do something useful with the msg here ...
 })
@@ -93,7 +95,7 @@ This is a convenience function pair that lets you take action when a message fro
 For example, a message from Node-RED such as `{topic: 'mytopic', payload: 42}` could be actioned using the following code:
 
 ```javascript
-let otRef = uibuilder.onTopic('mytopic', function(msg) {
+let otRef = uibuilder.onTopic('mytopic', (msg) => {
     console.log('>> onTopic `mytopic` >>', this, msg)
     // ... do something useful with the msg here ...
 })
@@ -235,15 +237,16 @@ See [Custom Components](client-docs/custom-components) for details.
 
 ## set function (Managed variables)
 
-the `uibuilder.set()` function is now more flexible than in `uibuilderfe.js`. You can now set anything that doesn't start with `_` or `#`.
+The `uibuilder.set()` function can create/change any variable name that doesn't start with `_` or `#`. To obtain the current value of a set variable, use `uibuilder.get()`. To monitor for changes, use `uibuilder.onChange()`.
 
-!> Please note that there may be some rough edges still in regard to what should and shouldn't be `set`. Please try to avoid setting an internal variable or function or bad things may happen 😲
+> [!NOTE]
+> There may be some rough edges still in regard to what should and shouldn't be `set`. Please try to avoid setting an internal variable or function or bad things may happen 😲
 
-This means that you can simulate an incoming message from Node-RED with something like `uibuilder.set('msg', {topic:'uibuilder', payload:42})` in your front-end JavaScript.
+This means that you can even simulate an incoming message from Node-RED with something like `uibuilder.set('msg', {topic:'uibuilder', payload:42})` in your front-end JavaScript.
 
 One interesting possibility is getting your page to auto-reload using `uibuilder.set('msg', {_uib:{reload:true}})`. Perhaps even more useful is the ability to very easily alter your UI on the page by using the dynamic UI feature (detailed below) `uibuilder.set('msg', {_ui:[{method:'add', ...}, {method:'remove', ....}]})`.
 
-Using the `set` function triggers an event `uibuilder:propertyChanged` which is attached to the `document` object. This means that you have two different ways to watch for variables changing.
+Using the `set` function triggers an event `uibuilder:propertyChanged` which is attached to the `document` object. So you have two different ways to watch for variables changing.
 
 This will listen for a specific variable changing:
 
@@ -278,7 +281,8 @@ In previous versions of the front-end library, you had to provide your own CSS c
 
 In this version, if you haven't loaded any other stylesheets, the library will automatically load the new default stylesheet (`uib-brand.css`).
 
-!> Note that using this auto-load feature may result in a flash of an unformatted page before the styles are loaded and applied. So it is still recommended to load the stylesheet manually in the head section of your HTML. That will avoid the unstyled flash.
+> [!NOTE]
+> Using this auto-load feature may result in a flash of an unformatted page before the styles are loaded and applied. So it is still recommended to load the stylesheet manually in the head section of your HTML. That will avoid the unstyled flash.
 
 If you are trying to load the default CSS and can't find the correct URL, try removing the style link from your HTML and check what the client loads in the browsers dev tools network tab.
 
@@ -288,11 +292,18 @@ Internal logging is much improved over previous versions of this library. There 
 
 You can alter the amount of information that the uibuilder library outputs to the console by changing the `logLevel` with `uibuilder.logLevel = 4` where the number should be between 0 and 5. you can set that at any time in your code, however it will generally be most useful set _before_ calling `uibuilder.start()`.
 
-The default level is set to 1 (warn). The levels are: 0 'error', 1 'warn', 2 'info', 3 'log', 4 'debug', 5 'trace'.
+The default level is set to 0 (error). The levels are: 0 'error', 1 'warn', 2 'info', 3 'log', 4 'debug', 5 'trace'.
 
 Changing the log level outputs an info note to the console telling you what the level is.
 
 The log function is also available to your own code as `uibuilder.log(level, prefix, ...outputs)`.
+
+> [!TIP]
+> If you want to see what is happening in the uibuilder library's startup processing, you can add a `logLevel` attribute to the script tag. E.g.:
+> ```
+> <script defer src="../uibuilder/uibuilder.iife.min.js" logLevel="2"></script>
+> ```
+> This is mostly only useful for debugging the library itself. Note that you can only use numeric settings here.
 
 ## document-level events
 
@@ -431,6 +442,7 @@ This information is also built into the `uib-cache` node from v5.1 to reduce unn
 {
     "uibuilderCtrl": "client connect",
     "from": "server",
+    "maxHttpBufferSize": 1048576,
     "_socketId": "D2ynn6nsx7sIQkijAAAF",
     "version": "6.5.0-iife.min",
     "ip": "::ffff:127.0.0.1",
@@ -468,6 +480,7 @@ See [Pre-defined UIBUILDER messages](pre-defined-msgs) for details.
 {
     "uibuilderCtrl": "client connect",
     "from": "server",
+    "maxHttpBufferSize": 1048576,
     "_socketId": "D2ynn6nsx7sIQkijAAAF",
     "version": "6.5.0-iife.min",
     "ip": "::ffff:127.0.0.1",
@@ -526,10 +539,12 @@ Unfortunately, due to the asynchronous nature of the Socket.IO client and server
     "uibuilderCtrl": "client connect",
     "_socketId": "RV1Zo5NKm2vNOSdsAAA2",
     "from": "server",
+    // Lets the client auto-calculate the time difference from the server
     "serverTimestamp": "2022-06-28T17:04:34.491Z",
-
     // New for v5.1 - the server uibuilder version
-    "version": "5.1.0-prerelease"
+    "version": "5.1.0-prerelease",
+    // Let the client know the max msg size (in bytes) that can be sent, default=1MB
+    "maxHttpBufferSize": 1048576
 }
 ```
 
@@ -551,7 +566,8 @@ There is no longer a need to load this library, which sometimes caused confusion
 
 ## start function (now rarely needed)
 
-!> You should hardly ever need to manually run this now. Try without first. See the details below.
+> [!NOTE]
+> You should hardly ever need to manually run this now. Try without first. See the details below.
 
 The start function is what kick-starts the uibuilder front-end library into action. It attempts to make a connection to Node-RED and exchanges the initial control messages.
 
@@ -562,9 +578,9 @@ It:
 * An event handler is created for incoming messages from Node-RED. It checks for reload and UI requests and deals with them automatically.
 * Automatically loads the default stylesheet if you haven't loaded your own.
 
-Normally, you will not have to pass any options to this function (unlike the equivalent function in the older `uibuilderfe.js` library before uibuilder v5). However, see the troubleshooting section if you are having problems connecting correctly.
+Normally, you will not have to pass any options to this function. However, see the troubleshooting section if you are having problems connecting correctly.
 
-If you do need the options, there is now only a single object argument with only two possible properties:
+If you do need the options, there is now only a single object argument:
 
 ```javascript
 uibuilder.start({

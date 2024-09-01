@@ -3,8 +3,7 @@ title: Using the Svelte framework with uibuilder
 description: |
   How to make good use of the Svelte front-end framework with uibuilder and Node-RED.
 created: 2022-02-26 19:40:00
-lastUpdated: 2023-09-30 13:08:35
-updated: 2023-12-30 17:01:41
+updated: 2024-06-14 20:23:29
 ---
 
 The Svelte framework turns out to be one of the easiest frameworks to use in conjunction with uibuilder of those that requires a build step.
@@ -13,9 +12,10 @@ One of the main reasons for this is that it's development server "just works" ev
 
 Svelte is also a very easy framework to use and constantly rates very highly with developers. It also aligns closely to the emerging web components standards.
 
-?> Note: uibuilder v5 comes with a simple Svelte template that you can use with the instructions below.
-
-?> Also Note that you do not need to install Svelte using uibuilder's Libraries tab. It needs to be installed locally in the instance folder
+> [!TIP]
+> uibuilder v5 and above comes with a simple Svelte template that you can use with the instructions below.
+>
+> Also Note that you do not need to install Svelte using uibuilder's Libraries tab. It needs to be installed locally in the instance folder
 
 ## Using with uibuilder
 
@@ -40,7 +40,8 @@ These instructions assume that you have installed Node-RED using the "standard" 
 
 Marvel at the amazing dynamic, data-driven web app you just made with a few clicks!
 
-?> Once you have made whatever changes you want, you can exit the dev server and run `npm run build`. This will update the `/dist/build/` bundles with optimised versions ready for production. The template includes built bundles so that you can run it straight out of the box.
+> [!TIP]
+> Once you have made whatever changes you want, you can exit the dev server and run `npm run build`. This will update the `/dist/build/` bundles with optimised versions ready for production. The template includes built bundles so that you can run it straight out of the box.
 
 ## Going further
 
@@ -62,7 +63,8 @@ OK, so not the most amazing thing. But lets note a couple of important points. (
 
 Just a few lines of actual code for a simple, data-driven web page. Not too bad I think.
 
-?> Some features will be added to uibuilder in a future release that will make this even easier. <br><br>There will be buttons in the Editor panel for `uibuilder` nodes the will let you run any npm scripts defined in your `package.json` file. For Svelte, that will include `install`, `build` and `dev` buttons. So that most of the above steps will be reduced to a couple of clicks. <br><br>These changes will help anyone who needs a build step for their web app, not just be for Svelte users.
+> [!TIP]
+> Some features will be added to uibuilder in a future release that will make this even easier. <br><br>There will be buttons in the Editor panel for `uibuilder` nodes the will let you run any npm scripts defined in your `package.json` file. For Svelte, that will include `install`, `build` and `dev` buttons. So that most of the above steps will be reduced to a couple of clicks. <br><br>These changes will help anyone who needs a build step for their web app, not just be for Svelte users.
 
 ## References
 

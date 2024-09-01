@@ -22,6 +22,11 @@ UIBUILDER for Node-RED allows the easy creation of data-driven front-end web app
 
 It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces integrated with Node-RED.
 
+> [!NOTE]
+> UIBUILDER triggers a quality warning in the [Flows scorecard entry](https://flows.nodered.org/node/node-red-contrib-uibuilder/scorecard).
+> 
+> "Number of Dependencies" is >6 - this is due to the large number of features in UIBUILDER and is expected. Even so, v7 only has 7 dependencies. 1 more is due to be removed in a future release.
+
 ## Installation
 
 UIBUILDER is best installed using Node-RED's Palette Manager.
@@ -35,18 +40,18 @@ cd ~/.node-red
 npm install node-red-contrib-uibuilder
 ```
 
-To install old versions:
+To install old versions, provide the major version number:
 
 ```bash
 cd ~/.node-red
-npm install node-red-contrib-uibuilder@v5.1.1
+npm install node-red-contrib-uibuilder@v5
 ```
 
-To install development branches, please install from [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder):
+To install development branches, please install from [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder). Branchnames are future version numbers, check GitHub for available branches:
 
 ```bash
 cd ~/.node-red
-npm install totallyinformation/node-red-contrib-uibuilder#branchname
+npm install totallyinformation/node-red-contrib-uibuilder#v7.1.0
 ```
 
 You will need to restart Node-RED if installing manually.
@@ -56,17 +61,16 @@ You will need to restart Node-RED if installing manually.
 
 The current [CHANGELOG](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/CHANGELOG.md) contains all of the changes and requirement details for each version.
 
-Older changes can be found in the previous change documents: [CHANGELOG-V5](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/CHANGELOG-v5.md), [CHANGELOG-V3/V4]([/docs](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/)/CHANGELOG-v3-v4.md), [CHANGELOG-v2](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/CHANGELOG-v2.md), and [CHANGELOG-v2](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/CHANGELOG-v1.md)
+Older changes can be found in the previous change documents: [CHANGELOG-V5](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/CHANGELOG-v6.md), [CHANGELOG-V5](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/CHANGELOG-v5.md), [CHANGELOG-V3/V4]([/docs](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/)/CHANGELOG-v3-v4.md), [CHANGELOG-v2](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/CHANGELOG-v2.md), and [CHANGELOG-v2](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/archived/CHANGELOG-v1.md).
 
 ## Getting started
 
 Once installed, The following is a typical simple flow to get going.
 
 1. Add a `uibuilder` node. Open its settings and give it a "URL" which is used as the identifying name. Close the settings and click on the Deploy button.
-2. Add an inject node for some simple input data and two debug nodes on the two output ports so that you can see everything that is going on. Deploy the flow.
-3. Re-open the `uibuilder` node's settings and click the "Open" button to see the resulting web page.
+2. Re-open the `uibuilder` node's settings and click the "Open" button to see the resulting web page.
 
-You are now ready to edit the front-end html/javascript/css if you wish and to add logic in Node-RED to provide inputs and handle outputs.
+You are now ready to edit the front-end html/javascript/css if you wish and to add logic in Node-RED to provide inputs and handle outputs. You can also use UIBUILDER's no-code features to create your UI as well or instead.
 
 Please see the [First-timers walkthrough](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/walkthrough1) in the documentation and the [Introduction Video](https://www.youtube.com/watch?v=IVWR_3cx05A) for more help to get started. Also try out the built-in example flows.
 
@@ -227,6 +231,10 @@ You can also support the development of UIBUILDER by sponsoring the development.
 
 [GitHub Sponsorship](https://github.com/sponsors/TotallyInformation), 
 [PayPal Sponsorship](https://paypal.me/TotallyInformation)
+
+## Sponsors
+
+- [@MagicJF](https://github.com/MagicJF)
 
 ## Developers/Contributors
 

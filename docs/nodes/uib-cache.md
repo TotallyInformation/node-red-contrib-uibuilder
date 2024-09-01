@@ -3,16 +3,18 @@ title: uib-cache - Cache and replay data
 description: |
   Usage and configuration.
 created: 2023-02-05 16:31:39
-lastUpdated: 2023-10-28 15:57:45
-updated: 2023-12-30 17:01:41
+updated: 2024-07-12 11:38:01
 ---
 
-The cache node was added in uibuilder v5. It provides an easy method of saving messages in a cache and replaying them
-when needed. Typically when a client browser loads or reloads a uibuilder web page.
+> [!TIP]
+> Please see [Caching front-end data](/how-to/cache-node.md) for a more detailed explanation of *why* you may need/want to use this node. It explains the concepts and approaches to use.
+
+The cache node provides an easy method of saving messages in a cache and replaying them when needed. Typically when a client browser loads or reloads a uibuilder web page.
 
 The cache uses Node-RED's build-in `context` stores for the cache. This is a very flexible approach and can cater for both restart-safe (file or database) and restart-cleared (memory only) stores.
 
-!> Most of Node-RED's context stores keep all variables completely in-memory. So you must take care over the size of any caches you use.
+> [!WARNING]
+> Most of Node-RED's context stores keep all variables completely in-memory. So you must take care over the size of any caches you use.
 
 ## Using the cache node
 

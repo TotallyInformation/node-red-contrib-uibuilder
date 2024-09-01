@@ -387,7 +387,7 @@ function detailsPage(uib, urlPrefix) {
     page += `
         <h2>uibuilder ExpressJS Routes</h2>
         <p>These tables show all of the web URL routes for uibuilder.</p>
-        <h3>User-Facing Routes</h3>
+        <h3>Client-Facing Routes</h3>
         ${web.htmlBuildTable( web.routers.user, ['name', 'desc', 'path', 'type', 'folder'] )}
         <h4>ExpressJS technical route data for admin routes</h4>
         <h5>Application Routes (<code>../*</code>)</h5>
@@ -397,7 +397,7 @@ function detailsPage(uib, urlPrefix) {
         <h5>Vendor Routes (<code>../uibuilder/vendor/*</code>)</h5>
         ${web.htmlBuildTable( routes.user.vendorRouter, ['name', 'path', 'folder', 'route'] )}
         <hr>
-        <h3>Per-Instance User-Facing Routes</h3>
+        <h3>Per-Instance Client-Facing Routes</h3>
     `
     Object.keys(routes.instances).forEach( url => {
         page += `
@@ -570,11 +570,17 @@ function adminRouterV2(uib, log) {
                 res.status(200).end()
                 // Reload connected clients if required by sending them a reload msg
                 if ( params.reload === 'true' ) {
-                    sockets.sendToFe2({
-                        '_uib': {
-                            'reload': true,
+                    sockets.sendToFe2(
+                        {
+                            '_uib': {
+                                'reload': true,
+                            }
+                        },
+                        // @ts-ignore
+                        {
+                            url: params.url
                         }
-                    }, params.url)
+                    )
                 }
             }
         })
@@ -688,7 +694,7 @@ function adminRouterV2(uib, log) {
 
         const folder = RED.settings.userDir
 
-        log.info(`[uibuilder:apiv2:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} with tag/version '${params.tag}'`)
+        log.info(`[uibuilder:apiv2:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} with tag/version '${params.tag ? params.tag : ''}'`)
 
         // delete package lock file as it seems to mess up sometimes - no error if it fails
         fs.removeSync(path.join(folder, 'package-lock.json'))
@@ -698,13 +704,14 @@ function adminRouterV2(uib, log) {
             case 'update':
             case 'install': {
                 // @ts-expect-error
-                packageMgt.npmInstallPackage(params.url, params.package, params.tag)
+                packageMgt.npmInstallPackage(params.url, params.package, params.tag, '', params.cmd)
                     .then((npmOutput) => {
                         // Get the updated package.json file into packageMgt.uibPackageJson
-                        packageMgt.getUibRootPackageJson()
-
-                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages() - re-saves the package.json file
+                        packageMgt.uibPackageJson = packageMgt.pkgCheck()
+                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
                         packageMgt.pkgsQuickUpd()
+                        // ASYNC - Update details and re-save the file
+                        packageMgt.updateInstalledPackageDetails()
 
                         // Update the packageList
                         web.serveVendorPackages()
@@ -715,9 +722,8 @@ function adminRouterV2(uib, log) {
                         return true
                     })
                     .catch((err) => {
-                        // log.warn(`[uibuilder:apiv2:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, err.stdout)
-                        console.dir(err)
-                        log.warn(`[uibuilder:apiv2:uibnpmmanage:install] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+                        // err has extra props: {all:string, code:number, command:string}
+                        log.error(`[uibuilder:apiv2:uibnpmmanage:${params.cmd}] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
                         res.json({ 'success': false, 'result': err.all })
                         return false
                     })
@@ -728,12 +734,11 @@ function adminRouterV2(uib, log) {
                 packageMgt.npmRemovePackage(params.package)
                     .then((npmOutput) => {
                         // Get the updated package.json file into packageMgt.uibPackageJson
-                        packageMgt.getUibRootPackageJson()
-
-                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages() - re-saves the package.json file
+                        packageMgt.uibPackageJson = packageMgt.pkgCheck()
+                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
                         packageMgt.pkgsQuickUpd()
-
-                        // TODO remove - just send back success
+                        // ASYNC - Only need this to re-save the file
+                        packageMgt.updateInstalledPackageDetails()
 
                         // Update the packageList
                         web.serveVendorPackages()

@@ -3,9 +3,9 @@
   See: https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/config-driven-ui
 
   Author: Julian Knight (Totally Information), March 2023
-  
+
   License: Apache 2.0
-  Copyright (c) 2022-2023 Julian Knight (Totally Information)
+  Copyright (c) 2022-2024 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -31,30 +31,45 @@
 // }
 
 const Ui = class Ui {
-    version = '6.8.2-src'
+    //#region --- Class variables ---
+    version = '7.0.0-src'
 
     // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
     sanitiseExtraTags = ['uib-var']
     sanitiseExtraAttribs = ['variable', 'report', 'undefined']
 
-    // Reference to DOM window - must be passed in the constructor
-    // Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
-    window
+    /** Reference to DOM window - must be passed in the constructor
+     * Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
+     * @type {Window}
+     */
+    static win
+
+    /** Reference to the DOM top-level window.document for convenience - set in constructor @type {Document} */
+    static doc
 
     /** Log function - passed in constructor or will be a dummy function
-     * @type {function}
+     * @type {Function}
      */
     static log
 
+    /** Options for Markdown-IT if available (set in constructor) */
+    static mdOpts
+    /** Reference to pre-loaded Markdown-IT library */
+    static md
+    /** Optional Markdown-IT Plugins */
+    ui_md_plugins
+    //#endregion --- class variables ---
+
     /** Called when `new Ui(...)` is called
      * @param {globalThis} win Either the browser global window or jsdom dom.window
-     * @param {function} [extLog] A function that returns a function for logging
-     * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
+     * @param {Function} [extLog] A function that returns a function for logging
+     * @param {Function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
      */
     constructor(win, extLog, jsonHighlight) {
         // window must be passed in as an arg to the constructor
         // Should either be the global window for a browser or `dom.window` for jsdom in Node.js
-        if (win) this.window = win
+        // @ts-ignore
+        if (win) Ui.win = win
         else {
             // Ui.log(0, 'Ui:constructor', 'Current environment does not include `window`, UI functions cannot be used.')()
             // return
@@ -62,18 +77,93 @@ const Ui = class Ui {
         }
 
         // For convenience
-        this.document = this.window.document
+        Ui.doc = Ui.win.document
 
         // If a suitable function not passed in, create a dummy one
         if (extLog) Ui.log = extLog
-        else Ui.log = function(){return function(){}}
+        else Ui.log = function() { return function() {} }
 
         // If a JSON HTML highlighting function passed then use it, else a dummy fn
         if (jsonHighlight) this.syntaxHighlight = jsonHighlight
-        else this.syntaxHighlight = function(){}
+        else this.syntaxHighlight = function() {}
+
+        // If Markdown-IT pre-loaded, then configure it now
+        if (Ui.win['markdownit']) {
+            Ui.mdOpts = {
+                html: true,
+                xhtmlOut: false,
+                linkify: true,
+                _highlight: true,
+                _strict: false,
+                _view: 'html',
+                langPrefix: 'language-',
+                // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
+                highlight: function(str, lang) {
+                    // https://highlightjs.org
+                    if (lang && window['hljs'] && window['hljs'].getLanguage(lang)) {
+                        try {
+                            return `<pre class="">
+                                    <code class="hljs border">${window['hljs'].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
+                        } finally { } // eslint-disable-line no-empty
+                    }
+                    return `<pre class="hljs border"><code>${Ui.md.utils.escapeHtml(str).trim()}</code></pre>`
+                },
+            }
+            Ui.md = Ui.win['markdownit'](Ui.mdOpts)
+        }
     }
 
     //#region ---- Internal Methods ----
+
+    _markDownIt() {
+        // If Markdown-IT pre-loaded, then configure it now
+        if (!Ui.win['markdownit']) return
+
+        // If plugins not yet defined, check if uibuilder has set them
+        if (!this.ui_md_plugins && Ui.win['uibuilder'] && Ui.win['uibuilder'].ui_md_plugins) this.ui_md_plugins = Ui.win['uibuilder'].ui_md_plugins
+
+        Ui.mdOpts = {
+            html: true,
+            xhtmlOut: false,
+            linkify: true,
+            _highlight: true,
+            _strict: false,
+            _view: 'html',
+            langPrefix: 'language-',
+            // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
+            highlight: function(str, lang) {
+                if (window['hljs']) {
+                    if (lang && window['hljs'].getLanguage(lang)) {
+                        try {
+                            return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window['hljs'].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
+                        } finally { } // eslint-disable-line no-empty
+                    } else {
+                        try {
+                            const high = window['hljs'].highlightAuto(str)
+                            return `<pre><code class="hljs border language-${high.language}" data-language="${high.language}" title="Source language estimated by HighlightJS: '${high.language}'">${high.value}</code></pre>`
+                        } finally { } // eslint-disable-line no-empty
+                    }
+                }
+                return `<pre><code class="border">${Ui.md.utils.escapeHtml(str).trim()}</code></pre>`
+            },
+        }
+        Ui.md = Ui.win['markdownit'](Ui.mdOpts)
+        // Ui.md.use(Ui.win.markdownitTaskLists, {enabled: true})
+        if (this.ui_md_plugins) {
+            if (!Array.isArray(this.ui_md_plugins)) {
+                Ui.log('error', 'Ui:_markDownIt:plugins', 'Could not load plugins, ui_md_plugins is not an array')()
+                return
+            }
+            this.ui_md_plugins.forEach( plugin => {
+                if (typeof plugin === 'string') {
+                    Ui.md.use(Ui.win[plugin])
+                } else {
+                    const name = Object.keys(plugin)[0]
+                    Ui.md.use(Ui.win[name], plugin[name])
+                }
+            })
+        }
+    }
 
     /** Show a browser notification if the browser and the user allows it
      * @param {object} config Notification config data
@@ -90,14 +180,17 @@ const Ui = class Ui {
             return new Promise( (resolve, reject) => {
                 // Doesn't ever seem to fire (at least in Chromium)
                 notify.addEventListener('close', ev => {
+                    // @ts-ignore
                     ev.currentTarget.userAction = 'close'
                     resolve(ev)
                 })
                 notify.addEventListener('click', ev => {
+                    // @ts-ignore
                     ev.currentTarget.userAction = 'click'
                     resolve(ev)
                 })
                 notify.addEventListener('error', ev => {
+                    // @ts-ignore
                     ev.currentTarget.userAction = 'error'
                     reject(ev)
                 })
@@ -113,7 +206,7 @@ const Ui = class Ui {
     //     // must be Vue
     //     // must have only 1 root element
     //     const compToAdd = ui.components[0]
-    //     const newEl = this.document.createElement(compToAdd.type)
+    //     const newEl = Ui.doc.createElement(compToAdd.type)
 
     //     if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
     //     this._uiComposeComponent(newEl, compToAdd)
@@ -154,20 +247,20 @@ const Ui = class Ui {
                 // If trying to insert raw html, wrap in a div
                 case 'html': {
                     compToAdd.ns = 'html'
-                    newEl = this.document.createElement('div')
+                    newEl = Ui.doc.createElement('div')
                     break
                 }
 
                 // If trying to insert raw svg, need to create in namespace
                 case 'svg': {
                     compToAdd.ns = 'svg'
-                    newEl = this.document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+                    newEl = Ui.doc.createElementNS('http://www.w3.org/2000/svg', 'svg')
                     break
                 }
 
                 default: {
                     compToAdd.ns = 'dom'
-                    newEl = this.document.createElement(compToAdd.type)
+                    newEl = Ui.doc.createElement(compToAdd.type)
                     break
                 }
             }
@@ -187,13 +280,13 @@ const Ui = class Ui {
             } else if (ui.parentEl) {
                 elParent = ui.parentEl
             } else if (compToAdd.parent) {
-                elParent = this.document.querySelector(compToAdd.parent)
+                elParent = Ui.doc.querySelector(compToAdd.parent)
             } else if (ui.parent) {
-                elParent = this.document.querySelector(ui.parent)
+                elParent = Ui.doc.querySelector(ui.parent)
             }
             if (!elParent) {
                 Ui.log('info', 'Ui:_uiAdd', 'No parent found, adding to body')()
-                elParent = this.document.querySelector('body')
+                elParent = Ui.doc.querySelector('body')
             }
 
             if (compToAdd.position && compToAdd.position === 'first') {
@@ -228,6 +321,9 @@ const Ui = class Ui {
         if (comp.attributes) {
             Object.keys(comp.attributes).forEach((attrib) => {
                 if (attrib === 'class' && Array.isArray(comp.attributes[attrib])) comp.attributes[attrib].join(' ')
+
+                Ui.log('trace', '_uiComposeComponent:attributes-forEach', `Attribute: '${attrib}', value: '${comp.attributes[attrib]}'`)()
+
                 // For values, set the actual value as well since the attrib only changes the DEFAULT value
                 if (attrib === 'value') el.value = comp.attributes[attrib]
 
@@ -268,12 +364,17 @@ const Ui = class Ui {
             Object.keys(comp.properties).forEach((prop) => {
                 // TODO break a.b into sub properties
                 el[prop] = comp.properties[prop]
+                // Auto-dispatch events if changing value or changed since DOM does not do this automatically
+                if (['value', 'checked'].includes(prop)) {
+                    el.dispatchEvent(new Event('input'))
+                    el.dispatchEvent(new Event('change'))
+                }
             })
         }
 
         //#region Add Slot content to innerHTML
         if (comp.slot) {
-            this.replaceSlot(el, comp)
+            this.replaceSlot(el, comp.slot)
         }
         //#endregion
 
@@ -304,14 +405,15 @@ const Ui = class Ui {
             if (compToAdd.ns === 'html') {
                 newEl = parentEl
                 // newEl.outerHTML = compToAdd.slot
-                parentEl.innerHTML = compToAdd.slot
+                // parentEl.innerHTML = compToAdd.slot
+                this.replaceSlot(parentEl, compToAdd.slot)
             } else if (compToAdd.ns === 'svg') {
-                newEl = this.document.createElementNS('http://www.w3.org/2000/svg', compToAdd.type)
+                newEl = Ui.doc.createElementNS('http://www.w3.org/2000/svg', compToAdd.type)
                 // Updates newEl
                 this._uiComposeComponent(newEl, compToAdd)
                 parentEl.appendChild(newEl)
             } else {
-                newEl = this.document.createElement(compToAdd.type === 'html' ? 'div' : compToAdd.type)
+                newEl = Ui.doc.createElement(compToAdd.type === 'html' ? 'div' : compToAdd.type)
                 // Updates newEl
                 this._uiComposeComponent(newEl, compToAdd)
                 parentEl.appendChild(newEl)
@@ -336,7 +438,8 @@ const Ui = class Ui {
             if (!Array.isArray(ui.components)) ui.components = [ui.components]
 
             ui.components.forEach(async component => {
-                await import(component)
+                // NOTE: This happens asynchronously but we don't wait
+                import(component)
             })
         }
         // Remote Scripts
@@ -381,8 +484,9 @@ const Ui = class Ui {
         if (!Array.isArray(msg._ui)) msg._ui = [msg._ui]
 
         msg._ui.forEach((ui, i) => {
+            if (ui.mode && !ui.method) ui.method = ui.mode
             if (!ui.method) {
-                Ui.log('error', 'Ui:_uiManager', `No method defined for msg._ui[${i}]. Ignoring`)()
+                Ui.log('error', 'Ui:_uiManager', `No method defined for msg._ui[${i}]. Ignoring. `, ui)()
                 return
             }
 
@@ -456,15 +560,15 @@ const Ui = class Ui {
     _uiRemove(ui, all = false) {
         ui.components.forEach((compToRemove) => {
             let els
-            if (all !== true) els = [this.document.querySelector(compToRemove)]
-            else els = this.document.querySelectorAll(compToRemove)
+            if (all !== true) els = [Ui.doc.querySelector(compToRemove)]
+            else els = Ui.doc.querySelectorAll(compToRemove)
 
             els.forEach(el => {
                 try {
                     el.remove()
                 } catch (err) {
                     // Could not remove. Cannot read properties of null <= no need to report this one
-                    // Could not remove. Failed to execute 'querySelector' on 'this.document': '##testbutton1' is not a valid selector
+                    // Could not remove. Failed to execute 'querySelector' on 'Ui.doc': '##testbutton1' is not a valid selector
                     Ui.log('trace', 'Ui:_uiRemove', `Could not remove. ${err.message}`)()
                 }
             })
@@ -485,13 +589,13 @@ const Ui = class Ui {
 
             // Either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. FIRST element matching is updated.
             if (compToReplace.id) {
-                elToReplace = this.document.getElementById(compToReplace.id) // .querySelector(`#${compToReplace.id}`)
+                elToReplace = Ui.doc.getElementById(compToReplace.id) // .querySelector(`#${compToReplace.id}`)
             } else if (compToReplace.selector || compToReplace.select) {
-                elToReplace = this.document.querySelector(compToReplace.selector)
+                elToReplace = Ui.doc.querySelector(compToReplace.selector)
             } else if (compToReplace.name) {
-                elToReplace = this.document.querySelector(`[name="${compToReplace.name}"]`)
+                elToReplace = Ui.doc.querySelector(`[name="${compToReplace.name}"]`)
             } else if (compToReplace.type) {
-                elToReplace = this.document.querySelector(compToReplace.type)
+                elToReplace = Ui.doc.querySelector(compToReplace.type)
             }
 
             Ui.log('trace', `Ui:_uiReplace:components-forEach:${i}`, 'Element to replace: ', elToReplace)()
@@ -509,20 +613,20 @@ const Ui = class Ui {
                 // If trying to insert raw html, wrap in a div
                 case 'html': {
                     compToReplace.ns = 'html'
-                    newEl = this.document.createElement('div')
+                    newEl = Ui.doc.createElement('div')
                     break
                 }
 
                 // If trying to insert raw svg, need to create in namespace
                 case 'svg': {
                     compToReplace.ns = 'svg'
-                    newEl = this.document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+                    newEl = Ui.doc.createElementNS('http://www.w3.org/2000/svg', 'svg')
                     break
                 }
 
                 default: {
                     compToReplace.ns = 'dom'
-                    newEl = this.document.createElement(compToReplace.type)
+                    newEl = Ui.doc.createElement(compToReplace.type)
                     break
                 }
             }
@@ -547,27 +651,30 @@ const Ui = class Ui {
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
     _uiUpdate(ui) {
-        Ui.log('trace', 'Ui:_uiManager:update', 'Starting _uiUpdate')()
+        Ui.log('trace', 'UI:_uiUpdate:update', 'Starting _uiUpdate', ui)()
 
         // We allow an update not to actually need to spec a component
         if (!ui.components) ui.components = [Object.assign({}, ui)]
 
         ui.components.forEach((compToUpd, i) => {
-            Ui.log('trace', '_uiUpdate:components-forEach', `Component #${i}`, compToUpd)()
+            Ui.log('trace', '_uiUpdate:components-forEach', `Start loop #${i}`, compToUpd)()
 
             /** @type {NodeListOf<Element>} */
             let elToUpd
 
-            // Either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. ALL elements matching are updated.
-            if (compToUpd.id) {
+            // If a parent element is passed, use that as the update target (only allowed internally)
+            // Otherwise either the id, CSS selector, name or type (element type) must be given in order to identify the element to change. ALL elements matching are updated.
+            if (compToUpd.parentEl) {
+                elToUpd = compToUpd.parentEl
+            } else if (compToUpd.id) {
                 // NB We don't use get by id because this way the code is simpler later on
-                elToUpd = this.document.querySelectorAll(`#${compToUpd.id}`)
+                elToUpd = Ui.doc.querySelectorAll(`#${compToUpd.id}`)
             } else if (compToUpd.selector || compToUpd.select) {
-                elToUpd = this.document.querySelectorAll(compToUpd.selector)
+                elToUpd = Ui.doc.querySelectorAll(compToUpd.selector)
             } else if (compToUpd.name) {
-                elToUpd = this.document.querySelectorAll(`[name="${compToUpd.name}"]`)
+                elToUpd = Ui.doc.querySelectorAll(`[name="${compToUpd.name}"]`)
             } else if (compToUpd.type) {
-                elToUpd = this.document.querySelectorAll(compToUpd.type)
+                elToUpd = Ui.doc.querySelectorAll(compToUpd.type)
             }
 
             // @ts-ignore Nothing was found so give up
@@ -582,26 +689,48 @@ const Ui = class Ui {
             if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload
 
             // Might have >1 element to update - so update them all
-            elToUpd.forEach(el => {
+            elToUpd.forEach((el, j) => {
+                Ui.log('trace', '_uiUpdate:components-forEach', `Updating element #${j}`, el)()
                 this._uiComposeComponent(el, compToUpd)
+                // Try to go down another level of nesting if needed
+                // ! NOT CONVINCED THIS ACTUALLY WORKS !
+                if (compToUpd.components) {
+                    Ui.log('trace', '_uiUpdate:nested-component', `Element #${j} - nested-component`, compToUpd, el)()
+                    const nc = { _ui: [] }
+                    compToUpd.components.forEach((nestedComp, k) => {
+                        const method = nestedComp.method || compToUpd.method || ui.method
+                        if (nestedComp.method) delete nestedComp.method
+                        if (!Array.isArray(nestedComp)) nestedComp = [nestedComp]
+                        // nestedComp.parentEl = el
+                        // nestedComp.components = [nestedComp]
+                        Ui.log('trace', '_uiUpdate:nested-component', `Element #${j} - nested-component #${k}`, nestedComp)()
+                        nc._ui.push( {
+                            method: method,
+                            parentEl: el,
+                            components: nestedComp,
+                        })
+                    })
+                    Ui.log('trace', '_uiUpdate:nested-component', `Element #${j} - nested-component new manager`, nc)()
+                    this._uiManager(nc)
+                }
             })
 
-            // If nested components, go again - but don't pass payload to sub-components
-            if (compToUpd.components) {
-                elToUpd.forEach(el => {
-                    Ui.log('trace', '_uiUpdate:components', 'el', el)()
-                    this._uiUpdate({
-                        method: ui.method,
-                        parentEl: el,
-                        components: compToUpd.components,
-                    })
-                })
-            }
-
+            // If nested components, apply to every found element - but don't pass payload to sub-components
+            // if (compToUpd.components) {
+            //     compToUpd.components.forEach((el, k) => {
+            //         Ui.log('trace', '_uiUpdate:nested-component', `Updating nested-component #${k}`, el)()
+            //         this._uiUpdate({
+            //             method: el.method || ui.method,
+            //             parentEl: el,
+            //             components: el.components,
+            //         })
+            //     })
+            // }
         })
     } // --- end of _uiUpdate ---
 
     //#endregion ---- -------- ----
+
     //#region ---- External Methods ----
 
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
@@ -609,11 +738,12 @@ const Ui = class Ui {
      * If the selected element is a <template>, returns the first child element.
      * type {HTMLElement}
      * @param {string} cssSelector A CSS Selector that identifies the element to return
-     * @returns {HTMLElement|null} Selected HTML element or null
+     * @param {"el"|"text"|"html"|"attributes"|"attr"} [output] Optional. What type of output to return. Defaults to "el", the DOM element reference
+     * @returns {HTMLElement|string|InnerHTML|array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
      */
-    $(cssSelector) {
+    $(cssSelector, output) {
         /** @type {*} Some kind of HTML element */
-        let el = document.querySelector(cssSelector)
+        let el = Ui.doc.querySelector(cssSelector)
 
         if (!el) {
             Ui.log(1, 'Uib:$', `No element found for CSS selector ${cssSelector}`)()
@@ -628,7 +758,41 @@ const Ui = class Ui {
             }
         }
 
-        return el
+        if (!output) output = 'el'
+        let out
+
+        try {
+            switch (output.toLowerCase()) {
+                case 'text': {
+                    out = el.innerText
+                    break
+                }
+
+                case 'html': {
+                    out = el.innerHTML
+                    break
+                }
+
+                case 'attr':
+                case 'attributes': {
+                    out = {}
+                    for (const attr of el.attributes) {
+                        out[attr.name] = attr.value
+                    }
+                    break
+                }
+
+                default: {
+                    out = el
+                    break
+                }
+            }
+        } catch (e) {
+            out = el
+            Ui.log(1, 'Uib:$', `Could not process output type "${output}" for CSS selector ${cssSelector}, returned the DOM element. ${e.message}`, e)()
+        }
+
+        return out
     }
 
     /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
@@ -637,7 +801,7 @@ const Ui = class Ui {
      * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
      */
     $$(cssSelector) {
-        return Array.from(document.querySelectorAll(cssSelector))
+        return Array.from(Ui.doc.querySelectorAll(cssSelector))
     }
 
     /** Add 1 or several class names to an element
@@ -649,6 +813,106 @@ const Ui = class Ui {
         if (el) el.classList.add(...classNames)
     }
 
+    /** Apply a source template tag to a target html element
+     * NOTES:
+     * - styles in ALL templates are accessible to all templates.
+     * - scripts in templates are run AT TIME OF APPLICATION (so may run multiple times).
+     * - scripts in templates are applied in order of application, so variables may not yet exist if defined in subsequent templates
+     * @param {string} sourceId The HTML ID of the source element
+     * @param {string} targetId The HTML ID of the target element
+     * @param {object} config Configuration options
+     * @param {boolean=} config.onceOnly If true, the source will be adopted (the source is moved)
+     * @param {object=} config.attributes A set of key:value pairs that will be applied as attributes to the target
+     */
+    applyTemplate(sourceId, targetId, config) {
+        if (!config) config = { onceOnly: false }
+
+        const template = Ui.doc.getElementById(sourceId)
+        const target = Ui.doc.getElementById(targetId)
+
+        if (template && target) {
+            let content
+            try {
+                if (config.onceOnly !== true) content = Ui.doc.importNode(template.content, true)
+                else content = Ui.doc.adoptNode(template.content)
+                // NB content.childElementCount = 0 after adoption
+            } catch (e) {
+                Ui.log('error', 'Ui:applyTemplate', `Source must be a <template>. id='${sourceId}'`)()
+                return
+            }
+            if (content) {
+                // Apply config.attributes to the 1st element of the template content
+                if (config.attributes) {
+                    const el = content.firstElementChild
+                    Object.keys(config.attributes).forEach( attrib => {
+                        // Apply each attribute and value
+                        el.setAttribute(attrib, config.attributes[attrib])
+                    })
+                }
+                // ! TODO Add ability to change slot content
+                // Apply to the target
+                target.appendChild(content)
+            }
+        } else {
+            if (!template) Ui.log('error', 'Ui:applyTemplate', `Source not found: id='${sourceId}'`)()
+            if (!target) Ui.log('error', 'Ui:applyTemplate', `Target not found: id='${targetId}'`)()
+        }
+    }
+
+    /** Builds an HTML table from an array (or object) of objects
+     * 1st row is used for columns. If an object of objects, the outer keys
+     * are used as row ID's (prefixed with "r-").
+     * @param {Array<object>|Object} data Input data array or object
+     * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
+     */
+    buildHtmlTable(data) {
+        // If data is an object of objects, convert it to an array of objects
+        let keys
+        if (!Array.isArray(data)) {
+            if (typeof data === 'object') {
+                keys = Object.keys(data)
+                data = Object.values(data)
+            }
+            // Ensure input is an array of objects
+            if (!Array.isArray(data)) {
+                const out = Ui.doc.createElement('p')
+                out.textContent = 'Input data is not an array or an object, cannot create a table.'
+                return out
+            }
+        }
+
+        const tbl = Ui.doc.createElement('table')
+        // Heading row
+        const thead = Ui.doc.createElement('thead')
+        const headerRow = Ui.doc.createElement('tr')
+        // Get the headers from the keys of the first object
+        const headers = Object.keys(data[0])
+        headers.forEach(header => {
+            const th = Ui.doc.createElement('th')
+            th.textContent = header
+            headerRow.appendChild(th)
+        })
+        thead.appendChild(headerRow)
+        tbl.appendChild(thead)
+
+        // body
+        const tbody = Ui.doc.createElement('tbody')
+        data.forEach( (item, i) => {
+            const row = Ui.doc.createElement('tr')
+            if (keys) row.id = `r-${keys[i]}`
+            headers.forEach(header => {
+                const cell = Ui.doc.createElement('td')
+                // cell.textContent = item[header]
+                cell.innerHTML = this.sanitiseHTML(item[header])
+                row.appendChild(cell)
+            })
+            tbody.appendChild(row)
+        })
+        tbl.appendChild(tbody)
+
+        return tbl
+    }
+
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
      * @param {string} mdText The input markdown string
@@ -656,26 +920,15 @@ const Ui = class Ui {
      */
     convertMarkdown(mdText) {
         if (!mdText) return ''
-        if (!this.window['markdownit']) return mdText
-
-        const opts = { // eslint-disable-line object-shorthand
-            html: true,
-            linkify: true,
-            _highlight: true,
-            langPrefix: 'language-',
-            highlight(str, lang) {
-                if (lang && this.window['hljs'] && this.window['hljs'].getLanguage(lang)) {
-                    try {
-                        return `<pre class="highlight" data-language="${lang.toUpperCase()}">
-                                <code class="language-${lang}">${this.window['hljs'].highlightAuto(str).value}</code></pre>`
-                    } finally { } // eslint-disable-line no-empty
-                }
-                return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`
-            },
-        }
-        const md = this.window['markdownit'](opts)
+        if (!Ui.win['markdownit']) return mdText
+        if (!Ui.md) this._markDownIt() // To handle case where the library is late loaded
         // Convert from markdown to HTML
-        return md.render(mdText)
+        try {
+            return Ui.md.render(mdText.trim())
+        } catch (e) {
+            Ui.log(0, 'uibuilder:convertMarkdown', `Could not render Markdown. ${e.message}`, e)()
+            return '<p class="border error">Could not render Markdown<p>'
+        }
     }
 
     /** Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
@@ -766,7 +1019,7 @@ const Ui = class Ui {
             case 'image': {
                 data = await response.blob()
                 slot = `<img src="${URL.createObjectURL(data)}">`
-                if (this.window['DOMPurify']) {
+                if (Ui.win['DOMPurify']) {
                     txtReturn = 'Include successful. BUT DOMPurify loaded which may block its use.'
                     Ui.log('warn', 'Ui:include:image', txtReturn)()
                 }
@@ -776,7 +1029,7 @@ const Ui = class Ui {
             case 'video': {
                 data = await response.blob()
                 slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`
-                if (this.window['DOMPurify']) {
+                if (Ui.win['DOMPurify']) {
                     txtReturn = 'Include successful. BUT DOMPurify loaded which may block its use.'
                     Ui.log('warn', 'Ui:include:video', txtReturn)()
                 }
@@ -788,7 +1041,7 @@ const Ui = class Ui {
             default: {
                 data = await response.blob()
                 slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`
-                if (this.window['DOMPurify']) {
+                if (Ui.win['DOMPurify']) {
                     txtReturn = 'Include successful. BUT DOMPurify loaded which may block its use.'
                     Ui.log('warn', `Ui:include:${type}`, txtReturn)()
                 }
@@ -819,10 +1072,10 @@ const Ui = class Ui {
      * @param {string} url The url to be used in the script src attribute
      */
     loadScriptSrc(url) {
-        const newScript = this.document.createElement('script')
+        const newScript = Ui.doc.createElement('script')
         newScript.src = url
         newScript.async = false
-        this.document.head.appendChild(newScript)
+        Ui.doc.head.appendChild(newScript)
     }
 
     /** Attach a new text script to the end of HEAD synchronously
@@ -831,10 +1084,10 @@ const Ui = class Ui {
      * @param {string} textFn The text to be loaded as a script
      */
     loadScriptTxt(textFn) {
-        const newScript = this.document.createElement('script')
+        const newScript = Ui.doc.createElement('script')
         newScript.async = false
         newScript.textContent = textFn
-        this.document.head.appendChild(newScript)
+        Ui.doc.head.appendChild(newScript)
     }
 
     /** Attach a new remote stylesheet link to the end of HEAD synchronously
@@ -843,12 +1096,12 @@ const Ui = class Ui {
      * @param {string} url The url to be used in the style link href attribute
      */
     loadStyleSrc(url) {
-        const newStyle = this.document.createElement('link')
+        const newStyle = Ui.doc.createElement('link')
         newStyle.href = url
         newStyle.rel = 'stylesheet'
         newStyle.type = 'text/css'
 
-        this.document.head.appendChild(newStyle)
+        Ui.doc.head.appendChild(newStyle)
     }
 
     /** Attach a new text stylesheet to the end of HEAD synchronously
@@ -857,9 +1110,9 @@ const Ui = class Ui {
      * @param {string} textFn The text to be loaded as a stylesheet
      */
     loadStyleTxt(textFn) {
-        const newStyle = this.document.createElement('style')
+        const newStyle = Ui.doc.createElement('style')
         newStyle.textContent = textFn
-        this.document.head.appendChild(newStyle)
+        Ui.doc.head.appendChild(newStyle)
     }
 
     /** Load a dynamic UI from a JSON web reponse
@@ -905,6 +1158,25 @@ const Ui = class Ui {
             })
     } // --- end of loadui
 
+    /** ! NOT COMPLETE Move an element from one position to another
+     * @param {object} opts Options
+     * @param {string} opts.sourceSelector Required, CSS Selector that identifies the element to be moved
+     * @param {string} opts.targetSelector Required, CSS Selector that identifies the element to be moved
+     */
+    moveElement(opts) {
+        const { sourceSelector, targetSelector, moveType, position } = opts
+        const sourceEl = document.querySelector(sourceSelector)
+        if (!sourceEl) {
+            Ui.log(0, 'Ui:moveElement', 'Source element not found')()
+            return
+        }
+        const targetEl = document.querySelector(targetSelector)
+        if (!targetEl) {
+            Ui.log(0, 'Ui:moveElement', 'Target element not found')()
+            return
+        }
+    }
+
     /** Get standard data from a DOM node.
      * @param {*} node DOM node to examine
      * @param {string} cssSelector Identify the DOM element to get data from
@@ -930,7 +1202,7 @@ const Ui = class Ui {
         }
 
         if (['UL', 'OL'].includes(node.nodeName)) {
-            const listEntries = this.document.querySelectorAll(`${cssSelector} li`)
+            const listEntries = Ui.doc.querySelectorAll(`${cssSelector} li`)
             if (listEntries) {
                 thisOut.list = {
                     'entries': listEntries.length
@@ -938,7 +1210,7 @@ const Ui = class Ui {
             }
         }
         if (node.nodeName === 'DL') {
-            const listEntries = this.document.querySelectorAll(`${cssSelector} dt`)
+            const listEntries = Ui.doc.querySelectorAll(`${cssSelector} dt`)
             if (listEntries) {
                 thisOut.list = {
                     'entries': listEntries.length
@@ -946,9 +1218,9 @@ const Ui = class Ui {
             }
         }
         if (node.nodeName === 'TABLE') {
-            const bodyEntries = this.document.querySelectorAll(`${cssSelector} > tbody > tr`)
-            const headEntries = this.document.querySelectorAll(`${cssSelector} > thead > tr`)
-            const cols = this.document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`)  // #eltest > table > tbody > tr:nth-child(3)
+            const bodyEntries = Ui.doc.querySelectorAll(`${cssSelector} > tbody > tr`)
+            const headEntries = Ui.doc.querySelectorAll(`${cssSelector} > thead > tr`)
+            const cols = Ui.doc.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`)  // #eltest > table > tbody > tr:nth-child(3)
             if (bodyEntries || headEntries || cols) {
                 thisOut.table = {
                     'headRows': headEntries ? headEntries.length : 0,
@@ -1019,21 +1291,28 @@ const Ui = class Ui {
         if (el) el.classList.remove(...classNames)
     }
 
-    // TODO Add multi-slot
     /** Replace or add an HTML element's slot from text or an HTML string
+     * WARNING: Executes <script> tags! And will process <style> tags.
      * Will use DOMPurify if that library has been loaded to window.
      * param {*} ui Single entry from the msg._ui property
      * @param {Element} el Reference to the element that we want to update
-     * @param {*} component The component we are trying to add/replace
+     * @param {*} slot The slot content we are trying to add/replace (defaults to empty string)
      */
-    replaceSlot(el, component) {
-        if (!component.slot) return
+    replaceSlot(el, slot) {
         if (!el) return
+        if (!slot) slot = ''
 
         // If DOMPurify is loaded, apply it now
-        if (this.window['DOMPurify']) component.slot = this.window['DOMPurify'].sanitize(component.slot)
-        // Set the component content to the msg.payload or the slot property
-        el.innerHTML = component.slot
+        slot = this.sanitiseHTML(slot)
+
+        // Create doc frag and apply html string (msg.payload or the slot property)
+        const tempFrag = Ui.doc.createRange().createContextualFragment(slot)
+
+        // Remove content of el and replace with tempFrag
+        const elRange = Ui.doc.createRange()
+        elRange.selectNodeContents(el)
+        elRange.deleteContents()
+        el.append(tempFrag)
     }
 
     /** Replace or add an HTML element's slot from a Markdown string
@@ -1060,8 +1339,8 @@ const Ui = class Ui {
      * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
      */
     sanitiseHTML(html) {
-        if (!this.window['DOMPurify']) return html
-        return this.window['DOMPurify'].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs })
+        if (!Ui.win['DOMPurify']) return html
+        return Ui.win['DOMPurify'].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs })
     }
 
     /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
@@ -1113,9 +1392,9 @@ const Ui = class Ui {
         //#endregion -- -- --
 
         // Create a toaster container element if not already created - or get a ref to it
-        let toaster = this.document.getElementById('toaster')
+        let toaster = Ui.doc.getElementById('toaster')
         if (toaster === null) {
-            toaster = this.document.createElement('div')
+            toaster = Ui.doc.createElement('div')
             toaster.id = 'toaster'
             toaster.title = 'Click to clear all notifcations'
             toaster.setAttribute('class', 'toaster')
@@ -1125,11 +1404,11 @@ const Ui = class Ui {
                 // @ts-ignore
                 toaster.remove()
             }
-            this.document.body.insertAdjacentElement('afterbegin', toaster)
+            Ui.doc.body.insertAdjacentElement('afterbegin', toaster)
         }
 
         // Create a toast element. Would be nice to use <dialog> but that isn't well supported yet - come on Apple!
-        const toast = this.document.createElement('div')
+        const toast = Ui.doc.createElement('div')
         toast.title = 'Click to clear this notifcation'
         toast.setAttribute('class', `toast ${ui.variant ? ui.variant : ''} ${type}`)
         toast.innerHTML = content
@@ -1169,7 +1448,6 @@ const Ui = class Ui {
         if (json._ui) msg = json
         else msg._ui = json
 
-        console.log(this)
         this._uiManager(msg)
     }
 
@@ -1180,7 +1458,7 @@ const Ui = class Ui {
      */
     uiGet(cssSelector, propName = null) {
         // The type cast below not really correct but it gets rid of the other typescript errors
-        const selection = /** @type {NodeListOf<HTMLInputElement>} */ (this.document.querySelectorAll(cssSelector))
+        const selection = /** @type {NodeListOf<HTMLInputElement>} */ (Ui.doc.querySelectorAll(cssSelector))
 
         const out = []
 

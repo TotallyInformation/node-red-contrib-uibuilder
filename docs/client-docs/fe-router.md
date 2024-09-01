@@ -3,8 +3,8 @@ title: UIBUILDER Front-End Router Library
 description: |
   Details on the configuration and use of UIBUILDER's front-end router.
 created: 2022-02-01 11:15:27
-lastUpdated: 2023-12-29 17:25:14
-updated: 2023-12-30 17:01:41
+lastUpdated: 2024-01-23 17:03:38
+updated: 2024-06-14 20:12:29
 ---
 
 The `uibrouter` front-end library defines a `UibRouter` class. This allows both internal and external content to be dynamically shown, allowing the creation of "Single-Page Apps" (SPA's) or simply keeping parts of the UI hidden from the users until they need them.
@@ -89,6 +89,35 @@ Which mode you use will be dependent on what you want to achieve.
 ## Configuration
 
 TBC - See the example below for configuration settings.
+
+```js
+/** Type definitions
+ * routeDefinition
+ * @typedef {object} routeDefinition Single route configuration
+ * @property {string} id REQUIRED. Route ID
+ * @property {string} src REQUIRED for external, optional for internal (default=route id). CSS Selector for template tag routes, url for external routes
+ * @property {"url"|undefined} [type] OPTIONAL, default=internal route. "url" for external routes
+ * @property {string} [title] OPTIONAL, default=route id. Text to use as a short title for the route
+ * @property {string} [description] OPTIONAL, default=route id. Text to use as a long description for the route
+ * @property {"html"|"md"|"markdown"} [format] OPTIONAL, default=html. Route content format, HTML or Markdown (md). Markdown requires the Markdown-IT library to have been loaded.
+ *
+ * UibRouterConfig
+ * @typedef {object} UibRouterConfig Configuration for the UiBRouter class instances
+ * @property {routeDefinition[]} routes REQUIRED. Array of route definitions
+ * @property {string} [defaultRoute] OPTIONAL, default=1st route. If set to a route id, that route will be automatically shown on load
+ * @property {string} [routeContainer] OPTIONAL, default='#uibroutecontainer'. CSS Selector for an HTML Element containing routes
+ * @property {boolean} [hide] OPTIONAL, default=false. If TRUE, routes will be hidden/shown on change instead of removed/added
+ * @property {boolean} [templateLoadAll] OPTIONAL, default=false. If TRUE, all external route templates will be loaded when the router is instanciated. Default is to lazy-load external templates
+ * @property {boolean} [templateUnload] OPTIONAL, default=true. If TRUE, route templates will be unloaded from DOM after access.
+ * @property {otherLoadDefinition[]} [otherLoad] OPTIONAL, default=none. If present, router start will pre-load other external templates direct to the DOM. Use for menu's, etc.
+ *
+ * otherLoadDefinition
+ * @typedef {object} otherLoadDefinition Single external load configuration
+ * @property {string} id REQUIRED. Unique (to page) ID. Will be applied to loaded content.
+ * @property {string} src REQUIRED. url of external template to load
+ * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
+ */
+```
 
 ### Configuration Schema
 
@@ -183,19 +212,26 @@ Note that, when used with UIBUILDER, several managed uibuilder variables are als
   
   External routes will be loaded to template tags as per class startup. Note that external templates are loaded asynchronously. Check for the `uibrouter:routes-added` custom event to have fired or listen for the uibuilder `uibrouter` managed variable to be set to `routes added` to detect when all new external routes have been loaded.
 
+* `addRoutes(routeDefinition)` - Add a new route to the configuration.
 * `currentRoute()` - Returns the configuration data `{id, src, type, title, description}` of the current route as a JavaScript object.
 * `defaultRoute()` - Show the default route if it has been defined in the config.
+* `deleteTemplates(templateIds=all, externalOnlyFlag=true)` - Delete some or all templates from the browser. Optionally restricting to only external templates.
 * `doRoute(routeSource)` - Manually show a specific route id.
+* `ensureTemplate(routeId)` - Async method to ensure that a template element exists for a given route id. If route is external, will try to load if it doesn't exist. Throws an error if no template possible.
 * `getRouteConfigById(routeId)` - Gets route configuration details for a given route id.
 * `isRouteExternal(routeId)` - Returns true if the given route id is an external route.
 * `keepHashFromUrl(url)` - Given a URL, extracts and returns a route id.
 * `loadExternal(routeDefinition)` - Loads an external route template given a valid route definition.
-* `noRoute()` - Removes/hides the current route leaving no route showing. NOTE that this will ***NOT*** trigger *route or hash change events*.
+* `loadOther(extOther)` - Load other (non-route) external files and apply to specific parents (mostly used for externally defined menus).
+* `loadRoute(routeId, routeParentElement)` - Async method to create DOM route content from a route template (internal or external) - loads external templates if not already loaded. Route templates have to be a `<template>` tag with an ID that matches the route id. Scripts in the template are run at this point. All errors throw so make sure to try/catch calls to this method. Can also load and render Markdown route templates if the Markdown-IT library is pre-loaded.
+* `noRoute()` - Removes/hides the current route content and removes the route ID from the browser URL leaving no route showing. NOTE that this will ***NOT*** trigger *route or hash change events*.
 * `removeHash()` - Removes the hash from the browser URL.
-* `routeDescription` - Returns the description of the current route or its ID if the `description` property not set.
+* `renderMarkdown(mdText)` - Converts a string of Markdown to HTML if the Markdown-IT library is pre-loaded.
+* `routeDescription()` - Returns the description of the current route or its ID if the `description` property not set.
 * `routeList(returnHash)` - Return an array of route id's. Useful for creating routing menu's. If the optional `returnHash` is set to true, returns id's prefixed with a `#` for direct use in `href` attributes.
 * `routeTitle` - Returns the title of the current route or its ID if the `title` property not set.
 * `setCurrentMenuItems()` - Updates any on-page menu's so that the currently selected route can be highlighted. Adds `class="currentRoute" aria-current="page"` to the current route item in the list and removes them from all other items. Assumes that you are using an HTML list where the list items are marked with `<li data-route="routeid"`. Wherever `routeid` matches the new current route, the above attributes are added.
+* `unloadTemplate(routeId, externalOnlyFlag=true)` - Unloads a single route template. Optionally restricting to only external.
 
 > [!NOTE]
 > Any class methods starting with `_` are for internal use only and must not be used in your own code.
@@ -220,7 +256,7 @@ TBC
 * Remember that styles in external templates only exist while that route is loaded. While you can reference that style anywhere on page, it will only apply when the route is loaded. This could be used to get some interesting effects such as having page styles change outside the route display based on the current route (though it would require the route to be unloaded when not in use).
 
 
-## Using with UIBUILDER
+## Using with uibuilder
 
 While not dependent on UIBUILDER, the router class does work nicely with it.
 
@@ -292,6 +328,30 @@ The router also sets some uibuilder managed variables:
 Managed uibuilder variables can be monitored via `uibuilder.onChange` (in JavaScript) or via `<uib-var variable="...."></uib-var>` (in [HTML](#in-front-end-html)).
 
 
+## Rendering Markdown routes
+
+The router library supports having route content defined as Markdown rather than HTML. To render the Markdown into HTML, the [Markdown-IT](https://www.npmjs.com/package/markdown-it) library needs to have been loaded either from a CDN (Internet required) or by pre-installing in Node-RED via the UIBUILDER library manager.
+
+Load the Markdown-IT library in your HTML head section BEFORE you load the router library (and before loading the uibuilder library):
+
+```html
+<script defer src="https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js"></script>
+```
+
+Markdown-IT supports the CommonMark spec with some extensions to support things like GitHub Flavored Markdown, Autolinking and typography. It is configured to be secure by default.
+
+The Markdown renderer has also been configured with basic syntax highlighting using [HighlightJS](https://highlightjs.org) for code blocks (in triple backslashes). To make use of it, you need to pre-load their libraries and CSS:
+
+```html
+<!-- There are lots of different themes available, see https://highlightjs.org/demo -->
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/hybrid.min.css">
+
+<script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<!-- <script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/go.min.js"></script> -->
+<!-- ... uibuilder, uibrouter, index.js ... -->
+```
+
 ## Other Notes
 
 * Your routes can be a mix of external files and `<template>` tags.
@@ -306,39 +366,72 @@ Managed uibuilder variables can be monitored via `uibuilder.onChange` (in JavaSc
 
 ## Example
 
+There is a more complete example flow available in the uibuilder examples library.
+
 ```javascript
 const routerConfig = {
-    // OPTIONAL. Router templates created inside the routeContainer, specify an CSS selector
-    // If not provided, default div with ID uibroutecontainer is added as the last element of the body
-    routeContainer: '#routecontainer',
+    // Router templates created inside the routeContainer, specify an CSS selector
+    // If not provided, defaults to '#routecontainer'
+    // If no element with the ID exists on the page, a div with the id is added as the last element of the body.
+    // routeContainer: '#routecontainer',
 
-    // OPTIONAL. Chose a default route id to be displayed on load
+    // Optionally, chose a default route id to be displayed on load
+    // If not given, the first defined route is used.
     defaultRoute: 'route03',
 
-    // OPTIONAL. If true, use CSS show/hide instead of removing/recreating route content
-    // hide: true,
+    // Optional, default=false. False unloads route content when going to a new route.
+    // Set to true to (un)hide rather than unload the actual route elements. 
+    // hide: false,
 
-    // OPTIONAL. If true, templates are unloaded from the DOM after being accessed (only useful with hide: true)
-    // unload: true,
+    // Optional, default=false. False loads external templates on first use.
+    // Set to `true` to pre-load all external templates
+    // templateLoadAll: true,
 
-    // REQUIRED. Define the possible routes type=url for externals
+    // Optional, default=true. If true, templates are unloaded after use.
+    // Only set to false if your network is slow to load the templates.
+    // templateUnload: true,
+
+    // Define the possible routes type=url for externals
     // Can be an object or an array but each entry must be an object containing {id,src,type}
     //   type can be anything but only `url` will be treated as an external template file.
     //   src is either a CSS selector for a <template> or a URL of an HTML file.
     //   id must match the href="#routeid" in any menu/link. and `<template id="routeid">` on any loaded template
     //      must be unique on the page
     routes: [
-        // Two <template> tags as routes
-        { id: 'route01', src: '#route01',
-          title: 'Home', description: 'A summary view of the home.' },
-        {id: 'route02', src: '#route02'},
-        // File exists in sub-folder below index.js, is served by Node-RED/uibuilder
-        {id: 'route03', src: './fe-routes/route03.html', type: 'url'},
+        {
+            id: 'route01', src: '#route01',
+            title: 'Route 1', description: 'My first route',
+        }, {
+            id: 'route02', src: '#route02',
+            title: 'Route 2', description: 'My second route',
+        }, {
+            id: 'route03', src: './fe-routes/route03.html', type: 'url',
+            title: 'Route 3', description: 'My third route',
+        },
         // Doesn't exist. Tests load error
         {id: 'route04', src: './fe-routes/dummy.html', type: 'url'},
+        // Testing Markdown templates - Markdown-IT Library must be loaded
+        {
+            id: 'route-md-01', src: '#route-md-01',
+            title: 'Markdown Route 1', format: 'markdown',
+            description: 'A route defined using markdown #1',
+        }, {
+            id: 'route-md-02', src: './fe-routes/route-md-02.md', type: 'url',
+            title: 'Markdown Route 2', format: 'markdown',
+            description: 'A route defined using markdown #2',
+        },
+    ],
+
+    // OPTIONAL. If present, external html is loaded direct to DOM
+    // Templates that fail to load are ignored
+    otherLoad: [
+        {
+            id: 'main-menu',
+            src: './fe-routes/main-menu.html',
+            container: 'header',
+        }
     ],
 }
-const router = new UibRouter(routerConfig)
 ```
 
 With a simple HTML Menu:

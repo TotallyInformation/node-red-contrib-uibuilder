@@ -4,62 +4,120 @@ var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { en
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
-var __publicField = (obj, key, value) => {
-  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
-  return value;
-};
+var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
 // src/front-end-module/ui.js
 var require_ui = __commonJS({
   "src/front-end-module/ui.js"(exports, module) {
     var _a;
     var Ui = (_a = class {
+      //#endregion --- class variables ---
       /** Called when `new Ui(...)` is called
        * @param {globalThis} win Either the browser global window or jsdom dom.window
-       * @param {function} [extLog] A function that returns a function for logging
-       * @param {function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
+       * @param {Function} [extLog] A function that returns a function for logging
+       * @param {Function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
        */
       constructor(win, extLog, jsonHighlight) {
-        __publicField(this, "version", "6.8.2-src");
+        //#region --- Class variables ---
+        __publicField(this, "version", "7.0.0-src");
         // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
         __publicField(this, "sanitiseExtraTags", ["uib-var"]);
         __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
-        // Reference to DOM window - must be passed in the constructor
-        // Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
-        __publicField(this, "window");
-        if (win)
-          this.window = win;
+        /** Optional Markdown-IT Plugins */
+        __publicField(this, "ui_md_plugins");
+        if (win) _a.win = win;
         else {
           throw new Error("Ui:constructor. Current environment does not include `window`, UI functions cannot be used.");
         }
-        this.document = this.window.document;
-        if (extLog)
-          _a.log = extLog;
-        else
-          _a.log = function() {
-            return function() {
-            };
+        _a.doc = _a.win.document;
+        if (extLog) _a.log = extLog;
+        else _a.log = function() {
+          return function() {
           };
-        if (jsonHighlight)
-          this.syntaxHighlight = jsonHighlight;
-        else
-          this.syntaxHighlight = function() {
+        };
+        if (jsonHighlight) this.syntaxHighlight = jsonHighlight;
+        else this.syntaxHighlight = function() {
+        };
+        if (_a.win["markdownit"]) {
+          _a.mdOpts = {
+            html: true,
+            xhtmlOut: false,
+            linkify: true,
+            _highlight: true,
+            _strict: false,
+            _view: "html",
+            langPrefix: "language-",
+            // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
+            highlight: function(str, lang) {
+              if (lang && window["hljs"] && window["hljs"].getLanguage(lang)) {
+                try {
+                  return `<pre class="">
+                                    <code class="hljs border">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+                } finally {
+                }
+              }
+              return `<pre class="hljs border"><code>${_a.md.utils.escapeHtml(str).trim()}</code></pre>`;
+            }
           };
+          _a.md = _a.win["markdownit"](_a.mdOpts);
+        }
       }
       //#region ---- Internal Methods ----
+      _markDownIt() {
+        if (!_a.win["markdownit"]) return;
+        if (!this.ui_md_plugins && _a.win["uibuilder"] && _a.win["uibuilder"].ui_md_plugins) this.ui_md_plugins = _a.win["uibuilder"].ui_md_plugins;
+        _a.mdOpts = {
+          html: true,
+          xhtmlOut: false,
+          linkify: true,
+          _highlight: true,
+          _strict: false,
+          _view: "html",
+          langPrefix: "language-",
+          // NB: the highlightjs (hljs) library must be loaded before markdown-it for this to work
+          highlight: function(str, lang) {
+            if (window["hljs"]) {
+              if (lang && window["hljs"].getLanguage(lang)) {
+                try {
+                  return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+                } finally {
+                }
+              } else {
+                try {
+                  const high = window["hljs"].highlightAuto(str);
+                  return `<pre><code class="hljs border language-${high.language}" data-language="${high.language}" title="Source language estimated by HighlightJS: '${high.language}'">${high.value}</code></pre>`;
+                } finally {
+                }
+              }
+            }
+            return `<pre><code class="border">${_a.md.utils.escapeHtml(str).trim()}</code></pre>`;
+          }
+        };
+        _a.md = _a.win["markdownit"](_a.mdOpts);
+        if (this.ui_md_plugins) {
+          if (!Array.isArray(this.ui_md_plugins)) {
+            _a.log("error", "Ui:_markDownIt:plugins", "Could not load plugins, ui_md_plugins is not an array")();
+            return;
+          }
+          this.ui_md_plugins.forEach((plugin) => {
+            if (typeof plugin === "string") {
+              _a.md.use(_a.win[plugin]);
+            } else {
+              const name = Object.keys(plugin)[0];
+              _a.md.use(_a.win[name], plugin[name]);
+            }
+          });
+        }
+      }
       /** Show a browser notification if the browser and the user allows it
        * @param {object} config Notification config data
        * @returns {Promise} Resolves on close or click event, returns the event.
        */
       _showNotification(config) {
-        if (config.topic && !config.title)
-          config.title = config.topic;
-        if (!config.title)
-          config.title = "uibuilder notification";
-        if (config.payload && !config.body)
-          config.body = config.payload;
-        if (!config.body)
-          config.body = " No message given.";
+        if (config.topic && !config.title) config.title = config.topic;
+        if (!config.title) config.title = "uibuilder notification";
+        if (config.payload && !config.body) config.body = config.payload;
+        if (!config.body) config.body = " No message given.";
         try {
           const notify = new Notification(config.title, config);
           return new Promise((resolve, reject) => {
@@ -85,7 +143,7 @@ var require_ui = __commonJS({
       //     // must be Vue
       //     // must have only 1 root element
       //     const compToAdd = ui.components[0]
-      //     const newEl = this.document.createElement(compToAdd.type)
+      //     const newEl = Ui.doc.createElement(compToAdd.type)
       //     if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload
       //     this._uiComposeComponent(newEl, compToAdd)
       //     // If nested components, go again - but don't pass payload to sub-components
@@ -111,22 +169,21 @@ var require_ui = __commonJS({
           switch (compToAdd.type) {
             case "html": {
               compToAdd.ns = "html";
-              newEl = this.document.createElement("div");
+              newEl = _a.doc.createElement("div");
               break;
             }
             case "svg": {
               compToAdd.ns = "svg";
-              newEl = this.document.createElementNS("http://www.w3.org/2000/svg", "svg");
+              newEl = _a.doc.createElementNS("http://www.w3.org/2000/svg", "svg");
               break;
             }
             default: {
               compToAdd.ns = "dom";
-              newEl = this.document.createElement(compToAdd.type);
+              newEl = _a.doc.createElement(compToAdd.type);
               break;
             }
           }
-          if (!compToAdd.slot && ui.payload)
-            compToAdd.slot = ui.payload;
+          if (!compToAdd.slot && ui.payload) compToAdd.slot = ui.payload;
           this._uiComposeComponent(newEl, compToAdd);
           let elParent;
           if (compToAdd.parentEl) {
@@ -134,13 +191,13 @@ var require_ui = __commonJS({
           } else if (ui.parentEl) {
             elParent = ui.parentEl;
           } else if (compToAdd.parent) {
-            elParent = this.document.querySelector(compToAdd.parent);
+            elParent = _a.doc.querySelector(compToAdd.parent);
           } else if (ui.parent) {
-            elParent = this.document.querySelector(ui.parent);
+            elParent = _a.doc.querySelector(ui.parent);
           }
           if (!elParent) {
             _a.log("info", "Ui:_uiAdd", "No parent found, adding to body")();
-            elParent = this.document.querySelector("body");
+            elParent = _a.doc.querySelector("body");
           }
           if (compToAdd.position && compToAdd.position === "first") {
             elParent.insertBefore(newEl, elParent.firstChild);
@@ -163,26 +220,21 @@ var require_ui = __commonJS({
       _uiComposeComponent(el, comp) {
         if (comp.attributes) {
           Object.keys(comp.attributes).forEach((attrib) => {
-            if (attrib === "class" && Array.isArray(comp.attributes[attrib]))
-              comp.attributes[attrib].join(" ");
-            if (attrib === "value")
-              el.value = comp.attributes[attrib];
-            if (attrib.startsWith("xlink:"))
-              el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
-            else
-              el.setAttribute(attrib, comp.attributes[attrib]);
+            if (attrib === "class" && Array.isArray(comp.attributes[attrib])) comp.attributes[attrib].join(" ");
+            _a.log("trace", "_uiComposeComponent:attributes-forEach", `Attribute: '${attrib}', value: '${comp.attributes[attrib]}'`)();
+            if (attrib === "value") el.value = comp.attributes[attrib];
+            if (attrib.startsWith("xlink:")) el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
+            else el.setAttribute(attrib, comp.attributes[attrib]);
           });
         }
-        if (comp.id)
-          el.setAttribute("id", comp.id);
+        if (comp.id) el.setAttribute("id", comp.id);
         if (comp.type === "svg") {
           el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.w3.org/2000/svg");
           el.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
         }
         if (comp.events) {
           Object.keys(comp.events).forEach((type) => {
-            if (type.toLowerCase === "onclick")
-              type = "click";
+            if (type.toLowerCase === "onclick") type = "click";
             try {
               el.addEventListener(type, (evt) => {
                 new Function("evt", `${comp.events[type]}(evt)`)(evt);
@@ -195,10 +247,14 @@ var require_ui = __commonJS({
         if (comp.properties) {
           Object.keys(comp.properties).forEach((prop) => {
             el[prop] = comp.properties[prop];
+            if (["value", "checked"].includes(prop)) {
+              el.dispatchEvent(new Event("input"));
+              el.dispatchEvent(new Event("change"));
+            }
           });
         }
         if (comp.slot) {
-          this.replaceSlot(el, comp);
+          this.replaceSlot(el, comp.slot);
         }
         if (comp.slotMarkdown) {
           this.replaceSlotMarkdown(el, comp);
@@ -217,13 +273,13 @@ var require_ui = __commonJS({
           compToAdd.ns = ns;
           if (compToAdd.ns === "html") {
             newEl = parentEl;
-            parentEl.innerHTML = compToAdd.slot;
+            this.replaceSlot(parentEl, compToAdd.slot);
           } else if (compToAdd.ns === "svg") {
-            newEl = this.document.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
+            newEl = _a.doc.createElementNS("http://www.w3.org/2000/svg", compToAdd.type);
             this._uiComposeComponent(newEl, compToAdd);
             parentEl.appendChild(newEl);
           } else {
-            newEl = this.document.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
+            newEl = _a.doc.createElement(compToAdd.type === "html" ? "div" : compToAdd.type);
             this._uiComposeComponent(newEl, compToAdd);
             parentEl.appendChild(newEl);
           }
@@ -239,34 +295,29 @@ var require_ui = __commonJS({
        */
       _uiLoad(ui) {
         if (ui.components) {
-          if (!Array.isArray(ui.components))
-            ui.components = [ui.components];
+          if (!Array.isArray(ui.components)) ui.components = [ui.components];
           ui.components.forEach(async (component) => {
-            await import(component);
+            import(component);
           });
         }
         if (ui.srcScripts) {
-          if (!Array.isArray(ui.srcScripts))
-            ui.srcScripts = [ui.srcScripts];
+          if (!Array.isArray(ui.srcScripts)) ui.srcScripts = [ui.srcScripts];
           ui.srcScripts.forEach((script) => {
             this.loadScriptSrc(script);
           });
         }
         if (ui.txtScripts) {
-          if (!Array.isArray(ui.txtScripts))
-            ui.txtScripts = [ui.txtScripts];
+          if (!Array.isArray(ui.txtScripts)) ui.txtScripts = [ui.txtScripts];
           this.loadScriptTxt(ui.txtScripts.join("\n"));
         }
         if (ui.srcStyles) {
-          if (!Array.isArray(ui.srcStyles))
-            ui.srcStyles = [ui.srcStyles];
+          if (!Array.isArray(ui.srcStyles)) ui.srcStyles = [ui.srcStyles];
           ui.srcStyles.forEach((sheet) => {
             this.loadStyleSrc(sheet);
           });
         }
         if (ui.txtStyles) {
-          if (!Array.isArray(ui.txtStyles))
-            ui.txtStyles = [ui.txtStyles];
+          if (!Array.isArray(ui.txtStyles)) ui.txtStyles = [ui.txtStyles];
           this.loadStyleTxt(ui.txtStyles.join("\n"));
         }
       }
@@ -276,13 +327,12 @@ var require_ui = __commonJS({
        * @param {*} msg Standardised msg object containing a _ui property object
        */
       _uiManager(msg) {
-        if (!msg._ui)
-          return;
-        if (!Array.isArray(msg._ui))
-          msg._ui = [msg._ui];
+        if (!msg._ui) return;
+        if (!Array.isArray(msg._ui)) msg._ui = [msg._ui];
         msg._ui.forEach((ui, i) => {
+          if (ui.mode && !ui.method) ui.method = ui.mode;
           if (!ui.method) {
-            _a.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i}]. Ignoring`)();
+            _a.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i}]. Ignoring. `, ui)();
             return;
           }
           ui.payload = msg.payload;
@@ -345,10 +395,8 @@ var require_ui = __commonJS({
       _uiRemove(ui, all = false) {
         ui.components.forEach((compToRemove) => {
           let els;
-          if (all !== true)
-            els = [this.document.querySelector(compToRemove)];
-          else
-            els = this.document.querySelectorAll(compToRemove);
+          if (all !== true) els = [_a.doc.querySelector(compToRemove)];
+          else els = _a.doc.querySelectorAll(compToRemove);
           els.forEach((el) => {
             try {
               el.remove();
@@ -368,13 +416,13 @@ var require_ui = __commonJS({
           _a.log("trace", `Ui:_uiReplace:components-forEach:${i}`, "Component to replace: ", compToReplace)();
           let elToReplace;
           if (compToReplace.id) {
-            elToReplace = this.document.getElementById(compToReplace.id);
+            elToReplace = _a.doc.getElementById(compToReplace.id);
           } else if (compToReplace.selector || compToReplace.select) {
-            elToReplace = this.document.querySelector(compToReplace.selector);
+            elToReplace = _a.doc.querySelector(compToReplace.selector);
           } else if (compToReplace.name) {
-            elToReplace = this.document.querySelector(`[name="${compToReplace.name}"]`);
+            elToReplace = _a.doc.querySelector(`[name="${compToReplace.name}"]`);
           } else if (compToReplace.type) {
-            elToReplace = this.document.querySelector(compToReplace.type);
+            elToReplace = _a.doc.querySelector(compToReplace.type);
           }
           _a.log("trace", `Ui:_uiReplace:components-forEach:${i}`, "Element to replace: ", elToReplace)();
           if (elToReplace === void 0 || elToReplace === null) {
@@ -386,17 +434,17 @@ var require_ui = __commonJS({
           switch (compToReplace.type) {
             case "html": {
               compToReplace.ns = "html";
-              newEl = this.document.createElement("div");
+              newEl = _a.doc.createElement("div");
               break;
             }
             case "svg": {
               compToReplace.ns = "svg";
-              newEl = this.document.createElementNS("http://www.w3.org/2000/svg", "svg");
+              newEl = _a.doc.createElementNS("http://www.w3.org/2000/svg", "svg");
               break;
             }
             default: {
               compToReplace.ns = "dom";
-              newEl = this.document.createElement(compToReplace.type);
+              newEl = _a.doc.createElement(compToReplace.type);
               break;
             }
           }
@@ -415,41 +463,49 @@ var require_ui = __commonJS({
        * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
        */
       _uiUpdate(ui) {
-        _a.log("trace", "Ui:_uiManager:update", "Starting _uiUpdate")();
-        if (!ui.components)
-          ui.components = [Object.assign({}, ui)];
+        _a.log("trace", "UI:_uiUpdate:update", "Starting _uiUpdate", ui)();
+        if (!ui.components) ui.components = [Object.assign({}, ui)];
         ui.components.forEach((compToUpd, i) => {
-          _a.log("trace", "_uiUpdate:components-forEach", `Component #${i}`, compToUpd)();
+          _a.log("trace", "_uiUpdate:components-forEach", `Start loop #${i}`, compToUpd)();
           let elToUpd;
-          if (compToUpd.id) {
-            elToUpd = this.document.querySelectorAll(`#${compToUpd.id}`);
+          if (compToUpd.parentEl) {
+            elToUpd = compToUpd.parentEl;
+          } else if (compToUpd.id) {
+            elToUpd = _a.doc.querySelectorAll(`#${compToUpd.id}`);
           } else if (compToUpd.selector || compToUpd.select) {
-            elToUpd = this.document.querySelectorAll(compToUpd.selector);
+            elToUpd = _a.doc.querySelectorAll(compToUpd.selector);
           } else if (compToUpd.name) {
-            elToUpd = this.document.querySelectorAll(`[name="${compToUpd.name}"]`);
+            elToUpd = _a.doc.querySelectorAll(`[name="${compToUpd.name}"]`);
           } else if (compToUpd.type) {
-            elToUpd = this.document.querySelectorAll(compToUpd.type);
+            elToUpd = _a.doc.querySelectorAll(compToUpd.type);
           }
           if (elToUpd === void 0 || elToUpd.length < 1) {
             _a.log("warn", "Ui:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
             return;
           }
           _a.log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
-          if (!compToUpd.slot && compToUpd.payload)
-            compToUpd.slot = compToUpd.payload;
-          elToUpd.forEach((el) => {
+          if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload;
+          elToUpd.forEach((el, j) => {
+            _a.log("trace", "_uiUpdate:components-forEach", `Updating element #${j}`, el)();
             this._uiComposeComponent(el, compToUpd);
-          });
-          if (compToUpd.components) {
-            elToUpd.forEach((el) => {
-              _a.log("trace", "_uiUpdate:components", "el", el)();
-              this._uiUpdate({
-                method: ui.method,
-                parentEl: el,
-                components: compToUpd.components
+            if (compToUpd.components) {
+              _a.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component`, compToUpd, el)();
+              const nc = { _ui: [] };
+              compToUpd.components.forEach((nestedComp, k) => {
+                const method = nestedComp.method || compToUpd.method || ui.method;
+                if (nestedComp.method) delete nestedComp.method;
+                if (!Array.isArray(nestedComp)) nestedComp = [nestedComp];
+                _a.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component #${k}`, nestedComp)();
+                nc._ui.push({
+                  method,
+                  parentEl: el,
+                  components: nestedComp
+                });
               });
-            });
-          }
+              _a.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component new manager`, nc)();
+              this._uiManager(nc);
+            }
+          });
         });
       }
       // --- end of _uiUpdate ---
@@ -460,10 +516,11 @@ var require_ui = __commonJS({
        * If the selected element is a <template>, returns the first child element.
        * type {HTMLElement}
        * @param {string} cssSelector A CSS Selector that identifies the element to return
-       * @returns {HTMLElement|null} Selected HTML element or null
+       * @param {"el"|"text"|"html"|"attributes"|"attr"} [output] Optional. What type of output to return. Defaults to "el", the DOM element reference
+       * @returns {HTMLElement|string|InnerHTML|array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
        */
-      $(cssSelector) {
-        let el = document.querySelector(cssSelector);
+      $(cssSelector, output) {
+        let el = _a.doc.querySelector(cssSelector);
         if (!el) {
           _a.log(1, "Uib:$", `No element found for CSS selector ${cssSelector}`)();
           return null;
@@ -475,7 +532,36 @@ var require_ui = __commonJS({
             return null;
           }
         }
-        return el;
+        if (!output) output = "el";
+        let out;
+        try {
+          switch (output.toLowerCase()) {
+            case "text": {
+              out = el.innerText;
+              break;
+            }
+            case "html": {
+              out = el.innerHTML;
+              break;
+            }
+            case "attr":
+            case "attributes": {
+              out = {};
+              for (const attr of el.attributes) {
+                out[attr.name] = attr.value;
+              }
+              break;
+            }
+            default: {
+              out = el;
+              break;
+            }
+          }
+        } catch (e) {
+          out = el;
+          _a.log(1, "Uib:$", `Could not process output type "${output}" for CSS selector ${cssSelector}, returned the DOM element. ${e.message}`, e)();
+        }
+        return out;
       }
       /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
        * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
@@ -483,17 +569,97 @@ var require_ui = __commonJS({
        * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
        */
       $$(cssSelector) {
-        return Array.from(document.querySelectorAll(cssSelector));
+        return Array.from(_a.doc.querySelectorAll(cssSelector));
       }
       /** Add 1 or several class names to an element
        * @param {string|string[]} classNames Single or array of classnames
        * @param {HTMLElement} el HTML Element to add class(es) to
        */
       addClass(classNames, el) {
-        if (!Array.isArray(classNames))
-          classNames = [classNames];
-        if (el)
-          el.classList.add(...classNames);
+        if (!Array.isArray(classNames)) classNames = [classNames];
+        if (el) el.classList.add(...classNames);
+      }
+      /** Apply a source template tag to a target html element
+       * NOTES:
+       * - styles in ALL templates are accessible to all templates.
+       * - scripts in templates are run AT TIME OF APPLICATION (so may run multiple times).
+       * - scripts in templates are applied in order of application, so variables may not yet exist if defined in subsequent templates
+       * @param {string} sourceId The HTML ID of the source element
+       * @param {string} targetId The HTML ID of the target element
+       * @param {object} config Configuration options
+       * @param {boolean=} config.onceOnly If true, the source will be adopted (the source is moved)
+       * @param {object=} config.attributes A set of key:value pairs that will be applied as attributes to the target
+       */
+      applyTemplate(sourceId, targetId, config) {
+        if (!config) config = { onceOnly: false };
+        const template = _a.doc.getElementById(sourceId);
+        const target = _a.doc.getElementById(targetId);
+        if (template && target) {
+          let content;
+          try {
+            if (config.onceOnly !== true) content = _a.doc.importNode(template.content, true);
+            else content = _a.doc.adoptNode(template.content);
+          } catch (e) {
+            _a.log("error", "Ui:applyTemplate", `Source must be a <template>. id='${sourceId}'`)();
+            return;
+          }
+          if (content) {
+            if (config.attributes) {
+              const el = content.firstElementChild;
+              Object.keys(config.attributes).forEach((attrib) => {
+                el.setAttribute(attrib, config.attributes[attrib]);
+              });
+            }
+            target.appendChild(content);
+          }
+        } else {
+          if (!template) _a.log("error", "Ui:applyTemplate", `Source not found: id='${sourceId}'`)();
+          if (!target) _a.log("error", "Ui:applyTemplate", `Target not found: id='${targetId}'`)();
+        }
+      }
+      /** Builds an HTML table from an array (or object) of objects
+       * 1st row is used for columns. If an object of objects, the outer keys
+       * are used as row ID's (prefixed with "r-").
+       * @param {Array<object>|Object} data Input data array or object
+       * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
+       */
+      buildHtmlTable(data) {
+        let keys;
+        if (!Array.isArray(data)) {
+          if (typeof data === "object") {
+            keys = Object.keys(data);
+            data = Object.values(data);
+          }
+          if (!Array.isArray(data)) {
+            const out = _a.doc.createElement("p");
+            out.textContent = "Input data is not an array or an object, cannot create a table.";
+            return out;
+          }
+        }
+        const tbl = _a.doc.createElement("table");
+        const thead = _a.doc.createElement("thead");
+        const headerRow = _a.doc.createElement("tr");
+        const headers = Object.keys(data[0]);
+        headers.forEach((header) => {
+          const th = _a.doc.createElement("th");
+          th.textContent = header;
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        tbl.appendChild(thead);
+        const tbody = _a.doc.createElement("tbody");
+        data.forEach((item, i) => {
+          const row = _a.doc.createElement("tr");
+          if (keys) row.id = `r-${keys[i]}`;
+          headers.forEach((header) => {
+            const cell = _a.doc.createElement("td");
+            cell.innerHTML = this.sanitiseHTML(item[header]);
+            row.appendChild(cell);
+          });
+          tbody.appendChild(row);
+        });
+        tbl.appendChild(tbody);
+        return tbl;
       }
       /** Converts markdown text input to HTML if the Markdown-IT library is loaded
        * Otherwise simply returns the text
@@ -501,29 +667,15 @@ var require_ui = __commonJS({
        * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
        */
       convertMarkdown(mdText) {
-        if (!mdText)
-          return "";
-        if (!this.window["markdownit"])
-          return mdText;
-        const opts = {
-          // eslint-disable-line object-shorthand
-          html: true,
-          linkify: true,
-          _highlight: true,
-          langPrefix: "language-",
-          highlight(str, lang) {
-            if (lang && this.window["hljs"] && this.window["hljs"].getLanguage(lang)) {
-              try {
-                return `<pre class="highlight" data-language="${lang.toUpperCase()}">
-                                <code class="language-${lang}">${this.window["hljs"].highlightAuto(str).value}</code></pre>`;
-              } finally {
-              }
-            }
-            return `<pre class="highlight"><code>${md.utils.escapeHtml(str)}</code></pre>`;
-          }
-        };
-        const md = this.window["markdownit"](opts);
-        return md.render(mdText);
+        if (!mdText) return "";
+        if (!_a.win["markdownit"]) return mdText;
+        if (!_a.md) this._markDownIt();
+        try {
+          return _a.md.render(mdText.trim());
+        } catch (e) {
+          _a.log(0, "uibuilder:convertMarkdown", `Could not render Markdown. ${e.message}`, e)();
+          return '<p class="border error">Could not render Markdown<p>';
+        }
       }
       /** Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
        * Wraps the included object in a div tag.
@@ -603,7 +755,7 @@ var require_ui = __commonJS({
           case "image": {
             data = await response.blob();
             slot = `<img src="${URL.createObjectURL(data)}">`;
-            if (this.window["DOMPurify"]) {
+            if (_a.win["DOMPurify"]) {
               txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
               _a.log("warn", "Ui:include:image", txtReturn)();
             }
@@ -612,7 +764,7 @@ var require_ui = __commonJS({
           case "video": {
             data = await response.blob();
             slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`;
-            if (this.window["DOMPurify"]) {
+            if (_a.win["DOMPurify"]) {
               txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
               _a.log("warn", "Ui:include:video", txtReturn)();
             }
@@ -623,7 +775,7 @@ var require_ui = __commonJS({
           default: {
             data = await response.blob();
             slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`;
-            if (this.window["DOMPurify"]) {
+            if (_a.win["DOMPurify"]) {
               txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
               _a.log("warn", `Ui:include:${type}`, txtReturn)();
             }
@@ -632,10 +784,8 @@ var require_ui = __commonJS({
         }
         uiOptions.type = "div";
         uiOptions.slot = slot;
-        if (!uiOptions.parent)
-          uiOptions.parent = "body";
-        if (!uiOptions.attributes)
-          uiOptions.attributes = { class: "included" };
+        if (!uiOptions.parent) uiOptions.parent = "body";
+        if (!uiOptions.attributes) uiOptions.attributes = { class: "included" };
         this._uiReplace({
           components: [
             uiOptions
@@ -651,10 +801,10 @@ var require_ui = __commonJS({
        * @param {string} url The url to be used in the script src attribute
        */
       loadScriptSrc(url) {
-        const newScript = this.document.createElement("script");
+        const newScript = _a.doc.createElement("script");
         newScript.src = url;
         newScript.async = false;
-        this.document.head.appendChild(newScript);
+        _a.doc.head.appendChild(newScript);
       }
       /** Attach a new text script to the end of HEAD synchronously
        * NOTE: It takes too long for most scripts to finish loading
@@ -662,10 +812,10 @@ var require_ui = __commonJS({
        * @param {string} textFn The text to be loaded as a script
        */
       loadScriptTxt(textFn) {
-        const newScript = this.document.createElement("script");
+        const newScript = _a.doc.createElement("script");
         newScript.async = false;
         newScript.textContent = textFn;
-        this.document.head.appendChild(newScript);
+        _a.doc.head.appendChild(newScript);
       }
       /** Attach a new remote stylesheet link to the end of HEAD synchronously
        * NOTE: It takes too long for most scripts to finish loading
@@ -673,11 +823,11 @@ var require_ui = __commonJS({
        * @param {string} url The url to be used in the style link href attribute
        */
       loadStyleSrc(url) {
-        const newStyle = this.document.createElement("link");
+        const newStyle = _a.doc.createElement("link");
         newStyle.href = url;
         newStyle.rel = "stylesheet";
         newStyle.type = "text/css";
-        this.document.head.appendChild(newStyle);
+        _a.doc.head.appendChild(newStyle);
       }
       /** Attach a new text stylesheet to the end of HEAD synchronously
        * NOTE: It takes too long for most scripts to finish loading
@@ -685,9 +835,9 @@ var require_ui = __commonJS({
        * @param {string} textFn The text to be loaded as a stylesheet
        */
       loadStyleTxt(textFn) {
-        const newStyle = this.document.createElement("style");
+        const newStyle = _a.doc.createElement("style");
         newStyle.textContent = textFn;
-        this.document.head.appendChild(newStyle);
+        _a.doc.head.appendChild(newStyle);
       }
       /** Load a dynamic UI from a JSON web reponse
        * @param {string} url URL that will return the ui JSON
@@ -723,6 +873,24 @@ var require_ui = __commonJS({
         });
       }
       // --- end of loadui
+      /** ! NOT COMPLETE Move an element from one position to another
+       * @param {object} opts Options
+       * @param {string} opts.sourceSelector Required, CSS Selector that identifies the element to be moved
+       * @param {string} opts.targetSelector Required, CSS Selector that identifies the element to be moved
+       */
+      moveElement(opts) {
+        const { sourceSelector, targetSelector, moveType, position } = opts;
+        const sourceEl = document.querySelector(sourceSelector);
+        if (!sourceEl) {
+          _a.log(0, "Ui:moveElement", "Source element not found")();
+          return;
+        }
+        const targetEl = document.querySelector(targetSelector);
+        if (!targetEl) {
+          _a.log(0, "Ui:moveElement", "Target element not found")();
+          return;
+        }
+      }
       /** Get standard data from a DOM node.
        * @param {*} node DOM node to examine
        * @param {string} cssSelector Identify the DOM element to get data from
@@ -748,7 +916,7 @@ var require_ui = __commonJS({
           }
         };
         if (["UL", "OL"].includes(node.nodeName)) {
-          const listEntries = this.document.querySelectorAll(`${cssSelector} li`);
+          const listEntries = _a.doc.querySelectorAll(`${cssSelector} li`);
           if (listEntries) {
             thisOut.list = {
               "entries": listEntries.length
@@ -756,7 +924,7 @@ var require_ui = __commonJS({
           }
         }
         if (node.nodeName === "DL") {
-          const listEntries = this.document.querySelectorAll(`${cssSelector} dt`);
+          const listEntries = _a.doc.querySelectorAll(`${cssSelector} dt`);
           if (listEntries) {
             thisOut.list = {
               "entries": listEntries.length
@@ -764,9 +932,9 @@ var require_ui = __commonJS({
           }
         }
         if (node.nodeName === "TABLE") {
-          const bodyEntries = this.document.querySelectorAll(`${cssSelector} > tbody > tr`);
-          const headEntries = this.document.querySelectorAll(`${cssSelector} > thead > tr`);
-          const cols = this.document.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
+          const bodyEntries = _a.doc.querySelectorAll(`${cssSelector} > tbody > tr`);
+          const headEntries = _a.doc.querySelectorAll(`${cssSelector} > thead > tr`);
+          const cols = _a.doc.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
           if (bodyEntries || headEntries || cols) {
             thisOut.table = {
               "headRows": headEntries ? headEntries.length : 0,
@@ -781,15 +949,13 @@ var require_ui = __commonJS({
             if (attrib.name !== "id") {
               thisOut.attributes[attrib.name] = node.attributes[attrib.name].value;
             }
-            if (attrib.name === "class")
-              thisOut.classes = Array.from(node.classList);
+            if (attrib.name === "class") thisOut.classes = Array.from(node.classList);
           }
         }
         if (node.nodeName === "#text") {
           thisOut.text = node.textContent;
         }
-        if (node.validity)
-          thisOut.userInput.validity = {};
+        if (node.validity) thisOut.userInput.validity = {};
         for (const v in node.validity) {
           thisOut.userInput.validity[v] = node.validity[v];
         }
@@ -807,8 +973,7 @@ var require_ui = __commonJS({
         if (typeof config === "string") {
           config = { body: config };
         }
-        if (typeof Notification === "undefined")
-          return Promise.reject(new Error("Notifications not available in this browser"));
+        if (typeof Notification === "undefined") return Promise.reject(new Error("Notifications not available in this browser"));
         let permit = Notification.permission;
         if (permit === "denied") {
           return Promise.reject(new Error("Notifications not permitted by user"));
@@ -831,26 +996,25 @@ var require_ui = __commonJS({
           el.removeAttribute("class");
           return;
         }
-        if (!Array.isArray(classNames))
-          classNames = [classNames];
-        if (el)
-          el.classList.remove(...classNames);
+        if (!Array.isArray(classNames)) classNames = [classNames];
+        if (el) el.classList.remove(...classNames);
       }
-      // TODO Add multi-slot
       /** Replace or add an HTML element's slot from text or an HTML string
+       * WARNING: Executes <script> tags! And will process <style> tags.
        * Will use DOMPurify if that library has been loaded to window.
        * param {*} ui Single entry from the msg._ui property
        * @param {Element} el Reference to the element that we want to update
-       * @param {*} component The component we are trying to add/replace
+       * @param {*} slot The slot content we are trying to add/replace (defaults to empty string)
        */
-      replaceSlot(el, component) {
-        if (!component.slot)
-          return;
-        if (!el)
-          return;
-        if (this.window["DOMPurify"])
-          component.slot = this.window["DOMPurify"].sanitize(component.slot);
-        el.innerHTML = component.slot;
+      replaceSlot(el, slot) {
+        if (!el) return;
+        if (!slot) slot = "";
+        slot = this.sanitiseHTML(slot);
+        const tempFrag = _a.doc.createRange().createContextualFragment(slot);
+        const elRange = _a.doc.createRange();
+        elRange.selectNodeContents(el);
+        elRange.deleteContents();
+        el.append(tempFrag);
       }
       /** Replace or add an HTML element's slot from a Markdown string
        * Only does something if the markdownit library has been loaded to window.
@@ -859,10 +1023,8 @@ var require_ui = __commonJS({
        * @param {*} component The component we are trying to add/replace
        */
       replaceSlotMarkdown(el, component) {
-        if (!el)
-          return;
-        if (!component.slotMarkdown)
-          return;
+        if (!el) return;
+        if (!component.slotMarkdown) return;
         component.slotMarkdown = this.convertMarkdown(component.slotMarkdown);
         component.slotMarkdown = this.sanitiseHTML(component.slotMarkdown);
         el.innerHTML = component.slotMarkdown;
@@ -873,9 +1035,8 @@ var require_ui = __commonJS({
        * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
        */
       sanitiseHTML(html) {
-        if (!this.window["DOMPurify"])
-          return html;
-        return this.window["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
+        if (!_a.win["DOMPurify"]) return html;
+        return _a.win["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
       }
       /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
        * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
@@ -888,38 +1049,29 @@ var require_ui = __commonJS({
        */
       showDialog(type, ui, msg) {
         let content = "";
-        if (msg.payload && typeof msg.payload === "string")
-          content += `<div>${msg.payload}</div>`;
-        if (ui.content)
-          content += `<div>${ui.content}</div>`;
+        if (msg.payload && typeof msg.payload === "string") content += `<div>${msg.payload}</div>`;
+        if (ui.content) content += `<div>${ui.content}</div>`;
         if (content === "") {
           _a.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
           return;
         }
-        if (!ui.title && msg.topic)
-          ui.title = msg.topic;
-        if (ui.title)
-          content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
-        if (ui.noAutohide)
-          ui.noAutoHide = ui.noAutohide;
-        if (ui.noAutoHide)
-          ui.autohide = !ui.noAutoHide;
+        if (!ui.title && msg.topic) ui.title = msg.topic;
+        if (ui.title) content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
+        if (ui.noAutohide) ui.noAutoHide = ui.noAutohide;
+        if (ui.noAutoHide) ui.autohide = !ui.noAutoHide;
         if (ui.autoHideDelay) {
-          if (!ui.autohide)
-            ui.autohide = true;
+          if (!ui.autohide) ui.autohide = true;
           ui.delay = ui.autoHideDelay;
-        } else
-          ui.autoHideDelay = 1e4;
-        if (!Object.prototype.hasOwnProperty.call(ui, "autohide"))
-          ui.autohide = true;
+        } else ui.autoHideDelay = 1e4;
+        if (!Object.prototype.hasOwnProperty.call(ui, "autohide")) ui.autohide = true;
         if (type === "alert") {
           ui.modal = true;
           ui.autohide = false;
           content = `<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> ${content}`;
         }
-        let toaster = this.document.getElementById("toaster");
+        let toaster = _a.doc.getElementById("toaster");
         if (toaster === null) {
-          toaster = this.document.createElement("div");
+          toaster = _a.doc.createElement("div");
           toaster.id = "toaster";
           toaster.title = "Click to clear all notifcations";
           toaster.setAttribute("class", "toaster");
@@ -928,20 +1080,18 @@ var require_ui = __commonJS({
           toaster.onclick = function() {
             toaster.remove();
           };
-          this.document.body.insertAdjacentElement("afterbegin", toaster);
+          _a.doc.body.insertAdjacentElement("afterbegin", toaster);
         }
-        const toast = this.document.createElement("div");
+        const toast = _a.doc.createElement("div");
         toast.title = "Click to clear this notifcation";
         toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
         toast.innerHTML = content;
         toast.setAttribute("role", "alertdialog");
-        if (ui.modal)
-          toast.setAttribute("aria-modal", ui.modal);
+        if (ui.modal) toast.setAttribute("aria-modal", ui.modal);
         toast.onclick = function(evt) {
           evt.stopPropagation();
           toast.remove();
-          if (toaster.childElementCount < 1)
-            toaster.remove();
+          if (toaster.childElementCount < 1) toaster.remove();
         };
         if (type === "alert") {
         }
@@ -949,8 +1099,7 @@ var require_ui = __commonJS({
         if (ui.autohide === true) {
           setInterval(() => {
             toast.remove();
-            if (toaster.childElementCount < 1)
-              toaster.remove();
+            if (toaster.childElementCount < 1) toaster.remove();
           }, ui.autoHideDelay);
         }
       }
@@ -960,11 +1109,8 @@ var require_ui = __commonJS({
        */
       ui(json) {
         let msg = {};
-        if (json._ui)
-          msg = json;
-        else
-          msg._ui = json;
-        console.log(this);
+        if (json._ui) msg = json;
+        else msg._ui = json;
         this._uiManager(msg);
       }
       /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
@@ -975,13 +1121,12 @@ var require_ui = __commonJS({
       uiGet(cssSelector, propName = null) {
         const selection = (
           /** @type {NodeListOf<HTMLInputElement>} */
-          this.document.querySelectorAll(cssSelector)
+          _a.doc.querySelectorAll(cssSelector)
         );
         const out = [];
         selection.forEach((node) => {
           if (propName) {
-            if (propName === "classes")
-              propName = "class";
+            if (propName === "classes") propName = "class";
             let prop = node.getAttribute(propName);
             if (prop === void 0 || prop === null) {
               try {
@@ -990,10 +1135,8 @@ var require_ui = __commonJS({
               }
             }
             if (prop === void 0 || prop === null) {
-              if (propName.toLowerCase() === "value")
-                out.push(node.innerText);
-              else
-                out.push(`Property '${propName}' not found`);
+              if (propName.toLowerCase() === "value") out.push(node.innerText);
+              else out.push(`Property '${propName}' not found`);
             } else {
               const p = {};
               const cType = prop.constructor.name.toLowerCase();
@@ -1009,8 +1152,7 @@ var require_ui = __commonJS({
                   p2[key] = prop[key];
                 }
               }
-              if (p.class)
-                p.classes = Array.from(node.classList);
+              if (p.class) p.classes = Array.from(node.classList);
               out.push(p);
             }
           } else {
@@ -1028,10 +1170,17 @@ var require_ui = __commonJS({
         this._uiComposeComponent(el, comp);
       }
       //#endregion ---- -------- ----
-    }, /** Log function - passed in constructor or will be a dummy function
-     * @type {function}
+    }, /** Reference to DOM window - must be passed in the constructor
+     * Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
+     * @type {Window}
      */
-    __publicField(_a, "log"), _a);
+    __publicField(_a, "win"), /** Reference to the DOM top-level window.document for convenience - set in constructor @type {Document} */
+    __publicField(_a, "doc"), /** Log function - passed in constructor or will be a dummy function
+     * @type {Function}
+     */
+    __publicField(_a, "log"), /** Options for Markdown-IT if available (set in constructor) */
+    __publicField(_a, "mdOpts"), /** Reference to pre-loaded Markdown-IT library */
+    __publicField(_a, "md"), _a);
     module.exports = Ui;
   }
 });

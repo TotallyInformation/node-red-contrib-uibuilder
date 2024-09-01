@@ -3,8 +3,7 @@ title: What makes a good Node-RED Dashboard framework?
 description: |
   Lays out what I think a good framework for building Node-RED dashboards would look like and what features it would have.
 created: 2021-09-17 09:28:09
-lastUpdated: 2023-09-30 15:01:50
-updated: 2023-12-30 17:01:41
+updated: 2024-03-17 20:25:25
 ---
 
 Status: **Incomplete**
@@ -45,10 +44,10 @@ Status: **Incomplete**
 * Registers front-end code folder: contains front-end code that is made available to all uibuilder instances - allows uib extensions to cater for ANY front-end framework.
 * Front-end code must be written in a way to self-execute
 * Each Instance:
-  * Uses a uibuilder instance's URL name - drop-down box for chosing.
+  * Uses a uibuilder instance's URL name - drop-down box for choosing.
   * Has its own config
   * When a client (re)connects to the matching instance of uib, it is sent the extension/component config in the initial connect control msg.
-    _NB: uibuilderfe should probably dynamically load the appropriate code resources._
+    _NB: uibuilder client library should probably dynamically load the appropriate code resources._
   * Msgs sent to the instance are changed to match the appropriate schema and then sent to the front-end
 
 ### On socket connect

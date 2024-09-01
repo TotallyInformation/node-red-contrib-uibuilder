@@ -3,28 +3,21 @@ title: uibuilder Security Documentation
 description: |
   Some thoughts on how to correctly and safely secure a uibuilder app.
 created: 2020-01-05 20:45:00
-lastUpdated: 2022-04-01 17:53:58
-updated: 2023-12-30 17:01:42
+updated: 2024-03-23 16:53:05
 ---
 
 As at uibuilder v5, many of the security features in uibuilder have been removed as they were never complete and were holding back other development. Security of web apps is best done using a dedicated service anyway. Typically a reverse-proxy using a web server can be used to provided integrated security and authentication. Such services can be independently tested and verified.
 
 However, there are a number of supporting features in uibuilder that let you control information flow into and out-of a uibuilder-based front-end. They assume, however, that you have either provided authentication externally or written your own middleware-based security functions.
 
-!> **WARNING**: I am **not** a professional developer, nor am I an operational DevOps person. I make no claims nor do I provide any warrenties or guarantees about the fundamental security of a web app developed with uibuilder. If you are unsure, you need to pay a professional to audit and penetration test your specific configuration as well as my code.
+> [!WARNING]
+> I am **not** a professional developer, nor am I an operational DevOps person. I make no claims nor do I provide any warrenties or guarantees about the fundamental security of a web app developed with uibuilder. If you are unsure, you need to pay a professional to audit and penetration test your specific configuration as well as my code.
 
-?> Having said that, if you or anyone else discovers flaws in the programming, I will work with you/them as well as I can in order to fix things. But this is not a paid-for development and I don't always have much time. I'm also open to Pull Requests to fix specific issues.
+> [!NOTE]
+> Having said that, if you or anyone else discovers flaws in the programming, I will work with you/them as well as I can in order to fix things. But this is not a paid-for development and I don't always have much time. I'm also open to Pull Requests to fix specific issues.
 
 - [Terminology](#terminology)
 - [How do I secure my uibuilder app?](#how-do-i-secure-my-uibuilder-app)
-  - [Step #1: TLS (HTTPS)](#step-1-tls-https)
-  - [Step #2: Sanitising Inputs](#step-2-sanitising-inputs)
-  - [Step #3: Identity and authentication](#step-3-identity-and-authentication)
-  - [Step #4: Authorisation](#step-4-authorisation)
-  - [Step #5: Restricting access to data](#step-5-restricting-access-to-data)
-  - [Step #6: Security Testing](#step-6-security-testing)
-  - [Step #7: Logging \& Monitoring](#step-7-logging--monitoring)
-  - [Securing the Infrastructure](#securing-the-infrastructure)
 - [Configuring Node-RED for TLS](#configuring-node-red-for-tls)
 - [Configuring the uibuilder custom server for TLS](#configuring-the-uibuilder-custom-server-for-tls)
 - [Standard Schema for `msg._auth`](#standard-schema-for-msg_auth)
@@ -70,7 +63,8 @@ If you cannot run a reverse proxy at all, then you will have to configure Node-R
 
 If you can run a reverse proxy but it or Node-RED is on a network that may get lots of different traffic, it is strongly recommended that you still use the proxy for external security but also configure Node-RED to use TLS as well.
 
-?> A reverse proxy provides a number of advantages and is the recommended approach.
+> [!TIP]
+> A reverse proxy provides a number of advantages and is the recommended approach.
 
 ### Step #2: Sanitising Inputs
 
@@ -82,7 +76,8 @@ Step #2 of securing any web app is to make sure that a potential attacker or jus
 
 Don't forget that API inputs need to be sanitised as well as user inputs.
 
-?> For simple systems, doing this step via Node-RED and/or uibuilder middleware may be sufficient. In more secure systems, sanitisation of inputs may be done at multiple levels for additional protection and may use tools such as a *Web Application Firewall* or an *Intrusion Protection System*. For a full analysis of best practice, try the [OWASP](https://owasp.org/) documentation.
+> [!TIP]
+> For simple systems, doing this step via Node-RED and/or uibuilder middleware may be sufficient. In more secure systems, sanitisation of inputs may be done at multiple levels for additional protection and may use tools such as a *Web Application Firewall* or an *Intrusion Protection System*. For a full analysis of best practice, try the [OWASP](https://owasp.org/) documentation.
 
 ### Step #3: Identity and authentication
 
@@ -94,7 +89,8 @@ The guidance here is generic and should only be used on low-security, low-value 
 
 **_NOTE_: The rest of this section is TBC**.
 
-?> While identity and authorisation _may_ be done using uibuilder ExpressJS/Socket.IO middleware, it is strongly recommended to use a separate service such as a reverse proxy with an authentication extension and then pass through appropriate information to Node-RED/uibuilder via HTTP headers and similar mechanisms.
+> [!NOTE]
+> While identity and authorisation _may_ be done using uibuilder ExpressJS/Socket.IO middleware, it is strongly recommended to use a separate service such as a reverse proxy with an authentication extension and then pass through appropriate information to Node-RED/uibuilder via HTTP headers and similar mechanisms.
 
 ### Step #4: Authorisation
 
@@ -110,13 +106,15 @@ Once you have ensured that you have a secure way to prove the identity of a pers
 
 Typically, for inexperienced developers, this step is where they may start but as you can see, there are several important steps before this.
 
-?> It is worth noting here that steps 2, 3, and 4 _can_ all be done in Node-RED and uibuilder. However, it is not recommended. It is better to have a "separation of concerns" and keep specialist tasks such as identity and authorisation in their own tools.
+> [!NOTE]
+> It is worth noting here that steps 2, 3, and 4 _can_ all be done in Node-RED and uibuilder. However, it is not recommended. It is better to have a "separation of concerns" and keep specialist tasks such as identity and authorisation in their own tools.
 
 For Node-RED and uibuilder-based apps, controlling access is done by writing flows and/or ExpressJS/Socket.IO middleware to make use of the identity (and authorisation if configured) that has been authenticated. 
 
 Of course, that requires that any external security services are passing suitable data down to Node-RED.
 
-?> It is important to remember that uibuilder apps are *web pages* - they *run in the browser*, not in Node-RED. You cannot make things secure in the front-end code of a web app since the user will _always_ be able to make changes. So security _must_ be done at the server. Node-RED flows and uibuilder middleware run on the server. <br>It is also important to remember that uibuilder makes extensive use of websockets to send and recieve data between Node-RED and the browser. This presents some technical challenges for ensuring data security.
+> [!NOTE]
+> It is important to remember that uibuilder apps are *web pages* - they *run in the browser*, not in Node-RED. You cannot make things secure in the front-end code of a web app since the user will _always_ be able to make changes. So security _must_ be done at the server. Node-RED flows and uibuilder middleware run on the server. <br>It is also important to remember that uibuilder makes extensive use of websockets to send and recieve data between Node-RED and the browser. This presents some technical challenges for ensuring data security.
 
 This topic is covered in more detail on a separate page: [Securing Data](securing-data.md).
 
@@ -202,7 +200,8 @@ uibuilder: {
 
 ## Standard Schema for `msg._auth`
 
-?> Although much of the built-in security processing has been removed from uibuilder in v5, I am leaving this in place as a recommendation because it is useful as a potential standard not only for uibuilder. When creating your own security processing in Node-RED and uibuilder middleware, please use this schema for campatibility and consistency.
+> [!NOTE]
+> Although much of the built-in security processing has been removed from uibuilder in v5, I am leaving this in place as a recommendation because it is useful as a potential standard not only for uibuilder. When creating your own security processing in Node-RED and uibuilder middleware, please use this schema for campatibility and consistency.
 
 
 This uses the `_auth` object property on exchanged `msg`s. The actual content of the object is likely to be different depending on what the message is.
@@ -281,7 +280,8 @@ Because uibuilder lets you create custom middleware for both Express and Socket.
 
 The uibuilder front-end clients also create a stable clientId that is stored in a session cookie which lasts until the browser is restarted. That id along with the real IP of the client is sent in control messages and optionally in standard messages. These can also help with custom authentication, authorisation and session management.
 
-?> **NOTE**: When managing sessions, do not forget that your users will rarely load a web page. Most communication happens via websockets, not http(s). Because of this, full, secure session management is actually quite hard.<br><br> To help with this, uibuilder now implements a new HTTP(S) `ping` URL along with a `setPing` function in the front-end library. By passing an integer number of milliseconds argument to setPing, the client will access the ping endpoint every n ms. This could be used to keep a client session alive.
+> [!NOTE]
+> When managing sessions, do not forget that your users will rarely load a web page. Most communication happens via websockets, not http(s). Because of this, full, secure session management is actually quite hard.<br><br> To help with this, uibuilder now implements a new HTTP(S) `ping` URL along with a `setPing` function in the front-end library. By passing an integer number of milliseconds argument to setPing, the client will access the ping endpoint every n ms. This could be used to keep a client session alive.
 
 Here are some other libraries that might be helpful in security middleware for uibuilder:
 

@@ -16,7 +16,7 @@ Folder list:
   
   * `dist/build/` - contains the built JavaScript and CSS files and a map file for debugging. The bundle files are used in the 
     
-    * `dist/build/bundle.js` - The "compiled" JavaScript which is minimised for efficiency. Load this into your index.html file. This bundle contains all the required code for the UI except uibuilderfe.js and socket.io-client (they can be bundled but it is generally easier not too because if you do, you have to take on responsibility for maintaining the correct versions when uibuilder gets updated).
+    * `dist/build/bundle.js` - The "compiled" JavaScript which is minimised for efficiency. Load this into your index.html file. This bundle contains all the required code for the UI except for the uibuilder client library (it can be bundled but it is generally easier not too because if you do, you have to take on responsibility for maintaining the correct versions when uibuilder gets updated).
     * `dist/build/bundle.css` - The "compiled" CSS which is minimised for efficiency. Load this into your index.html file.
     * `dist/build/bundle.js.map` - A debugging map file that your browser dev tools can use. No need to put this into your index.html.
   

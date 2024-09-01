@@ -1,0 +1,49 @@
+<!--
+    Copyright (c) 2021-2024 Julian Knight (Totally Information)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<script src="./resources/node-red-contrib-uibuilder/uib-sender.js"></script>
+
+<script type="text/html" data-template-name="uib-sender">
+    <div id="ti-edit-panel">
+
+        <div aria-label="uibuilder URL to associate with" class="form-row" title="uibuilder URL to associate with">
+            <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+            <select id="node-input-url">
+                <option value="" name="">--choose a uibuilder instance--</option>
+            </select>
+        </div>
+    
+        <div class="form-row">
+            <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+            <input type="text" id="node-input-name">
+        </div>
+        <div class="form-row">
+            <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+            <input type="text" id="node-input-topic">
+        </div>
+    
+        <div class="form-row">
+            <input type="checkbox" id="node-input-passthrough" style="display:inline-block; width:15px; vertical-align:baseline;">
+            <label for="node-input-passthrough" style="width: 90%;">Pass input msg to output?</label>
+        </div>
+    
+        <div class="form-row">
+            <input type="checkbox" id="node-input-return" style="display:inline-block; width:15px; vertical-align:baseline;">
+            <label for="node-input-return" style="width: 90%;">Allow return messages?</label>
+        </div>
+    
+    </div>    
+</script>

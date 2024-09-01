@@ -2,7 +2,7 @@
 /* eslint-disable no-irregular-whitespace */
 /** Define typedefs for linting and JSDoc/ts checks - does not actually contain live code
  *
- * Copyright (c) 2017-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2024 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -65,6 +65,7 @@
  * @property {object} [uibuilder.serverOptions] Optional ExpressJS server options for uib custom server
  * @property {object} [uibuilder.socketOptions] Override Socket.IO options if desired. See https://socket.io/docs/v4/server-options/
  * @property {boolean} [uibuilder.instanceApiAllowed] Allow instance-level custom API's to be loaded. Could be a security issue so it is controlled in settings.js
+ * @property {Function} [uibuilder.hooks] Provide hook functions
  *
  * @property {string} coreNodesDir Folder containing Node-RED core nodes
  * @property {string} version Node-RED version
@@ -101,6 +102,14 @@
  * @property {Function} audit Audit log
  * @property {Function} addHandler Adds a log handler
  * @property {Function} removeHandler Removes a log handler
+ * @property {10} FATAL : 10,
+ * @property {20} ERROR : 20,
+ * @property {30} WARN  : 30,
+ * @property {40} INFO  : 40,
+ * @property {50} DEBUG : 50,
+ * @property {60} TRACE : 60,
+ * @property {98} AUDIT : 98,
+ * @property {99} METRIC: 99,
  */
 
 /** Node-RED runtimeNodes: RED.nodes
@@ -120,21 +129,29 @@
  * @typedef {object} runtimeRED The core Node-RED runtime object
  * @property {expressApp} httpAdmin Reference to the ExpressJS app for Node-RED Admin including the Editor
  * @property {expressApp} httpNode Reference to the ExpressJS app for Node-RED user-facing nodes including http-in/-out and Dashboard
- * @property {object} server Node.js http(s) Server object
+ * @property {Server} server Node.js http(s) Server object
  * @property {runtimeLogging} log Logging.
  * @property {runtimeNodes} nodes Gives access to other active nodes in the flows.
  * @property {runtimeSettings} settings Static and Dynamic settings for Node-RED runtime
  *
- * @property {Function} version Get the Node-RED version
+ * @property {Function} version Get the Node-RED version [Function: getVersion],
  * @property {Function} require : [Function: requireModule],
- * @property {Function} comms : { publish: [Function: publish] },
- * @property {Function} library : { register: [Function: register] },
- * @property {Function} auth : { needsPermission: [Function: needsPermission] },
+ * @property {Function} import : [Function: importModule],
  *
- * @property {object} events Event handler object
+ * @property {object} auth :
+ * @property {Function} auth.needsPermission : [Function: needsPermission]
+ *
+ * @property {object} library :
+ * @property {Function} library.register : [Function: register],
+ *
+ * @property {object} comms Communicate with admin pages
+ * @property {Function} comms.publish : [Function: publish],
+ *
+ * @property {EventEmitter} events Event handler object
  * @property {Function} events.on Event Listener Function. Types: 'nodes-started', 'nodes-stopped'
  * @property {Function} events.once .
  * @property {Function} events.addListener .
+ * @property {((name:string, opts:object)=>void)} events.emit Emit a new event
  *
  * @property {object} hooks .
  * @property {Function} hooks.has .
@@ -144,26 +161,33 @@
  * @property {Function} hooks.trigger .
  *
  * @property {object} util .
- * @property {Function} util.encodeobject : [Function: encodeobject],
- * @property {Function} util.ensurestring : [Function: ensurestring],
+ * @property {Function} util.encodeObject : [Function: encodeobject],
+ * @property {Function} util.ensureString : [Function: ensurestring],
  * @property {Function} util.ensureBuffer : [Function: ensureBuffer],
  * @property {Function} util.cloneMessage : [Function: cloneMessage],
- * @property {Function} util.compareobjects : [Function: compareobjects],
+ * @property {Function} util.compareObjects : [Function: compareobjects],
  * @property {Function} util.generateId : [Function: generateId],
  * @property {Function} util.getMessageProperty : [Function: getMessageProperty],
  * @property {Function} util.setMessageProperty : [Function: setMessageProperty],
- * @property {Function} util.getobjectProperty : [Function: getobjectProperty],
- * @property {Function} util.setobjectProperty : [Function: setobjectProperty],
+ * @property {Function} util.getObjectProperty : [Function: getobjectProperty],
+ * @property {Function} util.setObjectProperty : [Function: setobjectProperty],
  * @property {Function} util.evaluateNodeProperty : [Function: evaluateNodeProperty],
  * @property {Function} util.normalisePropertyExpression : [Function: normalisePropertyExpression],
  * @property {Function} util.normaliseNodeTypeName : [Function: normaliseNodeTypeName],
  * @property {Function} util.prepareJSONataExpression : [Function: prepareJSONataExpression],
  * @property {Function} util.evaluateJSONataExpression : [Function: evaluateJSONataExpression],
  * @property {Function} util.parseContextStore : [Function: parseContextStore]
- * 
+ * @property {Function} util.getSetting ??
+ *
  * @property {object} util.uib : Added by uibuilder.js - utility functions made available to function nodes
- * @property {Function} util.uib.deepObjFind : Recursive object deep find
+ * @property {Function} util.uib.deepObjFind : Recursive object deep find - https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/config-driven-ui?id=manipulating-msg_ui
  * @property {Function} util.uib.listAllApps : Return a list of all uibuilder instances
+ * @property {Function} util.uib.dp : Return a formatted number using a specified locale and number of decimal places
+ *
+ * @property {object} plugins Node-RED plugins
+ * @property {Function} plugins.registerPlugin : [Function: registerPlugin],
+ * @property {Function} plugins.get: [Function: get],
+ * @property {Function} plugins.getByType: [Function: getByType]
  */
 
 /** runtimeNode
@@ -180,11 +204,20 @@
  * @property {Function} debug Debug level log output
  * @property {Function} status Show a status message under the node in the Editor
  * @property {object=} credentials Optional secured credentials
- * @property {object=} name Internal.
- * @property {object=} id Internal. uid of node instance.
- * @property {object=} type Internal. Type of node instance.
- * @property {object=} z Internal. uid of ???
+ * @property {string=} name Internal.
+ * @property {string=} id Internal. uid of node instance.
+ * @property {string=} type Internal. Type of node instance.
+ * @property {string=} z Internal. uid of ???
+ * @property {string=} g Internal. uid of ???
  * @property {[Array<string>]=} wires Internal. Array of Array of strings. The wires attached to this node instance (uid's)
+ * @property {number=} _wireCount Count of connected wires
+ * @property {string=} _wire ID of connected wire
+ * @property {[Array<Function>]=} _closeCallbacks ??
+ * @property {[Array<Function>]=} _inputCallback Input callback fn
+ * @property {[Array<Function>]=} _inputCallbacks ??
+ * @property {number=} _expectedDoneCount ??
+ * @property {Flow=} _flow Full definition of this node's containing flow
+ * @property {*=} _alias ??
  */
 
 /** runtimeNodeConfig
@@ -227,6 +260,7 @@
  * @property {string} ioNamespace Make sure each node instance uses a separate Socket.IO namespace
  * @property {string} title Short descriptive title for the instance
  * @property {string} descr Longer description for the instance
+ * @property {string} editurl Shortcut URL that will open a code editor at the node instance folder
  */
 
 /** uibNode
@@ -282,6 +316,7 @@
  *
  * @property {string} title Short descriptive title for the instance
  * @property {string} descr Longer description for the instance
+ * @property {string} editurl Shortcut URL that will open a code editor at the node instance folder
  *
  * @property {Function} sendToFe Ref to sockets.sendToFe
  */
@@ -328,10 +363,9 @@
  * @property {string} ioChannels.server Channel for messages from clients to server. Default `uiBuilder`
  * @property {Array<number|string>} nodeVersion What version of Node.JS are we running under? Impacts some file processing.
  * @property {object} staticOpts Options for serveStatic. See https://expressjs.com/en/resources/middleware/serve-static.html
- * @property {Object<string,boolean>} deleteOnDelete Set of instances that have requested their local instance folders be
- *  deleted on deploy - see html file oneditdelete, updated by admin api
- *
- *  Schema: `{ <url>: <boolean> }`
+ * @property {{url:string,value:boolean}|{}} deleteOnDelete Set of instances that have requested their local instance folders be
+ *  deleted on deploy - see html file oneditdelete, updated by admin api.
+ *  Actually set in admin-api-v3.js/put and consumed in uiblib.js/instanceClose
  * @property {object}           customServer Set in libs/web.js:_webSetup()
  *  Parameters for custom webserver if required. Port is undefined if using Node-RED's webserver.
  * @property {undefined|number} customServer.port TCP/IP port number.
@@ -485,6 +519,22 @@
  * }} uibSaveNode
  */
 
+/** uibFileListNode (File List Node)
+ * @typedef {{
+ * name: string;
+ * topic: string;
+ * url: string;
+ * uibId: string;
+ * folder: string;
+ * filter: Array<string>;
+ * exclude: string;
+ * urlOut: boolean;
+ * live: boolean;
+ * fullPrefix: boolean;
+ * statusDisplay: object;
+ * }} uibFileListNode
+ */
+
 /** uibUpdNode (Update Node)
  * @typedef {{
  *   name: string;
@@ -584,8 +634,35 @@
  * }} uibPackageJson
  */
 
+/** routeDefinition
+ * @typedef {object} routeDefinition Single route configuration
+ * @property {string} id REQUIRED. Route ID
+ * @property {string} src REQUIRED for external, optional for internal (default=route id). CSS Selector for template tag routes, url for external routes
+ * @property {"url"|undefined} [type] OPTIONAL, default=internal route. "url" for external routes
+ * @property {string} [title] OPTIONAL, default=route id. Text to use as a short title for the route
+ * @property {string} [description] OPTIONAL, default=route id. Text to use as a long description for the route
+ * @property {"html"|"md"|"markdown"} [format] OPTIONAL, default=html. Route content format, HTML or Markdown (md). Markdown requires the Markdown-IT library to have been loaded.
+ */
+/** UibRouterConfig
+ * @typedef {object} UibRouterConfig Configuration for the UiBRouter class instances
+ * @property {routeDefinition[]} routes REQUIRED. Array of route definitions
+ * @property {Array<string|object>} [mdPlugins] OPTIONAL. Array of Markdown-IT plugins
+ * @property {string} [defaultRoute] OPTIONAL, default=1st route. If set to a route id, that route will be automatically shown on load
+ * @property {string} [routeContainer] OPTIONAL, default='#uibroutecontainer'. CSS Selector for an HTML Element containing routes
+ * @property {boolean} [hide] OPTIONAL, default=false. If TRUE, routes will be hidden/shown on change instead of removed/added
+ * @property {boolean} [templateLoadAll] OPTIONAL, default=false. If TRUE, all external route templates will be loaded when the router is instanciated. Default is to lazy-load external templates
+ * @property {boolean} [templateUnload] OPTIONAL, default=true. If TRUE, route templates will be unloaded from DOM after access.
+ * @property {otherLoadDefinition[]} [otherLoad] OPTIONAL, default=none. If present, router start will pre-load other external templates direct to the DOM. Use for menu's, etc.
+ */
+/** otherLoadDefinition
+ * @typedef {object} otherLoadDefinition Single external load configuration
+ * @property {string} id REQUIRED. Unique (to page) ID. Will be applied to loaded content.
+ * @property {string} src REQUIRED. url of external template to load
+ * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
+ */
+
 /** Props define attributes on a virtual node.
- * @typedef {Object<string, any> | {}} Props
+ * @typedef {{string, any} | {}} Props
  * @property {object} Props .
  * @property {Children} Props.children .
  */
@@ -596,8 +673,8 @@
  * @typedef {string | number | Function} Type
  */
 /** Define a custom type for virtual nodes:
- * @typedef {Object<string, any>} VNode
- * @property {Object<string, any>} VNode .
+ * @typedef {{string, any}} VNode
+ * @property {{string, any}} VNode .
  * @property {Type} VNode.type .
  * @property {Props} VNode.props .
  * @property {Children} VNode.children .

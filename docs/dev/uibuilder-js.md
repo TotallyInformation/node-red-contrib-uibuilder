@@ -3,11 +3,11 @@ title: Developer documentation for `uibuilder.js`
 description: |
   `uibuilder.js` is the main file that defines the uibuilder node. It is this that is _required_ into Node-RED when it starts.
 created: 2019-05-18 18:25:00
-lastUpdated: 2022-11-26 16:28:09
-updated: 2023-12-30 17:01:41
+updated: 2024-03-23 16:50:25
 ---
 
-!> This document needs updating, it is incomplete.
+> [!WARNING]
+> This document needs updating, it is incomplete, especially for UIBUILDER v7.
 
 - [Key processing elements](#key-processing-elements)
 - [Global/Module properties](#globalmodule-properties)
@@ -45,9 +45,9 @@ Call `uiblib.checkInstalledPackages`. Reads the packageList and masterPackageLis
 
 ### Client Connection
 
-A client connection is any browser tab that loads and starts the uibuilderfe.js code. So a single device/user can have many connections.
+A client connection is any browser tab that loads and starts the uibuilder client library code. So a single device/user can have many connections.
 
-When a client loads and starts processing using `uibuilder.start()`, The client socket.io library handshakes with the server.
+When a client loads and starts processing using `start()`, The client socket.io library handshakes with the server.
 
 **Note**: that this process also happens when a client _**re**connects_.
 
@@ -317,7 +317,8 @@ Note that the file `typedefs.js` may have a more up-to-date version of this.
 * [UibWeb (`nodes/web.js`)](web-js.md) - A singleton class that manages the interactions with ExpressJS and so provides all of the web server capabilities.
 * [UibSockets (`socket.js`)](socket-js.md) - A singleton class that manages the interactions with Socket.IO and so provides all of the communications between Node-RED and front-end code.
 
-?> Note that a singleton class is one that can only be instantiated once. Thanks to the way that Node.js's `require` function works, whenever a singleton class is required, the same instance will always be used.
+> [!NOTE]
+> A singleton class is one that can only be instantiated once. Thanks to the way that Node.js's `require` function works, whenever a singleton class is required, the same instance will always be used.
 
 ### Utility Functions
 

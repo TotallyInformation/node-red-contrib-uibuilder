@@ -9,10 +9,10 @@
 module.exports = {
     // Do not remove this one, it is the default and expected to be there
     blank: {
-        'name': 'Blank template, no framework',
+        'name': 'Minimal template (default)',
         'folder': 'blank',
         'dependencies': [],
-        'description': 'Default blank template. As of v6, uses the iife client.'
+        'description': 'Default minimal template. Uses the IIFE client & no front-end framework library.'
     },
     'iife-blank-client': {
         'name': 'No framework, IIFE client',
@@ -61,12 +61,6 @@ module.exports = {
         'folder': 'svelte-basic',
         'dependencies': [],
         'description': 'Simple Svelte template. Requires Svelte installation, see README.md'
-    },
-    'old-blank-client': {
-        'name': 'No framework, old client',
-        'folder': 'old-blank-client',
-        'dependencies': [],
-        'description': 'Minimal template using the old uibuilderfe client.'
     },
     // DO NOT REMOVE THIS ONE OR YOU WILL NOT BE ABLE TO LOAD EXTERNAL TEMPLATES
     external: {

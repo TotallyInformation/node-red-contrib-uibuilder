@@ -1,0 +1,345 @@
+
+:root {
+    --base-font-size: 20px;
+    --base-line-height: 1.5; /* 1.7 */
+    --bodyFontSize: 16px;
+    --code-block-line-height: 1.2;
+    --code-block-padding: 1em .5em 1em .5em;
+    --heading-h1-margin: 0 0 0;
+    --heading-h3-border-color: var(--mono-tint2);
+    --heading-h4-border-color: var(--mono-tint3);
+    --search-margin: .5rem 0 0;
+    --search-result-item-padding: .5em 0;
+    --sidebar-nav-indent: 0;
+    --sidebar-nav-margin: .5rem 0 0;
+    --sidebar-nav-pagelink-background: ;
+    --sidebar-padding: 0 0.2rem 0 0.5rem;
+    --sidebar-width: 18.5em;
+    --uib-blue: hsl(204 89% 55% / 70%);
+    --uib-red: hsl(0 100% 45% / 70%);
+}
+
+/* #main.markdown-section > ul > li {
+    padding-bottom: 0.5rem;
+} */
+
+.sidebar-nav>ul>li {
+    font-style: italic;
+    font-weight: bolder;
+}
+.sidebar-nav>ul>li:has(ul) {
+    border-top: 1px solid var(--heading-h2-border-color);
+    margin-top: 1rem;
+    margin-top: .3rem;
+    padding-top: .1rem;
+}
+.sidebar-nav>ul>li:not(:has(ul))>a {
+    padding:0 !important;
+}
+.sidebar-nav>ul>li li {
+    font-style: normal;
+}
+.sidebar-nav>ul>li>a {
+    font-style: normal;
+}
+.sidebar .search {
+    padding: 0 1rem;
+    width: 99%;
+}
+.sidebar .search .input-wrap {
+    align-items:center;
+}
+.results-panel.show > div > a p {
+    font-size: smaller;
+}
+
+.dhide {
+    display: none;
+}
+
+.app-name-link img {
+    width: 5rem;
+    float: left
+}
+
+.app-name-link {
+    font-size: 80%;
+}
+
+.app-name-link::after {
+    content: "UIBUILDER v7 docs";
+    float: right;
+}
+
+img[src*="#cool"] {
+    display: none;
+}
+
+img[alt$=">"] {
+    /* use as ![image alt >](/image-right.jpg) */
+    float: right;
+    max-width: 30%;
+    position: relative;
+    z-index: 1;
+}
+
+img[alt$="<"] {
+    float: left;
+}
+
+img[alt$="><"] {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: auto;
+    float: none !important;
+}
+
+figcaption {
+  font-style: italic;
+}
+figcaption::before {
+  content: "Figure: ";
+}
+
+.markdown-section h1,
+.markdown-section h2 {
+    color: var(--sidebar-nav-link-color--active, var(--sidebar-nav-link-color));
+    line-height: 1.1;
+}
+
+.markdown-section h3,
+.markdown-section h4,
+.markdown-section h5 {
+    color: hsl(204 89% 70%);
+    line-height: 1.2;
+}
+
+.markdown-section h2 {
+    border-bottom-width: thick;
+}
+
+.markdown-section h3 {
+    border-bottom-width: thin;
+}
+
+.pagination-item {
+    margin-top: 1em !important;
+}
+
+#main>hr {
+    margin: 1em 0;
+}
+
+.flex-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.flex-left {
+    width: 69%;
+    margin-right: 1%;
+}
+
+.flex-right {
+    width: 29%;
+    margin-left: 1%;
+}
+
+.cover-head {
+    display: flex;
+    font-size: xx-large;
+}
+
+.cover-head p {
+    flex: 1;
+    order: 2;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.ch-title {
+    flex: 3;
+    order: 1;
+}
+
+.ch-title p {
+    margin-top: .1rem;
+}
+
+.cover blockquote p {
+    margin-top: 0.1rem;
+}
+
+.uib-name {
+    display: inline !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--uib-blue) !important;
+}
+
+.uib-red {
+    color: var(--uib-red) !important;
+    font-weight: 800;
+}
+
+#docsify-darklight-theme {
+    top: 1rem;
+    right: 5rem;
+    z-index: 999;
+}
+
+/*#region TOC */
+
+/* @import url("https://unpkg.com/docsify-toc@1.0.0/dist/toc.css"); */
+/* @import url("https://unpkg.com/docsify-plugin-toc@1.3.1/dist/light.css"); */
+
+@media only screen and (max-width: 1299px) {
+    aside.toc-nav {
+      max-width: 45px;
+      opacity: 0.6;
+      right: 0 !important;
+      margin-right: 0 !important;
+      background: #fff;
+    }
+    aside.toc-nav:hover {
+      max-width: inherit;
+      opacity: 1;
+    }
+    #docsify-darklight-theme {
+        right: 5rem;
+    }
+  }
+  
+  @media only screen and (min-width: 1300px) {
+    section.content {
+      padding-right: 250px;
+    }
+    #docsify-darklight-theme {
+        right: -8rem;
+    }
+  }
+  
+  aside.toc-nav {
+    /* FONT-WEIGHT: 600; */
+    position: fixed;
+    top: 6rem;
+    right: 3%;
+    /* margin-right: 20px; */
+    width: 250px;
+    z-index: 999999;
+    /* align-self: flex-start; */
+    /* flex: 0 0 auto; */
+    overflow-y: auto;
+    /* max-height: 90%; */
+    /* margin-left: 1em; */
+    /* background-color: bisque; */
+    font-size: smaller;
+    /* line-height: 0; */
+  }
+  
+  aside.toc-nav.nothing {
+    width: 0;
+  }
+  
+  .page_toc {
+    position: relative;
+    left: 3px;
+    /* margin: 10px 0; */
+    border: none;
+    /* margin-left: 1em; */
+    /* line-height: 1; */
+    /* font-size: 1.0em; */
+    width: 99%;
+    max-height: 80vh;
+  }
+  
+  .page_toc p.title {
+    margin: 0;
+    padding-bottom: 5px;
+    font-weight: 600;
+    font-size: 1.2em;
+  }
+  
+  .page_toc .anchor:hover:after {
+    content: "";
+  }
+  .page_toc div[class^="lv"] a:hover span {
+    color: var(--sidebar-nav-link-color--active, #42b983);
+  }
+  
+  .page_toc div {
+    border-left: 2px solid #e8e8e8;
+    text-indent: 10px;
+    /* padding: 2px 0; */
+    cursor: pointer;
+  }
+  
+  .page_toc div.active {
+    border-left-color: var(--sidebar-nav-link-color--active, #42b983);
+    transition: border-left-color 0.23s;
+  }
+  
+  .page_toc div.active a span {
+    color: var(--sidebar-nav-link-color--active, #42b983);
+    transition: color 0.23s;
+  }
+  
+  .page_toc div[class^="lv"] a {
+    /* color: var(--text-color-base, black); */
+    /* text-decoration: none; */
+    font-weight: 300;
+    /* line-height: 2em; */
+    /* display: block; */
+  }
+  
+  .page_toc div[class^="lv"] a span {
+    color: var(--sidebar-nav-link-color--hover, var(--sidebar-nav-link-color));
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow:ellipsis;
+  }
+  
+  .page_toc div.lv2 {
+    /* text-indent: 20px; */
+  }
+  
+  .page_toc div.lv3 {
+    text-indent: 1rem;
+  }
+  
+  .page_toc div.lv4 {
+    text-indent: 40px;
+  }
+  
+  .page_toc div.lv5 {
+    text-indent: 50px;
+  }
+  
+  .page_toc div.lv6 {
+    text-indent: 60px;
+  }
+  /*#endregion TOC */
+
+tr {
+  vertical-align: top;
+}
+
+/* Extra line spacing for <br>, mainly for use in markdown tables */
+br {
+    display:block;
+    content:"";
+    margin-top:0.8em;
+    line-height:190%;
+}
+
+/* In case you want to use an hr in a table, reduced top/bottom margins */
+td hr {
+  margin-top:0.5em;
+  margin-bottom:0.5em;
+}
+
+td ol {
+  padding-left: 0 !important;
+}

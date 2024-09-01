@@ -1,0 +1,276 @@
+<!--
+    Copyright (c) 2017-2024 Julian Knight (Totally Information)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<script src="./resources/node-red-contrib-uibuilder/uibuilder.js"></script>
+
+<script type="text/html" data-template-name="uibuilder">
+
+<div id="ti-edit-panel">
+
+    <div class="tabs-row"><ul id="tabs"></ul></div> 
+    <div id="tabs-content">
+        <div id="tab-core">
+            <div id="url-input" aria-label="Home 'page' id. Defines the URL used" class="form-row" title="Make sure this gives a unique URL. Also used as a folder name for resources.">
+                <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+                <input type="text" id="node-input-url" title="Cannot be 'templates. Cannot contain: space _ / \\ ..'" placeholder="Required. <20 chars. Unique">
+            </div>
+
+            <div id="info" aria-label="Information and utility links" class="form-row uib-info-bar">
+
+                <a id="uibuilderurl" title="Open the default web page for this uibuilder instance" href="uibindex" target="_blank" class="red-ui-button editor-button">
+                    <i class="fa fa-globe" aria-hidden="true"></i> Open
+                </a>
+                <a id="uibinstanceconf" href="./uibuilder/instance/_url_?cmd=showinstancesettings" target="_blank" class="red-ui-button editor-button" title="Show detailed configuration for this instance of UIBUILDER">
+                    <i class="fa fa-info" aria-hidden="true"></i> Node details
+                </a>
+                <a href="./uibuilder/uibindex" target="_blank" class="red-ui-button editor-button" title="Show available libraries, configuration and other detailed UIBUILDER information">
+                    <i class="fa fa-info-circle" aria-hidden="true"></i> Full details
+                </a>
+                <a id="uib-apps-list" href="#" target="_blank" class="red-ui-button editor-button" title="Show the UIBUILDER Apps list page. All uibuilder instances.">
+                    <i class="fa fa-list" aria-hidden="true"></i> Apps
+                </a>
+        
+            </div>
+
+            <div aria-label="UIBUILDER server info" class="form-tips node-help">
+                <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> is using <span id="uib-svr-type">#</span> webserver at 
+                <a id="uib-svr" href="#" target="_blank" title="Open in new window">#</a><div id="uib-svr-fldr"></div>
+            </div>
+
+            <div aria-label="Node Name" class="form-row" title="Node Name (descriptive only)">
+                <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+                <input type="text" id="node-input-name">
+            </div>
+
+            <div aria-label="Topic" class="form-row" title="Adds a msg.topic to input msgs if not already provided">
+                <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+                <input type="text" id="node-input-topic">
+            </div>
+
+            <fieldset>
+                <legend>Template Settings</legend>
+
+                <div aria-label="Template selector" class="form-row">
+                    <label for="node-input-templateFolder"><i class="fa fa-window-restore"></i> Template</label>
+                    <select id="node-input-templateFolder"></select>
+                </div>
+    
+                <div aria-label="Hidden unless external template is selected above" id="et-input" class="form-row" title="Input a Degit compatible repository name. e.g. totallyinformation&sol;uib-template-test" style="display:none">
+                    <label for="node-input-extTemplate"><i class="fa fa-globe"></i> External</label>
+                    <input type="text" id="node-input-extTemplate" placeholder="totallyinformation/uib-template-test">
+                </div>
+    
+                <div aria-label="Button to load new template" class="form-row">
+                    <label for="btn-load-template"></label>
+                    <button class="btn" id="btn-load-template" title="Load selected template, overwriting existing files">
+                        Load &amp; Overwrite Files
+                    </button>
+                </div>
+                
+                <div aria-label="How to use the template selector" style="max-width: var(--min-editor-panel-width);">
+                    <p>
+                        By default, <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> uses the default minimal template.
+                        If you wish to use a different template, select and load it here.
+                    </p>
+                    <p>
+                        Selecting a Template from the drop-down <b>does not</b> load the template.
+                    </p>
+                    <p>
+                        Loading a Template <b><u>will</u> overwrite</b> existing same-named files.
+                    </p>
+                </div>
+            </fieldset>
+        </div>
+
+        <div id="tab-files">
+            <div aria-label="Drop-down for selecting folder & new, del buttons" class="form-row" title="Choose between the src, dist (built src) or root folders">
+                <label for="node-input-folder" style="width:5em;">
+                    <i class="fa fa-folder-open-o"></i> Folder:
+                </label>
+                <select id="node-input-folder" style="width:63%;"></select>
+                <span id="fldr-buttons">
+                    <button class="btn" id="btn-fldr-new" title="Add a new folder">New</button>
+                    <div id="fldr-new-dialog" title="Create a new folder" dialog>
+                        <label for="fldr-input-newname">New Folder Name</label>
+                        <input type="text" id="fldr-input-newname">
+                        <div title="" style="margin-top:.5em;">
+                            New folder will be created inside 
+                            <code>&lt;uibRoot&gt;/<span id="fldr_url">&lt;url&gt;</span></code>.<br>
+                            Do not forget to include sub-folder name if needed.<br>
+                            e.g. <code>src/mynewfldr</code>
+                        </div>
+                    </div>                  
+                    <button class="btn" id="btn-fldr-del" title="Delete the selected folder">Del</button>
+                    <div id="fldr-del-dialog" title="Delete the currently selected folder" dialog>
+                        <b>Folder to be deleted</b>
+                        <p><code id="fldr-del-name"></code></p>
+                        <p id="fldr-del-recopy"></p>
+                        <p style="border:2px solid brown;color:brown;font-weight:bold;padding:5px 5px;">
+                            Warning: This action cannot be undone.<br />
+                            If you delete the <code>src</code> or <code>dist</code> folders
+                            some things might not work correctly.
+                        </p>
+                    </div>                  
+                </span>
+            </div>
+
+            <div aria-label="Drop-down for selecting file to edit" class="form-row ti-edit-panel">
+                <label for="node-input-filename"  style="width:5em;"><i class="fa fa-file-code-o"></i> File:</label>
+                <select id="node-input-filename" style="width: 83%;"></select>
+            </div>
+
+            <div aria-label="Save, Reset, close, (message), Delete" class="form-row ti-edit-panel">
+                <button class="btn" id="edit-save" title="Save any changes to the file">Save</button>
+                <button class="btn" id="edit-reset" title="Reset any changes to last saved version (cancel changes)">Reset</button>
+
+                <span id="file-action-message"></span>
+
+                <div style="position: absolute;right:1.6em;display:inline-block;">
+                    <button class="btn" id="edit-new" title="Add a new file.">
+                        New
+                    </button>
+                    <div dialog id="edit_new_dialog" title="Create a new file">
+                        <label for="edit-input-newname">New File Name</label>
+                        <input type="text" id="edit-input-newname">
+                        <div style="margin-top:.5em;">
+                            New file will be created inside the 
+                            <code>
+                                &lt;uibRoot&gt;/<span id="file_url">&lt;url&gt;</span>/<span id="file_fldr">&lt;folder&gt;</span>
+                            </code> folder.<br>
+                            You can include a sub-folder name if needed. Intermediate folders will be automatically created.<br>
+                            e.g. <code>src/mynewfldr/myfile.js</code>
+                        </div>
+                    </div>                  
+                    <button class="btn" id="edit-delete" title="Delete the file. Will reset to the default template if Copy from templates flag is set.">
+                        Delete
+                    </button>
+                    <div id="edit_delete_dialog" title="Delete the currently selected file" dialog>
+                        <b>File to be deleted</b>
+                        <p><code id="edit-delete-name"></code></p>
+                        <p id="edit-delete-recopy"></p>
+                        <p style="border:2px solid brown;color:brown;font-weight:bold;padding:5px 5px;">Warning: This action cannot be undone.</p>
+                    </div>                  
+                </div>
+            </div>
+
+            <div aria-label="Edit box editor-tray-content" id="edit-outer" class="node-text-editor-row" style="position:relative">
+                <div style="height: calc(100vh - 28rem); min-height:150px;" class="node-text-editor" id="node-input-template-editor" ></div>
+                <div style="height: calc(100vh - 28rem); min-height:150px; display:hidden;" id="node-input-template-editor-no-file" >
+                    No file available, please select a different file or folder.
+                </div>
+            </div>
+
+            <div aria-label="File data (hidden), language selector" class="form-row ti-edit-panel">
+                <button id="node-function-expand-js" class="editor-button"><i class="fa fa-expand"></i></button>
+
+                <!-- Option to reload any connected client pages after edit-save -->
+                <input type="checkbox" id="node-input-reload" style="width:auto;"
+                    title="If set, all connected clients will reload the page they are on when any change is saved."
+                    >
+                <label for="node-input-reload" style="width:80%;">Reload connected clients on save?.</label>
+
+                <input type="hidden" id="node-input-template" data-isClean="true">
+                <div style="position: absolute; right:1.6em;display:inline-block; text-align: right;">
+                    <select id="node-input-format" style="width:110px; padding:0;">
+                        <option value="text">Text</option>
+                        <option value="html">HTML</option>
+                        <option value="javascript">Javascript</option>
+                        <option value="css">CSS</option>
+                        <option value="json">JSON</option>
+                        <option value="scss">SCSS</option>
+                        <option value="handlebars">mustache</option>
+                        <option value="markdown">Markdown</option>
+                        <option value="yaml">YAML</option>
+                        <option value="csv">CSV</option>
+                        <option value="python">Python</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-libraries">
+            <p>
+                Install, remove or update npm packages that provide front-end libraries such as
+                VueJS, jQuery, MoonJS, etc.<br>
+                Search for packages on <a href="https://www.npmjs.com/" target="_blank" style="color:var(--red-ui-text-color-link);text-decoration:underline;">official npm site</a> 
+                or <a href="https://npms.io/" target="_blank" style="color:var(--red-ui-text-color-link);text-decoration:underline;">npms.io</a>.
+            </p>
+
+            <div aria-label="Package List Container" class="form-row" id="package-list-container">
+                <ol id="node-input-packageList"></ol>
+            </div>
+        </div>
+
+        <div id="tab-advanced">
+            <div aria-label="Information" class="form-row form-tips node-help">
+                <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> version: <b id="uib_version">--</b>
+            </div>
+
+            <!-- How long do we want resources to be cached for? *** NOT READY *** 
+            <div class="form-row" title="Cache max. age in seconds (blank or zero for no caching)">
+                <label for="node-input-maxAge"><i class="fa fa-clock-o"></i> Cache Age</label>
+                <input type="number" step="1" pattern="\d+" min="0" max="31536000" id="node-input-maxAge" style="width: 10em;"> Seconds
+            </div>
+            -->
+            
+            <div aria-label="Select source folder" class="form-row" title="Select the folder to serve files from">
+                <label for="node-input-sourceFolder"><i class="fa fa-folder"></i> Serve:</label>
+                <input type="text" id="node-input-sourceFolder" style="width:75%;">
+            </div>
+            <div aria-label="Source folder information" class="form-row form-tips node-help">
+                Selects the folder that will be served as the root folder of your web app.<br>
+                The folder <b>must</b> contain an <code>index.html</code> file as a minimum.<br>
+                If it doesn't, you will get an error.<br>
+                Need to re-deploy for the folder to change.
+            </div>
+
+            <div aria-label="Pass the msg._uib to standard message output?" class="form-row" title="If turned on, msg._uib included in standard msgs">
+                <input type="checkbox" id="node-input-showMsgUib" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-input-showMsgUib" style="width: 90%;">Include <code>msg._uib</code> in standard msg output.</label>
+            </div>
+            <div aria-label="msg._uib information" class="form-row form-tips node-help">
+                This includes the <code>clientId</code>, <code>remoteAddress</code> and <code>pageName</code> properties from the client in the output<br>
+                The <code>clientId</code> is generated in the browser and remains stable while the browser is open.
+                It is reset when the browser restarts. Control msgs always include <code>msg.clientId</code>.
+            </div>
+
+            <div aria-label="Description text for this instance" class="form-row">
+                <label for="node-input-title" style="display:block;width:100%;">Short description for this UIBUILDER instance:</label>
+                <input id="node-input-title" type="text" style="width:100%;">
+            </div>
+
+            <div aria-label="More description text for this instance" class="form-row">
+                <label for="node-input-title" style="display:block;width:100%;">Long description for this UIBUILDER instance:</label>
+                <textarea id="node-input-descr" style="width:100%;"></textarea>
+            </div>
+
+            <div aria-label="Forward flag" class="form-row" title="forward inbound msg's direct to the output">
+                <input type="checkbox" id="node-input-fwdInMessages" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-input-fwdInMessages" style="width: 90%;">
+                    Forward input msgs to output?
+                </label>
+            </div>
+
+            <div aria-label="Description text for this instance" class="form-row">
+                <label for="node-input-editurl" style="display:block;width:100%;">Code editor URL:</label>
+                <input id="node-input-editurl" type="text" style="width:100%;">
+            </div>
+
+        </div>
+    </div>
+    
+</div>
+</script>

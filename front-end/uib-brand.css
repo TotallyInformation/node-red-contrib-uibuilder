@@ -8,7 +8,7 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 1.32 2024-01-01
+ * @version: 1.33 2024-03-28
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -63,6 +63,8 @@
     --lightness: calc(var(--lightness-value) + var(--lightness-bias));
 
     --base-margin: 1rem;
+    --max-width: 64rem;
+
     --border-radius: 0.5rem; /*8px;*/
     --border-pad: 0.5rem;
     --border-margin: 0;
@@ -462,14 +464,24 @@
 
 /*#region --- Basic reset --- */
 
-* {
+*, *::before, *::after {
     box-sizing: border-box;
     /* margin: 0; */
+}
+*:focus-visible {
+    outline: 2px solid var(--secondary-fg);
+    outline-offset: 2px;
+}
+@supports not selector(:focus-visible) {
+    *:focus {
+        outline: 1px solid var(--secondary-fg);
+        outline-offset: -4px;
+    }
 }
 html {
     line-height: 1.5;
     font-size: 100%;
-    background-color: var(--surface2);
+    background-color: var(--surface1);
     color: var(--text2);
     accent-color: var(--brand);
 }
@@ -496,11 +508,11 @@ p, h1, h2, h3, h4, h5, h6, heading, li, dl, dt, blockquote {
     hyphens: auto;
     word-break: break-word;
 }
-div > p {
+div > p, div > article {
     margin-left: var(--base-margin);
     margin-right: var(--base-margin);
 }
-button, input[type="button" i], input[type="reset" i], input[type="submit" i] {
+button, input[type="button" i], input[type="reset" i], input[type="submit" i], ::file-selector-button {
     /* display: inline-flex; */
     align-items: center;
     justify-content: center;
@@ -526,15 +538,12 @@ button, input[type="button" i], input[type="reset" i], input[type="submit" i] {
 button:hover, input[type="button" i]:hover, input[type="reset" i]:hover, input[type="submit" i]:hover {
     background-color: hsl(var(--info-hsl) / .5);
 }
-button:focus, input[type="button" i]:focus, input[type="reset" i]:focus, input[type="submit" i]:focus {
-    outline: 1px solid var(--text4);
-    outline-offset: -4px;
-}
 button:active, input[type="button" i]:active, input[type="reset" i]:active, input[type="submit" i]:active {
     transform: scale(0.97);
 }
 input, button, textarea, select {
     font: inherit;
+    min-width: 2em;
 }
 blockquote {
     border: 1px solid var(--text3);
@@ -544,12 +553,50 @@ blockquote {
 code {
     font-size: 120%;
 }
-main {
+/* This lets us use an article like a card display */
+article {
+    max-width: var(--max-width);
+    border: 1px solid var(--text3);
+    border-radius: var(--border-radius);
+    padding: var(--border-pad);
+    margin: 1rem var(--border-margin);
+    background-color: var(--surface3);
+}
+article > h1::before {
+    font-size: 50%;
+    color: hsl( var(--failure-hue) 100% 50% );
+    content: "⛔ Do not use H1 headings in articles. "
+}
+article > h2, article > h3, article > h4 {
+    margin-block-start: 0;
+    border-bottom: 1px solid var(--text3);
+    padding-block-end: var(--border-pad);
+}
+/* HTML5 section tags - only special format top-level to reduce odd fmts */
+body > main, body > header, body > footer, body > section {
     padding-left: var(--base-margin);
     padding-right: var(--base-margin);
-    max-width: 64rem;
-    margin-left:auto;
-    margin-right: auto;    
+    max-width: var(--max-width);
+    margin: 0 auto;
+}
+body > main {
+    display: grid;
+    gap: 1rem;
+}
+footer {
+    margin-top: 1em;
+}
+/* Put asides inside a main to one side
+   Or, use a section or div to wrap multiple */
+main > article, main .left {
+    grid-column: 1;
+}
+main > aside, main .right {
+    grid-column: 2;
+}
+/* Inline blocks in a summary tag */
+summary > h2, summary > h3, summary > h4, summary > div, summary > p {
+    display: inline-block;
 }
 
 /*#endregion --- Basic reset --- */
@@ -588,9 +635,20 @@ tbody tr:nth-child(even) {
     background-color: var(--surface3);
     background-blend-mode: lighten;
 }
+/* In case you want to use an hr in a table, reduced top/bottom margins */
+td hr {
+    margin-top:0.5em;
+    margin-bottom:0.5em;
+}
+/* Extra line spacing for <br> in tables, mainly for use in markdown */
+td br, th br {
+    display:block;
+    content:"";
+    margin-top:0.8em;
+    line-height:190%;
+}
 /*#endregion --- Tables --- */
 
-/* TODO Try flexbox or grid instead of float? */
 /*#region --- Forms --- */
 form {
     border: 1px solid var(--text3);
@@ -614,7 +672,7 @@ input:invalid, textarea:invalid, select:invalid {
     border: 3px solid var(--success);
 } */
 /* at any level of nesting */
-form input, form textarea, form select {
+form input, form textarea, form select, form fieldset, form output {
     /* width: 75%; */
     flex: 2;
     border-radius: var(--border-radius);
@@ -639,14 +697,17 @@ form button, input[type="button" i], form input[type="reset" i], form input[type
     margin-left: .2em;
     margin-right: .2em;
 }
-form input[type="checkbox" i] {
+form input[type="checkbox" i], form input[type="radio" i] {
     height:1.5em;
+    vertical-align: middle;
 }
 form:invalid button {
     background-color: var(--warning);
 }
 form label {
     flex: 1;
+    vertical-align: middle;
+    display: inline-block;
 }
 form label[required]::after {
     content: " *"
@@ -654,6 +715,10 @@ form label[required]::after {
 /* first level only */
 form > div {
     display: inherit;
+    vertical-align: middle;
+}
+form > div:focus-within {
+    font-weight: bold;
 }
 form > label {
     align-self: center;
@@ -663,7 +728,7 @@ form > label:focus-within {
     font-weight: bold;
 }
 /* Small screen */
-@media screen and (max-width: 600px) {
+@media all and (max-width: 600px) {
     form, form * {
         display:block;
         width:100%;
@@ -685,38 +750,69 @@ nav a {
     background-color: inherit;
 }
 nav li:not([aria-current]):hover {
-    font-weight: bold;
+    text-decoration: underline;
+    filter: brightness(120%);
 }
 nav [aria-current=page] {
 	font-weight: bolder;
-    text-decoration: underline;
+    filter: brightness(130%);
 }
-/* identifiable nav entries (li): nav [data-route] */
+
 /*#region -- Horizontal menu -- */
-nav.horizontal {
+/* nav.horizontal {
     display: inline-block;
     padding: 0.5rem;
+} */
+nav.horizontal {
+    display: flex;
+    padding: 0 0.1rem;
+    align-items: center;
+    background-color: var(--surface3);
 }
-nav.horizontal > h2 {
-    display: inline-block;
-    line-height: inherit;
+nav.horizontal > h2 { /* Menu heading */
     font-size: inherit;
-    margin: 0;
+    font-weight: inherit;
+    padding-left: 0.5rem;
 }
-nav.horizontal [role="menubar"] { /* ul */
+nav.horizontal [role="menubar"], nav.horizontal ul { /* ul */
+    display: flex;
+    flex: 2;
     list-style-type: none;
-    display: inline-block;
     margin: 0;
-    padding: 0 0 0 0.5rem;
-
+    padding: 0;
+    justify-content: flex-start;
 }
 nav.horizontal li { /* [role="menuitem"], [data-route], li */
-    display: inline-block;
-    padding: 0 0.4rem 0 0.1rem;
+    padding: 0.2rem 0.4rem;
 }
-nav.horizontal li:not(:last-child) {
-    border-right: 2px solid;
-    border-right-color: inherit;
+/* Search form */
+nav.horizontal form {
+    flex: 1;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    align-items: center;
+    border: none;
+    margin: inherit;
+    padding: inherit;
+    gap: .2rem;
+}
+nav.horizontal input[type="search"] {
+    flex: 3;
+    filter: brightness(120%);
+}
+nav.horizontal input[type="submit"] {
+    flex: 1;
+    font-size: large;
+    font-weight: bolder;
+    filter: brightness(120%);
+    padding: .5rem 0;
+}
+@media all and (max-width: 600px) {
+    nav.horizontal, nav.horizontal ul {
+        /* On small screens, we are no longer using row direction but column */
+        flex-direction: column;
+    }
 }
 /*#endregion -- ---- -- */
 /*#endregion --- Menus --- */
@@ -746,12 +842,13 @@ li.started {
 
 /*#region ---- Utility ---- */
 
-.emoji { /* Nicer, cross-platform emoji's */
-    font-family: var(--emoji-fonts);
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-
-.noborder {
-    border: none;
+@keyframes pulse {
+    50% {
+        opacity: .5;
+    }
 }
 
 .border {
@@ -770,6 +867,46 @@ li.started {
     margin-top: 0.5rem;
 }
 
+.centre, .center {
+    margin-left:auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.compact {
+    margin: 0;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+}
+button.compact {
+    padding: 2px 5px;
+    border-radius: 0;
+    background: inherit;
+    margin: 2px;
+}
+
+.emoji { /* Nicer, cross-platform emoji's */
+    font-family: var(--emoji-fonts);
+}
+
+.noborder {
+    border: none;
+}
+
+.status-side-panel {
+    border-radius: 9999px;
+    width: .5rem;
+    height: 100%;
+    background-color: var(--surface1);
+}
+
+.text-larger {
+    font-size: larger;
+}
+.text-smaller {
+    font-size: smaller;
+}
+
 /* Apply to headings where you want a sub-title */
 .with-subtitle {
     margin-bottom: 0;
@@ -783,47 +920,6 @@ li.started {
 
 .uppercase {
     text-transform: uppercase;
-}
-
-.centre, .center {
-    margin-left:auto;
-    margin-right: auto;
-    text-align: center;
-}
-
-.animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-@keyframes pulse {
-    50% {
-        opacity: .5;
-    }
-}
-
-.status-side-panel {
-    border-radius: 9999px;
-    width: .5rem;
-    height: 100%;
-    background-color: var(--surface1);
-}
-
-.text-smaller {
-    font-size: smaller;
-}
-.text-larger {
-    font-size: larger;
-}
-
-.compact {
-    margin: 0;
-    padding-top: 0.2rem;
-    padding-bottom: 0.2rem;
-}
-button.compact {
-    padding: 2px 5px;
-    border-radius: 0;
-    background: inherit;
-    margin: 2px;
 }
 
 /*#endregion ---- Utility ---- */

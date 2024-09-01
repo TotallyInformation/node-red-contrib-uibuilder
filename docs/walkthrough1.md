@@ -1,30 +1,13 @@
 ---
-title: A first-timers walkthrough of using UIBUILDER
+title: A first-timers walkthrough
 description: |
   If you haven't used UIBUILDER before, it can be a little confusing as it brings together concepts from several different worlds. This walkthrough takes you from nothing to a basic data-driven web page.
 created: 2021-09-24 11:02:56
-lastUpdated: 2023-09-30 13:10:40
-updated: 2023-12-30 17:01:41
+updated: 2024-06-30 12:33:30
 ---
 
-Like UIBUILDER itself, this walkthrough may look complex. But you should bear in mind that if you follow the 7 steps in the [How to get started](#how-to-get-started-4-steps-to-a-data-driven-web-app) section, that is basically it.
-The rest starts to unpack some of the things that you can then do with UIBUILDER and how to do them. Please consider them as additional walkthroughs.
-
-## What is UIBUILDER
-
-Node-RED's Dashboard and UIBUILDER are both different approaches to the same use-case. How to present data to users in a web browser tab and get information back from them into Node-RED. Remembering that the users browser and the Node-RED server are completely different environments and may be on different devices.
-
-We refer to this as a "data-driven web application".
-
-UIBUILDER was created in order to provide Node-RED users with a flexible alternative to the Dashboard.
-
-Dashboard is extremely simple to start using and great for doing relatively straight-forward UI's very quickly. However, if you want to do more complex things, you quickly hit the brick-wall that is common with many frameworks. Suddenly things go from being simple to very complex.
-
-UIBUILDER takes the opposite approach to Dashboard. Its main purpose is to be a _foundation_ on which you can build whatever you like, however you like.
-
-It does the complex background tasks for you and then gets out of the way.
-
-UIBUILDER is a *bridge* between the Node-RED server and any connected clients (web browser tabs). Each browser tab pointing at the same uibuilder instance is a *client* and you can have many clients running from 1 browser, 1 device/many browsers or different devices - however you like.
+Like UIBUILDER itself, this walkthrough may look complex. But you should bear in mind that if you follow the few steps in the [next](#how-to-get-started-4-steps-to-a-data-driven-web-app) section, that is basically it.
+Everything else on this page starts to unpack some of the things that you can then do with UIBUILDER and how to do them. Please consider them as additional walkthroughs.
 
 ## How to get started - 4 steps to a data-driven web app
 
@@ -33,55 +16,68 @@ It may look complex, but really it isn't. 😊
 1. Install node-red-contrib-uibuilder via Node-RED's "Manage palette" menu.
 
 2. Add a new flow consisting of: `inject -> uibuilder -> debug` nodes connected in that order. 
+
+   ![simple uibuilder flow](images/simple-uibuilder-flow.png)
+   
    Add debug nodes to both of the output ports of the `uibuilder` node and set them both to show the full msg.
 
    > [!note]
    > You can import a working example using Node-RED's import menu. Look in the examples section under uibuilder.
+   >
+   > Don't forget to set the uibuilder node's "URL" (its name) and then Deploy before doing anything else.
 
 3. Double-click on the `uibuilder` node and change it's URL to `uibtest`. Click on the "Done" button.
 
 4. Click on the Node-RED "Deploy" button.
    
-**At this point, you now have a working web app!** However, it doesn't really show anything useful.
+**At this point, you now have a working web app!** So, *re-open the uibuilder node and click on the "Open" button* to view the page. This opens a new browser tab showing you your web page.
 
-To improve that, re-open the node's settings and change the _Template_ drop-down to "*No framework, IIFE client*". Then click the "Load & Overwrite Files" button.
+However, the page doesn't really show or do anything useful yet.
+
+![blank-uibuilder-page](images/blank-uibuilder-page.png)
+
+To improve this mostly blank page, re-open the node's settings again and change the _Template_ drop-down to "*No framework, IIFE client*". Then click the "Load & Overwrite Files" button.
 You will get a warning that you should carefully read and if OK, click on the "OK, overwrite" button. Of course, if you don't want to overwrite things, click on the cancel button (which is the default).
 
-When you now revisit your web page, you will see that there is a bit more to it that will help you understand how to get things done. It has a title, sub-title and a form containing one input field with a button, and one custom button.
+The rest is really now just testing and getting familiar with the details of how things work.
 
-The rest is really now just testing.
+1. Either reload the page or re-open the `uibuilder` node and click on the "Open" button. This shows the updated page (the template contains all the code).
 
-1. Re-open the `uibuilder` node and click on the "Open" button.
-   
-   This opens a new browser tab showing you your web page. It has a title, a couple of buttons showing ways to get data back to Node-RED and a panel that shows the latest message sent from Node-RED.
+  ![no framework template](images/no-framework-template.png)
 
 2. In the Editor, cancel the `uibuilder` node's configuration panel and click on the inject node's input button.
    Then check your web page again.
    
+   ![msg-from-nr>](images/msg-from-nr.png)
+
    You should now see a nicely formatted presentation of the message that the inject node sent to the `uibuilder` node which, in turn, passed it to your front-end client (the browser).
 
    _So at this point, you know that you can communicate from Node-RED to your browser. If this isn't working, please see the troubleshooting section below._
 
 3. Now check the debug panel in Node-RED.
+   ![no-framework-template-debug-msgs>](images/no-framework-template-debug-msgs.png)
    
    You should see several messages listed there. If you check, you will see that they all come from the second output port of the `uibuilder` node.
 
    That port outputs uibuilder _control_ messages. The messages tell you where they came from, either the server (the `uibuilder` node itself) or the client and what they represent ("Client Connect" for example).
    You will also see a bunch of other properties that tell you things about the connected client browser tab.
 
-   Note that the top output port on the `uibuilder` node outputs messages from your client(s). There is a [helper function in the uibuilder client library](client-docs/functions?id=sendmsg-originator-3939-send-a-custom-message-back-to-node-red): `uibuilder.send({...})` that sends a message back to Node-RED. The message must be structured the same as a Node-RED message. That is to say that it must be a JavaScript object containing properties with values. For example: `{ "payload": "Message from the client", "topic": "mymessage" }`. See below for more information on working with the front-end code.
+   > [!TIP]
+   > The top output port on a `uibuilder` *node* outputs standard messages from your client browser(s). The bottom port outputs control messages mostly generated by uibuilder itself.
 
-   Remember that the Node-RED server and the browser client page run in completely separate contexts (even if they both run on the same device). The only communication between them happens because the `uibuilder` node talks to the uibuilder client library.
+   > [!NOTE]
+   > Remember that the Node-RED server and the browser client page run in completely *separate contexts* (even if they both run on the same device). The only communication between them happens because the `uibuilder` node talks to the uibuilder client library.
 
 4. Send information back to Node-RED from the browser
 
-   Now that you have seen how Node-RED can send a message to the browser, it is time to send a message back.
-
-   The loaded template has a FORM pre-defined. You can enter data into the form and press the "eventSend" button. Check out the debug panel in the Node-RED editor and you will see a new message there. Hover over it to see that it came out of the top port of the `uibuilder` node. This is the standard message port. Messages you send from the browser appear here.
+   The loaded template has a web FORM pre-defined. You can enter data into the form and press the "eventSend" button. Check out the debug panel in the Node-RED editor and you will see a new message there. Hover over it to see that it came out of the top port of the `uibuilder` node. This is the standard message port. Messages you send from the browser appear here.
 
    Check the content of the message and you will see that it contains a msg._ui property with lots of pre-defined data. That includes the input from the form. This uses the [helper function](client-docs/functions?id=eventsenddomevent-originator-3939-send-a-standard-message-back-to-node-red-in-response-to-a-dom-event) `uibuilder.eventSend(event)`. This function makes it extremely easy to send useful information back to Node-RED simply by attaching it to an HTML event such as a button click or input field change.
 
-You now have a fully working UIBUILDER configuration with a web page and have seen how to send data between Node-RED, the browser, and back.
+   > [!TIP]
+   > `uibuilder.eventSend(event)` and `uibuilder.send({...})` are two of the client library's built in functions and both send information back from the browser client to the Node-RED server.
+
+**You now have a fully working UIBUILDER configuration with a web page and have seen how to send data between Node-RED, the browser, and back.**
 
 ## Finding and editing your front-end code
 
@@ -89,11 +85,11 @@ Now that you have the basics running, it is time to look at the front-end code. 
 
 * The code is completely standard web code using HTML, CSS and JavaScript.
 
-* There is a [JavaScript client library](client-docs/readme), `uibuilder.iife.min.js`, that provides the magic connections between the front and back ends. A second library called `socket.io-client` is also loaded for you in the background, it enables the communications to/from Node-RED, you don't need to load this yourself. 
+* There is a [JavaScript client library](client-docs/readme), `uibuilder.iife.min.js`, that provides the magic connections between the front and back ends.
   
   See the [uibuilder components overview](components) for a diagram of how the different parts of uibuilder work together with Node-RED and the browser.
 
-  There are actually 3 uibuilder client library versions. The one above should be the most commonly used. `uibuilder.min.esm.min.js` is used if you want to use [ES Module](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/) style coding. There is an older library, `uibuilderfe.min.js` but this is no longer being actively updated (as of uibuilder v6+) and should be replaced where possible.
+  There are two uibuilder client library versions. The one above should be the most commonly used. `uibuilder.min.esm.min.js` is used if you want to use [ES Module](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/) style coding.
 
 
 * All of the front-end code for a specific `uibuilder` node (an "[instance](glossary)") is stored in a single folder (with a number of sub-folders).
@@ -120,12 +116,14 @@ There are two ways to look at and change the content of an instance's root folde
 
 2. Use a code editor.
 
-   This is best if you are already familiar with writing code for the browser. It is also best if your code is going to be at all complex.
+   This is best if you are already familiar with writing code for the browser. It is also best if your code is going to be at all complex or you will have more than one person working on different parts of the code.
 
    To use this approach, you need access to the folder on the server's filing system that contains the root folder for the instance. 
    
    > [!tip]
    > The server location for your code is shown on the node's "Core" tab.
+   >
+   > There is also a link provided that may open your code editor at the right location. This is set up for VSCode by default but you may change it in the advanced settings for the uibuilder node.
 
    Each `uibuilder` node instance has a [`url`](glossary) setting. This has to be unique for the instance of Node-RED. It is used as the identifier for the instance. That includes naming the folder that contains the front-end code. For example, if you use the URL from the first part of the walkthrough, the folder would be `~/.node-red/uibuilder/uibtest/`.
 
@@ -160,8 +158,7 @@ Notes:
   
   See the example flows and WIKI entries about "Caching" to see how to pre-load data into new/reloaded pages from Node-RED.
 
-* The various templates along with some of the examples show you the different ways to work with the `uibuilderfe` 
-  library depending whether you are using a front-end framework library or not.
+* The various templates along with some of the examples show you the different ways to work with the front-end client library depending whether you are using along with a front-end framework library or not.
 
 * There is an external template on GitHub called [`TotallyInformation/uib-template-test`](https://github.com/TotallyInformation/uib-template-test).
   You can use this to see the kinds of things that need to be in a template. Templates are likely to continue to evolve and in the future are likely
@@ -171,30 +168,13 @@ Notes:
 
 Send data from Node-RED to your clients in 1 or more standard messages into your `uibuilder` node. The node sends the whole msg to your front-end.
 
-In your front-end code, you will generally use a `uibuilder.onChange('msg', (msg) => {...})` function. Inside the function, take the contents of the msg and assign it to variables that you have pre-defined in your Vue app data section so that they are responsive. See the [Event Handling](client-docs/functions?id=event-handling) docs for more details.
-
-Alternatively, you can use a [`uib-update` node](nodes/uib-update) to do the same thing from within Node-RED without any code being needed.
-
-### Example
-
-Assuming some HTML like `<div id="mything"></div>`, you can update the content of that div with the following JavaScript:
-
-```javascript
-uibuilder.onChange('msg', (msg) => {
-   // You don't have to filter by topic but it can be helpful
-   if ( msg.topic === 'update mything' ) {
-      // $(...) is a uibuilder helper function that selects an HTML element based on a CSS Selector
-      // Use innerHTML if your payload includes additional HTML formatting
-      $('#mything').innerText = msg.payload
-   }
-})
-```
+There are multiple ways to display this data on your web page. They are outlined on the [Easy UI updates](using/easy-ui-updates) page.
 
 ## Sending data to Node-RED
 
 To send data back to Node-RED, use one of the [Message Handling functions](client-docs/functions?id=message-handling). Both of these will output a message from the topmost output port of your `uibuilder` node. `uibuilder` node's also have an advanced setting that includes additional details in the output about the client. That can be useful for custom authentication and authorisation flows or splitting flows by source page, etc.
 
-### `uibuilder.send(msg)`
+### `uibuilder.send(msg)` :id=send
 
 Sends a custom message. The message just includes what you send (plus a `msg._uib` object with additional client details if turned on in the node settings).
 
@@ -202,7 +182,7 @@ Sends a custom message. The message just includes what you send (plus a `msg._ui
 uibuilder.send(payload: "Hi there from the client", topic: "from the client")
 ```
 
-### `uibuilder.eventSend(event)`
+### `uibuilder.eventSend(event)` :id=eventSend
 
 <div class="flex-container">
 
@@ -242,15 +222,15 @@ Can be attached to an HTML event such as a button click (`onclick`) or input fie
 
 ## No-code UI's
 
-uibuilder v6.1 introduces new features to enable the creation of web pages dynamically without the need to code any HTML or JavaScript. Two nodes [`uib-element`](nodes/uib-element) and [`uib-update`](nodes/uib-update) are used for this.
+uibuilder v6.1 introduced extra features to enable the creation of web pages dynamically without the need to code any HTML or JavaScript. Two nodes [`uib-element`](nodes/uib-element) and [`uib-update`](nodes/uib-update) are used for this.
 
-`uib-element` takes in simple data structures and outputs [`msg._ui` configuration data](client-docs/config-driven-ui) that the client library can re-hydrate straight into HTML. Several simple options such as tables and lists are available in uibuilder v6.1, additional elements and structures will be made available in future versions. 
+`uib-element` takes in simple data structures and outputs [`msg._ui` configuration data](client-docs/config-driven-ui) that the client library can re-hydrate straight into HTML. Several simple options such as tables and lists are available in uibuilder v6.1+, additional elements and structures are occasionally added. 
 
 `uib-update` allows simple updating of specific on-page elements. Outputs from both nodes can be chained together and can be sent direct into a `uibuilder` node or via a `uib-cache` node.
 
 The output `msg._ui` configuration data is a defined standard and you can further process that data to enhance it before sending.
 
-uibuilder v6.2 and beyond will have the ability to save this data and to re-hydrate to HTML within Node-RED so that you can use these features to create HTML for use in other tools and for static page delivery (very efficient).
+uibuilder from v7 has the ability to save this data and to re-hydrate to HTML *within Node-RED* as well so that you can use these features to create HTML for use in other tools and for static page delivery (very efficient).
 
 ## Low-code UI's
 
@@ -262,30 +242,4 @@ It will also work with any framework that does not force you to pre-define all o
 
 ## Troubleshooting
 
-### Software versions
-
-uibuilder v6 requires Node.js v14+, Node-RED v 3+ and for the browser, an ES6 (ECMA2015) capable version (Not IE. Virtually all modern browsers over the last few years but for Apple mobiles has to be iOS 12+). Some of the newer features need a browser capable of ECMA2019 which should be virtually every modern browser.
-
-Without these, you are likely to hit issues with compatibility or outright error. Please contact the author if you need something outside of these specifications though as it is possible that something could be put together.
-
-[This w3schools JavaScript versions page](https://www.w3schools.com/js/js_versions.asp) shows which browsers support which versions of JavaScript.
-
-For the VueJS templates and examples, VueJS v2 (not v3) needs to be installed along with the `bootstrap-vue` package. You can install v2 by simply giving the name `vue@2` to the library manager.
-
-### A white page
-
-This usually indicates that an error has crashed whatever front-end framework you are using. In the browser, open the Developer Tools and look at the Console tab for errors.
-
-### An ugly page
-
-Assuming you didn't design your page that way, this generally means that you have made an error in one of the URL's in your `index.html` page and so a resource file hasn't loaded. Check the Developer Tools Console and Network tabs for "404" errors (page not found).
-
-Check uibuilder's "uibuilder details" page (button on any `uibuilder` node in the Editor) to see the exact URL's you should be specifying.
-
-### Socket.IO errors
-
-If your browser is reporting an error in Socket.IO, the most likely reason is that you are serving your front-end code from a different web server and not from Node-RED. In that case, see [the documentation](client-docs/troubleshooting?id=socketio-refuses-to-connect) for details about the correct function and parameters you need in your front-end javascript to get round this issue. This may occur if you are developing with a front-end framework that includes its own development server.
-
-Otherwise, the next most likely reason is that you are using a web proxy such as NGINX, Caddy, Apache, etc and have forgotten to proxy the websocket connections. There is an [example for NGINX in the documentation](uib-security-nginx?id=websockets).
-
-After that, the most likely explanation is that you have a network issue between your client and the Node-RED server. That is beyond the remit of this walkthrough.
+Please see the [Troubleshooting](/using/troubleshooting.md) page.

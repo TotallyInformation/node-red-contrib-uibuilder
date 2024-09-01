@@ -3,28 +3,30 @@ title: uibuilder Security Documentation
 description: |
   Some thoughts on how to correctly and safely secure a uibuilder app.
 created: 2020-01-05 20:45:00
-lastUpdated: 2021-06-27 18:19:13
-updated: 2023-12-30 17:01:41
+updated: 2024-03-23 16:41:57
 ---
 
 uibuilder provides its own security process based on simple standards.
 
 This enables anyone to implement simple but effective multi-user security on their uibuilder based front-end's. You don't have to be an expert in ExpressJS or PassportJS. Nor do you need to understand much about web security, JWT, etc - though you will need some basic understanding if you really want to be sure about securing your user interfaces.
 
-!> **WARNING**: I am **not** a professional developer, nor am I an operational DevOps person. I make no claims nor do I provide any warrenties or guarantees about the fundamental security of a web app developed with uibuilder. If you are unsure, you need to pay a professional to audit and penetration test your specific configuration as well as my code.
+> [!WARNING]
+> I am **not** a professional developer, nor am I an operational DevOps person. I make no claims nor do I provide any warrenties or guarantees about the fundamental security of a web app developed with uibuilder. If you are unsure, you need to pay a professional to audit and penetration test your specific configuration as well as my code.
 
-?> Having said that, if you or anyone else discovers flaws in the programming, I will work with you/them as well as I can in order to fix things. But this is not a paid-for development and I don't always have much time. I'm also open to Pull Requests to fix specific issues.
+> [!NOTE]
+> Having said that, if you or anyone else discovers flaws in the programming, I will work with you/them as well as I can in order to fix things. But this is not a paid-for development and I don't always have much time. I'm also open to Pull Requests to fix specific issues.
 
-* [How do I secure my uibuilder app?](#how-do-i-secure-my-uibuilder-app)
-* [Configuring Node-RED for TLS](#configuring-node-red-for-tls)
-* [Standard Schema for `msg._auth`](#standard-schema-for-msg_auth)
-* [Additional Information](#additional-information)
+- [How do I secure my uibuilder app?](#how-do-i-secure-my-uibuilder-app)
+- [Configuring Node-RED for TLS](#configuring-node-red-for-tls)
+- [Standard Schema for `msg._auth`](#standard-schema-for-msg_auth)
+- [Additional Information](#additional-information)
 
 ## How do I secure my uibuilder app?
 
 1. Configure Node-RED to use TLS or use a "Reverse Proxy" to provide TLS. The security documentation for Node-RED contains the details. There are also various threads on the Node-RED Discourse forum that explain what people have done to make use of Let's Encrypt or self-signed certificates.
    
-   !> **WARNING**: Do not - EVER - use any kind of web login process without first setting up TLS. It is unsafe and sends your sensitive user data unencrypted over the network (potentially over the Internet).
+   > [!WARNING]
+   > Do not - EVER - use any kind of web login process without first setting up TLS. It is unsafe and sends your sensitive user data unencrypted over the network (potentially over the Internet).
 
 2. Open the configuration of your uibuilder Node in the Node-RED admin Editor. Turn on the security flag.
    
@@ -34,6 +36,7 @@ This enables anyone to implement simple but effective multi-user security on the
 
    Remember that everything is controlled via messages between your front-end and the Node-RED server. When security is turned on, only a logon control message is allowed from the front-end. Everything else will be rejected until the client is authenticated and authorised. 
    
+   > [!NOTE]
    > Use a dummy `anonymous` user if you want to allow some non-authenticated data to flow before a proper login happens. The template `security.js` file has an example. With an anonymous user, you can control what data is allowed using your flows. Each message contains the `msg._auth.id` string that identifies the user. `msg._auth` can also have additional properties set by your `security.js` `validateUser` function, these can then be used to make further decisions about access to data. When security is turned on, any client trying to connect will automatically do so using the anonymous user if you have allowed this feature.
    
    Security is **not** applied to your web resources (html, css, javascript, images, etc). It is always assumed that these are "public" in the sense that anyone with access to your web server is able to load them. So make sure that nothing sensitive is made available via a web resource.
@@ -86,7 +89,8 @@ After you have done this, you will need to access your Node-RED web pages using 
 
 ## Standard Schema for `msg._auth`
 
-**NOTE**: _The name of this property is likely to change to something like `msg._auth` so that other tools needing front-end authentication and authorisation can use a common schema._
+> [!NOTE]
+> _The name of this property is likely to change to something like `msg._auth` so that other tools needing front-end authentication and authorisation can use a common schema._
 
 uibuilder proposes a standard(ish) schema for exchanging authentication, authorisation and session data.
 

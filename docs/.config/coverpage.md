@@ -4,7 +4,7 @@
 
 <div class="ch-title">
 
-# <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> <small>v6</small>
+# <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> <small>v7</small>
 
 for Node-RED
 
@@ -12,7 +12,7 @@ for Node-RED
 
 </div>
 
-> Easy data-driven web UI's.
+> Easy data-driven web UI's. Batteries included!
 
 - No-code and Low-code options, driven from Node-RED
 - Dynamic data interchange between Node-RED and the browser
@@ -20,6 +20,6 @@ for Node-RED
 - Can integrate with existing web development workflows
 
 [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
-[Get Started](#uibuilder-documentation)
+[Get Started](about)
 [Quick Start](walkthrough1)
 

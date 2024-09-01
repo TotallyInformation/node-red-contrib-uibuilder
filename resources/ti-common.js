@@ -2,9 +2,18 @@
  * Load as: ./resources/node-red-contrib-uibuilder/ti-common.js
  */
 
+/** TODO
+ * Now this is loaded as a plugin, should really use
+ *   RED.plugins.registerPlugin('uib-plugin', { onadd: function() { ... } } )
+ * to register and run.
+ * https://github.com/node-red/nrlint/blob/bb60347c4a11e5e0bbc77ea20e75535677c5bddd/src/nrlint-core.html#L344
+ * Also note that RED is available here
+ */
+
 ;(function () { // eslint-disable-line sonarjs/cognitive-complexity
     'use strict'
 
+    // TODO The run-check not strictly needed now we load once only via a plugin
     if (!window['uibuilder']) {
         let _dbg = false
 
@@ -18,6 +27,8 @@
             typedInputWidth: '68.5%',
             // Are we running on a local device?
             localHost: ['localhost', '127.0.0.1', '::1', ''].includes(window.location.hostname) || window.location.hostname.endsWith('.localhost'),
+            // Server address of the Node-RED server
+            nrServer: window.location.hostname,
             // URL root if needed (set below to '' if using a custom uib server)
             nodeRoot: RED.settings.httpNodeRoot.replace(/^\//, ''),
             // URL prefix for all uib nodes - set below
@@ -80,6 +91,12 @@
                     data: {
                         'cmd': 'listinstances',
                     },
+                    beforeSend: function(jqXHR) {
+                        const authTokens = RED.settings.get('auth-tokens')
+                        if (authTokens) {
+                            jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                        }
+                    },
                     success: (instances) => {
                         this.deployedUibInstances = this.sortInstances(instances)
                         // Also pre-populate the editorUibInstances to avoid the problem that
@@ -96,7 +113,7 @@
              */
             sortInstances: function sortInstances(instances) {
                 return Object.fromEntries(
-                    Object.entries(instances).sort(([,a],[,b]) => {
+                    Object.entries(instances).sort(([, a], [, b]) => {
                         const nameA = a.toUpperCase()
                         const nameB = b.toUpperCase()
                         if (nameA < nameB) return -1
@@ -137,6 +154,13 @@
             url: 'uibuilder/uibvendorpackages',
             async: false,
             // data: { url: node.url},
+
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
+            },
 
             success: function(vendorPaths) {
                 uibuilder.packages = vendorPaths

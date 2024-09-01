@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* This is the Front-End JavaScript for uibuilder  in HTML Module form
   It provides a number of global objects that can be used in your own javascript.
   see the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
@@ -32,30 +33,103 @@
 import Ui from './ui'
 import io from 'socket.io-client'
 import UibVar from '../components/uib-var'
+import UibMeta from '../components/uib-meta'
+import ApplyTemplate from '../components/apply-template'
 
-const version = '6.8.2-src'
+const version = '7.0.0-src'
 
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
 
-// @ts-ignore Detect whether the loaded library is minified or not
-const isMinified = !(/param/).test(function (param) { }) // eslint-disable-line no-unused-vars
+// Detect whether the loaded library is minified or not
+const isMinified = !(/param/).test(function (param) { })
 
 //#region --- print/console - debugging output functions --- //
 
-/** Default log level - Error & Warn */
-let logLevel = isMinified ? 0 : 1  // When using minified lib, assume production and only log errors otherwise also log warn
-// function changeLogLevel(level) {
-//     logLevel = level
-//     console.trace = logLevel < 4 ? function(){} : console.trace
-//     console.debug = logLevel < 2 ? function(){} : console.debug
-//     if ( logLevel < 1 ) {
-//         console.log = console.group = console.groupEnd =  function(){}
-//     }
-// }
+/** Custom logging. e.g. log(2, 'here:there', 'jiminy', {fred:'jim'})()
+ * @returns {Function} Log function @example log(2, 'here:there', 'jiminy', {fred:'jim'})()
+ */
+function log() {
+    // Get the args
+    const args = Array.prototype.slice.call(arguments)
 
-// Experimental
-const LOG_STYLES = {
+    // 1st arg is the log level/type
+    let level = args.shift()
+    let strLevel
+    switch (level) {
+        case 'trace':
+        case 5: {
+            if (log.level < 5) break
+            level = 5 // make sure level is numeric
+            strLevel = 'trace'
+            break
+        }
+
+        case 'debug':
+        case 4: {
+            if (log.level < 4) break
+            level = 4
+            strLevel = 'debug'
+            break
+        }
+
+        case 'log':
+        case 3: {
+            if (log.level < 3) break
+            level = 3
+            strLevel = 'log'
+            break
+        }
+
+        case 'info':
+        case '':
+        case 2: {
+            if (log.level < 2) break
+            level = 2
+            strLevel = 'info'
+            break
+        }
+
+        case 'warn':
+        case 1: {
+            if (log.level < 1) break
+            level = 1
+            strLevel = 'warn'
+            break
+        }
+
+        case 'error':
+        case 'err':
+        case 0: {
+            if (log.level < 0) break
+            level = 0
+            strLevel = 'error'
+            break
+        }
+
+        default: {
+            level = -1
+            break
+        }
+    }
+
+    // If set to something unknown, no log output
+    if (strLevel === undefined) return function () { }
+
+    // 2nd arg is a heading that will be colour highlighted
+    const head = args.shift()
+
+    // Bind back to console.log (could use console[strLevel] but some levels ignore some formatting, use console.xxx directly or dedicated fn)
+    return Function.prototype.bind.call(
+        console[log.LOG_STYLES[strLevel].console],
+        console,
+        `%c${log.LOG_STYLES[strLevel].pre}${strLevel}%c [${head}]`, `${log.LOG_STYLES.level} ${log.LOG_STYLES[strLevel].css}`, `${log.LOG_STYLES.head} ${log.LOG_STYLES[strLevel].txtCss}`,
+        ...args
+    )
+}
+
+// Nice console styling
+log.LOG_STYLES = {
     // 0
     error: {
         css: 'background: red; color: black;',
@@ -104,88 +178,39 @@ const LOG_STYLES = {
     head: 'font-weight:bold; font-style:italic;',
     level: 'font-weight:bold; border-radius: 3px; padding: 2px 5px; display:inline-block;',
 }
-/** Custom logging. e.g. log(2, 'here:there', 'jiminy', {fred:'jim'})()
- * @returns {Function} Log function @example log(2, 'here:there', 'jiminy', {fred:'jim'})()
- */
-function log() {
-    // Get the args
-    const args = Array.prototype.slice.call(arguments)
 
-    // 1st arg is the log level/type
-    let level = args.shift()
-    let strLevel
-    switch (level) {
-        case 'trace':
-        case 5: {
-            if (logLevel < 5) break
-            level = 5 // make sure level is numeric
-            strLevel = 'trace'
-            break
-        }
+/** Default log level - Error */
+log.default = 0
+let ll
 
-        case 'debug':
-        case 4: {
-            if (logLevel < 4) break
-            level = 4
-            strLevel = 'debug'
-            break
-        }
+// Check if the script element was found and get the data-log-level attribute (only numeric levels allowed here)
+try {
+    const scriptElement = document.currentScript
+    ll = scriptElement.getAttribute('logLevel')
+} catch (e) {}
 
-        case 'log':
-        case 3: {
-            if (logLevel < 3) break
-            level = 3
-            strLevel = 'log'
-            break
-        }
-
-        case 'info':
-        case '':
-        case 2: {
-            if (logLevel < 2) break
-            level = 2
-            strLevel = 'info'
-            break
-        }
-
-        case 'warn':
-        case 1: {
-            if (logLevel < 1) break
-            level = 1
-            strLevel = 'warn'
-            break
-        }
-
-        case 'error':
-        case 'err':
-        case 0: {
-            if (logLevel < 0) break
-            level = 0
-            strLevel = 'error'
-            break
-        }
-
-        default: {
-            level = -1
-            break
-        }
-
-    }
-
-    // If set to something unknown, no log output
-    if (strLevel === undefined) return function () { }
-
-    // 2nd arg is a heading that will be colour highlighted
-    const head = args.shift()
-
-    // Bind back to console.log (could use console[strLevel] but some levels ignore some formatting, use console.xxx directly or dedicated fn)
-    return Function.prototype.bind.call(
-        console[LOG_STYLES[strLevel].console],
-        console,
-        `%c${LOG_STYLES[strLevel].pre}${strLevel}%c [${head}]`, `${LOG_STYLES.level} ${LOG_STYLES[strLevel].css}`, `${LOG_STYLES.head} ${LOG_STYLES[strLevel].txtCss}`,
-        ...args
-    )
+// Otherwise check if the import url (for ESM only) has a logLevel query param
+if (ll === undefined) {
+    try {
+        const url = new URL(import.meta.url).searchParams
+        ll = url.get('logLevel')
+    } catch (e) {}
 }
+
+// If either found, check numeric and set default level if so
+if (ll !== undefined) {
+    ll = Number(ll)
+    if (isNaN(ll)) {
+        console.warn( `[Uib:constructor] Cannot set logLevel to "${scriptElement.getAttribute('logLevel')}". Defaults to 0 (error).`)
+        log.default = 0
+    } else log.default = ll
+}
+
+// Set current level to default
+log.level = log.default
+
+// log.default = isMinified ? 0 : 1  // When using minified lib, assume production and only log errors otherwise also log warn
+
 //#endregion
 
 /** A hack to dynamically load a remote module and wait until it is loaded
@@ -210,46 +235,6 @@ function log() {
 
 //     return done
 // }
-
-/** Makes a null or non-object into an object
- * If not null, moves "thing" to {payload:thing}
- *
- * @param {*} thing Thing to check
- * @param {string} [property='payload'] property that "thing" is moved to if not null and not an object
- * @returns {!object} _
- */
-function makeMeAnObject(thing, property) {
-    if (!property) property = 'payload'
-    if (typeof property !== 'string') {
-        log('warn', 'uibuilderfe:makeMeAnObject', `WARNING: property parameter must be a string and not: ${typeof property}`)()
-        property = 'payload'
-    }
-    let out = {}
-    if ( thing !== null && thing.constructor.name === 'Object' ) {
-        out = thing
-    } else if (thing !== null) {
-        out[property] = thing
-    }
-    return out
-} // --- End of make me an object --- //
-
-/** Joins all arguments as a URL string
- * see http://stackoverflow.com/a/28592528/3016654
- * since v1.0.10, fixed potential double // issue
- * arguments {string} URL fragments
- * @returns {string} _
- */
-function urlJoin() {
-    const paths = Array.prototype.slice.call(arguments)
-    const url = '/' + paths.map(function (e) {
-        return e.replace(/^\/|\/$/g, '')
-    })
-        .filter(function (e) {
-            return e
-        })
-        .join('/')
-    return url.replace('//', '/')
-} // ---- End of urlJoin ---- //
 
 /** Convert JSON to Syntax Highlighted HTML
  * @param {object} json A JSON/JavaScript Object
@@ -336,6 +321,8 @@ export const Uib = class Uib {
     #isShowStatus = false
     // If true, URL hash changes send msg back to node-red. Controlled by watchUrlHash()
     #sendUrlHash = false
+    // Used to help create unique element ID's if one hasn't been provided, increment on use
+    #uniqueElID = 0
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
         'elementExists', 'get', 'getManagedVarList', 'getWatchedVars', 'htmlSend', 'include',
@@ -376,6 +363,10 @@ export const Uib = class Uib {
     // Track ui observers (see uiWatch)
     #uiObservers = {}
 
+    // List of uib specific attributes that will be watched and processed dynamically
+    uibAttribs = ['uib-topic', 'data-uib-topic']
+    #uibAttrSel = `[${this.uibAttribs.join('], [')}]`
+
     //#endregion
 
     //#region public class vars
@@ -391,10 +382,14 @@ export const Uib = class Uib {
     ctrlMsg = {}
     /** Is Socket.IO client connected to the server? */
     ioConnected = false
+    // Is the library running from a minified version?
+    isMinified = isMinified
     // Is the browser tab containing this page visible or not?
     isVisible = false
     // Remember the last page (re)load/navigation type: navigate, reload, back_forward, prerender
     lastNavType = ''
+    // Max msg size that can be sent over Socket.IO - updated by "client connect" msg receipt
+    maxHttpBufferSize = 1048576
     /** Last std msg received from Node-RED */
     msg = {}
     /** number of messages sent to server since page load */
@@ -437,6 +432,12 @@ export const Uib = class Uib {
      * @type {(string|undefined)}
      */
     topic = undefined
+    /** Either undefined or a reference to a uib router instance
+     * Set by uibrouter, do not set manually.
+     */
+    uibrouterinstance
+    /** Set by uibrouter, do not set manually */
+    uibrouter_CurrentRoute
     //#endregion ---- ---- ---- ---- //
 
     //#region ---- These are unlikely to be needed externally: ----
@@ -451,6 +452,11 @@ export const Uib = class Uib {
     // NOTE: These can only change when a client (re)connects
     socketOptions = {
         path: this.ioPath,
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebTransport_API
+        // https://socket.io/get-started/webtransport
+        // NOTE: webtransport requires HTTP/3 and TLS. HTTP/2 & 3 not yet available in Node.js
+        // transports: ['polling', 'websocket', 'webtransport'],
         transports: ['polling', 'websocket'],
         // Using callback so that they are updated automatically on (re)connect
         // Only put things in here that will be valid for a websocket connected session
@@ -484,8 +490,8 @@ export const Uib = class Uib {
     //#region ------- Getters and Setters ------- //
 
     // Change logging level dynamically (affects both console. and print.)
-    set logLevel(level) { logLevel = level; console.log('%c❗ info%c [logLevel]', `${LOG_STYLES.level} ${LOG_STYLES.info.css}`, `${LOG_STYLES.head} ${LOG_STYLES.info.txtCss}`, `Set to ${level} (${LOG_STYLES.names[level]})`) /* changeLogLevel(level)*/ }
-    get logLevel() { return logLevel }
+    set logLevel(level) { log.level = level; console.log('%c❗ info%c [logLevel]', `${log.LOG_STYLES.level} ${log.LOG_STYLES.info.css}`, `${log.LOG_STYLES.head} ${log.LOG_STYLES.info.txtCss}`, `Set to ${level} (${log.LOG_STYLES.names[level]})`) /* changeLogLevel(level)*/ }
+    get logLevel() { return log.level }
 
     get meta() { return Uib._meta }
 
@@ -629,7 +635,6 @@ export const Uib = class Uib {
 
     //#region ------- Our own event handling system ---------- //
 
-    // TODO Add option to send event details back to Node-RED as uib ctrl msg
     /** Standard fn to create a custom event with details & dispatch it
      * @param {string} title The event name
      * @param {*} details Any details to pass to event output
@@ -792,6 +797,15 @@ export const Uib = class Uib {
         })
     }
 
+    /** Returns a new array containing the intersection of the 2 input arrays
+     * @param {Array} a1 Array to check
+     * @param {Array} a2 Array to intersect
+     * @returns {Array} The intersection of the 2 arrays (may be an empty array)
+     */
+    arrayIntersect(a1, a2) {
+        return a1.filter(uName => a2.includes(uName))
+    }
+
     /** Copies a uibuilder variable to the browser clipboard
      * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
      */
@@ -856,6 +870,31 @@ export const Uib = class Uib {
         return out
     }
 
+    /** Attempt to get rough size of an object
+     * @param {*} obj Any serialisable object
+     * @returns {number|undefined} Rough size of object in bytes or undefined
+     */
+    getObjectSize(obj) {
+        let size
+        try {
+            const jsonString = JSON.stringify(obj)
+            // Encode the string to a Uint8Array and measure its length
+            const encoder = new TextEncoder()
+            const uint8Array = encoder.encode(jsonString)
+            size = uint8Array.length
+        } catch (e) {
+            log('error', 'uibuilder:getObjectSize', 'Could not stringify, cannot determine size', obj, e)
+        }
+        return size
+    }
+
+    /** Returns true if a uibrouter instance is loaded, otherwise returns false
+     * @returns {boolean} true if uibrouter instance loaded else false
+     */
+    hasUibRouter() {
+        return !!this.uibrouterinstance
+    }
+
     /** Only keep the URL Hash & ignoring query params
      * @param {string} url URL to extract the hash from
      * @returns {string} Just the route id
@@ -869,6 +908,27 @@ export const Uib = class Uib {
         log(...arguments)()
     }
 
+    /** Makes a null or non-object into an object. If thing is already an object.
+     * If not null, moves "thing" to {payload:thing}
+     * @param {*} thing Thing to check
+     * @param {string} [property='payload'] property that "thing" is moved to if not null and not an object
+     * @returns {!object} _
+     */
+    makeMeAnObject(thing, property) {
+        if (!property) property = 'payload'
+        if (typeof property !== 'string') {
+            log('warn', 'uibuilder:makeMeAnObject', `WARNING: property parameter must be a string and not: ${typeof property}`)()
+            property = 'payload'
+        }
+        let out = {}
+        if ( thing !== null && thing.constructor.name === 'Object' ) {
+            out = thing
+        } else if (thing !== null) {
+            out[property] = thing
+        }
+        return out
+    } // --- End of make me an object --- //
+
     /** Navigate to a new page or a new route (hash)
      * @param {string} url URL to navigate to. Can be absolute or relative (to current page) or just a hash for a route change
      * @returns {Location} The new window.location string
@@ -876,6 +936,18 @@ export const Uib = class Uib {
     navigate(url) {
         if (url) window.location.href = url
         return window.location
+    }
+
+    /** Fast but accurate number rounding (https://stackoverflow.com/a/48764436/1309986 solution 2)
+     * Half away from zero method (AKA "commercial" rounding), most common type
+     * @param {number} num The number to be rounded
+     * @param {number} decimalPlaces Number of DP's to round to
+     * @returns Rounded number
+     */
+    round(num, decimalPlaces) {
+        const p = Math.pow(10, decimalPlaces || 0)
+        const n = (num * p) * (1 + Number.EPSILON)
+        return Math.round(n) / p
     }
 
     /** Set the default originator. Set to '' to ignore. Used with uib-sender.
@@ -945,6 +1017,24 @@ export const Uib = class Uib {
         return ret
     }
 
+    /** Joins all arguments as a URL string
+     * see http://stackoverflow.com/a/28592528/3016654
+     * since v1.0.10, fixed potential double // issue
+     * arguments {string} URL fragments
+     * @returns {string} _
+     */
+    urlJoin() {
+        const paths = Array.prototype.slice.call(arguments)
+        const url = '/' + paths.map(function (e) {
+            return e.replace(/^\/|\/$/g, '')
+        })
+            .filter(function (e) {
+                return e
+            })
+            .join('/')
+        return url.replace('//', '/')
+    } // ---- End of urlJoin ---- //
+
     /** Turn on/off/toggle sending URL hash changes back to Node-RED
      * @param {string|number|boolean|undefined} [toggle] Optional on/off/etc
      * @returns {boolean} True if we will send a msg to Node-RED on a hash change
@@ -974,6 +1064,8 @@ export const Uib = class Uib {
 
     //#region -- Direct to _ui --
     // ! NOTE: Direct assignments change the target `this` to here. Use with caution
+    // However, also note that the window/jsdom and the window.document
+    // references are now static in _ui so not impacted by this.
 
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
      * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
@@ -999,6 +1091,19 @@ export const Uib = class Uib {
      * @param {HTMLElement} el HTML Element to add class(es) to
      */
     addClass = _ui.addClass
+
+    /** Apply a source template tag to a target html element
+     * NOTES:
+     * - styles in ALL templates are accessible to all templates.
+     * - scripts in templates are run AT TIME OF APPLICATION (so may run multiple times).
+     * - scripts in templates are applied in order of application, so variables may not yet exist if defined in subsequent templates
+     * @param {HTMLElement} source The source element
+     * @param {HTMLElement} target The target element
+     * @param {boolean} onceOnly If true, the source will be adopted (the source is moved)
+     */
+    applyTemplate = _ui.applyTemplate
+
+    buildHtmlTable = _ui.buildHtmlTable
 
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
@@ -1071,13 +1176,14 @@ export const Uib = class Uib {
     removeClass = _ui.removeClass
 
     /** Replace or add an HTML element's slot from text or an HTML string
+     * WARNING: Executes <script> tags! And will process <style> tags.
      * Will use DOMPurify if that library has been loaded to window.
      * param {*} ui Single entry from the msg._ui property
      * @param {Element} el Reference to the element that we want to update
-     * @param {*} component The component we are trying to add/replace
+     * @param {*} slot The slot content we are trying to add/replace (defaults to empty string)
      */
-    replaceSlot(el, component) {
-        _ui.replaceSlot(el, component)
+    replaceSlot(el, slot) {
+        _ui.replaceSlot(el, slot)
     }
 
     /** Replace or add an HTML element's slot from a Markdown string
@@ -1138,6 +1244,347 @@ export const Uib = class Uib {
     }
 
     //#endregion -- direct to _ui --
+
+    /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
+     * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
+     *          as possible. Async so that calling function does not need to wait.
+     * Observer is set up in the start() function
+     * @param {MutationRecord[]} mutations Array of Mutation Records
+     */
+    async _uibAttribObserver(mutations/* , observer */) {
+        mutations.forEach( async m => { // async so process does not wait
+            log('trace', 'uibuilder:_uibAttribObserver', 'Mutations ', m)()
+            // Deal with attribute changes
+            if (m.attributeName && (m.attributeName.startsWith('uib') || m.attributeName.startsWith('data-uib'))) {
+                // log(0, 'attribute mutation', m.attributeName, m.target.getAttribute(m.attributeName), m.oldValue, m )()
+                this._uibAttrScanOne(m.target)
+            } else if (m.addedNodes.length > 0) {
+                // And deal with newly added elements (e.g. from route change)
+                // Check for added nodes with uib attribs
+                m.addedNodes.forEach( async n => { // async so process does not wait
+                    // Attributes are a map and we need an array
+                    let aNames = []
+                    try { // Nodes might not always have attributes
+                        aNames = [...n.attributes]
+                    } catch (e) {}
+                    // Get any added elements that have uib attribs
+                    const intersect = this.arrayIntersect(this.uibAttribs, aNames)
+                    // Process them
+                    intersect.forEach( async el => {
+                        this._uibAttrScanOne(el)
+                    })
+                    // And get any children of the added elements that have uib attribs (a node might not have querySelectorAll method)
+                    let uibChildren = []
+                    if (n.querySelectorAll) uibChildren = n.querySelectorAll(this.#uibAttrSel)
+                    // Process them
+                    uibChildren.forEach( async el => {
+                        this._uibAttrScanOne(el)
+                    })
+                })
+            }
+        })
+    }
+
+    /** Check a single HTML element for uib attributes and add auto-processors as needed.
+     * Async so that calling function does not need to wait.
+     * Understands only uib-topic at present. Msgs received on the topic can have:
+     *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
+     *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
+     * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
+     */
+    async _uibAttrScanOne(el) {
+        log('trace', 'uibuilder:_uibAttrScanOne', 'Setting up auto-processor for: ', el)()
+        const topic = el.getAttribute('uib-topic') || el.getAttribute('data-uib-topic')
+        // Create a topic listener
+        this.onTopic(topic, (msg) => {
+            log('trace', 'uibuilder:_uibAttrScanOne', `Msg with topic "${topic}" received. msg content: `, msg)()
+            msg._uib_processed_by = '_uibAttrScanOne' // record that this has already been processed
+            // Process msg.attributes
+            if (Object.prototype.hasOwnProperty.call(msg, 'attributes')) {
+                try {
+                    for (const [k, v] of Object.entries(msg.attributes)) {
+                        el.setAttribute(k, v)
+                    }
+                } catch (e) {
+                    log(0, 'uibuilder:attribute-processing', 'Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.')()
+                }
+            }
+
+            // Process msg.value (or set checked if boolean - for checkboxes)
+            // TODO Move this to a common function
+            const hasChecked = Object.prototype.hasOwnProperty.call(msg, 'checked')
+            const hasValue = Object.prototype.hasOwnProperty.call(msg, 'value')
+            if ( hasValue || hasChecked ) {
+                if (el.type && (el.type === 'checkbox' || el.type === 'radio')) {
+                    if (hasChecked) el.checked = this.truthy(msg.checked, false)
+                    else if (hasValue) el.checked = this.truthy(msg.value, false)
+                } else {
+                    if (hasValue) el.value = msg.value
+                    else if (hasChecked) el.value = this.truthy(msg.checked, false)
+                }
+            }
+
+            // TODO (MAYBE) Process msg.classes and msg.styles. msg.props (for non-string data)?
+
+            // Process msg.payload (applied as slot HTML) - NB: Will process <script> & <style>
+            if (Object.prototype.hasOwnProperty.call(msg, 'payload')) this.replaceSlot(el, msg.payload)
+        })
+    }
+
+    /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
+     * Async so that calling function does not need to wait.
+     * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
+     */
+    async _uibAttrScanAll(parentEl) {
+        if (!Array.isArray(parentEl)) parentEl = [parentEl]
+        parentEl.forEach( async p => { // async so process does not wait
+            const uibChildren = p.querySelectorAll(this.#uibAttrSel)
+            // log('trace', 'uibuilder:_uibAttrScanAll:forEach:children', 'p, uibChildren: ', p, uibChildren)()
+            if (uibChildren.length > 0) {
+                // console.log('existing elements uib attrib', uibChildren)
+                uibChildren.forEach( el => {
+                    this._uibAttrScanOne(el) // async so process does not wait
+                })
+            }
+        })
+    }
+
+    /** Given a FileList array, send each file to Node-RED and return file metadata
+     * @param {FileList} files FileList array
+     * @param {boolean=} noSend If true, don't send the file to Node-RED. Default is to send.
+     * @returns {Array<object>} Metadata values from all files
+     */
+    _processFilesInput(files, noSend = false) {
+        const value = []
+        for (const file of files) {
+            const props = {}
+            // Walk through each file property
+            for (const prop in file) {
+                props[prop] = file[prop]
+            }
+            // Create a temp URL allowing access to download the file
+            // Automatically destroyed on page reload
+            props.tempUrl = window.URL.createObjectURL(file)
+
+            value.push(props)
+
+            // Auto-upload to Node-RED over Socket.IO
+            if (noSend !== true) this.uploadFile(file)
+        }
+        return value
+    }
+
+    /** Attempt to get target attributs - can fail for certain target types, if so, returns empty object
+     * @param {HTMLElement} el Target element
+     * @returns {object} Array of key/value HTML attribute objects
+     */
+    getElementAttributes(el) {
+        const ignoreAttribs = ['class', 'id', 'name']
+        let attribs
+        try {
+            attribs = Object.assign({},
+                ...Array.from(el.attributes,
+                    ( { name, value } ) => {
+                        if ( !ignoreAttribs.includes(name) ) {
+                            return ({ [name]: value })
+                        }
+                        return undefined
+                    }
+                )
+            )
+        } catch (e) {}
+
+        return attribs
+    }
+
+    /** Check for CSS Classes and return as array if found or undefined if not
+     * @param {HTMLElement} el Target element
+     * @returns {Array|undefined} Array of class names
+     */
+    getElementClasses(el) {
+        let classes
+        try {
+            classes = Array.from(el.classList)
+        } catch (e) {}
+        return classes
+    }
+
+    /** Get target custom properties - only shows custom props not element default ones
+     * Excludes custom props starting with _
+     * @param {HTMLElement} el Target element
+     * @returns {object} Object of propname/value pairs
+     */
+    getElementCustomProps(el) {
+        const props = {}
+        Object.keys(el).forEach( key => {
+            if (key.startsWith('_')) return // Exclude private
+            props[key] = el[key]
+        })
+        return props
+    }
+
+    /** Check for el.value and el.checked. el.checked will also set the value return for ease of use.
+     * Only 2 input types use el.checked, different from all other input types - this is annoying.
+     * @param {HTMLElement} el HTML Element to be checked
+     * @returns {{value:boolean|null, checked:boolean|null}} Return null if properties not present, else the appropriate value
+     */
+    getFormElementValue(el) {
+        let value = null
+        let checked = null
+
+        switch (el.type) {
+            case 'checkbox':
+            case 'radio': {
+                value = checked = el.checked
+                // HTML does not normally return any value if not checked but we do for ease of use,
+                break
+            }
+
+            case 'select-multiple': {
+                // value = Array.from(el.selectedOptions).forEach( (sel) => sel.value )
+                value = Array.from(el.selectedOptions).map(option => option.value)
+                break
+            }
+
+            default: {
+                if (el.value) value = el.value
+
+                // Probably not really needed
+                if (el.checked) {
+                    value = checked = el.checked
+                    // HTML does not normally return any value if not checked but we do for ease of use,
+                }
+
+                // If the value is a valid number, use that instead of the text version - probably only applies to range inputs
+                if (el.valueAsNumber && !isNaN(el.valueAsNumber)) {
+                    value = el.valueAsNumber
+                }
+
+                break
+            }
+        }
+
+        return { value, checked }
+    }
+
+    // ! TODO - Handle fieldsets
+    /** For HTML Form elements (e.g. input, textarea, select), return the details
+     * @param {HTMLFormElement} el Source form element
+     * @returns {object|null} Form element key details
+     */
+    getFormElementDetails(el) {
+        if (!el.type) {
+            log(1, 'uibuilder:getFormElementDetails', 'Cannot get form element details as this is not an input type element')()
+            return null
+        }
+
+        // Get or create a (hopefully) unique ID
+        const id = this.returnElementId(el)
+        if (!id) {
+            log(1, 'uibuilder:getFormElementDetails', 'Cannot get form element details as no id is present and could not be generated')()
+            return null
+        }
+
+        let { value, checked } = this.getFormElementValue(el)
+
+        // For multi file input, get the file details as the value
+        // el.files is a FileList type & each entry is a File type - have to process these manually - stupid HTML!
+        // https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications
+        // NOTE: The eventSend fn calls uploadFiles if files present in form.
+        if (el.type === 'file' && el.files.length > 0) {
+            // Walk through each file in the FileList, get the details and send the file to Node-RED
+            value = this._processFilesInput(el.files)
+        }
+
+        const formDetails = {
+            'id': id,
+            'name': el.name,
+            'valid': el.checkValidity(),
+            'type': el.type,
+        }
+        if (value !== null) formDetails.value = value
+        if (checked !== null) formDetails.checked = checked
+
+        // If the form element has invalid content, try to report why
+        if (formDetails.valid === false) {
+            const v = el.validity
+            formDetails.validity = {
+                badInput: v.badInput === true ? v.badInput : undefined,
+                customError: v.customError === true ? v.customError : undefined,
+                patternMismatch: v.patternMismatch === true ? v.patternMismatch : undefined,
+                rangeOverflow: v.rangeOverflow === true ? v.rangeOverflow : undefined,
+                rangeUnderflow: v.rangeUnderflow === true ? v.rangeUnderflow : undefined,
+                stepMismatch: v.stepMismatch === true ? v.stepMismatch : undefined,
+                tooLong: v.tooLong === true ? v.tooLong : undefined,
+                tooShort: v.tooShort === true ? v.tooShort : undefined,
+                typeMismatch: v.typeMismatch === true ? v.typeMismatch : undefined,
+                valueMissing: v.valueMissing === true ? v.valueMissing : undefined,
+            }
+        }
+
+        // If any data-* attribs defined
+        if (Object.keys(el.dataset).length > 0) formDetails.data = el.dataset
+
+        return formDetails
+    }
+
+    /** Show a browser notification if possible.
+     * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
+     * or a Notifications API options object + config.title string.
+     * @example uibuilder.notify( 'My simple message to the user' )
+     * @example uibuilder.notify( {topic: 'My Title', payload: 'My simple message to the user'} )
+     * @example uibuilder.notify( {title: 'My Title', body: 'My simple message to the user'} )
+     * @example // If config.return = true, a promise is returned.
+     * // The resolved promise is only returned if the notification is clicked by the user.
+     * // Can be used to send the response back to Node-RED
+     * uibuilder.notify(notifyConfig).then( res => uibuilder.eventSend(res) )
+     * @ref https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+     * @param {object|string} config Notification config data or simple message string
+     * @returns {Promise<Event>|null} A promise that resolves to the click event or null
+     */
+    notify(config) {
+        if (config.return) return _ui.notification(config)
+
+        _ui.notification(config)
+            .then( res => { // eslint-disable-line promise/always-return
+                log('info', 'Uib:notification', 'Notification completed event', res)()
+                // if (config.return) return res
+            })
+            .catch( err => {
+                log('error', 'Uib:notification', 'Notification error event', err)()
+            })
+        return null
+    }
+
+    /** Get or create a (hopefully) unique ID
+     * @param {HTMLFormElement} el Source form element
+     * @returns {string|null} A hopefully unique element ID
+     */
+    returnElementId(el) {
+        return el.id !== '' ? el.id : (el.name !== '' ? `${el.name}-${++this.#uniqueElID}` : (el.type ? `${el.type}-${++this.#uniqueElID}` : `${el.localName}-${++this.#uniqueElID}`))
+    }
+
+    /** Scroll the page
+     * https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+     * @param {string} [cssSelector] Optional. If not set, scrolls to top of page.
+     * @param {{block:(string|undefined),inline:(string|undefined),behavior:(string|undefined)}} [opts] Optional. DOM scrollIntoView options
+     * @returns {boolean} True if element was found, false otherwise
+     */
+    scrollTo(cssSelector, opts) {
+        // @ts-ignore
+        if (!opts) opts = {}
+        if (!cssSelector || cssSelector === 'top'  || cssSelector === 'start') cssSelector = 'body'
+        else if (cssSelector === 'bottom' || cssSelector === 'end') {
+            cssSelector = 'body'
+            opts.block = 'end'
+        }
+        const el = this.$(cssSelector)
+        if (el) {
+            el.scrollIntoView(opts)
+            return true
+        }
+        return false
+    }
 
     /** * Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
      * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
@@ -1205,56 +1652,6 @@ export const Uib = class Uib {
         }
 
         return showHide
-    }
-
-    /** Show a browser notification if possible.
-     * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
-     * or a Notifications API options object + config.title string.
-     * @example uibuilder.notify( 'My simple message to the user' )
-     * @example uibuilder.notify( {topic: 'My Title', payload: 'My simple message to the user'} )
-     * @example uibuilder.notify( {title: 'My Title', body: 'My simple message to the user'} )
-     * @example // If config.return = true, a promise is returned.
-     * // The resolved promise is only returned if the notification is clicked by the user.
-     * // Can be used to send the response back to Node-RED
-     * uibuilder.notify(notifyConfig).then( res => uibuilder.eventSend(res) )
-     * @ref https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
-     * @param {object|string} config Notification config data or simple message string
-     * @returns {Promise<Event>|null} A promise that resolves to the click event or null
-     */
-    notify(config) {
-        if (config.return) return _ui.notification(config)
-
-        _ui.notification(config)
-            .then( res => { // eslint-disable-line promise/always-return
-                log('info', 'Uib:notification', 'Notification completed event', res)()
-                // if (config.return) return res
-            })
-            .catch( err => {
-                log('error', 'Uib:notification', 'Notification error event', err)()
-            })
-        return null
-    }
-
-    /** Scroll the page
-     * https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
-     * @param {string} [cssSelector] Optional. If not set, scrolls to top of page.
-     * @param {{block:(string|undefined),inline:(string|undefined),behavior:(string|undefined)}} [opts] Optional. DOM scrollIntoView options
-     * @returns {boolean} True if element was found, false otherwise
-     */
-    scrollTo(cssSelector, opts) {
-        // @ts-ignore
-        if (!opts) opts = {}
-        if (!cssSelector || cssSelector === 'top'  || cssSelector === 'start') cssSelector = 'body'
-        else if (cssSelector === 'bottom' || cssSelector === 'end') {
-            cssSelector = 'body'
-            opts.block = 'end'
-        }
-        const el = this.$(cssSelector)
-        if (el) {
-            el.scrollIntoView(opts)
-            return true
-        }
-        return false
     }
 
     /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
@@ -1420,38 +1817,6 @@ export const Uib = class Uib {
         return startStop
     } // ---- End of watchDom ---- //
 
-    //#endregion -------- -------- -------- //
-
-    //#region ------- HTML cache and DOM watch --------- //
-
-    /** Clear the saved DOM from localStorage */
-    clearHtmlCache() {
-        this.removeStore('htmlCache')
-        log('trace', 'uibuilder.module.js:clearHtmlCache', 'HTML cache cleared')()
-    }
-
-    /** Restore the complete DOM (the whole web page) from browser localStorage if available */
-    restoreHtmlFromCache() {
-        // Is the html cached? If so, restore it
-        const htmlCache = this.getStore('htmlCache')
-        if (htmlCache) {
-            const targetNode = document.getElementsByTagName('html')[0]
-            // Restore the entire HTML
-            targetNode.innerHTML = htmlCache
-            log('trace', 'uibuilder.module.js:restoreHtmlFromCache', 'Restored HTML from cache')()
-        } else {
-            log('trace', 'uibuilder.module.js:restoreHtmlFromCache', 'No cache to restore')()
-        }
-    }
-
-    /** Save the current DOM state to browser localStorage.
-     * localStorage is persistent and so can be recovered even after a browser restart.
-     */
-    saveHtmlCache() {
-        // Save the updated entire HTML in localStorage
-        this.setStore('htmlCache', document.documentElement.innerHTML)
-    }
-
     /** Use the Mutation Observer browser API to watch for and save changes to the HTML
      * Once the observer is created, it will be reused.
      * Sending true or undefined will turn on the observer, false turns it off.
@@ -1486,6 +1851,38 @@ export const Uib = class Uib {
             log('trace', 'uibuilder.module.js:watchDom', 'Stopped Watching and saving DOM changes')()
         }
     } // ---- End of watchDom ---- //
+
+    //#endregion -------- -------- -------- //
+
+    //#region ------- HTML cache --------- //
+
+    /** Clear the saved DOM from localStorage */
+    clearHtmlCache() {
+        this.removeStore('htmlCache')
+        log('trace', 'uibuilder.module.js:clearHtmlCache', 'HTML cache cleared')()
+    }
+
+    /** Restore the complete DOM (the whole web page) from browser localStorage if available */
+    restoreHtmlFromCache() {
+        // Is the html cached? If so, restore it
+        const htmlCache = this.getStore('htmlCache')
+        if (htmlCache) {
+            const targetNode = document.getElementsByTagName('html')[0]
+            // Restore the entire HTML
+            targetNode.innerHTML = htmlCache
+            log('trace', 'uibuilder.module.js:restoreHtmlFromCache', 'Restored HTML from cache')()
+        } else {
+            log('trace', 'uibuilder.module.js:restoreHtmlFromCache', 'No cache to restore')()
+        }
+    }
+
+    /** Save the current DOM state to browser localStorage.
+     * localStorage is persistent and so can be recovered even after a browser restart.
+     */
+    saveHtmlCache() {
+        // Save the updated entire HTML in localStorage
+        this.setStore('htmlCache', document.documentElement.innerHTML)
+    }
 
     //#endregion -------- -------- -------- //
 
@@ -1524,8 +1921,8 @@ export const Uib = class Uib {
 
             /** We are connected to the server - 1st msg from server */
             case 'client connect': {
-                log('trace', `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server')()
-                log('info', `Uib:ioSetup:${this._ioChannels.control}`, `✅ Server connected. Version: ${receivedCtrlMsg.version}\nServer time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours`)()
+                log('trace', `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server', receivedCtrlMsg)()
+                log('info', `Uib:ioSetup:${this._ioChannels.control}`, `✅ Server connected. Version: ${receivedCtrlMsg.version}\nServer time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours. Max msg size: ${receivedCtrlMsg.maxHttpBufferSize}`)()
 
                 if ( !Uib._meta.version.startsWith(receivedCtrlMsg.version.split('-')[0]) ) {
                     log('warn', `Uib:ioSetup:${this._ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${Uib._meta.version})`)()
@@ -1541,11 +1938,20 @@ export const Uib = class Uib {
                     // }, this._ioChannels.control)
                 }
 
+                // Save the current server max msg size - defaults to 1mb, change in settings.js
+                this.maxHttpBufferSize = receivedCtrlMsg.maxHttpBufferSize
+
+                break
+            }
+
+            // We requested this page's metadata from the server using getPageMeta() - this handles the response
+            case 'get page meta': {
+                this.set('pageMeta', receivedCtrlMsg.payload)
                 break
             }
 
             default: {
-                log('trace', `uibuilderfe:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`)
+                log('trace', `uibuilder:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`)
                 // Anything else to do for other control msgs?
             }
         } // ---- End of process control msg types ---- //
@@ -1587,6 +1993,10 @@ export const Uib = class Uib {
         // Topic
         if ( msg.topic ) this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg)
 
+        // Check whether the msg has already been processed - if so, we don't need to process again
+        if (msg._uib_processed_by) return
+        else msg._uib_processed_by = '_msgRcvdEvents'
+
         // Handle msg._uib special requests
         if (msg._uib) {
             // Don't process if the inbound msg is not for us
@@ -1596,21 +2006,25 @@ export const Uib = class Uib {
              * Note that msg._ui.reload is also actioned via the _ui processing below */
             if (msg._uib.reload === true) {
                 log('trace', 'Uib:_msgRcvdEvents:_uib:reload', 'reloading')()
+                msg._uib_processed_by = '_msgRcvdEvents - reload'
                 location.reload()
                 return
             }
 
             // Process msg._uib.command messages - allows Node-RED to run uibuilder FE functions
             if (msg._uib.command) {
+                msg._uib_processed_by = '_msgRcvdEvents - remote command'
                 this._uibCommand(msg)
                 return
             }
 
             // Better to request via msg._ui - these are for backwards compatibility
             if ( msg._uib.componentRef === 'globalNotification' ) {
+                msg._uib_processed_by = '_msgRcvdEvents - globalNotification'
                 _ui.showDialog('notify', msg._uib.options, msg)
             }
             if ( msg._uib.componentRef === 'globalAlert' ) {
+                msg._uib_processed_by = '_msgRcvdEvents - globalAlert'
                 _ui.showDialog('alert', msg._uib.options, msg)
             }
         }
@@ -1621,6 +2035,7 @@ export const Uib = class Uib {
             if (!this._forThis(msg._ui)) return
 
             log('trace', 'Uib:_msgRcvdEvents:_ui', 'Calling _uiManager')()
+            msg._uib_processed_by = '_msgRcvdEvents - _ui'
             this._dispatchCustomEvent('uibuilder:msg:_ui', msg)
             _ui._uiManager(msg)
         }
@@ -1635,16 +2050,22 @@ export const Uib = class Uib {
     _send(msgToSend, channel, originator = '') {
         if (channel === null || channel === undefined) channel = this._ioChannels.client
 
-        // Make sure msgToSend is an object
+        // Make sure msgToSend is an object & add props to control msgs
         if (channel === this._ioChannels.client) {
-            msgToSend = makeMeAnObject(msgToSend, 'payload')
+            msgToSend = this.makeMeAnObject(msgToSend, 'payload')
+            if (this.hasUibRouter()) {
+                if (!msgToSend._uib) msgToSend._uib = {}
+                msgToSend._uib.routeId = this.uibrouter_CurrentRoute
+            }
         } else if (channel === this._ioChannels.control) {
-            msgToSend = makeMeAnObject(msgToSend, 'uibuilderCtrl')
+            msgToSend = this.makeMeAnObject(msgToSend, 'uibuilderCtrl')
             if (!Object.prototype.hasOwnProperty.call(msgToSend, 'uibuilderCtrl')) {
                 msgToSend.uibuilderCtrl = 'manual send'
             }
             // help remember where this came from as ctrl msgs can come from server or client
             msgToSend.from = 'client'
+            // Add current route id if needed
+            if (this.hasUibRouter()) msgToSend.routeId = this.uibrouter_CurrentRoute
         }
 
         /** since 2020-01-02 Added _socketId which should be the same as the _socketId on the server */
@@ -1668,8 +2089,18 @@ export const Uib = class Uib {
             }
         }
 
-        // If a standard send & _ui property exists, make sure to add _ui.from = 'client'
-        if (msgToSend._ui) msgToSend._ui.from = 'client'
+        // If a standard send & _ui property exists, make sure to add _ui.from = 'client' & routerId if needed
+        if (msgToSend._ui) {
+            msgToSend._ui.from = 'client'
+            if (this.hasUibRouter()) msgToSend._ui.routeId = this.uibrouter_CurrentRoute
+        }
+
+        // Check size and warn if may be too large - doesn't work if obj contains a buffer
+        // const approxMsgSize = this.getObjectSize(msgToSend)
+        // console.log(approxMsgSize, this.maxHttpBufferSize, approxMsgSize >= this.maxHttpBufferSize, msgToSend, this.getObjectSize(msgToSend))
+        // if (approxMsgSize >= this.maxHttpBufferSize) {
+        //     log('error', 'Uib:_send', `Message may be too large to send. Approx msg size: ${approxMsgSize}. Max msg size: ${this.maxHttpBufferSize}`)()
+        // }
 
         // Track how many messages have been sent & last msg sent
         let numMsgs
@@ -1695,7 +2126,7 @@ export const Uib = class Uib {
     _stdMsgFromServer(receivedMsg) {
 
         // Make sure that msg is an object & not null
-        receivedMsg = makeMeAnObject(receivedMsg, 'payload')
+        receivedMsg = this.makeMeAnObject(receivedMsg, 'payload')
 
         // Don't process if the inbound msg is not for us
         if (receivedMsg._uib && !this._forThis(receivedMsg._uib)) return
@@ -1873,6 +2304,13 @@ export const Uib = class Uib {
         navigator.sendBeacon('./_clientLog', `${logLevel}::${txtToSend}`)
     }
 
+    /** Request the current page's metadata from the server - response is handled automatically in _ctrlMsgFromServer */
+    getPageMeta() {
+        this.sendCtrl({
+            uibuilderCtrl: 'get page meta'
+        })
+    }
+
     /** Easily send the entire DOM/HTML msg back to Node-RED
      * @param {string} [originator] A Node-RED node ID to return the message to
      * @param {boolean} [send] If true (default) directly send response to Node-RED. Is false when calling from Node-RED as a command.
@@ -1955,83 +2393,52 @@ export const Uib = class Uib {
         // The target element
         const target = domevent.currentTarget
 
-        // Get target properties - only shows custom props not element default ones
-        const props = {}
-        Object.keys(target).forEach( key => {
-            if (key.startsWith('_')) return // Exclude private
-            props[key] = target[key]
-        })
+        // Get target custom properties - only shows custom props not element default ones
+        const props = this.getElementCustomProps(target)
 
         // Attempt to get target attributs - can fail for certain target types
-        const ignoreAttribs = ['class', 'id', 'name']
-        let attribs
-        try {
-            attribs = Object.assign({},
-                ...Array.from(target.attributes,
-                    ( { name, value } ) => {
-                        if ( !ignoreAttribs.includes(name) ) {
-                            return ({ [name]: value })
-                        }
-                        return undefined
-                    }
-                )
-            )
-        } catch (e) {}
+        const attribs = this.getElementAttributes(target)
 
-        // If target embedded in a form, include the form data
-        let form
-        const frmVals = []
+        // Msg.payload
+        let payload = {}
+
+        // If target is embedded in a form, include ALL the form data in the output
+        let formDetails
         if ( target.form ) {
-            form = {}
-            form.valid = target.form.checkValidity()
+            formDetails = {
+                id: this.returnElementId(target.form),
+                valid: target.form.checkValidity(),
+            }
+
             Object.values(target.form).forEach( (frmEl, i) => {
-                const id = frmEl.id !== '' ? frmEl.id : (frmEl.name !== '' ? frmEl.name : `${i}-${frmEl.type}`)
+                // Ignore <fieldset>, <object> - they don't have values
+                if (['fieldset', 'object'].includes(frmEl.type)) return
 
-                // We must have both an element id (we may have forced one above) AND
-                // the element type MUST be not undefined - to allow for the extra properties added by frameworks such as Svelte
-                if (id !== '' && frmEl.type) {
-                    // Stupid HTML doesn't use value attrib for checkboxes. So override if value is set to default
-                    if ('checked' in frmEl && frmEl.value === 'on') frmEl.value = frmEl.checked.toString()
-
-                    frmVals.push( { key: id, val: frmEl.value } ) // simplified for addition to msg.payload
-
-                    form[id] = {
-                        'id': frmEl.id,
-                        'name': frmEl.name,
-                        'value': frmEl.value,
-                        'valid': frmEl.checkValidity(),
-                        'type': frmEl.type,
-                    }
-
-                    if (form[id].valid === false) {
-                        const v = frmEl.validity
-                        form[id].validity = {
-                            badInput: v.badInput === true ? v.badInput : undefined,
-                            customError: v.customError === true ? v.customError : undefined,
-                            patternMismatch: v.patternMismatch === true ? v.patternMismatch : undefined,
-                            rangeOverflow: v.rangeOverflow === true ? v.rangeOverflow : undefined,
-                            rangeUnderflow: v.rangeUnderflow === true ? v.rangeUnderflow : undefined,
-                            stepMismatch: v.stepMismatch === true ? v.stepMismatch : undefined,
-                            tooLong: v.tooLong === true ? v.tooLong : undefined,
-                            tooShort: v.tooShort === true ? v.tooShort : undefined,
-                            typeMismatch: v.typeMismatch === true ? v.typeMismatch : undefined,
-                            valueMissing: v.valueMissing === true ? v.valueMissing : undefined,
-                        }
-                    }
-
-                    if (frmEl.dataset) form[id].data = frmEl.dataset
+                // NB: If type=files, this also sends the file to Node-RED
+                const details = this.getFormElementDetails(frmEl)
+                if (details) {
+                    formDetails[details.id] = details
+                    // simplified for addition to msg.payload
+                    payload[details.id] = details.value
                 }
             })
+        } else {
+            if (target.type === 'file') {
+                // Walk through each file in the FileList, get the details and send the file to Node-RED
+                payload = this._processFilesInput(target.files)
+            }
         }
 
         // Check for CSS Classes
-        let classes
-        try {
-            classes = Array.from(target.classList)
-        } catch (e) {}
+        const classes = this.getElementClasses(target)
 
         // Each `data-xxxx` attribute is added as a property
-        let payload = { ...target.dataset }
+        if (Object.keys(target.dataset).length > 0) payload = { ...payload, ...target.dataset }
+
+        // Check for element value/check props
+        const { value, checked } = this.getFormElementValue(target)
+        if (value !== null) payload.value = value
+        if (checked !== null) payload.checked = checked
 
         // Handle Notification events
         let nprops
@@ -2058,7 +2465,6 @@ export const Uib = class Uib {
                 vibrate: target.vibrate,
             }
         }
-        // console.log(Object.prototype.toString.call(target))
 
         // Set up the msg to send - NB: Topic may be added by this._send
         const msg = {
@@ -2071,7 +2477,7 @@ export const Uib = class Uib {
                 name: target.name !== '' ? target.name : undefined,
                 slotText: target.textContent ? target.textContent.substring(0, 255) : undefined,
 
-                form: form,
+                form: formDetails,
                 props: props,
                 attribs: attribs,
                 classes: classes,
@@ -2093,19 +2499,7 @@ export const Uib = class Uib {
             }
         }
 
-        if (frmVals.length > 0) {
-            frmVals.forEach( entry => {
-                msg.payload[entry.key] = entry.val
-            })
-        }
-
-        if (domevent.type === 'change') {
-            // Checkboxes don't have a value!!
-            msg._ui.newValue = msg.payload.value = 'checked' in target ? target.checked : domevent.target.value
-        }
-
         log('trace', 'Uib:eventSend', 'Sending msg to Node-RED', msg)()
-        if (target.dataset && target.dataset.length === 0) log('warn', 'Uib:eventSend', 'No payload in msg. data-* attributes should be used.')()
 
         this._send(msg, this._ioChannels.client, originator)
     }
@@ -2149,6 +2543,53 @@ export const Uib = class Uib {
         this._send(msg, this._ioChannels.control)
     }
 
+    /**
+     * Send a message to Node-RED on a custom channel - use for UIBUILDER 3rd-party custom nodes
+     * @param {string} channel The custom channel name to use
+     * @param {object} msg The message to send
+     */
+    sendCustom(channel, msg) {
+        this._socket.emit(channel, msg)
+    }
+
+    /** Upload a file to Node-RED over Socket.IO
+     * https://developer.mozilla.org/en-US/docs/Web/API/FileReader
+     * @param {File} file Reference to File API object to upload
+     */
+    uploadFile(file) {
+        // Create a new FileReader instance
+        const reader = new FileReader()
+
+        // Define the onload event for the FileReader
+        reader.onload = (e) => {
+            // Get the binary content of the file
+            const arrayBuffer = e.target.result
+
+            // Send the binary content to the server
+            const msg = {
+                topic: this.topic || 'file-upload',
+                payload: arrayBuffer,
+                fileName: file.name,
+                type: file.type,
+                lastModified: file.lastModifiedDate,
+                size: file.size,
+            }
+
+            // Only send if content not too large
+            const maxSize = this.maxHttpBufferSize - 500
+            if (arrayBuffer.byteLength >= maxSize) {
+                msg.payload = undefined
+                msg.error = `File is too large to send. File size: ${arrayBuffer.byteLength}. Max msg size: ${maxSize}`
+                log('error', 'Uib:uploadFile', msg.error)()
+
+            }
+
+            this.send(msg)
+        }
+
+        // Read the file as an ArrayBuffer
+        reader.readAsArrayBuffer(file)
+    }
     //#endregion -------- ------------ -------- //
 
     //#region ------- Socket.IO -------- //
@@ -2300,8 +2741,6 @@ export const Uib = class Uib {
         // Update the URL path to make sure we have the right one
         this.socketOptions.path = this.ioPath
 
-        // NOTE: this._socket.auth is now set by callback and so automatically updated for each client (re)connection. No need to set here
-
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
         log('trace', 'Uib:ioSetup', `About to create IO object. Transports: [${this.socketOptions.transports.join(', ')}]`)()
         this._socket = io(this.ioNamespace, this.socketOptions)
@@ -2406,6 +2845,74 @@ export const Uib = class Uib {
 
     //#endregion -------- ------------ -------- //
 
+    //#region ! EXPERIMENTAL: Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
+
+    /** Attempt to load a service worker
+     * https://yonatankra.com/how-service-workers-sped-up-our-website-by-97-5/
+     * @param {string} fileName Name of service worker js file (without .js extension)
+     */
+    // async registerServiceWorker(fileName) {
+    //     if (!navigator.serviceWorker) return
+
+    //     await navigator.serviceWorker.register(
+    //         `./${fileName}.js`,
+    //         {
+    //             scope: './',
+    //         }
+    //     )
+    // }
+
+    /** Wrap an object in a JS proxy
+     * WARNING: Sadly, `let x = uib.createProxy( [1,2] ); x.push(3);` Does not trigger a send because that is classed as a
+     * GET, not a SET.
+     * param {*} target The target object to proxy
+     * returns {Proxy} A proxied version of the target object
+     */
+    // createProxy(target) {
+    //     return new Proxy(target, {
+    //         _doSend(prop, val, oldVal) {
+    //             uibuilder.send({
+    //                 topic: 'uibuilder/proxy/change',
+    //                 _uib: {
+    //                     varChange: {
+    //                         name: self.$name,
+    //                         property: prop,
+    //                         oldValue: oldVal,
+    //                         newValue: val,
+    //                     }
+    //                 },
+    //                 payload: target,
+    //             })
+    //         },
+    //         get(target, prop, receiver) {
+    //             console.log('uib proxy - GET: ', prop, target)
+    //             let val = Reflect.get(...arguments)
+    //             if (typeof val === 'function') val = val.bind(target)
+    //             if (self.$sendChanges) this._doSend(prop, Reflect.get(target))
+    //             return val
+    //         },
+    //         set(target, prop, val, receiver) {
+    //             if (prop === '$sendChanges') {
+    //                 self.$sendChanges = typeof val === 'boolean' ? val : false
+    //                 return true
+    //             }
+    //             if (prop === '$name') {
+    //                 self.$name = typeof val === 'string' ? val : undefined
+    //                 return true
+    //             }
+    //             console.log('uib proxy - SET: ', val, prop, target)
+    //             const oldVal = Reflect.get(...arguments)
+    //             const worked = Reflect.set(target, prop, val, receiver)
+    //             if (self.$sendChanges && worked) {
+    //                 self._doSend(prop, val, oldVal)
+    //             }
+    //             return worked
+    //         },
+    //     })
+    // }
+
+    //#endregion ! EXPERIMENTAL
+
     //#region ------- Class construction & startup method -------- //
 
     constructor() {
@@ -2489,7 +2996,7 @@ export const Uib = class Uib {
             this.set('httpNodeRoot', `/${fullPath.join('/')}`)
             log('trace', '[Uib:constructor]', `httpNodeRoot set by URL parsing to "${this.httpNodeRoot}". NOTE: This may fail for pages in sub-folders.`)()
         }
-        this.set('ioPath', urlJoin(this.httpNodeRoot, Uib._meta.displayName, 'vendor', 'socket.io'))
+        this.set('ioPath', this.urlJoin(this.httpNodeRoot, Uib._meta.displayName, 'vendor', 'socket.io'))
         log('trace', 'Uib:constructor', `ioPath: "${this.ioPath}"`)()
 
         //#endregion
@@ -2508,6 +3015,9 @@ export const Uib = class Uib {
                 })
             }
         } catch (e) {}
+
+        // ! Experimental service worker
+        // this.registerServiceWorker('sw')
 
         this._dispatchCustomEvent('uibuilder:constructorComplete')
 
@@ -2539,18 +3049,6 @@ export const Uib = class Uib {
             if (options.ioNamespace) this.set('ioNamespace', options.ioNamespace)
             if (options.ioPath) this.set('ioPath', options.ioPath)
             if (options.nopolling && this.socketOptions.transports[0] === 'polling') this.socketOptions.transports.shift()
-            // See below for handling of options.loadStylesheet
-        }
-
-        // Do we need to load styles?
-        if ( document.styleSheets.length >= 1 || (document.styleSheets.length === 1 && document.styleSheets[0].cssRules.length === 0) ) {
-            log('info', 'Uib:start', 'Styles already loaded so not loading uibuilder default styles.')()
-        } else {
-            if (options && options.loadStylesheet === false) log('info', 'Uib:start', 'No styles loaded & options.loadStylesheet === false.')()
-            else {
-                log('info', 'Uib:start', 'No styles loaded, loading uibuilder default styles.')()
-                this.loadStyleSrc(`${this.httpNodeRoot}/uibuilder/uib-brand.min.css`)
-            }
         }
 
         /** Handle specialist messages like reload and _ui -> Moved to _msgRcvdEvents */
@@ -2599,13 +3097,6 @@ export const Uib = class Uib {
             log('trace', 'Uib:start', 'Markdown-IT is not loaded.')()
         }
 
-        // if (window['DOMPurify']) {
-        //     this.set('purify', true)
-        //     log('trace', 'Uib:start', 'DOMPurify is loaded.')
-        // } else {
-        //     log('trace', 'Uib:start', 'DOMPurify is not loaded.')
-        // }
-
         // Set up msg listener for the optional showMsg
         this.onChange('msg', (msg) => {
             if (this.#isShowMsg === true) {
@@ -2614,13 +3105,25 @@ export const Uib = class Uib {
             }
         })
 
+        // Initial scan for uib-* attributes & add suitable change processors
+        this._uibAttrScanAll(document)
+        // Observer to watch for new/changed elements & add suitable change processors
+        const observer = new MutationObserver(this._uibAttribObserver.bind(this))
+        observer.observe(document, {
+            subtree: true,
+            attributes: true,
+            attributeOldValue: true,
+            attributeFilter: this.uibAttribs,
+            childList: true
+        })
+
         this._dispatchCustomEvent('uibuilder:startComplete')
     }
 
     //#endregion -------- ------------ -------- //
 } // ==== End of Class Uib ====
 
-//#region --- Wrap up - get things started ---
+//#region --- Wrap up - get things started, define globals & web components ---
 
 // Create an instance (we will only ever want one)
 const uibuilder = new Uib()
@@ -2656,13 +3159,41 @@ if (!window['$$']) {
 }
 
 // Assign `$ui` to global window object unless it is already in use.
-// Note that this is also available as `uibuilder.$$`.
 if (!window['$ui']) {
     /** @type {HTMLElement} */
-    window['$ui'] = window['uibuilder'].$ui // document.querySelectorAll.bind(document)
+    window['$ui'] = window['uibuilder'].$ui
 } else {
     log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$ui`, it is already in use. Use `uibuilder.$ui` or `uib.$ui` instead.')
 }
+
+if (!('on' in document)) {
+    document.on = function (event, callback) {
+        this.addEventListener(event, callback)
+    }
+}
+if (!('on' in window)) {
+    window.on = function (event, callback) {
+        this.addEventListener(event, callback)
+    }
+}
+
+try {
+    if (!('query' in Element)) {
+        Element.prototype.query = function(selector) {
+            return this.querySelector(selector)
+        }
+    }
+    if (!('queryAll' in Element)) {
+        Element.prototype.queryAll = function(selector) {
+            return this.querySelectorAll(selector)
+        }
+    }
+    if (!('on' in Element)) {
+        Element.prototype.on = function (event, callback) {
+            this.addEventListener(event, callback)
+        }
+    }
+} finally { } // eslint-disable-line no-empty
 
 // Can import as `import uibuilder from ...` OR `import {uibuilder} from ...`
 export { uibuilder }
@@ -2671,8 +3202,10 @@ export default uibuilder
 // Attempt to run start fn
 uibuilder.start()
 
-// Add the class as a new Custom Element to the window object
+// Add built-in web component classes as a new Custom Element to the window object
 customElements.define('uib-var', UibVar)
+customElements.define('uib-meta', UibMeta)
+customElements.define('apply-template', ApplyTemplate)
 
 //#endregion --- Wrap up ---
 

@@ -38,7 +38,7 @@ export default class UibVar extends HTMLElement {
     /** What is the value type */
     type = 'plain'
     /** what are the available types? */
-    types = ['plain', 'html', 'markdown', 'object']
+    types = ['plain', 'html', 'markdown', 'object', 'json', 'table', 'list', 'array']
     /** Holds uibuilder.onTopic listeners */
     topicMonitors = {}
     /** Is UIBUILDER loaded? */
@@ -125,7 +125,7 @@ export default class UibVar extends HTMLElement {
                 if (this.topicMonitors[newVal]) uibuilder.cancelTopic(newVal, this.topicMonitors[newVal])
                 // Set up a uibuilder listener for this topic - ASSUMES msg.payload contains the VALUE to show
                 this.topicMonitors[newVal] = uibuilder.onTopic(newVal, (msg) => {
-                    // console.log('topicMonitor ', newVal, msg)
+                    // console.log('🔦 topicMonitor ⟫', newVal, msg)
                     this.value = msg.payload
                     this.varDom()
                     if (this.report === true) window['uibuilder'].send({ topic: this.variable, payload: this.value || undefined })
@@ -236,9 +236,9 @@ export default class UibVar extends HTMLElement {
         }
 
         // Apply the filter to the value before display
-        const val = chkVal ? this.doFilter(this.value) : this.doFilter()
+        let val = chkVal ? this.doFilter(this.value) : this.doFilter()
 
-        // console.log('🧪 varDOM: ', val, typeof val, this.type)
+        // console.log('🔦 varDOM ⟫ ', val, typeof val, this.type)
 
         let out = val
 
@@ -248,9 +248,32 @@ export default class UibVar extends HTMLElement {
                 break
             }
 
+            case 'json':
             case 'object': {
                 // console.log(window['uibuilder'].syntaxHighlight(val))
                 out = `<pre class="syntax-highlight">${this.uib ? window['uibuilder'].syntaxHighlight(val) : val}</pre>`
+                break
+            }
+
+            case 'table': {
+                // console.log('🔦 val ⟫', val)
+                // if (!Array.isArray(val)) {
+                //     out = '<code>Contents of msg.payload is not an array which is required for table output.</code>'
+                //     break
+                // }
+                out = window['uibuilder'].sanitiseHTML(window['uibuilder'].buildHtmlTable(val).outerHTML)
+                break
+            }
+
+            case 'array':
+            case 'list': {
+                if (!Array.isArray(val)) val = [val]
+                // console.log('🔦 val ⟫', val)
+                out = '<ul>'
+                val.forEach( li => {
+                    out += `<li>${window['uibuilder'].sanitiseHTML(li)}</li>`
+                })
+                out += '</ul>'
                 break
             }
 

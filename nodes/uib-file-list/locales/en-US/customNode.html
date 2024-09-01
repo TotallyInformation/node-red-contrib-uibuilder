@@ -1,0 +1,93 @@
+
+<script type="text/html" data-help-name="uib-file-list">    
+
+    <p>
+        Return a list of files from a uibuilder instance folder. Either as folder/file or URL strings.
+    </p>
+    <p>
+        <a href="./uibuilder/docs/#/nodes/uib-file-list" target="_blank">Documentation</a>.
+    </p>
+
+    <h3>Inputs</h3>
+    <p>Currently none. The incoming msg is only used as a trigger. This will change in future releases.</p>
+
+    <h3>Node Settings</h3>
+    <dl class="message-properties">
+        <dt>URL <span class="property-type">selection</span></dt>
+        <dd>
+            Select the existing uibuilder Node instance via its URL setting.
+            This cannot be overridden by a msg property at this time.
+        </dd>
+        <dd>
+            Sets the top-most (root) folder that can be written to.
+        </dd>
+
+        <dt>Filter <span class="property-type">string</span></dt>
+        <dd>
+            A <a href="https://www.npmjs.com/package/fast-glob" target="_blank" style="font-weight: bold; font-style: italic;">fast-glob</a> style glob filter specification.
+        </dd>
+        <dd>
+            The default <code>**/*.html</code> specification will select all HTML files from the root folder and all sub-folders.
+        </dd>
+        <dd>
+            Hover over the field to see a drop-down that contains some common filters.
+        </dd>
+        <dt>Exclude <span class="property-type">string</span></dt>
+        <dd>
+            An exclusion glob filter specification.
+        </dd>
+
+        <dt>URL Output? <span class="property-type">boolean</span></dt>
+        <dd>
+            If set (default), the returned payload array will be in the form of relative URL paths.
+        </dd>
+        <dd>
+            These paths are relative to either the uibuilder root URL (if <i>Use full prefix?</i> is set) or the uibuilder instance root path so they can be used directly in front-end links.
+        </dd>
+        <dd>
+            In this mode, any outputs that end with <code>index.html</code> will have that text removed since that is the default for a specific URL path.
+        </dd>
+
+        <dt>Use live served folder? <span class="property-type">boolean</span></dt>
+        <dd>
+            If set (default), the uibuilder node's "Serve" folder will be the search root.
+        </dd>
+        <dd>
+            If not set, the uibuilder node's instance root folder will be the search root. Allowing access to all folders and files.
+        </dd>
+
+        <dt>Use full prefix? <span class="property-type">boolean</span></dt>
+        <dd>
+            If set (default), the output will be a full path.
+        </dd>
+        <dd>
+            Otherwise, the output will be a path relative to the uibuilder instance.
+        </dd>
+        
+
+        
+        <dt>Topic <span class="property-type">string</span></dt>
+        <dd>
+            Standard optional topic name.
+        </dd>
+
+        <dt>Name <span class="property-type">string</span></dt>
+        <dd>
+            Standard optional name. Has no impact other than on the Editor display.
+        </dd>
+    </dl>
+
+    <h3>Message Outputs</h3>
+    <dl class="message-outputs">
+        <dt><code>msg.results</code> <span class="property-type">string array</span></dt>
+        <dd>
+            An array of found files expressed as filing system or url paths according to the settings.
+        </dd>
+
+        <dt><code>msg.config</code> <span class="property-type">object</span></dt>
+        <dd>
+            An object showing all of the relavent settings for both this node and the parent uibuilder instance.
+        </dd>
+    </dl>
+
+</script>

@@ -3,8 +3,7 @@ title: Front-End Build Steps and Tools
 description: |
   Describes how to use a build step to transpile and optimise your front-end code.
 created: 2021-04-22 09:53:00
-lastUpdated: 2023-09-30 13:05:07
-updated: 2023-12-30 17:01:41
+updated: 2024-06-14 20:18:33
 ---
 
 A build step is simply a way to take things that your browser wont understand directly (like .vue, .jsx files)
@@ -58,7 +57,9 @@ It is also possible that you could automate these changes using the build tool. 
 There are many options when it comes to tooling for your build step, here are some of the main ones and some of the latest
 tools that are a LOT simpler than the earlier ones
 
-### [Snowpack](https://www.snowpack.dev/)
+### Snowpack
+
+[Snowpack](https://www.snowpack.dev/) is:
 
 > "a lightning-fast frontend build tool, designed for the modern web"
 
@@ -66,7 +67,9 @@ See the [How-to configure and use a front-end build step using Snowpack](front-e
 
 Snowpack works well with UIBUILDER.
 
-### [ESbuild](https://esbuild.github.io/)
+### ESbuild
+
+[ESbuild](https://esbuild.github.io/)
 
 Unlike the other tools listed here, esbuild _only_ does a build. It does not attempt to provide a development server or do clever transpilation (converting from a newer version of JavaScript to an older one).
 
@@ -74,20 +77,30 @@ And that may well be all that you need since Node-RED is providing a web server 
 
 Julia Evans is a well-known blogger and has written a [simple guide to using esbuild with VueJS](https://jvns.ca/blog/2021/11/15/esbuild-vue/).
 
+ESbuild is used to produce the IIFE and ESM builds of the uibuilder client library and other front-end libraries because it is able to output different versions constrained to specific JavaScript versions and module types. It can also compress JavaScript source and create map files for ease of debugging.
 
-### [Webpack](https://webpack.js.org/)
 
-TBC
+### Webpack
 
-### [Parcel](https://parceljs.org/)
-
-TBC
-
-### [Rollup](https://rollupjs.org/)
+[Webpack](https://webpack.js.org/)
 
 TBC
 
-### [Vite](https://vitejs.dev/) (by VueJS author Evan You)
+### Parcel
+
+[Parcel](https://parceljs.org/)
+
+TBC
+
+### Rollup
+
+[Rollup](https://rollupjs.org/)
+
+TBC
+
+### Vite
+
+[Vite](https://vitejs.dev/) (by VueJS author Evan You):
 
 > "an opinionated web dev build tool that serves your code via native ES Module imports during development and bundles it with Rollup for production."
   

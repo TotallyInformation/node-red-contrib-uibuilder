@@ -1,0 +1,316 @@
+[
+    {
+        "id": "51317a1ca60f92ef",
+        "type": "group",
+        "z": "ff9704678e3a4b61",
+        "name": "UIBUILDER super-simple jQuery example (Updated: 2024-07-01) \\n ",
+        "style": {
+            "fill": "#e3f3d3",
+            "fill-opacity": "0.2",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "ef2c6bdb83f45e40",
+            "f8176cc4d8409322",
+            "174c8a1a9edc3178",
+            "0e38f1543880aa12",
+            "1d65510c9840813a",
+            "60481ea45d3c3ccc"
+        ],
+        "x": 138,
+        "y": 843,
+        "w": 734,
+        "h": 304
+    },
+    {
+        "id": "ef2c6bdb83f45e40",
+        "type": "inject",
+        "z": "ff9704678e3a4b61",
+        "g": "51317a1ca60f92ef",
+        "name": "Msg",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "msg-from-nr",
+        "payload": "A message from Node-RED",
+        "payloadType": "str",
+        "x": 250,
+        "y": 920,
+        "wires": [
+            [
+                "0e38f1543880aa12"
+            ]
+        ]
+    },
+    {
+        "id": "f8176cc4d8409322",
+        "type": "debug",
+        "z": "ff9704678e3a4b61",
+        "g": "51317a1ca60f92ef",
+        "name": "std msg output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 755,
+        "y": 900,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "174c8a1a9edc3178",
+        "type": "debug",
+        "z": "ff9704678e3a4b61",
+        "d": true,
+        "g": "51317a1ca60f92ef",
+        "name": "ctrl msg output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 755,
+        "y": 960,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "0e38f1543880aa12",
+        "type": "uibuilder",
+        "z": "ff9704678e3a4b61",
+        "g": "51317a1ca60f92ef",
+        "name": "",
+        "topic": "",
+        "url": "uib-jquery-example",
+        "okToGo": true,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.2.0-dev",
+        "showMsgUib": true,
+        "editurl": "vscode://file/src/uibRoot/uib-jquery-example/?windowId=_blank",
+        "x": 600,
+        "y": 920,
+        "wires": [
+            [
+                "f8176cc4d8409322"
+            ],
+            [
+                "174c8a1a9edc3178"
+            ]
+        ]
+    },
+    {
+        "id": "1d65510c9840813a",
+        "type": "inject",
+        "z": "ff9704678e3a4b61",
+        "g": "51317a1ca60f92ef",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 290,
+        "y": 960,
+        "wires": [
+            [
+                "0e38f1543880aa12"
+            ]
+        ]
+    },
+    {
+        "id": "60481ea45d3c3ccc",
+        "type": "group",
+        "z": "ff9704678e3a4b61",
+        "g": "51317a1ca60f92ef",
+        "name": "Run this to update the front-end code files (after setting the uibuilder url name)",
+        "style": {
+            "fill": "#ffffff",
+            "fill-opacity": "0.31",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "4a251bd2ace9ddd0",
+            "c35dbab075b18367",
+            "d6f22ca9617c2dcf",
+            "806312030f917d49",
+            "a79d8f961c84980b",
+            "9cc007b379853232"
+        ],
+        "x": 164,
+        "y": 999,
+        "w": 682,
+        "h": 122
+    },
+    {
+        "id": "4a251bd2ace9ddd0",
+        "type": "inject",
+        "z": "ff9704678e3a4b61",
+        "g": "60481ea45d3c3ccc",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 225,
+        "y": 1080,
+        "wires": [
+            [
+                "806312030f917d49",
+                "a79d8f961c84980b"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "c35dbab075b18367",
+        "type": "template",
+        "z": "ff9704678e3a4b61",
+        "g": "60481ea45d3c3ccc",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "mustache",
+        "template": "<!doctype html>\n<html lang=\"en\"><head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <link rel=\"icon\" href=\"../uibuilder/images/node-blue.ico\">\n\n    <title>jQuery Example - Node-RED UIBUILDER</title>\n    <meta name=\"description\" content=\"Node-RED UIBUILDER - jQuery Example\">\n\n    <!-- Your own CSS (defaults to loading uibuilders css)-->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->\n    <!-- Use either the CDN version OR install using uibuilder's library mgr -->\n    <script defer src=\"https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js\"></script>\n    <!-- <script defer src=\"../uibuilder/vendor/jquery/dist/jquery.min.js\"></script> -->\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\"></script>\n    <script defer src=\"./index.js\"></script>\n    <!-- #endregion -->\n</head><body class=\"uib\">\n    <h1 class=\"with-subtitle\">jQuery Example</h1>\n    <div role=\"doc-subtitle\">Using the UIBUILDER IIFE library.</div>\n\n    <div id=\"more\"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>\n</body></html>",
+        "output": "str",
+        "x": 500,
+        "y": 1040,
+        "wires": [
+            [
+                "d6f22ca9617c2dcf"
+            ]
+        ]
+    },
+    {
+        "id": "d6f22ca9617c2dcf",
+        "type": "uib-save",
+        "z": "ff9704678e3a4b61",
+        "g": "60481ea45d3c3ccc",
+        "url": "uib-jquery-example",
+        "uibId": "0e38f1543880aa12",
+        "folder": "src",
+        "fname": "",
+        "createFolder": false,
+        "reload": false,
+        "usePageName": false,
+        "encoding": "utf8",
+        "mode": 438,
+        "name": "",
+        "topic": "",
+        "x": 730,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "806312030f917d49",
+        "type": "change",
+        "z": "ff9704678e3a4b61",
+        "g": "60481ea45d3c3ccc",
+        "name": "index.html",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.html",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 350,
+        "y": 1040,
+        "wires": [
+            [
+                "c35dbab075b18367"
+            ]
+        ]
+    },
+    {
+        "id": "a79d8f961c84980b",
+        "type": "change",
+        "z": "ff9704678e3a4b61",
+        "g": "60481ea45d3c3ccc",
+        "name": "index.js",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.js",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 340,
+        "y": 1080,
+        "wires": [
+            [
+                "9cc007b379853232"
+            ]
+        ]
+    },
+    {
+        "id": "9cc007b379853232",
+        "type": "template",
+        "z": "ff9704678e3a4b61",
+        "g": "60481ea45d3c3ccc",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "javascript",
+        "syntax": "mustache",
+        "template": "/** The simplest use of uibuilder client library\n * See the docs if the client doesn't start on its own.\n */\n\n$(document).ready(function () {\n\n    // Listen for incoming messages from Node-RED and action\n    uibuilder.onChange('msg', (msg) => {\n        console.log('msg received', msg)\n        // do stuff with the incoming msg\n        $('#more').text(msg.payload)\n    })\n\n})\n",
+        "output": "str",
+        "x": 500,
+        "y": 1080,
+        "wires": [
+            [
+                "d6f22ca9617c2dcf"
+            ]
+        ]
+    }
+]
