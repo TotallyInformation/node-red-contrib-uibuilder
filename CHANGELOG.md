@@ -28,9 +28,13 @@ The following are only used for _**developing**_ UIBUILDER:
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.1...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.2...main)
 
 Nothing currently.
+
+## [v7.0.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.2...v7.0.1)
+
+Bug fix only. Minor issue in `nodes/libs/uiblib.js` regarding the new `nanoId` client id creator.
 
 ## [v7.0.1](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.1...v7.0.0)
 
@@ -134,6 +138,8 @@ Most of these changes will *not* impact most people but you should check through
   As well as debugging or msg altering, you can use these to help with message filtering, especially useful as part of authentication and authorisation processes. And somewhat simpler to use than Socket.IO middleware (which is still available).
 
 * Connection headers have been added to the client details that are shown on control messages and on standard messages if the uibuilder "Include msg._uib in standard msg output." advanced flag is turned on. These may be particularly useful if using 3rd-party identity (authentication and authorisation) tooling which may put validated data into custom headings. Note however that these are "connection" headers, ongoing communications between the clients and the server do not update the headers (not possible over websockets) but will be updated if the client reconnects or reloads.
+
+* UIBUILDER now recognises common external user authentications. See [Standardised msg._client properties for authenticated clients](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/security/authenticated-client-properties) in the docs for details. FlowFuse, Cloudflare Access, Keycloak, Authelia and Authentik as well as ones that use standard proxy headers should all be recognised.
 
 * Documentation improvements
   * Access to the documentation inside Node-RED is now available fully offline, no Internet needed.

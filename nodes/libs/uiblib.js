@@ -211,7 +211,7 @@ const UibLib = {
         if ( req.headers.cookie ) {
             const matches = req.headers.cookie.match(regex)
             // if ( !matches || !matches.groups.id ) clientId = nanoid()
-            if ( !matches || !matches.groups.id ) clientId = this.nanoId(uidLen)
+            if ( !matches || !matches.groups.id ) clientId = nanoId(uidLen)
             else clientId = matches.groups.id
         } else {
             // clientId = nanoid()
