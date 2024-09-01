@@ -157,6 +157,8 @@ These are things that ended up as possibilities in the v7.0.0 changelog but have
 * **Collapsible list**: Either built-in class/js or a web component. [Ref](https://chatgpt.com/share/e32ce7f8-7b86-45e7-ae9d-69d167c37a14). NB: Allow for nav menus as well as normal lists. Also consider collapsible para's.
 * **FE: Drag/drop**: draggable class, drag-container class (to constrain drag area). Use `moveElement` fn. On drop, send change notice to Node-RED as control msg.
 
+* CSS: Add a `.shadow` utility class for adding shadows to things.
+
 * Extend SVG example to download and save the svg from the gist
 * [ ] Add instance descriptions to the index pages
 * [ ] Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
