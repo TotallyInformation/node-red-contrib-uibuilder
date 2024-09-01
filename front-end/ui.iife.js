@@ -874,6 +874,24 @@
           });
         }
         // --- end of loadui
+        /** ! NOT COMPLETE Move an element from one position to another
+         * @param {object} opts Options
+         * @param {string} opts.sourceSelector Required, CSS Selector that identifies the element to be moved
+         * @param {string} opts.targetSelector Required, CSS Selector that identifies the element to be moved
+         */
+        moveElement(opts) {
+          const { sourceSelector, targetSelector, moveType, position } = opts;
+          const sourceEl = document.querySelector(sourceSelector);
+          if (!sourceEl) {
+            _a.log(0, "Ui:moveElement", "Source element not found")();
+            return;
+          }
+          const targetEl = document.querySelector(targetSelector);
+          if (!targetEl) {
+            _a.log(0, "Ui:moveElement", "Target element not found")();
+            return;
+          }
+        }
         /** Get standard data from a DOM node.
          * @param {*} node DOM node to examine
          * @param {string} cssSelector Identify the DOM element to get data from
