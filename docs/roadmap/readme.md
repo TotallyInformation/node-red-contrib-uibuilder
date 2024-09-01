@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-08-30 13:48:32
+updated: 2024-09-01 13:48:32
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -14,6 +14,11 @@ For more information about the future of UIBUILDER, please see the [Futures page
 ## In Progress
 
 To see what is currently being developed, please look at the "Unreleased" section of the [Changelog](changelog) for the latest branch. Anything else in this section is work-in-progress.
+
+* [-] FE: `moveElement`
+  * [ ] Finish coding in ui.js
+  * [ ] Add reference to client library
+  * [ ] Document
 
 * [-] Use of `msg._client`
   * [ ] Msgs from FE client
@@ -145,8 +150,14 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 These are things that ended up as possibilities in the v7.0.0 changelog but have been deferred. Will rationalise with the other lists here at some point.
 
+* `uib-element` allow the outer tag to be anything, not just `div` (or maybe just have a simpler list: `div`, `article`, `section`), also allow attributes to be set.
+* FE: Create a **`moveElement`** function that moves an element from 1 place to another. [Ref](https://chatgpt.com/share/872cede6-2fd6-44b2-891b-a152a0798c77).
+* Transfer the formats from the dashboard layout example to uib-brand.css
+* Look at the uib-router menu handling js and copy to FE.
+* **Collapsible list**: Either built-in class/js or a web component. [Ref](https://chatgpt.com/share/e32ce7f8-7b86-45e7-ae9d-69d167c37a14).
+* **FE: Drag/drop**: draggable class, drag-container class (to constrain drag area). Use `moveElement` fn. On drop, send change notice to Node-RED as control msg.
+
 * Extend SVG example to download and save the svg from the gist
-* [ ] NEW NODE: uib-component - like uib-element but auto-installs a web component library.
 * [ ] Add instance descriptions to the index pages
 * [ ] Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
 * [ ] uib-element forms need some serious TLC! checkbox, radio
@@ -190,6 +201,16 @@ These are things that ended up as possibilities in the v7.0.0 changelog but have
 * gauge tiles - web component or new element? [ref](https://discourse.nodered.org/t/dashboard-2-beta-development/83550/133?u=totallyinformation)
 * 
 
+### FE Client library
+
+* `uib-topic` attribute processing
+  * [ ] Need std innerHTML process to account for MD and sanitize. Align with `<uib-var>`
+  * [ ] Allow msg.value - including for checkboxes (to avoid el.checked confusion)
+  * [ ] Add TABLE renderer
+  * [ ] Add LIST renderer
+  * [ ] MAYBE: Allow msg.classes
+  * [ ] MAYBE: Allow msg.styles
+  * [ ] MAYBE: Allow msg._ui
 
 ### `uibrouter` FE library
 
@@ -231,7 +252,7 @@ These are things that ended up as possibilities in the v7.0.0 changelog but have
 
 * [ ] Amend to use same processors as the uib-topic?
 * [ ] Add ability to directly amend the tag's attributes.
-* [x] New Example: Easy Updates
+* [ ] New Example: Easy UI Updates
   * [ ] Add uib-topic attrib examples
 * [ ] Update docs: 
   * [ ] custom-components
@@ -298,6 +319,7 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 * `uib-event` - Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance. May be helpful to some people to simplify flows without using lots of link nodes.
 * `uib-fe-event` - captures actual front-end events (e.g. custom events) and forwards them to Node-RED either as std or ctrl (?) messages.
 * `uib-file-read` - Reads a file for a specific uibuilder instance. Allows, for example, the file to be passed to the FE for editing.
+* `uib-component` - like uib-element but auto-installs a web component library.
 
 #### Maybe
 

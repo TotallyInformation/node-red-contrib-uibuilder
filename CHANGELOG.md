@@ -8,29 +8,9 @@ updated: 2024-08-30 17:39:34
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
-* `uib-element` allow the outer tag to be anything, not just `div`, also allow attributes to be set.
+## To Do
 
-### FE Client library
-
-* `uib-topic` attribute processing
-  * [ ] Need std innerHTML process to account for MD and sanitize. Align with `<uib-var>`
-  * [ ] Allow msg.value - including for checkboxes (to avoid el.checked confusion)
-  * [ ] Add TABLE renderer
-  * [ ] Add LIST renderer
-  * [ ] MAYBE: Allow msg.classes
-  * [ ] MAYBE: Allow msg.styles
-  * [ ] MAYBE: Allow msg._ui
-
-### `<uib-var>` custom HTML component
-
-* [ ] Amend to use same processors as the uib-topic?
-* [ ] Add ability to directly amend the tag's attributes.
-* [ ] New Example: Easy UI Updates
-  * [ ] Add uib-topic attrib examples
-* [ ] Update docs: 
-  * [ ] config-driven-ui
-  * [ ] easy-ui-updates
-
+Please see the roadmap in the docs for the backlog.
 
 
 ## Current Issues
@@ -155,9 +135,9 @@ Most of these changes will *not* impact most people but you should check through
   * Access to the documentation inside Node-RED is now available fully offline, no Internet needed.
   * There are lots of new and update pages to explore.
 
-* New example flows: client-side code/Dynamic SVG - A rework of an example from the flows library showing how to overlay interactive lamp icons on an SVG plan backdrop. Turn on/off lights from the web and from Node-RED.
+* New example flows: (1) client-side code/Dynamic SVG - A rework of an example from the flows library showing how to overlay interactive lamp icons on an SVG plan backdrop. Turn on/off lights from the web and from Node-RED. (2) Blog/content grid layout. (3) Dashboard grid layout.
 
-* Updated example flows: Simple Flow - index.(html|js|css) can now be populated from a flow that uses uib-save. low-code/report-builder - The required Markdown-IT library is now auto-loaded from the Internet.
+* Updated example flows: Various examples have been updated to simplify or improve them, including (1) Simple Flow - index.(html|js|css) can now be populated from a flow that uses uib-save. low-code/report-builder - The required Markdown-IT library is now auto-loaded from the Internet.
 
 * For anyone even vaguely comfortable with HTML or front-end development:
   
@@ -393,7 +373,9 @@ The `old-blank-client` template and all associated documentation has also been r
 
 ### Example Flows
 
-* **NEW** - Content-grid (block-style) layout example.
+* **NEW** - Dynamic SVG - A rework of an example from the flows library showing how to overlay interactive lamp icons on an SVG plan backdrop. Turn on/off lights from the web and from Node-RED.
+* **NEW** - Content-grid (blog-style) layout example.
+* **NEW** - Dashboard-grid layout example.
 * `no-code-examples` - Updated to include dynamic script and css in the HTML passthrough example.
 
 ### `uibuilder` node
