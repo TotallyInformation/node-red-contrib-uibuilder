@@ -1125,6 +1125,8 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
 
 * Extend optional attributes on the uibuilder script tag to override start options. Would reduce the need for custom `uibuilder.start(...)` when serving from odd web servers.
 
+* Consider creating a test install script that allows creation of a clean node-red install using the alt installer, adds uibuilder, asks for a port.
+
 ### Thoughts on JavaScript tabular data manipulation and visualisation
 
 * An editable table widget for the browser where data changes are sent back to Node-RED.
