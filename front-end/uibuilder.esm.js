@@ -58,7 +58,7 @@ var require_ui = __commonJS({
        */
       constructor(win, extLog, jsonHighlight) {
         //#region --- Class variables ---
-        __publicField(this, "version", "7.0.2-src");
+        __publicField(this, "version", "7.0.3-src");
         // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
         __publicField(this, "sanitiseExtraTags", ["uib-var"]);
         __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -5057,7 +5057,7 @@ __publicField(_ApplyTemplate, "props", ["template-id", "once"]);
 var ApplyTemplate = _ApplyTemplate;
 
 // src/front-end-module/uibuilder.module.js
-var version = "7.0.2-esm";
+var version = "7.0.3-esm";
 var isMinified = !/param/.test(function(param) {
 });
 function log() {

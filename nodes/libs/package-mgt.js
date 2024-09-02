@@ -166,7 +166,16 @@ class UibPackages {
      * @returns {boolean} True if successful
      */
     createBasicPj() {
-        return copySync('../../templates/uibroot-package.json', [this.uib.rootFolder, 'package.json'])
+        if (!this.log) console.error('[uibuilder:package-mgt:createBasicPj] this.log not defined!')
+        try {
+            const pj = copySync([__dirname, '..', '..', 'templates', 'uibroot-package.json'], [this.uib.rootFolder, 'package.json'])
+            this.log.trace(`[uibuilder:package-mgt:createBasicPj] Basic package.json created in "${this.uib.rootFolder}"`)
+            return pj
+        } catch (e) {
+            this.log.error(`[uibuilder:package-mgt:createBasicPj] Basic package.json creation FAILED in "${this.uib.rootFolder}". ${e.message}`, e)
+            console.trace()
+            return null
+        }
     }
 
     /** Use npm to check packages installed to uibRoot

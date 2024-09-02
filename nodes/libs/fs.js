@@ -44,6 +44,8 @@ const fg = require('fast-glob')
 // ! TODO: Move other file-handling functions into this class
 // !       In readiness for move to mono-repo (need node.js v16+ as a base)
 
+let log
+
 class UibFs {
     //#region --- Class vars ---
     /** PRIVATE Flag to indicate whether setup() has been run (ignore the false eslint error)
@@ -87,7 +89,9 @@ class UibFs {
 
         this.RED = uib.RED
         this.uib = uib
-        this.log = uib.RED.log
+        this.log = log = uib.RED.log
+
+        this.log.trace('[uibuilder:fs.js:setup] Setup completed', this.uib)
     } // ---- End of setup ---- //
 
     /** returns true if the filename contains / or \ else false
@@ -551,15 +555,14 @@ class UibFs {
                 preserveTimestamps: true,
             }
         }
-        // @ts-ignore
-        if (Array.isArray(src)) src = join(src)
-        // @ts-ignore
-        if (Array.isArray(dest)) dest = join(dest)
-
         try {
+            // @ts-ignore
+            if (Array.isArray(src)) src = join(...src)
+            // ts-ignore
+            if (Array.isArray(dest)) dest = join(...dest)
             cpSync(src, dest, opts)
         } catch (e) {
-            this.log.error(`Could not copy '${src}' to '${dest}'. ${e.message}`, e)
+            log.error(`Could not copy '${src}' to '${dest}'. ${e.message}`, e)
             return false
         }
         return true

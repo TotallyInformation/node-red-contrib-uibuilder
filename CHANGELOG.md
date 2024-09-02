@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-09-01 16:52:21
+updated: 2024-09-02 17:52:21
 ---
 
 # Changelog
@@ -28,9 +28,13 @@ The following are only used for _**developing**_ UIBUILDER:
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.2...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.3...main)
 
 Nothing currently.
+
+## [v7.0.3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.3...v7.0.2)
+
+Bug fix only. Issue for new UIBUILDER installations that would get the error `[node-red-contrib-uibuilder/uibuilder] TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received an instance of Array (line:393)`.
 
 ## [v7.0.2](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.2...v7.0.1)
 

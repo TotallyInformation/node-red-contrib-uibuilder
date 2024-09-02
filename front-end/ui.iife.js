@@ -20,7 +20,7 @@
          */
         constructor(win, extLog, jsonHighlight) {
           //#region --- Class variables ---
-          __publicField(this, "version", "7.0.2-src");
+          __publicField(this, "version", "7.0.3-src");
           // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
           __publicField(this, "sanitiseExtraTags", ["uib-var"]);
           __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);

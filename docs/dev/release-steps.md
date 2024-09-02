@@ -21,6 +21,9 @@ Make sure version numbers are correct and aligned:
 
 * package.json
 * gulpfile.js
+  
+  Make sure that `gulp watch` is running for these:
+
 * src\front-end-module\ui.js
 * src\front-end-module\uibuilder.module.js
 
@@ -32,6 +35,7 @@ Make sure version numbers are correct and aligned:
 
 ## 04) Do a final commit & push to the dev branch
 
+* Commit and push
 * Check DeepScan and Snyk results and resolve any issues.
 
 ## 05) Merge GitHub dev branch to main
