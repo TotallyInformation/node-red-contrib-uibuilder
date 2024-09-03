@@ -25,7 +25,7 @@
   * [Function node enhancements](nodes/function-node.md)
 * The front-end client
   * [Controlling from Node-RED](client-docs/control-from-node-red.md)
-  * [Custom Components](client-docs/custom-components.md "The built-in uib-var component, using external components")
+  * [Custom Components](client-docs/custom-components.md "AKA 'Widgets', built-in and external elements to incorporate in your UI")
   * [Custom Events](client-docs/custom-events.md)
   * [Dynamic, config-driven UI's](client-docs/config-driven-ui.md)
   * [Features](client-docs/features.md)

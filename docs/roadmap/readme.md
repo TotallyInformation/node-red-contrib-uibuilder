@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-09-03 14:04:55
+updated: 2024-09-03 17:23:55
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -130,40 +130,86 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 
 ### Possible New Nodes
 
-* `uib-component` (or `uib-custom`?) - like uib-element but auto-installs a web component library. Specify the library name, drop-down prefix for local (e.g. installed using library mgr) or jsdelivr CDN.
-* `uib-ctrl` - route different types of control msgs to different output ports: `cache` ("client connect"), `network` ("client connect", "client disconnect"), `visibilty`, `routing` ("route change"). Maybe link to a uib instance so that it can be separate.
-* `uib-read-all-front-matter` - Reads a folder recursively and compiles all YAML Front-Matter entries into a single return. Use with `uib-file-change` to update when files change.
-* `uib-meta` - links to a uibuilder node and returns the instance metadata including URL's and folder locations and other settings. (e.g. use with [node-red-cleanup-filesystem](https://discourse.nodered.org/t/announce-node-red-cleanup-filesystem-request-for-testing/88135) for example).
-* `uib-template` -  New node to take a `msg._ui` template input and update parts of it before sending (e.g. parent, id, ...). Alt. name ideas: `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation).
-* `uib-file-change` - Watches for changes to files for a specific uibuilder instance. Allow folder choice, filtering (via fast-glob). Triggers an output on-change. Output can be a folder/file list OR a URL list (or maybe both). Could then be used to simply reload any connected clients automatically, trigger backups or something else entirely.
-* `uib-event` - Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance. May be helpful to some people to simplify flows without using lots of link nodes.
-* `uib-fe-event` - captures actual front-end events (e.g. custom events) and forwards them to Node-RED either as std or ctrl (?) messages.
-* `uib-file-read` - Reads a file for a specific uibuilder instance. Allows, for example, the file to be passed to the FE for editing.
+#### `uib-component` (or `uib-custom`?)
+
+Like uib-element but auto-installs a web component library. Specify the library name, drop-down prefix for local (e.g. installed using library mgr) or jsdelivr CDN.
+
+#### `uib-ctrl`
+
+Route different types of control msgs to different output ports: `cache` ("client connect"), `network` ("client connect", "client disconnect"), `visibilty`, `routing` ("route change"). Maybe link to a uib instance so that it can be separate.
+
+#### `uib-read-all-front-matter`
+
+Reads a folder recursively and compiles all YAML Front-Matter entries into a single return. Use with `uib-file-change` to update when files change.
+
+#### `uib-meta`
+
+Links to a uibuilder node and returns the instance metadata including URL's and folder locations and other settings. (e.g. use with [node-red-cleanup-filesystem](https://discourse.nodered.org/t/announce-node-red-cleanup-filesystem-request-for-testing/88135) for example).
+
+#### `uib-template`
+
+New node to take a `msg._ui` template input and update parts of it before sending (e.g. parent, id, ...). Alt. name ideas: `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation).
+
+#### `uib-file-change`
+
+Watches for changes to files for a specific uibuilder instance. Allow folder choice, filtering (via fast-glob). Triggers an output on-change. Output can be a folder/file list OR a URL list (or maybe both). Could then be used to simply reload any connected clients automatically, trigger backups or something else entirely.
+
+#### `uib-event`
+
+Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance. May be helpful to some people to simplify flows without using lots of link nodes.
+
+`uib-fe-event`
+
+Captures actual front-end events (e.g. custom events) and forwards them to Node-RED either as std or ctrl (?) messages.
+
+#### `uib-file-read`
+
+Reads a file for a specific uibuilder instance. Allows, for example, the file to be passed to the FE for editing.
 
 #### Maybe
 
-* `uib-parse` - Use Cheerio or DOMParser to convert HTML to low-code JSON. [Ref](https://blog.apify.com/javascript-parse-html/). Could be extended to form the basis of automated no-/low-code -> HTML -> and back testing. Or for accessibility testing.
-* A node that uses JSDom to select from HTML and return as html/text/attribs as needed (as per updated `$()` fn). [Ref 1]([GitHub - chishui/JSSoup: JavaScript + BeautifulSoup = JSSoup](https://github.com/chishui/JSSoup)), [Ref 2](https://www.npmjs.com/package/x-ray).
+##### `uib-parse`
+
+Use Cheerio or DOMParser to convert HTML to low-code JSON. [Ref](https://blog.apify.com/javascript-parse-html/). Could be extended to form the basis of automated no-/low-code -> HTML -> and back testing. Or for accessibility testing.
+
+##### `uib-extract`
+
+A node that uses JSDom to select from HTML and return as html/text/attribs as needed (as per updated `$()` fn). [Ref 1]([GitHub - chishui/JSSoup: JavaScript + BeautifulSoup = JSSoup](https://github.com/chishui/JSSoup)), [Ref 2](https://www.npmjs.com/package/x-ray).
 
 ### Possible New Web Components
 
 > [!NOTE]
->
 > May want to use auto-adopted stylesheets in components. [Ref](https://southleft.com/insights/development/adopted-stylesheets/).
 
-* `<include-fragment src="/tips">` [ref]([github/include-fragment-element: A client-side includes tag.](https://github.com/github/include-fragment-element/))
+#### ~~Include-fragment~~
 
-* Light controller. With options for on/off, brightness and colour.
+~~`<include-fragment src="/tips">` [ref](https://github.com/github/include-fragment-element/).~~
 
-* Pop-down menu. Icon & menu list that pops down when the icon is clicked. Icon defaults to a cog. Common use: configuration or control menu.
+Use [GitHub's version instead](https://github.com/github/include-fragment-element/).
 
-* `<uib-loop>`. [Ref](https://discourse.nodered.org/t/ui/82818/33?u=totallyinformation) - A web component that takes a variable to loop over. Slot content being used as a template and replicated. Need a way to represent loop properties in the template.
+#### Light-controller
 
-* lamp - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras)
+Light controller. With options for on/off, brightness and colour.
 
-* gauge - [convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras).
+#### Pop-down menu
 
-* `<uib-input>` - extended input. Refs: [1](https://stackoverflow.com/questions/25495849/can-a-custom-element-extend-an-input-element), [2](https://elements-x.com/?path=/docs/getting-started--docs), [3](https://medium.com/@andresander/extending-html-inputs-in-a-framework-agnostic-way-with-web-components-9227532b6139), [4](https://blog.revillweb.com/extending-native-dom-elements-with-web-components-233350c8e86a).
+Icon & menu list that pops down when the icon is clicked. Icon defaults to a cog. Common use: configuration or control menu.
+
+#### uib-loop
+
+`<uib-loop>`. [Ref](https://discourse.nodered.org/t/ui/82818/33?u=totallyinformation) - A web component that takes a variable to loop over. Slot content being used as a template and replicated. Need a way to represent loop properties in the template.
+
+#### lamp
+
+[convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras)
+
+#### gauge
+
+[convert from vue version](https://github.com/TotallyInformation/uibuilder-vuejs-component-extras).
+
+#### uib-input
+
+`<uib-input>` Extended input. Refs: [1](https://stackoverflow.com/questions/25495849/can-a-custom-element-extend-an-input-element), [2](https://elements-x.com/?path=/docs/getting-started--docs), [3](https://medium.com/@andresander/extending-html-inputs-in-a-framework-agnostic-way-with-web-components-9227532b6139), [4](https://blog.revillweb.com/extending-native-dom-elements-with-web-components-233350c8e86a).
 
 ### General changes
 
@@ -901,7 +947,7 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 * Telegram web app. [ref1](https://github.com/revenkroz/telegram-web-app-bot-example)
 * [Perspective](https://perspective.finos.org/) - interactive data dashboard
 
-### **NEW FEATURE** Create package.json template for Node-RED projects
+### NEW FEATURE: Create package.json template for Node-RED projects
 
 [Reference](https://discourse.nodered.org/t/uibuilder-install-default-packages-when-creating-a-node-red-projects/88496/6?u=totallyinformation)
 
