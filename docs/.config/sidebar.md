@@ -79,5 +79,5 @@
 * [Node-RED <sup>🔗</sup>](https://nodered.org/)
 * Changes
   * [Live changelog <sup>🔗</sup>](changelog)
-  * [Roadmap](roadmap/)
+  * [Roadmap](roadmap/readme.md)
   * [Archived changelogs](archived/changelog-archive.md)
