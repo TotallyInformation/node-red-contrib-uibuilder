@@ -12,6 +12,98 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Please see the roadmap in the docs for the backlog.
 
+* **Collapsible list**: Either built-in class/js or a web component. [Ref](https://chatgpt.com/share/e32ce7f8-7b86-45e7-ae9d-69d167c37a14). NB: Allow for nav menus as well as normal lists. Also consider collapsible para's.
+
+* **FE: Drag/drop**: draggable class, drag-container class (to constrain drag area). Use `moveElement` fn. On drop, send change notice to Node-RED as control msg.
+
+* [-] Use of `msg._client`
+  * [ ] Msgs from FE client
+    * [x] Check headers for:
+      * [x] FlowFuse auth
+      * [x] CloudFlare auth
+      * [x] Authelia auth
+      * [x] Authentik auth
+    * [x] Create `msg._client` and populate with std props, add to output msg - for both std and ctrl msgs
+  * [ ] Msgs from node-red flows
+    * [ ] ??
+  * [ ] Msgs to FE client
+    * [ ] ??
+  * [ ] Example?
+  * [ ] Documentation
+    * [x] Describe what headers are understood, where they come from.
+    * [x] Describe `msg._client` properties
+    * [x] How to block in/out client msgs based on `msg._client` - e.g. use of the new hooks.
+    * [ ] How to redirect un-auth web requests to login page
+
+* [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
+
+* [ ] Remove all tiEvents - swap to RED.events.
+  * [ ] uibuilder: function externalEvents
+  * [ ] uibuilder: this.on('close'
+  * [ ] uib-sender
+  * [ ] package.json
+
+### Nodes
+
+#### Node: `uibuilder`
+
+* Editor panel
+  * [ ] Inputs on Files tab don't expand correctly
+  * [ ] Text in Template settings fieldset is fixed width
+
+#### Node: `uib-cache`
+
+* Editor panel
+  * [ ] Some inputs width not consistent
+
+#### Node: `uib-save` & `uib-file-list`
+
+*  editor panels
+   * [ ] URL drop-down width not consistent (check uib-update as this is correct)
+
+### Front-End
+
+#### FE Client Library
+
+* [-] [**STARTED**] `moveElement` function that moves an element from 1 place to another. [Ref](https://chatgpt.com/share/872cede6-2fd6-44b2-891b-a152a0798c77).
+
+  * [ ] Finish coding in ui.js
+  * [ ] Add reference to client library
+  * [ ] Document
+
+* [ ] Enhance JSON viewing using my own interpretation of the [json-view](https://github.com/pgrabovets/json-view) library.
+
+#### FE UI Library: `ui.js`
+
+* `applyTemplate` - Allow slot content to be changed.
+
+### Styles: `uib-brand css`
+
+* Transfer the formats from the dashboard layout example to uib-brand.css
+* Add a `.shadow` utility class for adding shadows to things.
+
+### Examples
+
+* [-] [started] Update text update example to include new `uib-topic` html attributes
+* [ ] `uib-sender` - remove ref to uibuilderfe and update flows.
+* [ ] Navigation *menu* examples. 1x Router, 1x page.
+* [x] Template Examples - remove old library example.
+* [x] uib-element tests
+* [x] **REMOVE** old client library example
+* [x] uib-save example
+* [x] jQuery
+* [x] Client side/Dynamic SVG
+* [x] Low code/report builder
+* [x] Simple flow
+
+### Documentation
+  * [ ] Document a dashboard-like grid layout.
+  * [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
+  * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
+  * [ ] "Islands" concept. [Ref.](https://docs.astro.build/en/concepts/islands/#a-brief-history).
+    
+    > The general idea of an “Islands” architecture is deceptively simple: render HTML pages on the server, and inject placeholders or slots around highly dynamic regions […] that can then be “hydrated” on the client into small self-contained widgets, reusing their server-rendered initial HTML.
+
 
 ## Current Issues
 
