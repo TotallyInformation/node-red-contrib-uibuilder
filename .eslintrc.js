@@ -209,6 +209,7 @@ module.exports = {
         // Try to keep code complexity in functions to a minimum
         'sonarjs/cognitive-complexity': ['error', 60],  // default is 15! Need to try and improve this :-)
         'sonarjs/no-duplicate-string': ['warn', { 'threshold': 5 }],  // default is 3
+        'sonarjs/no-commented-code': 0,
 
         // Make Standard less annoying
         'brace-style': 'off',     // You should only use one-true-brace style but sometimes we want to compress things a bit.
