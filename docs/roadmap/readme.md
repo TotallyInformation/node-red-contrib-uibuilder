@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-09-03 17:23:55
+updated: 2024-09-03 16:39:15
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -123,6 +123,16 @@ Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategor
 | Notes                                         |           |           |             |               |          |          |            |         |            | check this for other needed updates |
 
 (1) https://github.com/ryanmcdermott/clean-code-javascript?tab=readme-ov-file#set-default-objects-with-objectassign
+
+### Optimisations
+
+#### Front-End
+
+* Use document fragments (`document.createDocumentFragment()`) to build components then use `appendChild` when the component is built.
+* Use textContent over innerText - but only where you know that the text cannot be hidden as textContent ignores that.
+* Use `insertAdjacentHTML` over `innerHTML`
+* Prefer hiding/showing content over creating new elements. [Accessibility ref.](https://www.a11yproject.com/posts/how-to-hide-content/).
+* For element references, use `WeakMap`  to make it easier to remove and allow garbage collection earlier. [ref](https://frontendmasters.com/blog/patterns-for-memory-efficient-dom-manipulation/#associate-data-to-dom-nodes-with-weakmap).
 
 ---
 
