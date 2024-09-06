@@ -59,7 +59,7 @@
          */
         constructor(win, extLog, jsonHighlight) {
           //#region --- Class variables ---
-          __publicField(this, "version", "7.0.3-src");
+          __publicField(this, "version", "7.0.4-src");
           // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
           __publicField(this, "sanitiseExtraTags", ["uib-var"]);
           __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -5059,7 +5059,7 @@
 
   // src/front-end-module/uibuilder.module.js
   var import_meta = {};
-  var version = "7.0.3-iife";
+  var version = "7.0.4-iife";
   var isMinified = !/param/.test(function(param) {
   });
   function log() {
