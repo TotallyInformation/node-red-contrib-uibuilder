@@ -3,7 +3,7 @@ title: Standardised msg._client properties for authenticated clients
 description: |
   msg._client is a standardised message property added to both UIBUILDER and FlowFuse's Dashboard 2.0 outputs when an authenticated client is detected. Authentication happens using an external tool such as FlowFuse authentication, Cloudflare access, Authelia, Authentik, Keycloak, etc.
 created: 2024-08-04 12:49:35
-updated: 2024-09-05 17:30:06
+updated: 2024-09-06 13:27:03
 ---
 
 > [!NOTE]

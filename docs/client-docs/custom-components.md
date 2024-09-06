@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2024-09-03 17:24:29
+updated: 2024-09-06 13:27:03
 ---
 
 The following custom web components are built into UIBUILDER:

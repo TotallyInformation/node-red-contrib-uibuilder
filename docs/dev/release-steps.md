@@ -3,7 +3,7 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2024-09-02 21:07:10
+updated: 2024-09-06 13:27:03
 ---
 
 This assumes all main updates have been done for this release and that local testing is complete.
