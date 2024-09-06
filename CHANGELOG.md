@@ -28,9 +28,13 @@ The following are only used for _**developing**_ UIBUILDER:
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.3...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.4...main)
 
 Nothing currently.
+
+## [v7.0.4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.4...v7.0.3)
+
+Bug fix only. Missing originator on messages from clients.
 
 ## [v7.0.3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.3...v7.0.2)
 

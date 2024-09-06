@@ -3,7 +3,7 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2024-09-01 15:44:31
+updated: 2024-09-06 13:22:03
 ---
 
 This assumes all main updates have been done for this release and that local testing is complete.
@@ -81,3 +81,12 @@ Remember to switch branches to the version branch in VS Code before continuing.
   * Tag: node-red-contrib-uibuilder.
   * Title: `:sparkles: UIBUILDER New Release v6.8.2 - something about the release` OR, for major releases `:star2: UIBUILDER Major Release v7.0.0 - it’s here at last!`
   * Include intro and version changelog.
+
+## 10) If releasing a bug-fix to main
+
+After publishing:
+
+```bash
+git switch v7.0.0
+git merge main
+```

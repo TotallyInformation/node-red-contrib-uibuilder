@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2024-08-25 15:31:21
+updated: 2024-09-06 12:39:40
 ---
 
 The following custom web components are built into UIBUILDER:
