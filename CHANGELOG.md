@@ -120,7 +120,7 @@ The following are only used for _**developing**_ UIBUILDER:
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.3...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.4...main)
 
 <!-- Nothing currently. -->
 
@@ -129,6 +129,10 @@ The following are only used for _**developing**_ UIBUILDER:
 * Added `text-wrap: balance` to `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `heading` and added `text-wrap: pretty` to `p`, `li`, `figcaption` - these make the elements look a little nicer when text is wrapping.
 * Added `container-type: inline-size` to `header`, `footer`, `main`, `section`, `article`. This is in preparation for the future use of [Container Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries) which are a much more flexible alternative to [Media Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries) for controlling responsive layout breakpoints. Container Queries are still very new and not yet supported widely enough to use.
 * Added some additional "reset" tweaks for improved visual style.
+
+## [v7.0.4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.4...v7.0.3)
+
+Bug fix only. Missing originator on messages from clients.
 
 ## [v7.0.3](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.3...v7.0.2)
 
