@@ -479,7 +479,7 @@
     }
 }
 html {
-    line-height: 1.5;
+    line-height: 1.5; /* Accessible line-height */
     font-size: 100%;
     background-color: var(--surface1);
     color: var(--text2);
@@ -490,9 +490,10 @@ body {
     margin-right: var(--base-margin);
     /* padding: 0.3rem; */
     font-family: var(--font-family);
+    -webkit-font-smoothing: antialiased; /* Improve text rendering */
 }
 h1, h2, h3, h4, h5, h6, heading {
-    line-height: 1.3;
+    line-height: calc(1em + 0.5rem); /* dynamic heights for headings */
     text-wrap: balance;
 }
 p, li, figcaption {
