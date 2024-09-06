@@ -563,7 +563,7 @@ class UibSockets {
             return
         }
 
-        if ( msg._uib && msg._uib.originator && (typeof msg._uib.originator === 'string') ) {
+        if ( msg?._uib?.originator && (typeof msg._uib.originator === 'string') ) {
             // const eventName = `node-red-contrib-uibuilder/return/${msg._uib.originator}`
             tiEvent.emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
         } else {
@@ -607,10 +607,8 @@ class UibSockets {
                     ..._uib
                 }
             }
-        } else {
-            // Remove msg._uib
-            delete msg._uib
         }
+        // Do NOT remove msg._uib here!
 
         if (_client) msg._client = _client
 
@@ -679,7 +677,6 @@ class UibSockets {
                 break
             }
         }
-
     }
 
     /** Add a new Socket.IO NAMESPACE (for each uib instance) - also creates std & ctrl and other listeners on connection
