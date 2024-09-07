@@ -319,6 +319,7 @@
  * @property {string} editurl Shortcut URL that will open a code editor at the node instance folder
  *
  * @property {Function} sendToFe Ref to sockets.sendToFe
+ * @property {Function} sender Ref to uib-sender event sending function
  */
 
 /** uibConfig - THe module-level `uib` configuration variable
