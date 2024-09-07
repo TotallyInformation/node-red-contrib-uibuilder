@@ -50,8 +50,6 @@ Please see the roadmap in the docs for the backlog.
     * [x] How to block in/out client msgs based on `msg._client` - e.g. use of the new hooks.
     * [ ] How to redirect un-auth web requests to login page
 
-* [ ] Remove `writeJson` from package.mgt.js then remove `fs-extra` dependency
-
 * [ ] Remove all tiEvents - swap to RED.events.
   * [ ] uibuilder: function externalEvents
   * [ ] uibuilder: this.on('close'
@@ -139,16 +137,25 @@ The following are only used for _**developing**_ UIBUILDER:
 
 <!-- Nothing currently. -->
 
+### 📌 Highlights
+
+* Any Node-RED custom node can now send a message to a uibuilder client! In your runtime code, add `RED.events.emit('UIBUILDER/send/<url-name>', {payload: 'Hi from my custom node!'})` where `<url-name>` is the URL set in a deployed uibuilder node. The data will be sent to all browser tabs connected to that uibuilder endpoint. Note though that this bypasses any uib-cache node.
+
 ### General changes
 
 * References to `fs-extra` 3rd-party library removed from all nodes & libraries except `libs/fs.js`.
 * All references to node.js's `fs` library now restricted to `libs/fs.js`.
+* Some now unused node.js files have been removed.
 
 ### `uib-brand.css` styles & variables
 
 * Added `text-wrap: balance` to `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `heading` and added `text-wrap: pretty` to `p`, `li`, `figcaption` - these make the elements look a little nicer when text is wrapping.
 * Added `container-type: inline-size` to `header`, `footer`, `main`, `section`, `article`. This is in preparation for the future use of [Container Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries) which are a much more flexible alternative to [Media Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries) for controlling responsive layout breakpoints. Container Queries are still very new and not yet supported widely enough to use.
 * Added some additional "reset" tweaks for improved visual style.
+
+### Documentation changes
+
+* Improved documentation for uibuilder's event handling and better linked that to how to create custom nodes that work with uibuilder.
 
 ## [v7.0.4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.4...v7.0.3)
 
