@@ -92,7 +92,7 @@ window.$docsify = { //  eslint-disable-line no-undef
                     }
 
                     if (vm.frontmatter.status) {
-                        content = `> ${vm.frontmatter.status}\n\n${content}`
+                        content = `> Status: ${vm.frontmatter.status}\n\n${content}`
                     }
 
                     if (vm.frontmatter.title) {
