@@ -37,12 +37,12 @@
     "esbuild": "^0.23.1",
     "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-n": "^16.6.2",
-    "eslint-plugin-promise": "^6.6.0",
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^8.1.1",
+    "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsdoc": "^50.2.2",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.6.0",
     "eslint-plugin-sonarjs": "^2.0.0",
     "execa": "^5",
     "gulp": "^5.0.0",
@@ -72,7 +72,6 @@
       "uib-tag": "nodes/uib-tag/customNode.js",
       "uib-update": "nodes/uib-update/customNode.js"
     },
-    "notyetnodes": {},
     "plugins": {
       "uib-plugin": "nodes/uib-plugin.html"
     }
