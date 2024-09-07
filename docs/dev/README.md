@@ -3,7 +3,7 @@ title: Developer Documentation
 description: |
   Deep dives into the internals of UIBUILDER. This is where to go if you need to understand how things work. These documents may lag behind the actual code however, so it is always worth also referencing the current codebase.
 created: 2019-06-16 16:16:00
-updated: 2024-06-14 21:40:37
+updated: 2024-09-07 14:28:54
 ---
 
 ## Processes
@@ -57,7 +57,6 @@ In addition, these are required for developing UIBUILDER, they are not required 
 * [`web.js`](dev/server-libs/web) - ExpressJS web server handling.
 * `low-code.js` - Library to generate low-code configurations. Not yet in use.
 * `user-apis.js` - User-facing (as opposed to admin-facing) API's. Not currently in use.
-* ~~[`tilogger.js`](dev/server-libs/tilogger)~~ - Custom server logger, not currently in use.
 
 ## Client Libraries
 
