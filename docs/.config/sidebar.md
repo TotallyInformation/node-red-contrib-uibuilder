@@ -71,6 +71,7 @@
   * [Developing 3rd-party extensions](dev/3rd-party-extensions.md "How to create extension nodes that work with UIBUILDER")
   * [Details](dev/README.md)
   * [REST API's](apis/)
+  * [Runtime events](dev/uib-event-comms.md "Node-RED runtime events used in UIBUILDER")
 * [Glossary of terms](glossary.md)
 * [Main readme <sup>🔗</sup>](uibhome)
 * [Apache v2 license <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/LICENSE)
