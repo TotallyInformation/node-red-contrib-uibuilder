@@ -78,17 +78,21 @@ window.$docsify = { //  eslint-disable-line no-undef
 
             // Runs against the raw markdown for each page
             hook.beforeEach(function (content) {
-                content = content.replace(/UIBUILDER/g, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
+                content = content.replace(/-UIBUILDER-/g, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
                 let mydate = new Date()
                 let strYr = mydate.getFullYear()
                 let yearFrom = 2017
                 let yearTo = strYr
                 footer[5] = ''
 
-                if (vm.frontmatter) { // fm only exists per page, requires plugin
+                if (vm.frontmatter) { // vm only exists per page, requires plugin
                     //#region --- Add front-matter (YAML) standard metadata to each page if present ---
                     if (vm.frontmatter.description) {
                         content = `${vm.frontmatter.description}\n\n${content}`
+                    }
+
+                    if (vm.frontmatter.status) {
+                        content = `> ${vm.frontmatter.status}\n\n${content}`
                     }
 
                     if (vm.frontmatter.title) {
