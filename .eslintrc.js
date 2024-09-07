@@ -66,7 +66,7 @@ module.exports = {
         'plugin:es/no-new-in-esnext',
         'plugin:jsdoc/recommended',
         'plugin:promise/recommended',
-        'plugin:sonarjs/recommended-legacy', // NB: Needs changing for eslint v9. https://www.npmjs.com/package/eslint-plugin-sonarjs#usage
+        // 'plugin:sonarjs/recommended-legacy', // NB: Needs changing for eslint v9. https://www.npmjs.com/package/eslint-plugin-sonarjs#usage
         // 'plugin:prettier/recommended',
         // The n plugin reads the min. node.js version from package.json and error's any ES features not available in that version.
         'plugin:n/recommended',
