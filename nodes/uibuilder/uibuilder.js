@@ -133,20 +133,21 @@ let userDir = ''
  * @param {uibNode} node Reference to node instance
  */
 function externalEvents(node) {
+    const RED = uib.RED
 
     // The event name to listen out for
-    const eventName = `node-red-contrib-uibuilder/${node.url}`
+    const eventName = `UIBUILDER/send/${node.url}`
     // console.log('[uibuilder:externalEvents] ', eventName )
 
     // The function to execute when an event is received
-    const sender = (msg) => {
+    node.sender = (msg) => {
         // this.send(msg)
         // console.log('>> EVENT tofe: ', msg )
         sockets.sendToFe(msg, node, uib.ioChannels.server)
     }
 
     // Create new listener for the given topic, they are removed on close
-    tiEvents.on(eventName, sender)
+    RED.events.on(eventName, node.sender)
 
     // console.log('>>>> THIS >>>>> ', node)
 }
@@ -397,7 +398,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     /** (d) Pass core objects to the Socket.IO handler module */
     sockets.setup(uib, web.server)
 
-    RED.events.emit('node-red-contrib-uibuilder/runtimeSetupComplete', uib)
+    RED.events.emit('UIBUILDER/runtimeSetupComplete', uib)
 } // --- end of runtimeSetup --- //
 
 /** 2) All of the initialisation of the Node Instance
@@ -503,8 +504,8 @@ function nodeInstance(config) {
             fslib.moveSync(path.join(/** @type {string} */ (uib.rootFolder), this.oldUrl), this.customFolder, { overwrite: false })
             log.trace(`[uibuilder:nodeInstance:${this.url}] Folder renamed from ${this.oldUrl} to ${this.url}`)
             // Notify other nodes
-            RED.events.emit('node-red-contrib-uibuilder/URL-change', { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
-            RED.events.emit(`node-red-contrib-uibuilder/URL-change/${this.oldUrl}`, { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
+            RED.events.emit('UIBUILDER/URL-change', { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
+            RED.events.emit(`UIBUILDER/URL-change/${this.oldUrl}`, { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
         } catch (e) {
             log.trace(`[uibuilder:nodeInstance:${this.url}] Could not rename folder. ${e.message}`)
             // Not worried if the source doesn't exist - this will regularly happen when changing the name BEFORE first deploy.
@@ -520,7 +521,7 @@ function nodeInstance(config) {
     }
 
     // Does the custom folder exist? If not, create it and copy template to it. Otherwise make sure it is accessible.
-    // TODO replace with uibFs.ensureFolder()
+    // TODO replace with fslib.ensureFolder()
     let customFoldersOK = true
     if ( !fslib.existsSync(this.customFolder) ) {
         // Does not exist so check whether built-in or external template wanted
@@ -613,7 +614,7 @@ function nodeInstance(config) {
         this.removeListener('input', inputMsgHandler)
 
         // Cancel any event listeners for this node
-        tiEvents.removeAllListeners(`node-red-contrib-uibuilder/${this.url}`)
+        RED.events.off(`UIBUILDER/send/${this.url}`, this.sender)
 
         // Tody up the ExpressJS routes if a node is removed
         if (removed) {
@@ -632,14 +633,8 @@ function nodeInstance(config) {
         res.status(200).send( web.showInstanceDetails(req, this) )
     })
 
-    RED.events.emit('node-red-contrib-uibuilder/instanceSetupComplete', this)
-    RED.events.emit(`node-red-contrib-uibuilder/instanceSetupComplete/${this.url}`, this)
-
-    // // TODO: Remove this debug info
-    // setTimeout(function() {
-    //     tiEvents.emit(`node-red-contrib-uibuilder/components-html/BOO`, 1, 2)
-    //     tiEvents.emit(`node-red-contrib-uibuilder/components-html`, 3, 4)
-    // }, 8000)
+    RED.events.emit('UIBUILDER/instanceSetupComplete', this)
+    RED.events.emit(`UIBUILDER/instanceSetupComplete/${this.url}`, this)
 } // ----- end of nodeInstance ----- //
 
 /** 3) Handler function for node flow input events (when a node instance receives a msg from the flow)

@@ -557,6 +557,8 @@ class UibSockets {
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     sendIt(msg, node) {
+        const RED = this.RED
+
         // Run uibuilder.hooks.msgReceived hook - NOTE: msg might be amended by the hook
         if (this.hooks('msgReceived', { msg, node }) === false) {
             this.log.warn(`[uibuilder:socket:sendToFe] msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
@@ -564,8 +566,7 @@ class UibSockets {
         }
 
         if ( msg?._uib?.originator && (typeof msg._uib.originator === 'string') ) {
-            // const eventName = `node-red-contrib-uibuilder/return/${msg._uib.originator}`
-            tiEvent.emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
+            RED.events.emit(`UIBUILDER/return-to-sender/${msg._uib.originator}`, msg)
         } else {
             node.send(msg)
         }

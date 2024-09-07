@@ -719,7 +719,7 @@ class UibPackages {
 
     //#region -- Manage Packages via npm --
 
-    // TODO Use RED.events `node-red-contrib-uibuilder/npm` as option to show log during install
+    // TODO Use RED.events `UIBUILDER/npm` as option to show log during install
     /** Install or update an npm package
      * NOTE: This fn does not update the list of packages
      *       because that is built from the package.json file

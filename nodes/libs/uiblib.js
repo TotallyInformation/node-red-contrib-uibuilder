@@ -278,14 +278,14 @@ const UibLib = {
             shell.stdout.on('data', (data) => {
                 const d = data.toString()
                 // Emit log event with data
-                // RED.events.emit('node-red-contrib-uibuilder/runOsCmd/log', d )
+                // RED.events.emit('UIBUILDER/runOsCmd/log', d )
                 out += d
                 // Don't emit chunks of output as this stops the final output from resolving
             })
             shell.stderr.on('data', (data) => {
                 const d = data.toString()
                 // Emit log event with data
-                // RED.events.emit('node-red-contrib-uibuilder/runOsCmd/log', d )
+                // RED.events.emit('UIBUILDER/runOsCmd/log', d )
                 out += d
             })
 
@@ -297,7 +297,7 @@ const UibLib = {
             })
 
             shell.on('close', (code) => {
-                // RED.events.emit('node-red-contrib-uibuilder/runOsCmd/end', { 'code': code } )
+                // RED.events.emit('UIBUILDER/runOsCmd/end', { 'code': code } )
                 // Return complete output
                 if (opts.out === 'bare') {
                     resolve(out)
