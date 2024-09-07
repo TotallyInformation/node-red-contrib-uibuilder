@@ -16,6 +16,21 @@ Please see the roadmap in the docs for the backlog.
 
 * **FE: Drag/drop**: draggable class, drag-container class (to constrain drag area). Use `moveElement` fn. On drop, send change notice to Node-RED as control msg.
 
+* Removal of fs-extra dependency
+  * Functions wanted:
+    * [ ] `ensureDirSync` (uibuilder, admin-api-v3)
+    * [ ] `ensureFileSync` (admin-api-v3)
+    * [ ] `moveSync` (uibuilder)
+    * [ ] `removeSync` (admin-api-v3, admin-api-v2)
+    * [ ] `writeJson` (package-mgt)
+    * [x] `remove` (uiblib) - needs testing
+    * [x] `access` (admin-api-v3) - passthrough to node:fs/promises - needs testing
+    * [x] `writeFileCb` (admin-api-v2) - passthrough to node:fs
+  * Remove from:
+    * [ ] `libs\fs.js`
+
+* Can we remove `lib/tilogger.js`?
+
 * [-] Use of `msg._client`
   * [ ] Msgs from FE client
     * [x] Check headers for:
@@ -123,6 +138,11 @@ The following are only used for _**developing**_ UIBUILDER:
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.4...main)
 
 <!-- Nothing currently. -->
+
+### General changes
+
+* References to `fs-extra` 3rd-party library removed from all nodes & libraries except `libs/fs.js`.
+* All references to node.js's `fs` library now restricted to `libs/fs.js`.
 
 ### `uib-brand.css` styles & variables
 

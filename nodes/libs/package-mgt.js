@@ -26,9 +26,8 @@
  */
 
 const { join } = require('node:path')
-const { copy, copySync, existsSync } = require('./fs.js')
+const { copy, copySync, existsSync, writeJson } = require('./fs.js')
 const { runOsCmd, runOsCmdSync } = require('./uiblib.js')
-const { /* copy, readJsonSync, writeJsonSync, */ writeJson } = require('fs-extra')
 
 class UibPackages {
     //#region ---- Class Variables ----
@@ -302,16 +301,16 @@ class UibPackages {
 
         try { // Make a backup copy
             await copy(fileName, `${fileName}.bak`)
-            this.log.trace(`[uibuilder:package-mgt:writePackageJson] package.json file successfully backed up in ${folder}`)
+            this.log.trace(`✔️ [uibuilder:package-mgt:writePackageJson] package.json file successfully backed up in ${folder}`)
         } catch (err) {
-            this.log.error(`[uibuilder:package-mgt:writePackageJson] Failed to copy package.json to backup.  ${folder}`, this.packageJson, err)
+            this.log.error(`🛑 [uibuilder:package-mgt:writePackageJson] Failed to copy package.json to backup.  ${folder}`, this.packageJson, err)
         }
 
         try {
             await writeJson(fileName, json, { spaces: 2 })
-            this.log.trace(`[uibuilder:package-mgt:writePackageJson] package.json file written successfully in ${folder}`)
+            this.log.trace(`✔️ [uibuilder:package-mgt:writePackageJson] package.json file written successfully in ${folder}`)
         } catch (err) {
-            this.log.error(`[uibuilder:package-mgt:writePackageJson] Failed to write package.json.  ${folder}`, this.packageJson, err)
+            this.log.error(`🛑 [uibuilder:package-mgt:writePackageJson] Failed to write package.json.  ${folder}`, this.packageJson, err)
         }
     }
 

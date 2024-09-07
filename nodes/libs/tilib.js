@@ -20,7 +20,6 @@
 'use strict'
 
 const path = require('path')
-// const fs = require('fs-extra')
 
 const mylog = (process.env.TI_ENV === 'debug') ? console.log : function() {}
 

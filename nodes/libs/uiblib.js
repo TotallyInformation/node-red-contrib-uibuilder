@@ -37,8 +37,7 @@ const path = require('node:path')
 const { promisify } = require('node:util')
 const crypto = require('node:crypto')
 const { spawn, spawnSync } = require('node:child_process')
-// const fslib = require('./fs')
-const fs = require('fs-extra') // ! TODO Remove
+const fslib = require('./fs.js')
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
 
 /** Encode data in a buffer as Base32 with a url-safe alphabet.
@@ -110,15 +109,14 @@ const UibLib = {
         try { // Wrap this in a try to make sure that everything is working
             // Remove url folder if requested
             if ( uib.deleteOnDelete[node.url] === true ) {
-                log.trace(`[uibuilder:uiblib:instanceClose] Deleting instance folder. URL: ${node.url}`)
+                log.trace(`✔️ [uibuilder:uiblib:instanceClose] Deleting instance folder. URL: ${node.url}`)
 
                 // Remove the flag in case someone recreates the same url!
                 delete uib.deleteOnDelete[node.url]
 
-                // fsPromises.rm(path, {force:true,recursive:true}), fs.rm(path, {force:true,recursive:true}), callback(err))
-                fs.remove(path.join(uib.rootFolder, node.url))
+                fslib.remove(path.join(uib.rootFolder, node.url))
                     .catch(err => {
-                        log.error(`[uibuilder:uiblib:processClose] Deleting instance folder failed. URL=${node.url}, Error: ${err.message}`)
+                        log.error(`🛑 [uibuilder:uiblib:processClose] Deleting instance folder failed. URL=${node.url}, Error: ${err.message}`)
                     })
             }
 

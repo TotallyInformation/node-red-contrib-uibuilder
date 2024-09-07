@@ -61,9 +61,6 @@ try {
 // Core node.js
 const path = require('path')
 
-// TODO - ELIMINATE - move fs processing to uibFs
-const fs = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
-
 //#endregion ----- Require packages ----- //
 
 //#region ------ uibuilder module-level globals ------ //
@@ -331,14 +328,13 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     // (a) Configure the UibFs handler class
     fslib.setup(uib)
 
-    // TODO: Move all file handling to fslib
     //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
 
     /** Check uib root folder: create if needed, writable? */
     let uibRootFolderOK = true
     // Try to create root and root/.config - ignore error if it already exists
     try {
-        fs.ensureDirSync(uib.configFolder) // creates both folders
+        fslib.ensureDirSync(uib.configFolder) // creates both folders
         log.trace(`[uibuilder:runtimeSetup] uibRoot folder exists. ${uib.rootFolder}` )
     } catch (e) {
         if ( e.code !== 'EEXIST' ) { // ignore folder exists error
@@ -357,28 +353,28 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     // Assuming all OK, copy over the master .config folder without overwriting (vendor package list, middleware)
     if (uibRootFolderOK === true) {
         // We want to always overwrite the .config template files
-        const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
+        const fsOpts = { 'overwrite': true, 'preserveTimestamps': true, 'recursive': true, }
         try {
-            fs.copySync( path.join( uib.masterTemplateFolder, uib.configFolderName ), uib.configFolder, fsOpts )
-            log.trace(`[uibuilder:runtimeSetup] Copied template .config folder to local .config folder ${uib.configFolder} (not overwriting)` )
+            fslib.copySync( path.join( uib.masterTemplateFolder, uib.configFolderName ), uib.configFolder, fsOpts)
+            log.trace(`✔️ [uibuilder:runtimeSetup] Copied template .config folder to local .config folder ${uib.configFolder} (not overwriting)` )
         } catch (e) {
-            RED.log.error(`🛑[uibuilder:runtimeSetup] Master .config folder copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
+            RED.log.error(`🛑 [uibuilder:runtimeSetup] Master .config folder copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
             uibRootFolderOK = false
         }
 
         // and copy the common folder from template (contains the default blue node-red icon)
         fsOpts.overwrite = false // we don't want to overwrite any common folder files
         try {
-            fs.copy( path.join( uib.masterTemplateFolder, uib.commonFolderName ), uib.commonFolder, fsOpts, function(err) {
+            fslib.copyCb( path.join( uib.masterTemplateFolder, uib.commonFolderName )+'/', uib.commonFolder+'/', fsOpts, function(err) {
                 if (err) {
-                    log.error(`🛑[uibuilder:runtimeSetup] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}`, err)
+                    log.error(`🛑 [uibuilder:runtimeSetup] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}. ${err.message}`, err)
                 } else {
-                    log.trace(`[uibuilder:runtimeSetup] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
+                    log.trace(`✔️ [uibuilder:runtimeSetup] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
                 }
             })
         } catch (e) {
             // should never happen
-            log.error('🛑[uibuilder:runtimeSetup] COPY OF COMMON FOLDER FAILED')
+            log.error(`🛑 [uibuilder:runtimeSetup] COPY OF COMMON FOLDER FAILED. ${e.message}`)
         }
         // It is served up at the instance level to allow caching to be configured. It is used as a static resource folder (added in nodeInstance() so available for each instance as `./common/`)
     }
@@ -504,7 +500,7 @@ function nodeInstance(config) {
     if ( this.oldUrl !== undefined && this.oldUrl !== '' && this.url !== this.oldUrl ) {
         // rename (move) folder if possible - but don't overwrite
         try {
-            fs.moveSync(path.join(/** @type {string} */ (uib.rootFolder), this.oldUrl), this.customFolder, { overwrite: false })
+            fslib.moveSync(path.join(/** @type {string} */ (uib.rootFolder), this.oldUrl), this.customFolder, { overwrite: false })
             log.trace(`[uibuilder:nodeInstance:${this.url}] Folder renamed from ${this.oldUrl} to ${this.url}`)
             // Notify other nodes
             RED.events.emit('node-red-contrib-uibuilder/URL-change', { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
@@ -534,10 +530,10 @@ function nodeInstance(config) {
 
             const copyFrom = path.join( uib.masterTemplateFolder, this.templateFolder )
             try {
-                fs.copySync( copyFrom, this.customFolder, cpyOpts)
-                log.info(`[uibuilder:nodeInstance:${this.url}] Created instance folder ${this.customFolder} and copied template files from ${copyFrom}` )
+                fslib.copySync( copyFrom, this.customFolder, cpyOpts)
+                log.info(`✔️ [uibuilder:nodeInstance:${this.url}] Created instance folder ${this.customFolder} and copied template files from ${copyFrom}` )
             } catch (e) {
-                log.error(`🛑[uibuildernodeInstance] CREATE OF INSTANCE FOLDER '${this.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
+                log.error(`🛑 [uibuildernodeInstance] CREATE OF INSTANCE FOLDER '${this.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
                 customFoldersOK = false
             }
         } else {
