@@ -137,11 +137,11 @@ class UibFs {
         return files.filter(Boolean).reduce((all, folderContents) => all.concat(folderContents), [])
     } // -- End of walk -- //
 
-    //#endregion ---- ---- ----
-
     get uibRootFolder() {
         return this.uib.rootFolder
     }
+
+    //#endregion ---- ---- ----
 
     //#region ---- Async Methods ----
 
@@ -655,7 +655,7 @@ class UibFs {
         return mkdirSync(path, options)
     }
 
-    /** Read a JSON file and return as a JavaScript object - can use instead of fs-extra
+    /** Read a JSON file and return as a JavaScript object
      * @throws If reading or parsing fails
      * @param {string} file JSON file path/name to read
      * @returns {object} The parsed JSON file as an object
@@ -668,6 +668,13 @@ class UibFs {
             throw e
         }
     }
+
+    /** Read a file, return as a buffer unless options.encoding is provided
+     * @param {string|Buffer|URL|number} file The file path/name to read
+     * @param {object|string=} options
+     * @returns {string|Buffer} File contents as a string
+     */
+    readFileSync = readFileSync
 
     //#endregion ---- ---- ----
 
