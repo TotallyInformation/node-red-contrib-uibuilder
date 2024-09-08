@@ -2,7 +2,7 @@
  *
  * See: https://expressjs.com/en/4x/api.html#router, https://expressjs.com/en/guide/routing.html
  *
- * Copyright (c) 2021-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2024 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -31,6 +31,7 @@ const web = require('./web')
 const sockets = require('./socket')
 const packageMgt = require('./package-mgt')
 const templateConf  = require('../../templates/template_dependencies') // Template configuration metadata
+const elements = require('../elements/elements.js')
 
 const v3AdminRouter = express.Router() // eslint-disable-line new-cap
 
@@ -163,6 +164,50 @@ function chkParamFldr(params) {
 
 //#endregion === End of API validation functions === //
 
+/** Get the description & options HTML for an element and return to caller
+ * @param {object} params All parameters from the HTTP call
+ * @param {string} rootFolder uibuilder's root folder
+ * @param {express.Request} req ExpressJS request object
+ * @param {express.Response} res ExpressJS response object
+ */
+function doGetOneElement(params, rootFolder, req, res) {
+    const rootPath = [__dirname, '..', 'elements']
+
+    let optsHtml = ''
+    let descHtml = ''
+
+    const availableLangs = ['en-US']
+
+    let lang
+    if (params.languages) {
+        lang = params.languages.filter(value => availableLangs.includes(value))
+    }
+    if (!lang) lang = ['en-US']
+    rootPath.push(lang[0])
+
+    let fname = path.join( ...rootPath, `${params.elType}-options.html`)
+
+    // Get the content for the advanced settings tab
+    try {
+        optsHtml = fslib.readFileSync(fname, 'utf8')
+    } catch (e) {
+        fname = path.join( ...rootPath, 'default-options.html')
+        optsHtml = fslib.readFileSync(fname, 'utf8')
+    }
+
+    // Get the description
+    try {
+        fname = path.join( ...rootPath, `${params.elType}-description.html`)
+        descHtml = fslib.readFileSync(fname, 'utf8')
+    } catch (e) {
+        fname = path.join( ...rootPath, 'default-description.html')
+        descHtml = fslib.readFileSync(fname, 'utf8')
+    }
+
+    res.statusMessage = `No-code element ${params.elType} options returned`
+    res.status(200).json( { descHtml, optsHtml } )
+}
+
 /** Return a router but allow parameters to be passed in
  * @param {uibConfig} uib Reference to uibuilder's master uib object
  * @param {*} log Reference to uibuilder's log functions
@@ -202,6 +247,75 @@ function adminRouterV3(uib, log) {
 
             // Commands ...
             switch (params.cmd) {
+                // See if a node's custom folder exists. Return true if it does, else false
+                case 'checkfolder': {
+                    log.trace(`[uibuilder:adminRouterV3:GET:checkfolder] See if a node's custom folder exists. URL: ${params.url}`)
+
+                    const folder = path.join( uib.rootFolder, params.url)
+
+                    fslib.access(folder, fslib.constants.F_OK)
+                        .then( () => {
+                            res.statusMessage = 'Folder checked'
+                            res.status(200).json( true )
+                            return true
+                        })
+                        .catch( () => { // err) => {
+                            res.statusMessage = 'Folder checked'
+                            res.status(200).json( false )
+                            return false
+                        })
+
+                    break
+                } // -- end of checkfolder -- //
+
+                // See if a specific package has been installed into uibRoot (e.g. via library manager)
+                case 'checkpackage': {
+                    // We must have a packageName
+                    if (!params.packageName) {
+                        log.error(`🛑 [uibuilder:adminRouterV3:GET] Admin API. cmd=${checkpackage}. 'packageName' parameter not provided. url=${params.url}`)
+                        res.statusMessage = 'packageName parameter not provided'
+                        res.status(500).end()
+                        return
+                    }
+                    const ans = packageMgt.isPackageInstalled(params.packageName)
+                    if (ans === false) {
+                        res.statusMessage = 'Package checked - not installed'
+                        res.status(200).json( false )
+                    }
+
+                    res.statusMessage = 'Package checked - is installed'
+                    res.status(200).json( true )
+
+                    break
+                } // -- end of checkpackage -- //
+
+                // Check if URL is already in use
+                case 'checkurls': {
+                    log.trace(`[uibuilder:adminRouterV3:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
+
+                    /** @returns {boolean} True if the given url exists, else false */
+                    const chkInstances = Object.values(uib.instances).includes(params.url)
+                    const chkFolders = fslib.existsSync(uib.rootFolder, params.url)
+
+                    res.statusMessage = 'Instances and Folders checked'
+                    res.status(200).json( chkInstances || chkFolders )
+
+                    break
+                } // -- end of checkurls -- //
+
+                // Get list of all available no-code elements
+                case 'getElements': {
+                    res.statusMessage = 'No-code elements list returned'
+                    res.status(200).json( elements )
+                    break
+                }
+
+                // Get details for one specific no-code element
+                case 'getOneElement': {
+                    doGetOneElement(params, uib.rootFolder, req, res)
+                    break
+                }
+
                 // List all folders and files for this uibuilder instance
                 case 'listall': {
                     log.trace(`[uibuilder:adminRouterV3:GET] Admin API. List all folders and files. url=${params.url}, root fldr=${uib.rootFolder}`)
@@ -308,20 +422,6 @@ function adminRouterV3(uib, log) {
                     break
                 } // -- end of listfolders -- //
 
-                // Check if URL is already in use
-                case 'checkurls': {
-                    log.trace(`[uibuilder:adminRouterV3:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
-
-                    /** @returns {boolean} True if the given url exists, else false */
-                    const chkInstances = Object.values(uib.instances).includes(params.url)
-                    const chkFolders = fslib.existsSync(uib.rootFolder, params.url)
-
-                    res.statusMessage = 'Instances and Folders checked'
-                    res.status(200).json( chkInstances || chkFolders )
-
-                    break
-                } // -- end of checkurls -- //
-
                 // List all of the deployed instance urls
                 case 'listinstances': {
 
@@ -364,49 +464,9 @@ function adminRouterV3(uib, log) {
                     break
                 } // -- end of listurls -- //
 
-                // See if a node's custom folder exists. Return true if it does, else false
-                case 'checkfolder': {
-                    log.trace(`[uibuilder:adminRouterV3:GET:checkfolder] See if a node's custom folder exists. URL: ${params.url}`)
-
-                    const folder = path.join( uib.rootFolder, params.url)
-
-                    fslib.access(folder, fslib.constants.F_OK)
-                        .then( () => {
-                            res.statusMessage = 'Folder checked'
-                            res.status(200).json( true )
-                            return true
-                        })
-                        .catch( () => { // err) => {
-                            res.statusMessage = 'Folder checked'
-                            res.status(200).json( false )
-                            return false
-                        })
-
-                    break
-                } // -- end of checkfolder -- //
-
-                // See if a specific package has been installed into uibRoot (e.g. via library manager)
-                case 'checkpackage': {
-                    // We must have a packageName
-                    if (!params.packageName) {
-                        log.error(`🛑 [uibuilder:adminRouterV3:GET] Admin API. cmd=${checkpackage}. 'packageName' parameter not provided. url=${params.url}`)
-                        res.statusMessage = 'packageName parameter not provided'
-                        res.status(500).end()
-                        return
-                    }
-                    const ans = packageMgt.isPackageInstalled(params.packageName)
-                    if (ans === false) {
-                        res.statusMessage = 'Package checked - not installed'
-                        res.status(200).json( false )
-                    }
-
-                    res.statusMessage = 'Package checked - is installed'
-                    res.status(200).json( true )
-
-                    break
-                } // -- end of checkpackage -- //
-
                 default: {
+                    res.statusMessage = 'cmd parameter missing or incorrect'
+                    res.status(500).json( { error: res.statusMessage } )
                     break
                 }
             }
@@ -651,5 +711,3 @@ function adminRouterV3(uib, log) {
 }
 
 module.exports = adminRouterV3
-
-// EOF

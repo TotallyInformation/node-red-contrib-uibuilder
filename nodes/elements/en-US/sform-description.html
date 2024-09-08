@@ -1,0 +1,25 @@
+<p>
+    A simple but accessible Form with inputs and buttons. <b><a href="./uibuilder/docs/#/elements/forms" target="_blank">Docs</a></b>.
+</p><p>
+    Set the input data to an <i>Array of Objects</i>.
+    Each array entry will be a new form input or button.
+    An Object of Objects can also be used where the outer object is key'd by the ID of the entry.
+</p><p>
+    Currently supported properties in the inner objects are: 
+    <code>type=</code>One of the input types listed below, 
+    <code>id=</code>Unique HTML identifier, 
+    <code>label=</code>Label text of the input field or button, 
+    <code>required=</code>true/false whether a value is required,
+    <code>value=</code>Optional starting value.
+</p><p>
+    Other properties can be provided. These only work with the appropriate input types and are otherwise ignored
+</p><p>
+    Available input types are:
+    button, checkbox, color, date, detetime-local, email, hidden, month, number, password, radio, range, tel, text, time, url, week.
+    See <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Input" target="_blank">this explanation of the types and properties</a>.
+</p><p>
+    Some additional types will be made available in the future: select, combo, file, image, textarea. Auto-complete will also be added eventually.
+</p><p>
+    If a button is included, pressing the button will automatically send a message from the client back to Node-RED
+    All of the form data will be included in that message in <code>msg._ui.form</code>.
+</p>
