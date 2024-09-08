@@ -141,6 +141,7 @@ The following are only used for _**developing**_ UIBUILDER:
 * All references to node.js's `fs` library now restricted to `libs/fs.js`.
 * Some now unused node.js files have been removed.
 * @totallyinformation/ti-common-event-handler dependency package now removed completely. `RED.events` is used throughout, all uibuilder events start with `UIBUILDER/`.
+* To make it easier to create new elements in the future. Moved no-code element runtime processing to a common folder, `nodes/elements`. Added Editor API's and moved processing out of the `uib-element` runtime to separate module. Also moved element description and advanced options HTML to `nodes/elements/en-US`.
 
 ### `uib-brand.css` styles & variables
 
