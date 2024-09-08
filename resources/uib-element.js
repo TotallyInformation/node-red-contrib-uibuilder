@@ -1,5 +1,9 @@
 /* eslint-disable strict, sonarjs/no-duplicate-string, sonarjs/no-duplicated-branches */
 
+/** Node-RED WidgetTypedInputType
+ * @typedef { Array<"bin"|"bool"|"date"|"env"|"flow"|"global"|"json"|"jsonata"|"msg"|"num"|"re"|"str"> } WidgetTypedInputType
+ */
+
 // Isolate this code
 ;(function () {
     'use strict'
@@ -247,7 +251,9 @@
         },
     }
 
-    // Standard typed input types for string fields
+    /** Standard typed input types for string fields
+     * @type {WidgetTypedInputType}
+     */
     const stdStrTypes = [
         'msg', 'flow', 'global',
         'str', 'env', 'jsonata', 're',

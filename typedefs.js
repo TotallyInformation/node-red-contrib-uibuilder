@@ -662,6 +662,10 @@
  * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
  */
 
+/** Node-RED WidgetTypedInputType
+ * @typedef { Array<"bin"|"bool"|"date"|"env"|"flow"|"global"|"json"|"jsonata"|"msg"|"num"|"re"|"str"> } WidgetTypedInputType
+ */
+
 /** Props define attributes on a virtual node.
  * @typedef {{string, any} | {}} Props
  * @property {object} Props .
