@@ -31,7 +31,6 @@
 const uiblib = require('../libs/uiblib.js')  // Utility library for uibuilder
 const tilib = require('../libs/tilib.js')   // General purpose library (by Totally Information)
 const packageMgt = require('../libs/package-mgt.js')
-const tiEvents = require('@totallyinformation/ti-common-event-handler') // https://github.com/EventEmitter2/EventEmitter2
 const fslib  = require('../libs/fs.js')   // File/folder handling library (by Totally Information)
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
 try {

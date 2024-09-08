@@ -28,16 +28,11 @@
  */
 
 const { join }     = require('path')
-const { inspect }     = require('util')
 const { existsSync, getFileMeta } = require('./fs')
 const socketio = require('socket.io')
 const { urlJoin }    = require('./tilib')    // General purpose library (by Totally Information)
 const { setNodeStatus }   = require('./uiblib')   // Utility library for uibuilder
 // const security = require('./sec-lib') // uibuilder security module
-// const { emit } = require('@totallyinformation/ti-common-event-handler') // NO, don't do this! If you do, the emits don't work
-const tiEvent = require('@totallyinformation/ti-common-event-handler')
-
-let testingHeaders = 0
 
 /** Parse x-forwarded-for headers.
  * Borrowed from https://github.com/pbojinov/request-ip/blob/master/src/index.js
@@ -813,7 +808,7 @@ class UibSockets {
                 that.sendCtrlMsg(ctrlMsg, node, 'addNS:disconnect')
 
                 // Let other nodes know a client is disconnecting (via custom event manager)
-                tiEvent.emit(`node-red-contrib-uibuilder/${node.url}/clientDisconnect`, ctrlMsg)
+                this.RED.events.emit(`UIBUILDER/${node.url}/clientDisconnect`, ctrlMsg)
             }) // --- End of on-connection::on-disconnect() --- //
 
             // Listen for msgs from clients on standard channel
@@ -938,7 +933,7 @@ class UibSockets {
             that.sendCtrlMsg(ctrlMsg, node, 'addNS:connection')
 
             // Let other nodes know a client is connecting (via custom event manager)
-            tiEvent.emit(`node-red-contrib-uibuilder/${node.url}/clientConnect`, ctrlMsg)
+            this.RED.events.emit(`UIBUILDER/${node.url}/clientConnect`, ctrlMsg)
 
             //#endregion ---- run when client connects ---- //
 

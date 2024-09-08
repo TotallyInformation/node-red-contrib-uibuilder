@@ -50,12 +50,6 @@ Please see the roadmap in the docs for the backlog.
     * [x] How to block in/out client msgs based on `msg._client` - e.g. use of the new hooks.
     * [ ] How to redirect un-auth web requests to login page
 
-* [ ] Remove all tiEvents - swap to RED.events.
-  * [ ] uibuilder: function externalEvents
-  * [ ] uibuilder: this.on('close'
-  * [ ] uib-sender
-  * [ ] package.json
-
 ### Nodes
 
 #### Node: `uibuilder`
@@ -146,6 +140,7 @@ The following are only used for _**developing**_ UIBUILDER:
 * References to `fs-extra` 3rd-party library removed from all nodes & libraries except `libs/fs.js`.
 * All references to node.js's `fs` library now restricted to `libs/fs.js`.
 * Some now unused node.js files have been removed.
+* @totallyinformation/ti-common-event-handler dependency package now removed completely. `RED.events` is used throughout, all uibuilder events start with `UIBUILDER/`.
 
 ### `uib-brand.css` styles & variables
 

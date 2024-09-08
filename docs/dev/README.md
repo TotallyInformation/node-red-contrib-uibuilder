@@ -3,7 +3,7 @@ title: Developer Documentation
 description: |
   Deep dives into the internals of UIBUILDER. This is where to go if you need to understand how things work. These documents may lag behind the actual code however, so it is always worth also referencing the current codebase.
 created: 2019-06-16 16:16:00
-updated: 2024-09-07 14:28:54
+updated: 2024-09-08 11:23:17
 ---
 
 ## Processes
@@ -22,11 +22,10 @@ Due to its complexity, UIBUILDER has a higher than Node-RED average of external 
 
 These are required to run UIBUILDER
 
-* [@totallyinformation/ti-common-event-handler](https://www.npmjs.com/package/@totallyinformation/ti-common-event-handler) - My own shared library for doing extended event handling in Node.js. Allows for wildcards and is faster than Node's native event handler.
 * [degit](https://www.npmjs.com/package/degit) - Used to enable external uibuilder templates to be utilised from Git repositories - notably GitHub or GitLab.
 * [ExpressJS](https://www.npmjs.com/package/express) - Node.js standard web server. Also used by Node-RED.
 * [fast-glob](https://www.npmjs.com/package/fast-glob) - Fast file find and traversal. Used in `libs/fs.js` only. **TO BE REMOVED IN THE FUTURE**
-* [fs-extra](https://www.npmjs.com/package/fs-extra) - Additional filing system methods. Used in several modules but is being slowly moved to `libs/fs.js` only. **IN THE PROCESS OF BEING REMOVED**
+* [fs-extra](https://www.npmjs.com/package/fs-extra) - Additional filing system methods. Only now used in the `libs/fs.js` module. **IN THE PROCESS OF BEING REMOVED**
 * [jsdom](https://www.npmjs.com/package/jsdom) - Industry standard Node.js module to simulate the browser DOM on the server. Used for the `uib-html` node to hydrate uibuilder's low-code JSON to HTML.
 * [Socket.IO](https://www.npmjs.com/package/socket.io) - Enhanced websockets.
 
@@ -70,7 +69,7 @@ In addition, these are required for developing UIBUILDER, they are not required 
 
 ## Node-RED Editor Libraries
 
-These libraries provide common Node-RED Editor data, functions and styling for all UIBUILDER nodes.
+These libraries provide common Node-RED Editor data, functions and styling for all UIBUILDER nodes, they are loaded to the Editor via a plugin.
 
 * [`/resources/ti-common.js`](dev/editor-libs/ti-common) - Common JavaScript library for the Editor.
 * [`/resources/ti-common.css`](dev/editor-libs/ti-common-css) - Common style sheet library for the Editor.
