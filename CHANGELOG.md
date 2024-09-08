@@ -29,8 +29,6 @@ Please see the roadmap in the docs for the backlog.
   * Remove from:
     * [ ] `libs\fs.js`
 
-* Can we remove `lib/tilogger.js`?
-
 * [-] Use of `msg._client`
   * [ ] Msgs from FE client
     * [x] Check headers for:
