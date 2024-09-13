@@ -40,7 +40,7 @@
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^8.0.0",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsdoc": "^48.2.1",
+    "eslint-plugin-jsdoc": "^50.2.3",
     "eslint-plugin-n": "^17.2.1",
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-sonarjs": "^0",
