@@ -615,7 +615,7 @@ function nodeInstance(config) {
         // Cancel any event listeners for this node
         RED.events.off(`UIBUILDER/send/${this.url}`, this.sender)
 
-        // Tody up the ExpressJS routes if a node is removed
+        // Tidy up the ExpressJS routes if a node is removed
         if (removed) {
             delete web.routers.instances[this.url]
             delete web.instanceRouters[this.url]
