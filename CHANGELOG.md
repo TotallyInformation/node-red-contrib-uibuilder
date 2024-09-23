@@ -8,10 +8,23 @@ updated: 2024-09-02 17:52:21
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
+## To Fix
+
+* Copy/paste of a uibuilder node leaves the wrong code editor url. Probably rename does as well.
+
+## Consider
+
+* Include source node data in msg._ui & an optional 2nd output on no-code nodes to allow interactions from elements to be routed direct to the source node.
+
 ## To Do
 
 Please see the roadmap in the docs for the backlog.
 
+* Update built-in web components to new standards
+* Add `_ui.dataset = {...target.dataset}` to `eventSend`
+  
+* Add disconnect & reconnect timestamps to the uib FE library and pass back in connect ctrl msgs. Add option to the cache node to only send data from the disconnected period.
+  
 * **Collapsible list**: Either built-in class/js or a web component. [Ref](https://chatgpt.com/share/e32ce7f8-7b86-45e7-ae9d-69d167c37a14). NB: Allow for nav menus as well as normal lists. Also consider collapsible para's.
 
 * **FE: Drag/drop**: draggable class, drag-container class (to constrain drag area). Use `moveElement` fn. On drop, send change notice to Node-RED as control msg.
@@ -142,6 +155,12 @@ The following are only used for _**developing**_ UIBUILDER:
 * To make it easier to create new elements in the future. Moved no-code element runtime processing to a common folder, `nodes/elements`. Added Editor API's and moved processing out of the `uib-element` runtime to separate module. Also moved element description and advanced options HTML to `nodes/elements/en-US`.
 
 ### `uib-brand.css` styles & variables
+
+* **NEW** Utility classes
+  * `square` - Make something square or rectangular.
+  * `round` - Make something circular, oval or pill-shaped
+  
+    Each of these are controlled by simple CSS variable overrides. See the [live file](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/front-end/uib-brand.css) for details on use.
 
 * Added `text-wrap: balance` to `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `heading` and added `text-wrap: pretty` to `p`, `li`, `figcaption` - these make the elements look a little nicer when text is wrapping.
 * Added `container-type: inline-size` to `header`, `footer`, `main`, `section`, `article`. This is in preparation for the future use of [Container Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries) which are a much more flexible alternative to [Media Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries) for controlling responsive layout breakpoints. Container Queries are still very new and not yet supported widely enough to use.

@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-09-08 16:34:39
+updated: 2024-09-15 18:05:22
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -204,6 +204,19 @@ Consider implementing at Kroki diagram service node - https://kroki.io/ - enable
 ~~`<include-fragment src="/tips">` [ref](https://github.com/github/include-fragment-element/).~~
 
 Use [GitHub's version instead](https://github.com/github/include-fragment-element/).
+
+#### Enhanced button/Button-state
+
+[Ref](https://discourse.nodered.org/t/button-state-node-is-something-similar-available-for-dashboard-2/90933/8).
+
+* Modes: momentary, latching
+* Visuals: button, pill switch (horizontal & vertical)
+* Transitions: Warm-up, warm-down options
+
+#### Multi-state switch
+
+* Visuals: button row (or col), slider (v or h), circular
+* Transition options
 
 #### Light-controller
 
@@ -728,7 +741,7 @@ See Node-RED worldmap for reference.
 
 * *New Functions* (all to be callable from Node-RED):
 
-  * [ ] `formateDate` - Use INTL std lib, usable as a `<uib-var>` filter function. [ref](https://discourse.nodered.org/t/format-date-at-yyyydd-hh-mm-ss/83130/12?u=totallyinformation)
+  * [ ] `formatDate` - Use INTL std lib, usable as a `<uib-var>` filter function. [ref](https://discourse.nodered.org/t/format-date-at-yyyydd-hh-mm-ss/83130/12?u=totallyinformation)
   * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
   * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
   * [ ] `uibuilder.socketReconnect()` Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
