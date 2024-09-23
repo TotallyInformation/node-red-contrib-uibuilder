@@ -401,9 +401,15 @@ module.exports = {
                 else if ('checked' in frmRow) frmRow.value = frmRow.checked.toString()
                 else frmRow.value = 'false'
             } else {
-                // Tracks old/new values on data atrributes for input fields
-                frmRow.onchange = 'this.dataset.newValue = this.value'
-                frmRow.onfocus = 'this.dataset.oldValue = this.value'
+                try {
+                    // Tracks old/new values on data attributes for input fields
+                    frmRow.onchange = 'this.dataset.newValue = this.value'
+                    frmRow.onfocus = 'this.dataset.oldValue = this.value'
+                } catch (e) {
+                    // Catch edge-case where the form row input is a string (incorrect use of template node to send input data)
+                    node.error(`[uib-element:elementBuilder:buildSForm] Failed to add onchange/onfocus. Form incomplete. Check input data. ${e.message}`, e)
+                    return
+                }
             }
 
             if (!frmRow.name) frmRow.name = frmRow.id
