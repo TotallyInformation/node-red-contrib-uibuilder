@@ -459,6 +459,7 @@
  *   confData: object;
  *   passthrough: boolean;
  *   _ui: any;
+ *   tag: string;
  * }} uibElNode
  */
 
