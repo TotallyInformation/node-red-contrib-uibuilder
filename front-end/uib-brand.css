@@ -1,7 +1,16 @@
-/** Default Styles for uibuilder - Light & Dark options
+/** Default Styles for uibuilder - Light & Dark options ...
  *
  * TODO: Add darker/lighter shades for variant colours for headers, etc.
  *
+ * Recommended @media breakpoints:
+ * Tablet:        48em @ 16pt   = 768px
+ * Tablet Wide:   62em @ 16pt   = 992px
+ *
+ * Mobile Small:  30em @ 16pt   = 480px
+ * Mobile Medium: 37.5em @ 16pt = 600px
+ * Mobile Large:  48em @ 16pt   = 768px
+ *
+ * 
  * https://css-tricks.com/a-complete-guide-to-custom-properties/ for details on using custom css properties
  * https://una.im/css-color-theming/ for more on color theory calculations
  * https://web.dev/building-a-color-scheme/ is the basis for this style
@@ -736,8 +745,8 @@ form > label {
 form > label:focus-within {
     font-weight: bold;
 }
-/* Small screen */
-@media all and (max-width: 600px) {
+/* Small screen (37.5em @ 16pt is about 600px) */
+@media all and (max-width: 37.5em) {
     form, form * {
         display:block;
         width:100%;
@@ -914,6 +923,30 @@ button.compact {
 }
 .text-smaller {
     font-size: smaller;
+}
+
+/** These are useful for things like buttons.
+ * Default to 5em in size but are easily customised
+ * using CSS variables.
+ * @example
+ *   <button class="square" style="--sq: 10em;">Square</button>
+ *   <button class="round" style="--dia: 10em;">Round</button>
+ *   <button class="square" style="--sq: 10em;--sqw: 20em;">Rectangle</button>
+ *   <button class="round" style="--dia: 10em;--roundw: 20em;">Oval</button>
+ */
+/* Make something square or rectangular. */
+.square {
+    --sq: 5em;
+    width: var(--sqw, var(--sq));
+    height: var(--sqh, var(--sq));
+    border-radius: calc(var(--sq) * 0.1);
+}
+/* Make something circular, oval or pill-shaped */
+.round {
+    --dia: 5em;
+    width: var(--roundw, var(--dia));
+    height: var(--roundh, var(--dia));
+    border-radius: var(--roundb, var(--dia));
 }
 
 /* Apply to headings where you want a sub-title */

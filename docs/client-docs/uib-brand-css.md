@@ -3,7 +3,7 @@ title: Documentation for the uibuilder standard CSS file
 description: |
   Details of the different styles and their usage.
 created: 2023-02-25 13:54:50
-updated: 2024-08-30 17:27:12
+updated: 2024-09-11 17:16:08
 ---
 
 This style sheet is light/dark adaptive and has a basic style reset for the most commonly used HTML tags.
@@ -146,13 +146,17 @@ Designed to be small rounded boxes with a left-hand coloured panel (no text) sho
 * `.compact`, `button.compact` - Reduces margin and padding.
 * `.emoji` - Apply to a `<span>` containing an emoji to make it look a lot nicer on most platforms.
 * `.noborder` - Turn off a border
+* `round`§ - Make something circular, oval or pill-shaped
 * `.status-side-panel` - A narrow, full-height block designed to show a vertical coloured status bar (no text). Apply one of the standard colour classes as well. Use with `.animate-pulse` to get an eye-catching effect.
+* `square`§ - Make something square or rectangular.
 * `.text-larger`, `.text-smaller` - Hopefully obvious.
 * `.withsubtitle` - Use on a page heading tag (usually `<h1>`) where you want to follow it with a subtitle.
 * `[role="doc-subtitle"]` - Add this role attribute to a `<div role="doc-subtitle">` immediately following a page heading to get smaller text with no gap.
 * `.uppercase` - Force text to display only in upper case.
 
 In addition, there is a set of colours defined for simple syntax highlighting of JSON objects since these so often need to be viewed. The `uibuilder.showMsg` and `uibuilder.syntaxHighlight` functions use these colours. They are controlled by a `.syntax-highlight` class and have `.key`, `.string`, `.number`, `.boolean`, `.null` and `.undefined` sub-classes.
+
+§ These styles have local CSS variable overrides. See the [live file](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/front-end/uib-brand.css) for details on the variables and how to use them.
 
 ## CSS Variables
 
