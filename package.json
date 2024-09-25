@@ -22,7 +22,7 @@
     "socket.io": "^4.3.2"
   },
   "devDependencies": {
-    "@types/express": "^4.17.13",
+    "@types/express": "^5.0.0",
     "@types/jquery": "^3.5.25",
     "@types/jqueryui": "^1.12.19",
     "@types/node": "^18.19.24",
