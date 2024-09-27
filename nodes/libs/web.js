@@ -526,19 +526,31 @@ class UibWeb {
             const pkgDetails = pj.uibuilder.packages[packageName]
 
             if ( this.vendorRouter === undefined ) throw new Error('web.js:serveVendorPackages: this.vendorRouter is undefined')
-            if ( pkgDetails.installFolder === undefined || pkgDetails.packageUrl === undefined ) throw new Error('web.js:serveVendorPackages: pkgDetails.installFolder or pkgDetails.packageUrl is undefined')
 
-            if ( !pkgDetails.missing ) { // Only if the package is actually installed
-                // Add a route for each package to this.vendorRouter
-                this.vendorRouter.use(
-                    pkgDetails.packageUrl,
-                    express.static(
-                        pkgDetails.installFolder,
-                        this.uib.staticOpts
-                    )
-                )
-                log.trace(`[uibuilder:web:serveVendorPackages] Vendor Route added for '${packageName}'. Fldr: '${pkgDetails.installFolder}', URL: '${this.uib.httpRoot}/uibuilder/vendor/${pkgDetails.packageUrl}/'. `)
+            // We already know something is wrong, report and skip this package
+            if ( pkgDetails.missing ) {
+                let probs = ''
+                if (pkgDetails.problems) probs = pkgDetails.problems.join('.')
+                log.error(`[uibuilder:web.js:serveVendorPackages] Package "${packageName}" is not actually installed. Remove this package or fix the installation. ${probs}`)
+                return
             }
+
+            // Double-check if details missing. We can't mount the folder so skip this one.
+            if ( pkgDetails.installFolder === undefined || pkgDetails.packageUrl === undefined ) {
+                log.error(`[uibuilder:web.js:serveVendorPackages] Either installFolder or packageUrl is undefined for package "${packageName}". Remove this package. installFolder="${pkgDetails.installFolder}", packageUrl="${pkgDetails.packageUrl}"`)
+                return
+            }
+
+            // Add a route for each package to this.vendorRouter
+            this.vendorRouter.use(
+                pkgDetails.packageUrl,
+                express.static(
+                    pkgDetails.installFolder,
+                    this.uib.staticOpts
+                )
+            )
+            
+            log.trace(`[uibuilder:web:serveVendorPackages] Vendor Route added for '${packageName}'. Fldr: '${pkgDetails.installFolder}', URL: '${this.uib.httpRoot}/uibuilder/vendor/${pkgDetails.packageUrl}/'. `)
         })
 
         log.trace('[uibuilder:web:serveVendorPackages] Serve Vendor Packages end')
