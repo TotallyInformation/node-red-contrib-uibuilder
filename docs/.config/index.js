@@ -22,7 +22,7 @@ window.$docsify = { //  eslint-disable-line no-undef
         '/dev/tilib-js.*': '/dev/server-libs/tilib.md',
         '/dev/uiblib-js.*': '/dev/server-libs/uiblib.md',
         '/dev/web-js.*': '/dev/server-libs/web.md',
-        // '/roadmap.*': '/roadmap/readme.md',
+        '/roadmap/': '/roadmap/readme.md',
 
         '.*?/.config/(.*)': '/.config/$1',
         '.*?/images/(.*)': '/images/$1',
