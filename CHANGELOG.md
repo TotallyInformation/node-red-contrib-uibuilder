@@ -69,6 +69,10 @@ Please see the roadmap in the docs for the backlog.
   * [ ] Inputs on Files tab don't expand correctly
   * [ ] Text in Template settings fieldset is fixed width
 
+#### Node `uib-element`
+
+* Make the outer div optional (at least for html/markdown) - needed for the `<collapsible-headings>` component.
+
 #### Node: `uib-cache`
 
 * Editor panel
@@ -90,6 +94,8 @@ Please see the roadmap in the docs for the backlog.
   * [ ] Document
 
 * [ ] Enhance JSON viewing using my own interpretation of the [json-view](https://github.com/pgrabovets/json-view) library.
+* [ ] Add detail prop to eventSend to capture multi-clicks. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/click_event#usage_notes).
+* [ ] Add debounce for click to correspond to detail prop reset time.
 
 #### FE UI Library: `ui.js`
 
@@ -115,6 +121,7 @@ Please see the roadmap in the docs for the backlog.
 * [x] Simple flow
 
 ### Documentation
+  * [ ] Add a "Debugging" doc. [ref](https://dashboard.flowfuse.com/contributing/widgets/debugging.html#debugging-dashboard-2-0), [ref1](https://discourse.nodered.org/t/debugging-node-red-ui-base-js-and-understanding-websocket-behavior/91131/6)
   * [ ] Document a dashboard-like grid layout.
   * [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
   * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
@@ -153,6 +160,7 @@ The following are only used for _**developing**_ UIBUILDER:
 * Some now unused node.js files have been removed.
 * @totallyinformation/ti-common-event-handler dependency package now removed completely. `RED.events` is used throughout, all uibuilder events start with `UIBUILDER/`.
 * To make it easier to create new elements in the future. Moved no-code element runtime processing to a common folder, `nodes/elements`. Added Editor API's and moved processing out of the `uib-element` runtime to separate module. Also moved element description and advanced options HTML to `nodes/elements/en-US`.
+* [Socket](https://docs.socket.dev/docs/socket-for-github) security check tool added to all TotallyInformation GitHub repositories including UIBUILDER. Provides significant supply-chain security and privacy checks.
 
 ### `uib-brand.css` styles & variables
 
@@ -169,6 +177,12 @@ The following are only used for _**developing**_ UIBUILDER:
 ### Documentation changes
 
 * Improved documentation for uibuilder's event handling and better linked that to how to create custom nodes that work with uibuilder.
+
+### Runtime library changes
+
+#### `web.js`
+
+* Improved error checking and reporting in `serveVendorPackages` when mounting installed libraries. [Issue #428](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/428).
 
 ## [v7.0.4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.4...v7.0.3)
 
