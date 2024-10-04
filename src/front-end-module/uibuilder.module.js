@@ -528,6 +528,7 @@ export const Uib = class Uib {
 
         // trigger an event on the prop name, pass both the name and value to the event details
         this._dispatchCustomEvent('uibuilder:propertyChanged', { 'prop': prop, 'value': val, 'store': store, 'autoload': autoload })
+        this._dispatchCustomEvent(`uibuilder:propertyChanged:${prop}`, { 'prop': prop, 'value': val, 'store': store, 'autoload': autoload })
 
         return val
     }
