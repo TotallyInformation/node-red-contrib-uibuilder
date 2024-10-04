@@ -11,16 +11,29 @@ Please see the documentation for archived changelogs - a new archive is produced
 ## To Fix
 
 * Copy/paste of a uibuilder node leaves the wrong code editor url. Probably rename does as well.
+* `uib-element` Page title output is not replacing the h1.
 
 ## Consider
 
 * Include source node data in msg._ui & an optional 2nd output on no-code nodes to allow interactions from elements to be routed direct to the source node.
 
+## In progress
+
+* [STARTED] Update built-in web components to new standards
+  * [x] `uib-var`
+  * [ ] `uib-meta`
+  * [ ] `apply-template`
+
+### Client library
+
+* Added `uibuilder:propertyChanged:${prop}` custom event when a managed variable changed. Has the same event.details as the 'uibuilder:propertyChanged' event. This event can be used instead of the `uibuilder.onChange('prop', ....)` function if preferred.
+
 ## To Do
 
 Please see the roadmap in the docs for the backlog.
 
-* Update built-in web components to new standards
+* Enhance client table builder
+  * Add data-row-key value - to row, ?to cells?
 * Add `_ui.dataset = {...target.dataset}` to `eventSend`
   
 * Add disconnect & reconnect timestamps to the uib FE library and pass back in connect ctrl msgs. Add option to the cache node to only send data from the disconnected period.
@@ -173,6 +186,14 @@ The following are only used for _**developing**_ UIBUILDER:
 * Added `text-wrap: balance` to `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `heading` and added `text-wrap: pretty` to `p`, `li`, `figcaption` - these make the elements look a little nicer when text is wrapping.
 * Added `container-type: inline-size` to `header`, `footer`, `main`, `section`, `article`. This is in preparation for the future use of [Container Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries) which are a much more flexible alternative to [Media Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries) for controlling responsive layout breakpoints. Container Queries are still very new and not yet supported widely enough to use.
 * Added some additional "reset" tweaks for improved visual style.
+
+### Front-end components: `uib-var`
+
+* Re-engineered to match the latest standards in the [TotallyInformation web-components library](https://wc.totallyinformation.net).
+* Added `ready` event
+* Removed shadow dom
+* Error messages improved
+* Add `source` prop when reporting change back to Node-RED
 
 ### Documentation changes
 
