@@ -640,6 +640,7 @@
           const tbl = _a.doc.createElement("table");
           const thead = _a.doc.createElement("thead");
           const headerRow = _a.doc.createElement("tr");
+          headerRow.dataset.colReference = "";
           const headers = Object.keys(data[0]);
           headers.forEach((header) => {
             const th = _a.doc.createElement("th");

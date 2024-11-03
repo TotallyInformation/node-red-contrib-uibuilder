@@ -678,6 +678,7 @@ var require_ui = __commonJS({
         const tbl = _a2.doc.createElement("table");
         const thead = _a2.doc.createElement("thead");
         const headerRow = _a2.doc.createElement("tr");
+        headerRow.dataset.colReference = "";
         const headers = Object.keys(data[0]);
         headers.forEach((header) => {
           const th = _a2.doc.createElement("th");

@@ -642,6 +642,7 @@ const Ui = class Ui2 {
     const tbl = Ui2.doc.createElement("table");
     const thead = Ui2.doc.createElement("thead");
     const headerRow = Ui2.doc.createElement("tr");
+    headerRow.dataset.colReference = "";
     const headers = Object.keys(data[0]);
     headers.forEach((header) => {
       const th = Ui2.doc.createElement("th");

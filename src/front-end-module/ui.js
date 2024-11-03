@@ -885,6 +885,8 @@ const Ui = class Ui {
         // Heading row
         const thead = Ui.doc.createElement('thead')
         const headerRow = Ui.doc.createElement('tr')
+        // Set this row to be the column reference (so we have a fixed ref if we allow more thead rows in the future)
+        headerRow.dataset.colReference = '' // creates attribute data-col-reference
         // Get the headers from the keys of the first object
         const headers = Object.keys(data[0])
         headers.forEach(header => {

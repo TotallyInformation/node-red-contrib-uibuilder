@@ -85,6 +85,7 @@ Please see the roadmap in the docs for the backlog.
 #### Node `uib-element`
 
 * Make the outer div optional (at least for html/markdown) - needed for the `<collapsible-headings>` component.
+* ~~For tables, add `data-row-index` to each tbody row.~~ NO! Because adding/removing rows throws out the numbering. Use the `rowIndex` property of the DOM element instead.
 
 #### Node: `uib-cache`
 
@@ -186,6 +187,10 @@ The following are only used for _**developing**_ UIBUILDER:
 * Added `text-wrap: balance` to `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `heading` and added `text-wrap: pretty` to `p`, `li`, `figcaption` - these make the elements look a little nicer when text is wrapping.
 * Added `container-type: inline-size` to `header`, `footer`, `main`, `section`, `article`. This is in preparation for the future use of [Container Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries) which are a much more flexible alternative to [Media Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries) for controlling responsive layout breakpoints. Container Queries are still very new and not yet supported widely enough to use.
 * Added some additional "reset" tweaks for improved visual style.
+
+### Front-end library: `ui.js`
+
+* Added `data-col-reference` attribute to created tables - on the `thead` row that actually defines the columns. Making it easier to get a reliable column reference later.
 
 ### Front-end components: `uib-var`
 

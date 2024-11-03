@@ -625,6 +625,7 @@ table {
     border: 1px solid var(--text3);
     margin-top: 1rem;
     margin-bottom: 1rem;
+    font-variant-numeric: tabular-nums; /* OpenType: better alignment of numbers */
 }
 thead th, thead td {
     color: var(--text2);
