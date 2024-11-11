@@ -36,8 +36,9 @@ import UibVar from '../components/uib-var'
 import UibMeta from '../components/uib-meta'
 import ApplyTemplate from '../components/apply-template'
 
-const version = '7.0.4-src'
+const version = '7.1.0-src'
 
+// TODO Move to separate library
 // TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
 
@@ -179,8 +180,8 @@ log.LOG_STYLES = {
     level: 'font-weight:bold; border-radius: 3px; padding: 2px 5px; display:inline-block;',
 }
 
-/** Default log level - Error */
-log.default = 0
+/** Default log level - Warn (@since v7.1.0) */
+log.default = 1
 let ll
 
 // Check if the script element was found and get the data-log-level attribute (only numeric levels allowed here)
@@ -1104,7 +1105,21 @@ export const Uib = class Uib {
      */
     applyTemplate = _ui.applyTemplate
 
-    buildHtmlTable = _ui.buildHtmlTable
+    /** Builds an HTML table from an array (or object) of objects
+     * 1st row is used for columns.
+     * If an object of objects, inner keys are used to populate th/td `data-col-name` attribs.
+     * @param {Array<object>|Object} data Input data array or object
+     * @param {object} opts Table options
+     *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
+     * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
+     */
+    buildHtmlTable(data, opts={}) {
+        return _ui.buildHtmlTable(data, opts)
+    }
+
+    createTable(data=[], opts={parent: 'body'}) {
+        _ui.createTable(data, opts)
+    }
 
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
@@ -1112,7 +1127,7 @@ export const Uib = class Uib {
      * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
      */
     convertMarkdown(mdText) {
-        return _ui.convertMarkdown
+        return _ui.convertMarkdown(mdText)
     }
 
     /** ASYNC: Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
@@ -1204,6 +1219,41 @@ export const Uib = class Uib {
      */
     sanitiseHTML(html) {
         return _ui.sanitiseHTML(html)
+    }
+
+    /** Add table click listener that returns the text or html content of either the full row or a single cell
+     * NOTE: Assumes that the table has a `tbody` element.
+     * If cells have a `data-col-name` attribute, it will be used in the output as the column name.
+     * @example tblAddListener('#eltest-tbl-table', {}, myVar)
+     * @example tblAddListener('#eltest-tbl-table', {eventScope: 'cell'}, myVar2)
+     *
+     * @param {string} tblSelector The table CSS Selector
+     * @param {object} [options={}] Additional options
+     *   @param {"row"|"cell"=} options.eventScope Optional, default=row. Return data for either the whole row (as an object) or for the single cell clicked
+     *   @param {"text"|"html"=} options.returnType Optional, default=text. Return text or html data
+     *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
+     *   @param {boolean=} options.send Optional, default=true. If uibuilder is present, will automatically send a message back to Node-RED.
+     *   @param {string|number=} options.logLevel Optional, default=3/info. Numeric or string log level matching uibuilder's log levels.
+     *   @param {string} [options.eventType] Optional, default=click. What event to listen for.
+     * @param {object=} out A variable reference that will be updated with the output data upon a click event
+     */
+    tblAddListener(tblSelector, options = {}, out = {}) {
+        return _ui.tblAddListener(tblSelector, options, out)
+    }
+
+    /** Adds a single new row to an existing table>tbody
+     * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
+     * @param {object|array} rowData A single row of column/cell data
+     * @param {object} [options]
+     * @param {number=} options.body Optional, default=0. The tbody section to add the row to.
+     * @param {boolean=} options.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+     * @param {string=} options.rowId Optional. HTML element ID for the added row
+     * @param {Array<columnDefinition>} [options.colMeta] Optional. Data about each column. If not provided, will be calculated from the table
+     * 
+     * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
+     */
+    tblAddDataRow(tbl, rowData={}, options={}) {
+        return _ui.tblAddDataRow(tbl, rowData, options)
     }
 
     /** Show a pop-over "toast" dialog or a modal alert

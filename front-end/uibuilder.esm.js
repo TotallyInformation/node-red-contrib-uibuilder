@@ -12,8 +12,8 @@ var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
 var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
+  for (var name2 in all)
+    __defProp(target, name2, { get: all[name2], enumerable: true });
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
@@ -58,7 +58,7 @@ var require_ui = __commonJS({
        */
       constructor(win, extLog, jsonHighlight) {
         //#region --- Class variables ---
-        __publicField(this, "version", "7.0.4-src");
+        __publicField(this, "version", "7.1.0-src");
         // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
         __publicField(this, "sanitiseExtraTags", ["uib-var"]);
         __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -142,8 +142,8 @@ var require_ui = __commonJS({
             if (typeof plugin === "string") {
               _a2.md.use(_a2.win[plugin]);
             } else {
-              const name = Object.keys(plugin)[0];
-              _a2.md.use(_a2.win[name], plugin[name]);
+              const name2 = Object.keys(plugin)[0];
+              _a2.md.use(_a2.win[name2], plugin[name2]);
             }
           });
         }
@@ -656,51 +656,6 @@ var require_ui = __commonJS({
           if (!target) _a2.log("error", "Ui:applyTemplate", `Target not found: id='${targetId}'`)();
         }
       }
-      /** Builds an HTML table from an array (or object) of objects
-       * 1st row is used for columns. If an object of objects, the outer keys
-       * are used as row ID's (prefixed with "r-").
-       * @param {Array<object>|Object} data Input data array or object
-       * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
-       */
-      buildHtmlTable(data) {
-        let keys;
-        if (!Array.isArray(data)) {
-          if (typeof data === "object") {
-            keys = Object.keys(data);
-            data = Object.values(data);
-          }
-          if (!Array.isArray(data)) {
-            const out = _a2.doc.createElement("p");
-            out.textContent = "Input data is not an array or an object, cannot create a table.";
-            return out;
-          }
-        }
-        const tbl = _a2.doc.createElement("table");
-        const thead = _a2.doc.createElement("thead");
-        const headerRow = _a2.doc.createElement("tr");
-        headerRow.dataset.colReference = "";
-        const headers = Object.keys(data[0]);
-        headers.forEach((header) => {
-          const th = _a2.doc.createElement("th");
-          th.textContent = header;
-          headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        tbl.appendChild(thead);
-        const tbody = _a2.doc.createElement("tbody");
-        data.forEach((item, i) => {
-          const row = _a2.doc.createElement("tr");
-          if (keys) row.id = `r-${keys[i]}`;
-          headers.forEach((header) => {
-            const cell = _a2.doc.createElement("td");
-            cell.innerHTML = this.sanitiseHTML(item[header]);
-            row.appendChild(cell);
-          });
-          tbody.appendChild(row);
-        });
-        tbl.appendChild(tbody);
-        return tbl;
-      }
       /** Converts markdown text input to HTML if the Markdown-IT library is loaded
        * Otherwise simply returns the text
        * @param {string} mdText The input markdown string
@@ -1209,7 +1164,284 @@ var require_ui = __commonJS({
       uiEnhanceElement(el, comp) {
         this._uiComposeComponent(el, comp);
       }
-      //#endregion ---- -------- ----
+      //#region --- table handling ---
+      /** Column metadata object definition
+       * @typedef columnDefinition
+       * @property {number} index The column index number
+       * @property {boolean} hasName Whether the column has a defined name or not
+       * @property {string} title The title of the column. Shown in the table header row
+       * @property {string=} name Optional. A defined column name that will be added as the `data-col-name` to all cells in the column if defined
+       * @property {string|number=} key Optional. A key value (currently unused)
+       * @property {"string"|"date"|"number"|"html"=} dataType FOR FUTURE USE. Optional. What type of data will this column contain?
+       * @property {boolean=} editable FOR FUTURE USE. Optional. Can cells in this column be edited?
+       */
+      /** Directly add a table to a parent element.
+       * @param {Array<object>|Array<array>|Object} data  Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
+       * @param {object} [opts] Build options
+       *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
+       *   @param {HTMLElement|string} opts.parent Default=body. The table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
+       *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+       */
+      createTable(data = [], opts = { parent: "body" }) {
+        if (!opts.parent) throw new Error("[ui.js:createTable] opts.parent must be provided");
+        this.buildHtmlTable(data, opts);
+      }
+      /** Builds & returns an HTML table element from an array (or object) of objects
+       * 1st row is used for columns unless you pass opts.cols to describe them.
+       * If an object of objects, inner keys are used to populate th/td `data-col-name` attribs. Outer keys applied as row ID's.
+       * 
+       * TODO
+       * - Allow optional caption, heading, footers, optional collapse
+       * - Multiple headings, footers
+       * - colspans, rowspans
+       * - multiple tbody
+       * 
+       * @param {Array<object>|Array<array>|Object} data Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
+       * @param {object} opts Table options
+       *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
+       *   @param {HTMLElement|string=} opts.parent If provided, the table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
+       *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+       * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
+       */
+      buildHtmlTable(data, opts = {}) {
+        let rowKeys;
+        const dataType = Object.prototype.toString.apply(data);
+        if (dataType === "[object Array]" || dataType === "[object Object]") {
+          rowKeys = Object.keys(data);
+          data = Object.values(data);
+        } else {
+          const out = _a2.doc.createElement("p");
+          out.textContent = "Input data is not an array or an object, cannot create a table.";
+          return out;
+        }
+        if (rowKeys.length > 1e3) _a2.log(1, "Uib:buildHtmlTable", `Warning, data is ${rowKeys.length} rows. Anything over 1,000 can get very slow to complete.`)();
+        const tbl = _a2.doc.createElement("table");
+        const thead = _a2.doc.createElement("thead");
+        const headerRow = _a2.doc.createElement("tr");
+        if (!opts.cols) {
+          if (!data) throw new Error("[ui.js:buildHtmlTable] When no opts.cols is provided, data must be provided");
+          const hasName = Object.prototype.toString.apply(data[0]) !== "[object Array]";
+          headerRow.dataset.colReference = "";
+          opts.cols = [];
+          Object.keys(data[0]).forEach((col, i) => {
+            opts.cols.push({
+              "index": i,
+              "hasName": hasName,
+              "name": hasName ? col : void 0,
+              "key": col ?? i,
+              "title": col
+            });
+          });
+        }
+        tbl.cols = opts.cols;
+        opts.cols.forEach((col) => {
+          const thEl = _a2.doc.createElement("th");
+          thEl.textContent = col.title;
+          if (col.hasName === true) thEl.dataset.colName = name;
+          headerRow.appendChild(thEl);
+        });
+        thead.appendChild(headerRow);
+        tbl.appendChild(thead);
+        const tbody = _a2.doc.createElement("tbody");
+        tbl.appendChild(tbody);
+        const rowOpts = {
+          allowHTML: true,
+          cols: opts.cols
+          // we only want to get this once
+        };
+        data.forEach((item, i) => {
+          if (isNaN(Number(rowKeys[i]))) rowOpts.rowId = rowKeys[i];
+          else rowOpts.rowId = void 0;
+          this.tblAddDataRow(tbl, item, rowOpts);
+        });
+        if (opts.parent) {
+          let parentEl;
+          if (typeof opts.parent === "string") {
+            parentEl = _a2.doc.querySelector(opts.parent);
+          } else {
+            parentEl = opts.parent;
+          }
+          try {
+            parentEl.appendChild(tbl);
+          } catch (e) {
+            throw new Error(`[ui.js:buildHtmlTable] Could not add table to parent. ${e.message}`);
+          }
+          return;
+        }
+        return tbl;
+      }
+      // TODO Add option for where to attach the row (afterRow)
+      // TODO Add check for existing named row - if present, replace instead of add
+      /** Adds a single new row to an existing table>tbody
+       * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
+       * @param {object|array} rowData A single row of column/cell data
+       * @param {object} [options]
+       * @param {number=} options.body Optional, default=0. The tbody section to add the row to.
+       * @param {boolean=} options.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+       * @param {string=} options.rowId Optional. HTML element ID for the added row
+       * @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
+       * 
+       * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
+       */
+      tblAddDataRow(tbl, rowData = {}, options = {}) {
+        const tblType = Object.prototype.toString.apply(tbl);
+        const dataType = Object.prototype.toString.apply(rowData);
+        if (dataType !== "[object Object]" && dataType !== "[object Array]") throw new Error(`[tblAddDataRow] rowData MUST be an object or an array containing column/cell data for each column`);
+        let tblEl;
+        if (tblType === "[object HTMLTableElement]") {
+          tblEl = tbl;
+        } else {
+          tblEl = _a2.doc.querySelector(tbl);
+          if (!tblEl) throw new Error(`[tblAddDataRow] Table with CSS Selector "${tbl}" not found`);
+        }
+        if (!options.body) options.body = 0;
+        if (!("allowHTML" in options)) options.allowHTML = false;
+        const tbodyEl = tblEl.getElementsByTagName("tbody")[options.body];
+        if (!tbodyEl) throw new Error(`[tblAddDataRow] Table must have a tbody tag, tbody section ${options.body} does not exist`);
+        if (!options.cols) options.cols = this.tblGetColMeta(tblEl);
+        const colMeta = options.cols;
+        const rowEl = _a2.doc.createElement("tr");
+        if (options.rowId) rowEl.id = options.rowId;
+        const cols = [];
+        for (const col of colMeta) {
+          const cellEl = _a2.doc.createElement("td");
+          cellEl.colMeta = col;
+          if (col.hasName) cellEl.dataset.colName = col.name;
+          cols.push(cellEl);
+        }
+        Object.keys(rowData).forEach((colKey, i, row) => {
+          let foundEl = cols.find((col) => col?.colMeta?.name === colKey);
+          let foundRowData;
+          if (foundEl) {
+            foundRowData = rowData[colKey];
+          } else {
+            let numColKey = Number(colKey);
+            if (isNaN(numColKey)) numColKey = i;
+            if (numColKey <= cols.length - 1) {
+              foundEl = cols[numColKey];
+              foundRowData = Object.values(rowData)[numColKey];
+            }
+          }
+          if (foundEl) {
+            if (options.allowHTML) foundEl.innerHTML = this.sanitiseHTML(foundRowData);
+            else foundEl.textContent = foundRowData;
+          }
+        });
+        rowEl.append(...cols);
+        return tbodyEl.appendChild(rowEl);
+      }
+      /** Add table click listener that returns the text or html content of either the full row or a single cell
+       * NOTE: Assumes that the table has a `tbody` element.
+       * If cells have a `data-col-name` attribute, it will be used in the output as the column name.
+       * @example tblAddListener('#eltest-tbl-table', {}, myVar)
+       * @example tblAddListener('#eltest-tbl-table', {eventScope: 'cell'}, myVar2)
+       *
+       * @param {string} tblSelector The table CSS Selector
+       * @param {object} [options={}] Additional options
+       *   @param {"row"|"cell"=} options.eventScope Optional, default=row. Return data for either the whole row (as an object) or for the single cell clicked
+       *   @param {"text"|"html"=} options.returnType Optional, default=text. Return text or html data
+       *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
+       *   @param {boolean=} options.send Optional, default=true. If uibuilder is present, will automatically send a message back to Node-RED.
+       *   @param {string|number=} options.logLevel Optional, default=3/info. Numeric or string log level matching uibuilder's log levels.
+       *   @param {string} [options.eventType] Optional, default=click. What event to listen for.
+       * @param {object=} out A variable reference that will be updated with the output data upon a click event
+       */
+      tblAddListener(tblSelector, options = {}, out = {}) {
+        const table = _a2.doc.querySelector(tblSelector);
+        if (!table) throw new Error(`Table with CSS Selector "${tblSelector}" not found`);
+        if (typeof out !== "object") throw new Error('The "out" argument MUST be an object');
+        if (!options.eventScope) options.eventScope = "row";
+        if (!options.returnType) options.returnType = "text";
+        if (!options.eventType) options.eventType = "click";
+        if (!options.pad) options.pad = 3;
+        if (!options.logLevel) options.logLevel = 2;
+        if (!("send" in options)) options.send = true;
+        table.querySelector("tbody").addEventListener(options.eventType, (event2) => {
+          Object.keys(out).forEach((key) => delete out[key]);
+          const clickedRow = event2.target.closest("tr");
+          const clickedCell = event2.target.closest("td");
+          if (clickedRow) {
+            out.clickType = options.eventScope;
+            out.eventType = options.eventType;
+            const rowIndex = out.rowIndex = clickedRow.rowIndex;
+            const cellIndex = out.cellIndex = clickedCell.cellIndex + 1;
+            if (clickedRow.id) out.rowId = clickedRow.id;
+            if (options.eventScope === "row") {
+              clickedRow.querySelectorAll("td").forEach((cell) => {
+                const colName = this.tblGetCellName(cell, options.pad);
+                out[colName] = options.returnType === "text" ? cell.textContent.trim() : cell.innerHTML;
+              });
+            } else {
+              const colName = this.tblGetCellName(clickedCell, options.pad);
+              out[colName] = options.returnType === "text" ? clickedCell.textContent.trim() : clickedCell.innerHTML;
+            }
+            _a2.log(options.logLevel, "Ui:tblAddClickListener", `${options.eventScope} ${options.eventType} on row=${rowIndex}, col=${cellIndex}, data: `, out)();
+            if (options.send === true && _a2.win["uibuilder"]) _a2.win["uibuilder"].send({
+              topic: `${tblSelector} ${options.eventScope} ${options.eventType}`,
+              payload: out
+            });
+          }
+        });
+      }
+      /** Find the column definition for a single column
+       * @param {string|number} rowKey Key or index to use for column search
+       * @param {Array<columnDefinition>=} colMeta Array of column definitions. If not provided, will need the HTML table element.
+       * @param {HTMLTableElement=} tblEl If the colMeta table not provided, provide the HTML table element to do the lookup
+       * @returns 
+       */
+      tblFindColMeta(rowKey, colMeta, tblEl) {
+        if (!colMeta && !tblEl) throw new Error("[tblFindColMeta] Either the column metadata array or the HTML table element must be provided");
+        if (!colMeta && tblEl) colMeta = this.tblGetColMeta(tblEl);
+        let colDef;
+        if (colMeta[rowKey]) colDef = colMeta[rowKey];
+        else {
+          const find = colMeta.find((c) => c.name === rowKey || c.index === Number(rowKey));
+          if (find) colDef = find;
+        }
+        return colDef;
+      }
+      /** Return a standardised table cell name. Either from a `data-col-name` attribute or a numeric reference like `C003`
+       * @param {HTMLTableCellElement} cellEl The cell element to process
+       * @param {number=} pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
+       * @returns {string} A cell name
+       */
+      tblGetCellName(cellEl, pad = 3) {
+        return cellEl.getAttribute("data-col-name") ?? `C${String(cellEl.cellIndex + 1).padStart(pad, "0")}`;
+      }
+      /** Returns either the existing or calculated column metadata given any table
+       * First checks if the data is on the `cols` custom property of the table
+       * If not, then looks 1st for a row with a `data-col-reference` attribute. Then for the first TR of the thead. Then for the first TR of the table.
+       * @param {HTMLTableElement} tblEl 
+       * @param {object} [options={}] 
+       *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
+       * @returns {Array<columnDefinition>} Column metadata = array of column definitions
+       */
+      tblGetColMeta(tblEl, options = {}) {
+        if (!options.pad) options.pad = 3;
+        if (tblEl.cols) return tblEl.cols;
+        let cols = tblEl.querySelector("tr[data-col-reference]")?.children;
+        if (!cols) cols = tblEl.querySelector("thead>tr:first-of-type")?.children;
+        if (!cols) cols = tblEl.querySelector("tr:first-of-type")?.children;
+        const colData = [];
+        let cellEl;
+        for (cellEl of cols) {
+          const hasName = !!cellEl.dataset.colName;
+          const colName = cellEl.dataset.colName;
+          const colIndex = cellEl.cellIndex + 1;
+          const colKey = hasName ? colName : `C${String(cellEl.cellIndex + 1).padStart(options.pad, "0")}`;
+          colData.push({
+            index: colIndex,
+            hasName,
+            name: colName,
+            key: colKey,
+            title: cellEl.textContent
+          });
+        }
+        tblEl.cols = colData;
+        return colData;
+      }
+      //#endregion --- table handling ---
+      //#endregion ---- external methods ----
     }, /** Reference to DOM window - must be passed in the constructor
      * Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
      * @type {Window}
@@ -2519,10 +2751,10 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
    * @return {Transport}
    * @private
    */
-  createTransport(name) {
+  createTransport(name2) {
     const query = Object.assign({}, this.opts.query);
     query.EIO = protocol;
-    query.transport = name;
+    query.transport = name2;
     if (this.id)
       query.sid = this.id;
     const opts = Object.assign({}, this.opts, {
@@ -2531,8 +2763,8 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
       hostname: this.hostname,
       secure: this.secure,
       port: this.port
-    }, this.opts.transportOptions[name]);
-    return new this._transportsByName[name](opts);
+    }, this.opts.transportOptions[name2]);
+    return new this._transportsByName[name2](opts);
   }
   /**
    * Initializes transport to use and starts probe.
@@ -2871,8 +3103,8 @@ var SocketWithUpgrade = class extends SocketWithoutUpgrade {
    * @param {String} name - transport name
    * @private
    */
-  _probe(name) {
-    let transport = this.createTransport(name);
+  _probe(name2) {
+    let transport = this.createTransport(name2);
     let failed = false;
     SocketWithoutUpgrade.priorWebsocketSuccess = false;
     const onTransportOpen = () => {
@@ -2945,7 +3177,7 @@ var SocketWithUpgrade = class extends SocketWithoutUpgrade {
     transport.once("close", onTransportClose);
     this.once("close", onclose);
     this.once("upgrading", onupgrade);
-    if (this._upgrades.indexOf("webtransport") !== -1 && name !== "webtransport") {
+    if (this._upgrades.indexOf("webtransport") !== -1 && name2 !== "webtransport") {
       this.setTimeoutFn(() => {
         if (!failed) {
           transport.open();
@@ -4769,8 +5001,8 @@ var UibVar = class extends HTMLElement {
    * @param {string} name A name to give the event, added to the component-name separated with a :
    * @param {*=} data Optional data object to pass to event listeners via the evt.detail property
    */
-  _event(name, data) {
-    this.dispatchEvent(new CustomEvent(`${this.localName}:${name}`, {
+  _event(name2, data) {
+    this.dispatchEvent(new CustomEvent(`${this.localName}:${name2}`, {
       bubbles: true,
       composed: true,
       detail: {
@@ -5165,7 +5397,7 @@ __publicField(_ApplyTemplate, "props", ["template-id", "once"]);
 var ApplyTemplate = _ApplyTemplate;
 
 // src/front-end-module/uibuilder.module.js
-var version = "7.0.4-esm";
+var version = "7.1.0-esm";
 var isMinified = !/param/.test(function(param) {
 });
 function log() {
@@ -5283,7 +5515,7 @@ log.LOG_STYLES = {
   head: "font-weight:bold; font-style:italic;",
   level: "font-weight:bold; border-radius: 3px; padding: 2px 5px; display:inline-block;"
 };
-log.default = 0;
+log.default = 1;
 var ll;
 try {
   const scriptElement2 = document.currentScript;
@@ -5639,7 +5871,6 @@ var Uib = (_a = class {
      * @param {boolean} onceOnly If true, the source will be adopted (the source is moved)
      */
     __publicField(this, "applyTemplate", _ui.applyTemplate);
-    __publicField(this, "buildHtmlTable", _ui.buildHtmlTable);
     /** Remove All, 1 or more class names from an element
      * @param {undefined|null|""|string|string[]} classNames Single or array of classnames. If undefined, "" or null, remove all classes
      * @param {HTMLElement} el HTML Element to add class(es) to
@@ -6205,6 +6436,20 @@ var Uib = (_a = class {
     this.send({ payload: "elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex" });
     return false;
   }
+  /** Builds an HTML table from an array (or object) of objects
+   * 1st row is used for columns.
+   * If an object of objects, inner keys are used to populate th/td `data-col-name` attribs.
+   * @param {Array<object>|Object} data Input data array or object
+   * @param {object} opts Table options
+   *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
+   * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
+   */
+  buildHtmlTable(data, opts = {}) {
+    return _ui.buildHtmlTable(data, opts);
+  }
+  createTable(data = [], opts = { parent: "body" }) {
+    _ui.createTable(data, opts);
+  }
   /** Converts markdown text input to HTML if the Markdown-IT library is loaded
    * Otherwise simply returns the text
    * @param {string} mdText The input markdown string
@@ -6288,6 +6533,39 @@ var Uib = (_a = class {
    */
   sanitiseHTML(html) {
     return _ui.sanitiseHTML(html);
+  }
+  /** Add table click listener that returns the text or html content of either the full row or a single cell
+   * NOTE: Assumes that the table has a `tbody` element.
+   * If cells have a `data-col-name` attribute, it will be used in the output as the column name.
+   * @example tblAddListener('#eltest-tbl-table', {}, myVar)
+   * @example tblAddListener('#eltest-tbl-table', {eventScope: 'cell'}, myVar2)
+   *
+   * @param {string} tblSelector The table CSS Selector
+   * @param {object} [options={}] Additional options
+   *   @param {"row"|"cell"=} options.eventScope Optional, default=row. Return data for either the whole row (as an object) or for the single cell clicked
+   *   @param {"text"|"html"=} options.returnType Optional, default=text. Return text or html data
+   *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
+   *   @param {boolean=} options.send Optional, default=true. If uibuilder is present, will automatically send a message back to Node-RED.
+   *   @param {string|number=} options.logLevel Optional, default=3/info. Numeric or string log level matching uibuilder's log levels.
+   *   @param {string} [options.eventType] Optional, default=click. What event to listen for.
+   * @param {object=} out A variable reference that will be updated with the output data upon a click event
+   */
+  tblAddListener(tblSelector, options = {}, out = {}) {
+    return _ui.tblAddListener(tblSelector, options, out);
+  }
+  /** Adds a single new row to an existing table>tbody
+   * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
+   * @param {object|array} rowData A single row of column/cell data
+   * @param {object} [options]
+   * @param {number=} options.body Optional, default=0. The tbody section to add the row to.
+   * @param {boolean=} options.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+   * @param {string=} options.rowId Optional. HTML element ID for the added row
+   * @param {Array<columnDefinition>} [options.colMeta] Optional. Data about each column. If not provided, will be calculated from the table
+   * 
+   * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
+   */
+  tblAddDataRow(tbl, rowData = {}, options = {}) {
+    return _ui.tblAddDataRow(tbl, rowData, options);
   }
   /** Show a pop-over "toast" dialog or a modal alert
    * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
@@ -6436,9 +6714,9 @@ var Uib = (_a = class {
         {},
         ...Array.from(
           el.attributes,
-          ({ name, value: value2 }) => {
-            if (!ignoreAttribs.includes(name)) {
-              return { [name]: value2 };
+          ({ name: name2, value: value2 }) => {
+            if (!ignoreAttribs.includes(name2)) {
+              return { [name2]: value2 };
             }
             return void 0;
           }
