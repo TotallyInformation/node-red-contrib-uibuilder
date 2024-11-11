@@ -15,7 +15,9 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## Consider
 
+* New node to simplify executing remote commands on the front-end
 * Include source node data in msg._ui & an optional 2nd output on no-code nodes to allow interactions from elements to be routed direct to the source node.
+* For `uib-element`, make the editor icon responsive to the selected element type by using a function and include svg files in resources.
 
 ## In progress
 
@@ -37,6 +39,7 @@ Please see the roadmap in the docs for the backlog.
 * Add `_ui.dataset = {...target.dataset}` to `eventSend`
   
 * Add disconnect & reconnect timestamps to the uib FE library and pass back in connect ctrl msgs. Add option to the cache node to only send data from the disconnected period.
+* Move FE logger to separate library to make it easier to use with ui.js without using uibuilder.
   
 * **Collapsible list**: Either built-in class/js or a web component. [Ref](https://chatgpt.com/share/e32ce7f8-7b86-45e7-ae9d-69d167c37a14). NB: Allow for nav menus as well as normal lists. Also consider collapsible para's.
 
@@ -85,6 +88,8 @@ Please see the roadmap in the docs for the backlog.
 #### Node `uib-element`
 
 * Make the outer div optional (at least for html/markdown) - needed for the `<collapsible-headings>` component.
+* Use the new tbl* functions
+* Allow option to add `tblAddClickListener` to tables
 * ~~For tables, add `data-row-index` to each tbody row.~~ NO! Because adding/removing rows throws out the numbering. Use the `rowIndex` property of the DOM element instead.
 
 #### Node: `uib-cache`
@@ -101,6 +106,9 @@ Please see the roadmap in the docs for the backlog.
 
 #### FE Client Library
 
+* [ ] Add `tblAddDataRow` and allow as external command.
+* [ ] Allow `tblAddClickListener` as an external command.
+
 * [-] [**STARTED**] `moveElement` function that moves an element from 1 place to another. [Ref](https://chatgpt.com/share/872cede6-2fd6-44b2-891b-a152a0798c77).
 
   * [ ] Finish coding in ui.js
@@ -113,6 +121,7 @@ Please see the roadmap in the docs for the backlog.
 
 #### FE UI Library: `ui.js`
 
+* [ ] Add `tblAddDataRow`
 * `applyTemplate` - Allow slot content to be changed.
 
 ### Styles: `uib-brand css`
@@ -135,6 +144,7 @@ Please see the roadmap in the docs for the backlog.
 * [x] Simple flow
 
 ### Documentation
+  * [ ] Document `tblGetCellName` (ui) and `tblAddClickListener` (ui, uibuilder) new FE functions.
   * [ ] Add a "Debugging" doc. [ref](https://dashboard.flowfuse.com/contributing/widgets/debugging.html#debugging-dashboard-2-0), [ref1](https://discourse.nodered.org/t/debugging-node-red-ui-base-js-and-understanding-websocket-behavior/91131/6)
   * [ ] Document a dashboard-like grid layout.
   * [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
@@ -188,8 +198,15 @@ The following are only used for _**developing**_ UIBUILDER:
 * Added `container-type: inline-size` to `header`, `footer`, `main`, `section`, `article`. This is in preparation for the future use of [Container Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries) which are a much more flexible alternative to [Media Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries) for controlling responsive layout breakpoints. Container Queries are still very new and not yet supported widely enough to use.
 * Added some additional "reset" tweaks for improved visual style.
 
+### Front-end library: `uibuilder.js`
+
+* **NEW FUNCTION** `tblAddClickListener` - adds row/cell listeners to the 1st tbody of a table. Will send a msg back to Node-RED when used with uibuilder.
+* **Updated the front-end `index.html` templates to highlight that the uibuilder client library MUST be included.** After seeing several people take it out.
+
 ### Front-end library: `ui.js`
 
+* **NEW METHOD** `tblAddClickListener` - adds row/cell listeners to the 1st tbody of a table. Will send a msg back to Node-RED when used with uibuilder.
+* **NEW METHOD** `tblGetCellName` - Returns a standardised table cell name. Either from a `data-col-name` attribute or a numeric reference like `C003`.
 * Added `data-col-reference` attribute to created tables - on the `thead` row that actually defines the columns. Making it easier to get a reliable column reference later.
 
 ### Front-end components: `uib-var`
