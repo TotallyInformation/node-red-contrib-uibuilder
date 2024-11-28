@@ -47,7 +47,7 @@
     "execa": "^5",
     "gulp": "^5.0.0",
     "gulp-clean-css": "^4.3.0",
-    "gulp-esbuild": "^0.12.0",
+    "gulp-esbuild": "^0.13.0",
     "gulp-htmlmin": "^5.0.1",
     "gulp-include": "^2.4.1",
     "gulp-json-editor": "^2.5.6",
