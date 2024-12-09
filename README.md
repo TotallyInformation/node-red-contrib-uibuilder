@@ -57,6 +57,16 @@ npm install totallyinformation/node-red-contrib-uibuilder#v7.1.0
 You will need to restart Node-RED if installing manually.
 </details>
 
+## Compatibility of current release
+
+* Servers:
+  * Node-RED: v4+
+  * Node.js: v18+ LTS
+  * Platforms: Linux, Windows, MacOS, Raspberry Pi, Docker, etc.
+* Browsers: 
+  * CSS - 0.12% or above of global usage but not Internet Explorer ([ref.](https://browserslist.dev/?q=Pj0wLjEyJSwgbm90IGllID4gMA%3D%3D)). The uncompiled CSS should work in all current mainstream browsers. The compiled CSS (`uib-brand.min.css`) should work in browsers back to early 2019, possibly before. Enforced by [LightningCSS](https://lightningcss.com/).
+  * JavaScript - ES6+ so should work in all current mainstream browsers. The compiled JS (`uibuilder.min.js`) should work in browsers back to early 2019, possibly before. Enforced by [ESBuild](https://esbuild.github.io/).
+
 ## Updates
 
 The current [CHANGELOG](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/CHANGELOG.md) contains all of the changes and requirement details for each version.
