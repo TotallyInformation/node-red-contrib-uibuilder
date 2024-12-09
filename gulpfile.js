@@ -44,7 +44,11 @@ const { createGulpEsbuild } = require('gulp-esbuild')
 const gulpEsbuild = createGulpEsbuild({
     pipe: true,
 })
-const cleanCSS = require('gulp-clean-css')
+
+const sourcemaps = require("gulp-sourcemaps");
+const browserslist = require('browserslist');
+const { transform, browserslistToTargets } = require('lightningcss');
+const lightningcss = require("gulp-lightningcss");
 
 const execa = require('execa')
 
@@ -70,7 +74,7 @@ const stdio = 'inherit'
 // @ts-ignore Find the module version in the package.json
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
-const release = '7.0.4'
+const release = '7.1.0'
 // Wanted node.js version - used for ESBUILD
 const nodeVersion = 'node18.12'
 
@@ -747,25 +751,31 @@ function packfeIIFEes5(cb) { // eslint-disable-line no-unused-vars
 
 //#endregion ---- ---- ----
 
-// Pack CSS
-/**
- *
+// Allows iOS Safari back to v12, excludes IE
+let targets = browserslistToTargets(browserslist('>=0.12%, not ie > 0'));
+// console.log(targets)
+
+const lightningcss_options = {
+    minify: true, // Default
+    sourceMap: true, // Default
+    targets: targets, // Make sure we don't use too new CSS
+}
+
+/** Pack CSS & limit "new" css options
+ * Retains original, creates new .min.css version and .min.css.map
+ * @param {Function} cb Callback
  */
 function minifyBrandCSS(cb) {
     src(`${feDest}/uib-brand.css`)
-        .pipe(cleanCSS())
-        .on('error', function(err) {
-            console.error('[packfeIIFE] ERROR ', err)
-            cb(err)
-        })
-        .pipe(rename('uib-brand.min.css'))
+        .pipe(sourcemaps.init())
+            .pipe(lightningcss(lightningcss_options))
+            .pipe(rename('uib-brand.min.css'))
+        .pipe(sourcemaps.write(""))
         .pipe(dest(feDest))
         .on('end', function() {
             // in case of success
             cb()
         })
-
-    // cb()
 }
 
 /** See the buildDocBundle script in package.json for building the Docsify bundle for offline use */
