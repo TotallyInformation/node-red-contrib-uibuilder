@@ -9,6 +9,7 @@
         "moduleResolution": "node",
         "target": "es2022",
         "noEmit": true,
+        "typeRoots": [".", "./types", "./node_modules/@types"]
       }
       
 }
