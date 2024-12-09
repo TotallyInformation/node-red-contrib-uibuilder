@@ -494,6 +494,7 @@ html {
     color: var(--text2);
     accent-color: var(--brand);
 }
+
 body {
     margin-left: var(--base-margin);
     margin-right: var(--base-margin);
