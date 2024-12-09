@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-09-02 17:52:21
+updated: 2024-12-08 16:16:58
 ---
 
 # Changelog
@@ -18,6 +18,8 @@ Please see the documentation for archived changelogs - a new archive is produced
 * New node to simplify executing remote commands on the front-end
 * Include source node data in msg._ui & an optional 2nd output on no-code nodes to allow interactions from elements to be routed direct to the source node.
 * For `uib-element`, make the editor icon responsive to the selected element type by using a function and include svg files in resources.
+* Using LightningCSS to compile source CSS and ensure not using too new CSS options.
+* Update brand CSS from changes in web site.
 
 ## In progress
 
@@ -144,6 +146,8 @@ Please see the roadmap in the docs for the backlog.
 * [x] Simple flow
 
 ### Documentation
+  * [ ] Change font to match new website
+  * [ ] Add [Giscus commenting to docs](https://github.com/docsify-note/docsify-giscus/)
   * [ ] Document `tblGetCellName` (ui) and `tblAddClickListener` (ui, uibuilder) new FE functions.
   * [ ] Add a "Debugging" doc. [ref](https://dashboard.flowfuse.com/contributing/widgets/debugging.html#debugging-dashboard-2-0), [ref1](https://discourse.nodered.org/t/debugging-node-red-ui-base-js-and-understanding-websocket-behavior/91131/6)
   * [ ] Document a dashboard-like grid layout.
@@ -153,6 +157,15 @@ Please see the roadmap in the docs for the backlog.
     
     > The general idea of an “Islands” architecture is deceptively simple: render HTML pages on the server, and inject placeholders or slots around highly dynamic regions […] that can then be “hydrated” on the client into small self-contained widgets, reusing their server-rendered initial HTML.
 
+## Compatibility of current release
+
+* Servers:
+  * Node-RED: v4+
+  * Node.js: v18+ LTS
+  * Platforms: Linux, Windows, MacOS, Raspberry Pi, Docker, etc.
+* Browsers: 
+  * CSS - 0.12% or above of global usage but not Internet Explorer ([ref.](https://browserslist.dev/?q=Pj0wLjEyJSwgbm90IGllID4gMA%3D%3D)). The uncompiled CSS should work in all current mainstream browsers. The compiled CSS (`uib-brand.min.css`) should work in browsers back to early 2019, possibly before. Enforced by [LightningCSS](https://lightningcss.com/).
+  * JavaScript - ES6+ so should work in all current mainstream browsers. The compiled JS (`uibuilder.min.js`) should work in browsers back to early 2019, possibly before. Enforced by [ESBuild](https://esbuild.github.io/).
 
 ## Current Issues
 
@@ -185,6 +198,7 @@ The following are only used for _**developing**_ UIBUILDER:
 * @totallyinformation/ti-common-event-handler dependency package now removed completely. `RED.events` is used throughout, all uibuilder events start with `UIBUILDER/`.
 * To make it easier to create new elements in the future. Moved no-code element runtime processing to a common folder, `nodes/elements`. Added Editor API's and moved processing out of the `uib-element` runtime to separate module. Also moved element description and advanced options HTML to `nodes/elements/en-US`.
 * [Socket](https://docs.socket.dev/docs/socket-for-github) security check tool added to all TotallyInformation GitHub repositories including UIBUILDER. Provides significant supply-chain security and privacy checks.
+* To help further improve the development of the brand css, [LightningCSS](https://lightningcss.com/) is now used to compile the source CSS. This ensures that the CSS is not using too new CSS options and improves the performance of the CSS. Additionally, stylelint is now used to check the CSS for errors and warnings.
 
 ### `uib-brand.css` styles & variables
 
