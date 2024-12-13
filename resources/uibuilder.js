@@ -250,7 +250,7 @@
 
                             console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
                             RED.notify(`Successful installation of npm package ${packageName} for ${node.url}`, 'success')
-                            RED._debug({topic: 'UIBUILDER Library Install', result: 'success', payload: packageName, output: npmOutput})
+                            RED._debug({ topic: 'UIBUILDER Library Install', result: 'success', payload: packageName, output: npmOutput })
 
                             // reset and populate the list
                             $('#node-input-packageList').editableList('empty')
@@ -832,7 +832,7 @@
 
             // subtract height of each row from the total
             for (let i = 0; i < rows.length; i++) {
-                height -= $(rows[i]).outerHeight(true)
+                height -= $(rows[i]).outerHeight(true) // eslint-disable-line no-unused-vars
             }
 
             // Set the height of the edit box - no longer needed, using calc CSS
@@ -881,7 +881,7 @@
      * @returns {{pre,post,url,icon}} Prefix and postfix for link + vscode url scheme & icon
      */
     function vscodeLink(node) {
-        if (!node.editurl && node.url) {
+        if (node.url) {
             if (uibuilder.localHost) node.editurl = `vscode://file${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank`
             else node.editurl = `vscode://vscode-remote/ssh-remote+${uibuilder.nrServer}${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank`
             $('#node-input-editurl').val(node.editurl)
@@ -1049,7 +1049,7 @@
         log('-- this --', node)
         console.groupEnd()
     }
-    /** Validation Function: Validate the url property
+    /** Live URL Validation Function: Validate the url property
      * Max 20 chars, can't contain any of ['..', ]
      * @param {string} value The url value to validate
      * @returns {boolean} true = valid
@@ -1456,22 +1456,32 @@
         }
     } // ---- end of showServerInUse ---- //
 
-    /** Handle URL changes - update web links (called from onEditPrepare)
-     * @param {object} node A jQuery Event object
-     * @this {Element} the selected jQuery object $('#node-input-url')
+    /** Handle URL changes
+     * See also validateUrl.
+     * @param {object} node A reference to the panel's `this` object
      */
     function urlChange(node) {
-        const thisurl = /** @type {string} */ ($(this).val())
+        // Save the old url
+        node.oldUrl = node.url
 
-        if (thisurl) {
+        const newUrl = /** @type {string} */ ($('#node-input-url').val())
+        log(`[uibuilder:urlChange] URL changed. New="${newUrl}", old="${node.oldUrl}"`)
+
+        // If the url isn't blank
+        if (newUrl) {
             // Show the root URL
-            $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${thisurl}`)
+            $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${newUrl}`)
             // Show the apps list URL
             $('#uib-apps-list').prop('href', `${uibuilder.urlPrefix}uibuilder/apps`)
             // Show this instances details URL
-            $('#uibinstanceconf').prop('href', `./uibuilder/instance/${thisurl}?cmd=showinstancesettings`)
+            $('#uibinstanceconf').prop('href', `./uibuilder/instance/${newUrl}?cmd=showinstancesettings`)
         }
+
+        // Update the server in use display
         showServerInUse(node)
+
+        // Update the IDE edit link (editurl)
+        vscodeLink(node)
     } // ---- end of urlChange ---- //
 
     /** Run when switching to the Files tab
@@ -1933,10 +1943,11 @@
         // Show the server in use
         showServerInUse(node)
 
-        // Update web links on url change
-        $('#node-input-url').on('change', function() {
-            urlChange.call(this, node)
-        })
+        // ~~Update web links on url change~~ Don't do this here because we need to force a deploy - see onEditChange
+        // $('#node-input-url').on('change', function() {
+        //     urlChange.call(this, node)
+        // })
+
         // Show url errors for 1 time when panel 1st opens (after that, the verify fn takes over)
         if ( node.url === undefined || node.url === '' ) {
             enableEdit(node.urlErrors, Object.keys(node.urlErrors).length < 1) }
@@ -1945,6 +1956,43 @@
 
         uibuilder.doTooltips('.ti-edit-panel') // Do this at the end
     } // ---- End of oneditprepare ---- //
+
+    /** Handles the save event when editing a node in the Node-RED editor.
+     *
+     * @param {object} node - The node being edited.
+     *
+     * @description
+     * This function performs the following tasks:
+     * 1. Logs the current context (`this`).
+     * 2. Destroys the ACE editor instance if it is loaded.
+     * 3. Checks if the URL has been changed and updates the old URL if necessary.
+     * 4. Updates the IDE edit link if the URL has changed.
+     * 5. Logs the URL change.
+     * 6. Resets the old URL if it is no longer needed.
+     * 7. Updates the deployed version if there are changes or if an update is required.
+     */
+    function onEditSave(node) {
+        // console.log('>>>> node >>>', node)
+
+        // Get rid of the editor
+        if ( uiace.editorLoaded === true ) {
+            uiace.editor.destroy()
+            delete uiace.editor
+            uiace.editorLoaded = false
+        }
+
+        // Check for url rename, set/reset oldUrl - note that validation of new url is done in the validate function
+        // If the url has changed (browser val != node val), process the change
+        if ( $('#node-input-url').val() !== node.url ) {
+            urlChange(node)
+        } else if ( node.oldUrl !== undefined ) {
+            // URL not changed so reset the oldUrl
+            node.oldUrl = undefined
+        }
+
+        // If something has changed or if something must change - a deploy is needed so update the deployed version
+        if ( node.changed || node.mustChange ) node.deployedVersion = RED.settings.uibuilderCurrentVersion
+    } // ---- End of onEditSave ---- //
 
     //#endregion ------------------------------------------------- //
 
@@ -1995,32 +2043,10 @@
         /** Prepares the Editor panel */
         oneditprepare: function() { onEditPrepare(this) },
 
-        /** Runs before save (Actually when Done button pressed)
+        /** Runs BEFORE save (Actually when Done button pressed)
          * @this {RED}
          */
-        oneditsave: function() {
-            log('[uib] >> this >>', this)
-
-            // Get rid of the editor
-            if ( uiace.editorLoaded === true ) {
-                uiace.editor.destroy()
-                delete uiace.editor
-                uiace.editorLoaded = false
-            }
-
-            // Check for url rename - note that validation of new url is done in the validate function
-            let url
-            if ( $('#node-input-url').val() !== '' ) url = $('#node-input-url').val()
-            if ( url !== this.url ) {
-                this.oldUrl = this.url
-                log(`>> oneditsave URL CHANGED >> New=${$('#node-input-url').val()}, Old=${this.url}` )
-            } else if ( this.oldUrl !== undefined ) {
-                this.oldUrl = undefined
-            }
-
-            // If something has changed or if something must change, update the deployed version
-            if ( this.changed || this.mustChange ) this.deployedVersion = RED.settings.uibuilderCurrentVersion
-        }, // ---- End of oneditsave ---- //
+        oneditsave: function() { onEditSave(this) },
 
         /** Runs before cancel */
         oneditcancel: function() {
