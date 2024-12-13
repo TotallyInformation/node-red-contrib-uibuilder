@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-12-08 16:16:58
+updated: 2024-12-13 13:58:32
 ---
 
 # Changelog
@@ -12,6 +12,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 * Copy/paste of a uibuilder node leaves the wrong code editor url. Probably rename does as well.
 * `uib-element` Page title output is not replacing the h1.
+* Need to improve url change for dependent nodes. Currently have to reload the editor to get the new url. Should happen live (on save of uibuilder).
 
 ## Consider
 
@@ -20,6 +21,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 * For `uib-element`, make the editor icon responsive to the selected element type by using a function and include svg files in resources.
 * Using LightningCSS to compile source CSS and ensure not using too new CSS options.
 * Update brand CSS from changes in web site.
+* Further simplifications of the url change handling in the uibuilder node. Converge to live url element change or the validation check. Stop saving props that don't need to be (that means that re-opening after a deployment results in  an update that needs re-deploying).
 
 ## In progress
 
@@ -211,6 +213,15 @@ The following are only used for _**developing**_ UIBUILDER:
 * Added `text-wrap: balance` to `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `heading` and added `text-wrap: pretty` to `p`, `li`, `figcaption` - these make the elements look a little nicer when text is wrapping.
 * Added `container-type: inline-size` to `header`, `footer`, `main`, `section`, `article`. This is in preparation for the future use of [Container Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries) which are a much more flexible alternative to [Media Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries) for controlling responsive layout breakpoints. Container Queries are still very new and not yet supported widely enough to use.
 * Added some additional "reset" tweaks for improved visual style.
+
+### Node: `uibuilder`
+
+* Node-RED Editor:
+  * **FIXED** When a URL is changed, the IDE editor url is now updated automatically. This is particularly important when copying/pasting a uibuilder node.
+
+#### Front-end code templates
+
+* Removed optional link to legacy CSS style library.
 
 ### Front-end library: `uibuilder.js`
 
