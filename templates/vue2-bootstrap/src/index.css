@@ -1,15 +1,12 @@
 /* NOTE: Not loading uibuilder CSS since bootstrap-vue supplies its own */
 
 /* Load defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-brand.min.css`
- * This version auto-adjusts for light/dark browser settings but might not be as complete.
+ * This is optional but reasonably complete and allows for light/dark mode switching.
  */
 /* @import url("../uibuilder/uib-brand.min.css"); */
-
-/* OR, load the defaults from the older `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-styles.css` */
-/* @import url("../uibuilder/uib-styles.css"); */
  
- /* For this template, we only want the syntax highlight styles
- /*#region  Colours for Syntax Highlighted pre's */
+/* For this template, we only want the syntax highlight styles
+/*#region  Colours for Syntax Highlighted pre's */
 .syntax-highlight {
     color:white;
     display:block;
