@@ -34,7 +34,7 @@
     "docsify-plugin-flexible-alerts": "^1.1.1",
     "docsify-plugin-toc": "^1.3.2",
     "docsify-themeable": "^0.9.0",
-    "esbuild": "^0.23.1",
+    "esbuild": "^0.24.2",
     "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-es": "^4.1.0",
