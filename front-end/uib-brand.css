@@ -17,7 +17,7 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 1.33 2024-03-28
+ * @version: 2024-12-30
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -49,9 +49,10 @@
      *    window.getComputedStyle(this, null).getPropertyValue('--uib-css') === 'uib-brand'
      * NOTE: no space between : and text!
      */
-    --uib-css:uib-brand;
+    --uib-css: uib-brand;
     /* Sans-serif is much easier to read on-screen */
-    --font-family: sans-serif;
+    /* --font-family: sans-serif; */
+    --font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 
     --brand-hue: 200;
     --text-hue: var(--brand-hue);
