@@ -2488,6 +2488,8 @@ var BaseWS = class extends Transport {
   }
   doClose() {
     if (typeof this.ws !== "undefined") {
+      this.ws.onerror = () => {
+      };
       this.ws.close();
       this.ws = null;
     }
@@ -6274,7 +6276,7 @@ var Uib = (_a = class {
       const uint8Array = encoder.encode(jsonString);
       size = uint8Array.length;
     } catch (e) {
-      log("error", "uibuilder:getObjectSize", "Could not stringify, cannot determine size", obj, e);
+      log("error", "uibuilder:getObjectSize", "Could not stringify, cannot determine size", obj, e)();
     }
     return size;
   }
@@ -6323,6 +6325,25 @@ var Uib = (_a = class {
   navigate(url2) {
     if (url2) window.location.href = url2;
     return window.location;
+  }
+  // ! TODO change ui uib-* attributes to use this
+  /** Convert a string attribute into an variable/constant reference
+   * Used to resolve data sources in attributes
+   * @param {string} path The string path to resolve, must be relative to the `window` global scope
+   * @returns {*} The resolved data source or null
+   */
+  resolveDataSource(path) {
+    try {
+      const parts2 = path.split(/[\.\[\]\'\"]/).filter(Boolean);
+      let data = window;
+      for (const part of parts2) {
+        data = data?.[part];
+      }
+      return data;
+    } catch (error) {
+      log("error", "uibuilder:resolveDataSource", `Error resolving data source "${path}", returned 'null'. ${error.message}`)();
+      return null;
+    }
   }
   /** Fast but accurate number rounding (https://stackoverflow.com/a/48764436/1309986 solution 2)
    * Half away from zero method (AKA "commercial" rounding), most common type
@@ -6456,7 +6477,7 @@ var Uib = (_a = class {
    * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
    */
   convertMarkdown(mdText) {
-    return _ui.convertMarkdown;
+    return _ui.convertMarkdown(mdText);
   }
   /** ASYNC: Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
    * Wraps the included object in a div tag.

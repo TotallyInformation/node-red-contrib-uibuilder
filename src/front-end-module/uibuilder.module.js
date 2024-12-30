@@ -885,7 +885,7 @@ export const Uib = class Uib {
             const uint8Array = encoder.encode(jsonString)
             size = uint8Array.length
         } catch (e) {
-            log('error', 'uibuilder:getObjectSize', 'Could not stringify, cannot determine size', obj, e)
+            log('error', 'uibuilder:getObjectSize', 'Could not stringify, cannot determine size', obj, e)()
         }
         return size
     }
@@ -938,6 +938,27 @@ export const Uib = class Uib {
     navigate(url) {
         if (url) window.location.href = url
         return window.location
+    }
+
+    // ! TODO change ui uib-* attributes to use this
+    /** Convert a string attribute into an variable/constant reference
+     * Used to resolve data sources in attributes
+     * @param {string} path The string path to resolve, must be relative to the `window` global scope
+     * @returns {*} The resolved data source or null
+     */
+    resolveDataSource(path) {
+        try {
+            const parts = path.split(/[\.\[\]\'\"]/).filter(Boolean)
+            let data = window
+            for (const part of parts) {
+                data = data?.[part]
+            }
+            return data
+        } catch (error) {
+            // console.error('Error resolving data source:', error)
+            log('error', 'uibuilder:resolveDataSource', `Error resolving data source "${path}", returned 'null'. ${error.message}`)()
+            return null
+        }
     }
 
     /** Fast but accurate number rounding (https://stackoverflow.com/a/48764436/1309986 solution 2)
