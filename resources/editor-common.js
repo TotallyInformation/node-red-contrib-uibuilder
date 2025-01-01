@@ -249,7 +249,11 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                     // ALL possible nodes in the editor
                     `\n\nEditor Instances (${Object.keys(uibuilder.editorUibInstances).length}, incl undeployed & disabled): `, uibuilder.editorUibInstances,
                     // Currently installed FE packages
-                    `\n\nFE installed packages - (${Object.keys(uibuilder.packages).length}): `, uibuilder.packages
+                    `\n\nFE installed packages - (${Object.keys(uibuilder.packages).length}): `, uibuilder.packages,
+
+                    '\n\nRED Keys: ', Object.keys(RED),
+                    '\n\nRED.events Keys: ', Object.keys(RED.events),
+                    '\n\nRED.utils Keys: ', Object.keys(RED.utils),
                 )
                 console.groupEnd()
             }, 1500)
