@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2024-08-25 15:20:01
+updated: 2025-01-01 17:49:42
 ---
 
 Functions accessible in client-side user code.
@@ -220,7 +220,7 @@ Does not return anything. Does not generate an error if the key does not exist.
 
 This is the preferred method to set an exposed UIBUILDER variable or property. Do not try to set variables and properties directly.
 
-When using set, the variable that is set becomes ***responsive***. That is to say, that issuing a set triggers both the internal event handler (as used in `uibuilder.onChange('prop', ...)`) but also the DOM custom event `uibuilder:propertyChanged`. Normally, you will want to use the `onChange` handler.
+When using set, the variable that is set becomes ***responsive***. That is to say, that issuing a set triggers both the internal event handler (as used in `uibuilder.onChange('prop', ...)`) but also the DOM custom events `uibuilder:propertyChanged` and `uibuilder:propertyChanged:${propertyName}`. Normally, you will want to use the `onChange` handler for simplicity but the custom events also include additional data such as the previous value if needed .
 
 > [!TIP]
 >
@@ -311,11 +311,42 @@ See also [removeClass](#removeClass). Uses [`el.classList.add`](https://develope
 
 Note that if you want to _toggle_ a class on/off, use the HTML DOM: `$('#more').classList.toggle('myclass')`. See [MDN DOMTokenList/toggle](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/toggle) for details.
 
-### `buildHtmlTable(data)` - Builds an HTML table from an array (or object) of objects :id=buildHtmlTable
-
-The first row of data is also used to define the columns.
+### `buildHtmlTable(data, options)` - Builds an HTML table from an array (or object) of objects :id=buildHtmlTable
 
 If the data is an object of objects, the outer keys are used as row ID's (prefixed with "r-").
+
+If an `options.cols` array is not provided, the first row of data is also used to define the columns.
+
+The table HTML is returned as a string unless a parent id is provided.
+
+The options object can contain the following properties:
+
+* `cols` `{Array<columnDefinition>=}` - Column metadata. If not provided will be derived from 1st row of data
+* `parent` `{HTMLElement|string}` - If provided, the table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
+* `allowHTML` `{boolean=}` - Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+
+> [!NOTE]
+> Will issue a warning to the browser console if > 1000 rows of data are provided. This is because large tables can be slow to render.
+
+`columnDefinition` is a schema with the following properties:
+
+* `{number} index` The column index number
+* `{boolean} hasName` Whether the column has a defined name or not
+* `{string} title` The title of the column. Shown in the table header row
+* `{string=} name` Optional. A defined column name that will be added as the `data-col-name` to all cells in the column if defined
+* `{string|number=} key` Optional. A key value (currently unused)
+* `{"string"|"date"|"number"|"html"=} dataType` FOR FUTURE USE. Optional. What type of data will this column contain?
+* `{boolean=} editable` FOR FUTURE USE. Optional. Can cells in this column be edited?
+
+This allows the table columns to be defined in a more flexible way.
+
+### `createTable(data, options)` - Add/replace HTML table to DOM :id=createTable
+
+`data` is an array of objects or an object of objects. Passed to `buildHtmlTable` to create the HTML.
+
+`options` is an object with the same properties as for `buildHtmlTable`.
+
+`options.parent` is automatically set to `body` if not provided. If an `options` object is provided but does not contain a `parent` property, an error is thrown.
 
 ### `convertMarkdown(mdText)` - Convert's Markdown text input to HTML :id=convertMarkdown
 
@@ -622,6 +653,72 @@ const eMsg = $('#msg')    // or  document.getElementById('msg') if you prefer
 if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 ```
 
+### `tblAddRow(tbl, rowData, options)` - Add or replace a row of data in a table :id=tblAddRow
+
+Adds or replaces a single row in an existing table>tbody
+
+ * `tbl` is either a CSS Selector for the table or a reference to the HTML Table Element.
+ * `rowData` is single row of column/cell data either as an array or an object.
+ * `options` is an object with the following properties:
+  
+   * `{number=} body` Optional, default=0. The tbody section to add the row to.
+   * `{boolean=} allowHTML` Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+   * `{string=} rowId` Optional. HTML element ID for the added row
+   * `{number=} afterRow` Optional. If provided, the new row will be added after this row number
+   * `{number=} beforeRow` Optional. If provided, the new row will be added before this row number. Ignored if afterRow is provided
+   * `{number=} replaceRow` Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
+   * `{Array<columnDefinition>=} cols` Optional. Data about each column. If not provided, will be calculated from the table
+
+A DOM element reference to the newly added row is returned to enable further changes to be made if required.
+
+> [!TIP]
+> Use the `rowIndex` DOM property for the row number if needed since the row number may not be the same as the array index and may change if rows are added or removed.
+
+### `tblAddListener` - Add an event listener to a table row or cell :id=tblAddListener
+
+Add table event listener that returns the text or html content of either the full row or a single cell as required.
+
+> [!NOTE]
+> Assumes that the table has a `tbody` element.
+
+If cells have a `data-col-name` attribute, it will be used in the output as the column name.
+
+#### Examples
+
+```javascript
+// Update myVar with the full row data when any cell on a row is clicked. Also outputs to Node-RED.
+tblAddListener('#eltest-tbl-table', {}, myVar)
+
+// Update myVar2 with the cell data when any cell is clicked. Also outputs to Node-RED.
+tblAddListener('#eltest-tbl-table', {eventScope: 'cell'}, myVar2)
+```
+
+#### Arguments
+
+```javascript
+/**
+ * @param {string} tblSelector The table CSS Selector
+ * @param {object} [options={}] Additional options
+ *   @param {"row"|"cell"=} options.eventScope Optional, default=row. Return data for either the whole row (as an object) or for the single cell clicked
+ *   @param {"text"|"html"=} options.returnType Optional, default=text. Return text or html data
+ *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
+ *   @param {boolean=} options.send Optional, default=true. If uibuilder is present, will automatically send a message back to Node-RED.
+ *   @param {string|number=} options.logLevel Optional, default=3/info. Numeric or string log level matching uibuilder's log levels.
+ *   @param {string} [options.eventType] Optional, default=click. What event to listen for.
+ * @param {object=} out A variable reference that will be updated with the output data upon a click event
+ */
+```
+
+### `tblRemoveRow(tbl, rowId, options)` - Remove a row from a table :id=tblRemoveRow
+
+Removes a row from an existing table
+
+`tbl` is either a CSS Selector for the table or a reference to the HTML Table Element.
+`rowIndex` is the row number to remove (1st row is 0, last row is -1).
+`options` is an object with the following properties:
+
+* `{number=} body` Optional, default=0. The tbody section to add the row to.
+
 ### `ui(json)` - Directly manage UI via JSON :id=ui
 
 Takes either an object containing `{_ui: {}}` or simply simple `{}` containing ui instructions. See [Config Driven UI](client-docs/config-driven-ui.md) for details of the required data.
@@ -919,6 +1016,7 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`connect()`]() - Manually (re)connect Socket.IO communications between the browser and Node-RED.
 * [`convertMarkdown`](#convertMarkdown) - Convert a Markdown string to HTML.
 * [`copyToClipboard`](#copyToClipboard)
+* [`createHtmlTable`](#createHtmlTable) - Create an HTML table from an array/object input & insert to the page.
 * [`elementExists`](#elementExists)*
 * ~~[`elementIsVisible`](#elementIsVisible)~~ - Temporarily deprecated.
 * [`eventSend`](#eventSend) - Returns standardised data to Node-RED. For form inputs or other events.
@@ -974,6 +1072,9 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`showStatus`](#showStatus)*
 * [`start`](#start)
 * [`syntaxHighlight`](#syntaxHighlight)
+* [`tblAddRow`](#tblAddRow)§ - Add a new row to a table.
+* [`tblAddListener`](#tblAddListener)§ - Add an event listener to a table row or cell.
+* [`tblRemoveRow`](#tblRemoveRow)§ - Remove a row from a table.
 * [`truthy`](#truthy)
 * [`ui`](#ui)
 * [`uiEnhanceElement`](#uiEnhanceElement)
