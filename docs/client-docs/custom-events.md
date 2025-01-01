@@ -3,14 +3,13 @@ title: Custom document events used in the modern client
 description: |
   Details about the custom `document` events used in the uibuilder modern front-end client library.
 created: 2023-01-28 15:56:57
-lastUpdated: 2023-09-30 13:02:53
-updated: 2023-12-30 17:01:41
+updated: 2025-01-01 14:29:58
 ---
 
 
 Custom events are all attached to the DOM `document` object. Additional custom data may be added to the `detail` object of the event object.
 
-Can be used as:
+Can be used as in this example:
 
 ```javascript
 document.addEventListener('uibuilder:socket:connected', (event) => { 
@@ -18,23 +17,51 @@ document.addEventListener('uibuilder:socket:connected', (event) => {
 })
 ```
 
-## `uibuilder:domChange`
-
-Triggered by `uiWatch` functions.
-
-Details contain the same data as sent back to Node-RED in `msg._ui` by that function. `details.cssSelector` shows what watched element triggered the change.
-
 ## `uibuilder:constructorComplete`
 
 When the uibuilder class constructor has completed
 
 No data included.
 
-## `uibuilder:startComplete`
+## `uibuilder:domChange`
 
-When uibuilder initial start function has completed
+Triggered by `uiWatch` functions.
 
-No data included.
+Details contain the same data as sent back to Node-RED in `msg._ui` by that function. `details.cssSelector` shows what watched element triggered the change.
+
+## `uibuilder:msg:_ui`
+
+When a std msg with a msg._ui property is received
+
+The message content is provided on the events `detail` object.
+
+## `uibuilder:msg:topic:${msg.topic}`
+
+When a std msg with a msg.topic prop is received
+
+The message content is provided on the events `detail` object.
+
+## `uibuilder:propertyChanged`
+
+When uibuilder.set is called (externally or internally).
+
+Used internally by the `onChange` function but can also be used directly if preferred. One potential advantage of using this event over `onChange` is that it includes additional details such as the previous value and whether the variable is stored in browser local storage.
+
+The new value of the property is provided on the events `detail` object. The details schema is:
+
+```javascript
+{ 
+  'prop': propertyName,
+  'value': newValue,
+  'oldValue': oldValue,
+  'store': store, // true if the property is stored in localStorage
+  'autoload': autoload // true if the property is autoloaded from localStorage
+}
+```
+
+## `uibuilder:propertyChanged:${propertyName}`
+
+Same as the generic `propertyChanged` event but fired when the specific property is changed.
 
 ## `uibuilder:socket:connected`
 
@@ -49,13 +76,11 @@ When Socket.IO disconnects from the matching `uibuilder` node in Node-RED
 
 The disconnect reason is provided on the events `detail` object if available. May be a string or an error object.
 
-## `uibuilder:propertyChanged`
+## `uibuilder:startComplete`
 
-When uibuilder.set is called (externally or internally)
+When uibuilder initial start function has completed
 
-Used internally be the `onChange` function but can also be used directly if preferred.
-
-The new value of the property is provided on the events `detail` object.
+No data included.
 
 ## `uibuilder:stdMsgReceived`
 
@@ -63,14 +88,3 @@ When a non-control msg is received from Node-RED
 
 The message content is provided on the events `detail` object.
 
-## `uibuilder:msg:topic:${msg.topic}`
-
-When a std msg with a msg.topic prop is received
-
-The message content is provided on the events `detail` object.
-
-## `uibuilder:msg:_ui`
-
-When a std msg with a msg._ui property is received
-
-The message content is provided on the events `detail` object.
