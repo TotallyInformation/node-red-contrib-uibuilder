@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-12-13 13:58:32
+updated: 2024-12-30 14:46:49
 ---
 
 # Changelog
@@ -19,9 +19,9 @@ Please see the documentation for archived changelogs - a new archive is produced
 * New node to simplify executing remote commands on the front-end
 * Include source node data in msg._ui & an optional 2nd output on no-code nodes to allow interactions from elements to be routed direct to the source node.
 * For `uib-element`, make the editor icon responsive to the selected element type by using a function and include svg files in resources.
-* Using LightningCSS to compile source CSS and ensure not using too new CSS options.
 * Update brand CSS from changes in web site.
 * Further simplifications of the url change handling in the uibuilder node. Converge to live url element change or the validation check. Stop saving props that don't need to be (that means that re-opening after a deployment results in  an update that needs re-deploying).
+* Adding a client library setting to auto-reload the page after loosing connection to the server. Would be useful for development.
 
 ## In progress
 
@@ -30,14 +30,11 @@ Please see the documentation for archived changelogs - a new archive is produced
   * [ ] `uib-meta`
   * [ ] `apply-template`
 
-### Client library
-
-* Added `uibuilder:propertyChanged:${prop}` custom event when a managed variable changed. Has the same event.details as the 'uibuilder:propertyChanged' event. This event can be used instead of the `uibuilder.onChange('prop', ....)` function if preferred.
-
 ## To Do
 
 Please see the roadmap in the docs for the backlog.
 
+* Change all node html files to load js as modules. Remove IIFE wrappers from js files.
 * Enhance client table builder
   * Add data-row-key value - to row, ?to cells?
 * Add `_ui.dataset = {...target.dataset}` to `eventSend`
@@ -49,8 +46,8 @@ Please see the roadmap in the docs for the backlog.
 
 * **FE: Drag/drop**: draggable class, drag-container class (to constrain drag area). Use `moveElement` fn. On drop, send change notice to Node-RED as control msg.
 
-* Removal of fs-extra dependency
-  * Functions wanted:
+* [-] Removal of fs-extra dependency
+  * [-] Functions wanted:
     * [ ] `ensureDirSync` (uibuilder, admin-api-v3)
     * [ ] `ensureFileSync` (admin-api-v3)
     * [ ] `moveSync` (uibuilder)
@@ -75,7 +72,7 @@ Please see the roadmap in the docs for the backlog.
   * [ ] Msgs to FE client
     * [ ] ??
   * [ ] Example?
-  * [ ] Documentation
+  * [-] Documentation
     * [x] Describe what headers are understood, where they come from.
     * [x] Describe `msg._client` properties
     * [x] How to block in/out client msgs based on `msg._client` - e.g. use of the new hooks.
@@ -110,8 +107,7 @@ Please see the roadmap in the docs for the backlog.
 
 #### FE Client Library
 
-* [ ] Add `tblAddDataRow` and allow as external command.
-* [ ] Allow `tblAddClickListener` as an external command.
+* [ ] Add `buildHtmlTable`, `createTable`, `tblAddRow`, `tblRemoveRow`, `tblAddListener` as external commands.
 
 * [-] [**STARTED**] `moveElement` function that moves an element from 1 place to another. [Ref](https://chatgpt.com/share/872cede6-2fd6-44b2-891b-a152a0798c77).
 
@@ -125,13 +121,13 @@ Please see the roadmap in the docs for the backlog.
 
 #### FE UI Library: `ui.js`
 
-* [ ] Add `tblAddDataRow`
 * `applyTemplate` - Allow slot content to be changed.
 
 ### Styles: `uib-brand css`
 
 * Transfer the formats from the dashboard layout example to uib-brand.css
 * Add a `.shadow` utility class for adding shadows to things.
+* Update with changes from the website.
 
 ### Examples
 
@@ -148,9 +144,8 @@ Please see the roadmap in the docs for the backlog.
 * [x] Simple flow
 
 ### Documentation
-  * [ ] Change font to match new website
   * [ ] Add [Giscus commenting to docs](https://github.com/docsify-note/docsify-giscus/)
-  * [ ] Document `tblGetCellName` (ui) and `tblAddClickListener` (ui, uibuilder) new FE functions.
+  * [ ] Document `tblGetCellName` (ui) new FE function.
   * [ ] Add a "Debugging" doc. [ref](https://dashboard.flowfuse.com/contributing/widgets/debugging.html#debugging-dashboard-2-0), [ref1](https://discourse.nodered.org/t/debugging-node-red-ui-base-js-and-understanding-websocket-behavior/91131/6)
   * [ ] Document a dashboard-like grid layout.
   * [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
@@ -158,6 +153,8 @@ Please see the roadmap in the docs for the backlog.
   * [ ] "Islands" concept. [Ref.](https://docs.astro.build/en/concepts/islands/#a-brief-history).
     
     > The general idea of an “Islands” architecture is deceptively simple: render HTML pages on the server, and inject placeholders or slots around highly dynamic regions […] that can then be “hydrated” on the client into small self-contained widgets, reusing their server-rendered initial HTML.
+  
+  * [ ] Highlight how the FE library uses the "Signals" pattern. [Ref](https://www.smashingmagazine.com/2018/01/deferring-lazy-loading-intersection-observer-api/).
 
 ## Compatibility of current release
 
@@ -190,7 +187,9 @@ The following are only used for _**developing**_ UIBUILDER:
 
 ### 📌 Highlights
 
-* Any Node-RED custom node can now send a message to a uibuilder client! In your runtime code, add `RED.events.emit('UIBUILDER/send/<url-name>', {payload: 'Hi from my custom node!'})` where `<url-name>` is the URL set in a deployed uibuilder node. The data will be sent to all browser tabs connected to that uibuilder endpoint. Note though that this bypasses any uib-cache node.
+* **Any** *Node-RED custom node* can now send a message to a uibuilder client! In your runtime code, add `RED.events.emit('UIBUILDER/send/<url-name>', {payload: 'Hi from my custom node!'})` where `<url-name>` is the URL set in a deployed uibuilder node. The data will be sent to all browser tabs connected to that uibuilder endpoint. Note though that this bypasses any uib-cache node.
+
+* For front-end coders, you now have access to a number of table manipulation functions. Making it very easy to create and manipulate tables in your web pages from simple input data. You can add and remove tables, table rows and add event handlers (e.g. click) to rows or cells.
 
 ### General changes
 
@@ -201,6 +200,7 @@ The following are only used for _**developing**_ UIBUILDER:
 * To make it easier to create new elements in the future. Moved no-code element runtime processing to a common folder, `nodes/elements`. Added Editor API's and moved processing out of the `uib-element` runtime to separate module. Also moved element description and advanced options HTML to `nodes/elements/en-US`.
 * [Socket](https://docs.socket.dev/docs/socket-for-github) security check tool added to all TotallyInformation GitHub repositories including UIBUILDER. Provides significant supply-chain security and privacy checks.
 * To help further improve the development of the brand css, [LightningCSS](https://lightningcss.com/) is now used to compile the source CSS. This ensures that the CSS is not using too new CSS options and improves the performance of the CSS. Additionally, stylelint is now used to check the CSS for errors and warnings.
+* Now using LightningCSS to compile source CSS and ensure not using too new CSS options.
 
 ### `uib-brand.css` styles & variables
 
@@ -210,6 +210,8 @@ The following are only used for _**developing**_ UIBUILDER:
   
     Each of these are controlled by simple CSS variable overrides. See the [live file](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/front-end/uib-brand.css) for details on use.
 
+* Core font now changed to match the uib-brand.css. No more Google fonts! This should make the UI more consistent and faster to load.
+* Now using LightningCSS to compile source CSS and ensure not using too new CSS options.
 * Added `text-wrap: balance` to `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `heading` and added `text-wrap: pretty` to `p`, `li`, `figcaption` - these make the elements look a little nicer when text is wrapping.
 * Added `container-type: inline-size` to `header`, `footer`, `main`, `section`, `article`. This is in preparation for the future use of [Container Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries) which are a much more flexible alternative to [Media Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries) for controlling responsive layout breakpoints. Container Queries are still very new and not yet supported widely enough to use.
 * Added some additional "reset" tweaks for improved visual style.
@@ -225,13 +227,26 @@ The following are only used for _**developing**_ UIBUILDER:
 
 ### Front-end library: `uibuilder.js`
 
-* **NEW FUNCTION** `tblAddClickListener` - adds row/cell listeners to the 1st tbody of a table. Will send a msg back to Node-RED when used with uibuilder.
+* **NEW FUNCTIONS**
+
+  * `buildHtmlTable` - Returns HTML of a table created from the input data.
+  * `createTable` - Uses `buildTable` to create a new table and attaches to a parent element in the DOM.
+  * `tblAddRow` - adds a new row to an existing table.
+  * `tblRemoveRow` - removes a row from an existing table.
+  * `tblAddListener` - adds row/cell listeners to the 1st tbody of a table. Will send a msg back to Node-RED when used with uibuilder.
+
 * **Updated the front-end `index.html` templates to highlight that the uibuilder client library MUST be included.** After seeing several people take it out.
+* Added `uibuilder:propertyChanged:${prop}` custom event when a managed variable changed. Has the same event.details as the 'uibuilder:propertyChanged' event. This event can be used instead of the `uibuilder.onChange('prop', ....)` function if preferred.
+* Updated `uibuilder:propertyChanged` and `uibuilder:propertyChanged:${prop}` custom events to include `oldValue` as one of the event details. Will be `undefined` if the property is new.
 
 ### Front-end library: `ui.js`
 
-* **NEW METHOD** `tblAddClickListener` - adds row/cell listeners to the 1st tbody of a table. Will send a msg back to Node-RED when used with uibuilder.
-* **NEW METHOD** `tblGetCellName` - Returns a standardised table cell name. Either from a `data-col-name` attribute or a numeric reference like `C003`.
+* **NEW METHODS**
+  * `buildHtmlTable` - Returns HTML of a table created from the input data.
+  * `createTable` - Uses `buildTable` to create a new table and attaches to a parent element in the DOM.
+  * `tblAddDataRow` - adds a new row to an existing table.
+  * `tblAddListener` - adds row/cell listeners to the 1st tbody of a table. Will send a msg back to Node-RED when used with uibuilder. Defaults to adding a `click` listener.
+  * `tblGetCellName` - Returns a standardised table cell name. Either from a `data-col-name` attribute or a numeric reference like `C003`.
 * Added `data-col-reference` attribute to created tables - on the `thead` row that actually defines the columns. Making it easier to get a reliable column reference later.
 
 ### Front-end components: `uib-var`
