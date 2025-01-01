@@ -10,12 +10,12 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 ## To Fix
 
-* Copy/paste of a uibuilder node leaves the wrong code editor url. Probably rename does as well.
 * `uib-element` Page title output is not replacing the h1.
 * Need to improve url change for dependent nodes. Currently have to reload the editor to get the new url. Should happen live (on save of uibuilder).
 
 ## Consider
 
+* A way to send messages to a uibuilder node from a function node.
 * New node to simplify executing remote commands on the front-end
 * Include source node data in msg._ui & an optional 2nd output on no-code nodes to allow interactions from elements to be routed direct to the source node.
 * For `uib-element`, make the editor icon responsive to the selected element type by using a function and include svg files in resources.
@@ -108,6 +108,8 @@ Please see the roadmap in the docs for the backlog.
 #### FE Client Library
 
 * [ ] Add `buildHtmlTable`, `createTable`, `tblAddRow`, `tblRemoveRow`, `tblAddListener` as external commands.
+* [ ] Add a `tblRemoveListener` function.
+* [ ] For `tblAddListener`, add an option to add a listener to the whole table.
 
 * [-] [**STARTED**] `moveElement` function that moves an element from 1 place to another. [Ref](https://chatgpt.com/share/872cede6-2fd6-44b2-891b-a152a0798c77).
 
@@ -201,6 +203,9 @@ The following are only used for _**developing**_ UIBUILDER:
 * [Socket](https://docs.socket.dev/docs/socket-for-github) security check tool added to all TotallyInformation GitHub repositories including UIBUILDER. Provides significant supply-chain security and privacy checks.
 * To help further improve the development of the brand css, [LightningCSS](https://lightningcss.com/) is now used to compile the source CSS. This ensures that the CSS is not using too new CSS options and improves the performance of the CSS. Additionally, stylelint is now used to check the CSS for errors and warnings.
 * Now using LightningCSS to compile source CSS and ensure not using too new CSS options.
+* The common code and css files in the `resources` folder (`ti-common.js` and `ti-common.css`) have been renamed to `editor-common.js` and `editor-common.css` respectively. This is to make it clearer that these are used in the Node-RED editor only.
+* The `uib-plugin` library now renamed to `uib-editor-plugin` for clarity.
+* New `uib-runtime-plugin` library added. Now manages most of the additions to `RED.util.uib` which contains functions made available to Node-RED function nodes.
 
 ### `uib-brand.css` styles & variables
 
