@@ -3,7 +3,7 @@ title: Developer documentation for `uibuilder.html`
 description: |
   Documents the processing of the html file that defines the Node-RED admin UI panel for uibuilder. Shown when double-clicking on a uibuilder node in a flow.
 created: 2019-06-15 14:26:00
-updated: 2024-03-23 16:44:28
+updated: 2025-01-01 21:50:09
 ---
 
 > [!NOTE]
@@ -82,8 +82,8 @@ If the "Install" button is pressed, the uibuilder `installPackage` API is called
 All uibuilder nodes load 2 resource files:
 
 ```html
-<link type="text/css" rel="stylesheet" href="./resources/node-red-contrib-uibuilder/ti-common.css" media="all">
-<script src="./resources/node-red-contrib-uibuilder/ti-common.js"></script>
+<link type="text/css" rel="stylesheet" href="./resources/node-red-contrib-uibuilder/editor-common.css" media="all">
+<script src="./resources/node-red-contrib-uibuilder/editor-common.js"></script>
 ```
 
 These define some common styles and a global variable `window.uibuilder`.

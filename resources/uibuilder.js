@@ -6,7 +6,7 @@
 
 // RED._debug({topic: 'RED.settings', payload:RED.settings})
 
-// NOTE: window.uibuilder is added by ti-common.js - see `resources` folder
+// NOTE: window.uibuilder is added by editor-common.js - see `resources` folder
 const uibuilder = window['uibuilder']
 const log = uibuilder.log
 /** Module name must match this nodes html file @constant {string} moduleName */

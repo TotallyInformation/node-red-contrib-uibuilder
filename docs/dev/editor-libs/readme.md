@@ -3,11 +3,10 @@ title: UIBUILDER's Node-RED Editor Libraries
 description: |
   UIBUILDER includes a common JavaScript & CSS library for uibuilder nodes to use in the Editor.
 created: 2023-12-19 16:11:52
-lastUpdated: 2023-12-19 16:11:59
-updated: 2023-12-30 17:01:42
+updated: 2025-01-01 21:50:29
 ---
 
 These libraries provide common Node-RED Editor data, functions and styling for all UIBUILDER nodes.
 
-* [`/resources/ti-common.js`](dev/editor-libs/ti-common) - Common JavaScript library for the Editor.
-* [`/resources/ti-common.css`](dev/editor-libs/ti-common-css) - Common style sheet library for the Editor.
+* [`/resources/editor-common.js`](dev/editor-libs/editor-common) - Common JavaScript library for the Editor.
+* [`/resources/editor-common.css`](dev/editor-libs/editor-common-css) - Common style sheet library for the Editor.

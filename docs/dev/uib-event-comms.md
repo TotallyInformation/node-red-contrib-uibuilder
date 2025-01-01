@@ -3,7 +3,7 @@ title: UIBUILDER events
 description: |
   This document details the Node-RED runtime and Editor events produced and consumed by UIBUILDER.
 created: 2021-09-29 20:04:36
-updated: 2024-09-08 11:37:28
+updated: 2025-01-01 21:49:25
 ---
 
 Node-RED's `RED.events` node.js-based event handlers are used to enable decoupled communications, even between different nodes.
@@ -170,7 +170,7 @@ UIBUILDER Editor events are all prefixed with `uibuilder:`.
 
 While these events are emitted, currently no nodes make use of them. They are free for 3rd-party nodes to use though.
 
-`resources/ti-common.js`
+`resources/editor-common.js`
 
 ```js
 // Inform interested functions that a uibuilder-related node was added (and why)

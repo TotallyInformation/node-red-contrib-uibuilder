@@ -4,11 +4,11 @@ description: |
   Provides common, standard, styling to all UIBUILDER nodes in the Node-RED Editor.
 created: 2023-12-19 16:22:27
 lastUpdated: 2023-12-19 16:22:32
-updated: 2023-12-30 17:01:42
+updated: 2025-01-01 21:51:39
 ---
 
-Location: `/resources/ti-common.css`
-URL: `<link type="text/css" rel="stylesheet" href="./resources/node-red-contrib-uibuilder/ti-common.css" media="all">
+Location: `/resources/editor-common.css`
+URL: `<link type="text/css" rel="stylesheet" href="./resources/node-red-contrib-uibuilder/editor-common.css" media="all">
 `
 
 ## Useage

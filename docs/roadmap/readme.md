@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2024-09-15 18:05:22
+updated: 2025-01-01 21:53:09
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -107,9 +107,9 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 | tiWidth = uibuilder.typedInputWidth |           |           | ✔️                       |               |          |          |            |         |            |                                     |
 | Notes                               |           |           | mv combobox styles?     |               |          |          |            |         |            | check this for other needed updates |
 
-Vars moved to ti-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId].
+Vars moved to editor-common (replace): node.urlPrefix, node.nodeRoot, paletteCategory, typedInputWidth, localHost, packages, editorInstances[urlsByNodeId].
 
-*Ref ti-common.js/css* - now moved to a plugin so only loaded once.
+*Ref editor-common.js/css* - now moved to a plugin so only loaded once.
 
 ### Node Runtime Refactoring
 
@@ -686,7 +686,7 @@ See Node-RED worldmap for reference.
 
 * [ ] Add instance descriptions to the index pages
 
-#### `ti-common.js`/`ti-common.css` (Shared Editor Code)
+#### `editor-common.js`/`editor-common.css` (Shared Editor Code)
 
 * Add `isNew` flag that indicates if a node instance has not yet been deployed. (e.g. new paste or import or drag from palatte)
 

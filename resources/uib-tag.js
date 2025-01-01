@@ -93,7 +93,7 @@
         uibuilder.doTooltips('#ti-edit-panel') // Do this at the end
     } // ----- end of onEditPrepare() ----- //
 
-    // ! TODO Move to ti-common
+    // ! TODO Move to editor-common
     /** Validate a typed input as a string
      * Must not be JSON. Can be a number only if allowNum=true. Can be an empty string only if allowBlank=true
      * Sets typedInput border to red if not valid since custom validation not available on std typedInput types

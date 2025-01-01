@@ -3,7 +3,7 @@ title: Developer Documentation
 description: |
   Deep dives into the internals of UIBUILDER. This is where to go if you need to understand how things work. These documents may lag behind the actual code however, so it is always worth also referencing the current codebase.
 created: 2019-06-16 16:16:00
-updated: 2024-09-08 11:23:17
+updated: 2025-01-01 21:48:55
 ---
 
 ## Processes
@@ -71,8 +71,8 @@ In addition, these are required for developing UIBUILDER, they are not required 
 
 These libraries provide common Node-RED Editor data, functions and styling for all UIBUILDER nodes, they are loaded to the Editor via a plugin.
 
-* [`/resources/ti-common.js`](dev/editor-libs/ti-common) - Common JavaScript library for the Editor.
-* [`/resources/ti-common.css`](dev/editor-libs/ti-common-css) - Common style sheet library for the Editor.
+* [`/resources/editor-common.js`](dev/editor-libs/editor-common) - Common JavaScript library for the Editor.
+* [`/resources/editor-common.css`](dev/editor-libs/editor-common-css) - Common style sheet library for the Editor.
 
 ## uibuilder front-end client library
 

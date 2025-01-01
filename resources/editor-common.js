@@ -1,10 +1,10 @@
 /** Common functions and data for UIBUILDER nodes
- * Load as: ./resources/node-red-contrib-uibuilder/ti-common.js
+ * Load as: ./resources/node-red-contrib-uibuilder/editor-common.js
  * Note that RED is available here
  */
 
 // Register the plugin
-RED.plugins.registerPlugin('uib-plugin', {
+RED.plugins.registerPlugin('uib-editor-plugin', {
     type: 'uibuilder-editor-plugin', // optional plugin type
     onadd: function() {
         let _dbg = false
@@ -228,7 +228,7 @@ RED.plugins.registerPlugin('uib-plugin', {
         /** If debug, dump out key information to console */
         if (uibuilder.debug === true) {
             setTimeout( () => {
-                console.groupCollapsed('[uibuilder:ti-common] Settings ...')
+                console.groupCollapsed('[uibuilder:editor-common] Settings ...')
                 console.log(
                     // The server's NODE_ENV environment var (e.g. PRODUCTION or DEVELOPMENT)
                     'NodeEnv: ', RED.settings.uibuilderNodeEnv,
