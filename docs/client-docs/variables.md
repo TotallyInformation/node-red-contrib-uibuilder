@@ -3,7 +3,7 @@ title: Variables used in the modern client
 description: |
   Details about the variables used in the uibuilder modern front-end client library. Some variables are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2024-08-25 15:08:40
+updated: 2025-01-01 14:58:38
 ---
 
 ## Read/write
@@ -24,7 +24,7 @@ Always use `uibuilder.set('varname', value)` to change these.
 
 ## Read only
 
-Always use `uibuilder.get('varname', value)` to obtain the value of these. You can also use `uibuilder.onChange('varname', (val)=>{})` to watch for changes to them. Or you can also use the custom `document` event `uibuilder:propertyChanged` if you really want to.
+Always use `uibuilder.get('varname', value)` to obtain the value of these. You can also use `uibuilder.onChange('varname', (val)=>{})` to watch for changes to them; or you can also use the custom `document` events `uibuilder:propertyChanged` or `uibuilder:propertyChanged:${propertyName}` if you prefer.
 
 * `clientId` - Client ID set by uibuilder on connect.
 * `connectedNum` - How many times the page has had to reconnect to Socket.IO.
