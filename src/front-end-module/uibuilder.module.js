@@ -513,6 +513,9 @@ export const Uib = class Uib {
             return `Cannot use set() on protected property "${prop}"`
         }
 
+        // Check for an old value
+        let oldVal = this[prop] ?? undefined
+
         // We must add the var to the uibuilder object
         this[prop] = val
 
@@ -528,8 +531,8 @@ export const Uib = class Uib {
         // this.emit(prop, val)
 
         // trigger an event on the prop name, pass both the name and value to the event details
-        this._dispatchCustomEvent('uibuilder:propertyChanged', { 'prop': prop, 'value': val, 'store': store, 'autoload': autoload })
-        this._dispatchCustomEvent(`uibuilder:propertyChanged:${prop}`, { 'prop': prop, 'value': val, 'store': store, 'autoload': autoload })
+        this._dispatchCustomEvent('uibuilder:propertyChanged', { 'prop': prop, 'value': val, 'oldValue': oldVal, 'store': store, 'autoload': autoload })
+        this._dispatchCustomEvent(`uibuilder:propertyChanged:${prop}`, { 'prop': prop, 'value': val, 'oldValue': oldVal, 'store': store, 'autoload': autoload })
 
         return val
     }
@@ -1138,6 +1141,13 @@ export const Uib = class Uib {
         return _ui.buildHtmlTable(data, opts)
     }
 
+    /** Directly add a table to a parent element.
+     * @param {Array<object>|Array<array>|Object} data  Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
+     * @param {object} [opts] Build options
+     *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
+     *   @param {HTMLElement|string} opts.parent Default=body. The table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
+     *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+     */
     createTable(data=[], opts={parent: 'body'}) {
         _ui.createTable(data, opts)
     }
@@ -1242,7 +1252,7 @@ export const Uib = class Uib {
         return _ui.sanitiseHTML(html)
     }
 
-    /** Add table click listener that returns the text or html content of either the full row or a single cell
+    /** Add table event listener that returns the text or html content of either the full row or a single cell
      * NOTE: Assumes that the table has a `tbody` element.
      * If cells have a `data-col-name` attribute, it will be used in the output as the column name.
      * @example tblAddListener('#eltest-tbl-table', {}, myVar)
@@ -1262,20 +1272,35 @@ export const Uib = class Uib {
         return _ui.tblAddListener(tblSelector, options, out)
     }
 
-    /** Adds a single new row to an existing table>tbody
+    /** Adds (or replaces) a single row in an existing table>tbody
+     * NOTE: Row numbers use the rowIndex property of the row element.
      * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
      * @param {object|array} rowData A single row of column/cell data
      * @param {object} [options]
      * @param {number=} options.body Optional, default=0. The tbody section to add the row to.
      * @param {boolean=} options.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
      * @param {string=} options.rowId Optional. HTML element ID for the added row
-     * @param {Array<columnDefinition>} [options.colMeta] Optional. Data about each column. If not provided, will be calculated from the table
+     * @param {number=} options.afterRow Optional. If provided, the new row will be added after this row number
+     * @param {number=} options.beforeRow Optional. If provided, the new row will be added before this row number. Ignored if afterRow is provided
+     * @param {number=} options.replaceRow Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
+     * @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
      * 
      * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
      */
-    tblAddDataRow(tbl, rowData={}, options={}) {
-        return _ui.tblAddDataRow(tbl, rowData, options)
+    tblAddRow(tbl, rowData={}, options={}) {
+        return _ui.tblAddRow(tbl, rowData, options)
     }
+
+    /** Remove a row from an existing table
+     * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
+     * @param {number} rowIndex The row number to remove (1st row is 0, last row is -1)
+     * @param {object} [options]
+     *  @param {number=} options.body Optional, default=0. The tbody section to add the row to.
+     */
+    tblRemoveRow(tbl, rowIndex, options = {}) {
+        return _ui.tblRemoveRow(tbl, rowIndex, options)
+    }
+
 
     /** Show a pop-over "toast" dialog or a modal alert
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
