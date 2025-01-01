@@ -1479,7 +1479,7 @@ const Ui = class Ui {
      * @param {Array<object>|Array<array>|Object} data  Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
      * @param {object} [opts] Build options
      *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
-     *   @param {HTMLElement|string} opts.parent Default=body. The table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
+     *   @param {HTMLElement|string} opts.parent Default=body. The table will be added as a child. May be an actual HTML element or a CSS Selector
      *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
      */
     createTable(data=[], opts={parent: 'body'}) {
@@ -1487,6 +1487,7 @@ const Ui = class Ui {
         this.buildHtmlTable(data, opts)
     }
 
+    // TODO ...
     /** Builds & returns an HTML table element from an array (or object) of objects
      * 1st row is used for columns unless you pass opts.cols to describe them.
      * If an object of objects, inner keys are used to populate th/td `data-col-name` attribs. Outer keys applied as row ID's.
@@ -1574,7 +1575,7 @@ const Ui = class Ui {
         data.forEach( (item, i) => {
             if (isNaN(Number(rowKeys[i]))) rowOpts.rowId = rowKeys[i]
             else rowOpts.rowId = undefined
-            this.tblAddDataRow(tbl, item, rowOpts)
+            this.tblAddRow(tbl, item, rowOpts)
         })
 
         if (opts.parent) {
@@ -1596,21 +1597,25 @@ const Ui = class Ui {
         return tbl
     }
     
-    // TODO Add option for where to attach the row (afterRow)
-    // TODO Add check for existing named row - if present, replace instead of add
-    /** Adds a single new row to an existing table>tbody
+    /** Adds (or replaces) a single row in an existing table>tbody
+     * NOTE: Row numbers use the rowIndex property of the row element.
      * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
      * @param {object|array} rowData A single row of column/cell data
      * @param {object} [options]
-     * @param {number=} options.body Optional, default=0. The tbody section to add the row to.
-     * @param {boolean=} options.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
-     * @param {string=} options.rowId Optional. HTML element ID for the added row
-     * @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
+     *  @param {number=} options.body Optional, default=0. The tbody section to add the row to.
+     *  @param {boolean=} options.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+     *  @param {string=} options.rowId Optional. HTML element ID for the added row
+     *  @param {number=} options.afterRow Optional. If provided, the new row will be added after this row number
+     *  @param {number=} options.beforeRow Optional. If provided, the new row will be added before this row number. Ignored if afterRow is provided
+     *  @param {number=} options.replaceRow Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
+     *  @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
      * 
      * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
      */
-    tblAddDataRow(tbl, rowData={}, options={}) {
+    tblAddRow(tbl, rowData={}, options={}) {
         const tblType = Object.prototype.toString.apply(tbl)
+
+        if (Object.prototype.toString.apply(options) !== '[object Object]') throw new Error(`[tblAddDataRow] options must be an object`)
 
         // rowData must be an object or array of column cell data
         const dataType = Object.prototype.toString.apply(rowData)
@@ -1684,11 +1689,22 @@ const Ui = class Ui {
         // Append all the columns to the row
         rowEl.append(...cols)
 
-        // Adds the row and returns the row reference for further processing if needed
+        // If afterRow is provided, insert the row after the specified row number & return reference to the new row
+        if ('afterRow' in options) {
+            const afterRow = tbodyEl.rows[options.afterRow]
+            if (afterRow) return afterRow.after(rowEl)
+        } else if ('beforeRow' in options) {
+            const beforeRow = tbodyEl.rows[options.beforeRow]
+            if (beforeRow) return beforeRow.before(rowEl)
+        } else if ('replaceRow' in options) {
+            const replaceRow = tbodyEl.rows[options.replaceRow]
+            if (replaceRow) return replaceRow.replaceWith(rowEl)
+        }
+        // Otherwise adds the row to the end of the table and returns the row reference for further processing if needed
         return tbodyEl.appendChild(rowEl)
     }
 
-    /** Add table click listener that returns the text or html content of either the full row or a single cell
+    /** Add table event listener that returns the text or html content of either the full row or a single cell
      * NOTE: Assumes that the table has a `tbody` element.
      * If cells have a `data-col-name` attribute, it will be used in the output as the column name.
      * @example tblAddListener('#eltest-tbl-table', {}, myVar)
@@ -1825,6 +1841,36 @@ const Ui = class Ui {
         tblEl.cols = colData
 
         return colData
+    }
+
+    /** Remove a row from an existing table
+     * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
+     * @param {number} rowIndex The row number to remove (1st row is 0, last row is -1)
+     * @param {object} [options]
+     *  @param {number=} options.body Optional, default=0. The tbody section to add the row to.
+     */
+    tblRemoveRow(tbl, rowIndex, options = {}) {
+        const tblType = Object.prototype.toString.apply(tbl)
+
+        if (Object.prototype.toString.apply(options) !== '[object Object]') throw new Error(`[tblRemoveRow] options must be an object`)
+
+        /** @type {HTMLTableElement} */
+        let tblEl
+        if (tblType === '[object HTMLTableElement]') { // we were passed an actual table el
+            // @ts-ignore
+            tblEl = tbl
+        } else { // we were passed a css selector
+            // @ts-ignore
+            tblEl = Ui.doc.querySelector(tbl)
+            if (!tblEl) throw new Error(`[tblRemoveRow] Table with CSS Selector "${tbl}" not found`)
+        }
+
+        if (!options.body) options.body = 0
+
+        const tbodyEl = tblEl.getElementsByTagName('tbody')[options.body]
+        if (!tbodyEl) throw new Error(`[tblAddDataRow] Table must have a tbody tag, tbody section ${options.body} does not exist`)
+
+        tbodyEl.deleteRow(rowIndex)
     }
 
     //#endregion --- table handling ---
