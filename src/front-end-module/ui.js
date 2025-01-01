@@ -813,6 +813,7 @@ const Ui = class Ui {
         if (el) el.classList.add(...classNames)
     }
 
+    // TODO Add ability to change slot content ...
     /** Apply a source template tag to a target html element
      * NOTES:
      * - styles in ALL templates are accessible to all templates.
@@ -849,7 +850,7 @@ const Ui = class Ui {
                         el.setAttribute(attrib, config.attributes[attrib])
                     })
                 }
-                // ! TODO Add ability to change slot content
+                // TODO Add ability to change slot content
                 // Apply to the target
                 target.appendChild(content)
             }

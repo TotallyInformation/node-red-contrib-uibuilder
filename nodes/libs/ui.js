@@ -582,6 +582,7 @@ const Ui = class Ui2 {
     if (!Array.isArray(classNames)) classNames = [classNames];
     if (el) el.classList.add(...classNames);
   }
+  // TODO Add ability to change slot content ...
   /** Apply a source template tag to a target html element
    * NOTES:
    * - styles in ALL templates are accessible to all templates.
