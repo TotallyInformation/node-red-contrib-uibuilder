@@ -199,41 +199,19 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     if ( uib.RED === null ) return
     const RED = uib.RED
 
-    // TODO Move to a runtime plugin
-    // Add deep find utility function to RED.util so it can be used inside function nodes
+    // Add list all uibuilder apps function to RED.util so it can be used inside function nodes
+    // NOTE: Only add things here that require uibuilder configuration data which won't be available
+    //       until after plugins are defined. Most things should be added in the the runtime plugin.
     RED.util.uib = {
-        /** Recursive object deep find
-         * @param {*} obj The object to be searched
-         * @param {Function} matcher Function that, if returns true, will result in cb(obj) being called
-         * @param {Function} cb Callback function that takes a single arg `obj`
-         */
-        deepObjFind: (obj, matcher, cb) => {
-            if (matcher(obj)) {
-                cb(obj)
-            }
-            for (const key in obj) {
-                if (typeof obj[key] === 'object') {
-                    RED.util.uib.deepObjFind(obj[key], matcher, cb)
-                }
-            }
-        },
-        /** Format a number to a given locale and decimal places
-         * @param {number} inp Input number
-         * @param {number} dp Number of output decimal places required (default=1)
-         * @param {string} int Locale to use for number format (default=en-GB)
-         * @returns {string} Formatted number as a string
-         */
-        dp: (inp, dp, int) => {
-            if (!int) int = 'en-GB'
-            if (!dp) dp = 1
-            return inp.toLocaleString(int, { 'minimumFractionDigits': dp, 'maximumFractionDigits': dp })
-        },
         /** Return a list of all instances
          * @returns {object} List of all registered uibuilder instances
          */
         listAllApps: () => {
             return uib.apps
         },
+
+        // Merge in functions from the runtime plugin
+        ...RED.util.uib
     }
 
     //#region ----- back-end debugging ----- //
