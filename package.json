@@ -77,7 +77,8 @@
       "uib-update": "nodes/uib-update/customNode.js"
     },
     "plugins": {
-      "uib-plugin": "nodes/uib-plugin.html"
+      "uib-runtime-plugin": "nodes/uib-runtime-plugin.js",
+      "uib-editor-plugin": "nodes/uib-editor-plugin.html"
     }
   },
   "engines": {
