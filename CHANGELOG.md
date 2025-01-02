@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-12-30 14:46:49
+updated: 2025-01-02 15:52:18
 ---
 
 # Changelog
@@ -11,17 +11,22 @@ Please see the documentation for archived changelogs - a new archive is produced
 ## To Fix
 
 * `uib-element` Page title output is not replacing the h1.
-* Need to improve url change for dependent nodes. Currently have to reload the editor to get the new url. Should happen live (on save of uibuilder).
 
 ## Consider
 
 * A way to send messages to a uibuilder node from a function node.
+* Need to improve url change for dependent nodes. Currently have to reload the editor to get the new url. Should happen live (on save of uibuilder).
 * New node to simplify executing remote commands on the front-end
 * Include source node data in msg._ui & an optional 2nd output on no-code nodes to allow interactions from elements to be routed direct to the source node.
 * For `uib-element`, make the editor icon responsive to the selected element type by using a function and include svg files in resources.
 * Update brand CSS from changes in web site.
 * Further simplifications of the url change handling in the uibuilder node. Converge to live url element change or the validation check. Stop saving props that don't need to be (that means that re-opening after a deployment results in  an update that needs re-deploying).
 * Adding a client library setting to auto-reload the page after loosing connection to the server. Would be useful for development.
+
+* **Collapsible list**: Either built-in class/js or a web component. [Ref](https://chatgpt.com/share/e32ce7f8-7b86-45e7-ae9d-69d167c37a14). NB: Allow for nav menus as well as normal lists. Also consider collapsible para's.
+
+* **FE: Drag/drop**: draggable class, drag-container class (to constrain drag area). Use `moveElement` fn. On drop, send change notice to Node-RED as control msg.
+
 
 ## In progress
 
@@ -30,21 +35,16 @@ Please see the documentation for archived changelogs - a new archive is produced
   * [ ] `uib-meta`
   * [ ] `apply-template`
 
-## To Do
-
-Please see the roadmap in the docs for the backlog.
-
-* Change all node html files to load js as modules. Remove IIFE wrappers from js files.
-* Enhance client table builder
-  * Add data-row-key value - to row, ?to cells?
-* Add `_ui.dataset = {...target.dataset}` to `eventSend`
-  
-* Add disconnect & reconnect timestamps to the uib FE library and pass back in connect ctrl msgs. Add option to the cache node to only send data from the disconnected period.
-* Move FE logger to separate library to make it easier to use with ui.js without using uibuilder.
-  
-* **Collapsible list**: Either built-in class/js or a web component. [Ref](https://chatgpt.com/share/e32ce7f8-7b86-45e7-ae9d-69d167c37a14). NB: Allow for nav menus as well as normal lists. Also consider collapsible para's.
-
-* **FE: Drag/drop**: draggable class, drag-container class (to constrain drag area). Use `moveElement` fn. On drop, send change notice to Node-RED as control msg.
+* [STARTED] Change all node html files to load js as modules. Remove IIFE wrappers from js files.
+  * [x] `uibuilder`
+  * [ ] `uib-element`
+  * [ ] `uib-cache`
+  * [ ] `uib-file-list`
+  * [ ] `uib-save`
+  * [ ] `uib-html`
+  * [ ] `uib-sender`
+  * [ ] `uib-tag`
+  * [ ] `uib-update`
 
 * [-] Removal of fs-extra dependency
   * [-] Functions wanted:
@@ -78,6 +78,20 @@ Please see the roadmap in the docs for the backlog.
     * [x] How to block in/out client msgs based on `msg._client` - e.g. use of the new hooks.
     * [ ] How to redirect un-auth web requests to login page
 
+
+## To Do
+
+Please see the roadmap in the docs for the backlog.
+
+* Enhance client table builder
+  * Add data-row-key value - to row, ?to cells?
+  
+* Improve connection/disconnection processing
+  * Add disconnect & reconnect timestamps to the uib FE library and pass back in connect ctrl msgs.
+  * Add option to the cache node to only send data from the disconnected period.
+
+* Move FE logger to separate library to make it easier to use with ui.js without using uibuilder.
+  
 ### Nodes
 
 #### Node: `uibuilder`
@@ -107,7 +121,7 @@ Please see the roadmap in the docs for the backlog.
 
 #### FE Client Library
 
-* [ ] Add `buildHtmlTable`, `createTable`, `tblAddRow`, `tblRemoveRow`, `tblAddListener` as external commands.
+* [ ] Add `createTable`, `tblAddRow`, `tblRemoveRow`, `tblAddListener` as external commands.
 * [ ] Add a `tblRemoveListener` function.
 * [ ] For `tblAddListener`, add an option to add a listener to the whole table.
 
@@ -117,8 +131,12 @@ Please see the roadmap in the docs for the backlog.
   * [ ] Add reference to client library
   * [ ] Document
 
+* [ ] Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
+
 * [ ] Enhance JSON viewing using my own interpretation of the [json-view](https://github.com/pgrabovets/json-view) library.
+
 * [ ] Add detail prop to eventSend to capture multi-clicks. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/click_event#usage_notes).
+
 * [ ] Add debounce for click to correspond to detail prop reset time.
 
 #### FE UI Library: `ui.js`
@@ -241,8 +259,12 @@ The following are only used for _**developing**_ UIBUILDER:
   * `tblAddListener` - adds row/cell listeners to the 1st tbody of a table. Will send a msg back to Node-RED when used with uibuilder.
 
 * **Updated the front-end `index.html` templates to highlight that the uibuilder client library MUST be included.** After seeing several people take it out.
+
 * Added `uibuilder:propertyChanged:${prop}` custom event when a managed variable changed. Has the same event.details as the 'uibuilder:propertyChanged' event. This event can be used instead of the `uibuilder.onChange('prop', ....)` function if preferred.
+
 * Updated `uibuilder:propertyChanged` and `uibuilder:propertyChanged:${prop}` custom events to include `oldValue` as one of the event details. Will be `undefined` if the property is new.
+
+* Updated `uibuilder.eventSend` function to include `msg._ui.dataset` which contains any `data-*` attributes from the element that triggered the event.
 
 ### Front-end library: `ui.js`
 
