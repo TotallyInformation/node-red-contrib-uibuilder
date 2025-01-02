@@ -2573,6 +2573,7 @@ export const Uib = class Uib {
                 id: target.id !== '' ? target.id : undefined,
                 name: target.name !== '' ? target.name : undefined,
                 slotText: target.textContent ? target.textContent.substring(0, 255) : undefined,
+                dataset: {...target.dataset},
 
                 form: formDetails,
                 props: props,
