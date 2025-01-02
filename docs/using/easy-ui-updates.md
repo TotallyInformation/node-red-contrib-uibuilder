@@ -3,7 +3,7 @@ title: Updating web UI content and attributes dynamically from Node-RED
 description: |
   A quick FAQ explaining the different ways to include and dynamically change data on your web pages from Node-RED.
 created: 2024-06-19 10:29:37
-updated: 2024-07-17 17:12:00
+updated: 2025-01-02 16:12:34
 ---
 
 > [!TIP]
@@ -31,6 +31,9 @@ In Node-RED:
 4. No-code and low-code nodes can directly update identifiable on-page elements.
 
 Options 1 and 2 are described here. Option 3 is described in the client documentation [onChange](/client-docs/features#onchangecancelchange-functions)/[onTopic](/client-docs/features#ontopiccanceltopic-functions) and option 4 in [Dynamic, config-driven UI's](/client-docs/config-driven-ui)/[uib-update](/nodes/uib-update)
+
+> [!TIP]
+> As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance.
 
 ## 1) Using the `uib-topic` attribute :id=uibtopic
 

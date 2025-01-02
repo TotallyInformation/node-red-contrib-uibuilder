@@ -3,7 +3,7 @@ title: The main uibuilder node
 description: |
   Usage and configuration.
 created: 2023-02-05 16:31:39
-updated: 2024-06-28 14:43:57
+updated: 2025-01-02 17:00:15
 ---
 
 > [!note]
@@ -75,15 +75,39 @@ As at uibuilder v5, there are 4 built-in Templates plus the ability to load exte
 
 ### Files Tab
 
-tbc.
+This tab allows you to manage the files in the server folder for this instance of uibuilder.
+
+You can create, delete and edit files here.
+
+> [!NOTE]
+> If you want to do any amount of file/folder editing, it is recommended to use a full code editor such as Visual Studio Code or similar. The built-in editor is very basic and does not have many of the features you might expect from a full editor. VS Code has a well supported remote editing feature that allows you to edit files on a remote server directly from your local machine.
+>
+> The Advanced tab has a setting that enables a direct link to your chosen editor assuming that it allows custom URL schemes. By default, this is set to Visual Studio Code but you can change it to any editor that supports custom URL schemes.
 
 ### Libraries Tab
 
-tbc.
+This tab allows you to manage the front-end libraries that are available to your front-end code. It uses standard npm packages and you can search for and install any package that is available on the npm repository, or that npm can install for example, from a GitHub repository, or local folder.
+
+You use the standard npm package name which can include @ prefixes, version number suffixes, etc. You can even install multiple versions of the same package by supplying a specification such as `vue2@npm:vue@2` and `vue3@npm:vue@3`. See the npm documentation for more information.
+
+Any front-end library will be installed to the `<uibRoot>/` folder (typically `~/.node-red/uibuilder/`) and will be available to all instances of uibuilder. This ensures that the libraries are not confused with Node-RED's own libraries. The libraries are all exposed via the `../uibuilder/vendor/` URL path. For example, if you install `vue3`, you can access it in your front-end code using `../uibuilder/vendor/vue/dist/vue.global.js`. Check the vendor's library documentation for the correct sub-path to use however as uibuilder's guesses are based on the library's `package.json` file which isn't alway correct.
+
+UIBUILDER will attempt to check for library updates every time you open the Libraries tab. If it finds any, it will show an update message which you can click on. Occasionally, the click may not work, in which case you can simply "Add" the same library again and it will update accordingly.
+
+Each installed library shows an information link which will open the library's declared documentation homepage on the Internet. This is useful for checking the library's API and usage.
+
+Click on the X icon alongside a library to remove it. This will delete the library from the server.
 
 ### Advanced Tab
 
-tbc.
+This tab contains a number of advanced settings that you can use to fine-tune the behaviour of the uibuilder node. Most have self-explanitory help text.
+
+Notably, you can:
+
+* Select a server sub-folder to use for serving the front-end code. The default is `src` which contains the default source files. The other commonly used folder is `dist`, this is useful if you are using a build process such as Webpack or Rollup.
+* Choose whether to automatically add a `msg._uib` property to all messages from the front-end. This contains information about the client that sent the message. This is optional and off by default since it contains information that might be considered sensitive.
+* Add a short and long description. These are used in the uibuilder admin pages such as the Apps Index page to help you remember what this instance is for.
+* Manually change the Code Editor URL which lets you easily access the server folder containing this instances files using your preferred code editor. The default uses a local or remote Visual Studio Code custom URL scheme but you can change it for any editor that supports custom URL schemes.
 
 ## Message inputs
 
@@ -94,6 +118,9 @@ Any message sent to a uibuilder node input will be forwarded direct to connected
 Messages for clients should have the same structure as other Node-RED messages. However, there are some specific formats that the uibuilder client will recognise and automatically process for you. See the [Standard Messages page](pre-defined-msgs) for details. 
 
 Most notably, any message containing a `msg._ui` property will not make it through to front-end user code. It is processed automatically by the uibuilder front-end library. That is the standard property used by uibuilder's [low-code capability](client-docs/config-driven-ui.md).
+
+> [!TIP]
+> As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance.
 
 ## Message outputs
 

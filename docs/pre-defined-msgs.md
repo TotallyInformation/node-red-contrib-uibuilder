@@ -3,12 +3,15 @@ title: Pre-defined UIBUILDER messages
 description: |
   Documents the different types of UIBUILDER messages between a Node-RED `uibuilder` node and a UIBUILDER front-end.
 created: 2020-09-24 18:14:00
-updated: 2024-08-04 13:45:53
+updated: 2025-01-02 16:06:01
 ---
 
 ## Message types
 
 The `uibuilder` node has a number of general types of message. Some of which have more defined structures. It also has some standard message property names that are used throughout. These are described in the [next section below](#standard-msg-properties-used-by-uibuilder).
+
+> [!TIP]
+> As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance.
 
 ### Input messages
 

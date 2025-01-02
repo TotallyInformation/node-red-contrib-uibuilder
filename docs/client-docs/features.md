@@ -1,34 +1,13 @@
 ---
 title: Features of the modern, modular front-end client `uibuilder.esm.js` and `uibuilder.iife.js`
 description: |
-  Description of the main features.
+  Description of the main features of UIBUILDER's browser client library.
 created: 2022-06-11 14:15:26
-updated: 2025-01-01 14:55:51
+updated: 2025-01-02 17:27:25
 ---
 
-- [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)
-- [Exposes global uibuilder, uib, $, and $$](#exposes-global-uibuilder-uib--and-)
-- [$ and $$ functions](#-and--functions)
-- [onChange/cancelChange functions](#onchangecancelchange-functions)
-- [onTopic/cancelTopic functions](#ontopiccanceltopic-functions)
-- [send function](#send-function)
-- [eventSend function](#eventsend-function)
-- [uib-var custom HTML tag (include managed variables in the UI)](#uib-var-custom-html-tag-include-managed-variables-in-the-ui)
-- [set function (Managed variables)](#set-function-managed-variables)
-- [Auto-loading of the uibuilder default stylesheet](#auto-loading-of-the-uibuilder-default-stylesheet)
-- [Conditional logging](#conditional-logging)
-- [document-level events](#document-level-events)
-- [setPing function](#setping-function)
-- [Page auto-reload](#page-auto-reload)
-- [setStore, getStore, removeStore functions](#setstore-getstore-removestore-functions)
-- [Initial connection message now shows whether the page is newly loaded or not](#initial-connection-message-now-shows-whether-the-page-is-newly-loaded-or-not)
-- [Stable client identifier](#stable-client-identifier)
-- [Number of connections is tracked and sent to server on (re)connect](#number-of-connections-is-tracked-and-sent-to-server-on-reconnect)
-- [Client connection/disconnection control messages](#client-connectiondisconnection-control-messages)
-- [ui function](#ui-function)
-- [Controlling from Node-RED](#controlling-from-node-red)
-- [Includes the Socket.IO client library](#includes-the-socketio-client-library)
-- [start function (now rarely needed)](#start-function-now-rarely-needed)
+> [!TIP]
+> As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance.
 
 ## Dynamic, data-driven HTML content
 

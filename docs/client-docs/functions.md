@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2025-01-01 17:49:42
+updated: 2025-01-02 17:29:12
 ---
 
 Functions accessible in client-side user code.
@@ -33,6 +33,10 @@ You can also do `uibuilder.set('msg', {/*your object details*/})` in your front-
 You can use one or more of the `msg._uib.pageName`, `msg._uib.clientId`, or `msg._uib.tabId` properties to control whether a specific page, client or browser tab will process an inbound message. Use this where you have multiple pages or clients and need to target a message to a specific one.
 
 UIBUILDER also allows you to issue control commands from Node-RED to your front-end app by sending messages to the `uibuilder` node containing `msg._uib.command` which must be set to [one of the recognised commands](/client-docs/control-from-node-red).
+
+> [!TIP]
+> As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance.
+
 
 ### Rooms
 

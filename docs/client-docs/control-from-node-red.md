@@ -3,8 +3,7 @@ title: Controlling UIBUILDER's client from Node-RED
 description: |
   How to send specially formatted messages from Node-RED to the uibuilder node that get information from the client and control how it works.
 created: 2023-02-23 11:59:44
-lastUpdated: 2023-10-14 17:00:54
-updated: 2023-12-30 17:01:41
+updated: 2025-01-02 21:57:59
 ---
 
 The UIBUILDER client library can be controlled in various ways from Node-RED to save you the bother of having to write front-end code.
@@ -22,24 +21,28 @@ Please load the "remote-commands" example from the library to test all of these 
 > {"_uib": {"command": "scrollTo", "prop": "top", "quiet": true}}
 > ```
 
+> [!TIP]
+> As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance.
+
+
 ### A summary of the commands available
 
 Possible `msg._uib.command` values.
 
-* `elementExists` - does an element exist in the HTML DOM?
-* `get` - gets a uibuilder client managed variable.
-* `getManagedVarList` - gets the list of uibuilder client managed variables.
-* `getWatchedVars` - gets the list of uibuilder client managed variables that are currently being watched for changes.
-* `htmlSend` - gets the current full HTML as text.
-* `include` - Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API.
+* [`elementExists`](#elementExists) - does an element exist in the HTML DOM?
+* [`get`](#get) - gets a uibuilder client managed variable.
+* [`getManagedVarList`](#getManagedVarList) - gets the list of uibuilder client managed variables.
+* [`getWatchedVars`](#getWatchedVars) - gets the list of uibuilder client managed variables that are currently being watched for changes.
+* [`htmlSend`](#htmlSend) - gets the current full HTML as text.
+* [`include`](#include) - Dynamically Add (Include) external content to the page.
 * [`navigate`](#navigation-control) - Triggers a page change or a route change.
 * [`scrollTo`](#scrolling) - Scroll visible page to an element based on a CSS Selector.
-* `set` - set a uibuilder client managed variable.
-* `showMsg` - Turn on/off the display of the latest msg from Node-RED.
-* `showStatus` - Turn on/off the display of the uibuilder client library settings.
-* `uiGet` - get detailed information about an HTML DOM element.
-* `uiWatch` - watch for changes to the HTML DOM, return messages about changes.
-* `watchUrlHash` - watch for URL Hash changes. Used for front-end routing.
+* [`set`](#set-variable) - set a uibuilder client managed variable.
+* [`showMsg`](#showMsg) - Turn on/off the display of the latest msg from Node-RED.
+* [`showStatus`](#showStatus) - Turn on/off the display of the uibuilder client library settings.
+* [`uiGet`](#uiGet) - get detailed information about an HTML DOM element.
+* [`uiWatch`](#uiWatch) - watch for changes to the HTML DOM, return messages about changes.
+* [`watchUrlHash`](#watchUrlHash) - watch for URL Hash changes. Used for front-end routing.
 
 
 > [!NOTE]
@@ -68,9 +71,34 @@ The page can be scrolled dynamically by Node-RED using the `scrollTo` command. S
 
 An optional 2nd object can be passed in the optional `value` property which gives more control. e.g. `{"_uib": {"command": "scrollTo", "prop": "#mydivid", "value": {"block": "bottom"}}}`. See [Client Functions (scrollTo) in the docs](client-docs/functions#scrollTo) for details. See the definition of the [`scrollIntoView`](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView) DOM API for details of the options.
 
+### `include` - Dynamically add (include) external content to the page :id=include
+
+External content can include HTML fragments, images, video, text, json, form data, PDF's or anything else from an external file _or_ an API.
+
+> [!NOTE]
+> This feature requires browser support for the Fetch API. This is supported in all modern browsers.
+
+To include external content into the page, send a message like this:
+
+```json
+{"_uib": {"command": "include", "prop": "http://example.com/somecontent.html", "value": {"id": "mydiv"}}}
+```
+
+To include a file from the same folder as the current page:
+
+```json
+{"_uib": {"command": "include", "prop": "./nicepic.jpg", "value": {"id": "mypic", "parentSelector": "#more"}}}
+```
+
+The `value` object must be provided and at least contain the `id` property.
+
+The `parentSelector` property is optional and can be used to specify where the content should be inserted. If not provided, the content will be inserted at the end of the body. It must be a valid CSS Selector.
+
+Additional options can be provided in the `value` object. See [Client Functions (include)](client-docs/functions#include) for further details on use.
+
 ## Navigation & routing
 
-### `watchUrlHash` Watch for URL Hash changes
+### `watchUrlHash` Watch for URL Hash changes :id=watchUrlHash
 
 Typically from front-end routers and Single-Page App (SPA) style pages. URL Hash changes do not cause the browser to reload the page.
 
@@ -107,7 +135,7 @@ A page reload can also be done using low-code. Set `msg._ui` to `{"method": "rel
 
 ## Getting UI information
 
-### `uiGet`
+### `uiGet` :id=uiGet
 
 Sending a message containing a `msg._uib` property set as follows will result in a returned message with standard details about the requested HTML element(s).
 
@@ -127,7 +155,7 @@ Which will return the class attribute value from a `<table>` tag within a tag ha
 
 With this format, if you ask for the `value` attribute - `{"command":"uiGet","prop":"#eltest", "value": "value"}` - if the selected element is an `input` type, the input's value attribute will be returned. But if it is some other kind of element type, the element's inner text will be returned.
 
-### `uiWatch`
+### `uiWatch` - watch for changes to the HTML DOM :id=uiWatch
 
 To be automatically informed of changes to some part of the web page UI, you can send a message with `msg._uib` something like this:
 
@@ -137,8 +165,17 @@ To be automatically informed of changes to some part of the web page UI, you can
 
 Which will watch the `<div id="more">...</div>` element for changes. Any changes to attributes or content will be reported back as standard messages.
 
+### `elementExists` - does an element exist in the HTML DOM? :id=elementExists
 
-## Getting client status information
+To check if an element exists in the HTML DOM, send a message like this:
+
+```json
+{"command":"elementExists","prop":"#more"}
+```
+
+The `prop` value must be a valid CSS Selector.
+
+## Getting client status information :id=get
 
 Sending a message containing a `msg._uib` property set as follows will result in that property being updated with a `msg._uib.value` property.
 
@@ -181,7 +218,7 @@ The `autoload` option tells the client to attempt to automatically reload the va
 > [!WARNING]
 > `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is closed.
 
-### Turn on/off visible last message from Node-RED
+### Turn on/off visible last message from Node-RED :id=showMsg
 
 ```json
 {"command": "showMsg", "prop": "body", "value": true}
@@ -192,7 +229,7 @@ Where:
 - `value` is *true* to turn on the message display, *false* turns it off. If not provided, toggles the display.
 - `prop` is the CSS Selector under which the display will be shown. If omitted, 'body' is used which results in the display being added to the end of the visible page.
 
-### Turn on/off visible current status of the uibuilder front-end client
+### Turn on/off visible current status of the uibuilder front-end client :id=showStatus
 
 ```json
 {"command": "showStatus", "prop": "body", "value": true}
@@ -204,17 +241,17 @@ Where:
 - `prop` is the CSS Selector under which the display will be shown. If omitted, 'body' is used which results in the display being added to the end of the visible page.
 
 
-## Get complete copy of the current web page
+## Get complete copy of the current web page :id=htmlSend
 
 To get the current web page, complete with dynamic changes back to Node-RED as a string in `msg.payload`, send a message to the `uibuilder` node containing:
 
 ```json
-{ "_uib": { "command": "sendHtml" } }
+{ "_uib": { "command": "htmlSend" } }
 ```
 
 ## Getting other information from the client
 
-### Get a list of managed variables 
+### Get a list of managed variables :id=getManagedVarList
 
 Send the following msg object to get a list of all variables actively managed by the client. Those which can be watched for changes using `uibuilder.onChange()`.
 
@@ -228,7 +265,7 @@ Optionally, also send the "full" prop to get an object instead of an array:
 { "_uib": { "command": "getManagedVarList", "prop": "full" } }
 ```
 
-### Get a list of watched variables
+### Get a list of watched variables :id=getWatchedVars
 
 Send the following msg object to get a list of all variables currently being watched by the client using `uibuilder.onChange()`.
 
