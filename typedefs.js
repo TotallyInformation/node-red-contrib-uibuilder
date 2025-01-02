@@ -183,6 +183,7 @@
  * @property {Function} util.uib.deepObjFind : Recursive object deep find - https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/config-driven-ui?id=manipulating-msg_ui
  * @property {Function} util.uib.listAllApps : Return a list of all uibuilder instances
  * @property {Function} util.uib.dp : Return a formatted number using a specified locale and number of decimal places
+ * @property {Function} util.uib.send : Send a message to a client via a uibuilder instance
  *
  * @property {object} plugins Node-RED plugins
  * @property {Function} plugins.registerPlugin : [Function: registerPlugin],

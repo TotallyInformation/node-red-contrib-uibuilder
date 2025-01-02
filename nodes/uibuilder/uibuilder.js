@@ -33,19 +33,19 @@ const tilib = require('../libs/tilib.js')   // General purpose library (by Total
 const packageMgt = require('../libs/package-mgt.js')
 const fslib  = require('../libs/fs.js')   // File/folder handling library (by Totally Information)
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
-try {
+try { // templateConf
     // Template configuration metadata
     var templateConf = require('../../templates/template_dependencies.js') // eslint-disable-line no-var
 } catch (e) {
     console.error('[uibuilder] REQUIRE TEMPLATE-CONF failed::', e)
 }
-try {
+try { // sockets
     // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
     var sockets = require('../libs/socket.js') // eslint-disable-line no-var
 } catch (e) {
     console.error('[uibuilder] REQUIRE SOCKET failed::', e)
 }
-try {
+try { // web
     // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
     var web = require('../libs/web.js') // eslint-disable-line no-var
 } catch (e) {
@@ -208,6 +208,19 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
          */
         listAllApps: () => {
             return uib.apps
+        },
+
+        /** Send a message to a specific uibuilder instance
+         * @param {string} uibName The name (url) of the uibuilder instance to send via
+         * @param {object} msg Message object to send to the front-end
+         */
+        send: (uibName, msg) => {
+            const targetNode = RED.nodes.getNode(uib.apps[uibName].node)
+            if ( !targetNode ) {
+                throw new Error(`[RED.util.uib.sendToFe] ERROR: uibuilder instance '${uibName}' not found`)
+            }
+            msg.from = 'server/function-node'
+            sockets.sendToFe2(msg, targetNode)
         },
 
         // Merge in functions from the runtime plugin
