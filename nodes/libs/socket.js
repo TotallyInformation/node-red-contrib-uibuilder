@@ -397,7 +397,7 @@ class UibSockets {
 
     /** Output a normal msg to the front-end. Can override socketid. NOTE:
      *    Applies the msgReceived hook if present
-     *    Currently only used for the auto-reload on edit in admin-api-v2.js and Post:replaceTemplate in admin-api-v3.js
+     *    Only used for: function-node:uib.send, auto-reload on edit in admin-api-v2.js and Post:replaceTemplate in admin-api-v3.js
      * @param {object} msg The message to output
      * @param {uibNode} node WARNING: Not a full reference to a node instance, only node.url is available
      * @param {string=} socketId Optional. If included, only send to specific client id (mostly expecting this to be on msg._socketID so not often required)
