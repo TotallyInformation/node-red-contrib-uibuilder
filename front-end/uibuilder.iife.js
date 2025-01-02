@@ -5608,7 +5608,7 @@
   var _a, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _uniqueElID, _extCommands, _managedVars, _showStatus, _uiObservers, _uibAttrSel;
   var Uib = (_a = class {
     //#endregion -------- ------------ -------- //
-    //#region ! EXPERIMENTAL: Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
+    //#region Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
     /** Attempt to load a service worker
      * https://yonatankra.com/how-service-workers-sped-up-our-website-by-97-5/
      * @param {string} fileName Name of service worker js file (without .js extension)
@@ -7400,10 +7400,6 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       const quiet = msg._uib.quiet ?? false;
       let response, info;
       switch (cmd) {
-        case "elementIsVisible": {
-          response = this.elementIsVisible(prop);
-          break;
-        }
         case "elementExists": {
           response = this.elementExists(prop, false);
           info = `Element "${prop}" ${response ? "exists" : "does not exist"}`;
@@ -7423,6 +7419,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
           else response = Object.values(this.getWatchedVars());
           break;
         }
+        case "sendHtml":
         case "htmlSend": {
           response = this.htmlSend("", false);
           break;

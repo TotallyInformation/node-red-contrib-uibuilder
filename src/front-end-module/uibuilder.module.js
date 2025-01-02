@@ -6,7 +6,7 @@
   Please use the default index.js file for your own code and leave this as-is.
   See Uib._meta for client version string
 
-  Copyright (c) 2022-2024 Julian Knight (Totally Information)
+  Copyright (c) 2022-2025 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -38,8 +38,6 @@ import ApplyTemplate from '../components/apply-template'
 
 const version = '7.1.0-src'
 
-// TODO Move to separate library
-// TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
 
 // Detect whether the loaded library is minified or not
@@ -2271,11 +2269,11 @@ export const Uib = class Uib {
 
         // Don't forget to update `#extCommands`, `docs/client-docs/control-from-node-red.md` & `functions.md`
         switch (cmd) {
-            case 'elementIsVisible': {
-                response = this.elementIsVisible(prop)
-                // info = `Element "${prop}" ${response ? 'is visible' : 'is not visible'}`
-                break
-            }
+            // case 'elementIsVisible': { // temporarily deprecated
+            //     response = this.elementIsVisible(prop)
+            //     // info = `Element "${prop}" ${response ? 'is visible' : 'is not visible'}`
+            //     break
+            // }
 
             case 'elementExists': {
                 response = this.elementExists(prop, false)
@@ -2300,6 +2298,7 @@ export const Uib = class Uib {
                 break
             }
 
+            case 'sendHtml':
             case 'htmlSend': {
                 response = this.htmlSend('', false)
                 break
@@ -2360,7 +2359,7 @@ export const Uib = class Uib {
                 break
             }
 
-            default: {
+            default: { // anything else is rejected
                 log('warning', 'Uib:_uibCommand', `Command '${cmd}' not yet implemented`)()
                 break
             }
@@ -2943,7 +2942,7 @@ export const Uib = class Uib {
 
     //#endregion -------- ------------ -------- //
 
-    //#region ! EXPERIMENTAL: Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
+    //#region Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
 
     /** Attempt to load a service worker
      * https://yonatankra.com/how-service-workers-sped-up-our-website-by-97-5/
