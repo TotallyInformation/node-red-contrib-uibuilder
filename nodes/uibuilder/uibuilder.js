@@ -217,7 +217,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
         send: (uibName, msg) => {
             const targetNode = RED.nodes.getNode(uib.apps[uibName].node)
             if ( !targetNode ) {
-                throw new Error(`[RED.util.uib.sendToFe] ERROR: uibuilder instance '${uibName}' not found`)
+                throw new Error(`[RED.util.uib.send] ERROR: uibuilder instance '${uibName}' not found`)
             }
             msg.from = 'server/function-node'
             sockets.sendToFe2(msg, targetNode)
