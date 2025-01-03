@@ -3,7 +3,7 @@ title: Controlling UIBUILDER's client from Node-RED
 description: |
   How to send specially formatted messages from Node-RED to the uibuilder node that get information from the client and control how it works.
 created: 2023-02-23 11:59:44
-updated: 2025-01-02 21:57:59
+updated: 2025-01-03 13:10:16
 ---
 
 The UIBUILDER client library can be controlled in various ways from Node-RED to save you the bother of having to write front-end code.
@@ -24,6 +24,8 @@ Please load the "remote-commands" example from the library to test all of these 
 > [!TIP]
 > As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance.
 
+> [!TIP]
+> As of v7.1, you can send messages to any uibuilder instance from a _function node_. Using the `RED.util.uib.send('uibname', msg)` function.
 
 ### A summary of the commands available
 
