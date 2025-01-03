@@ -41,9 +41,7 @@ const htmlmin = require('gulp-htmlmin')
 const jeditor = require('gulp-json-editor')
 // const gulpEsbuild = require('gulp-esbuild')
 const { createGulpEsbuild } = require('gulp-esbuild')
-const gulpEsbuild = createGulpEsbuild({
-    pipe: true,
-})
+const gulpEsbuild = createGulpEsbuild()
 
 const sourcemaps = require("gulp-sourcemaps");
 const browserslist = require('browserslist');
