@@ -44,8 +44,6 @@ const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readF
 const fg = require('fast-glob')
 // WARNING: Take care not to end up with circular requires. e.g. libs/socket.js or uiblib.js cannot be required here
 
-let log
-
 class UibFs {
     //#region --- Class vars ---
     /** PRIVATE Flag to indicate whether setup() has been run (ignore the false eslint error)
