@@ -8,173 +8,7 @@ updated: 2025-01-02 15:52:18
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
-## To Fix
-
-* `uib-element` Page title output is not replacing the h1.
-
-## Consider
-
-* A way to send messages to a uibuilder node from a function node.
-* Need to improve url change for dependent nodes. Currently have to reload the editor to get the new url. Should happen live (on save of uibuilder).
-* New node to simplify executing remote commands on the front-end
-* Include source node data in msg._ui & an optional 2nd output on no-code nodes to allow interactions from elements to be routed direct to the source node.
-* For `uib-element`, make the editor icon responsive to the selected element type by using a function and include svg files in resources.
-* Update brand CSS from changes in web site.
-* Further simplifications of the url change handling in the uibuilder node. Converge to live url element change or the validation check. Stop saving props that don't need to be (that means that re-opening after a deployment results in  an update that needs re-deploying).
-* Adding a client library setting to auto-reload the page after loosing connection to the server. Would be useful for development.
-
-* **Collapsible list**: Either built-in class/js or a web component. [Ref](https://chatgpt.com/share/e32ce7f8-7b86-45e7-ae9d-69d167c37a14). NB: Allow for nav menus as well as normal lists. Also consider collapsible para's.
-
-* **FE: Drag/drop**: draggable class, drag-container class (to constrain drag area). Use `moveElement` fn. On drop, send change notice to Node-RED as control msg.
-
-
-## In progress
-
-* [STARTED] Update built-in web components to new standards
-  * [x] `uib-var`
-  * [ ] `uib-meta`
-  * [ ] `apply-template`
-
-* [STARTED] Change all node html files to load js as modules. Remove IIFE wrappers from js files.
-  * [x] `uibuilder`
-  * [ ] `uib-element`
-  * [ ] `uib-cache`
-  * [ ] `uib-file-list`
-  * [ ] `uib-save`
-  * [ ] `uib-html`
-  * [ ] `uib-sender`
-  * [ ] `uib-tag`
-  * [ ] `uib-update`
-
-* [-] Removal of fs-extra dependency
-  * [-] Functions wanted:
-    * [ ] `ensureDirSync` (uibuilder, admin-api-v3)
-    * [ ] `ensureFileSync` (admin-api-v3)
-    * [ ] `moveSync` (uibuilder)
-    * [ ] `removeSync` (admin-api-v3, admin-api-v2)
-    * [ ] `writeJson` (package-mgt)
-    * [x] `remove` (uiblib) - needs testing
-    * [x] `access` (admin-api-v3) - passthrough to node:fs/promises - needs testing
-    * [x] `writeFileCb` (admin-api-v2) - passthrough to node:fs
-  * Remove from:
-    * [ ] `libs\fs.js`
-
-* [-] Use of `msg._client`
-  * [ ] Msgs from FE client
-    * [x] Check headers for:
-      * [x] FlowFuse auth
-      * [x] CloudFlare auth
-      * [x] Authelia auth
-      * [x] Authentik auth
-    * [x] Create `msg._client` and populate with std props, add to output msg - for both std and ctrl msgs
-  * [ ] Msgs from node-red flows
-    * [ ] ??
-  * [ ] Msgs to FE client
-    * [ ] ??
-  * [ ] Example?
-  * [-] Documentation
-    * [x] Describe what headers are understood, where they come from.
-    * [x] Describe `msg._client` properties
-    * [x] How to block in/out client msgs based on `msg._client` - e.g. use of the new hooks.
-    * [ ] How to redirect un-auth web requests to login page
-
-
-## To Do
-
-Please see the roadmap in the docs for the backlog.
-
-* Enhance client table builder
-  * Add data-row-key value - to row, ?to cells?
-  
-* Improve connection/disconnection processing
-  * Add disconnect & reconnect timestamps to the uib FE library and pass back in connect ctrl msgs.
-  * Add option to the cache node to only send data from the disconnected period.
-
-* Move FE logger to separate library to make it easier to use with ui.js without using uibuilder.
-  
-### Nodes
-
-#### Node: `uibuilder`
-
-* Editor panel
-  * [ ] Inputs on Files tab don't expand correctly
-  * [ ] Text in Template settings fieldset is fixed width
-
-#### Node `uib-element`
-
-* Make the outer div optional (at least for html/markdown) - needed for the `<collapsible-headings>` component.
-* Use the new tbl* functions
-* Allow option to add `tblAddClickListener` to tables
-* ~~For tables, add `data-row-index` to each tbody row.~~ NO! Because adding/removing rows throws out the numbering. Use the `rowIndex` property of the DOM element instead.
-
-#### Node: `uib-cache`
-
-* Editor panel
-  * [ ] Some inputs width not consistent
-
-#### Node: `uib-save` & `uib-file-list`
-
-*  editor panels
-   * [ ] URL drop-down width not consistent (check uib-update as this is correct)
-
-### Front-End
-
-#### FE Client Library
-
-* [ ] Add `createTable`, `tblAddRow`, `tblRemoveRow`, `tblAddListener` as external commands.
-* [ ] Add a `tblRemoveListener` function.
-* [ ] For `tblAddListener`, add an option to add a listener to the whole table.
-
-* [-] [**STARTED**] `moveElement` function that moves an element from 1 place to another. [Ref](https://chatgpt.com/share/872cede6-2fd6-44b2-891b-a152a0798c77).
-
-  * [ ] Finish coding in ui.js
-  * [ ] Add reference to client library
-  * [ ] Document
-
-* [ ] Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
-
-* [ ] Enhance JSON viewing using my own interpretation of the [json-view](https://github.com/pgrabovets/json-view) library.
-
-* [ ] Add detail prop to eventSend to capture multi-clicks. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/click_event#usage_notes).
-
-* [ ] Add debounce for click to correspond to detail prop reset time.
-
-#### FE UI Library: `ui.js`
-
-* `applyTemplate` - Allow slot content to be changed.
-
-### Styles: `uib-brand css`
-
-* Transfer the formats from the dashboard layout example to uib-brand.css
-* Add a `.shadow` utility class for adding shadows to things.
-* Update with changes from the website.
-
-### Examples
-
-* [-] [started] Update text update example to include new `uib-topic` html attributes
-* [ ] `uib-sender` - remove ref to uibuilderfe and update flows.
-* [ ] Navigation *menu* examples. 1x Router, 1x page.
-* [x] Template Examples - remove old library example.
-* [x] uib-element tests
-* [x] **REMOVE** old client library example
-* [x] uib-save example
-* [x] jQuery
-* [x] Client side/Dynamic SVG
-* [x] Low code/report builder
-* [x] Simple flow
-
-### Documentation
-  * [ ] Add [Giscus commenting to docs](https://github.com/docsify-note/docsify-giscus/)
-  * [ ] Document `tblGetCellName` (ui) new FE function.
-  * [ ] Add a "Debugging" doc. [ref](https://dashboard.flowfuse.com/contributing/widgets/debugging.html#debugging-dashboard-2-0), [ref1](https://discourse.nodered.org/t/debugging-node-red-ui-base-js-and-understanding-websocket-behavior/91131/6)
-  * [ ] Document a dashboard-like grid layout.
-  * [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
-  * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
-  * [ ] "Islands" concept. [Ref.](https://docs.astro.build/en/concepts/islands/#a-brief-history).
-    
-    > The general idea of an “Islands” architecture is deceptively simple: render HTML pages on the server, and inject placeholders or slots around highly dynamic regions […] that can then be “hydrated” on the client into small self-contained widgets, reusing their server-rendered initial HTML.
-  
-  * [ ] Highlight how the FE library uses the "Signals" pattern. [Ref](https://www.smashingmagazine.com/2018/01/deferring-lazy-loading-intersection-observer-api/).
+Please see the roadmap in the docs for the backlog of future planned developments.
 
 ## Compatibility of current release
 
@@ -186,19 +20,6 @@ Please see the roadmap in the docs for the backlog.
   * CSS - 0.12% or above of global usage but not Internet Explorer ([ref.](https://browserslist.dev/?q=Pj0wLjEyJSwgbm90IGllID4gMA%3D%3D)). The uncompiled CSS should work in all current mainstream browsers. The compiled CSS (`uib-brand.min.css`) should work in browsers back to early 2019, possibly before. Enforced by [LightningCSS](https://lightningcss.com/).
   * JavaScript - ES6+ so should work in all current mainstream browsers. The compiled JS (`uibuilder.min.js`) should work in browsers back to early 2019, possibly before. Enforced by [ESBuild](https://esbuild.github.io/).
 
-## Current Issues
-
-* In the uibuilder node, advanced settings, if you change the URL (name), the Code Editor URL does NOT change. You have to change it manually. This will be fixed in a future release.
-
-### "Outdated" dependencies (Resolved)
-
-As of v7, all outdated dependencies have been removed or limited to uibuilder development only, not production use.
-
-The following are only used for _**developing**_ UIBUILDER:
-
-* `execa` - restricted to v5. Author sindresorhus decided that everyone HAS to use ESM even though his packages are widely used and he must know that it is often impossible to move from CommonJS without a complete rewrite. Node-RED is so complex, when would that be possible? Very annoying.
-* `@types/node` - restricted to v18 to match Node-RED's current baseline.
-
 ------------
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.4...main)
@@ -209,20 +30,33 @@ The following are only used for _**developing**_ UIBUILDER:
 
 * **Any** *Node-RED custom node* can now send a message to a uibuilder client! In your runtime code, add `RED.events.emit('UIBUILDER/send/<url-name>', {payload: 'Hi from my custom node!'})` where `<url-name>` is the URL set in a deployed uibuilder node. The data will be sent to all browser tabs connected to that uibuilder endpoint. Note though that this bypasses any uib-cache node.
 
+* You can now send a message from Node-RED to a connected client from a Function Node! Simply add `RED.util.uib.send('uibname', {....})` to your function code. This will send a message to all connected clients for that uibuilder instance.
+
 * For front-end coders, you now have access to a number of table manipulation functions. Making it very easy to create and manipulate tables in your web pages from simple input data. You can add and remove tables, table rows and add event handlers (e.g. click) to rows or cells.
 
 ### General changes
 
+* Added ability to send messages from Node-RED to a connected client from a Function Node. Simply add `RED.util.uib.send('uibname', {....})` to your function code. This will send a message to all connected clients for that uibuilder instance.
+
 * References to `fs-extra` 3rd-party library removed from all nodes & libraries except `libs/fs.js`.
-* All references to node.js's `fs` library now restricted to `libs/fs.js`.
-* Some now unused node.js files have been removed.
-* @totallyinformation/ti-common-event-handler dependency package now removed completely. `RED.events` is used throughout, all uibuilder events start with `UIBUILDER/`.
-* To make it easier to create new elements in the future. Moved no-code element runtime processing to a common folder, `nodes/elements`. Added Editor API's and moved processing out of the `uib-element` runtime to separate module. Also moved element description and advanced options HTML to `nodes/elements/en-US`.
+
 * [Socket](https://docs.socket.dev/docs/socket-for-github) security check tool added to all TotallyInformation GitHub repositories including UIBUILDER. Provides significant supply-chain security and privacy checks.
+
+* All references to node.js's `fs` library now restricted to `libs/fs.js`.
+
 * To help further improve the development of the brand css, [LightningCSS](https://lightningcss.com/) is now used to compile the source CSS. This ensures that the CSS is not using too new CSS options and improves the performance of the CSS. Additionally, stylelint is now used to check the CSS for errors and warnings.
 * Now using LightningCSS to compile source CSS and ensure not using too new CSS options.
+
+* Some unused NodeJS files have been removed.
+
+* `@totallyinformation/ti-common-event-handler` dependency package now removed completely. `RED.events` is used throughout, all uibuilder events start with `UIBUILDER/`.
+
+* To make it easier to create new elements in the future. Moved no-code element runtime processing to a common folder, `nodes/elements`. Added Editor API's and moved processing out of the `uib-element` runtime to separate module. Also moved element description and advanced options HTML to `nodes/elements/en-US`.
+
 * The common code and css files in the `resources` folder (`ti-common.js` and `ti-common.css`) have been renamed to `editor-common.js` and `editor-common.css` respectively. This is to make it clearer that these are used in the Node-RED editor only.
+
 * The `uib-plugin` library now renamed to `uib-editor-plugin` for clarity.
+
 * New `uib-runtime-plugin` library added. Now manages most of the additions to `RED.util.uib` which contains functions made available to Node-RED function nodes.
 
 ### `uib-brand.css` styles & variables
@@ -287,6 +121,13 @@ The following are only used for _**developing**_ UIBUILDER:
 ### Documentation changes
 
 * Improved documentation for uibuilder's event handling and better linked that to how to create custom nodes that work with uibuilder.
+* Improved documentation of the uibuilder extensions for the `RED.util.uib` object for use in Function nodes.
+* Documentation for the new table handing functions in the client library.
+
+### Example flow updates
+
+* All examples showing the use of the old `uibuilderfe` client library have been removed.
+* Several of the example flows have been updated to show the latest features.
 
 ### Runtime library changes
 
@@ -454,6 +295,15 @@ Most of these changes will *not* impact most people but you should check through
   * New events are now available using `RED.events` that track the setup of uibuilder, the setup of each uibuilder node instance and node instance url renames.
 
   This allows 3rd-party extensions to UIBUILDER to be more easily created. The events pass references to all of the information you might need. [New documentation also now available for contributors](dev/3rd-party-extensions.md) showing the various ways to easily build new content and features through custom nodes and web components.
+
+### "Outdated" dependencies (Resolved)
+
+As of v7, all outdated dependencies have been removed or limited to uibuilder development only, not production use.
+
+The following are only used for _**developing**_ UIBUILDER:
+
+* `execa` - restricted to v5. Author sindresorhus decided that everyone HAS to use ESM even though his packages are widely used and he must know that it is often impossible to move from CommonJS without a complete rewrite. Node-RED is so complex, when would that be possible? Very annoying.
+* `@types/node` - restricted to v18 to match Node-RED's current baseline.
 
 ### General Changes
 

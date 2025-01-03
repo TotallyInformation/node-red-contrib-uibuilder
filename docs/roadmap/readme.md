@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2025-01-01 21:53:09
+updated: 2025-01-03 16:26:09
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -36,6 +36,8 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] Document new managed var: `globalMsg`.
 
 ### FE: Client Library
+
+* [ ] `applyTemplate` - Allow slot content to be changed.
 
 * [ ] [**STARTED**] Ability to visually show all uibuilder managed variables.
 
@@ -71,6 +73,13 @@ To see what is currently being developed, please look at the "Unreleased" sectio
   * Maybe: options to auto-load js and css files with the same name as a template file.
   * Maybe: Reset route to template option?
 
+### Web components
+
+* [STARTED] Update built-in web components to new standards
+  * [x] `uib-var`
+  * [ ] `uib-meta`
+  * [ ] `apply-template`
+
 ### Node: `uibuilder`
 
 * Add manual entry field to editor config for a URL scheme to open the instanceRoot folder in an editor new window. Pre-fill with vscode entry for localhost. Partially fill with vscode-remote otherwise (or maybe have a button).
@@ -78,20 +87,24 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 ### All nodes
 
 * Incorporate ideas from: https://www.htmhell.dev/adventcalendar/2023/2/
-
 * More flexible low-code class attribute handling.
   * In ui.js
     * [ ] Update the low-code schema's with add/remove/replace `classes` property
-    * Update all fns to use the extra property
-    
+    * Update all fns to use the extra property   
   * In nodes - update to allow using array of classes and to have add/remove class arrays
     * In uib-update
-    
     * In uib-element
-    
     * In uib-tag
-    
-      
+
+### Styles: `uib-brand.css`
+
+* Transfer the formats from the dashboard layout example to uib-brand.css
+* Add a `.shadow` utility class for adding shadows to things.
+* Update with changes from the website.
+
+### Examples
+
+* Update text update example to include new `uib-topic` html attributes
 
 ### Node Edit Panel Refactoring
 
@@ -119,10 +132,30 @@ Vars moved to editor-common (replace): node.urlPrefix, node.nodeRoot, paletteCat
 | Std process for typed inputs |           |           |             |               |          |          |            |         |            |                                     |
 | buildUi to std lib           | --        | --        |             |               |          | --       | --         |         |            | ??                                  |
 | Object.assign config vars(1) |           |           |             |               |          |          |            |         |            |                                     |
+| Move FS to lib(3)            |           |           |             |               |          |          |            |         |            |                                     |
+| Remove fs-extra(4)           |           |           |             |               |          |          |            |         |            |                                     |
+| Modules(5)                   | ✔️         |           |             |               |          |          |            |         |            |                                     |
 | Notes                        |           |           |             |               |          |          |            |         |            | check this for other needed updates |
 
 (1) https://github.com/ryanmcdermott/clean-code-javascript?tab=readme-ov-file#set-default-objects-with-objectassign
 (2) Get an individual value for a typed input field and save to supplied node object
+(3) Complete the move of all server filing system handling into the `libs/fs.js` library.
+(4) Remove dependency on `fs-extra`.
+(5) Change all node html files to load js as modules. Remove IIFE wrappers from js files.
+
+#### Removal of fs-extra dependency
+
+* [-] Functions wanted:
+  * [ ] `ensureDirSync` (uibuilder, admin-api-v3)
+  * [ ] `ensureFileSync` (admin-api-v3)
+  * [ ] `moveSync` (uibuilder)
+  * [ ] `removeSync` (admin-api-v3, admin-api-v2)
+  * [ ] `writeJson` (package-mgt)
+  * [x] `remove` (uiblib) - needs testing
+  * [x] `access` (admin-api-v3) - passthrough to node:fs/promises - needs testing
+  * [x] `writeFileCb` (admin-api-v2) - passthrough to node:fs
+* Remove from:
+  * [ ] `libs\fs.js`
 
 ### Optimisations
 
@@ -139,6 +172,10 @@ Vars moved to editor-common (replace): node.urlPrefix, node.nodeRoot, paletteCat
 ## Backlog
 
 ### Possible New Nodes
+
+#### `uib-remote`
+
+New node to simplify executing remote commands on the front-end
 
 #### `uib-file-read`
 
@@ -373,13 +410,18 @@ See Node-RED worldmap for reference.
 
 ### General changes
 
-* Complete the move of the zero- to low-code translations into the `libs/lowcode.js` library. Move runtime `buildUi` to common library.
-    Consider putting each element in its own source js file and using a build process. This will allow their use when converting to web components. Add a master js with all components but allow each to be individually loaded.
-* Complete the move of all server filing system handling into the `libs/fs.js` library. And remove dependency on `fs-extra`.
+* **Collapsible list**: Either built-in class/js or a web component. [Ref](https://chatgpt.com/share/e32ce7f8-7b86-45e7-ae9d-69d167c37a14). NB: Allow for nav menus as well as normal lists. Also consider collapsible para's.
+* **FE: Drag/drop**: draggable class, drag-container class (to constrain drag area). Use `moveElement` fn. On drop, send change notice to Node-RED as control msg.
+
+* Improve connection/disconnection processing
+  * Add disconnect & reconnect timestamps to the uib FE library and pass back in connect ctrl msgs.
+  * Add option to the cache node to only send data from the disconnected period.
+* Need to improve url change for dependent nodes. Currently have to reload the editor to get the new url. Should happen live (on save of uibuilder).
+* Include source node data in `msg._ui` & an optional 2nd output on no-code nodes to allow interactions from elements to be routed direct to the source node.
 * [Issue #94](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/94) - Detect when Node-RED switches projects and see if the uibRoot folder can be dynamically changed.
 * Allow control of browser html cache from Node-RED. Add an auto-restore on load option. (? Add send updates back to Node-RED option - control msg ?)
 * Add automatic `search` handler for all uibuilder endpoints - [Ref](https://developer.mozilla.org/en-US/docs/Web/API/Window/location#example_5_send_a_string_of_data_to_the_server_by_modifying_the_search_property)
-* Add endpoint creation apis
+* Add endpoint creation APIs
 * Change runtime parameter passes of `uib` to `globalThis['ti-uibuilder'].uib`
 * Consider moving all handling of uib's package.json into a single lib. Only allow a single function to read/write/update
 * Add Vue-style dynamic attributes: [ref1](https://claude.ai/chat/0c494f54-758c-4f14-a8c7-90dbe6b2c5d7), [ref2](https://chatgpt.com/c/7b797547-4e7e-455d-927b-926de42171aa).
@@ -388,7 +430,6 @@ See Node-RED worldmap for reference.
   * enableOnEdit (optional) If set to true, this tab will be accessible whilst the edit dialog is open. Default: false.
 * Consider adding a uibuilder custom library - [ref](https://github.com/node-red/node-red-library-file-store).
 * gauge tiles - web component or new element? [ref](https://discourse.nodered.org/t/dashboard-2-beta-development/83550/133?u=totallyinformation)
-
 * **Example stand-alone node package as exemplar**
 
   * https://github.com/TotallyInformation/nr-uibuilder-uplot
@@ -409,10 +450,12 @@ See Node-RED worldmap for reference.
 
 * **IMPROVEMENT NEEDED** uibuilder.packages after an update does not contain the `outdated` prop for each package because the server only does a quick update and so does not call `npmOutdated` (from packge-mgt.js) on each package because it is async and quite slow. This may mean that update flags are not updated until the Editor is next reloaded which isn't ideal. Probably need to fix at some point.
 
+* Further simplifications of the url change handling. Converge to live url element change or the validation check. Stop saving props that don't need to be (that means that re-opening after a deployment results in  an update that needs re-deploying).
+
 * Gracefully handle when rename cannot (re)move original folder (e.g. held open by browser).
 
   * Improve checks for rename failures. `[uibuilder:nodeInstance] RENAME OF INSTANCE FOLDER FAILED. Fatal.` - these should clear after restart but sometimes don't.
-  
+
 * Ensure that uibRoot is set to a project folder if projects in use. See [PR#47](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/47) and [Issue #44](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/44)
 
 * Improve handling for when Node-RED changes projects.
@@ -475,6 +518,8 @@ See Node-RED worldmap for reference.
 
 ##### Editor Panel
 
+* Inputs on Files tab don't expand correctly.
+* Text in Template settings fieldset is fixed width.
 * Server info box doesn't update if nr restarts with different setting but editor not reloaded. Need to switch to an API call.
 * When a template changes, optionally install required front-end packages. Probably use a new property in package.json - note, don't use the dependencies property as these are for local dependencies not for packages that uibuilder will make available to the front-end via ExpressJS. Or possibly make this a button for easy install?
 * Method to show output from npm package handling.
@@ -586,6 +631,8 @@ See Node-RED worldmap for reference.
 #### Node: `uib-cache`
 
 * CHANGE CONTEXT VAR HANDLING TO DEAL WITH ASYNC
+* Editor panel
+  * [ ] Some inputs width not consistent
 * Change cache & main nodes to use client id rather than socket id where available. Since that is less likely to change.
 * Add cache replay filtering. Option flags need adding for control. Filter by:
   * [ ] `routeId`
@@ -610,38 +657,38 @@ See Node-RED worldmap for reference.
 * Improve docs by describing common use-cases: replay all or last 1, replay only on initial load, ...
 * On close, delete cache
 
-
 #### Node: `uib-element`
 
-* [ ] Allow the outer tag to be anything, not just `div` (or maybe just have a simpler list: `div`, `article`, `section`), also allow attributes to be set. [ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions/210)
+* Make the outer div optional (at least for html/markdown) - needed for the `<collapsible-headings>` component.
 
+* Use the new tbl* functions
+
+* Allow option to add `tblAddClickListener` to tables
+
+* ~~For tables, add `data-row-index` to each tbody row.~~ NO! Because adding/removing rows throws out the numbering. Use the `rowIndex` property of the DOM element instead.
+
+* [ ] Allow the outer tag to be anything, not just `div` (or maybe just have a simpler list: `div`, `article`, `section`), also allow attributes to be set. [ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions/210)
 * [ ] Add option for `routerId` - would ensure that the output only goes to the appropriate route.
 * [ ] Add option for `clientId` - would ensure that the output only goes to the appropriate client.
 * [ ] Add option for `pageName` - would ensure that the output only goes to the appropriate page.
 * [ ] uib-element forms need some serious TLC! checkbox, radio
-
 * Add width setting
-
 * Add input to allow restriction by pageName/clientId/tabId. `_ui.pageName`, `_ui.clientId`, and/or `_ui.tabId`
-
 * Add individual class handling to _ui processing. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
-
 * New Types for CSS and JS files?
-
 * New type "Clone" - use a template or other element already in the HTML and copy it to a new position in the DOM. Applies attribs/slot changes if specified. Templates themselves are invisible.
-
 * Disable or hide inputs when unused for a specific type.
-
 * As more element types are added, group into types: main, add, form, etc
-
 * ? Have JSON input msg templates for each type with links to copy to clipboard ?
-
 * Check out: https://www.w3.org/WAI/ARIA/apg/patterns/
-
 * Think about having a `linkInputs([idList])` fn that allows easy linking of different inputs?
-
 * ??? How to allow EXTERNAL element definitions ??? e.g. Someone else's contributed package.
-  
+* Consider making the editor icon responsive to the selected element type by using a function and include svg files in resources.
+
+#### Node: `uib-file-list`
+
+* Editor panel
+  * [ ] URL drop-down width not consistent (check uib-update as this is correct)
 
 #### Node: `uib-html`
 
@@ -651,6 +698,8 @@ See Node-RED worldmap for reference.
 
 #### Node: `uib-save`
 
+* Editor panel
+  * [ ] URL drop-down width not consistent (check uib-update as this is correct)
 * Allow msg overrides of input fields
 * Allow URL to be driven by msg or context (just add new options to select, don't bother with typed input)
 
@@ -694,6 +743,17 @@ See Node-RED worldmap for reference.
 
 #### FE Client Library
 
+* Table handling
+  
+  * [ ] Add `createTable`, `tblAddRow`, `tblRemoveRow`, `tblAddListener` as external commands.
+  * [ ] Add a `tblRemoveListener` function.
+  
+  * [ ] For `tblAddListener`, add an option to add a listener to the whole table.
+  
+  * [ ] For tables: Add data-row-key value - to row, ?to cells?
+  
+* Move FE logger to separate library to make it easier to use with ui.js without using uibuilder.
+
 * `uib-topic` attribute processing
   * [ ] Need std innerHTML process to account for MD and sanitize. Align with `<uib-var>`
   * [ ] Allow msg.value - including for checkboxes (to avoid el.checked confusion)
@@ -706,6 +766,12 @@ See Node-RED worldmap for reference.
 * Add `getPages()` function - sends control msg to Node-RED to fetch all of the current folders & html files. Will allow menu's to be created. Consider adding a `createMenu(entries)` function as well which would create a nav menu.
 
 * Look at the uib-router menu handling js and copy to FE.
+
+* [ ] Enhance JSON viewing using my own interpretation of the [json-view](https://github.com/pgrabovets/json-view) library.
+
+* [ ] Add detail prop to eventSend to capture multi-clicks. [ref](https://developer.mozilla.org/en-US/docs/Web/API/Element/click_event#usage_notes).
+
+* [ ] Add debounce for click to correspond to detail prop reset time.
 
 * Consider adding a template literal renderer. [Ref](https://github.com/WebReflection/hyperHTML/tree/master).
 
@@ -736,18 +802,19 @@ See Node-RED worldmap for reference.
   * Allow for multi-select sending array of selected options.
   * Allow for multi-select pre-selecting array of options.
   * Allow for "selected" `true` on option entries.
-  
+
 * Get _uib/_ui notify features to use Notification API if available
 
-* *New Functions* (all to be callable from Node-RED):
+* *New Functions*:
 
+  * [ ] `moveElement` - see ui.js
   * [ ] `formatDate` - Use INTL std lib, usable as a `<uib-var>` filter function. [ref](https://discourse.nodered.org/t/format-date-at-yyyydd-hh-mm-ss/83130/12?u=totallyinformation)
   * [ ] `uibuilder.cacheSend()` and `uibuilder.cacheClear()` - send ctrl msgs back to node-red - reinstate in uib-cache fn now we've removed extra ctrl send.
   * [ ] `uibuilder.showLog()` - Add a visible panel on-page to show console.log output. Redirects (or maybe copies) uibuilder.log output - possibly also console.log. Will need amendments to the uibuilder.log function to give options for output to this and/or back to Node-RED.
   * [ ] `uibuilder.socketReconnect()` Add manual socket.io reconnection function so it can be incorporated in disconnected UI notifications.
   * [ ] Expand/collapse all details, expand previous/next (with/without collapsing others) buttons. [ref](https://codereview.stackexchange.com/questions/192138/buttons-that-expand-or-collapse-all-the-details-within-the-document)
   * [ ] **HARD - may be impossible?** `uibuilder.convertToUI(cssSelector)` - convert part/all of the DOM to `_ui` json structure. [ref](https://stackoverflow.com/questions/2303713/how-to-serialize-dom-node-to-json-even-if-there-are-circular-references)
-  
+
 * Control from Node-RED. Functions to implement:
 
   * [ ] watchDom(startStop), uiWatch(cssSelector) [add custom event outputs]
@@ -758,14 +825,10 @@ See Node-RED worldmap for reference.
   * [ ] Expand/collapse all details, expand previous/next (with/without collapsing others)
 
   * Add `info` outputs to commands. Allow the fns that commands call to have auto-send & info.
-  
-* Allow file uploads
 
 * Add a `jsonImport` option to the _ui `load` method. The `jsonImport` property being an object where the keys are variable names to load to and the values are the URL's to load the JSON from.
 
 * Add JSON treeview formatting to syntaxHighlight. [ref1](https://iamkate.com/code/tree-views/), [ref2](https://github.com/williamtroup/JsonTree.js).
-
-* Consider watching for a url change (e.g. from vue router) and send a ctrl msg if not sending a new connection (e.g. from an actual page change). `url` variable already added in preparation.
 
 * Option for a pop-over notification to manually reconnect the websocket.
 
@@ -773,6 +836,7 @@ See Node-RED worldmap for reference.
 
 * Extend logging functions:
 
+  * Send log outputs back to Node-RED via control messages
   * Report socket.io setup/config issues back to Node-RED using `beaconLog(txtToSend, logLevel)`.
   * [ ] [**STARTED**]  Add showLog function similar to showMsg - showing log output to the UI instead of the console.
   * Add option to send log events back to node-red via the `navigator.sendBeacon()` method.
@@ -780,7 +844,7 @@ See Node-RED worldmap for reference.
     * `uibuilder` node will output control msg of type `Client Log` when client sends a beacon.
     * Make optional via flag in Editor with start msg enabling/disabling in client.
     * ? window and document events - make optional via uibuilder fe command.
-  
+
 * Add a standard tab handler fn to handle tab changes. Are DOM selectors dynamic (do they update with new DOM elements)? If not, will need to include a DOM observer.
 
 * Extend clearHtmlCache, restoreHtmlFromCache, saveHtmlCache fns to allow *sessionCache*.
@@ -790,6 +854,8 @@ See Node-RED worldmap for reference.
 * Look at [`window.prompt`](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt), [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) and [`<dialog>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog) - should _ui implement these?
 
 * Get better control over what control messages can be sent. Centralise the list of control messages in use.
+
+* Consider adding a client library setting to auto-reload the page after loosing connection to the server. Would be useful for development.
 
 * Add functions for manipulating SVG's.
 
@@ -801,7 +867,7 @@ See Node-RED worldmap for reference.
   * https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/web-app-manifests
   * Allow push API interface as well as websocket. https://developer.mozilla.org/en-US/docs/Web/API/Push_API
   * See following about Push Notifications: https://github.com/FlowFuse/node-red-dashboard/issues/589, https://github.com/FlowFuse/node-red-dashboard/pull/708, https://github.com/bartbutenaers/node-red-contrib-ui-web-push/blob/master/web_push_client.js, https://web.dev/articles/push-notifications-overview, https://vite-pwa-org.netlify.app/guide/
-  
+
 * Accessibility
 
   * Need to add a dismiss button to toasts
@@ -811,14 +877,32 @@ See Node-RED worldmap for reference.
 #### FE UI Library: `ui.js`
 
 * [ ] uib-element/client - allow loading of data to the ROOT to allow for full HTML replacement
+
 * [ ] [**Started**] Add optional page filter to _ui - if `msg._ui.pageName` not matching current page, don't process - *needs list and wildcard capabilities*.
+
 * Filter on `msg._ui.routeId` (If using router).
+
 * Content editor capability - to set editable content blocks. [ref 1](https://editorjs.io/)
+
 * Add handling for `_ui.components[n].slots` where slots is an object of named slots with the special
   name of `default` for the default slot (default must be handled first since it overwrites all existing slots)
+  
 * Add check to uibuilder.module.js to prevent adding of multiple entries with same ID
+
 * Allow adding to more locations: next/previous sibling
+
 * Add click coordinates to return msgs where appropriate. See https://discourse.nodered.org/t/contextmenu-location/22780/51
+
+* **New functions**
+
+  * [**STARTED**] `moveElement` function that moves an element from 1 place to another. [Ref](https://chatgpt.com/share/872cede6-2fd6-44b2-891b-a152a0798c77).
+
+    * [ ] Finish coding in ui.js
+
+    * [ ] Add reference to client library
+
+    * [ ] Document
+
 
 #### FE Router Library: `uibrouter.js`
 
@@ -902,6 +986,12 @@ See Node-RED worldmap for reference.
 
 ### Documentation (including videos)
 
+* [ ] Document `tblGetCellName` (ui) new FE function.
+* [ ] Add a "Debugging" doc. [ref](https://dashboard.flowfuse.com/contributing/widgets/debugging.html#debugging-dashboard-2-0), [ref1](https://discourse.nodered.org/t/debugging-node-red-ui-base-js-and-understanding-websocket-behavior/91131/6)
+* [ ] Document grid and flex layouts.
+* [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
+* [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
+* How to redirect un-auth web requests to login page (using `msg._client`).
 * Update docs for ctrl msgs and `msg._uib` return data to say that anything set via the socket.io auth can only update when the client reconnects. 
 * document clientTimeDifference
 * New doc for using `ui.js` outside of uibuilder.
@@ -916,6 +1006,12 @@ See Node-RED worldmap for reference.
 * Add new doc to explain the HTML document hierarchy.
 * Consider changing favicon slightly for the docs - to better differentiate from uibuilder apps.
 * Allow offline usage. [Ref](https://docsify.js.org/#/pwa). Need to work out how to cache the plugins. May need a manifest.json?
+* Add [Giscus commenting to docs](https://github.com/docsify-note/docsify-giscus/)
+* [ ] "Islands" concept. [Ref.](https://docs.astro.build/en/concepts/islands/#a-brief-history).
+
+> The general idea of an “Islands” architecture is deceptively simple: render HTML pages on the server, and inject placeholders or slots around highly dynamic regions […] that can then be “hydrated” on the client into small self-contained widgets, reusing their server-rendered initial HTML.
+
+* [ ] Highlight how the FE library uses the "Signals" pattern. [Ref](https://www.smashingmagazine.com/2018/01/deferring-lazy-loading-intersection-observer-api/).
 
 #### WIKI
 
@@ -952,6 +1048,10 @@ See Node-RED worldmap for reference.
 
 ### Examples
 
+* Use of `msg._client`
+* Add example for sending msg using function node
+* `uib-sender` - remove ref to uibuilderfe and update flows.
+* Navigation **menu** examples. 1x Router, 1x page.
 * Extend SVG example to download and save the svg from the gist
 * Add a "Quick Start" example.
 * Update the uib-element example.
