@@ -6,7 +6,7 @@
   Please use the default index.js file for your own code and leave this as-is.
   See Uib._meta for client version string
 
-  Copyright (c) 2022-2024 Julian Knight (Totally Information)
+  Copyright (c) 2022-2025 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -36,9 +36,8 @@ import UibVar from '../components/uib-var'
 import UibMeta from '../components/uib-meta'
 import ApplyTemplate from '../components/apply-template'
 
-const version = '7.0.4-src'
+const version = '7.1.0-src'
 
-// TODO Add option to allow log events to be sent back to Node-RED as uib ctrl msgs
 //#region --- Module-level utility functions --- //
 
 // Detect whether the loaded library is minified or not
@@ -179,8 +178,8 @@ log.LOG_STYLES = {
     level: 'font-weight:bold; border-radius: 3px; padding: 2px 5px; display:inline-block;',
 }
 
-/** Default log level - Error */
-log.default = 0
+/** Default log level - Warn (@since v7.1.0) */
+log.default = 1
 let ll
 
 // Check if the script element was found and get the data-log-level attribute (only numeric levels allowed here)
@@ -512,6 +511,9 @@ export const Uib = class Uib {
             return `Cannot use set() on protected property "${prop}"`
         }
 
+        // Check for an old value
+        let oldVal = this[prop] ?? undefined
+
         // We must add the var to the uibuilder object
         this[prop] = val
 
@@ -527,7 +529,8 @@ export const Uib = class Uib {
         // this.emit(prop, val)
 
         // trigger an event on the prop name, pass both the name and value to the event details
-        this._dispatchCustomEvent('uibuilder:propertyChanged', { 'prop': prop, 'value': val, 'store': store, 'autoload': autoload })
+        this._dispatchCustomEvent('uibuilder:propertyChanged', { 'prop': prop, 'value': val, 'oldValue': oldVal, 'store': store, 'autoload': autoload })
+        this._dispatchCustomEvent(`uibuilder:propertyChanged:${prop}`, { 'prop': prop, 'value': val, 'oldValue': oldVal, 'store': store, 'autoload': autoload })
 
         return val
     }
@@ -883,7 +886,7 @@ export const Uib = class Uib {
             const uint8Array = encoder.encode(jsonString)
             size = uint8Array.length
         } catch (e) {
-            log('error', 'uibuilder:getObjectSize', 'Could not stringify, cannot determine size', obj, e)
+            log('error', 'uibuilder:getObjectSize', 'Could not stringify, cannot determine size', obj, e)()
         }
         return size
     }
@@ -936,6 +939,27 @@ export const Uib = class Uib {
     navigate(url) {
         if (url) window.location.href = url
         return window.location
+    }
+
+    // ! TODO change ui uib-* attributes to use this
+    /** Convert a string attribute into an variable/constant reference
+     * Used to resolve data sources in attributes
+     * @param {string} path The string path to resolve, must be relative to the `window` global scope
+     * @returns {*} The resolved data source or null
+     */
+    resolveDataSource(path) {
+        try {
+            const parts = path.split(/[\.\[\]\'\"]/).filter(Boolean)
+            let data = window
+            for (const part of parts) {
+                data = data?.[part]
+            }
+            return data
+        } catch (error) {
+            // console.error('Error resolving data source:', error)
+            log('error', 'uibuilder:resolveDataSource', `Error resolving data source "${path}", returned 'null'. ${error.message}`)()
+            return null
+        }
     }
 
     /** Fast but accurate number rounding (https://stackoverflow.com/a/48764436/1309986 solution 2)
@@ -1103,7 +1127,28 @@ export const Uib = class Uib {
      */
     applyTemplate = _ui.applyTemplate
 
-    buildHtmlTable = _ui.buildHtmlTable
+    /** Builds an HTML table from an array (or object) of objects
+     * 1st row is used for columns.
+     * If an object of objects, inner keys are used to populate th/td `data-col-name` attribs.
+     * @param {Array<object>|Object} data Input data array or object
+     * @param {object} opts Table options
+     *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
+     * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
+     */
+    buildHtmlTable(data, opts={}) {
+        return _ui.buildHtmlTable(data, opts)
+    }
+
+    /** Directly add a table to a parent element.
+     * @param {Array<object>|Array<array>|Object} data  Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
+     * @param {object} [opts] Build options
+     *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
+     *   @param {HTMLElement|string} opts.parent Default=body. The table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
+     *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+     */
+    createTable(data=[], opts={parent: 'body'}) {
+        _ui.createTable(data, opts)
+    }
 
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
@@ -1111,7 +1156,7 @@ export const Uib = class Uib {
      * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
      */
     convertMarkdown(mdText) {
-        return _ui.convertMarkdown
+        return _ui.convertMarkdown(mdText)
     }
 
     /** ASYNC: Include HTML fragment, img, video, text, json, form data, pdf or anything else from an external file or API
@@ -1204,6 +1249,56 @@ export const Uib = class Uib {
     sanitiseHTML(html) {
         return _ui.sanitiseHTML(html)
     }
+
+    /** Add table event listener that returns the text or html content of either the full row or a single cell
+     * NOTE: Assumes that the table has a `tbody` element.
+     * If cells have a `data-col-name` attribute, it will be used in the output as the column name.
+     * @example tblAddListener('#eltest-tbl-table', {}, myVar)
+     * @example tblAddListener('#eltest-tbl-table', {eventScope: 'cell'}, myVar2)
+     *
+     * @param {string} tblSelector The table CSS Selector
+     * @param {object} [options={}] Additional options
+     *   @param {"row"|"cell"=} options.eventScope Optional, default=row. Return data for either the whole row (as an object) or for the single cell clicked
+     *   @param {"text"|"html"=} options.returnType Optional, default=text. Return text or html data
+     *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
+     *   @param {boolean=} options.send Optional, default=true. If uibuilder is present, will automatically send a message back to Node-RED.
+     *   @param {string|number=} options.logLevel Optional, default=3/info. Numeric or string log level matching uibuilder's log levels.
+     *   @param {string} [options.eventType] Optional, default=click. What event to listen for.
+     * @param {object=} out A variable reference that will be updated with the output data upon a click event
+     */
+    tblAddListener(tblSelector, options = {}, out = {}) {
+        return _ui.tblAddListener(tblSelector, options, out)
+    }
+
+    /** Adds (or replaces) a single row in an existing table>tbody
+     * NOTE: Row numbers use the rowIndex property of the row element.
+     * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
+     * @param {object|array} rowData A single row of column/cell data
+     * @param {object} [options]
+     * @param {number=} options.body Optional, default=0. The tbody section to add the row to.
+     * @param {boolean=} options.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+     * @param {string=} options.rowId Optional. HTML element ID for the added row
+     * @param {number=} options.afterRow Optional. If provided, the new row will be added after this row number
+     * @param {number=} options.beforeRow Optional. If provided, the new row will be added before this row number. Ignored if afterRow is provided
+     * @param {number=} options.replaceRow Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
+     * @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
+     * 
+     * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
+     */
+    tblAddRow(tbl, rowData={}, options={}) {
+        return _ui.tblAddRow(tbl, rowData, options)
+    }
+
+    /** Remove a row from an existing table
+     * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
+     * @param {number} rowIndex The row number to remove (1st row is 0, last row is -1)
+     * @param {object} [options]
+     *  @param {number=} options.body Optional, default=0. The tbody section to add the row to.
+     */
+    tblRemoveRow(tbl, rowIndex, options = {}) {
+        return _ui.tblRemoveRow(tbl, rowIndex, options)
+    }
+
 
     /** Show a pop-over "toast" dialog or a modal alert
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
@@ -2174,11 +2269,11 @@ export const Uib = class Uib {
 
         // Don't forget to update `#extCommands`, `docs/client-docs/control-from-node-red.md` & `functions.md`
         switch (cmd) {
-            case 'elementIsVisible': {
-                response = this.elementIsVisible(prop)
-                // info = `Element "${prop}" ${response ? 'is visible' : 'is not visible'}`
-                break
-            }
+            // case 'elementIsVisible': { // temporarily deprecated
+            //     response = this.elementIsVisible(prop)
+            //     // info = `Element "${prop}" ${response ? 'is visible' : 'is not visible'}`
+            //     break
+            // }
 
             case 'elementExists': {
                 response = this.elementExists(prop, false)
@@ -2203,6 +2298,7 @@ export const Uib = class Uib {
                 break
             }
 
+            case 'sendHtml':
             case 'htmlSend': {
                 response = this.htmlSend('', false)
                 break
@@ -2263,7 +2359,7 @@ export const Uib = class Uib {
                 break
             }
 
-            default: {
+            default: { // anything else is rejected
                 log('warning', 'Uib:_uibCommand', `Command '${cmd}' not yet implemented`)()
                 break
             }
@@ -2476,6 +2572,7 @@ export const Uib = class Uib {
                 id: target.id !== '' ? target.id : undefined,
                 name: target.name !== '' ? target.name : undefined,
                 slotText: target.textContent ? target.textContent.substring(0, 255) : undefined,
+                dataset: {...target.dataset},
 
                 form: formDetails,
                 props: props,
@@ -2845,7 +2942,7 @@ export const Uib = class Uib {
 
     //#endregion -------- ------------ -------- //
 
-    //#region ! EXPERIMENTAL: Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
+    //#region Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
 
     /** Attempt to load a service worker
      * https://yonatankra.com/how-service-workers-sped-up-our-website-by-97-5/

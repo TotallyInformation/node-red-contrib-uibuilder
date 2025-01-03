@@ -28,16 +28,11 @@
  */
 
 const { join }     = require('path')
-const { inspect }     = require('util')
 const { existsSync, getFileMeta } = require('./fs')
 const socketio = require('socket.io')
 const { urlJoin }    = require('./tilib')    // General purpose library (by Totally Information)
 const { setNodeStatus }   = require('./uiblib')   // Utility library for uibuilder
 // const security = require('./sec-lib') // uibuilder security module
-// const { emit } = require('@totallyinformation/ti-common-event-handler') // NO, don't do this! If you do, the emits don't work
-const tiEvent = require('@totallyinformation/ti-common-event-handler')
-
-let testingHeaders = 0
 
 /** Parse x-forwarded-for headers.
  * Borrowed from https://github.com/pbojinov/request-ip/blob/master/src/index.js
@@ -402,7 +397,7 @@ class UibSockets {
 
     /** Output a normal msg to the front-end. Can override socketid. NOTE:
      *    Applies the msgReceived hook if present
-     *    Currently only used for the auto-reload on edit in admin-api-v2.js and Post:replaceTemplate in admin-api-v3.js
+     *    Only used for: function-node:uib.send, auto-reload on edit in admin-api-v2.js and Post:replaceTemplate in admin-api-v3.js
      * @param {object} msg The message to output
      * @param {uibNode} node WARNING: Not a full reference to a node instance, only node.url is available
      * @param {string=} socketId Optional. If included, only send to specific client id (mostly expecting this to be on msg._socketID so not often required)
@@ -557,6 +552,8 @@ class UibSockets {
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     sendIt(msg, node) {
+        const RED = this.RED
+
         // Run uibuilder.hooks.msgReceived hook - NOTE: msg might be amended by the hook
         if (this.hooks('msgReceived', { msg, node }) === false) {
             this.log.warn(`[uibuilder:socket:sendToFe] msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
@@ -564,8 +561,7 @@ class UibSockets {
         }
 
         if ( msg?._uib?.originator && (typeof msg._uib.originator === 'string') ) {
-            // const eventName = `node-red-contrib-uibuilder/return/${msg._uib.originator}`
-            tiEvent.emit(`node-red-contrib-uibuilder/return/${msg._uib.originator}`, msg)
+            RED.events.emit(`UIBUILDER/return-to-sender/${msg._uib.originator}`, msg)
         } else {
             node.send(msg)
         }
@@ -812,7 +808,7 @@ class UibSockets {
                 that.sendCtrlMsg(ctrlMsg, node, 'addNS:disconnect')
 
                 // Let other nodes know a client is disconnecting (via custom event manager)
-                tiEvent.emit(`node-red-contrib-uibuilder/${node.url}/clientDisconnect`, ctrlMsg)
+                this.RED.events.emit(`UIBUILDER/${node.url}/clientDisconnect`, ctrlMsg)
             }) // --- End of on-connection::on-disconnect() --- //
 
             // Listen for msgs from clients on standard channel
@@ -937,7 +933,7 @@ class UibSockets {
             that.sendCtrlMsg(ctrlMsg, node, 'addNS:connection')
 
             // Let other nodes know a client is connecting (via custom event manager)
-            tiEvent.emit(`node-red-contrib-uibuilder/${node.url}/clientConnect`, ctrlMsg)
+            this.RED.events.emit(`UIBUILDER/${node.url}/clientConnect`, ctrlMsg)
 
             //#endregion ---- run when client connects ---- //
 

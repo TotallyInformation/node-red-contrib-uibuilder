@@ -3,8 +3,7 @@ title: UIBUILDER REST API's
 description: |
   UIBUILDER exposes a number of REST API's. This is an index of them.
 created: 2023-09-14 19:39:52
-lastUpdated: 2023-09-16 12:36:36
-updated: 2023-12-30 17:01:41
+updated: 2024-09-08 15:41:30
 ---
 
 Most of UIBUILDER's standard REST API's are common across all instances of `uibuilder` nodes added to your Node-RED flows. However, see below for the instance API's features.
@@ -38,6 +37,8 @@ The newer v3 API's are provided by `nodes/libs/admin-api-v3.js` which returns an
 
 Unlike the the v2 API's, the v3 are provided by a master set of `all`, `get`, `put`, `post`, and `delete` handlers.
 
+### API's that require a uibuilder url
+
 All of these API endpoints are only accessible from the Node-RED Editor. The endpoint is simply defined as `/:url` which translates in Editor code to `./uibuilder/admin/<url>` which is relative to the Editor's URL.
 
 Each of the v3 API's accepts a `cmd` parameter (either via URL query parameters or via JSON in the BODY for POST/PUT/etc). Alloed `cmd`s are shown below.
@@ -62,6 +63,14 @@ Each of the v3 API's accepts a `cmd` parameter (either via URL query parameters 
 * DELETE
   * `deletefolder` - delete a folder for the given instance
   * `deletefile` = delete a file for the given instance
+
+### API's that do not require a uibuilder url
+
+These are accessible from the Node-RED Editor only and use the URL `./uibuilder/admin/-nourl-`.
+
+* GET
+  * `getElements` - Return the list of all available no-code elements & their configuration abilities.
+  * `getOneElement` - Return the description HTML and advanced options HTML for a specific element type.
 
 ## Middleware User API's
 

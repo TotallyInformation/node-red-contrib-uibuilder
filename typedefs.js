@@ -183,6 +183,7 @@
  * @property {Function} util.uib.deepObjFind : Recursive object deep find - https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/config-driven-ui?id=manipulating-msg_ui
  * @property {Function} util.uib.listAllApps : Return a list of all uibuilder instances
  * @property {Function} util.uib.dp : Return a formatted number using a specified locale and number of decimal places
+ * @property {Function} util.uib.send : Send a message to a client via a uibuilder instance
  *
  * @property {object} plugins Node-RED plugins
  * @property {Function} plugins.registerPlugin : [Function: registerPlugin],
@@ -319,6 +320,7 @@
  * @property {string} editurl Shortcut URL that will open a code editor at the node instance folder
  *
  * @property {Function} sendToFe Ref to sockets.sendToFe
+ * @property {Function} sender Ref to uib-sender event sending function
  */
 
 /** uibConfig - THe module-level `uib` configuration variable
@@ -458,6 +460,7 @@
  *   confData: object;
  *   passthrough: boolean;
  *   _ui: any;
+ *   tag: string;
  * }} uibElNode
  */
 
@@ -659,6 +662,10 @@
  * @property {string} id REQUIRED. Unique (to page) ID. Will be applied to loaded content.
  * @property {string} src REQUIRED. url of external template to load
  * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
+ */
+
+/** Node-RED WidgetTypedInputType
+ * @typedef { Array<"bin"|"bool"|"date"|"env"|"flow"|"global"|"json"|"jsonata"|"msg"|"num"|"re"|"str"> } WidgetTypedInputType
  */
 
 /** Props define attributes on a virtual node.

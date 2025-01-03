@@ -15,6 +15,7 @@
     --sidebar-nav-pagelink-background: ;
     --sidebar-padding: 0 0.2rem 0 0.5rem;
     --sidebar-width: 18.5em;
+    --siteFont: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; 
     --uib-blue: hsl(204 89% 55% / 70%);
     --uib-red: hsl(0 100% 45% / 70%);
 }

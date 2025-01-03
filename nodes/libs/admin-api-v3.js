@@ -2,7 +2,7 @@
  *
  * See: https://expressjs.com/en/4x/api.html#router, https://expressjs.com/en/guide/routing.html
  *
- * Copyright (c) 2021-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2024 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -25,13 +25,13 @@
 
 const express = require('express')
 const path = require('path')
-const fs = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
 const fg = require('fast-glob') // https://github.com/mrmlnc/fast-glob
 const fslib = require('./fs')  // Utility library for uibuilder
 const web = require('./web')
 const sockets = require('./socket')
 const packageMgt = require('./package-mgt')
 const templateConf  = require('../../templates/template_dependencies') // Template configuration metadata
+const elements = require('../elements/elements.js')
 
 const v3AdminRouter = express.Router() // eslint-disable-line new-cap
 
@@ -79,7 +79,7 @@ function chkParamUrl(params) {
     }
 
     // Actually, since uib auto-creates folder if not exists, this just gets in the way - // Does this url have a matching instance root folder?
-    // if ( ! fs.existsSync(path.join(uib.rootFolder, params.url)) ) {
+    // if ( ! fslib.existsSync(path.join(uib.rootFolder, params.url)) ) {
     //     res.statusMessage = `url does not have a matching instance root folder. url='${params.url}', Master root folder='${uib.rootFolder}'`
     //     res.status = 500
     //     return res
@@ -164,6 +164,50 @@ function chkParamFldr(params) {
 
 //#endregion === End of API validation functions === //
 
+/** Get the description & options HTML for an element and return to caller
+ * @param {object} params All parameters from the HTTP call
+ * @param {string} rootFolder uibuilder's root folder
+ * @param {express.Request} req ExpressJS request object
+ * @param {express.Response} res ExpressJS response object
+ */
+function doGetOneElement(params, rootFolder, req, res) {
+    const rootPath = [__dirname, '..', 'elements']
+
+    let optsHtml = ''
+    let descHtml = ''
+
+    const availableLangs = ['en-US']
+
+    let lang
+    if (params.languages) {
+        lang = params.languages.filter(value => availableLangs.includes(value))
+    }
+    if (!lang) lang = ['en-US']
+    rootPath.push(lang[0])
+
+    let fname = path.join( ...rootPath, `${params.elType}-options.html`)
+
+    // Get the content for the advanced settings tab
+    try {
+        optsHtml = fslib.readFileSync(fname, 'utf8')
+    } catch (e) {
+        fname = path.join( ...rootPath, 'default-options.html')
+        optsHtml = fslib.readFileSync(fname, 'utf8')
+    }
+
+    // Get the description
+    try {
+        fname = path.join( ...rootPath, `${params.elType}-description.html`)
+        descHtml = fslib.readFileSync(fname, 'utf8')
+    } catch (e) {
+        fname = path.join( ...rootPath, 'default-description.html')
+        descHtml = fslib.readFileSync(fname, 'utf8')
+    }
+
+    res.statusMessage = `No-code element ${params.elType} options returned`
+    res.status(200).json( { descHtml, optsHtml } )
+}
+
 /** Return a router but allow parameters to be passed in
  * @param {uibConfig} uib Reference to uibuilder's master uib object
  * @param {*} log Reference to uibuilder's log functions
@@ -185,7 +229,7 @@ function adminRouterV3(uib, log) {
             // Validate URL - params.url
             const chkUrl = chkParamUrl(params)
             if ( chkUrl.status !== 0 ) {
-                log.error(`[uibuilder:adminRouterV3:ALL] Admin API. ${chkUrl.statusMessage}`)
+                log.error(`🛑 [uibuilder:adminRouterV3:ALL] Admin API. ${chkUrl.statusMessage}`)
                 res.statusMessage = chkUrl.statusMessage
                 res.status(chkUrl.status).end()
                 return
@@ -203,6 +247,75 @@ function adminRouterV3(uib, log) {
 
             // Commands ...
             switch (params.cmd) {
+                // See if a node's custom folder exists. Return true if it does, else false
+                case 'checkfolder': {
+                    log.trace(`[uibuilder:adminRouterV3:GET:checkfolder] See if a node's custom folder exists. URL: ${params.url}`)
+
+                    const folder = path.join( uib.rootFolder, params.url)
+
+                    fslib.access(folder, fslib.constants.F_OK)
+                        .then( () => {
+                            res.statusMessage = 'Folder checked'
+                            res.status(200).json( true )
+                            return true
+                        })
+                        .catch( () => { // err) => {
+                            res.statusMessage = 'Folder checked'
+                            res.status(200).json( false )
+                            return false
+                        })
+
+                    break
+                } // -- end of checkfolder -- //
+
+                // See if a specific package has been installed into uibRoot (e.g. via library manager)
+                case 'checkpackage': {
+                    // We must have a packageName
+                    if (!params.packageName) {
+                        log.error(`🛑 [uibuilder:adminRouterV3:GET] Admin API. cmd=${checkpackage}. 'packageName' parameter not provided. url=${params.url}`)
+                        res.statusMessage = 'packageName parameter not provided'
+                        res.status(500).end()
+                        return
+                    }
+                    const ans = packageMgt.isPackageInstalled(params.packageName)
+                    if (ans === false) {
+                        res.statusMessage = 'Package checked - not installed'
+                        res.status(200).json( false )
+                    }
+
+                    res.statusMessage = 'Package checked - is installed'
+                    res.status(200).json( true )
+
+                    break
+                } // -- end of checkpackage -- //
+
+                // Check if URL is already in use
+                case 'checkurls': {
+                    log.trace(`[uibuilder:adminRouterV3:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
+
+                    /** @returns {boolean} True if the given url exists, else false */
+                    const chkInstances = Object.values(uib.instances).includes(params.url)
+                    const chkFolders = fslib.existsSync(uib.rootFolder, params.url)
+
+                    res.statusMessage = 'Instances and Folders checked'
+                    res.status(200).json( chkInstances || chkFolders )
+
+                    break
+                } // -- end of checkurls -- //
+
+                // Get list of all available no-code elements
+                case 'getElements': {
+                    res.statusMessage = 'No-code elements list returned'
+                    res.status(200).json( elements )
+                    break
+                }
+
+                // Get details for one specific no-code element
+                case 'getOneElement': {
+                    doGetOneElement(params, uib.rootFolder, req, res)
+                    break
+                }
+
                 // List all folders and files for this uibuilder instance
                 case 'listall': {
                     log.trace(`[uibuilder:adminRouterV3:GET] Admin API. List all folders and files. url=${params.url}, root fldr=${uib.rootFolder}`)
@@ -309,20 +422,6 @@ function adminRouterV3(uib, log) {
                     break
                 } // -- end of listfolders -- //
 
-                // Check if URL is already in use
-                case 'checkurls': {
-                    log.trace(`[uibuilder:adminRouterV3:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
-
-                    /** @returns {boolean} True if the given url exists, else false */
-                    const chkInstances = Object.values(uib.instances).includes(params.url)
-                    const chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
-
-                    res.statusMessage = 'Instances and Folders checked'
-                    res.status(200).json( chkInstances || chkFolders )
-
-                    break
-                } // -- end of checkurls -- //
-
                 // List all of the deployed instance urls
                 case 'listinstances': {
 
@@ -330,7 +429,7 @@ function adminRouterV3(uib, log) {
 
                     /** @returns {boolean} True if the given url exists, else false */
                     // let chkInstances = Object.values(uib.instances).includes(params.url)
-                    // let chkFolders = fs.existsSync(path.join(uib.rootFolder, params.url))
+                    // let chkFolders = fslib.existsSync(path.join(uib.rootFolder, params.url))
 
                     res.statusMessage = 'Instances listed'
                     res.status(200).json( uib.instances )
@@ -365,49 +464,9 @@ function adminRouterV3(uib, log) {
                     break
                 } // -- end of listurls -- //
 
-                // See if a node's custom folder exists. Return true if it does, else false
-                case 'checkfolder': {
-                    log.trace(`[uibuilder:adminRouterV3:GET:checkfolder] See if a node's custom folder exists. URL: ${params.url}`)
-
-                    const folder = path.join( uib.rootFolder, params.url)
-
-                    fs.access(folder, fs.constants.F_OK)
-                        .then( () => {
-                            res.statusMessage = 'Folder checked'
-                            res.status(200).json( true )
-                            return true
-                        })
-                        .catch( () => { // err) => {
-                            res.statusMessage = 'Folder checked'
-                            res.status(200).json( false )
-                            return false
-                        })
-
-                    break
-                } // -- end of checkfolder -- //
-
-                // See if a specific package has been installed into uibRoot (e.g. via library manager)
-                case 'checkpackage': {
-                    // We must have a packageName
-                    if (!params.packageName) {
-                        log.error(`[uibuilder:adminRouterV3:GET] Admin API. cmd=${checkpackage}. 'packageName' parameter not provided. url=${params.url}`)
-                        res.statusMessage = 'packageName parameter not provided'
-                        res.status(500).end()
-                        return
-                    }
-                    const ans = packageMgt.isPackageInstalled(params.packageName)
-                    if (ans === false) {
-                        res.statusMessage = 'Package checked - not installed'
-                        res.status(200).json( false )
-                    }
-
-                    res.statusMessage = 'Package checked - is installed'
-                    res.status(200).json( true )
-
-                    break
-                } // -- end of checkpackage -- //
-
                 default: {
+                    res.statusMessage = 'cmd parameter missing or incorrect'
+                    res.status(500).json( { error: res.statusMessage } )
                     break
                 }
             }
@@ -447,7 +506,7 @@ function adminRouterV3(uib, log) {
             }
 
             // If we get here, we've failed
-            log.trace(`[uibuilder:adminRouterV3:PUT] Unsuccessful. command=${params.cmd}, url=${params.url}`)
+            log.trace(`🛑 [uibuilder:adminRouterV3:PUT] Unsuccessful. command=${params.cmd}, url=${params.url}`)
             res.statusMessage = 'PUT unsuccessful'
             res.status(500).json({
                 'cmd': params.cmd,
@@ -455,7 +514,6 @@ function adminRouterV3(uib, log) {
                 'params': params,
                 'message': 'PUT unsuccessful',
             })
-
         })
 
         // Load new template or Create a new folder or file
@@ -496,7 +554,7 @@ function adminRouterV3(uib, log) {
                             if ( params.template === 'external' ) mystr = `, ${params.extTemplate}`
                             statusMsg = `Replace template error. ${err.message}. url=${params.url}. ${params.template}${mystr}`
                         }
-                        log.error(`[uibuilder:adminapi:POST:replaceTemplate] ${statusMsg}`, err)
+                        log.error(`🛑 [uibuilder:adminapi:POST:replaceTemplate] ${statusMsg}`, err)
                         res.statusMessage = statusMsg
                         res.status(500).end()
                     } )
@@ -504,7 +562,7 @@ function adminRouterV3(uib, log) {
                 // Validate folder name - params.folder
                 const chkFldr = chkParamFldr(params)
                 if ( chkFldr.status !== 0 ) {
-                    log.error(`[uibuilder:adminRouterV3:POST] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+                    log.error(`🛑 [uibuilder:adminRouterV3:POST] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
                     res.statusMessage = chkFldr.statusMessage
                     res.status(chkFldr.status).end()
                     return
@@ -512,7 +570,7 @@ function adminRouterV3(uib, log) {
                 // Validate command - must be present and either be 'newfolder' or 'newfile'
                 if ( !(params.cmd && (params.cmd === 'newfolder' || params.cmd === 'newfile')) ) {
                     const statusMsg = `cmd parameter not present or wrong value (must be 'newfolder' or 'newfile'). url=${params.url}, cmd=${params.cmd}`
-                    log.error(`[uibuilder:adminRouterV3:POST] Admin API. ${statusMsg}`)
+                    log.error(`🛑 [uibuilder:adminRouterV3:POST] Admin API. ${statusMsg}`)
                     res.statusMessage = statusMsg
                     res.status(500).end()
                     return
@@ -521,7 +579,7 @@ function adminRouterV3(uib, log) {
                 if (params.cmd === 'newfile' ) {
                     const chkFname = chkParamFname(params)
                     if ( chkFname.status !== 0 ) {
-                        log.error(`[uibuilder:adminRouterV3:POST] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+                        log.error(`🛑 [uibuilder:adminRouterV3:POST] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
                         res.statusMessage = chkFname.statusMessage
                         res.status(chkFname.status).end()
                         return
@@ -537,9 +595,9 @@ function adminRouterV3(uib, log) {
                 }
 
                 // Does folder or file already exist? If so, return error
-                if ( fs.pathExistsSync(fullname) ) {
+                if ( fslib.existsSync(fullname) ) {
                     const statusMsg = `selected ${params.cmd === 'newfolder' ? 'folder' : 'file'} already exists. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}`
-                    log.error(`[uibuilder:adminRouterV3:POST] Admin API. ${statusMsg}`)
+                    log.error(`🛑 [uibuilder:adminRouterV3:POST] Admin API. ${statusMsg}`)
                     res.statusMessage = statusMsg
                     res.status(500).end()
                     return
@@ -548,19 +606,19 @@ function adminRouterV3(uib, log) {
                 // try to create folder/file - if fail, return error
                 try {
                     if ( params.cmd === 'newfolder') {
-                        fs.ensureDirSync(fullname)
+                        fslib.ensureDirSync(fullname)
                     } else {
-                        fs.ensureFileSync(fullname)
+                        fslib.ensureFileSync(fullname)
                     }
                 } catch (e) {
                     const statusMsg = `could not create ${params.cmd === 'newfolder' ? 'folder' : 'file'}. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}, error=${e.message}`
-                    log.error(`[uibuilder:adminRouterV3:POST] Admin API. ${statusMsg}`)
+                    log.error(`🛑 [uibuilder:adminRouterV3:POST] Admin API. ${statusMsg}`)
                     res.statusMessage = statusMsg
                     res.status(500).end()
                     return
                 }
 
-                log.trace(`[uibuilder:adminRouterV3:POST] Admin API. Folder/File create SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
+                log.trace(`✔️ [uibuilder:adminRouterV3:POST] Admin API. Folder/File create SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
                 res.statusMessage = 'Folder/File created successfully'
                 res.status(200).json({
                     'fullname': fullname,
@@ -585,7 +643,7 @@ function adminRouterV3(uib, log) {
             // Validate folder name - params.folder
             const chkFldr = chkParamFldr(params)
             if ( chkFldr.status !== 0 ) {
-                log.error(`[uibuilder:adminRouterV3:DELETE] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+                log.error(`🛑 [uibuilder:adminRouterV3:DELETE] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
                 res.statusMessage = chkFldr.statusMessage
                 res.status(chkFldr.status).end()
                 return
@@ -593,7 +651,7 @@ function adminRouterV3(uib, log) {
             // Validate command - must be present and either be 'deletefolder' or 'deletefile'
             if ( !(params.cmd && (params.cmd === 'deletefolder' || params.cmd === 'deletefile')) ) {
                 const statusMsg = `cmd parameter not present or wrong value (must be 'deletefolder' or 'deletefile'). url=${params.url}, cmd=${params.cmd}`
-                log.error(`[uibuilder:adminRouterV3:DELETE] Admin API. ${statusMsg}`)
+                log.error(`🛑 [uibuilder:adminRouterV3:DELETE] Admin API. ${statusMsg}`)
                 res.statusMessage = statusMsg
                 res.status(500).end()
                 return
@@ -602,7 +660,7 @@ function adminRouterV3(uib, log) {
             if (params.cmd === 'deletefile' ) {
                 const chkFname = chkParamFname(params)
                 if ( chkFname.status !== 0 ) {
-                    log.error(`[uibuilder:adminRouterV3:DELETE] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+                    log.error(`🛑 [uibuilder:adminRouterV3:DELETE] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
                     res.statusMessage = chkFname.statusMessage
                     res.status(chkFname.status).end()
                     return
@@ -618,26 +676,26 @@ function adminRouterV3(uib, log) {
             }
 
             // Does folder or file does not exist? Return error
-            if ( !fs.pathExistsSync(fullname) ) {
+            if ( !fslib.existsSync(fullname) ) {
                 const statusMsg = `selected ${params.cmd === 'deletefolder' ? 'folder' : 'file'} does not exist. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}`
-                log.error(`[uibuilder:adminRouterV3:DELETE] Admin API. ${statusMsg}`)
+                log.error(`🛑 [uibuilder:adminRouterV3:DELETE] Admin API. ${statusMsg}`)
                 res.statusMessage = statusMsg
                 res.status(500).end()
                 return
             }
 
-            // try to create folder/file - if fail, return error
+            // try to delete folder/file - if fail, return error
             try {
-                fs.removeSync(fullname)  // deletes both files and folders
+                fslib.removeSync(fullname)  // deletes both files and folders
             } catch (e) {
                 const statusMsg = `could not delete ${params.cmd === 'deletefolder' ? 'folder' : 'file'}. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}, error=${e.message}`
-                log.error(`[uibuilder:adminRouterV3:DELETE] Admin API. ${statusMsg}`)
+                log.error(`🛑 [uibuilder:adminRouterV3:DELETE] Admin API. ${statusMsg}`)
                 res.statusMessage = statusMsg
                 res.status(500).end()
                 return
             }
 
-            log.trace(`[uibuilder:adminRouterV3:DELETE] Admin API. Folder/File delete SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
+            log.trace(`✔️ [uibuilder:adminRouterV3:DELETE] Admin API. Folder/File delete SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
             res.statusMessage = 'Folder/File deleted successfully'
             res.status(200).json({
                 'fullname': fullname,
@@ -653,5 +711,3 @@ function adminRouterV3(uib, log) {
 }
 
 module.exports = adminRouterV3
-
-// EOF

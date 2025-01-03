@@ -36,6 +36,31 @@ const uib = window['uibuilder']
 // {/* <style>@import url("../uibuilder/uib-brand.min.css");</style><span></span> */}
 // `
 
+/**
+ * ApplyTemplate is a custom HTML element that allows you to apply a template to the DOM.
+ * It listens to changes in specific attributes and updates the DOM accordingly.
+ * 
+ * @class ApplyTemplate
+ * @extends {HTMLElement}
+ * 
+ * @property {number} static _iCount - Holds a count of how many instances of this component are on the page.
+ * @property {Array<string>} static props - List of all of the HTML attributes (props) listened to.
+ * @property {boolean} once - Holder for the once attribute.
+ * @property {Object} log - Holder for the uibuilder log.
+ * 
+ * @constructor
+ * @throws {Error} Throws an error if the uibuilder client library is not available.
+ * 
+ * @method static get observedAttributes - Makes HTML attribute changes watched.
+ * @returns {Array<string>} The list of observed attributes.
+ * 
+ * @method attributeChangedCallback - Handle watched attributes.
+ * @param {string} attrib - The name of the attribute that is changing.
+ * @param {string} oldVal - The old value of the attribute.
+ * @param {string} newVal - The new value of the attribute.
+ * 
+ * @method connectedCallback - Runs when an instance is added to the DOM.
+ */
 export default class ApplyTemplate extends HTMLElement {
     //#region --- Class Properties ---
     /** Holds a count of how many instances of this component are on the page */

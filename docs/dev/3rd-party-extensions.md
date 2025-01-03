@@ -1,27 +1,31 @@
 ---
 title: How to create extension nodes that work with UIBUILDER
 description: |
-  Anyone can create Node-RED nodes that work with UIBUILDER. This pages shows how to go about it.
+  Anyone can create Node-RED nodes that work with UIBUILDER. This page shows how to go about it.
 created: 2024-06-27 15:55:18
-updated: 2024-06-27 20:47:05
+updated: 2024-09-07 18:04:05
+status: Incomplete
 ---
-
-Status: In development.
 
 UIBUILDER extensions will be Node-RED nodes packaged and published in the normal way. Please see the Node-RED documentation for details of that process.
 
-The most common UIBUILDER extension will be a *no-code node* that converts relatively simple input data into uibuilder low-code output messages that can be sent direct to a uibuilder node. Connected clients will turn the descriptive data into HTML and display on-page without the need for front-end code. An example might be a node that takes an array of objects as a `msg.payload` and a title in `msg.topic` then outputs a configuration that results in a chart on your web page.
+The most common UIBUILDER extension is likely to be a *no-code node* that converts relatively simple input data into uibuilder low-code output messages that can be sent direct to a uibuilder node. Connected clients will turn the descriptive data into HTML and display on-page without the need for front-end code. An example might be a node that takes an array of objects as a `msg.payload` and a title in `msg.topic` then outputs a configuration that results in a chart on your web page.
 
 This has an additional advantage in that the resulting output is simply a data specification of a web element (or set of elements) that can be further enhanced or changed as needed by other nodes capable of manipulating JSON (pretty much everything in Node-RED therefore!).
 
 > [!TIP]
 > Low-code output data can also be converted into full HTML in Node-RED rather than at the client by using the `uib-html` node. The output can be saved to a static file with the `uib-save` node or used with the core `http-response` or Dashboard `ui-template` nodes.
+>
+> Use this for data-driven pages that only change periodically since the resulting static pages are easily cached by browsers and tend to be the most efficient. For example, a page containing charts that only update once or twice a day.
 
 *These kinds of extensions should require little or no interaction with the technical side of uibuilder* since they only need to use Node-RED's standard wiring to communicate to/from uibuilder connected clients.
 
 This approach is the rough equivalent of Dashboard's ui nodes. However, uibuilder extensions are much simpler since they only need to output JSON data using the [standardised data schema](client-docs/config-driven-ui.md). They also rarely, if ever need to handle specific return data from the clients or deal with caches of data (there is a separate `uib-cache` node for that).
 
 The most likely additional interaction is likely to be automatically making front-end libraries or new web components available to clients. This is covered below.
+
+> [!TIP]
+> Custom nodes do not have to output low-code though - you can use them for any type of communication to/from uibuilder connected clients!
 
 ## Making new front-end libraries available to clients
 
@@ -79,12 +83,16 @@ The preferred method is simply to output a message and connect your node to the 
 
 You can also use the `uib-sender` node if you prefer. That also has a return node.
 
-You could also implement a direct tunnel (see the `uib-sender` node for details), however, this is not really recommended.
+You can also implement a direct tunnel from your node to uibuilder-connected clients. While this can be quite tempting and is certainly easy, it can be confusing for users as the flow of data may not be obvious. Use with caution.
+
+See _[UIBUILDER events](dev/uib-event-comms.md)_ for details.
 
 
 ## Receiving messages from connected clients
 
 As all client messages are output from the corresponding uibuilder node, you should use link return nodes or `uib-sender` in return mode.
+
+However, you can also use uibuilder's event system to get messages returned to your node from clients. See _[UIBUILDER events](dev/uib-event-comms.md)_ for details. However, again, bear in mind that such tunnelling of messages may be confusing for flow authors.
 
 ## Interacting with uibuilder
 
@@ -151,11 +159,12 @@ UIBUILDER has a wide set of administrative API's. These are mostly used by the N
 
 ### In the Node-RED runtime
 
-#### Watching uibuilder events
+#### Watching uibuilder runtime events
 
 Use `RED.events.on` in your node(s).
 
-Listening for `node-red-contrib-uibuilder/runtimeSetupComplete` will tell you that the uibuilder module has been added to Node-RED and is configured for use, it passes the core uibuilder configuration data.
+Listening for `UIBUILDER/runtimeSetupComplete` will tell you that the uibuilder module has been added to Node-RED and is configured for use, it passes the core uibuilder configuration data.
 
-Listening for `node-red-contrib-uibuilder/instanceSetupComplete` or `node-red-contrib-uibuilder/instanceSetupComplete/--url--` (where `--url--` is an instance url) will tell you when a specific instance has been initialised. They pass a reference to the complete node as data.
+Listening for `UIBUILDER/instanceSetupComplete` or `UIBUILDER/instanceSetupComplete/--url--` (where `--url--` is an instance url) will tell you when a specific instance has been initialised. They pass a reference to the complete node as data.
 
+See _[UIBUILDER events](dev/uib-event-comms.md)_ for details.

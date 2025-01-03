@@ -1,20 +1,12 @@
 /** Common functions and data for UIBUILDER nodes
- * Load as: ./resources/node-red-contrib-uibuilder/ti-common.js
+ * Load as: ./resources/node-red-contrib-uibuilder/editor-common.js
+ * Note that RED is available here
  */
 
-/** TODO
- * Now this is loaded as a plugin, should really use
- *   RED.plugins.registerPlugin('uib-plugin', { onadd: function() { ... } } )
- * to register and run.
- * https://github.com/node-red/nrlint/blob/bb60347c4a11e5e0bbc77ea20e75535677c5bddd/src/nrlint-core.html#L344
- * Also note that RED is available here
- */
-
-;(function () { // eslint-disable-line sonarjs/cognitive-complexity
-    'use strict'
-
-    // TODO The run-check not strictly needed now we load once only via a plugin
-    if (!window['uibuilder']) {
+// Register the plugin
+RED.plugins.registerPlugin('uib-editor-plugin', {
+    type: 'uibuilder-editor-plugin', // optional plugin type
+    onadd: function() {
         let _dbg = false
 
         /** Add a "uibuilder" object to the Node-RED Editor
@@ -236,7 +228,7 @@
         /** If debug, dump out key information to console */
         if (uibuilder.debug === true) {
             setTimeout( () => {
-                console.groupCollapsed('[uibuilder] Settings ...')
+                console.groupCollapsed('[uibuilder:editor-common] Settings ...')
                 console.log(
                     // The server's NODE_ENV environment var (e.g. PRODUCTION or DEVELOPMENT)
                     'NodeEnv: ', RED.settings.uibuilderNodeEnv,
@@ -257,10 +249,15 @@
                     // ALL possible nodes in the editor
                     `\n\nEditor Instances (${Object.keys(uibuilder.editorUibInstances).length}, incl undeployed & disabled): `, uibuilder.editorUibInstances,
                     // Currently installed FE packages
-                    `\n\nFE installed packages - (${Object.keys(uibuilder.packages).length}): `, uibuilder.packages
+                    `\n\nFE installed packages - (${Object.keys(uibuilder.packages).length}): `, uibuilder.packages,
+
+                    '\n\nRED Keys: ', Object.keys(RED),
+                    '\n\nRED.events Keys: ', Object.keys(RED.events),
+                    '\n\nRED.utils Keys: ', Object.keys(RED.utils),
                 )
                 console.groupEnd()
             }, 1500)
         }
-    }
-}())
+    },
+    // onremove: function() {},
+})

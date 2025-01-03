@@ -32,17 +32,17 @@
  */
 
 const { join, relative, normalize } = require('node:path')
-// const fsextra = require('fs-extra')
+// To be removed when feasible - https://github.com/jprichardson/node-fs-extra
+const fsextra = require('fs-extra')
 // Async
 const fs = require('node:fs/promises')
+// cb
+const { cp, writeFile } = require('node:fs')
 // Sync
 const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readFileSync } = require('node:fs')
 // TODO Remove in future?
 const fg = require('fast-glob')
-// WARNING: Take care not to end up with circular requires. e.g. libs/socket.js cannot be required here
-
-// ! TODO: Move other file-handling functions into this class
-// !       In readiness for move to mono-repo (need node.js v16+ as a base)
+// WARNING: Take care not to end up with circular requires. e.g. libs/socket.js or uiblib.js cannot be required here
 
 let log
 
@@ -68,6 +68,9 @@ class UibFs {
 
     /** @type {string} Get npm's global install location */
     globalPrefix // set in constructor
+
+    /** Node's fs libs constants */
+    constants = fs.constants
     //#endregion --- ----- ---
 
     // constructor() {} // ---- End of constructor ---- //
@@ -134,31 +137,36 @@ class UibFs {
         return files.filter(Boolean).reduce((all, folderContents) => all.concat(folderContents), [])
     } // -- End of walk -- //
 
-    //#endregion ---- ---- ----
-
     get uibRootFolder() {
         return this.uib.rootFolder
     }
 
+    //#endregion ---- ---- ----
+
     //#region ---- Async Methods ----
 
-    // async getAllInstanceUrls
+    /** Tests a user's permissions for the file or directory specified by path. The mode argument is an optional integer that specifies the accessibility checks to be performed
+     * @param {string|Buffer|URL} path Path to test
+     * @param {number} mode Access mode to test.
+     */
+    access = fs.access
 
     /** ASYNC Folder or File copy - Will THROW on error
      * @param {Array<string>|string} src Source. Single string or array of strings that will be `join`d
      * @param {Array<string>|string} dest Destination. Single string or array of strings that will be `join`d
-     * @param {boolean} [overwrite] Optional. Default=false. Overwrite on copy or fail if dest exists
      * @param {import('node:fs').CopyOptions} [opts] Optional.
-     * @returns {Promise<boolean>} True if copy succeeded else error thrown
      */
-    async copy(src, dest, overwrite, opts) {
-        if (!overwrite) overwrite = false
-        if (!opts) {
+    async copy(src, dest, opts) {
+        if (opts === undefined) {
             opts = {
-                force: overwrite === true,
-                preserveTimestamps: true,
+                'preserveTimestamps': true,
             }
         }
+        // @ts-ignore - opts.overwrite is an fs-extra setting
+        if (opts.hasOwnProperty('overwrite')) opts.force = opts.overwrite
+        // When copying, we always want everything
+        opts.recursive = true
+
         // @ts-ignore
         if (Array.isArray(src)) src = join(src)
         // @ts-ignore
@@ -167,9 +175,8 @@ class UibFs {
         try {
             await fs.cp(src, dest, opts)
         } catch (e) {
-            throw new Error(`Could not copy '${src}' to '${dest}'. ${e.message}`)
+            throw new Error(`uib libs/fs.js copy could not copy '${src}' to '${dest}'. ${e.message}`)
         }
-        return true
     }
 
     /** Returns the create/amend timestamps (as JS Date objects) & file size
@@ -247,6 +254,13 @@ class UibFs {
         // const chkFolders = existsSync(join(uib.rootFolder, params.url))
     }
 
+    /**Removes a file or directory. The directory can have contents. If the path does not exist, silently does nothing. 
+     * @param {string} path Folder/File to remove
+     */
+    async remove(path) {
+        await fs.rm(path, {force:true,recursive:true})
+    }
+
     // TODO Move degit processing to its own function. Don't need the emitter on uib
     /** Replace template in front-end instance folder
      * @param {string} url The uib instance URL
@@ -317,7 +331,6 @@ class UibFs {
             /** Source template folder name */
             const srcTemplate = join( uib.masterTemplateFolder, template )
             try {
-                // fsextra.copySync( srcTemplate, fullname, fsOpts )
                 // NB: fs.cp is still experimental even in node.js v20 - but seems stable since v16
                 await fs.cp(srcTemplate, fullname, fsOpts)
                 const statusMsg = `Successfully copied template ${template} to ${url}.`
@@ -509,6 +522,47 @@ class UibFs {
 
     //#endregion ---- ---- ----
 
+    //#region ---- Callback methods ----
+
+    /** Asynchronously copies the entire directory structure from src to dest, including subdirectories and files. Throws on fail.
+     * @param {string|Array<string>|URL} src Source path to copy, if an array of strings, they will be path joined
+     * @param {string|Array<string>|URL} dest Source path to copy, if an array of strings, they will be path joined
+     * @param {import('node:fs').CopyOptions} opts Node.js copy options
+     * @param {Function} cb Callback function
+     */
+    copyCb(src, dest, opts, cb) {
+        if (opts === undefined) {
+            opts = {
+                'preserveTimestamps': true,
+            }
+        }
+        // @ts-ignore - opts.overwrite is an fs-extra setting
+        if (opts.hasOwnProperty('overwrite')) opts.force = opts.overwrite
+        // When copying, we always want everything
+        opts.recursive = true
+        // @ts-ignore - we allow an array of path segments
+        if (Array.isArray(src)) src = join(src)
+        // @ts-ignore
+        if (Array.isArray(dest)) dest = join(dest)
+
+        try {
+            // @ts-ignore
+            cp(src, dest, opts, cb)
+        } catch (e) {
+            throw new Error(`uib libs/fs.js copyCb could not copy '${src}' to '${dest}'. ${e.message}`)
+        }
+    }
+
+    /** Write to a file (make sure it exists first)
+     * @param {string|Buffer|URL|number} file File path to write to
+     * @param {string|Buffer|DataView|object} data Data to write to file
+     * @param {object=} options
+     * @param {function} callback Has err as only argument
+     */
+    writeFileCb = writeFile
+
+    //#endregion ---- ---- ----
+
     //#region ---- Synchronous methods ----
 
     /** Synchronously try access and error if fail.
@@ -543,18 +597,19 @@ class UibFs {
     /** Synchronous Folder or File copy - Will THROW on error
      * @param {Array<string>|string} src Source. Single string or array of strings that will be `join`d
      * @param {Array<string>|string} dest Destination. Single string or array of strings that will be `join`d
-     * @param {boolean} [overwrite] Optional. Default=false. Overwrite on copy or fail if dest exists
      * @param {import('node:fs').CopySyncOptions} [opts] Optional.
-     * @returns {boolean} True if copy succeeded else false
      */
-    copySync(src, dest, overwrite, opts) {
-        if (!overwrite) overwrite = false
-        if (!opts) {
+    copySync(src, dest, opts) {
+        if (opts === undefined) {
             opts = {
-                force: overwrite === true,
-                preserveTimestamps: true,
+                'preserveTimestamps': true,
             }
         }
+        // @ts-ignore - opts.overwrite is an fs-extra setting
+        if (opts.hasOwnProperty('overwrite')) opts.force = opts.overwrite
+        // When copying, we always want everything
+        opts.recursive = true
+
         try {
             // @ts-ignore
             if (Array.isArray(src)) src = join(...src)
@@ -562,10 +617,8 @@ class UibFs {
             if (Array.isArray(dest)) dest = join(...dest)
             cpSync(src, dest, opts)
         } catch (e) {
-            log.error(`Could not copy '${src}' to '${dest}'. ${e.message}`, e)
-            return false
+            throw new Error(`uib libs/fs.js copySync could not copy '${src}' to '${dest}'. ${e.message}`)
         }
-        return true
     }
 
     // ensureFolder({ folder, copyFrom,  }) {
@@ -576,7 +629,7 @@ class UibFs {
     // }
 
     /** Does the path exist? Pass 1 or more args which are joined & then checked
-     * param {string} path FS Path to check
+     * @param {...string} path FS Path to check, multiple strings are path.join'd
      * @returns {boolean} True if path exists
      */
     existsSync() {
@@ -602,22 +655,7 @@ class UibFs {
         return mkdirSync(path, options)
     }
 
-    //#endregion ---- ---- ----
-
-    /* TODO
-        rm
-        moveSync
-        copySync
-        copy
-        ensureDirSync
-    */
-
-    //#region ---- async fs-extra replacement methods ----
-    //#endregion ---- ---- ----
-
-    //#region ---- synchronous fs-extra replacement methods ----
-
-    /** Read a JSON file and return as a JavaScript object - can use instead of fs-extra
+    /** Read a JSON file and return as a JavaScript object
      * @throws If reading or parsing fails
      * @param {string} file JSON file path/name to read
      * @returns {object} The parsed JSON file as an object
@@ -631,7 +669,50 @@ class UibFs {
         }
     }
 
+    /** Read a file, return as a buffer unless options.encoding is provided
+     * @param {string|Buffer|URL|number} file The file path/name to read
+     * @param {object|string=} options
+     * @returns {string|Buffer} File contents as a string
+     */
+    readFileSync = readFileSync
+
     //#endregion ---- ---- ----
+
+    //#region ---- fs-extra passthrough methods that need replacement ----
+
+    /** Ensures that the directory exists. If the directory structure does not exist, it is created. If provided, options may specify the desired mode for the directory.
+     * @param {string} dir Folder path to ensure
+     * @param {object|number=} opts Mode if number, else { mode: <Integer> }
+     */
+    ensureDirSync = fsextra.ensureDirSync
+
+    /** Ensures that the file exists. If the file that is requested to be created is in directories that do not exist, these directories are created. If the file already exists, it is NOT MODIFIED.
+     * @param {string} file File path to ensure
+     */
+    ensureFileSync = fsextra.ensureFileSync
+
+    /** Moves a file or directory, even across devices.
+     * @param {string} src Source folder/file
+     * @param {string} dest Destination folder/file
+     * @param {object=} opts { overwrite: true } - overwrite is false by default
+     */
+    moveSync = fsextra.moveSync
+
+    /** Removes a file or directory. The directory can have contents. If the path does not exist, silently does nothing.
+     * @param {string} path Folder/file path to remove
+     */
+    removeSync = fsextra.removeSync
+    
+    /** Writes an object to a JSON file.
+     * https://github.com/jprichardson/node-fs-extra/blob/master/docs/writeJson.md
+     * @param {string} file File path to write to
+     * @param {object} object Object to write to
+     * @param {object} options
+     */
+    writeJson = fsextra.writeJson
+
+    //#endregion ---- ---- ----
+
 } // ----- End of UibPackages ----- //
 
 /** Singleton model. Only 1 instance of UibWeb should ever exist.

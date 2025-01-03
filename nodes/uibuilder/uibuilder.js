@@ -31,22 +31,21 @@
 const uiblib = require('../libs/uiblib.js')  // Utility library for uibuilder
 const tilib = require('../libs/tilib.js')   // General purpose library (by Totally Information)
 const packageMgt = require('../libs/package-mgt.js')
-const tiEvents = require('@totallyinformation/ti-common-event-handler') // https://github.com/EventEmitter2/EventEmitter2
 const fslib  = require('../libs/fs.js')   // File/folder handling library (by Totally Information)
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
-try {
+try { // templateConf
     // Template configuration metadata
     var templateConf = require('../../templates/template_dependencies.js') // eslint-disable-line no-var
 } catch (e) {
     console.error('[uibuilder] REQUIRE TEMPLATE-CONF failed::', e)
 }
-try {
+try { // sockets
     // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
     var sockets = require('../libs/socket.js') // eslint-disable-line no-var
 } catch (e) {
     console.error('[uibuilder] REQUIRE SOCKET failed::', e)
 }
-try {
+try { // web
     // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
     var web = require('../libs/web.js') // eslint-disable-line no-var
 } catch (e) {
@@ -60,9 +59,6 @@ try {
 
 // Core node.js
 const path = require('path')
-
-// TODO - ELIMINATE - move fs processing to uibFs
-const fs = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
 
 //#endregion ----- Require packages ----- //
 
@@ -136,20 +132,21 @@ let userDir = ''
  * @param {uibNode} node Reference to node instance
  */
 function externalEvents(node) {
+    const RED = uib.RED
 
     // The event name to listen out for
-    const eventName = `node-red-contrib-uibuilder/${node.url}`
+    const eventName = `UIBUILDER/send/${node.url}`
     // console.log('[uibuilder:externalEvents] ', eventName )
 
     // The function to execute when an event is received
-    const sender = (msg) => {
+    node.sender = (msg) => {
         // this.send(msg)
         // console.log('>> EVENT tofe: ', msg )
         sockets.sendToFe(msg, node, uib.ioChannels.server)
     }
 
     // Create new listener for the given topic, they are removed on close
-    tiEvents.on(eventName, sender)
+    RED.events.on(eventName, node.sender)
 
     // console.log('>>>> THIS >>>>> ', node)
 }
@@ -202,41 +199,32 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     if ( uib.RED === null ) return
     const RED = uib.RED
 
-    // TODO Move to a runtime plugin
-    // Add deep find utility function to RED.util so it can be used inside function nodes
+    // Add list all uibuilder apps function to RED.util so it can be used inside function nodes
+    // NOTE: Only add things here that require uibuilder configuration data which won't be available
+    //       until after plugins are defined. Most things should be added in the the runtime plugin.
     RED.util.uib = {
-        /** Recursive object deep find
-         * @param {*} obj The object to be searched
-         * @param {Function} matcher Function that, if returns true, will result in cb(obj) being called
-         * @param {Function} cb Callback function that takes a single arg `obj`
-         */
-        deepObjFind: (obj, matcher, cb) => {
-            if (matcher(obj)) {
-                cb(obj)
-            }
-            for (const key in obj) {
-                if (typeof obj[key] === 'object') {
-                    RED.util.uib.deepObjFind(obj[key], matcher, cb)
-                }
-            }
-        },
-        /** Format a number to a given locale and decimal places
-         * @param {number} inp Input number
-         * @param {number} dp Number of output decimal places required (default=1)
-         * @param {string} int Locale to use for number format (default=en-GB)
-         * @returns {string} Formatted number as a string
-         */
-        dp: (inp, dp, int) => {
-            if (!int) int = 'en-GB'
-            if (!dp) dp = 1
-            return inp.toLocaleString(int, { 'minimumFractionDigits': dp, 'maximumFractionDigits': dp })
-        },
         /** Return a list of all instances
          * @returns {object} List of all registered uibuilder instances
          */
         listAllApps: () => {
             return uib.apps
         },
+
+        /** Send a message to a specific uibuilder instance
+         * @param {string} uibName The name (url) of the uibuilder instance to send via
+         * @param {object} msg Message object to send to the front-end
+         */
+        send: (uibName, msg) => {
+            const targetNode = RED.nodes.getNode(uib.apps[uibName].node)
+            if ( !targetNode ) {
+                throw new Error(`[RED.util.uib.send] ERROR: uibuilder instance '${uibName}' not found`)
+            }
+            msg.from = 'server/function-node'
+            sockets.sendToFe2(msg, targetNode)
+        },
+
+        // Merge in functions from the runtime plugin
+        ...RED.util.uib
     }
 
     //#region ----- back-end debugging ----- //
@@ -331,14 +319,13 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     // (a) Configure the UibFs handler class
     fslib.setup(uib)
 
-    // TODO: Move all file handling to fslib
     //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
 
     /** Check uib root folder: create if needed, writable? */
     let uibRootFolderOK = true
     // Try to create root and root/.config - ignore error if it already exists
     try {
-        fs.ensureDirSync(uib.configFolder) // creates both folders
+        fslib.ensureDirSync(uib.configFolder) // creates both folders
         log.trace(`[uibuilder:runtimeSetup] uibRoot folder exists. ${uib.rootFolder}` )
     } catch (e) {
         if ( e.code !== 'EEXIST' ) { // ignore folder exists error
@@ -357,28 +344,28 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     // Assuming all OK, copy over the master .config folder without overwriting (vendor package list, middleware)
     if (uibRootFolderOK === true) {
         // We want to always overwrite the .config template files
-        const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
+        const fsOpts = { 'overwrite': true, 'preserveTimestamps': true, 'recursive': true, }
         try {
-            fs.copySync( path.join( uib.masterTemplateFolder, uib.configFolderName ), uib.configFolder, fsOpts )
-            log.trace(`[uibuilder:runtimeSetup] Copied template .config folder to local .config folder ${uib.configFolder} (not overwriting)` )
+            fslib.copySync( path.join( uib.masterTemplateFolder, uib.configFolderName ), uib.configFolder, fsOpts)
+            log.trace(`✔️ [uibuilder:runtimeSetup] Copied template .config folder to local .config folder ${uib.configFolder} (not overwriting)` )
         } catch (e) {
-            RED.log.error(`🛑[uibuilder:runtimeSetup] Master .config folder copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
+            RED.log.error(`🛑 [uibuilder:runtimeSetup] Master .config folder copy ERROR, path: ${uib.masterTemplateFolder}. ${e.message}`)
             uibRootFolderOK = false
         }
 
         // and copy the common folder from template (contains the default blue node-red icon)
         fsOpts.overwrite = false // we don't want to overwrite any common folder files
         try {
-            fs.copy( path.join( uib.masterTemplateFolder, uib.commonFolderName ), uib.commonFolder, fsOpts, function(err) {
+            fslib.copyCb( path.join( uib.masterTemplateFolder, uib.commonFolderName )+'/', uib.commonFolder+'/', fsOpts, function(err) {
                 if (err) {
-                    log.error(`🛑[uibuilder:runtimeSetup] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}`, err)
+                    log.error(`🛑 [uibuilder:runtimeSetup] Error copying common template folder from ${path.join( uib.masterTemplateFolder, uib.commonFolderName)} to ${uib.commonFolder}. ${err.message}`, err)
                 } else {
-                    log.trace(`[uibuilder:runtimeSetup] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
+                    log.trace(`✔️ [uibuilder:runtimeSetup] Copied common template folder to local common folder ${uib.commonFolder} (not overwriting)` )
                 }
             })
         } catch (e) {
             // should never happen
-            log.error('🛑[uibuilder:runtimeSetup] COPY OF COMMON FOLDER FAILED')
+            log.error(`🛑 [uibuilder:runtimeSetup] COPY OF COMMON FOLDER FAILED. ${e.message}`)
         }
         // It is served up at the instance level to allow caching to be configured. It is used as a static resource folder (added in nodeInstance() so available for each instance as `./common/`)
     }
@@ -401,7 +388,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     /** (d) Pass core objects to the Socket.IO handler module */
     sockets.setup(uib, web.server)
 
-    RED.events.emit('node-red-contrib-uibuilder/runtimeSetupComplete', uib)
+    RED.events.emit('UIBUILDER/runtimeSetupComplete', uib)
 } // --- end of runtimeSetup --- //
 
 /** 2) All of the initialisation of the Node Instance
@@ -504,11 +491,11 @@ function nodeInstance(config) {
     if ( this.oldUrl !== undefined && this.oldUrl !== '' && this.url !== this.oldUrl ) {
         // rename (move) folder if possible - but don't overwrite
         try {
-            fs.moveSync(path.join(/** @type {string} */ (uib.rootFolder), this.oldUrl), this.customFolder, { overwrite: false })
+            fslib.moveSync(path.join(/** @type {string} */ (uib.rootFolder), this.oldUrl), this.customFolder, { overwrite: false })
             log.trace(`[uibuilder:nodeInstance:${this.url}] Folder renamed from ${this.oldUrl} to ${this.url}`)
             // Notify other nodes
-            RED.events.emit('node-red-contrib-uibuilder/URL-change', { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
-            RED.events.emit(`node-red-contrib-uibuilder/URL-change/${this.oldUrl}`, { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
+            RED.events.emit('UIBUILDER/URL-change', { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
+            RED.events.emit(`UIBUILDER/URL-change/${this.oldUrl}`, { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
         } catch (e) {
             log.trace(`[uibuilder:nodeInstance:${this.url}] Could not rename folder. ${e.message}`)
             // Not worried if the source doesn't exist - this will regularly happen when changing the name BEFORE first deploy.
@@ -524,7 +511,7 @@ function nodeInstance(config) {
     }
 
     // Does the custom folder exist? If not, create it and copy template to it. Otherwise make sure it is accessible.
-    // TODO replace with uibFs.ensureFolder()
+    // TODO replace with fslib.ensureFolder()
     let customFoldersOK = true
     if ( !fslib.existsSync(this.customFolder) ) {
         // Does not exist so check whether built-in or external template wanted
@@ -534,10 +521,10 @@ function nodeInstance(config) {
 
             const copyFrom = path.join( uib.masterTemplateFolder, this.templateFolder )
             try {
-                fs.copySync( copyFrom, this.customFolder, cpyOpts)
-                log.info(`[uibuilder:nodeInstance:${this.url}] Created instance folder ${this.customFolder} and copied template files from ${copyFrom}` )
+                fslib.copySync( copyFrom, this.customFolder, cpyOpts)
+                log.info(`✔️ [uibuilder:nodeInstance:${this.url}] Created instance folder ${this.customFolder} and copied template files from ${copyFrom}` )
             } catch (e) {
-                log.error(`🛑[uibuildernodeInstance] CREATE OF INSTANCE FOLDER '${this.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
+                log.error(`🛑 [uibuildernodeInstance] CREATE OF INSTANCE FOLDER '${this.customFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
                 customFoldersOK = false
             }
         } else {
@@ -617,9 +604,9 @@ function nodeInstance(config) {
         this.removeListener('input', inputMsgHandler)
 
         // Cancel any event listeners for this node
-        tiEvents.removeAllListeners(`node-red-contrib-uibuilder/${this.url}`)
+        RED.events.off(`UIBUILDER/send/${this.url}`, this.sender)
 
-        // Tody up the ExpressJS routes if a node is removed
+        // Tidy up the ExpressJS routes if a node is removed
         if (removed) {
             delete web.routers.instances[this.url]
             delete web.instanceRouters[this.url]
@@ -636,14 +623,8 @@ function nodeInstance(config) {
         res.status(200).send( web.showInstanceDetails(req, this) )
     })
 
-    RED.events.emit('node-red-contrib-uibuilder/instanceSetupComplete', this)
-    RED.events.emit(`node-red-contrib-uibuilder/instanceSetupComplete/${this.url}`, this)
-
-    // // TODO: Remove this debug info
-    // setTimeout(function() {
-    //     tiEvents.emit(`node-red-contrib-uibuilder/components-html/BOO`, 1, 2)
-    //     tiEvents.emit(`node-red-contrib-uibuilder/components-html`, 3, 4)
-    // }, 8000)
+    RED.events.emit('UIBUILDER/instanceSetupComplete', this)
+    RED.events.emit(`UIBUILDER/instanceSetupComplete/${this.url}`, this)
 } // ----- end of nodeInstance ----- //
 
 /** 3) Handler function for node flow input events (when a node instance receives a msg from the flow)

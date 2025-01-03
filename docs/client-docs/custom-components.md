@@ -1,9 +1,9 @@
 ---
 title: Custom web components
 description: |
-  Web components built into the UIBUILDER client and information about external web components.
+  Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2024-09-06 12:39:40
+updated: 2024-09-06 13:27:03
 ---
 
 The following custom web components are built into UIBUILDER:
@@ -325,6 +325,36 @@ Totally Information has a (so far experimental) set of web components that work 
 ### HotNiPi Gauge component
 
 A nice looking gauge was gifted to the community by Node-RED forum contributor HotNiPi and this also works with or without UIBUILDER. See [HotNipi Gauge Web Component](https://github.com/TotallyInformation/gauge-hotnipi) for details. In line with UIBUILDER standards, the gauge component is available in both ESM and IIFE formats for ease of use.
+
+### Include-fragment-element
+
+This web component is written and maintained by GitHub. It lets you have something like this in your 
+
+```html
+<div class="tip">
+  <include-fragment src="./tips/tip1.html">
+    <p>Loading tip…</p>
+  </include-fragment>
+</div>
+```
+
+Where `<include-fragment src="/tips">...</include-fragment>` is completely replaced by the content of the loaded HTML fragment.
+
+HTML Fragments in this case are files of HTML content without any of the `<html>`, `<head>`, `<body>` and other structural HTML, just raw content.
+
+Install locally using the UIBUILDER Library Manager with the name `@github/include-fragment-element` and then include in your index.html file as:
+
+```html
+<script defer src="../uibuilder/vendor/@github/include-fragment-element/dist/index.min.js"></script>
+```
+
+Or use direct from the Internet with:
+
+```html
+<script defer src="https://cdn.jsdelivr.net/npm/@github/include-fragment-element/dist/index.min.js"></script>
+```
+
+ESM loads are also available. [See GitHub for details](https://github.com/github/include-fragment-element/).
 
 ### Other web components and component libraries
 

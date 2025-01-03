@@ -25,7 +25,7 @@
   * [Function node enhancements](nodes/function-node.md)
 * The front-end client
   * [Controlling from Node-RED](client-docs/control-from-node-red.md)
-  * [Custom Components](client-docs/custom-components.md "The built-in uib-var component, using external components")
+  * [Custom Components](client-docs/custom-components.md "AKA 'Widgets', built-in and external elements to incorporate in your UI")
   * [Custom Events](client-docs/custom-events.md)
   * [Dynamic, config-driven UI's](client-docs/config-driven-ui.md)
   * [Features](client-docs/features.md)
@@ -71,6 +71,7 @@
   * [Developing 3rd-party extensions](dev/3rd-party-extensions.md "How to create extension nodes that work with UIBUILDER")
   * [Details](dev/README.md)
   * [REST API's](apis/)
+  * [Runtime events](dev/uib-event-comms.md "Node-RED runtime events used in UIBUILDER")
 * [Glossary of terms](glossary.md)
 * [Main readme <sup>🔗</sup>](uibhome)
 * [Apache v2 license <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/LICENSE)
@@ -79,5 +80,5 @@
 * [Node-RED <sup>🔗</sup>](https://nodered.org/)
 * Changes
   * [Live changelog <sup>🔗</sup>](changelog)
-  * [Roadmap](roadmap/)
+  * [Roadmap](roadmap/readme.md)
   * [Archived changelogs](archived/changelog-archive.md)

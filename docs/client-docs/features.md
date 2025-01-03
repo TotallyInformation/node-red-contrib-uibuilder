@@ -1,34 +1,13 @@
 ---
 title: Features of the modern, modular front-end client `uibuilder.esm.js` and `uibuilder.iife.js`
 description: |
-  Description of the main features.
+  Description of the main features of UIBUILDER's browser client library.
 created: 2022-06-11 14:15:26
-updated: 2024-07-21 15:29:57
+updated: 2025-01-02 17:27:25
 ---
 
-- [Dynamic, data-driven HTML content](#dynamic-data-driven-html-content)
-- [Exposes global uibuilder, uib, $, and $$](#exposes-global-uibuilder-uib--and-)
-- [$ and $$ functions](#-and--functions)
-- [onChange/cancelChange functions](#onchangecancelchange-functions)
-- [onTopic/cancelTopic functions](#ontopiccanceltopic-functions)
-- [send function](#send-function)
-- [eventSend function](#eventsend-function)
-- [uib-var custom HTML tag (include managed variables in the UI)](#uib-var-custom-html-tag-include-managed-variables-in-the-ui)
-- [set function (Managed variables)](#set-function-managed-variables)
-- [Auto-loading of the uibuilder default stylesheet](#auto-loading-of-the-uibuilder-default-stylesheet)
-- [Conditional logging](#conditional-logging)
-- [document-level events](#document-level-events)
-- [setPing function](#setping-function)
-- [Page auto-reload](#page-auto-reload)
-- [setStore, getStore, removeStore functions](#setstore-getstore-removestore-functions)
-- [Initial connection message now shows whether the page is newly loaded or not](#initial-connection-message-now-shows-whether-the-page-is-newly-loaded-or-not)
-- [Stable client identifier](#stable-client-identifier)
-- [Number of connections is tracked and sent to server on (re)connect](#number-of-connections-is-tracked-and-sent-to-server-on-reconnect)
-- [Client connection/disconnection control messages](#client-connectiondisconnection-control-messages)
-- [ui function](#ui-function)
-- [Controlling from Node-RED](#controlling-from-node-red)
-- [Includes the Socket.IO client library](#includes-the-socketio-client-library)
-- [start function (now rarely needed)](#start-function-now-rarely-needed)
+> [!TIP]
+> As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance.
 
 ## Dynamic, data-driven HTML content
 
@@ -237,16 +216,21 @@ See [Custom Components](client-docs/custom-components) for details.
 
 ## set function (Managed variables)
 
-The `uibuilder.set()` function can create/change any variable name that doesn't start with `_` or `#`. To obtain the current value of a set variable, use `uibuilder.get()`. To monitor for changes, use `uibuilder.onChange()`.
+The `uibuilder.set()` function can create/change a managed variable name. To obtain the current value of a set variable, use `uibuilder.get()`. To monitor for changes, use `uibuilder.onChange()`.
 
-> [!NOTE]
-> There may be some rough edges still in regard to what should and shouldn't be `set`. Please try to avoid setting an internal variable or function or bad things may happen 😲
+This feature is the same as [`Signals`](https://dev.to/this-is-learning/the-evolution-of-signals-in-javascript-8ob) features found in front-end frameworks. It is a way to communicate between different parts of your front-end code without having to pass messages around. It is especially useful for UI automation. The differences are that UIBUILDER had this feature well before the term "Signals" was coined and that it is fully integrated with UIBUILDER's other features. Also the uibuilder client library is specifically NOT a framework but rather seeks enhance native HTML/CSS/JavaScript and so is easier to use and maintain.
 
-This means that you can even simulate an incoming message from Node-RED with something like `uibuilder.set('msg', {topic:'uibuilder', payload:42})` in your front-end JavaScript.
+> [!WARNING]
+> Please try to avoid setting an existing internal variable or function name or bad things may happen! 😲
+>
+> Also note that `set` will refuse to act on any variable that starts with `_` or `#` as these are reserved for internal use.
+
+> [!TIP]
+> This means that you can even simulate an incoming message from Node-RED with something like `uibuilder.set('msg', {topic:'uibuilder', payload:42})` in your front-end JavaScript.
 
 One interesting possibility is getting your page to auto-reload using `uibuilder.set('msg', {_uib:{reload:true}})`. Perhaps even more useful is the ability to very easily alter your UI on the page by using the dynamic UI feature (detailed below) `uibuilder.set('msg', {_ui:[{method:'add', ...}, {method:'remove', ....}]})`.
 
-Using the `set` function triggers an event `uibuilder:propertyChanged` which is attached to the `document` object. So you have two different ways to watch for variables changing.
+Using the `set` function triggers two events `uibuilder:propertyChanged` and `uibuilder:propertyChanged:${prop}` which are attached to the `document` object. So you have different ways to watch for variables changing. Use whichever is most appropriate for your use case and coding style.
 
 This will listen for a specific variable changing:
 
@@ -260,6 +244,19 @@ uibuilder.set('myvar', 42)
 //     >> MYVAR HAS CHANGED >> 42
 ```
 
+Alternatively:
+
+```javascript
+document.addEventListener('uibuilder:propertyChanged:myvar', function (evt) {
+    // evt.detail contains the information on what has changed and what the new value is
+    console.log('>> EVENT uibuilder:propertyChanged:myvar >>', evt.detail)
+})
+// ...
+uibuilder.set('myvar', 42)
+// Outputs:
+//     >> EVENT uibuilder:propertyChanged:myvar >> {prop: 'myvar', value: 42, oldValue: undefined, store: false, autoload: false}
+```
+
 Whereas this will listen for anything changing:
 
 ```javascript
@@ -270,7 +267,7 @@ document.addEventListener('uibuilder:propertyChanged', function (evt) {
 // ...
 uibuilder.set('myvar', 42)
 // Outputs:
-//     >> EVENT uibuilder:propertyChanged >> {prop: 'myvar', value: 42}
+//     >> EVENT uibuilder:propertyChanged >> {prop: 'myvar', value: 42, oldValue: undefined, store: false, autoload: false}
 ```
 
 Note that `uibuilder.get()` will do a one-off get of a managed variable including the client libraries own internal variables and constants.
@@ -315,13 +312,16 @@ See the [Custom Events](#custom-events) below for details.
 
 The main current events are (other events may be added later):
 
-* `uibuilder:stdMsgReceived` - triggered when a non-control msg arrives from Node-RED
-* `uibuilder:propertyChanged` - triggered when any uibuilder managed property is changed
-* `uibuilder:msg:topic:${msg.topic}` - triggered when an incoming msg contains a `msg.topic` property allowing specific topics to be monitored
-* `uibuilder:msg:_ui` - triggered when an incoming msg contains a `msg._ui` property (used for UI automation using web components)
+* `uibuilder:domChange` - triggered by `uiWatch` functions. Allowing you to monitor for changes to specific elements on the page.
+
+* `uibuilder:msg:topic:${msg.topic}` - triggered when an incoming msg contains a `msg.topic` property allowing specific topics to be monitored.
+* `uibuilder:msg:_ui` - triggered when an incoming msg contains a `msg._ui` property (used for UI automation using web components).
 * `uibuilder:msg:_ui:${action.method}${action.id ? `:${action.id}` : ''}` - triggered when the incoming msg contains `msg._ui.add`, `msg._ui.update`, or `msg._ui.remove` for UI automation. For the update action, the `msg._ui.id` property links the msg to a specific on-page element by its HTML id attribute.
-* `uibuilder:socket:connected` - when Socket.IO successfully connects to the matching uibuilder node in Node-RED
-* `uibuilder:socket:disconnected` - when Socket.IO disconnects from the matching uibuilder node in Node-RED
+* `uibuilder:propertyChanged` - triggered when any uibuilder managed property is changed.
+* `uibuilder:propertyChanged:${prop}` - triggered when the specific uibuilder managed property is changed.
+* `uibuilder:socket:connected` - when Socket.IO successfully connects to the matching uibuilder node in Node-RED.
+* `uibuilder:socket:disconnected` - when Socket.IO disconnects from the matching uibuilder node in Node-RED.
+* `uibuilder:stdMsgReceived` - triggered when a non-control msg arrives from Node-RED.
 
 You can watch for these events in your own code using something like:
 

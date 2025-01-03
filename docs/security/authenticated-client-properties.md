@@ -3,7 +3,7 @@ title: Standardised msg._client properties for authenticated clients
 description: |
   msg._client is a standardised message property added to both UIBUILDER and FlowFuse's Dashboard 2.0 outputs when an authenticated client is detected. Authentication happens using an external tool such as FlowFuse authentication, Cloudflare access, Authelia, Authentik, Keycloak, etc.
 created: 2024-08-04 12:49:35
-updated: 2024-09-06 12:39:40
+updated: 2024-09-06 13:27:03
 ---
 
 > [!NOTE]
@@ -233,3 +233,31 @@ Where `prop` should be the appropriate login page URL.
 > Connecting clients may result in multiple initial messages being sent which could create a loop.
 >
 > To avoid this, keep track of connecting/disconnecting clients and only send them to login once, setting a flag against the msg.clientId on connection & resetting the flag on disconnection.
+
+## Rules controlling discovery of authenticated users
+
+`msg._client` is only shown if certain rules are met when receiving a connection from a client browser.
+
+`authProvider` Rules:
+
+```js
+if (headers['cf-access-authenticated-user-email']) authProvider = 'CloudFlare Access'
+else if (handshake.auth?.user?.userId) authProvider = 'FlowFuse'
+else if (headers['x-user-id']) authProvider = 'Keycloak'
+else if (headers['x-authentik-uid']) authProvider = 'Authentik'
+else if (headers['remote-user'] || headers['x-remote-user']) authProvider = 'Custom'
+else if (headers['x-forwarded-user']) authProvider = 'Proxied Custom'
+```
+
+If `authProvider` has been set, then the following rules apply.
+
+```js
+const email = headers['cf-access-authenticated-user-email'] || headers['x-authentik-email'] || headers['remote-email'] || headers['x-user-email'] || undefined
+const name = headers['x-authentik-name'] || headers['remote-name'] || headers['x-remote-name'] || handshake.auth?.user?.name
+
+if (headers['x-forwarded-groups']) client._client.groups = headers['x-forwarded-groups']
+if (headers['x-authentik-groups']) client._client.groups = headers['x-authentik-groups']
+if (headers['x-authentik-username']) client._client.username = headers['x-authentik-username']
+if (headers['x-user-role']) client._client.role = headers['x-user-role']
+if (handshake.auth?.user?.image) client._client.image = handshake.auth.user.image
+```

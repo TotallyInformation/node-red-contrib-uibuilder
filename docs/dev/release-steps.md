@@ -3,10 +3,27 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2024-09-06 13:22:03
+updated: 2024-09-06 13:29:54
 ---
 
 This assumes all main updates have been done for this release and that local testing is complete.
+
+## Incorporating bug-fixes from `main` branch
+
+When working on a feature branch, it may be necessary to release a new bug-fix release from `main`. At that point, you should then incorporate the changes into your feature branch(es).
+
+```bash
+git switch main
+git pull origin main
+git switch v7.0.0
+git merge main
+```
+Now the Source Control panel in VSCode will have any files with conflicts marked. Click on them to view the conflict and resolve. Then do another commit and push.
+
+## Creating a feature branch
+
+* On GitHub, click on the "Switch branches/tags" drop-down. Search for the new name - e.g. v7.0.0 - if it does not exist, GitHub will offer to create it from the current main branch.
+* In VSCode, switch to the SOURCE CONTROL sidebar, click on REMOTES, refresh if needed. Expand "origin" and click on the "Switch to branch..." icon.
 
 ## 01) Check the CHANGELOG
 
@@ -66,7 +83,7 @@ Remember to switch branches to the version branch in VS Code before continuing.
 ## 07) Create a new GitHub tag & release
 
 * Run `gulp createTag` from VSCode terminal (making sure to use main branch).
-* On GitHub, create a release from the tag and paste the version changelog notes into the release notes.
+* [On GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/tags), create a release from the tag and paste the version changelog notes into the release notes.
 
 ## 08) Publish new version to npm
 

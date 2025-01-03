@@ -9,6 +9,7 @@
  * unless imported here.
  */
 
+// THIS MUST BE INCLUDED - WITHOUT IT YOU CANNOT CONNECT TO NODE-RED
 import '../uibuilder/uibuilder.esm.min.js'  // Adds `uibuilder` and `$` to globals
 
 // logLevel 2+ shows more built-in logging. 0=error,1=warn,2=info,3=log,4=debug,5=trace.

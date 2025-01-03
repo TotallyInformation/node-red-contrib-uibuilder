@@ -25,7 +25,7 @@
 
 const express = require('express')
 const path = require('path')
-const fs = require('fs-extra')  // https://github.com/jprichardson/node-fs-extra#nodejs-fs-extra
+const fslib = require('./fs.js')
 // const uiblib = require('./uiblib')  // Utility library for uibuilder
 const web = require('./web')
 const sockets = require('./socket')
@@ -78,7 +78,7 @@ function chkParamUrl(params) {
     }
 
     // Actually, since uib auto-creates folder if not exists, this just gets in the way - // Does this url have a matching instance root folder?
-    // if ( ! fs.existsSync(path.join(uib.rootFolder, params.url)) ) {
+    // if ( ! fslib.existsSync(path.join(uib.rootFolder, params.url)) ) {
     //     res.statusMessage = `url does not have a matching instance root folder. url='${params.url}', Master root folder='${uib.rootFolder}'`
     //     res.status = 500
     //     return res
@@ -494,7 +494,7 @@ function adminRouterV2(uib, log) {
         const filePath = path.join(filePathRoot, params.fname)
 
         // Does the file exist?
-        if ( fs.existsSync(filePath) ) {
+        if ( fslib.existsSync(filePath) ) {
             // Send back a plain text response body containing content of the file
             res.type('text/plain').sendFile(
                 // @ts-ignore
@@ -509,7 +509,7 @@ function adminRouterV2(uib, log) {
                 }
             )
         } else {
-            log.error(`[uibuilder:apiv2:uibgetfile] Admin API. File does not exist '${filePath}'. url=${params.url}`)
+            log.error(`🛑 [uibuilder:apiv2:uibgetfile] Admin API. File does not exist '${filePath}'. url=${params.url}`)
             res.statusMessage = 'File does not exist'
             res.status(500).end()
         }
@@ -557,15 +557,15 @@ function adminRouterV2(uib, log) {
         const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
 
         // eslint-disable-next-line no-unused-vars
-        fs.writeFile(fullname, req.body.data, function (err, data) {
+        fslib.writeFileCb(fullname, req.body.data, function (err) {
             if (err) {
                 // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
-                log.error(`[uibuilder:apiv2:uibputfile] Admin API. File write FAIL. url=${params.url}, file=${params.folder}/${params.fname}`, err)
-                res.statusMessage = err
+                log.error(`🛑 [uibuilder:apiv2:uibputfile] Admin API. File write FAIL. url=${params.url}, file=${params.folder}/${params.fname}. ${err.message}`, err)
+                res.statusMessage = err.message
                 res.status(500).end()
             } else {
                 // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
-                log.trace(`[uibuilder:apiv2:uibputfile] Admin API. File write SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
+                log.trace(`✔️ [uibuilder:apiv2:uibputfile] Admin API. File write SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
                 res.statusMessage = 'File written successfully'
                 res.status(200).end()
                 // Reload connected clients if required by sending them a reload msg
@@ -622,12 +622,10 @@ function adminRouterV2(uib, log) {
 
     /** Check & update installed front-end library packages, return list as JSON - this runs when NR Editor is loaded if a uib instance deployed */
     v2AdminRouter.get('/uibvendorpackages', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-
         // Update the installed packages list
         // web.serveVendorPackages()
 
         res.json( packageMgt.uibPackageJson.uibuilder.packages )
-
     }) // ---- End of uibvendorpackages ---- //
 
     /** Call npm. Schema: {name:{(url),cmd}}
@@ -697,7 +695,7 @@ function adminRouterV2(uib, log) {
         log.info(`[uibuilder:apiv2:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} with tag/version '${params.tag ? params.tag : ''}'`)
 
         // delete package lock file as it seems to mess up sometimes - no error if it fails
-        fs.removeSync(path.join(folder, 'package-lock.json'))
+        fslib.removeSync(path.join(folder, 'package-lock.json'))
 
         // Formulate the command to be run
         switch (params.cmd) {
@@ -723,7 +721,7 @@ function adminRouterV2(uib, log) {
                     })
                     .catch((err) => {
                         // err has extra props: {all:string, code:number, command:string}
-                        log.error(`[uibuilder:apiv2:uibnpmmanage:${params.cmd}] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+                        log.error(`🛑 [uibuilder:apiv2:uibnpmmanage:${params.cmd}] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
                         res.json({ 'success': false, 'result': err.all })
                         return false
                     })
@@ -748,20 +746,19 @@ function adminRouterV2(uib, log) {
                     })
                     .catch((err) => {
                         // log.warn(`[uibuilder:apiv2:uibnpmmanage] Admin API. ERROR Running npm ${params.cmd} for package ${params.package}`, err.stdout)
-                        log.warn(`[uibuilder:apiv2:uibnpmmanage:remove] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+                        log.warn(`⚠️ [uibuilder:apiv2:uibnpmmanage:remove] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
                         res.json({ 'success': false, 'result': err.all })
                         return false
                     })
                 break
             }
             default: {
-                log.error(`[uibuilder:apiv2:uibnpmmanage] Admin API. Command ${params.cmd} is not a valid command. Must be 'install', 'remove' or 'update'.`)
+                log.error(`🛑 [uibuilder:apiv2:uibnpmmanage] Admin API. Command ${params.cmd} is not a valid command. Must be 'install', 'remove' or 'update'.`)
                 res.statusMessage = 'No valid npm command available'
                 res.status(500).end()
                 break
             }
         }
-
     }) // ---- End of npmmanage ---- //
 
     return v2AdminRouter

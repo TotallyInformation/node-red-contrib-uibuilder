@@ -1,5 +1,9 @@
 /* eslint-disable strict, sonarjs/no-duplicate-string, sonarjs/no-duplicated-branches */
 
+/** Node-RED WidgetTypedInputType
+ * @typedef { Array<"bin"|"bool"|"date"|"env"|"flow"|"global"|"json"|"jsonata"|"msg"|"num"|"re"|"str"> } WidgetTypedInputType
+ */
+
 // Isolate this code
 ;(function () {
     'use strict'
@@ -9,251 +13,102 @@
     // RED._debug({topic: 'RED.settings', payload:RED.settings})
 
     const uibuilder = window['uibuilder']
-    // const log = uibuilder.log
+    const log = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName = 'uib-element'
 
-    /** Element Types definitions */
-    const elTypes = {
-        table: {
-            value: 'table',
-            label: 'Simple Table',
-            description: `
-                <p>
-                    A simple but accessible table. <b><a href="./uibuilder/docs/#/elements/tables" target="_blank">Docs</a></b>.
-                </p><p>
-                    Set the input data to an <i>Array of Objects<i>.
-                    Each array entry will be a new row. Each property of the first array entry
-                    will be used for the column names.
-                </p><p>
-                    An Object of Objects can also be used. In that case, the outer object's keys will be
-                    used as row names by adding a <code>data-row-name</code> attribute to each row.
-                </p><p>
-                    Each column in the table has 
-                    <code>data-col-index</code> and <code>data-col-name</code> attributes. 
-                </p>
-            `,
-            allowsParent: true,
-            allowsHead: true,
-            allowsPos: true,
-        },
-        sform: {
-            value: 'sform',
-            label: 'Simple Form',
-            description: `
-                <p>
-                    A simple but accessible Form with inputs and buttons. <b><a href="./uibuilder/docs/#/elements/forms" target="_blank">Docs</a></b>.
-                </p><p>
-                    Set the input data to an <i>Array of Objects<i>.
-                    Each array entry will be a new form input or button.
-                    An Object of Objects can also be used where the outer object is key'd by the ID of the entry.
-                </p><p>
-                    Currently supported properties in the inner objects are: 
-                    <code>type=</code>One of the input types listed below, 
-                    <code>id=</code>Unique HTML identifier, 
-                    <code>label=</code>Label text of the input field or button, 
-                    <code>required=</code>true/false whether a value is required,
-                    <code>value=</code>Optional starting value.
-                </p><p>
-                    Other properties can be provided. These only work with the appropriate input types and are otherwise ignored
-                </p><p>
-                    Available input types are:
-                    button, checkbox, color, date, detetime-local, email, hidden, month, number, password, radio, range, tel, text, time, url, week.
-                    See <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Input" target="_blank">this explanation of the types and properties</a>.
-                </p><p>
-                    Some additional types will be made available in the future: select, combo, file, image, textarea. Auto-complete will also be added eventually.
-                </p><p>
-                    If a button is included, pressing the button will automatically send a message from the client back to Node-RED
-                    All of the form data will be included in that message in <code>msg._ui.form</code>.
-                </p>
-            `,
-            allowsParent: true,
-            allowsHead: true,
-            allowsPos: true,
-        },
-        ul: {
-            value: 'ul',
-            label: 'Unordered List (ul)',
-            description: `
-                <p>
-                    Outputs a simple, accessible, bullet list.  <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
-                </p><p>
-                    Input data should be an array of strings.
-                    An object of key/values can also be used.
-                </p>
-            `,
-            allowsParent: true,
-            allowsHead: true,
-            allowsPos: true,
-        },
-        ol: {
-            value: 'ol',
-            label: 'Ordered List (ol)',
-            description: `
-                <p>
-                    Outputs a simple, accessible, numbered list. <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
-                </p><p>
-                    Input data should be an array of strings.
-                    An object of key/values can also be used.
-                </p>
-            `,
-            allowsParent: true,
-            allowsHead: true,
-            allowsPos: true,
-        },
-        dl: {
-            value: 'dl',
-            label: 'Description List (dl)',
-            description: `
-                <p>
-                    Outputs a simple, accessible, description list. <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
-                </p>
-                <p>
-                    Set the input data to be an Array of Array's. The outer array representing each row 
-                    and the inner array containing at least 2 string entries representing the term/description pair.
-                    Additional entries in the inner array are added as secondary descriptions (<code>dd</code> tags).
-                </p>
-                <p>
-                    You can also use an Array of Objects where each object is a simple key/value pair. Or even an Object of Objects.
-                    Inner structures are catenated into a string separated by commas.
-                </p>
-                <p>
-                    Each entry has a wrapping <code>&lt;div></code> tag containing a term (<code>dt</code>) 
-                    and one or more descriptions (<code>dd</code>).
-                </p>
-            `,
-            allowsParent: true,
-            allowsHead: true,
-            allowsPos: true,
-        },
-        article: {
-            value: 'article',
-            label: 'Text box',
-            description: `
-                <p>
-                    A simple box containing text with an optional heading. <b><a href="./uibuilder/docs/#/elements/other" target="_blank">Docs</a></b>.
-                </p>
-            `,
-            allowsParent: true,
-            allowsHead: true,
-            allowsPos: true,
-        },
-        html: {
-            value: 'html',
-            label: 'HTML',
-            description: /*html*/`
-                <p>
-                    Pass-through HTML from the input data. When sent to the uibuilder node, will be reproduced in your page(s).
-                    Output is wrapped in a <code>div</code> but the optional heading is ignored. 
-                    <b><a href="./uibuilder/docs/#/elements/html" target="_blank">Docs</a></b>.
-                </p>
-                <p>
-                    May be used with the Node-RED core <code>template</code> node.
-                </p>
-                <p>
-                    <b>NOTE</b>: Use with caution, no validity checking is currently done unless the optional
-                    <a href="./uibuilder/docs/#/client-docs/readme?id=_1-dompurify-sanitises-html-to-ensure-safety-and-security" target="_blank">DOMPurify library</a>
-                    is loaded.
-                </p>
-            `,
-            allowsParent: true,
-            allowsHead: false,
-            allowsPos: true,
-        },
-        markdown: {
-            value: 'markdown',
-            label: 'Markdown',
-            description: /*html*/`
-                <p>
-                    Pass-through Markdown from the input data. When sent to the uibuilder node, will be reproduced as HTML in your page(s).
-                    Output is wrapped in a <code>div</code> but the optional heading is ignored.
-                    <b><a href="./uibuilder/docs/#/elements/markdown" target="_blank">Docs</a></b>.
-                </p>
-                <p>
-                    Markdown will not be rendered as HTML unless the optional
-                    <a href="./uibuilder/docs/#/client-docs/readme?id=_2-markdown-it-converts-markdown-markup-into-html" target="_blank">Markdown-IT library</a>
-                    is loaded.
-                </p>
-                <p>
-                    May be used with the Node-RED core <code>template</code> node.
-                </p>
-                <p>
-                    <b>NOTE</b>: Use with caution, no validity checking is currently done unless the optional <a href="./uibuilder/docs/#/client-docs/readme?id=_1-dompurify-sanitises-html-to-ensure-safety-and-security" target="_blank">DOMPurify library</a> is loaded.
-                </p>
-            `,
-            allowsParent: true,
-            allowsHead: false,
-            allowsPos: true,
-        },
-        title: {
-            value: 'title',
-            label: 'Page Title',
-            description: `
-                <p>
-                    Updates the HTML page title and meta description.  <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
-                </p>
-                <p>
-                    Amends the first <code>&lt;h1></code> tag on the page if it exists else adds one at the top of the page.
-                    There should only ever be one H1 tag on a page.
-                </p>
-                <p>
-                    The <b>Parent</b> and <b>HTML ID</b> are ignored in this case
-                </p>
-                <p>
-                    The input data must be a simple string.
-                </p>
-            `,
-            allowsParent: false,
-            allowsHead: false,
-            allowsPos: false,
-        },
-        li: {
-            value: 'li',
-            label: 'Add row to existing ordered or unordered list',
-            description: `
-                <p>
-                    Always add a new row to an existing list. (no replace). <b><a href="./uibuilder/docs/#/elements/lists" target="_blank">Docs</a></b>.
-                </p><p>
-                    Set the <b>Parent</b> to the id of the existing table.
-                </p><p>
-                    Set the input data to a string.
-                </p><p>
-                    Set the <b>Position</b> to "first", "last" or a number.
-                </p>
-            `,
-            allowsParent: true,
-            allowsHead: false,
-            allowsPos: true,
-        },
-        tr: {
-            value: 'tr',
-            label: 'Add row to existing table',
-            description: `
-                <p>
-                    Always add a new row to an existing table (no replace). <b><a href="./uibuilder/docs/#/elements/tables" target="_blank">Docs</a></b>.
-                </p><p>
-                    Set the <b>Parent</b> to the id of the existing table.
-                </p><p>
-                    Set the input data to an <i>Object<i>.
-                    The properties of the object must match the column definitions of the existing table.
-                </p><p>
-                    Set the <b>Position</b> to "first", "last" or a number.
-                </p>
-            `,
-            allowsParent: true,
-            allowsHead: false,
-            allowsPos: true,
-        },
-    }
+    /** Element Types definitions - updated by onEditPrepare->getTypesList API call */
+    let elTypes
 
-    // Standard typed input types for string fields
+    /** Standard typed input types for string fields
+     * @type {WidgetTypedInputType}
+     */
     const stdStrTypes = [
         'msg', 'flow', 'global',
         'str', 'env', 'jsonata', 're',
     ]
     // Standard width for typed input fields
-    const tiWidth = '68.5%'
+    const tiWidth = uibuilder.typedInputWidth
+
+    /** Get the list of available types via API call, updates elTypes
+     * @param {*} node A node instance as seen from the Node-RED Editor
+     */
+    function getTypesList(node) {
+        $.ajax({
+            url: './uibuilder/admin/nourl',
+            method: 'GET',
+            async: false,
+            dataType: 'json',
+            data: {
+                cmd: 'getElements',
+            },
+            beforeSend: function(jqXHR) {
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
+            },
+            success: function(data) {
+                log('[uib-element:onEditPrepare:getElTypes] Data updated successfully', data)
+                elTypes = data
+            },
+        })
+            .fail(function(_jqXHR, textStatus, errorThrown) {
+                console.error( '[uib-element:onEditPrepare:getElTypes] Error ' + textStatus, errorThrown )
+            })
+    }
+
+    function getOneType(elType) {
+        $.ajax({
+            url: './uibuilder/admin/-nourl-',
+            method: 'GET',
+            async: false,
+            dataType: 'json',
+            data: {
+                cmd: 'getOneElement',
+                elType: elType,
+                // @ts-ignore - Current user's browser languages via jQuery extension 
+                languages: $.i18n.languages,
+            },
+            beforeSend: function(jqXHR) {
+                log('[uib-element:getOneType:getEl] Preparing to get el type descr/opts. ', elType, $.i18n.languages)
+                const authTokens = RED.settings.get('auth-tokens')
+                if (authTokens) {
+                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                }
+            },
+            success: function(data) {
+                log('[uib-element:getOneType:getEl] Data retrieved successfully', data)
+                elTypes[elType].description = data.descHtml
+                elTypes[elType].options = data.optsHtml
+            },
+        })
+            .fail(function(_jqXHR, textStatus, errorThrown) {
+                console.error( '[uib-element:getOneType:getEl] Error ' + textStatus, errorThrown )
+            })
+    }
+
+    /** Update advanced settings tab for an element
+     * @param {*} node A node instance as seen from the Node-RED Editor
+     */
+    function advElTab(node) {
+        // node.elementtype
+        const type = $('#node-input-elementtype').val()
+
+        // @ts-ignore - Clone the template and apply to the UI
+        // const docFrag = templ.content.cloneNode(true)
+        // $('#el-tab-conf').append(docFrag)
+        $('#el-tab-conf').html(elTypes[type].options)
+        // Get any required functions for this type from the template (append runs the script tags immediately)
+        // const confFns = window['uibElementConfigFns']
+        // console.log('confFns', confFns.type, confFns)
+        // Re-constitute node.conf properties and values to the conf tab
+        // TODO Deal with select tags
+        Object.keys(node.confData).forEach( conf => {
+            $(`#conf-${type}-${conf}`).val(node.confData[conf])
+        })
+    }
 
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
@@ -266,6 +121,9 @@
             $('#node-input-position').val('last')
             node.position = 'last'
         }
+
+        // Update elTypes
+        getTypesList(node)
 
         // initial checkbox states
         if (!node.passthrough) node.passthrough = false
@@ -280,6 +138,11 @@
             ]
         // On-change of element type, update the info panel
         }).on('change', function() {
+            log('[uib-element:onEditPrepare] Element type changed. ', this.value)
+            // Get the description and adv options HTML, updates elTypes
+            getOneType(this.value)
+            log('[uib-element:onEditPrepare] Element description & adv. opts updated. ', this.value)
+
             // @ts-ignore
             if (elTypes[this.value].description === undefined) elTypes[this.value].description = 'No description available.'
             // @ts-ignore
@@ -373,47 +236,10 @@
             // scrollable: true,
             // collapsible: true,
             onchange: function (tab) {
-                let templ, docFrag
                 $('#el-tabs-content').children().hide()
                 // Populate the element config tab based on type
                 if ( tab.id === 'el-tab-conf') {
-                    const type = $('#node-input-elementtype').val()
-                    switch (type) { // eslint-disable-line sonarjs/no-small-switch
-                        // case 'text': {
-                        //     templ = document.querySelector('#text-template')
-                        //     break
-                        // }
-
-                        // case 'table': {
-                        //     templ = document.querySelector('#table-template')
-                        //     break
-                        // }
-
-                        // case 'list':
-                        // case 'ol':
-                        // case 'ul':
-                        // case 'dl': {
-                        //     templ = document.querySelector('#list-template')
-                        //     break
-                        // }
-
-                        default: {
-                            // templ = document.createElement('template')
-                            templ = document.querySelector('#default-template')
-                            break
-                        }
-                    }
-                    // @ts-ignore - Clone the template and apply to the UI
-                    docFrag = templ.content.cloneNode(true)
-                    $('#el-tab-conf').append(docFrag)
-                    // Get any required functions for this type from the template (append runs the script tags immediately)
-                    // const confFns = window['uibElementConfigFns']
-                    // console.log('confFns', confFns.type, confFns)
-                    // Re-constitute node.conf properties and values to the conf tab
-                    // TODO Deal with select tags
-                    Object.keys(node.confData).forEach( conf => {
-                        $(`#conf-${type}-${conf}`).val(node.confData[conf])
-                    })
+                    advElTab(node)
                 } else {
                     $('#el-tab-conf').empty()
                 }

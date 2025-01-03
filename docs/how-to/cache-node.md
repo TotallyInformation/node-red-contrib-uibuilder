@@ -3,7 +3,7 @@ title: Caching front-end data
 description: |
   This details why you may want to cache data and how to use the cache.
 created: 2022-01-07 22:01:49
-updated: 2024-07-16 19:54:37
+updated: 2025-01-02 17:33:58
 ---
 
 > [!NOTE]
@@ -27,6 +27,11 @@ Because not all web UI's will need caching and others may need multiple data cac
   <img src="./how-to/cache-reference-flow.png" alt="Cache reference flow" title="Typical flow for uibuilder with cache">
   <figcaption>Typical flow for uibuilder with a single cache</figcaption>
 </figure>
+
+> [!TIP]
+> As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance.
+>
+> If your cached messages include these properties, any cache replay events will automatically target the correct client or page.
 
 ## Using caching with a front-end SPA router
 

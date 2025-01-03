@@ -1,36 +1,139 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-09-02 17:52:21
+updated: 2025-01-02 15:52:18
 ---
 
 # Changelog
 
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
-## To Do
+Please see the roadmap in the docs for the backlog of future planned developments.
 
-Please see the roadmap in the docs for the backlog.
+## Compatibility of current release
 
-
-## Current Issues
-
-* In the uibuilder node, advanced settings, if you change the URL (name), the Code Editor URL does NOT change. You have to change it manually. This will be fixed in a future release.
-
-### "Outdated" dependencies (Resolved)
-
-As of v7, all outdated dependencies have been removed or limited to uibuilder development only, not production use.
-
-The following are only used for _**developing**_ UIBUILDER:
-
-* `execa` - restricted to v5. Author sindresorhus decided that everyone HAS to use ESM even though his packages are widely used and he must know that it is often impossible to move from CommonJS without a complete rewrite. Node-RED is so complex, when would that be possible? Very annoying.
-* `@types/node` - restricted to v18 to match Node-RED's current baseline.
+* Servers:
+  * Node-RED: v4+
+  * Node.js: v18+ LTS
+  * Platforms: Linux, Windows, MacOS, Raspberry Pi, Docker, etc.
+* Browsers: 
+  * CSS - 0.12% or above of global usage but not Internet Explorer ([ref.](https://browserslist.dev/?q=Pj0wLjEyJSwgbm90IGllID4gMA%3D%3D)). The uncompiled CSS should work in all current mainstream browsers. The compiled CSS (`uib-brand.min.css`) should work in browsers back to early 2019, possibly before. Enforced by [LightningCSS](https://lightningcss.com/).
+  * JavaScript - ES6+ so should work in all current mainstream browsers. The compiled JS (`uibuilder.min.js`) should work in browsers back to early 2019, possibly before. Enforced by [ESBuild](https://esbuild.github.io/).
 
 ------------
 
 ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.4...main)
 
-Nothing currently.
+<!-- Nothing currently. -->
+
+### 📌 Highlights
+
+* **Any** *Node-RED custom node* can now send a message to a uibuilder client! In your runtime code, add `RED.events.emit('UIBUILDER/send/<url-name>', {payload: 'Hi from my custom node!'})` where `<url-name>` is the URL set in a deployed uibuilder node. The data will be sent to all browser tabs connected to that uibuilder endpoint. Note though that this bypasses any uib-cache node.
+
+* You can now send a message from Node-RED to a connected client from a Function Node! Simply add `RED.util.uib.send('uibname', {....})` to your function code. This will send a message to all connected clients for that uibuilder instance.
+
+* For front-end coders, you now have access to a number of table manipulation functions. Making it very easy to create and manipulate tables in your web pages from simple input data. You can add and remove tables, table rows and add event handlers (e.g. click) to rows or cells.
+
+### General changes
+
+* Added ability to send messages from Node-RED to a connected client from a Function Node. Simply add `RED.util.uib.send('uibname', {....})` to your function code. This will send a message to all connected clients for that uibuilder instance.
+
+* References to `fs-extra` 3rd-party library removed from all nodes & libraries except `libs/fs.js`.
+
+* [Socket](https://docs.socket.dev/docs/socket-for-github) security check tool added to all TotallyInformation GitHub repositories including UIBUILDER. Provides significant supply-chain security and privacy checks.
+
+* All references to node.js's `fs` library now restricted to `libs/fs.js`.
+
+* To help further improve the development of the brand css, [LightningCSS](https://lightningcss.com/) is now used to compile the source CSS. This ensures that the CSS is not using too new CSS options and improves the performance of the CSS. Additionally, stylelint is now used to check the CSS for errors and warnings.
+* Now using LightningCSS to compile source CSS and ensure not using too new CSS options.
+
+* Some unused NodeJS files have been removed.
+
+* `@totallyinformation/ti-common-event-handler` dependency package now removed completely. `RED.events` is used throughout, all uibuilder events start with `UIBUILDER/`.
+
+* To make it easier to create new elements in the future. Moved no-code element runtime processing to a common folder, `nodes/elements`. Added Editor API's and moved processing out of the `uib-element` runtime to separate module. Also moved element description and advanced options HTML to `nodes/elements/en-US`.
+
+* The common code and css files in the `resources` folder (`ti-common.js` and `ti-common.css`) have been renamed to `editor-common.js` and `editor-common.css` respectively. This is to make it clearer that these are used in the Node-RED editor only.
+
+* The `uib-plugin` library now renamed to `uib-editor-plugin` for clarity.
+
+* New `uib-runtime-plugin` library added. Now manages most of the additions to `RED.util.uib` which contains functions made available to Node-RED function nodes.
+
+### `uib-brand.css` styles & variables
+
+* **NEW** Utility classes
+  * `square` - Make something square or rectangular.
+  * `round` - Make something circular, oval or pill-shaped
+  
+    Each of these are controlled by simple CSS variable overrides. See the [live file](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/front-end/uib-brand.css) for details on use.
+
+* Core font now changed to match the uib-brand.css. No more Google fonts! This should make the UI more consistent and faster to load.
+* Now using LightningCSS to compile source CSS and ensure not using too new CSS options.
+* Added `text-wrap: balance` to `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `heading` and added `text-wrap: pretty` to `p`, `li`, `figcaption` - these make the elements look a little nicer when text is wrapping.
+* Added `container-type: inline-size` to `header`, `footer`, `main`, `section`, `article`. This is in preparation for the future use of [Container Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries) which are a much more flexible alternative to [Media Queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries) for controlling responsive layout breakpoints. Container Queries are still very new and not yet supported widely enough to use.
+* Added some additional "reset" tweaks for improved visual style.
+
+### Node: `uibuilder`
+
+* Node-RED Editor:
+  * **FIXED** When a URL is changed, the IDE editor url is now updated automatically. This is particularly important when copying/pasting a uibuilder node.
+
+#### Front-end code templates
+
+* Removed optional link to legacy CSS style library.
+
+### Front-end library: `uibuilder.js`
+
+* **NEW FUNCTIONS**
+
+  * `buildHtmlTable` - Returns HTML of a table created from the input data.
+  * `createTable` - Uses `buildTable` to create a new table and attaches to a parent element in the DOM.
+  * `tblAddRow` - adds a new row to an existing table.
+  * `tblRemoveRow` - removes a row from an existing table.
+  * `tblAddListener` - adds row/cell listeners to the 1st tbody of a table. Will send a msg back to Node-RED when used with uibuilder.
+
+* **Updated the front-end `index.html` templates to highlight that the uibuilder client library MUST be included.** After seeing several people take it out.
+
+* Added `uibuilder:propertyChanged:${prop}` custom event when a managed variable changed. Has the same event.details as the 'uibuilder:propertyChanged' event. This event can be used instead of the `uibuilder.onChange('prop', ....)` function if preferred.
+
+* Updated `uibuilder:propertyChanged` and `uibuilder:propertyChanged:${prop}` custom events to include `oldValue` as one of the event details. Will be `undefined` if the property is new.
+
+* Updated `uibuilder.eventSend` function to include `msg._ui.dataset` which contains any `data-*` attributes from the element that triggered the event.
+
+### Front-end library: `ui.js`
+
+* **NEW METHODS**
+  * `buildHtmlTable` - Returns HTML of a table created from the input data.
+  * `createTable` - Uses `buildTable` to create a new table and attaches to a parent element in the DOM.
+  * `tblAddDataRow` - adds a new row to an existing table.
+  * `tblAddListener` - adds row/cell listeners to the 1st tbody of a table. Will send a msg back to Node-RED when used with uibuilder. Defaults to adding a `click` listener.
+  * `tblGetCellName` - Returns a standardised table cell name. Either from a `data-col-name` attribute or a numeric reference like `C003`.
+* Added `data-col-reference` attribute to created tables - on the `thead` row that actually defines the columns. Making it easier to get a reliable column reference later.
+
+### Front-end components: `uib-var`
+
+* Re-engineered to match the latest standards in the [TotallyInformation web-components library](https://wc.totallyinformation.net).
+* Added `ready` event
+* Removed shadow dom
+* Error messages improved
+* Add `source` prop when reporting change back to Node-RED
+
+### Documentation changes
+
+* Improved documentation for uibuilder's event handling and better linked that to how to create custom nodes that work with uibuilder.
+* Improved documentation of the uibuilder extensions for the `RED.util.uib` object for use in Function nodes.
+* Documentation for the new table handing functions in the client library.
+
+### Example flow updates
+
+* All examples showing the use of the old `uibuilderfe` client library have been removed.
+* Several of the example flows have been updated to show the latest features.
+
+### Runtime library changes
+
+#### `web.js`
+
+* Improved error checking and reporting in `serveVendorPackages` when mounting installed libraries. [Issue #428](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/428).
 
 ## [v7.0.4](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.4...v7.0.3)
 
@@ -192,6 +295,15 @@ Most of these changes will *not* impact most people but you should check through
   * New events are now available using `RED.events` that track the setup of uibuilder, the setup of each uibuilder node instance and node instance url renames.
 
   This allows 3rd-party extensions to UIBUILDER to be more easily created. The events pass references to all of the information you might need. [New documentation also now available for contributors](dev/3rd-party-extensions.md) showing the various ways to easily build new content and features through custom nodes and web components.
+
+### "Outdated" dependencies (Resolved)
+
+As of v7, all outdated dependencies have been removed or limited to uibuilder development only, not production use.
+
+The following are only used for _**developing**_ UIBUILDER:
+
+* `execa` - restricted to v5. Author sindresorhus decided that everyone HAS to use ESM even though his packages are widely used and he must know that it is often impossible to move from CommonJS without a complete rewrite. Node-RED is so complex, when would that be possible? Very annoying.
+* `@types/node` - restricted to v18 to match Node-RED's current baseline.
 
 ### General Changes
 

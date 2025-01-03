@@ -1,14 +1,23 @@
-/** Default Styles for uibuilder - Light & Dark options
+/** Default Styles for uibuilder - Light & Dark options ...
  *
  * TODO: Add darker/lighter shades for variant colours for headers, etc.
  *
+ * Recommended @media breakpoints:
+ * Tablet:        48em @ 16pt   = 768px
+ * Tablet Wide:   62em @ 16pt   = 992px
+ *
+ * Mobile Small:  30em @ 16pt   = 480px
+ * Mobile Medium: 37.5em @ 16pt = 600px
+ * Mobile Large:  48em @ 16pt   = 768px
+ *
+ * 
  * https://css-tricks.com/a-complete-guide-to-custom-properties/ for details on using custom css properties
  * https://una.im/css-color-theming/ for more on color theory calculations
  * https://web.dev/building-a-color-scheme/ is the basis for this style
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 1.33 2024-03-28
+ * @version: 2024-12-30
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -40,9 +49,10 @@
      *    window.getComputedStyle(this, null).getPropertyValue('--uib-css') === 'uib-brand'
      * NOTE: no space between : and text!
      */
-    --uib-css:uib-brand;
+    --uib-css: uib-brand;
     /* Sans-serif is much easier to read on-screen */
-    --font-family: sans-serif;
+    /* --font-family: sans-serif; */
+    --font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 
     --brand-hue: 200;
     --text-hue: var(--brand-hue);
@@ -479,20 +489,26 @@
     }
 }
 html {
-    line-height: 1.5;
+    line-height: 1.5; /* Accessible line-height */
     font-size: 100%;
     background-color: var(--surface1);
     color: var(--text2);
     accent-color: var(--brand);
 }
+
 body {
     margin-left: var(--base-margin);
     margin-right: var(--base-margin);
     /* padding: 0.3rem; */
     font-family: var(--font-family);
+    -webkit-font-smoothing: antialiased; /* Improve text rendering */
 }
 h1, h2, h3, h4, h5, h6, heading {
-    line-height: 1.3;
+    line-height: calc(1em + 0.5rem); /* dynamic heights for headings */
+    text-wrap: balance;
+}
+p, li, figcaption {
+    text-wrap: pretty;
 }
 img, picture, video, canvas, svg {
     /* display: block; */
@@ -553,6 +569,10 @@ blockquote {
 code {
     font-size: 120%;
 }
+header, footer, main, section, article {
+    /* default prep for container queries */
+    container-type: inline-size;
+}
 /* This lets us use an article like a card display */
 article {
     max-width: var(--max-width);
@@ -607,6 +627,7 @@ table {
     border: 1px solid var(--text3);
     margin-top: 1rem;
     margin-bottom: 1rem;
+    font-variant-numeric: tabular-nums; /* OpenType: better alignment of numbers */
 }
 thead th, thead td {
     color: var(--text2);
@@ -727,8 +748,8 @@ form > label {
 form > label:focus-within {
     font-weight: bold;
 }
-/* Small screen */
-@media all and (max-width: 600px) {
+/* Small screen (37.5em @ 16pt is about 600px) */
+@media all and (max-width: 37.5em) {
     form, form * {
         display:block;
         width:100%;
@@ -905,6 +926,30 @@ button.compact {
 }
 .text-smaller {
     font-size: smaller;
+}
+
+/** These are useful for things like buttons.
+ * Default to 5em in size but are easily customised
+ * using CSS variables.
+ * @example
+ *   <button class="square" style="--sq: 10em;">Square</button>
+ *   <button class="round" style="--dia: 10em;">Round</button>
+ *   <button class="square" style="--sq: 10em;--sqw: 20em;">Rectangle</button>
+ *   <button class="round" style="--dia: 10em;--roundw: 20em;">Oval</button>
+ */
+/* Make something square or rectangular. */
+.square {
+    --sq: 5em;
+    width: var(--sqw, var(--sq));
+    height: var(--sqh, var(--sq));
+    border-radius: calc(var(--sq) * 0.1);
+}
+/* Make something circular, oval or pill-shaped */
+.round {
+    --dia: 5em;
+    width: var(--roundw, var(--dia));
+    height: var(--roundh, var(--dia));
+    border-radius: var(--roundb, var(--dia));
 }
 
 /* Apply to headings where you want a sub-title */

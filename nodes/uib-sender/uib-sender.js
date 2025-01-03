@@ -27,8 +27,6 @@
 
 //#region ----- Module level variables ---- //
 
-const tiEvents = require('@totallyinformation/ti-common-event-handler')
-
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
  */
@@ -45,45 +43,20 @@ const mod = {
 
 //#region ----- Module-level support functions ----- //
 
-/** 3) Run whenever a node instance receives a new input msg
- * NOTE: `this` context is still the parent (nodeInstance).
- * See https://nodered.org/blog/2019/09/20/node-done
- * @param {object} msg The msg object received.
- * @param {Function} send Per msg send function, node-red v1+
- * @param {Function} done Per msg finish function, node-red v1+
+/** 1) Complete module definition for our Node. This is where things actually start.
+ * @param {runtimeRED} RED The Node-RED runtime object
  */
-function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
+function EventOut(RED) {
     // As a module-level named function, it will inherit `mod` and other module-level variables
 
-    // If you need it - or just use mod.RED if you prefer:
-    // const RED = mod.RED
+    // Save a reference to the RED runtime for convenience
+    mod.RED = RED
 
-    if (this.topic !== '') msg.topic = this.topic
-
-    // NOTE: Several ways to do this.
-    //  1) Most direct would be to directly ref the uibuilder node via RED.nodes - but this is tight coupling
-    //  2) 2nd most direct would be to use global uibsockets ref - but this is also fairly tight coupling
-    //  3) Least coupling is to use the TI events module or RED.events
-
-    if ( mod.useEvents === false && global['totallyInformationShared'] ) {
-        // TODO DEPRECATE this part
-        const sockets = global['totallyInformationShared'].uibsockets
-        msg._fromSender = true
-        if ( global['totallyInformationShared'].uibsockets ) {
-            sockets.sendToFe(msg, this, sockets.uib.ioChannels.server)
-        }
-    } else {
-        // Use events to send msg to uibuilder front-end.
-        const eventName = `node-red-contrib-uibuilder/${this.url}`
-        tiEvents.emit( eventName, { ...msg, ...{ _uib: { originator: this.id } } } )
-    }
-
-    // If passthrough is enabled, send the msg
-    if ( this.passthrough === true ) send(msg)
-    // We are done
-    done()
-
-} // ----- end of inputMsgHandler ----- //
+    /** Register a new instance of the specified node type (2)
+     *
+     */
+    RED.nodes.registerType(mod.nodeName, nodeInstance)
+}
 
 /** 2) This is run when an actual instance of our node is committed to a flow
  * type {function(this:runtimeNode&senderNode, runtimeNodeConfig & senderNode):void}
@@ -112,11 +85,13 @@ function nodeInstance(config) {
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)
 
+    const eventSender = (msg) => {
+        this.send(msg)
+    }
+
     /** If returns allowed, set up the return event listener */
     if ( this.return === true ) {
-        tiEvents.on(`node-red-contrib-uibuilder/return/${this.id}`, (msg) => {
-            this.send(msg)
-        })
+        RED.events.on(`UIBUILDER/return-to-sender/${this.id}`, eventSender)
     }
 
     /** Put things here if you need to do anything when a node instance is removed
@@ -126,7 +101,7 @@ function nodeInstance(config) {
      */
     this.on('close', (removed, done) => {
         // Cancel any event listeners for this node
-        tiEvents.removeAllListeners(`node-red-contrib-uibuilder/return/${this.id}`)
+        RED.events.off(`UIBUILDER/return-to-sender/${this.id}`, eventSender)
 
         done()
     })
@@ -139,22 +114,47 @@ function nodeInstance(config) {
      */
 }
 
-//#endregion ----- Module-level support functions ----- //
-
-/** 1) Complete module definition for our Node. This is where things actually start.
- * @param {runtimeRED} RED The Node-RED runtime object
+/** 3) Run whenever a node instance receives a new input msg
+ * NOTE: `this` context is still the parent (nodeInstance).
+ * See https://nodered.org/blog/2019/09/20/node-done
+ * @param {object} msg The msg object received.
+ * @param {Function} send Per msg send function, node-red v1+
+ * @param {Function} done Per msg finish function, node-red v1+
  */
-function EventOut(RED) {
+function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
     // As a module-level named function, it will inherit `mod` and other module-level variables
 
-    // Save a reference to the RED runtime for convenience
-    mod.RED = RED
+    // If you need it - or just use mod.RED if you prefer:
+    const RED = mod.RED
 
-    /** Register a new instance of the specified node type (2)
-     *
-     */
-    RED.nodes.registerType(mod.nodeName, nodeInstance)
-}
+    if (this.topic !== '') msg.topic = this.topic
+
+    // NOTE: Several ways to do this.
+    //  1) Most direct would be to directly ref the uibuilder node via RED.nodes - but this is tight coupling
+    //  2) 2nd most direct would be to use global uibsockets ref - but this is also fairly tight coupling
+    //  3) Least coupling is to use RED.events
+
+    if ( mod.useEvents === false && global['totallyInformationShared'] ) {
+        this.warn('⚠️ [uib-sender] Using deprecated message handler - please let @totallyinformation know')
+        // TODO DEPRECATE this part
+        const sockets = global['totallyInformationShared'].uibsockets
+        msg._fromSender = true
+        if ( global['totallyInformationShared'].uibsockets ) {
+            sockets.sendToFe(msg, this, sockets.uib.ioChannels.server)
+        }
+    } else {
+        // Use events to send msg to uibuilder front-end.
+        const eventName = `UIBUILDER/send/${this.url}`
+        RED.events.emit( eventName, { ...msg, ...{ _uib: { originator: this.id } } } )
+    }
+
+    // If passthrough is enabled, send the msg
+    if ( this.passthrough === true ) send(msg)
+    // We are done
+    done()
+} // ----- end of inputMsgHandler ----- //
+
+//#endregion ----- Module-level support functions ----- //
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = EventOut
