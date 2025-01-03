@@ -170,11 +170,13 @@ const Ui = class Ui2 {
       Ui2.log("trace", `Ui:_uiAdd:components-forEach:${i}`, "Component to add: ", compToAdd)();
       let newEl;
       switch (compToAdd.type) {
+        // If trying to insert raw html, wrap in a div
         case "html": {
           compToAdd.ns = "html";
           newEl = Ui2.doc.createElement("div");
           break;
         }
+        // If trying to insert raw svg, need to create in namespace
         case "svg": {
           compToAdd.ns = "svg";
           newEl = Ui2.doc.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -435,11 +437,13 @@ const Ui = class Ui2 {
       }
       let newEl;
       switch (compToReplace.type) {
+        // If trying to insert raw html, wrap in a div
         case "html": {
           compToReplace.ns = "html";
           newEl = Ui2.doc.createElement("div");
           break;
         }
+        // If trying to insert raw svg, need to create in namespace
         case "svg": {
           compToReplace.ns = "svg";
           newEl = Ui2.doc.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -1185,7 +1189,7 @@ const Ui = class Ui2 {
     const thead = Ui2.doc.createElement("thead");
     const headerRow = Ui2.doc.createElement("tr");
     if (!opts.cols) {
-      if (!data) throw new Error("[ui.js:buildHtmlTable] When no opts.cols is provided, data must be provided");
+      if (data.length < 1) throw new Error("[ui.js:buildHtmlTable] When no opts.cols is provided, data must contain at least 1 row");
       const hasName = Object.prototype.toString.apply(data[0]) !== "[object Array]";
       headerRow.dataset.colReference = "";
       opts.cols = [];
@@ -1401,6 +1405,10 @@ const Ui = class Ui2 {
     let cols = tblEl.querySelector("tr[data-col-reference]")?.children;
     if (!cols) cols = tblEl.querySelector("thead>tr:first-of-type")?.children;
     if (!cols) cols = tblEl.querySelector("tr:first-of-type")?.children;
+    if (!cols) {
+      Ui2.log(1, "Ui:tblGetColMeta", "No columns found in table")();
+      return [];
+    }
     const colData = [];
     let cellEl;
     for (cellEl of cols) {

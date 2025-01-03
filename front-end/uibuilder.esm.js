@@ -206,11 +206,13 @@ var require_ui = __commonJS({
           _a2.log("trace", `Ui:_uiAdd:components-forEach:${i}`, "Component to add: ", compToAdd)();
           let newEl;
           switch (compToAdd.type) {
+            // If trying to insert raw html, wrap in a div
             case "html": {
               compToAdd.ns = "html";
               newEl = _a2.doc.createElement("div");
               break;
             }
+            // If trying to insert raw svg, need to create in namespace
             case "svg": {
               compToAdd.ns = "svg";
               newEl = _a2.doc.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -471,11 +473,13 @@ var require_ui = __commonJS({
           }
           let newEl;
           switch (compToReplace.type) {
+            // If trying to insert raw html, wrap in a div
             case "html": {
               compToReplace.ns = "html";
               newEl = _a2.doc.createElement("div");
               break;
             }
+            // If trying to insert raw svg, need to create in namespace
             case "svg": {
               compToReplace.ns = "svg";
               newEl = _a2.doc.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -1221,7 +1225,7 @@ var require_ui = __commonJS({
         const thead = _a2.doc.createElement("thead");
         const headerRow = _a2.doc.createElement("tr");
         if (!opts.cols) {
-          if (!data) throw new Error("[ui.js:buildHtmlTable] When no opts.cols is provided, data must be provided");
+          if (data.length < 1) throw new Error("[ui.js:buildHtmlTable] When no opts.cols is provided, data must contain at least 1 row");
           const hasName = Object.prototype.toString.apply(data[0]) !== "[object Array]";
           headerRow.dataset.colReference = "";
           opts.cols = [];
@@ -1437,6 +1441,10 @@ var require_ui = __commonJS({
         let cols = tblEl.querySelector("tr[data-col-reference]")?.children;
         if (!cols) cols = tblEl.querySelector("thead>tr:first-of-type")?.children;
         if (!cols) cols = tblEl.querySelector("tr:first-of-type")?.children;
+        if (!cols) {
+          _a2.log(1, "Ui:tblGetColMeta", "No columns found in table")();
+          return [];
+        }
         const colData = [];
         let cellEl;
         for (cellEl of cols) {
@@ -4944,10 +4952,12 @@ var UibVar = class extends HTMLElement {
   // Runs when an instance is removed from the DOM
   disconnectedCallback() {
     if (__privateGet(this, _varCb)) this.uibuilder.cancelChange(__privateGet(this, _variable), __privateGet(this, _varCb));
-    if (__privateGet(this, _topicCb)) this.uibuilder.cancelTopic(__privateGet(this, _topic), __privateGet(this, _topicCb));
-    Object.keys(__privateGet(this, _topicCb)).forEach((topic) => {
-      this.uibuilder.cancelTopic(topic, __privateGet(this, _topicCb)[topic]);
-    });
+    if (__privateGet(this, _topicCb)) {
+      this.uibuilder.cancelTopic(__privateGet(this, _topic), __privateGet(this, _topicCb));
+      Object.keys(__privateGet(this, _topicCb)).forEach((topic) => {
+        this.uibuilder.cancelTopic(topic, __privateGet(this, _topicCb)[topic]);
+      });
+    }
     this._event("disconnected");
   }
   /** Handle watched attributes
@@ -5168,7 +5178,7 @@ _varCb = new WeakMap();
 _topic = new WeakMap();
 _topicCb = new WeakMap();
 /** Component version */
-__publicField(UibVar, "version", "2024-10-04");
+__publicField(UibVar, "version", "2025-01-03");
 /** Holds a count of how many instances of this component are on the page */
 __publicField(UibVar, "_iCount", 0);
 var uib_var_default = UibVar;
@@ -7224,11 +7234,13 @@ var Uib = (_a = class {
     this.set("msgsCtrlReceived", ++this.msgsCtrlReceived);
     log("trace", "Uib:ioSetup:_ctrlMsgFromServer", `Channel '${this._ioChannels.control}'. Received control msg #${this.msgsCtrlReceived}`, receivedCtrlMsg)();
     switch (receivedCtrlMsg.uibuilderCtrl) {
+      // Node-RED is shutting down
       case "shutdown": {
         log("info", `Uib:ioSetup:${this._ioChannels.control}`, '\u274C Received "shutdown" from server')();
         this.set("serverShutdown", void 0);
         break;
       }
+      /** We are connected to the server - 1st msg from server */
       case "client connect": {
         log("trace", `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server', receivedCtrlMsg)();
         log("info", `Uib:ioSetup:${this._ioChannels.control}`, `\u2705 Server connected. Version: ${receivedCtrlMsg.version}
@@ -7242,6 +7254,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         this.maxHttpBufferSize = receivedCtrlMsg.maxHttpBufferSize;
         break;
       }
+      // We requested this page's metadata from the server using getPageMeta() - this handles the response
       case "get page meta": {
         this.set("pageMeta", receivedCtrlMsg.payload);
         break;
@@ -7398,6 +7411,11 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     const quiet = msg._uib.quiet ?? false;
     let response, info;
     switch (cmd) {
+      // case 'elementIsVisible': { // temporarily deprecated
+      //     response = this.elementIsVisible(prop)
+      //     // info = `Element "${prop}" ${response ? 'is visible' : 'is not visible'}`
+      //     break
+      // }
       case "elementExists": {
         response = this.elementExists(prop, false);
         info = `Element "${prop}" ${response ? "exists" : "does not exist"}`;

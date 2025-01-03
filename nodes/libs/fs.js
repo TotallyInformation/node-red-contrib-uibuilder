@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 /** Manage uibuilder server files
  *
- * Copyright (c) 2023-2024 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2025 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -92,7 +92,7 @@ class UibFs {
 
         this.RED = uib.RED
         this.uib = uib
-        this.log = log = uib.RED.log
+        this.log = uib.RED.log
 
         this.log.trace('[uibuilder:fs.js:setup] Setup completed', this.uib)
     } // ---- End of setup ---- //
@@ -712,7 +712,6 @@ class UibFs {
     writeJson = fsextra.writeJson
 
     //#endregion ---- ---- ----
-
 } // ----- End of UibPackages ----- //
 
 /** Singleton model. Only 1 instance of UibWeb should ever exist.

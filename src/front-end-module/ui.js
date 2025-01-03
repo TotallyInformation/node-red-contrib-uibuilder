@@ -5,7 +5,7 @@
   Author: Julian Knight (Totally Information), March 2023
 
   License: Apache 2.0
-  Copyright (c) 2022-2024 Julian Knight (Totally Information)
+  Copyright (c) 2022-2025 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -1529,7 +1529,7 @@ const Ui = class Ui {
 
         if (!opts.cols) { // Take the columns from the 1st row of provided data
             // We have to have data
-            if (!data) throw new Error('[ui.js:buildHtmlTable] When no opts.cols is provided, data must be provided')
+            if (data.length < 1) throw new Error('[ui.js:buildHtmlTable] When no opts.cols is provided, data must contain at least 1 row')
 
             const hasName = Object.prototype.toString.apply(data[0]) !== '[object Array]'
 
@@ -1819,6 +1819,11 @@ const Ui = class Ui {
         let cols = tblEl.querySelector('tr[data-col-reference]')?.children
         if (!cols) cols = tblEl.querySelector('thead>tr:first-of-type')?.children
         if (!cols) cols = tblEl.querySelector('tr:first-of-type')?.children
+
+        if (!cols) {
+            Ui.log(1, 'Ui:tblGetColMeta', 'No columns found in table')()
+            return []
+        }
 
         const colData = []
 

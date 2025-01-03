@@ -3,7 +3,7 @@
  * Version: See component version
  */
 /*
-  Copyright (c) 2023-2024 Julian Knight (Totally Information)
+  Copyright (c) 2023-2025 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 
 class UibVar extends HTMLElement {
     /** Component version */
-    static version = '2024-10-04'
+    static version = '2025-01-03'
 
     //#region --- Class Properties ---
 
@@ -157,11 +157,13 @@ class UibVar extends HTMLElement {
     disconnectedCallback() {
         // Stop any previous variable or topic settings
         if (this.#varCb) this.uibuilder.cancelChange(this.#variable, this.#varCb)
-        if (this.#topicCb) this.uibuilder.cancelTopic(this.#topic, this.#topicCb)
+        if (this.#topicCb) {
+            this.uibuilder.cancelTopic(this.#topic, this.#topicCb)
 
-        Object.keys(this.#topicCb).forEach( topic => {
-            this.uibuilder.cancelTopic(topic, this.#topicCb[topic])
-        })
+            Object.keys(this.#topicCb).forEach( topic => {
+                this.uibuilder.cancelTopic(topic, this.#topicCb[topic])
+            })
+        }
 
         // Keep at end. Let everyone know that an instance of the component has been disconnected
         this._event('disconnected')
