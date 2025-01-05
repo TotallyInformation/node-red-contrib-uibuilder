@@ -19,7 +19,7 @@ var require_ui = __commonJS({
        */
       constructor(win, extLog, jsonHighlight) {
         //#region --- Class variables ---
-        __publicField(this, "version", "7.1.0-src");
+        __publicField(this, "version", "7.2.0-src");
         // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
         __publicField(this, "sanitiseExtraTags", ["uib-var"]);
         __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);

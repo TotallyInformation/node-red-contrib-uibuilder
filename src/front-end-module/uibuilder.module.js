@@ -36,7 +36,7 @@ import UibVar from '../components/uib-var'
 import UibMeta from '../components/uib-meta'
 import ApplyTemplate from '../components/apply-template'
 
-const version = '7.1.0-src'
+const version = '7.2.0-src'
 
 //#region --- Module-level utility functions --- //
 
