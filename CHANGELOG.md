@@ -26,6 +26,11 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 <!-- Nothing currently. -->
 
+## Front-end library: `ui.js`
+
+* **UPDATED FUNCTIONS**
+  * `applyTemplate` - Now has 3 modes of operation. `insert` appends the template as the 1ST CHILD of the target. `replace` replaces all of the child content of the target. `wrap` puts the targets previous content into the 1ST SLOT of the template (if present).
+
 ## [v7.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...v7.0.4)
 
 ### 📌 Highlights
