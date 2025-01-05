@@ -622,43 +622,65 @@ var require_ui = __commonJS({
         if (!Array.isArray(classNames)) classNames = [classNames];
         if (el) el.classList.add(...classNames);
       }
-      // TODO Add ability to change slot content ...
       /** Apply a source template tag to a target html element
        * NOTES:
-       * - styles in ALL templates are accessible to all templates.
+       * - Any attributes are only applied to the 1ST ELEMENT of the template content. Use a wrapper div if you need to apply to multiple elements.
+       * - When using 'wrap' mode, the target content is placed into the template's 1ST <slot> only (if present).
+       * - styles in ALL templates are accessible to all templates & impact the whole page.
        * - scripts in templates are run AT TIME OF APPLICATION (so may run multiple times).
        * - scripts in templates are applied in order of application, so variables may not yet exist if defined in subsequent templates
        * @param {string} sourceId The HTML ID of the source element
        * @param {string} targetId The HTML ID of the target element
        * @param {object} config Configuration options
-       * @param {boolean=} config.onceOnly If true, the source will be adopted (the source is moved)
-       * @param {object=} config.attributes A set of key:value pairs that will be applied as attributes to the target
+       *   @param {boolean=} config.onceOnly   If true, the source will be adopted (the source is moved)
+       *   @param {object=}  config.attributes A set of key:value pairs that will be applied as attributes to the 1ST ELEMENT ONLY of the target
+       *   @param {'insert'|'replace'|'wrap'}  config.mode How to apply the template. Default is 'insert'. 'replace' will replace the targets innerHTML. 'wrap' is like 'replace' but will put any target content into the template's 1ST <slot> (if present).
        */
       applyTemplate(sourceId, targetId, config) {
-        if (!config) config = { onceOnly: false };
+        if (!config) config = {};
+        if (!config.onlyOnce) config.onlyOnce = false;
+        if (!config.mode) config.mode = "insert";
         const template = _a2.doc.getElementById(sourceId);
+        if (!template || template.tagName !== "TEMPLATE") {
+          _a2.log("error", "Ui:applyTemplate", `Source must be a <template>. id='${sourceId}'`)();
+          return;
+        }
         const target = _a2.doc.getElementById(targetId);
-        if (template && target) {
-          let content;
-          try {
-            if (config.onceOnly !== true) content = _a2.doc.importNode(template.content, true);
-            else content = _a2.doc.adoptNode(template.content);
-          } catch (e) {
-            _a2.log("error", "Ui:applyTemplate", `Source must be a <template>. id='${sourceId}'`)();
-            return;
+        if (!target) {
+          _a2.log("error", "Ui:applyTemplate", `Target not found: id='${targetId}'`)();
+          return;
+        }
+        let targetContent = target.innerHTML ?? "";
+        if (targetContent && config.mode === "replace") {
+          _a2.log("warn", "Ui:applyTemplate", `Target element is not empty, content is replaced. id='${targetId}'`)();
+        }
+        let templateContent;
+        if (config.onceOnly === true) templateContent = _a2.doc.adoptNode(template.content);
+        else templateContent = _a2.doc.importNode(template.content, true);
+        if (templateContent) {
+          if (config.attributes) {
+            const el = templateContent.firstElementChild;
+            Object.keys(config.attributes).forEach((attrib) => {
+              el.setAttribute(attrib, config.attributes[attrib]);
+            });
           }
-          if (content) {
-            if (config.attributes) {
-              const el = content.firstElementChild;
-              Object.keys(config.attributes).forEach((attrib) => {
-                el.setAttribute(attrib, config.attributes[attrib]);
-              });
+          if (config.mode === "insert") {
+            target.appendChild(templateContent);
+          } else if (config.mode === "replace") {
+            target.innerHTML = "";
+            target.appendChild(templateContent);
+          } else if (config.mode === "wrap") {
+            target.innerHTML = "";
+            target.appendChild(templateContent);
+            if (targetContent) {
+              const slot = target.getElementsByTagName("slot");
+              if (slot.length > 0) {
+                slot[0].innerHTML = targetContent;
+              }
             }
-            target.appendChild(content);
           }
         } else {
-          if (!template) _a2.log("error", "Ui:applyTemplate", `Source not found: id='${sourceId}'`)();
-          if (!target) _a2.log("error", "Ui:applyTemplate", `Target not found: id='${targetId}'`)();
+          _a2.log("warn", "Ui:applyTemplate", `No valid content found in template`)();
         }
       }
       /** Converts markdown text input to HTML if the Markdown-IT library is loaded

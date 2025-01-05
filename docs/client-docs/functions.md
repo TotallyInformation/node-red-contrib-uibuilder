@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2025-01-02 17:29:12
+updated: 2025-01-05 16:14:45
 ---
 
 Functions accessible in client-side user code.
@@ -282,7 +282,7 @@ For functions with no descriptions, please refer to the code. In general, these 
 
 ### `applyTemplate(sourceId, targetId, config)` - Apply template element content to the page :id=applyTemplate
 
-This takes HTML (including styles and scripts) from a `<template>` tag. Templates are not active parts of the page but can be applied to a page, potentially multiple times. Great if you have some standard content that you might need to dynamically add to the page (a new list entry or table row for example).
+This takes HTML (including styles and scripts) from a `<template>` tag. Templates are not active parts of the page but can be applied to a page using a script, potentially multiple times. Great if you have some standard content that you might need to dynamically add to the page (a new list entry or table row for example).
 
 `sourceId` (required) must be the HTML id attribute value of a `<template>` tag on-page.
 
@@ -291,12 +291,17 @@ This takes HTML (including styles and scripts) from a `<template>` tag. Template
 `config` (optional) is an object with 2 possible properties:
 
 * `config.onceOnly` (optional) if set to `true`, the contents of the template will be consumed and can not be re-used. Otherwise, the template may be reused as often as needed.
-* `config.attributes` (optional) if provided, must be an object containing attribute-name:value pairs. These will be applied to the **first child element** of the template allowing any attribute (e.g. `id`, `class`, etc) to be set.
+* `config.attributes` (optional) if provided, must be an object containing attribute-name:value pairs. These will be applied to the **first child element only** of the template allowing any attribute (e.g. `id`, `class`, etc) to be set. Wrap your template content in a `<div>` or similar if you need attributes to be inherited by the rest of the template.
+* `config.mode` `{'insert'|'replace'|'wrap'}` Defines how to apply the template. *Default is 'insert'*.
+  
+  * `insert` (default) will *append* the template content to the end of any existing child elements of the target element.
+  * `replace` will *replace* the target element's content with the template content. Any previous target content will be lost.
+  * `wrap` will replace the target element with the template content but will also move the target element's previous content into the template's 1st `<slot>` if present. If no `<slot>` is present, the target previous content will be lost.
 
 > [!NOTE]
 > If the template contains `<style>` content, this becomes global to the page once it has been applied once.
 >
-> If the template contains `<script>` content, this is **run every time the template is applied**. So make sure you wrap any code in a test that will prevent it from re-running if that is important.
+> If the template contains `<script>` content, this is **run every time the template is applied**. So make sure you wrap any code in a test that will prevent it from re-running if that is important. Scripts are run in order of appearance and order of application.
 
 See the Node-RED example library "Dynamic SVG Example" flow for an example using this function.
 
