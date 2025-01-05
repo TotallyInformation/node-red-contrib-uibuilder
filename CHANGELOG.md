@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2025-01-02 15:52:18
+updated: 2025-01-03 20:13:07
 ---
 
 # Changelog
@@ -22,9 +22,11 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.4...main)
+## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main)
 
 <!-- Nothing currently. -->
+
+## [v7.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...v7.0.4)
 
 ### 📌 Highlights
 
@@ -106,6 +108,7 @@ Please see the roadmap in the docs for the backlog of future planned development
   * `buildHtmlTable` - Returns HTML of a table created from the input data.
   * `createTable` - Uses `buildTable` to create a new table and attaches to a parent element in the DOM.
   * `tblAddDataRow` - adds a new row to an existing table.
+  * `tblRemoveRow` - removes a row from an existing table.
   * `tblAddListener` - adds row/cell listeners to the 1st tbody of a table. Will send a msg back to Node-RED when used with uibuilder. Defaults to adding a `click` listener.
   * `tblGetCellName` - Returns a standardised table cell name. Either from a `data-col-name` attribute or a numeric reference like `C003`.
 * Added `data-col-reference` attribute to created tables - on the `thead` row that actually defines the columns. Making it easier to get a reliable column reference later.
