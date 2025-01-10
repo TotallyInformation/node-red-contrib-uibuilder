@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2025-01-05 16:14:45
+updated: 2025-01-10 12:34:07
 ---
 
 Functions accessible in client-side user code.
@@ -850,20 +850,31 @@ The UIBUILDER library also issues a number of custom events. These can be handle
 
 ## Utility
 
-### `$(cssSelector)` - Simplistic jQuery-like document CSS query selector, returns an HTML Element :id=dollar
+### `$(cssSelector, output, context)` - jQuery-like CSS query selector :id=dollar
 
-This is a convenience method to help you select HTML DOM elements in your own custom code. All it does is use ` document.querySelector(cssSelector)`. So any errors are the same as the native function.
+This is a convenience method to help you select [HTML DOM elements](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement) in your own custom code. For basic use it is identical to the native `document.querySelector(cssSelector)`. So any errors are the same as the native function.
 
-As per the native function, it returns a single [HTML element](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement). If the CSS Selector provided is not unique (e.g. >1 element would be returned), only the first element found in the DOM is returned. Use `document.querySelectorAll(cssSelector)` if you want to get back an array of selected elements.
+* `cssSelector` is a string containing a valid [CSS selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_selectors).
+
+* `output` is an optional argument that can be used to control what is returned:
+
+  * `el` - default. Returns the found HTML element.
+  * `text` - returns the inner text content of the element.
+  * `html` - returns the inner HTML content of the element as a string.
+  * `attributes` (or `attr`) - returns an object containing the element's attributes and attribute values.
+
+* `context` is an optional argument that can be used to specify the parent element to search within. If not provided, the search is done on the whole document. If used, it must be a valid HTML element.
+
+If the CSS Selector provided is not unique (e.g. >1 element would be returned), only the first element found in the DOM is returned. Use `$$` or the native `document.querySelectorAll(cssSelector)` if you want to get back an array of selected elements.
 
 If the UIBUILDER client finds an existing definition of `$` on startup, it will not make this global. However, it would still be usable as `uibuilder.$(...)`. This avoids clashes with libraries such as jQuery.
 
 If the selector finds a `<template>` tag, it returns its _first child_ instead of the tag. This is to ensure that if you clone it, it will be valid for applying event handlers. A template element is not visible on-page but is used for cloning multiple times or for swapping between different displays (removing the old element and replacing with a new one - not hide/show).
 
 > [!NOTE]
-> Worth noting that the Chromium DevTools console also uses the same definition of `$()` that UIBUILDER does. [Reference](https://developer.chrome.com/docs/devtools/console/utilities/#querySelector-function). UIBUILDER's definition supercedes that of the DevTools console however. The devtools version allows a 2nd parameter which UIBUILDER does not.
+> Chromium DevTools console also provides its own `$()` which is similar but not identical to uibuilder's. [Reference](https://developer.chrome.com/docs/devtools/console/utilities/#querySelector-function). uibuilder's definition supercedes that of the DevTools console however. The devtools version has a 2nd parameter which is the same as uibuilder's 3rd parameter.
 >
-> In addition, UIBUILDER's version gracefully handles the selection of a `<template>` tag where it returns the template's first child rather than the template itself.
+> In addition, uibuilder's version gracefully handles the selection of a `<template>` tag where it returns the template's first child rather than the template itself.
 
 #### Example
 
@@ -872,13 +883,16 @@ const eMsg = $('#msg')
 if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 ```
 
-### `$$(cssSelector)` - Returns an array of HTML elements properties :id=dollar2
+### `$$(cssSelector, context)` - Returns an array of HTML elements properties :id=dollar2
 
 This function is a convenience wrapper around `Array.from(document.querySelectorAll(cssSelector))`. So it returns an array. The array has an entry for each found element (an empty array if nothing found). Each entry in the array returns the _properties_ of the found element.
 
-This means that it returns different data to the `$()` function.
+* `cssSelector` is a string containing a valid [CSS selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_selectors).
+* `context` is an optional argument that can be used to specify the parent element to search within. If not provided, the search is done on the whole document. If used, it must be a valid HTML element.
 
-This is very similar to the function of the same name in the Chromium DevTools. The only difference being that UIBUILDER's function does not accept a 2nd parameter. UIBUILDER's function supercedes that of the DevTools.
+The function returns an _array_ of HTML elements. If the array length is 0, no elements were found.
+
+This is very similar to the function of the same name in the Chromium DevTools. UIBUILDER's function supercedes that of the DevTools.
 
 ### `arrayIntersect(a1, a2)` - Intersection of two input arrays :id=arrayIntersect
 

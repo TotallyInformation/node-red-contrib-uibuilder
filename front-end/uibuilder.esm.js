@@ -560,12 +560,19 @@ var require_ui = __commonJS({
        * type {HTMLElement}
        * @param {string} cssSelector A CSS Selector that identifies the element to return
        * @param {"el"|"text"|"html"|"attributes"|"attr"} [output] Optional. What type of output to return. Defaults to "el", the DOM element reference
+       * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
        * @returns {HTMLElement|string|InnerHTML|array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
        */
-      $(cssSelector, output) {
-        let el = _a2.doc.querySelector(cssSelector);
-        if (!el) {
-          _a2.log(1, "Uib:$", `No element found for CSS selector ${cssSelector}`)();
+      $(cssSelector, output, context) {
+        if (!context) context = _a2.doc;
+        if (!output) output = "el";
+        if (!context || !context.nodeType || context.nodeType !== 1) {
+          _a2.log(1, "Uib:$", `Invalid context element. Must be a valid HTML element.`, context)();
+          return null;
+        }
+        let el = context.querySelector(cssSelector);
+        if (!el || !el.nodeType || el.nodeType !== 1) {
+          _a2.log(1, "Uib:$", `No element found or element is not an HTML element for CSS selector ${cssSelector}`)();
           return null;
         }
         if (el.nodeName === "TEMPLATE") {
@@ -575,7 +582,6 @@ var require_ui = __commonJS({
             return null;
           }
         }
-        if (!output) output = "el";
         let out;
         try {
           switch (output.toLowerCase()) {
@@ -609,10 +615,16 @@ var require_ui = __commonJS({
       /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
        * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
        * @param {string} cssSelector A CSS Selector that identifies the elements to return
+       * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
        * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
        */
-      $$(cssSelector) {
-        return Array.from(_a2.doc.querySelectorAll(cssSelector));
+      $$(cssSelector, context) {
+        if (!context) context = _a2.doc;
+        if (!context || !context.nodeType || context.nodeType !== 1) {
+          _a2.log(1, "Uib:$$", `Invalid context element. Must be a valid HTML element.`, context)();
+          return null;
+        }
+        return Array.from(context.querySelectorAll(cssSelector));
       }
       /** Add 1 or several class names to an element
        * @param {string|string[]} classNames Single or array of classnames
@@ -4894,7 +4906,6 @@ var UibVar = class extends HTMLElement {
   constructor() {
     super();
     //#region --- Class Properties ---
-    __publicField(this, "connected", false);
     /** Name of the uibuilder mangaged variable to use @type {string} */
     __privateAdd(this, _variable);
     /** Current value of the watched variable */
@@ -4918,20 +4929,29 @@ var UibVar = class extends HTMLElement {
     __publicField(this, "uibuilder", window["uibuilder"]);
     /** Mini jQuery-like shadow dom selector (see constructor) */
     __publicField(this, "$");
-    this.uibuilder.log("trace", this.localName, `Constructor end`);
+    /** True when instance finishes connecting.
+     * Allows initial calls of attributeChangedCallback to be
+     * ignored if needed. */
+    __publicField(this, "connected", false);
   }
   // Makes HTML attribute change watched
   static get observedAttributes() {
     return [
+      // Standard watched attributes:
+      "name",
+      // Other watched attributes:            
       "filter",
       "id",
-      "name",
       "report",
       "topic",
       "type",
       "undefined",
       "variable"
     ];
+  }
+  /** Report the current component version string */
+  static get version() {
+    return `${this.componentVersion} (Base: ${this.baseVersion})`;
   }
   /** Set the uibuilder variable name to watch */
   set variable(varName) {
@@ -4980,7 +5000,7 @@ var UibVar = class extends HTMLElement {
         this.uibuilder.cancelTopic(topic, __privateGet(this, _topicCb)[topic]);
       });
     }
-    this._event("disconnected");
+    this._disconnect();
   }
   /** Handle watched attributes
    * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
@@ -5055,6 +5075,16 @@ var UibVar = class extends HTMLElement {
     if (!this.id) {
       this.id = `${this.localName}-${++this.constructor._iCount}`;
     }
+  }
+  /** Standardised connection. Call from the start of connectedCallback fn */
+  _connect() {
+    this._connect();
+    this._ready();
+  }
+  /** Standardised disconnection. Call from the END of disconnectedCallback fn */
+  _disconnect() {
+    document.removeEventListener(`uibuilder:msg:_ui:update:${this.id}`, this._uibMsgHandler);
+    this._event("disconnected");
   }
   /** Call from end of connectedCallback */
   _ready() {
@@ -5200,14 +5230,162 @@ _varCb = new WeakMap();
 _topic = new WeakMap();
 _topicCb = new WeakMap();
 /** Component version */
-__publicField(UibVar, "version", "2025-01-03");
-/** Holds a count of how many instances of this component are on the page */
+__publicField(UibVar, "componentVersion", "2025-01-05");
+/** Holds a count of how many instances of this component are on the page that don't have their own id
+ * Used to ensure a unique id if needing to add one dynamically
+ */
 __publicField(UibVar, "_iCount", 0);
 var uib_var_default = UibVar;
 window["UibVar"] = UibVar;
 
+// src/components/ti-base-component.js
+var _TiBaseComponent = class _TiBaseComponent extends HTMLElement {
+  /** NB: Attributes not available here - use connectedCallback to reference */
+  constructor() {
+    super();
+    /** Is UIBUILDER for Node-RED loaded? */
+    __publicField(this, "uib", !!window["uibuilder"]);
+    __publicField(this, "uibuilder", window["uibuilder"]);
+    /** Mini jQuery-like shadow dom selector (see constructor)
+     * @type {function(string): Element}
+     * @param {string} selector - A CSS selector to match the element within the shadow DOM.
+     * @returns {Element} The first element that matches the specified selector.
+     */
+    __publicField(this, "$");
+    /** Mini jQuery-like shadow dom multi-selector (see constructor)
+     * @type {function(string): NodeList}
+     * @param {string} selector - A CSS selector to match the element within the shadow DOM.
+     * @returns {NodeList} A STATIC list of all shadow dom elements that match the selector.
+     */
+    __publicField(this, "$$");
+    /** True when instance finishes connecting.
+     * Allows initial calls of attributeChangedCallback to be
+     * ignored if needed. */
+    __publicField(this, "connected", false);
+    /** Placeholder for the optional name attribute @type {string} */
+    __publicField(this, "name");
+    /** Runtime configuration settings @type {object} */
+    __publicField(this, "opts", {});
+  }
+  /** Report the current component version string */
+  static get version() {
+    return `${this.componentVersion} (Base: ${this.baseVersion})`;
+  }
+  /** Optionally apply an external linked style sheet (called from connectedCallback)
+   * @param {*} url The URL for the linked style sheet
+   */
+  async doInheritStyles() {
+    if (!this.hasAttribute("inherit-style")) return;
+    let url2 = this.getAttribute("inherit-style");
+    if (!url2) url2 = "./index.css";
+    const linkEl = document.createElement("link");
+    linkEl.setAttribute("type", "text/css");
+    linkEl.setAttribute("rel", "stylesheet");
+    linkEl.setAttribute("href", url2);
+    this.shadowRoot.appendChild(linkEl);
+    console.info(`[${this.localName}] Inherit-style requested. Loading: "${url2}"`);
+  }
+  /** OPTIONAL. Update runtime configuration, return complete config
+   * @param {object|undefined} config If present, partial or full set of options. If undefined, fn returns the current full option settings
+   */
+  config(config) {
+    if (config) this.opts = _TiBaseComponent.deepAssign(this.opts, config);
+    return this.opts;
+  }
+  /** Utility object deep merge fn
+   * @param {object} target Merge target object
+   * @param  {...object} sources 1 or more source objects to merge
+   * @returns {object} Deep merged object
+   */
+  static deepAssign(target, ...sources) {
+    for (let source of sources) {
+      for (let k in source) {
+        const vs = source[k];
+        const vt = target[k];
+        if (Object(vs) == vs && Object(vt) === vt) {
+          target[k] = _TiBaseComponent.deepAssign(vt, vs);
+          continue;
+        }
+        target[k] = source[k];
+      }
+    }
+    return target;
+  }
+  /** Ensure that the component instance has a unique ID & check again if uib loaded */
+  ensureId() {
+    this.uib = !!window["uibuilder"];
+    if (!this.id) {
+      this.id = `${this.localName}-${++this.constructor._iCount}`;
+    }
+  }
+  /** Creates the $ and $$ fns that do css selections against the shadow dom */
+  createShadowSelectors() {
+    this.$ = this.shadowRoot?.querySelector.bind(this.shadowRoot);
+    this.$$ = this.shadowRoot?.querySelectorAll.bind(this.shadowRoot);
+  }
+  // TODO Needs enhancing - does nothing at the moment
+  /** Handle a `uibuilder:msg:_ui:update:${this.id}` custom event
+   * @param {CustomEvent} evt uibuilder `uibuilder:msg:_ui:update:${this.id}` custom event evt.details contains the data
+   */
+  _uibMsgHandler(evt) {
+  }
+  /** Custom event dispacher `component-name:name` with detail data
+   * @example
+   *   this._event('ready')
+   * @example
+   *   this._event('ready', {age: 42, type: 'android'})
+   *
+   * @param {string} name A name to give the event, added to the component-name separated with a :
+   * @param {*=} data Optional data object to pass to event listeners via the evt.detail property
+   */
+  _event(name2, data) {
+    this.dispatchEvent(new CustomEvent(`${this.localName}:${name2}`, {
+      bubbles: true,
+      composed: true,
+      detail: {
+        id: this.id,
+        name: this.name,
+        data
+      }
+    }));
+  }
+  /** Standardised constructor. Keep after call to super()
+   * @param {Node|string} template Nodes/string content that will be cloned into the shadow dom
+   * @param {{mode:'open'|'closed',delegatesFocus:boolean}=} shadowOpts Options passed to attachShadow
+   */
+  _construct(template, shadowOpts) {
+    if (!shadowOpts) shadowOpts = { mode: "open", delegatesFocus: true };
+    this.attachShadow(shadowOpts).append(template);
+    this.createShadowSelectors();
+  }
+  /** Standardised connection. Call from the start of connectedCallback fn */
+  _connect() {
+    this.ensureId();
+    this.doInheritStyles();
+  }
+  /** Standardised disconnection. Call from the END of disconnectedCallback fn */
+  _disconnect() {
+    document.removeEventListener(`uibuilder:msg:_ui:update:${this.id}`, this._uibMsgHandler);
+    this._event("disconnected");
+  }
+  /** Call from end of connectedCallback */
+  _ready() {
+    this.connected = true;
+    this._event("connected");
+    this._event("ready");
+  }
+};
+/** Component version */
+__publicField(_TiBaseComponent, "baseVersion", "2025-01-09");
+/** Holds a count of how many instances of this component are on the page that don't have their own id
+ * Used to ensure a unique id if needing to add one dynamically
+ */
+__publicField(_TiBaseComponent, "_iCount", 0);
+var TiBaseComponent = _TiBaseComponent;
+var ti_base_component_default = TiBaseComponent;
+
 // src/components/uib-meta.js
-var _UibMeta = class _UibMeta extends HTMLElement {
+var UibMeta = class extends ti_base_component_default {
   //#endregion --- Class Properties ---
   constructor() {
     super();
@@ -5223,27 +5401,39 @@ var _UibMeta = class _UibMeta extends HTMLElement {
     /** What is the value type */
     __publicField(this, "type", "created");
     /** what are the available types? */
-    __publicField(this, "types", ["created", "updated", "crup", "size", "modified"]);
+    __publicField(this, "types", ["created", "updated", "crup", "both", "size", "modified", "all"]);
     /** Chosen formatting - default to none */
     __publicField(this, "format", "");
     /** what are the available formats? */
     __publicField(this, "formats", ["d", "dt", "t", "k", "m"]);
     /** Holds uibuilder.onTopic listeners */
     __publicField(this, "topicMonitors", {});
-    /** Is UIBUILDER loaded? */
-    __publicField(this, "uib", !!window["uibuilder"]);
-    /** Mini jQuery-like shadow dom selector (see constructor) */
-    __publicField(this, "$");
     this.shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
     this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot);
-    this.value = window["uibuilder"].get("pageMeta");
-    if (!this.value) window["uibuilder"].getPageMeta();
+    if (!this.uibuilder) throw new Error("[uib-meta] uibuilder client library not available");
+    this.value = this.uibuilder.get("pageMeta");
+    if (!this.value) this.uibuilder.getPageMeta();
     this.doWatch();
-    this.dispatchEvent(new Event("uib-meta:construction", { bubbles: true, composed: true }));
   }
   // Makes HTML attribute change watched
   static get observedAttributes() {
-    return _UibMeta.props;
+    return [
+      // Standard watched attributes:
+      "inherit-style",
+      "name",
+      // Other watched attributes:
+      "type",
+      "format"
+    ];
+  }
+  // Runs when an instance is added to the DOM
+  connectedCallback() {
+    this._connect();
+    this._ready();
+  }
+  // Runs when an instance is removed from the DOM
+  disconnectedCallback() {
+    this._disconnect();
   }
   /** Handle watched attributes
    * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
@@ -5270,26 +5460,8 @@ var _UibMeta = class _UibMeta extends HTMLElement {
         break;
       }
     }
+    this._event("attribChanged", { attribute: attrib, newVal, oldVal });
   }
-  // --- end of attributeChangedCallback --- //
-  // Runs when an instance is added to the DOM
-  connectedCallback() {
-    if (!this.id) {
-      if (!this.name) this.name = this.getAttribute("name");
-      if (this.name) this.id = this.name.toLowerCase().replace(/\s/g, "_");
-      else this.id = `uib-meta-${++_UibMeta._iCount}`;
-    }
-  }
-  // ---- end of connectedCallback ---- //
-  // Runs when an instance is removed from the DOM
-  // disconnectedCallback() {
-  //     // Ignore if not using uibuilder
-  //     if (this.uib) {
-  //         Object.keys(this.topicMonitors).forEach( topic => {
-  //             uibuilder.cancelTopic(topic, this.topicMonitors[topic])
-  //         })
-  //     }
-  // } // ---- end of disconnectedCallback ---- //
   /** Process changes to the required uibuilder variable */
   doWatch() {
     this.varDom();
@@ -5308,7 +5480,12 @@ var _UibMeta = class _UibMeta extends HTMLElement {
       return;
     }
     let out;
-    switch (this.type) {
+    switch (this.type.toLowerCase()) {
+      case "all": {
+        out = `Created: ${this.doFormat(this.value.created, "dt")}, Updated: ${this.doFormat(this.value.modified, "dt")}`;
+        out += `, Size: ${this.doFormat(this.value.size, "num")}b`;
+        break;
+      }
       case "size": {
         out = `Size: ${this.doFormat(this.value.size, "num")}b`;
         break;
@@ -5318,6 +5495,9 @@ var _UibMeta = class _UibMeta extends HTMLElement {
         out = `Updated: ${this.doFormat(this.value.modified, "dt")}`;
         break;
       }
+      case "both":
+      // both created and updated dates
+      case "created-updated":
       case "crup": {
         out = `Created: ${this.doFormat(this.value.created, "dt")}, Updated: ${this.doFormat(this.value.modified, "dt")}`;
         break;
@@ -5397,29 +5577,62 @@ var _UibMeta = class _UibMeta extends HTMLElement {
   //     return value
   // }
 };
-/** Holds a count of how many instances of this component are on the page */
-__publicField(_UibMeta, "_iCount", 0);
-/** @type {Array<string>} List of all of the html attribs (props) listened to */
-__publicField(_UibMeta, "props", ["type", "format"]);
-var UibMeta = _UibMeta;
+/** Component version */
+__publicField(UibMeta, "componentVersion", "2025-01-06");
+var uib_meta_default = UibMeta;
+window["UibMeta"] = UibMeta;
 
 // src/components/apply-template.js
-var uib = window["uibuilder"];
-var _ApplyTemplate = class _ApplyTemplate extends HTMLElement {
-  //#endregion --- Class Properties ---
+var ApplyTemplate = class extends ti_base_component_default {
   constructor() {
     super();
     // Holder for once attribute
     __publicField(this, "once", false);
-    // Holder for uibuilder log
-    __publicField(this, "log");
-    if (!window["uibuilder"]) throw new Error("uibuilder client library not available");
-    this.log = window["uibuilder"].log;
-    this.dispatchEvent(new Event("apply-template:construction", { bubbles: true, composed: true }));
+    if (!this.uibuilder) throw new Error("[apply-template] uibuilder client library not available");
   }
   // Makes HTML attribute change watched
   static get observedAttributes() {
-    return _ApplyTemplate.props;
+    return [
+      // Standard watched attributes:
+      /*'inherit-style',*/
+      "name",
+      // Other watched attributes:
+      "template-id",
+      "once"
+    ];
+  }
+  // Runs when an instance is added to the DOM
+  connectedCallback() {
+    this._connect();
+    const templateId = this["template-id"];
+    const onceOnly = this["once"];
+    if (!templateId) {
+      throw new Error("[ApplyTemplate] Template id attribute not provided. Template must be identified by an id attribute");
+    }
+    const template = document.getElementById(templateId);
+    if (!template || template.tagName !== "TEMPLATE") {
+      throw new Error(`[ApplyTemplate] Source must be a <template>. id='${templateId}'`);
+    }
+    const existContent = this.innerHTML;
+    this.innerHTML = "";
+    let templateContent;
+    if (onceOnly === false) {
+      templateContent = document.importNode(template.content, true);
+    } else {
+      templateContent = document.adoptNode(template.content);
+    }
+    this.appendChild(templateContent);
+    if (existContent) {
+      const slot = this.getElementsByTagName("slot");
+      if (slot.length > 0) {
+        slot[0].innerHTML = existContent;
+      }
+    }
+    this._ready();
+  }
+  /** Runs when an instance is removed from the DOM */
+  disconnectedCallback() {
+    this._disconnect();
   }
   /** Handle watched attributes
    * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
@@ -5431,40 +5644,13 @@ var _ApplyTemplate = class _ApplyTemplate extends HTMLElement {
   attributeChangedCallback(attrib, oldVal, newVal) {
     if (oldVal === newVal) return;
     this[attrib] = newVal;
-  }
-  // --- end of attributeChangedCallback --- //
-  // Runs when an instance is added to the DOM
-  connectedCallback() {
-    const templateId = this["template-id"];
-    const onceOnly = this["once"];
-    if (templateId) {
-      const template = document.getElementById(templateId);
-      if (template) {
-        try {
-          let content;
-          if (onceOnly === false) {
-            content = document.importNode(template.content, true);
-          } else {
-            content = document.adoptNode(template.content);
-          }
-          this.appendChild(content);
-        } catch (e) {
-          this.log("error", "ApplyTemplate", `Source must be a <template>. id='${templateId}'`);
-        }
-      } else {
-        this.log("error", "ApplyTemplate", `Source not found: id='${templateId}'`);
-      }
-    } else {
-      this.log("error", "ApplyTemplate", "Template id attribute not provided. Template must be identified by an id attribute.");
-    }
+    this._event("attribChanged", { attribute: attrib, newVal, oldVal });
   }
 };
-//#region --- Class Properties ---
-/** Holds a count of how many instances of this component are on the page */
-__publicField(_ApplyTemplate, "_iCount", 0);
-/** @type {Array<string>} List of all of the html attribs (props) listened to */
-__publicField(_ApplyTemplate, "props", ["template-id", "once"]);
-var ApplyTemplate = _ApplyTemplate;
+/** Component version */
+__publicField(ApplyTemplate, "componentVersion", "2025-01-05");
+var apply_template_default = ApplyTemplate;
+window["ApplyTemplate"] = ApplyTemplate;
 
 // src/front-end-module/uibuilder.module.js
 var version = "7.2.0-esm";
@@ -8033,8 +8219,8 @@ try {
 var uibuilder_module_default = uibuilder2;
 uibuilder2.start();
 customElements.define("uib-var", uib_var_default);
-customElements.define("uib-meta", UibMeta);
-customElements.define("apply-template", ApplyTemplate);
+customElements.define("uib-meta", uib_meta_default);
+customElements.define("apply-template", apply_template_default);
 export {
   Uib,
   uibuilder_module_default as default,

@@ -524,12 +524,19 @@ const Ui = class Ui2 {
    * type {HTMLElement}
    * @param {string} cssSelector A CSS Selector that identifies the element to return
    * @param {"el"|"text"|"html"|"attributes"|"attr"} [output] Optional. What type of output to return. Defaults to "el", the DOM element reference
+   * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
    * @returns {HTMLElement|string|InnerHTML|array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
    */
-  $(cssSelector, output) {
-    let el = Ui2.doc.querySelector(cssSelector);
-    if (!el) {
-      Ui2.log(1, "Uib:$", `No element found for CSS selector ${cssSelector}`)();
+  $(cssSelector, output, context) {
+    if (!context) context = Ui2.doc;
+    if (!output) output = "el";
+    if (!context || !context.nodeType || context.nodeType !== 1) {
+      Ui2.log(1, "Uib:$", `Invalid context element. Must be a valid HTML element.`, context)();
+      return null;
+    }
+    let el = context.querySelector(cssSelector);
+    if (!el || !el.nodeType || el.nodeType !== 1) {
+      Ui2.log(1, "Uib:$", `No element found or element is not an HTML element for CSS selector ${cssSelector}`)();
       return null;
     }
     if (el.nodeName === "TEMPLATE") {
@@ -539,7 +546,6 @@ const Ui = class Ui2 {
         return null;
       }
     }
-    if (!output) output = "el";
     let out;
     try {
       switch (output.toLowerCase()) {
@@ -573,10 +579,16 @@ const Ui = class Ui2 {
   /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
    * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
    * @param {string} cssSelector A CSS Selector that identifies the elements to return
+   * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
    * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
    */
-  $$(cssSelector) {
-    return Array.from(Ui2.doc.querySelectorAll(cssSelector));
+  $$(cssSelector, context) {
+    if (!context) context = Ui2.doc;
+    if (!context || !context.nodeType || context.nodeType !== 1) {
+      Ui2.log(1, "Uib:$$", `Invalid context element. Must be a valid HTML element.`, context)();
+      return null;
+    }
+    return Array.from(context.querySelectorAll(cssSelector));
   }
   /** Add 1 or several class names to an element
    * @param {string|string[]} classNames Single or array of classnames
