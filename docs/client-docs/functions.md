@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2025-01-10 12:34:07
+updated: 2025-01-10 12:38:21
 ---
 
 Functions accessible in client-side user code.
@@ -885,7 +885,7 @@ if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 
 ### `$$(cssSelector, context)` - Returns an array of HTML elements properties :id=dollar2
 
-This function is a convenience wrapper around `Array.from(document.querySelectorAll(cssSelector))`. So it returns an array. The array has an entry for each found element (an empty array if nothing found). Each entry in the array returns the _properties_ of the found element.
+This function is a convenience wrapper around `Array.from(document.querySelectorAll(cssSelector))`. So it returns an array. The array has an entry for each found element (an empty array if nothing found).
 
 * `cssSelector` is a string containing a valid [CSS selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_selectors).
 * `context` is an optional argument that can be used to specify the parent element to search within. If not provided, the search is done on the whole document. If used, it must be a valid HTML element.
