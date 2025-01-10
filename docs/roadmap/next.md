@@ -3,17 +3,12 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-01-05 12:37:10
+updated: 2025-01-08 17:58:24
 author: Julian Knight (Totally Information)
 ---
 
-## FE: Client Library
+## Answers needed
 
-* [ ] `applyTemplate` - Allow slot content to be changed.
+## Ideas
 
-## Web components
-
-* [STARTED] Update built-in web components to new standards
-  * [x] `uib-var`
-  * [ ] `uib-meta`
-  * [ ] `apply-template`
+* Move uib-brand.css to a new sub-package. Publish separately.
