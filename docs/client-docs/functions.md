@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2025-01-10 12:38:21
+updated: 2025-01-10 12:45:43
 ---
 
 Functions accessible in client-side user code.
@@ -879,8 +879,10 @@ If the selector finds a `<template>` tag, it returns its _first child_ instead o
 #### Example
 
 ```javascript
-const eMsg = $('#msg')
-if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
+// Get the first element with the id of "more"
+const elMore = $('#more')
+// Replace the HTML (best to always check if it was found)
+if (elMore) elMore.innerHTML = uibuilder.syntaxHighlight(msg)
 ```
 
 ### `$$(cssSelector, context)` - Returns an array of HTML elements properties :id=dollar2
