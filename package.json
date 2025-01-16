@@ -73,6 +73,7 @@
       "uib-html": "nodes/uib-html/customNode.js",
       "uib-save": "nodes/uib-save/customNode.js",
       "uib-sender": "nodes/uib-sender/uib-sender.js",
+      "uib-sidebar": "nodes/uib-sidebar/customNode.js",
       "uib-tag": "nodes/uib-tag/customNode.js",
       "uib-update": "nodes/uib-update/customNode.js"
     },
