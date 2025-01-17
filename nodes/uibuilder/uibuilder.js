@@ -388,7 +388,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     /** (d) Pass core objects to the Socket.IO handler module */
     sockets.setup(uib, web.server)
 
-    RED.events.emit('UIBUILDER/runtimeSetupComplete', uib)
+    RED.events.emit('uibuilder/runtimeSetupComplete', uib)
 } // --- end of runtimeSetup --- //
 
 /** 2) All of the initialisation of the Node Instance
@@ -494,8 +494,8 @@ function nodeInstance(config) {
             fslib.moveSync(path.join(/** @type {string} */ (uib.rootFolder), this.oldUrl), this.customFolder, { overwrite: false })
             log.trace(`[uibuilder:nodeInstance:${this.url}] Folder renamed from ${this.oldUrl} to ${this.url}`)
             // Notify other nodes
-            RED.events.emit('UIBUILDER/URL-change', { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
-            RED.events.emit(`UIBUILDER/URL-change/${this.oldUrl}`, { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
+            RED.events.emit('uibuilder/URL-change', { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
+            RED.events.emit(`uibuilder/URL-change/${this.oldUrl}`, { oldURL: this.oldUrl, newURL: this.url, folder: this.customFolder } )
         } catch (e) {
             log.trace(`[uibuilder:nodeInstance:${this.url}] Could not rename folder. ${e.message}`)
             // Not worried if the source doesn't exist - this will regularly happen when changing the name BEFORE first deploy.
@@ -623,8 +623,8 @@ function nodeInstance(config) {
         res.status(200).send( web.showInstanceDetails(req, this) )
     })
 
-    RED.events.emit('UIBUILDER/instanceSetupComplete', this)
-    RED.events.emit(`UIBUILDER/instanceSetupComplete/${this.url}`, this)
+    RED.events.emit('uibuilder/instanceSetupComplete', this)
+    RED.events.emit(`uibuilder/instanceSetupComplete/${this.url}`, this)
 } // ----- end of nodeInstance ----- //
 
 /** 3) Handler function for node flow input events (when a node instance receives a msg from the flow)

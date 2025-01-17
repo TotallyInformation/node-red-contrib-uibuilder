@@ -3,7 +3,7 @@ title: UIBUILDER events
 description: |
   This document details the Node-RED runtime and Editor events produced and consumed by UIBUILDER.
 created: 2021-09-29 20:04:36
-updated: 2025-01-01 21:49:25
+updated: 2025-01-17 16:21:27
 ---
 
 Node-RED's `RED.events` node.js-based event handlers are used to enable decoupled communications, even between different nodes.
@@ -20,7 +20,7 @@ Two pieces of data will be required to enable this:
 A custom node wishing to send a message to a uibuilder connected client must add the message object as the output to an emit function:
 
 ```js
-RED.events.emit( `UIBUILDER/send/${targetUibURL}`, {
+RED.events.emit( `uibuilder/send/${targetUibURL}`, {
   "payload": 'Hi from my custom node!',
   "_uib": {
     "originator": node.id
@@ -67,7 +67,7 @@ See "[How to create extension nodes that work with UIBUILDER](dev/3rd-party-exte
 #### uibuilder master runtime setup completed
   
   ```js
-  RED.events.emit('UIBUILDER/runtimeSetupComplete', uib)
+  RED.events.emit('uibuilder/runtimeSetupComplete', uib)
   ```
   
   Emitted when the uibuilder module completes runtime setup which means that all of the core settings, methods and classes are now available. But **not** yet any instance data.
@@ -80,13 +80,13 @@ See "[How to create extension nodes that work with UIBUILDER](dev/3rd-party-exte
 #### uibuilder instance runtime setup completed
   
   ```js
-  RED.events.emit(`UIBUILDER/instanceSetupComplete/${node.url}`, node)
+  RED.events.emit(`uibuilder/instanceSetupComplete/${node.url}`, node)
   ```
   
   and
   
   ```js
-  RED.events.emit('UIBUILDER/instanceSetupComplete', node)
+  RED.events.emit('uibuilder/instanceSetupComplete', node)
   ```
   
   Emitted when each instance (uibuilder node) completes its setup. At this point, data for this instance is fully available. The passed `this` is a reference to the defined node with all settings and methods.
@@ -102,7 +102,7 @@ See "[How to create extension nodes that work with UIBUILDER](dev/3rd-party-exte
 #### uibuilder instance url name change
 
   ```js
-  RED.events.emit(`UIBUILDER/URL-change`, { 
+  RED.events.emit(`uibuilder/URL-change`, { 
     "oldURL": node.oldUrl,
     "newURL": node.url,
     "folder": node.customFolder
@@ -112,7 +112,7 @@ See "[How to create extension nodes that work with UIBUILDER](dev/3rd-party-exte
   and
   
   ```js
-  RED.events.emit(`UIBUILDER/URL-change/${node.oldUrl}`, {
+  RED.events.emit(`uibuilder/URL-change/${node.oldUrl}`, {
     "oldURL": node.oldUrl,
     "newURL": node.url,
     "folder": node.customFolder
@@ -126,13 +126,13 @@ See "[How to create extension nodes that work with UIBUILDER](dev/3rd-party-exte
 ### Client Socket.IO connection
 
 ```js
-this.RED.events.emit(`UIBUILDER/${node.url}/clientConnect`, ctrlMsg)
+this.RED.events.emit(`uibuilder/${node.url}/clientConnect`, ctrlMsg)
 ```
 
 #### Client Socket.IO disconnection
 
 ```js
-this.RED.events.emit(`UIBUILDER/${node.url}/clientDisconnect`, ctrlMsg)
+this.RED.events.emit(`uibuilder/${node.url}/clientDisconnect`, ctrlMsg)
 ```
 
 ### Between server and clients
@@ -140,7 +140,7 @@ this.RED.events.emit(`UIBUILDER/${node.url}/clientDisconnect`, ctrlMsg)
 #### Send from a node to clients
   
   ```js
-  RED.events.emit( `UIBUILDER/send/${node.url}`, { 
+  RED.events.emit( `uibuilder/send/${node.url}`, { 
     "payload": "something",
     "_uib": {
       "originator": node.id
@@ -174,17 +174,17 @@ While these events are emitted, currently no nodes make use of them. They are fr
 
 ```js
 // Inform interested functions that a uibuilder-related node was added (and why)
-RED.events.emit('uibuilder:node-added', node)
+RED.events.emit('uibuilder/node-added', node)
 ```
 
 ```js
 // Inform interested functions that a uibuilder-related node was changed
-RED.events.emit('uibuilder:node-changed', node)
+RED.events.emit('uibuilder/node-changed', node)
 ```
 
 ```js
 // Inform interested functions that a uibuilder-related node was deleted
-RED.events.emit('uibuilder:node-deleted', node)
+RED.events.emit('uibuilder/node-deleted', node)
 ```
 
 "a uibuilder-related node" means any of the nodes in the UIBUILDER package.

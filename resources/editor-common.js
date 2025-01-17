@@ -135,7 +135,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
 
         if (RED.settings.uibuilderNodeEnv) {
             uibuilder.debug = RED.settings.uibuilderNodeEnv.toLowerCase() === 'development' || RED.settings.uibuilderNodeEnv.toLowerCase() === 'dev' // uibuilder.localHost
-            uibuilder.log(`[uibuilder] DEBUG ON (because env NODE_ENV is '${RED.settings.uibuilderNodeEnv}')`)
+            uibuilder.log(`🌐[uibuilder] DEBUG ON (because env NODE_ENV is '${RED.settings.uibuilderNodeEnv}')`)
         }
 
         /** Get initial list of installed FE packages via v2 API - save to master list */
@@ -188,7 +188,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 // Keep a list of ALL uibuilder nodes in the editor incl disabled, undeployed, etc. Different to the deployed list
                 if (node.url) uibuilder.editorUibInstances[node.id] = node.url
                 // Inform interested functions that something was added (and why)
-                RED.events.emit('uibuilder:node-added', node)
+                RED.events.emit('uibuilder/node-added', node)
                 // -- IF uibuilderInstances <> editorInstances THEN there are undeployed instances. OR Disabled nodes/flows --
 
                 // uibuilder.log('[uibuilder] node added:', node)
@@ -200,7 +200,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 if (node.url) uibuilder.editorUibInstances[node.id] = node.url
                 else delete uibuilder.editorUibInstances[node.id]
                 // Inform interested functions that something was changed
-                RED.events.emit('uibuilder:node-changed', node)
+                RED.events.emit('uibuilder/node-changed', node)
 
                 uibuilder.log('[uibuilder] node changed:', node)
             }
@@ -210,7 +210,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 // update list
                 delete uibuilder.editorUibInstances[node.id]
                 // Inform interested functions that something was deleted
-                RED.events.emit('uibuilder:node-deleted', node)
+                RED.events.emit('uibuilder/node-deleted', node)
 
                 uibuilder.log('[uibuilder] node removed: ', node)
             }
@@ -228,7 +228,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
         /** If debug, dump out key information to console */
         if (uibuilder.debug === true) {
             setTimeout( () => {
-                console.groupCollapsed('[uibuilder:editor-common] Settings ...')
+                console.groupCollapsed('🌐⚙️[uibuilder:editor-common] Settings ...')
                 console.log(
                     // The server's NODE_ENV environment var (e.g. PRODUCTION or DEVELOPMENT)
                     'NodeEnv: ', RED.settings.uibuilderNodeEnv,
