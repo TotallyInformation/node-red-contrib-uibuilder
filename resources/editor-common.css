@@ -23,6 +23,9 @@
     color: var(--uib-red) !important;
     font-weight: 800;
 }
+.uib-blue {
+    color: var(--uib-blue) !important;
+}
 
 .ui-tooltip { /* Better tooltips */
     background-color: var(--red-ui-popover-background);
