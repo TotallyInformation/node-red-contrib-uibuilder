@@ -57,10 +57,6 @@ function ModuleDefinition(RED) {
 
     /** Register a new instance of the specified node type (2) */
     RED.nodes.registerType(mod.nodeName, nodeInstance)
-
-    RED.httpAdmin.get('/uibuilder/sidebarui', (req, res) => {
-        res.status(200).send( {'response': 'ok'} )
-    })
 }
 
 /** 2) This is run when an actual instance of our node is committed to a flow
@@ -80,17 +76,20 @@ function nodeInstance(config) {
 
     /** Transfer config items from the Editor panel to the runtime */
     this.name = config.name ?? ''
-    this.topic = config.topic ?? ''
+    this.html = config.html ?? ''
+    // this.topic = config.topic ?? ''
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)
 
-    console.log(`🏠 Listenting for posts to /uibuilder/sidebarui/${this.id}`)
+    RED.log.trace(`📊 [uib-sidebar] Listening for posts to /uibuilder/sidebarui/${this.id}`)
     RED.httpAdmin.post(`/uibuilder/sidebarui/${this.id}`, (req, res) => {
-        console.log('🏠', `/uibuilder/sidebarui/${this.id}`, req.body)
+        RED.log.trace(`📊 [uib-sidebar] POST request for /uibuilder/sidebarui/${this.id}`, req.body)
         // res.status(200).send( { 'response': 'ok', 'id': this.id } )
         res.status(200).json( { 'response': 'ok', 'id': this.id } )
-        this.send({payload: req.body})
+        this.send({
+            ...req.body
+        })
     })
 }
 
@@ -103,7 +102,6 @@ function nodeInstance(config) {
  * @this {runtimeNode & tiTemplateNode}
  */
 async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
-
     // const RED = mod.RED
 
     // Pass straight through
@@ -116,9 +114,10 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 }
 
 function sendToEditor(node, msg) {
-    console.log('Sending to editor', msg, node.id)
-    mod.RED.events.emit('runtime-event', {
-        id: 'uibuilder-uib-sidebar-runtime',
+    const RED = mod.RED
+    RED.log.trace(`📊 [uib-sidebar] Sending to editor for ${node.id}`, msg, )
+    RED.events.emit('runtime-event', {
+        id: `uibuilder/uib-sidebar/${node.id}`,
         retain: false,
         payload: {
             srcId: node.id,
