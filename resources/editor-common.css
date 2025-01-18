@@ -122,3 +122,8 @@
 .uib-context-select label, .uib-context-select input {
     width: 100% !important;
 }
+
+/* Sidebar UI content */
+#uib-sidebar-ui {
+    margin: 0.5rem;
+}
