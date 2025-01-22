@@ -747,7 +747,7 @@ const Ui = class Ui {
         if (!output) output = 'el'
 
         // if context is not a valid htmlelement, return null
-        if (!context || !context.nodeType || context.nodeType !== 1) {
+        if (!context || !context.nodeType) {
             Ui.log(1, 'Uib:$', `Invalid context element. Must be a valid HTML element.`, context)()
             return null
         }
@@ -756,7 +756,7 @@ const Ui = class Ui {
         let el = (context).querySelector(cssSelector)
 
         // if no element found or is not a valid htmlelement, return null
-        if (!el || !el.nodeType || el.nodeType !== 1) {
+        if (!el || !el.nodeType) {
             Ui.log(1, 'Uib:$', `No element found or element is not an HTML element for CSS selector ${cssSelector}`)()
             return null
         }
@@ -815,7 +815,7 @@ const Ui = class Ui {
         if (!context) context = Ui.doc
 
         // if context is not a valid htmlelement, return null
-        if (!context || !context.nodeType || context.nodeType !== 1) {
+        if (!context || !context.nodeType) {
             Ui.log(1, 'Uib:$$', `Invalid context element. Must be a valid HTML element.`, context)()
             return null
         }

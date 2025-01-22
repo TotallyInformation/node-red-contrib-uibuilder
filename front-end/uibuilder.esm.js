@@ -566,12 +566,12 @@ var require_ui = __commonJS({
       $(cssSelector, output, context) {
         if (!context) context = _a2.doc;
         if (!output) output = "el";
-        if (!context || !context.nodeType || context.nodeType !== 1) {
+        if (!context || !context.nodeType) {
           _a2.log(1, "Uib:$", `Invalid context element. Must be a valid HTML element.`, context)();
           return null;
         }
         let el = context.querySelector(cssSelector);
-        if (!el || !el.nodeType || el.nodeType !== 1) {
+        if (!el || !el.nodeType) {
           _a2.log(1, "Uib:$", `No element found or element is not an HTML element for CSS selector ${cssSelector}`)();
           return null;
         }
@@ -620,7 +620,7 @@ var require_ui = __commonJS({
        */
       $$(cssSelector, context) {
         if (!context) context = _a2.doc;
-        if (!context || !context.nodeType || context.nodeType !== 1) {
+        if (!context || !context.nodeType) {
           _a2.log(1, "Uib:$$", `Invalid context element. Must be a valid HTML element.`, context)();
           return null;
         }
