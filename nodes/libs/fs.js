@@ -51,10 +51,6 @@ class UibFs {
      */
     #isConfigured = false
 
-    // #logUndefinedError = new Error('fs: this.log is undefined')
-    // #uibUndefinedError = new Error('fs: this.uib is undefined')
-    // #rootFldrNullError = new Error('fs: this.uib.rootFolder is null')
-
     /** @type {Array<string>} Updated by updateMergedPackageList which is called first in setup and then in various updates */
     mergedPkgMasterList = []
 
@@ -84,7 +80,7 @@ class UibFs {
 
         // Prevent setup from being called more than once
         if ( this.#isConfigured === true ) {
-            uib.RED.log.warn('⚠️[uibuilder:UibFs:setup] Setup has already been called, it cannot be called again.')
+            uib.RED.log.warn('🌐⚠️[uibuilder:UibFs:setup] Setup has already been called, it cannot be called again.')
             return
         }
 
@@ -92,7 +88,7 @@ class UibFs {
         this.uib = uib
         this.log = uib.RED.log
 
-        this.log.trace('[uibuilder:fs.js:setup] Setup completed', this.uib)
+        this.log.trace('🌐[uibuilder:fs.js:setup] Setup completed', this.uib)
     } // ---- End of setup ---- //
 
     /** returns true if the filename contains / or \ else false
@@ -220,7 +216,7 @@ class UibFs {
 
         // Make sure we got a node
         if (!node) {
-            RED.log.error(`No node found for url="${url}" - called before all nodes loaded in Node-RED?`)
+            RED.log.error(`🌐🛑[uibuilder:fs:getInstanceLiveHtmlFiles] No node found for url="${url}" - called before all nodes loaded in Node-RED?`)
             return []
         }
 
@@ -280,7 +276,7 @@ class UibFs {
         // Load a new template (params url, template, extTemplate)
         if ( template === 'external' && ( (!extTemplate) || extTemplate.length === 0) ) {
             const statusMsg = `External template selected but no template name provided. template=external, url=${url}, cmd=${cmd}`
-            log.error(`[uibuilder:fs:replaceTemplate]. ${statusMsg}`)
+            log.error(`🌐🛑[uibuilder:fs:replaceTemplate]. ${statusMsg}`)
             res.statusMessage = statusMsg
             res.status = 500
             return res
@@ -304,14 +300,14 @@ class UibFs {
             })
 
             uib.degitEmitter.on('info', info => {
-                log.trace(`[uibuilder:fs:replaceTemplate] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
+                log.trace(`🌐[uibuilder[:fs:replaceTemplate] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
             })
 
             await uib.degitEmitter.clone(fullname)
 
             // console.log({myclone})
             const statusMsg = `Degit successfully copied template '${extTemplate}' to '${fullname}'.`
-            log.info(`[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=${cmd}`)
+            log.info(`🌐📘[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=${cmd}`)
             res.statusMessage = statusMsg
             res.status = 200
 
@@ -332,7 +328,7 @@ class UibFs {
                 // NB: fs.cp is still experimental even in node.js v20 - but seems stable since v16
                 await fs.cp(srcTemplate, fullname, fsOpts)
                 const statusMsg = `Successfully copied template ${template} to ${url}.`
-                log.info(`[uibuilder:fs:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
+                log.info(`🌐📘[uibuilder:fs:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
                 res.statusMessage = statusMsg
                 res.status = 200
                 res.json = /** @type {*} */ ({
@@ -344,7 +340,7 @@ class UibFs {
                 return res
             } catch (err) {
                 const statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message}.`
-                log.error(`[uibuilder:fs:replaceTemplate] ${statusMsg}`, err)
+                log.error(`🌐🛑[uibuilder:fs:replaceTemplate] ${statusMsg}`, err)
                 res.statusMessage = statusMsg
                 res.status = 500
                 return res
@@ -352,7 +348,7 @@ class UibFs {
         } else {
             // Shouldn't ever be able to occur - but still :-)
             const statusMsg = `Template '${template}' does not exist. url=${url}, cmd=${cmd}.`
-            log.error(`[uibuilder:fs:replaceTemplate] ${statusMsg}`)
+            log.error(`🌐🛑[uibuilder:fs:replaceTemplate] ${statusMsg}`)
             res.statusMessage = statusMsg
             res.status = 500
             return res
@@ -515,7 +511,7 @@ class UibFs {
             throw new Error(`File write FAIL. ${err.message} [uibuilder:UibFs:writeInstanceFile]`, err)
         }
 
-        log.trace(`📗[uibuilder:UibFs:writeInstanceFile] File write SUCCESS. url=${url}, file=${folder}/${fname}`)
+        log.trace(`🌐[uibuilder:UibFs:writeInstanceFile] File write SUCCESS. url=${url}, file=${folder}/${fname}`)
     } // -- End of writeFile -- //
 
     //#endregion ---- ---- ----

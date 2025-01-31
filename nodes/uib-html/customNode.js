@@ -95,7 +95,7 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
         try {
             out.payload = dom.serialize()
         } catch (err) {
-            mod.RED.log.error(`[uib-html:inputMsgHandler] Cannot serialise the DOM. ${err.message} `, err)
+            mod.RED.log.error(`🌐🛑[uib-html:inputMsgHandler] Cannot serialise the DOM. ${err.message} `, err)
         }
 
         // And send it on its way

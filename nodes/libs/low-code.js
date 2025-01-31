@@ -29,21 +29,11 @@
  * @typedef {import('../../typedefs.js').uibPackageJson} uibPackageJson
  */
 
-// const { getSource } = require('../libs/uiblib')
-// const { promisify } = require('util')
-
 class UibLowCode {
-    //#region --- Class vars ---
     /** PRIVATE Flag to indicate whether setup() has been run (ignore the false eslint error)
      * @type {boolean}
      */
     #isConfigured = false
-
-    // #logUndefinedError = new Error('fs: this.log is undefined')
-    // #uibUndefinedError = new Error('fs: this.uib is undefined')
-    // #rootFldrNullError = new Error('fs: this.uib.rootFolder is null')
-
-    //#endregion --- ----- ---
 
     // constructor() {} // ---- End of constructor ---- //
 
@@ -55,7 +45,7 @@ class UibLowCode {
 
         // Prevent setup from being called more than once
         if ( this.#isConfigured === true ) {
-            RED.log.warn('⚠️[uibuilder:UibLowCode:setup] Setup has already been called, it cannot be called again.')
+            RED.log.warn('🌐⚠️[uibuilder:UibLowCode:setup] Setup has already been called, it cannot be called again.')
             return
         }
 

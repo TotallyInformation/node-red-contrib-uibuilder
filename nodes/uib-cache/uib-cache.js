@@ -195,7 +195,7 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
     } else {
         // Remove ExpressJS msg.res and msg.req because they are recursive objects and cannot be serialised
         if ( Object.prototype.hasOwnProperty.call(msg, 'req') || Object.prototype.hasOwnProperty.call(msg, 'res') ) {
-            mod.RED.log.info( '[uib-cache:inputMsgHandler] msg contains Express res/req. These cannot be serialised so removing them.' )
+            mod.RED.log.info('🌐📘[uib-cache:inputMsgHandler] msg contains Express res/req. These cannot be serialised so removing them.')
             delete msg.req
             delete msg.res
         }
@@ -266,8 +266,6 @@ function nodeInstance(config) {
      * same `this` context and so has access to all of the node instance properties.
      */
     this.on('close', (removed, done) => {
-        // console.log('>>>=[IN 4]=>>> [nodeInstance:close] Closing. Removed?: ', removed)
-
         done()
     })
 
