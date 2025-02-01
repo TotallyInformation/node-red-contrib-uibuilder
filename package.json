@@ -34,7 +34,7 @@
     "docsify-plugin-toc": "^1.3.2",
     "docsify-themeable": "^0.9.0",
     "esbuild": "^0.24.0",
-    "eslint": "^8.57.0",
+    "eslint": "^9.19.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^8.1.1",
