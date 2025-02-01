@@ -21,7 +21,7 @@ jobs:
       with:
         egress-policy: audit
 
-    - uses: actions/stale@0649bd81195b7ac109fbf9dde113af7e58a78b8e # v1.1.1
+    - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9.1.0
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         stale-issue-message: 'Stale issue message'
