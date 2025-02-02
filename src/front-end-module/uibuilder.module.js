@@ -1,25 +1,18 @@
 // @ts-nocheck
-/* This is the Front-End JavaScript for uibuilder  in HTML Module form
-  It provides a number of global objects that can be used in your own javascript.
-  see the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
-
-  Please use the default index.js file for your own code and leave this as-is.
-  See Uib._meta for client version string
-
-  Copyright (c) 2022-2025 Julian Knight (Totally Information)
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
+/**
+ * @kind module 
+ * @module uibuilder
+ * @description The client-side Front-End JavaScript for uibuilder in HTML Module form
+ *   It provides a number of global objects that can be used in your own javascript.
+ *   see the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
+ *
+ *   Please use the default index.js file for your own code and leave this as-is.
+ *   See Uib._meta for client version string
+ * @version 1.0.0
+ * @license Apache-2.0
+ * @author Julian Knight (Totally Information)
+ * @copyright (c) 2022-2025 Julian Knight (Totally Information)
+ */
 
 //#region --- Type Defs --- //
 /**

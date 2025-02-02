@@ -8226,3 +8226,17 @@ export {
   uibuilder_module_default as default,
   uibuilder2 as uibuilder
 };
+/**
+ * @kind module 
+ * @module uibuilder
+ * @description The client-side Front-End JavaScript for uibuilder in HTML Module form
+ *   It provides a number of global objects that can be used in your own javascript.
+ *   see the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
+ *
+ *   Please use the default index.js file for your own code and leave this as-is.
+ *   See Uib._meta for client version string
+ * @version 1.0.0
+ * @license Apache-2.0
+ * @author Julian Knight (Totally Information)
+ * @copyright (c) 2022-2025 Julian Knight (Totally Information)
+ */
