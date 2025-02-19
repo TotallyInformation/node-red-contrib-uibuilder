@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2025-01-03 20:13:07
+updated: 2025-01-17 20:14:34
 ---
 
 # Changelog
@@ -26,16 +26,65 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 <!-- Nothing currently. -->
 
+### 📌 Highlights
+
+* **NEW NODE** `uib-sidebar` - Creates a simple sidebar in the Node-RED Editor page. HTML for the sidebar is edited in the node. Messages sent to the node are passed to the sidebar. Any input HTML elements automatically send changes back to the output of the node.
+
+* **NEW FEATURE** `dom` - This is both a client-side new feature and a new message schema that facilitates data-driven DOM updates (e.g. web page updates) from both Node-RED and client code. It is a much simplified low-code feature. With it, you can easily create new content and update existing content on your web pages. It does, however, require some familiarity with HTML.
+
+* Updated `applyTemplate` function in the ui/uibuilder client libraries, gives a lot more flexibility.
+
+### **NEW** Node: `uib-sidebar`
+
+Creates a simple sidebar in the Node-RED Editor page. HTML for the sidebar is edited in the node. Messages sent to the node are passed to the sidebar. Any input HTML elements automatically send changes back to the output of the node.
+
+
+## **NEW/UPDATED BUILT-IN WEB COMPONENTS** (AKA "Widgets")
+
+These are pre-built into the uibuilder client library and can be used in your HTML without the need for writing JavaScript.
+
+* All of the components built into the uibuilder client library have been updated to match the latest standards used in my [independent web components](https://wc.totallyinformation.net/) as these represent the latest HTML standards and best practices.
+
+* `<apply-template>` - Takes the content of a `<template>` HTML tag and appends that content as children of itself. Allowing you to re-use standard, repeatable HTML without the need for JavaScript coding and without the need of sending potentially lengthy HTML from Node-RED every time it is needed. Any existing content between the `<apply-template>` tags is replaced. However, if the template has a slot, the existing content is placed back into the slot. This allows you to wrap existing content with a template.
+
+* `<uib-meta>` - Display's facts about the current page such as its file size, when it was created and when it was last updated. Obtains the data from Node-RED. The `type` attribute updated for ease of use.
+
+* `<uib-var>` - A web component that can be used to display dynamic content. It can be used to display simple text, HTML, lists, tables, and more. It can also be used to send data back to Node-RED.
+
+## **NEW** Front-end library: `tinyDom.js`
+
+When used with UIBUILDER, exposes a new global object `dom`. Enables easy changes to your uibuilder-enhanced web pages by providing easy functions to add to, remove or update the existing page.
+
+Also includes a new message schema that allows you to send messages from Node-RED to the client to update the DOM. This is a much simplified low-code feature.
+
+See the [documentation](client-docs/fns/dom.md) for more information.
+
 ## Front-end library: `ui.js`
 
+NB: Updates to this, also update the main uibuilder client library.
+
 * **UPDATED FUNCTIONS**
-  * `applyTemplate` - Now has 3 modes of operation. `insert` appends the template as the 1ST CHILD of the target. `replace` replaces all of the child content of the target. `wrap` puts the targets previous content into the 1ST SLOT of the template (if present).
+
+  * `applyTemplate` - Now has 3 modes of operation. `insert` appends the template as the 1ST CHILD of the target. `replace` replaces all of the child content of the target. `wrap` puts the targets previous content into the 1ST SLOT of the template (if present), this allows you to wrap existing content with a template. Also improved error handling and did some code cleanup.
+  * `$` - Now has an optional 3rd parameter to allow specifying the search root context. Defaults to `document` which was previously the only option. If used, must be a valid HTML element. Brings it further into line with similar functions in other libraries.
+  * `$$` - Now has an optional 2nd parameter to allow specifying the search root context. Defaults to `document` which was previously the only option. If used, must be a valid HTML element. Brings it further into line with similar functions in other libraries.
+
+## Documentation
+
+* Docsify configuration updated so that the description for the currently shown page is reflected in the browser's meta description tag. This should help with search engine optimisation and when pasting a link from the GitHub version of the documentation into social media.
+
+## Other changes
+
+* Runtime log messages now all start with `🌐` to help them stand out from other log entries. All log output should then have `[....]` after the icon but before the information and data. The content of the braces being `uibuilder:` followed by additional information of what code module/function generated the log.
+* Runtime warning log messages now all start with `🌐⚠️` to help them stand out from other log entries.
+* Runtime error log messages now all start with `🌐🛑` to help them stand out from other log entries.
+* Much previously deprecated code has been removed.
 
 ## [v7.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...v7.0.4)
 
 ### 📌 Highlights
 
-* **Any** *Node-RED custom node* can now send a message to a uibuilder client! In your runtime code, add `RED.events.emit('UIBUILDER/send/<url-name>', {payload: 'Hi from my custom node!'})` where `<url-name>` is the URL set in a deployed uibuilder node. The data will be sent to all browser tabs connected to that uibuilder endpoint. Note though that this bypasses any uib-cache node.
+* **Any** *Node-RED custom node* can now send a message to a uibuilder client! In your runtime code, add `RED.events.emit('uibuilder/send/<url-name>', {payload: 'Hi from my custom node!'})` where `<url-name>` is the URL set in a deployed uibuilder node. The data will be sent to all browser tabs connected to that uibuilder endpoint. Note though that this bypasses any uib-cache node.
 
 * You can now send a message from Node-RED to a connected client from a Function Node! Simply add `RED.util.uib.send('uibname', {....})` to your function code. This will send a message to all connected clients for that uibuilder instance.
 
@@ -65,6 +114,10 @@ Please see the roadmap in the docs for the backlog of future planned development
 * The `uib-plugin` library now renamed to `uib-editor-plugin` for clarity.
 
 * New `uib-runtime-plugin` library added. Now manages most of the additions to `RED.util.uib` which contains functions made available to Node-RED function nodes.
+
+* 1st phase of standardising event id's. All now start with `uibuilder/`.
+
+* 1st phase of standardising log outputs. All will eventually start with `🌐` to help them stand out from other log entries.
 
 ### `uib-brand.css` styles & variables
 

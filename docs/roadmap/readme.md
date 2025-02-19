@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2025-01-03 16:26:09
+updated: 2025-01-19 15:52:40
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -36,8 +36,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
     * [ ] Document new managed var: `globalMsg`.
 
 ### FE: Client Library
-
-* [ ] `applyTemplate` - Allow slot content to be changed.
 
 * [ ] [**STARTED**] Ability to visually show all uibuilder managed variables.
 
@@ -796,6 +794,8 @@ See Node-RED worldmap for reference.
 * ==Add reactive data feature== (see [arrow.js](https://www.arrow-js.com/docs/#reactive-data))
 
 * msgShow - add a message counter (optional?)
+
+* Allow setting of [hooks for DOMPurify](https://github.com/cure53/DOMPurify/tree/main/demos#what-is-this).
 
 * Forms (eventSend):
 
