@@ -13,6 +13,10 @@ if (!window['uibSidebarNodes']) {
     window['uibSidebarNodes'] = new Set()
 }
 
+const purifyOpts = {
+    USE_PROFILES: { html: true, svg: true, svgFilters: true },
+}
+
 /** Send a message via the node's runtime (API call)
  * @param {*} node -
  * @param {*} msg -
@@ -128,8 +132,8 @@ RED.events.on('nodes:remove', function(node) {
 function updateTab(html) {
     // Empty the current sidebar UI master element
     sbEl.innerHTML = ''
-    // Replace with the new HTML
-    sbEl.innerHTML = html
+    // Replace with the new HTML - but sanitise it first
+    sbEl.innerHTML = DOMPurify.sanitize(html, purifyOpts) // eslint-disable-line no-undef
 }
 
 // Subscribe to notifications from the runtime
@@ -151,7 +155,29 @@ RED.comms.subscribe('notification/uibuilder/uib-sidebar/#', function(topic, payl
             if (el) {
                 // for each property in msg.sidebar[key], update the element
                 for (const prop in msg.sidebar[key]) {
-                    el[prop] = msg.sidebar[key][prop]
+                    switch (prop) {
+                        // Don't allow outerHTML to be updated
+                        case 'outerHTML': {
+                            break
+                        }
+
+                        // Only update if sanitised. DOMPurify is loaded by Node-RED core.
+                        case 'innerHTML': {
+                            let clean
+                            try {
+                                clean = DOMPurify.sanitize(msg.sidebar[key][prop], purifyOpts) // eslint-disable-line no-undef
+                                el[prop] = clean
+                            } catch (e) {
+                                log('📊 [uib-sidebar] DOMPurify error:', e)
+                            }
+                            break
+                        }
+
+                        default: {
+                            el[prop] = msg.sidebar[key][prop]
+                            break
+                        }
+                    }
                 }
             }
             // if (Object.hasOwnProperty.call(msg.sidebar, key)) {
