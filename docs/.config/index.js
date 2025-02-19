@@ -89,6 +89,9 @@ window.$docsify = { //  eslint-disable-line no-undef
                     //#region --- Add front-matter (YAML) standard metadata to each page if present ---
                     if (vm.frontmatter.description) {
                         content = `${vm.frontmatter.description}\n\n${content}`
+                        // Update the output page's description meta tag
+                        const desc = document.querySelector('meta[name="description"]')
+                        if (desc) desc.setAttribute('content', vm.frontmatter.description)
                     }
 
                     if (vm.frontmatter.status) {
