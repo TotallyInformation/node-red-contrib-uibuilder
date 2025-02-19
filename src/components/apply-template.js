@@ -1,18 +1,9 @@
-/** A zero dependency web component that will display some metadata about the current web page.
+/** A web component that applies a template to the DOM.
  *
- * @version 1.0.0 2024-06-01
- *
- * @example
- *  <div id="more">
- *    <uib-meta type="created" format="t"></uib-meta><br>
- *    <uib-meta format="d"></uib-meta><br>
- *    <uib-meta type="updated" format="dt"></uib-meta><br>
- *    <uib-meta type="crup" format="d"></uib-meta><br>
- *    <uib-meta type="size" format="k"></uib-meta><br>
- *  </div>
+ * Version: See component version
  */
 /*
-  Copyright (c) 2024-2024 Julian Knight (Totally Information)
+  Copyright (c) 2024-2025 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -27,7 +18,7 @@
   limitations under the License.
 */
 
-const uib = window['uibuilder']
+import TiBaseComponent from './ti-base-component'
 
 // const template = document.createElement('template')
 // template.innerHTML = /** @type {HTMLTemplateElement} */ /*html*/`<span></span>`
@@ -36,69 +27,146 @@ const uib = window['uibuilder']
 // {/* <style>@import url("../uibuilder/uib-brand.min.css");</style><span></span> */}
 // `
 
+/** Namespace
+ * @namespace Live
+ */
+
 /**
  * ApplyTemplate is a custom HTML element that allows you to apply a template to the DOM.
  * It listens to changes in specific attributes and updates the DOM accordingly.
  * 
  * @class ApplyTemplate
- * @extends {HTMLElement}
+ * @extends TiBaseComponent
+ * @description Applies an HTML template to the DOM
  * 
- * @property {number} static _iCount - Holds a count of how many instances of this component are on the page.
- * @property {Array<string>} static props - List of all of the HTML attributes (props) listened to.
- * @property {boolean} once - Holder for the once attribute.
- * @property {Object} log - Holder for the uibuilder log.
- * 
+ * @element apply-template
+ * @memberOf Live
+
+ * METHODS FROM BASE:
+ * @method config Update runtime configuration, return complete config
+ * @method createShadowSelectors Creates the jQuery-like $ and $$ methods
+ * @method deepAssign Object deep merger
+ * @method doInheritStyles If requested, add link to an external style sheet
+ * @method ensureId Adds a unique ID to the tag if no ID defined.
+ * @method _connect Call from start of connectedCallback. Sets connected prop and creates shadow selectors
+ * @method _event(name,data) Standardised custom event dispatcher
+ * @method _disconnect Call from end of disconnectedCallback. Clears connected prop and removes shadow selectors
+ * @method _ready Call from end of connectedCallback. Sets connected prop and outputs events
+ * @method _uibMsgHandler Not yet in use
+ * STANDARD METHODS:
+ * @method attributeChangedCallback Called when an attribute is added, removed, updated or replaced
+ * @method connectedCallback Called when the element is added to a document
+ * @method constructor Construct the component
+ * @method disconnectedCallback Called when the element is removed from a document
+
+ * OTHER METHODS:
+ * None
+
+ * @fires apply-template:connected - When an instance of the component is attached to the DOM. `evt.details` contains the details of the element.
+ * @fires apply-template:ready - Alias for connected. The instance can handle property & attribute changes
+ * @fires apply-template:disconnected - When an instance of the component is removed from the DOM. `evt.details` contains the details of the element.
+ * @fires apply-template:attribChanged - When a watched attribute changes. `evt.details.data` contains the details of the change.
+ * NOTE that listeners can be attached either to the `document` or to the specific element instance.
+
  * @constructor
  * @throws {Error} Throws an error if the uibuilder client library is not available.
- * 
- * @method static get observedAttributes - Makes HTML attribute changes watched.
- * @returns {Array<string>} The list of observed attributes.
- * 
- * @method attributeChangedCallback - Handle watched attributes.
- * @param {string} attrib - The name of the attribute that is changing.
- * @param {string} oldVal - The old value of the attribute.
- * @param {string} newVal - The new value of the attribute.
- * 
- * @method connectedCallback - Runs when an instance is added to the DOM.
+ 
+ * Standard watched attributes (common across all my components):
+ * attr {string|boolean} inherit-style - Optional. Load external styles into component (only useful if using template). If present but empty, will default to './index.css'. Optionally give a URL to load.
+ * @attr {string} name - Optional. HTML name attribute. Included in output _meta prop.
+
+ * Other watched attributes:
+ * @attr {string} template-id - Required. The ID of the template to apply.
+ * @attr {string|boolean} once - Optional. If true, the template can only be used once. Default is false.
+
+ * PROPS FROM BASE:
+ * @prop {number} _iCount Static. The component version string (date updated)
+ * @prop {boolean} uib True if UIBUILDER for Node-RED is loaded
+ * @prop {object} uibuilder Reference to loaded UIBUILDER for Node-RED client library if loaded (else undefined)
+ * @prop {function(string): Element} $ jQuery-like shadow dom selector (or undefined if shadow dom not used)
+ * @prop {function(string): NodeList} $$  jQuery-like shadow dom multi-selector (or undefined if shadow dom not used)
+ * @prop {boolean} connected False until connectedCallback finishes
+ * @prop {string} name Placeholder for the optional name attribute
+ * @prop {object} opts This components controllable options - get/set using the `config()` method - empty object by default
+ * @prop {string} baseVersion Static. The base component version string (date updated).
+ * OTHER STANDARD PROPS:
+ * @prop {string} componentVersion Static. The component version string (date updated). Also has a getter that returns component and base version strings.
+
+ * Other props:
+ * @property {boolean} once - Holder for the once attribute. If true, the template can only be used once. Default is false.
+ * @property {string} template-id - The ID of the template to apply.
+ * By default, all attributes are also created as properties
+
+ * @slot Container contents (only if used template contains a slot)
+
+ * See https://github.com/runem/web-component-analyzer?tab=readme-ov-file#-how-to-document-your-components-using-jsdoc
  */
-export default class ApplyTemplate extends HTMLElement {
-    //#region --- Class Properties ---
-    /** Holds a count of how many instances of this component are on the page */
-    static _iCount = 0
-    /** @type {Array<string>} List of all of the html attribs (props) listened to */
-    static props = ['template-id', 'once']
+class ApplyTemplate extends TiBaseComponent {
+    /** Component version */
+    static componentVersion = '2025-01-05'
+
     // Holder for once attribute
     once = false
-    // Holder for uibuilder log
-    log
-    //#endregion --- Class Properties ---
-
-    constructor() {
-        super()
-        // this.shadow = this.attachShadow({ mode: 'open', delegatesFocus: true })
-        //  .append(template.content.cloneNode(true))
-
-        // this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot)
-
-        // Apply external styles to the shadow dom - assumes you use index.css in same url location as main url
-        // this.css = document.createElement('link')
-        // this.css.setAttribute('type', 'text/css')
-        // this.css.setAttribute('rel', 'stylesheet')
-        // this.css.setAttribute('href', './index.css')
-
-        // Get the latest page metadata from the server
-        // this.value = window['uibuilder'].get('pageMeta')
-        // if (!this.value) window['uibuilder'].getPageMeta()
-        // this.doWatch()
-
-        if (!window['uibuilder']) throw new Error('uibuilder client library not available')
-        this.log = window['uibuilder'].log
-        this.dispatchEvent(new Event('apply-template:construction', { bubbles: true, composed: true }))
-    }
 
     // Makes HTML attribute change watched
     static get observedAttributes() {
-        return ApplyTemplate.props
+        return [
+            // Standard watched attributes:
+            /*'inherit-style',*/ 'name',
+            // Other watched attributes:
+            'template-id', 'once',
+        ]
+    }
+    
+    constructor() {
+        super()
+        if (!this.uibuilder) throw new Error('[apply-template] uibuilder client library not available')
+    }
+
+    // Runs when an instance is added to the DOM
+    connectedCallback() {
+        this._connect() // Keep at start.
+
+        const templateId = this['template-id']
+        const onceOnly = this['once']
+
+        if (!templateId) {
+            throw new Error('[ApplyTemplate] Template id attribute not provided. Template must be identified by an id attribute')
+        }
+
+        const template = document.getElementById(templateId)
+        if (!template || template.tagName !== 'TEMPLATE') {
+            throw new Error(`[ApplyTemplate] Source must be a <template>. id='${templateId}'`)
+        }
+
+        const existContent = this.innerHTML
+        this.innerHTML = '' // Clear any existing content
+
+        let templateContent
+        if (onceOnly === false) {
+            // @ts-ignore
+            templateContent = document.importNode(template.content, true)
+        } else {
+            // NB content.childElementCount = 0 after adoption
+            // @ts-ignore
+            templateContent = document.adoptNode(template.content)
+        }
+
+        this.appendChild(templateContent)
+
+        if (existContent) {
+            const slot = this.getElementsByTagName('slot')
+            if (slot.length > 0) {
+                slot[0].innerHTML = existContent
+            }
+        }
+
+        this._ready() // Keep at end. Let everyone know that a new instance of the component has been connected & is ready
+    }
+
+    /** Runs when an instance is removed from the DOM */
+    disconnectedCallback() {
+        this._disconnect() // Keep at end.
     }
 
     /** Handle watched attributes
@@ -109,39 +177,32 @@ export default class ApplyTemplate extends HTMLElement {
      * @param {string} oldVal The old value of the attribute
      */
     attributeChangedCallback(attrib, oldVal, newVal) {
+        /** Optionally ignore attrib changes until instance is fully connected
+         * Otherwise this can fire BEFORE everthing is fully connected.
+         */
+        // if (!this.connected) return
+
+        // Don't bother if the new value same as old
         if ( oldVal === newVal ) return
+        // Create a property from the value - WARN: Be careful with name clashes
         this[attrib] = newVal
-    } // --- end of attributeChangedCallback --- //
 
-    // Runs when an instance is added to the DOM
-    connectedCallback() {
-        const templateId = this['template-id']
-        const onceOnly = this['once']
+        // Add other dynamic attribute processing here.
+        // If attribute processing doesn't need to be dynamic, process in connectedCallback as that happens earlier in the lifecycle
 
-        if (templateId) {
-            const template = document.getElementById(templateId)
-
-            if (template) {
-                try {
-                    let content
-                    if (onceOnly === false) {
-                        content = document.importNode(template.content, true)
-                    } else {
-                        content = document.adoptNode(template.content)
-                    }
-                    // NB content.childElementCount = 0 after adoption
-                    this.appendChild(content)
-                } catch (e) {
-                    this.log('error', 'ApplyTemplate', `Source must be a <template>. id='${templateId}'`)
-                }
-            } else {
-                this.log('error', 'ApplyTemplate', `Source not found: id='${templateId}'`)
-            }
-        } else {
-            this.log('error', 'ApplyTemplate', 'Template id attribute not provided. Template must be identified by an id attribute.')
-        }
+        // Keep at end. Let everyone know that an attribute has changed for this instance of the component
+        this._event('attribChanged', { attribute: attrib, newVal: newVal, oldVal: oldVal })
     }
 }
 
-// Add the class as a new Custom Element to the window object
-// customElements.define('uib-meta', UibMeta)
+// Make the class the default export so it can be used elsewhere
+export default ApplyTemplate
+
+/** Self register the class to global
+ * Enables new data lists to be dynamically added via JS
+ * and lets the static methods be called
+ */
+window['ApplyTemplate'] = ApplyTemplate
+
+// Add the class as a new Custom Element to the window object - Done by uibuilder client library otherwise uibuilder fns can't be used
+// customElements.define('apply-template', ApplyTemplate)
