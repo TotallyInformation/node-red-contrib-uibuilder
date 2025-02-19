@@ -22,11 +22,6 @@ UIBUILDER for Node-RED allows the easy creation of data-driven front-end web app
 
 It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces integrated with Node-RED.
 
-> [!NOTE]
-> UIBUILDER triggers a quality warning in the [Flows scorecard entry](https://flows.nodered.org/node/node-red-contrib-uibuilder/scorecard).
-> 
-> "Number of Dependencies" is >6 - this is due to the large number of features in UIBUILDER and is expected. Even so, v7 only has 7 dependencies. 1 more is due to be removed in a future release.
-
 ## Installation
 
 UIBUILDER is best installed using Node-RED's Palette Manager.
@@ -62,7 +57,7 @@ You will need to restart Node-RED if installing manually.
 * Servers:
   * Node-RED: v4+
   * Node.js: v18+ LTS
-  * Platforms: Linux, Windows, MacOS, Raspberry Pi, Docker, etc.
+  * Platforms: Linux, Windows, MacOS, Raspberry Pi, Docker, FlowFuse, etc.
 * Browsers: 
   * CSS - 0.12% or above of global usage but not Internet Explorer ([ref.](https://browserslist.dev/?q=Pj0wLjEyJSwgbm90IGllID4gMA%3D%3D)). The uncompiled CSS should work in all current mainstream browsers. The compiled CSS (`uib-brand.min.css`) should work in browsers back to early 2019, possibly before. Enforced by [LightningCSS](https://lightningcss.com/).
   * JavaScript - ES6+ so should work in all current mainstream browsers. The compiled JS (`uibuilder.min.js`) should work in browsers back to early 2019, possibly before. Enforced by [ESBuild](https://esbuild.github.io/).
@@ -90,7 +85,7 @@ Within Node-RED, use the hamburger menu. Click Import. Click Examples. Select th
 
 The templates feature in UIBUILDER provides working front-end code of various configurations.
 
-Other examples can be found on the [Node-RED Flows site](https://flows.nodered.org/search?term=uibuilder) and the [UIBUILDER WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). Also see the FAQ's and answered questions on the [Node-RED Forum](https://discourse.nodered.org/tag/node-red-contrib-uibuilder).
+Other examples can be found on the [Node-RED Flows site](https://flows.nodered.org/search?term=uibuilder) and the [UIBUILDER WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). Also see the [UIBUILDER tag on the Node-RED Forum](https://discourse.nodered.org/tag/uibuilder).
 
 ## Documentation and other links
 
@@ -140,7 +135,7 @@ The purpose of UIBUILDER is to:
 * Provide interface/data standards for exchanging data and controls between Node-RED and the web pages.
 * Enable the creation and management of multiple web apps from a single Node-RED instance.
 * Reduce the amount of front-end code (HTML/JavaScript) needed to create and manage a web app.
-* Reduce the knowledge required for creating reliable, accessible web apps by providing low-code and no-code features.
+* Reduce the knowledge required for creating reliable, accessible web apps by providing low-code and no-code features. But still ensure that any learning is applicable to general web development.
 * Make it easy to install and serve front-end libraries to support the development of more complex web apps.
 
 ## Features
@@ -149,7 +144,8 @@ The core features of UIBUILDER:
 
 * As far as possible, uses only vanilla, native HTML, CSS and JavaScript. Other than the Socket.IO client for communications (which is baked into the front-end library), no other front-end libraries are needed. UIBUILDER stays as close as possible to native HTML to avoid future compatibility issues. However, it does aim to make interaction with native HTML easier.
 * Nodes to enable zero-code translation of input data to usable and accessible web elements.
-* Capability for low-code, configuration-driven (data-driven) UI's. Creating a framework for describing a UI and translating to actual code without having to write code.
+* Capability for low-code, configuration-driven, data-driven UI's.
+* Creating a capability for describing a UI and translating to actual code without having to write code.
 * 2-way communications channel between the Node-RED server (back-end) and front-end UI.
 * A Node-RED node to act as the focus for communications with other nodes for additional ease of use.
 * Front-end library to: do the complex parts of the communications in the client browser; make manipulation of the UI easier and more consistent; make it easy to get data back to Node-RED as needed (both automatically and manually).
@@ -163,6 +159,9 @@ The core features of UIBUILDER:
 * Each `uibuilder` node instance provides a private 2-way communications channel between the Node-RED server (back-end) and browser (front-end) UI code.
 * Supports the use of standard web development workflows.
 * Allows the creation of a dedicated web service to facilitate independent security.
+* Allows any custom Node-RED node to communicate easily with a uibuilder enabled client via the Node-RED events system.
+* Provides server-side hydration of no-/low-code definitions into full HTML & easy saving to uibuilder folders.
+* Make it easy to develop event-driven UI's.
 
 <details><summary>No-code UI's</summary>
 
