@@ -273,4 +273,7 @@ Many other people have contributed ideas and suggestions, thanks to everyone who
 
 <a href="https://stackexchange.com/users/1375993/julian-knight"><img src="https://stackexchange.com/users/flair/1375993.png" width="208" height="58" alt="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" /></a>
 
-Please also check out my blog, [Much Ado About IT](https://it.knightnet.org.uk), it has information about all sorts of topics, mainly IT related, including Node-RED.
+Please also check out my blogs:
+
+* [Totally Information's Web Log](https://www.totallyinformation.net), "Ramblings by Julian Knight on all things Digital, Technology and Life". This is my new blog. It will have articles on Node-RED, web development, hardware reviews and more.
+* [Much Ado About IT](https://it.knightnet.org.uk), it has information about all sorts of topics, mainly IT related, including Node-RED. This is no longer being updated but it will be retained for reference.
