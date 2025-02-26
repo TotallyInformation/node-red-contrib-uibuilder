@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* Creates HTML UI's based on a standardised data input.
   Works stand-alone, with uibuilder or with Node.js/jsdom.
   See: https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/config-driven-ui
@@ -19,7 +20,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
  */
-/* globals module:true */
 
 // Namespaces - See https://stackoverflow.com/a/52572048/1309986
 // const NAMESPACES = {
@@ -103,7 +103,7 @@ const Ui = class Ui {
                     if (lang && window['hljs'] && window['hljs'].getLanguage(lang)) {
                         try {
                             return `<pre class="">
-                                    <code class="hljs border">${window['hljs'].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
+                                    <code class="hljs border">${window['hljs'].highlight(str, { language: lang, ignoreIllegals: true, }).value}</code></pre>`
                         } finally { } // eslint-disable-line no-empty
                     }
                     return `<pre class="hljs border"><code>${Ui.md.utils.escapeHtml(str).trim()}</code></pre>`
@@ -135,7 +135,7 @@ const Ui = class Ui {
                 if (window['hljs']) {
                     if (lang && window['hljs'].getLanguage(lang)) {
                         try {
-                            return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window['hljs'].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
+                            return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window['hljs'].highlight(str, { language: lang, ignoreIllegals: true, }).value}</code></pre>`
                         } finally { } // eslint-disable-line no-empty
                     } else {
                         try {
@@ -350,7 +350,7 @@ const Ui = class Ui {
                 try {
                     el.addEventListener(type, (evt) => {
                         // Use new Function to ensure that esbuild works: https://esbuild.github.io/content-types/#direct-eval
-                        (new Function('evt', `${comp.events[type]}(evt)`))(evt) // eslint-disable-line no-new-func
+                        (new Function('evt', `${comp.events[type]}(evt)`))(evt)
                     })
                     // newEl.setAttribute( 'onClick', `${comp.events[type]}()` )
                 } catch (err) {
@@ -603,7 +603,7 @@ const Ui = class Ui {
             // Nothing was found so ADD the element instead
             if (elToReplace === undefined || elToReplace === null) {
                 Ui.log('trace', `Ui:_uiReplace:components-forEach:${i}:noReplace`, 'Cannot find the DOM element. Adding instead.', compToReplace)()
-                this._uiAdd({ components: [compToReplace] }, false)
+                this._uiAdd({ components: [compToReplace], }, false)
                 return
             }
 
@@ -696,7 +696,7 @@ const Ui = class Ui {
                 // ! NOT CONVINCED THIS ACTUALLY WORKS !
                 if (compToUpd.components) {
                     Ui.log('trace', '_uiUpdate:nested-component', `Element #${j} - nested-component`, compToUpd, el)()
-                    const nc = { _ui: [] }
+                    const nc = { _ui: [], }
                     compToUpd.components.forEach((nestedComp, k) => {
                         const method = nestedComp.method || compToUpd.method || ui.method
                         if (nestedComp.method) delete nestedComp.method
@@ -740,7 +740,7 @@ const Ui = class Ui {
      * @param {string} cssSelector A CSS Selector that identifies the element to return
      * @param {"el"|"text"|"html"|"attributes"|"attr"} [output] Optional. What type of output to return. Defaults to "el", the DOM element reference
      * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
-     * @returns {HTMLElement|string|InnerHTML|array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
+     * @returns {HTMLElement|string|Array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
      */
     $(cssSelector, output, context) {
         if (!context) context = Ui.doc
@@ -863,7 +863,7 @@ const Ui = class Ui {
             return
         }
 
-        let targetContent = target.innerHTML ?? ''
+        const targetContent = target.innerHTML ?? ''
         if (targetContent && config.mode === 'replace') {
             Ui.log('warn', 'Ui:applyTemplate', `Target element is not empty, content is replaced. id='${targetId}'`)()
         }
@@ -929,7 +929,7 @@ const Ui = class Ui {
      * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
      * @returns {Promise<any>} Status
      */
-    async include(url, uiOptions) { // eslint-disable-line sonarjs/cognitive-complexity
+    async include(url, uiOptions) {
         // TODO: src, id, parent must all be a strings
         if (!fetch) {
             Ui.log(0, 'Ui:include', 'Current environment does not include `fetch`, skipping.')()
@@ -1042,13 +1042,13 @@ const Ui = class Ui {
         uiOptions.type = 'div'
         uiOptions.slot = slot
         if (!uiOptions.parent) uiOptions.parent = 'body'
-        if (!uiOptions.attributes) uiOptions.attributes = { class: 'included' }
+        if (!uiOptions.attributes) uiOptions.attributes = { class: 'included', }
 
         // Use uibuilder's standard ui processing to turn the instructions into HTML
         this._uiReplace({
             components: [
                 uiOptions
-            ]
+            ],
         })
 
         Ui.log('trace', `Ui:include:${type}`, txtReturn)()
@@ -1137,7 +1137,7 @@ const Ui = class Ui {
                 if (data !== undefined) {
                     Ui.log('trace', 'Ui:loadui:then2', 'Parsed JSON successfully obtained')()
                     // Call the _uiManager
-                    this._uiManager({ _ui: data })
+                    this._uiManager({ _ui: data, })
                     return true
                 }
                 return false
@@ -1153,7 +1153,7 @@ const Ui = class Ui {
      * @param {string} opts.targetSelector Required, CSS Selector that identifies the element to be moved
      */
     moveElement(opts) {
-        const { sourceSelector, targetSelector, moveType, position } = opts
+        const { sourceSelector, targetSelector, moveType, position, } = opts
         const sourceEl = document.querySelector(sourceSelector)
         if (!sourceEl) {
             Ui.log(0, 'Ui:moveElement', 'Source element not found')()
@@ -1179,8 +1179,8 @@ const Ui = class Ui {
             type: node.nodeName,
             attributes: undefined,
 
-            isUserInput: node.validity ? true : false, // eslint-disable-line no-unneeded-ternary
-            userInput: !node.validity ? undefined : { // eslint-disable-line multiline-ternary
+            isUserInput: node.validity ? true : false,
+            userInput: !node.validity ? undefined : {
                 value: node.value,
                 validity: undefined,
                 willValidate: node.willValidate,
@@ -1194,7 +1194,7 @@ const Ui = class Ui {
             const listEntries = Ui.doc.querySelectorAll(`${cssSelector} li`)
             if (listEntries) {
                 thisOut.list = {
-                    'entries': listEntries.length
+                    'entries': listEntries.length,
                 }
             }
         }
@@ -1202,7 +1202,7 @@ const Ui = class Ui {
             const listEntries = Ui.doc.querySelectorAll(`${cssSelector} dt`)
             if (listEntries) {
                 thisOut.list = {
-                    'entries': listEntries.length
+                    'entries': listEntries.length,
                 }
             }
         }
@@ -1248,23 +1248,23 @@ const Ui = class Ui {
      */
     async notification(config) {
         if (typeof config === 'string') {
-            config = { body: config }
+            config = { body: config, }
         }
         // Are notifications available?
         if (typeof Notification === 'undefined') return Promise.reject(new Error('Notifications not available in this browser'))
         // Do we have permission? If not, ask for permission
         let permit = Notification.permission
         if (permit === 'denied') {
-            return Promise.reject(new Error('Notifications not permitted by user')) // eslint-disable-line no-useless-return
+            return Promise.reject(new Error('Notifications not permitted by user'))
         } else if (permit === 'granted') {
             return this._showNotification(config)
-        } else { // if (permit === 'default') {
-            permit = await Notification.requestPermission()
-            if (permit === 'granted') {
-                return this._showNotification(config)
-            }
-            return Promise.reject(new Error('Notifications not permitted by user'))
         }
+        // if (permit === 'default') {
+        permit = await Notification.requestPermission()
+        if (permit === 'granted') {
+            return this._showNotification(config)
+        }
+        return Promise.reject(new Error('Notifications not permitted by user'))
     }
 
     /** Remove All, 1 or more class names from an element
@@ -1329,7 +1329,7 @@ const Ui = class Ui {
      */
     sanitiseHTML(html) {
         if (!Ui.win['DOMPurify']) return html
-        return Ui.win['DOMPurify'].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs })
+        return Ui.win['DOMPurify'].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs, })
     }
 
     /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
@@ -1341,7 +1341,7 @@ const Ui = class Ui {
      * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
      * @returns {void}
      */
-    showDialog(type, ui, msg) { // eslint-disable-line sonarjs/cognitive-complexity
+    showDialog(type, ui, msg) {
 
         //#region -- Check properties --
 
@@ -1519,13 +1519,13 @@ const Ui = class Ui {
      */
 
     /** Directly add a table to a parent element.
-     * @param {Array<object>|Array<array>|Object} data  Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
+     * @param {Array<object>|Array<Array>|object} data  Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
      * @param {object} [opts] Build options
      *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
      *   @param {HTMLElement|string} opts.parent Default=body. The table will be added as a child. May be an actual HTML element or a CSS Selector
      *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
      */
-    createTable(data=[], opts={parent: 'body'}) {
+    createTable(data=[], opts={parent: 'body',}) {
         if (!opts.parent) throw new Error('[ui.js:createTable] opts.parent must be provided')
         this.buildHtmlTable(data, opts)
     }
@@ -1534,14 +1534,14 @@ const Ui = class Ui {
     /** Builds & returns an HTML table element from an array (or object) of objects
      * 1st row is used for columns unless you pass opts.cols to describe them.
      * If an object of objects, inner keys are used to populate th/td `data-col-name` attribs. Outer keys applied as row ID's.
-     * 
+     *
      * TODO
      * - Allow optional caption, heading, footers, optional collapse
      * - Multiple headings, footers
      * - colspans, rowspans
      * - multiple tbody
-     * 
-     * @param {Array<object>|Array<array>|Object} data Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
+     *
+     * @param {Array<object>|Array<Array>|object} data Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
      * @param {object} opts Table options
      *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
      *   @param {HTMLElement|string=} opts.parent If provided, the table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
@@ -1564,7 +1564,7 @@ const Ui = class Ui {
         if (rowKeys.length > 1000) Ui.log(1, 'Uib:buildHtmlTable', `Warning, data is ${rowKeys.length} rows. Anything over 1,000 can get very slow to complete.`)()
 
         const tbl = Ui.doc.createElement('table')
-        
+
         // Heading row
         const thead = Ui.doc.createElement('thead')
         const headerRow = Ui.doc.createElement('tr')
@@ -1601,7 +1601,7 @@ const Ui = class Ui {
             if (col.hasName === true) thEl.dataset.colName = name
             headerRow.appendChild(thEl)
         })
-        
+
         thead.appendChild(headerRow)
         tbl.appendChild(thead)
 
@@ -1639,12 +1639,12 @@ const Ui = class Ui {
 
         return tbl
     }
-    
+
     /** Adds (or replaces) a single row in an existing table>tbody
      * NOTE: Row numbers use the rowIndex property of the row element.
      * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
-     * @param {object|array} rowData A single row of column/cell data
-     * @param {object} [options]
+     * @param {object|Array} rowData A single row of column/cell data
+     * @param {object} [options] Additional options
      *  @param {number=} options.body Optional, default=0. The tbody section to add the row to.
      *  @param {boolean=} options.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
      *  @param {string=} options.rowId Optional. HTML element ID for the added row
@@ -1652,7 +1652,7 @@ const Ui = class Ui {
      *  @param {number=} options.beforeRow Optional. If provided, the new row will be added before this row number. Ignored if afterRow is provided
      *  @param {number=} options.replaceRow Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
      *  @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
-     * 
+     *
      * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
      */
     tblAddRow(tbl, rowData={}, options={}) {
@@ -1702,7 +1702,7 @@ const Ui = class Ui {
             cols.push(cellEl)
         }
         // console.log('COLS:', cols)
-        
+
         // walk through provided data
         Object.keys(rowData).forEach( (colKey, i, row) => {
             // console.log('++ ROW KEY. i=', i, 'rowKey=', rowKey, 'rowData[rowKey]=', rowData[rowKey])
@@ -1754,7 +1754,7 @@ const Ui = class Ui {
      * @example tblAddListener('#eltest-tbl-table', {eventScope: 'cell'}, myVar2)
      *
      * @param {string} tblSelector The table CSS Selector
-     * @param {object} [options={}] Additional options
+     * @param {object} [options] Additional options. Default={}
      *   @param {"row"|"cell"=} options.eventScope Optional, default=row. Return data for either the whole row (as an object) or for the single cell clicked
      *   @param {"text"|"html"=} options.returnType Optional, default=text. Return text or html data
      *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
@@ -1774,7 +1774,7 @@ const Ui = class Ui {
         if (!options.pad) options.pad = 3
         if (!options.logLevel) options.logLevel = 2 // info
         if (!('send' in options)) options.send = true
-        
+
         // Add event listener to the table's <tbody> to capture clicks on any <tr> within it
         table.querySelector('tbody').addEventListener(options.eventType, (event) => {
             Object.keys(out).forEach(key => delete out[key]) // empty the out object
@@ -1782,7 +1782,7 @@ const Ui = class Ui {
             const clickedRow = event.target.closest('tr')
             const clickedCell = event.target.closest('td')
             // console.log('element clicked: ', clickedEl)
-            
+
             if (clickedRow) {
                 out.clickType = options.eventScope
                 out.eventType = options.eventType
@@ -1804,7 +1804,7 @@ const Ui = class Ui {
                 }
 
                 Ui.log(options.logLevel, 'Ui:tblAddClickListener', `${options.eventScope} ${options.eventType} on row=${rowIndex}, col=${cellIndex}, data: `, out)()
-                
+
                 // If UIBUILDER for Node-RED client library, send a message back to Node-RED
                 if (options.send === true && Ui.win['uibuilder']) Ui.win['uibuilder'].send({
                     topic: `${tblSelector} ${options.eventScope} ${options.eventType}`,
@@ -1818,10 +1818,10 @@ const Ui = class Ui {
      * @param {string|number} rowKey Key or index to use for column search
      * @param {Array<columnDefinition>=} colMeta Array of column definitions. If not provided, will need the HTML table element.
      * @param {HTMLTableElement=} tblEl If the colMeta table not provided, provide the HTML table element to do the lookup
-     * @returns 
+     * @returns {columnDefinition} Column metadata object
      */
     tblFindColMeta(rowKey, colMeta, tblEl) {
-        if (!colMeta && !tblEl) throw new Error("[tblFindColMeta] Either the column metadata array or the HTML table element must be provided");
+        if (!colMeta && !tblEl) throw new Error('[tblFindColMeta] Either the column metadata array or the HTML table element must be provided')
         if (!colMeta && tblEl) colMeta = this.tblGetColMeta(tblEl)
 
         let colDef
@@ -1841,14 +1841,14 @@ const Ui = class Ui {
      * @returns {string} A cell name
      */
     tblGetCellName(cellEl, pad = 3) {
-        return cellEl.getAttribute('data-col-name') ?? `C${String(cellEl.cellIndex + 1).padStart(pad, "0")}`
+        return cellEl.getAttribute('data-col-name') ?? `C${String(cellEl.cellIndex + 1).padStart(pad, '0')}`
     }
 
     /** Returns either the existing or calculated column metadata given any table
      * First checks if the data is on the `cols` custom property of the table
      * If not, then looks 1st for a row with a `data-col-reference` attribute. Then for the first TR of the thead. Then for the first TR of the table.
-     * @param {HTMLTableElement} tblEl 
-     * @param {object} [options={}] 
+     * @param {HTMLTableElement} tblEl DOM table element
+     * @param {object} [options] Additional options. Default={}
      *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
      * @returns {Array<columnDefinition>} Column metadata = array of column definitions
      */
@@ -1874,14 +1874,14 @@ const Ui = class Ui {
             const hasName = !!cellEl.dataset.colName
             const colName = cellEl.dataset.colName
             const colIndex = cellEl.cellIndex + 1
-            const colKey = hasName ? colName : `C${String(cellEl.cellIndex + 1).padStart(options.pad, "0")}`
+            const colKey = hasName ? colName : `C${String(cellEl.cellIndex + 1).padStart(options.pad, '0')}`
 
             colData.push({
                 index: colIndex,
                 hasName: hasName,
                 name: colName,
                 key: colKey,
-                title: cellEl.textContent
+                title: cellEl.textContent,
             })
         }
 
@@ -1894,7 +1894,7 @@ const Ui = class Ui {
     /** Remove a row from an existing table
      * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
      * @param {number} rowIndex The row number to remove (1st row is 0, last row is -1)
-     * @param {object} [options]
+     * @param {object} [options] Additional options
      *  @param {number=} options.body Optional, default=0. The tbody section to add the row to.
      */
     tblRemoveRow(tbl, rowIndex, options = {}) {
@@ -1926,7 +1926,7 @@ const Ui = class Ui {
     //#endregion ---- external methods ----
 }
 
-module.exports = Ui
+export default Ui
 
 // if (window) window['$ui'] = new Ui(window)
 
