@@ -202,6 +202,7 @@ class UibWeb {
 
         /** Serve up the v3 admin apis on /<httpAdminRoot>/uibuilder/admin/ */
         this.userApiRouter = require('./user-apis')(this.uib, this.log)
+        // @ts-ignore
         this.userApiRouter.myname = 'uibUserApiRouter'
         this.uibRouter.use('/api', this.userApiRouter)
         this.routers.admin.push( { name: 'User-facing APIs', path: `${this.uib.httpRoot}/uibuilder/api/*`, desc: 'User-facing APIs accessible to any valid user', type: 'Router' } )
