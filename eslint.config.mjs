@@ -11,14 +11,14 @@
  * npx eslint --print-config file.js
  */
 
-// import globals from 'globals' // https://www.npmjs.com/package/globals
-// // @ts-ignore
-// import pluginImport from 'eslint-plugin-import' // https://www.npmjs.com/package/eslint-plugin-import
-// import pluginPromise from 'eslint-plugin-promise' // https://www.npmjs.com/package/eslint-plugin-promise
-// import jsdoc from 'eslint-plugin-jsdoc'// https://github.com/gajus/eslint-plugin-jsdoc
-// import node from 'eslint-plugin-n' // https://www.npmjs.com/package/eslint-plugin-n, node.js only
-// import stylistic from '@stylistic/eslint-plugin' // https://eslint.style
-// import js from '@eslint/js'
+import globals from 'globals' // https://www.npmjs.com/package/globals
+// @ts-ignore
+import pluginImport from 'eslint-plugin-import' // https://www.npmjs.com/package/eslint-plugin-import
+import pluginPromise from 'eslint-plugin-promise' // https://www.npmjs.com/package/eslint-plugin-promise
+import jsdoc from 'eslint-plugin-jsdoc'// https://github.com/gajus/eslint-plugin-jsdoc
+import node from 'eslint-plugin-n' // https://www.npmjs.com/package/eslint-plugin-n, node.js only
+import stylistic from '@stylistic/eslint-plugin' // https://eslint.style
+import js from '@eslint/js'
 
 // Folder/file lists
 const browserCJS = [ // browser, es2019
@@ -148,7 +148,7 @@ const conf = [
             }],
             'jsdoc/no-multi-asterisk': 'off',
             'jsdoc/no-undefined-types': ['error', {
-                'definedTypes': ['NodeListOf'],
+                'definedTypes': ['NodeListOf', 'ProxyHandler'],
             }],
             'jsdoc/tag-lines': 'off',
 
@@ -204,7 +204,7 @@ const conf = [
     // Browser (ES2019) script, no-build
     {
         files: browserCJS,
-        ...general,
+        // ...general,
         ...js.configs.browser,
         languageOptions: {
             sourceType: 'script',
@@ -225,7 +225,7 @@ const conf = [
     // Browser (Latest) ESM, ESBUILD
     {
         files: browserMJS,
-        ...general,
+        // ...general,
         ...js.configs.browser,
         languageOptions: {
             sourceType: 'module',
@@ -270,7 +270,7 @@ const conf = [
     // Node.js (LTS) ESM, ESBUILD
     {
         files: nodeMJS,
-        ...general,
+        // ...general,
         ...node.configs['flat/recommended-module'],
         languageOptions: {
             sourceType: 'module',
