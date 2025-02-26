@@ -2,7 +2,7 @@
 
 ## Core Requirements
 
-- Follow project eslint configuration
+- Follow project ESLINT configurations
 - Ensure WCAG 2.2 Level AA compliance
 - Apply Shift-Left security practices
 
@@ -10,16 +10,18 @@
 
 ### JavaScript/TypeScript
 
-- For node.js, use features available to v18
+- For node.js, use features available to the latest LTS version but warn if using features not available to v18
 - For browsers, use features available to 90%+ browsers/users
 - No trailing semicolons
 - Single quotes for strings
+- Use trailing commas
 - Indent code blocks with 4 spaces
 - Use const by default, let when needed
 - Prefer arrow functions
 - Use optional chaining
 - Add JSDoc if missing
 - Add TypeScript types/interfaces
+- Assume the use of ESLINT v9
 
 ### Documentation
 
