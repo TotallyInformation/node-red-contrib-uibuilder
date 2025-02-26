@@ -28,7 +28,7 @@
  * @typedef {import('../../typedefs').runtimeNode} runtimeNode
  * typedef {import('../typedefs.js')}
  * typedef {import('node-red')} Red
- * @typedef {import('Express')} Express
+ * typedef {import('Express')} Express
  * typedef {import('socket.io').Namespace} socketio.Namespace
  * typedef {import('socket.io').Socket} socketio.Socket
  */
@@ -290,8 +290,11 @@ const UibLib = {
             })
 
             shell.on('error', (err) => {
+                // @ts-ignore
                 err.all = out
+                // @ts-ignore
                 err.command = cmdOut
+                // @ts-ignore
                 err.code = 2
                 reject(err)
             })
