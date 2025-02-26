@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-02-19 09:32:29
+updated: 2025-02-19 11:29:09
 author: Julian Knight (Totally Information)
 ---
 
@@ -44,6 +44,8 @@ author: Julian Knight (Totally Information)
 * Get node-red to tell connected clients that it is closing/restarting. The client library should then close the connection and attempt to reconnect with a sensible delay. A reconnection should NOT trigger not trigger a cache replay. Maybe get the server to tell the client when to start reconnecting by sending a retry period - the client should slightly randomise that period to avoid all clients reconnecting at the same time.
 * Move Vue/Svelte templates to separate repo's - keep in the templates list but link to the new repo.
 * How to have a "live" feature. This would be a mix of http-in/-response and uibuilder nodes. It would create a live endpoint that would be pre-populated with the uibuilder default ESM template. Would allow server-side rendering.
+* Move the uib-brand CSS to a separate package. Publish separately. Possibly as a sub-package of uibuilder.
+* Move ti-base-component to a separate package. Publish separately. Include here.
 
 ## Answers needed
 
