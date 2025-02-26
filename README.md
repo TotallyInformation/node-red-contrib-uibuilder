@@ -16,7 +16,7 @@
 
 <img class="dhide" align="right"  style="width:124px;" src="front-end/images/node-blue.svg" title="uibuilder icon" />
 
-# node-red-contrib-uibuilder
+# UIBUILDER FOR Node-RED
 
 UIBUILDER for Node-RED allows the easy creation of data-driven front-end web applications.
 
@@ -42,7 +42,7 @@ cd ~/.node-red
 npm install node-red-contrib-uibuilder@v5
 ```
 
-To install development branches, please install from [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder). Branchnames are future version numbers, check GitHub for available branches:
+To install development branches, please install from [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder). Branchnames are usually future version numbers, check GitHub for available branches:
 
 ```bash
 cd ~/.node-red
@@ -56,11 +56,11 @@ You will need to restart Node-RED if installing manually.
 
 * Servers:
   * Node-RED: v4+
-  * Node.js: v18+ LTS
+  * Node.js: v18+ LTS (matches Node-RED v4+ requirements)
   * Platforms: Linux, Windows, MacOS, Raspberry Pi, Docker, FlowFuse, etc.
 * Browsers: 
   * CSS - 0.12% or above of global usage but not Internet Explorer ([ref.](https://browserslist.dev/?q=Pj0wLjEyJSwgbm90IGllID4gMA%3D%3D)). The uncompiled CSS should work in all current mainstream browsers. The compiled CSS (`uib-brand.min.css`) should work in browsers back to early 2019, possibly before. Enforced by [LightningCSS](https://lightningcss.com/).
-  * JavaScript - ES6+ so should work in all current mainstream browsers. The compiled JS (`uibuilder.min.js`) should work in browsers back to early 2019, possibly before. Enforced by [ESBuild](https://esbuild.github.io/).
+  * JavaScript - ES6+ so should work in all current mainstream browsers. The compiled JS (`uibuilder.min.{iife|esm}.js`) should work in browsers back to early 2019, possibly before. Enforced by [ESBuild](https://esbuild.github.io/). Script (IIFE) and Module (ESM) versions are provided.
 
 ## Updates
 
