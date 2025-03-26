@@ -75,10 +75,11 @@ NB: Updates to this, also update the main uibuilder client library.
 
 ## Other changes
 
-* Runtime log messages now all start with `🌐` to help them stand out from other log entries. All log output should then have `[....]` after the icon but before the information and data. The content of the braces being `uibuilder:` followed by additional information of what code module/function generated the log.
+* Runtime log messages now all start with `🌐` to help them stand out from other log entries. All log output should then have `[....]` after the icon but before the information and data. The content of the braces being `uibuilder:` followed by additional information of what code module/function generated the log entry.
 * Runtime warning log messages now all start with `🌐⚠️` to help them stand out from other log entries.
 * Runtime error log messages now all start with `🌐🛑` to help them stand out from other log entries.
 * Much previously deprecated code has been removed.
+* Code linting has move from ESLINT v6 to v9. This was horrid work! And resulted in me raising 2 bugs with the ESLINT team. The new version of ESLINT is much more strict and has found a number of issues that were previously missed. This should result in better code quality.
 
 ## [v7.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...v7.0.4)
 
