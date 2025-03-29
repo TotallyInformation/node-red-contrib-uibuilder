@@ -76,18 +76,25 @@ RED.events.on('nodes:add', function(node) {
         }
         window['uibSidebarNodes'].add(node)
         sbEl.addEventListener('change', function(evt) {
+            // console.log('📊 [uib-sidebar] Input change event:', evt)
             const target = evt.target
+            // Deal with stupid checkboxes and radios
+            let value = target.value
+            if (target.localName === 'input' && (target.type === 'checkbox' || target.type === 'radio')) {
+                value = target.checked
+            }
             // TODO if target is in a form, get all the form data - consider requiring a submit button
             const msg = {
-                payload: target.value,
+                payload: value,
                 topic: `${moduleName}/${target.localName}${target.id ? `/${target.id}` : target.name ? `/${target.name}` : ''}`,
                 from: moduleName,
                 id: target.id,
                 name: target.name,
-                attributes: target.attributes,
+                attributes: {}, //target.attributes,
                 data: target.dataset,
                 willValidate: target.willValidate,
                 type: target.type,
+                value: value,
                 checked: target.checked,
                 localName: target.localName,
                 modifierKeys: {
@@ -96,6 +103,9 @@ RED.events.on('nodes:add', function(node) {
                     metaKey: evt.metaKey,
                     shiftKey: evt.shiftKey,
                 },
+            }
+            for (const attr of target.attributes) {
+                msg.attributes[attr.name] = attr.value;
             }
             // TODO specials for checkboxes and radios
             if (!isNaN(target.valueAsNumber)) {
@@ -132,8 +142,10 @@ RED.events.on('nodes:remove', function(node) {
 function updateTab(html) {
     // Empty the current sidebar UI master element
     sbEl.innerHTML = ''
+    // TODO: Needs better config
     // Replace with the new HTML - but sanitise it first
-    sbEl.innerHTML = DOMPurify.sanitize(html, purifyOpts) // eslint-disable-line no-undef
+    // sbEl.innerHTML = DOMPurify.sanitize(html, purifyOpts) // eslint-disable-line no-undef
+    sbEl.innerHTML = html
 }
 
 // Subscribe to notifications from the runtime
@@ -150,6 +162,7 @@ RED.comms.subscribe('notification/uibuilder/uib-sidebar/#', function(topic, payl
         for (const key in msg.sidebar) {
             // log('📊 [uib-sidebar] key:', key, sbEl)
             // get a reference to the element with the id of key
+            /** @type {HTMLElement} */
             const el = sbEl.querySelector(`#${key}`)
             // TODO Note that this is rather dangerous as it allows arbitrary HTML to be injected into the sidebar
             if (el) {
@@ -162,19 +175,28 @@ RED.comms.subscribe('notification/uibuilder/uib-sidebar/#', function(topic, payl
                         }
 
                         // Only update if sanitised. DOMPurify is loaded by Node-RED core.
+                        case 'innerText':
                         case 'innerHTML': {
-                            let clean
+                            // let clean
                             try {
-                                clean = DOMPurify.sanitize(msg.sidebar[key][prop], purifyOpts) // eslint-disable-line no-undef
-                                el[prop] = clean
+                                // TODO: Needs better config
+                                // clean = DOMPurify.sanitize(msg.sidebar[key][prop], purifyOpts) // eslint-disable-line no-undef
+                                // el[prop] = clean
+                                el[prop] = msg.sidebar[key][prop]
                             } catch (e) {
-                                log('📊 [uib-sidebar] DOMPurify error:', e)
+                                // log('📊 [uib-sidebar] DOMPurify error:', e)
+                                log(`📊 [uib-sidebar] InnerHTML assignment error for "${key}":`, e)
                             }
                             break
                         }
 
                         default: {
-                            el[prop] = msg.sidebar[key][prop]
+                            try {
+                                el.setAttribute(prop, msg.sidebar[key][prop])
+                            } catch (e) {
+                                log(`📊 [uib-sidebar] Attribute assignment error for "${key}":`, e)
+                            }
+                            // el[prop] = msg.sidebar[key][prop]
                             break
                         }
                     }

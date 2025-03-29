@@ -1,0 +1,83 @@
+[
+    {
+        "id": "8c0aef18f38bf6f0",
+        "type": "inject",
+        "z": "cb9a5d59a3174f18",
+        "name": "",
+        "props": [
+            {
+                "p": "sidebar",
+                "v": "{\"p1\":{\"innerHTML\":\"<b>Woo!</b> This is great! 😁\",\"style\":\"color: red; background-color:yellow; border: 2px solid blue;\",\"data-gridfinity\":true,\"myttrib\":\"fred\"},\"in1\":{\"value\":\"42\",\"data-more\":\"something\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 90,
+        "y": 60,
+        "wires": [
+            [
+                "ffbe189e9dbaac13"
+            ]
+        ]
+    },
+    {
+        "id": "6fbfb4d60086bcaf",
+        "type": "debug",
+        "z": "cb9a5d59a3174f18",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 400,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "ffbe189e9dbaac13",
+        "type": "uib-sidebar",
+        "z": "cb9a5d59a3174f18",
+        "name": "",
+        "html": "<p id=\"p1\">\n    blah\n</p>\n<div>\n    <input type=\"text\" id=\"in1\" class=\"myclass\" data-fred=\"jim\" />\n    <input type=\"checkbox\" id=\"in1a\" />\n</div>\n<div>\n    <input type=\"color\" id=\"in2\" />\n</div>\n<fieldset>\n    <legend>Choose one</legend>\n    <label>R1<input type=\"radio\" id=\"r1\" name=\"radioset\"></label>\n    <label>R1<input type=\"radio\" id=\"r2\" name=\"radioset\"></label>\n    <label>R1<input type=\"radio\" id=\"r3\" name=\"radioset\"></label>\n</fieldset>\n<div>\n    <textarea id=\"in3\"></textarea>\n</div>\n<div>\n    <select>\n        <option>one</option>\n        <option>two</option>\n    </select>\n</div>\n<div>\n    <input id=\"file-multi\" label=\"Multiple files:\" type=\"file\" multiple=\"multiple\" onchange=\"uib.eventSend(event)\">\n</div>\n<!-- To Try: check/radio, content editable -->\n",
+        "x": 250,
+        "y": 60,
+        "wires": [
+            [
+                "6fbfb4d60086bcaf"
+            ]
+        ]
+    },
+    {
+        "id": "b9ad0921b19784c2",
+        "type": "inject",
+        "z": "cb9a5d59a3174f18",
+        "name": "reset",
+        "props": [
+            {
+                "p": "reset",
+                "v": "",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 90,
+        "y": 100,
+        "wires": [
+            [
+                "ffbe189e9dbaac13"
+            ]
+        ]
+    }
+]
