@@ -28,18 +28,36 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### 📌 Highlights
 
-* **NEW NODE** `uib-sidebar` - Creates a simple sidebar in the Node-RED Editor page. HTML for the sidebar is edited in the node. Messages sent to the node are passed to the sidebar. Any input HTML elements automatically send changes back to the output of the node.
-
-* **NEW FEATURE** `dom` - This is both a client-side new feature and a new message schema that facilitates data-driven DOM updates (e.g. web page updates) from both Node-RED and client code. It is a much simplified low-code feature. With it, you can easily create new content and update existing content on your web pages. It does, however, require some familiarity with HTML.
+* **NEW NODE** `uib-sidebar` - Creates a simple sidebar in the Node-RED Editor page. HTML for the sidebar is edited in the node. Messages sent to the node are passed to the sidebar letting you change any attributes and inner HTML or text dynamically. Any input elements in the HTML automatically send changes back to the output of the node. A new example flow is available that demonstrates useage.
 
 * Updated `applyTemplate` function in the ui/uibuilder client libraries, gives a lot more flexibility.
 
+* Input form improvements.
+
+  * `uib-element`'s form type now adds an HTML ID to the form itself in the format `form-<element-id>`. This means that using a button inside a form, the resulting message will identify the form that the button belongs to. This is particularly useful if you have multiple forms on a page.
+  * When using the `eventSend` function (which is also used by `uib-element`), file input types now add more meta-data to the returned file-upload message. See the details below. Making it easier to process the file upload and combine with other data from a form.
+
+* Bug fixes
+
+  * uibuilder no longer overrides Node-RED's built-in ExpressJS server settings in regards to JSON upload sizing.
+
 ### **NEW** Node: `uib-sidebar`
 
-Creates a simple sidebar in the Node-RED Editor page. HTML for the sidebar is edited in the node. Messages sent to the node are passed to the sidebar. Any input HTML elements automatically send changes back to the output of the node.
+Creates a simple sidebar in the Node-RED Editor page. HTML for the sidebar is edited in the node.
 
+Messages sent to the node are passed to the sidebar allowing you to change any attributes and inner HTML or text dynamically.
 
-## **NEW/UPDATED BUILT-IN WEB COMPONENTS** (AKA "Widgets")
+Any input HTML elements automatically send changes back to the output of the node (in the future, wrapping inputs in a form element will allow sending only on button press but this isn't yet implemented).
+
+This is the first release of this node and further improvements will be added in the future. Check the "next" and "roadmap" documents for future plans.
+
+A new example flow has been added to demonstrate the sidebar node.
+
+### Node: `uib-element`
+
+* The form element type adds an HTML ID to the form itself in the format `form-<element-id>`. This means that using a button inside a form, the resulting message will identify the form that the button belongs to. This is particularly useful if you have multiple forms on a page.
+
+### **NEW/UPDATED BUILT-IN WEB COMPONENTS** (AKA "Widgets")
 
 These are pre-built into the uibuilder client library and can be used in your HTML without the need for writing JavaScript.
 
@@ -51,7 +69,7 @@ These are pre-built into the uibuilder client library and can be used in your HT
 
 * `<uib-var>` - A web component that can be used to display dynamic content. It can be used to display simple text, HTML, lists, tables, and more. It can also be used to send data back to Node-RED.
 
-## **NEW** Front-end library: `tinyDom.js`
+### **NEW** Front-end library: `tinyDom.js`
 
 When used with UIBUILDER, exposes a new global object `dom`. Enables easy changes to your uibuilder-enhanced web pages by providing easy functions to add to, remove or update the existing page.
 
@@ -59,7 +77,23 @@ Also includes a new message schema that allows you to send messages from Node-RE
 
 See the [documentation](client-docs/fns/dom.md) for more information.
 
-## Front-end library: `ui.js`
+### Front-end library: `uibuilder.js`
+
+* Form handling: File input types now add more meta-data to the returned file-upload message.
+
+  * A `seq` number and a `seqCount` for multi-file submissions.
+  * `id` is the HTML id of the source input element.
+  * `formId` is the HTML id of the form that the input element belongs to. The `formId` won't exist if the input was submitted without a form.
+  * `tempUrl`. This is probably the easiest property to use if you need to merge data with the main message since it will always be unique.
+  * `clientId`, `pageName` and `tabId`. This is duplicate data if you've turned on the `_uib` property in your uibuilder node but it should make it easier to filter/switch messages in your flows.
+  * `data` object. This contains any data-* attributes from the input element. Making it easier to attach additional information when uploading the file. You could use an `onchange` event on another input that updates a data-* attribute on the file input element.
+
+* **Updated functions**
+  * `eventSend` - Improved handling of file uploads including additional meta-data as shown above.
+  * `uploadFile` - Improved handling of file uploads. Now takes an optional 2nd object parameter of meta-data that will be added to the file-upload message.
+  * `applyTemplate`, `$`, `$$` - See ui.js section below.
+
+### Front-end library: `ui.js`
 
 NB: Updates to this, also update the main uibuilder client library.
 
@@ -69,17 +103,38 @@ NB: Updates to this, also update the main uibuilder client library.
   * `$` - Now has an optional 3rd parameter to allow specifying the search root context. Defaults to `document` which was previously the only option. If used, must be a valid HTML element. Brings it further into line with similar functions in other libraries.
   * `$$` - Now has an optional 2nd parameter to allow specifying the search root context. Defaults to `document` which was previously the only option. If used, must be a valid HTML element. Brings it further into line with similar functions in other libraries.
 
-## Documentation
+### Server library: `web.js`
 
+* **Bug fix** Moved JSON and URL Encoded data upload middleware from being loaded for both custom and Node-RED ExpressJS servers to only being loaded for the custom server. [Ref.](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988) This was blocking people from uploading large JSON payloads when using Node-RED's built-in ExpressJS server.
+
+### Documentation
+
+* **NEW HOW-TO** - Form handling - How to handle user input in forms. This includes a full example of how to use the new `uib-element` node to create a form and send the data back to Node-RED as well as using individual input elements.
+* **NEW HOW-TO** - Send file to server - How to send a file to the Node-RED server using an HTML input element. This is useful for uploading files from a client to the server.
+* Updated the documentation of the `eventSend` FE function.
+* Updated the documentation for the `$` FE function.
+* Updated the documentation for the `$$` FE function.
+* Updated the documentation of the `uploadFile` FE function.
+* Updated the documentation of the `applyTemplate` FE function.
+* Updated the documentation for the new `uib-sidebar` node.
 * Docsify configuration updated so that the description for the currently shown page is reflected in the browser's meta description tag. This should help with search engine optimisation and when pasting a link from the GitHub version of the documentation into social media.
 
-## Other changes
+### Other changes
 
 * Runtime log messages now all start with `🌐` to help them stand out from other log entries. All log output should then have `[....]` after the icon but before the information and data. The content of the braces being `uibuilder:` followed by additional information of what code module/function generated the log entry.
 * Runtime warning log messages now all start with `🌐⚠️` to help them stand out from other log entries.
 * Runtime error log messages now all start with `🌐🛑` to help them stand out from other log entries.
 * Much previously deprecated code has been removed.
 * Code linting has move from ESLINT v6 to v9. This was horrid work! And resulted in me raising 2 bugs with the ESLINT team. The new version of ESLINT is much more strict and has found a number of issues that were previously missed. This should result in better code quality.
+
+### Experimental
+
+These are future features being worked on but not yet ready for use.
+
+* `dom`/`tinyDom` - This is both a client-side new feature and a new message schema that facilitates data-driven DOM updates (e.g. web page updates) from both Node-RED and client code. It is a much simplified low-code feature. With it, you can easily create new content and update existing content on your web pages. It does, however, require some familiarity with HTML.
+
+* `logger` - A next-gen client-side logging library.
+
 
 ## [v7.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...v7.0.4)
 

@@ -3,51 +3,27 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-03-26 11:30:08
+updated: 2025-03-29 16:31:06
 author: Julian Knight (Totally Information)
 ---
 
-## Fixes needed
+## To Fix
 
-* [ ] web.js - move json handler into the isCustom section - not in main. [Ref](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988)
+* Form CSS: 
+  * Input fields should not have a black background in light mode.
 
 ## To Do
 
+* [ ] Improve brand.css font specification based on [Modern Font Stacks](https://github.com/system-fonts/modern-font-stacks).
 * [ ] Move all nodes editor html to use modules. [Ref](https://discourse.nodered.org/t/text-javascript-vs-module-in-html/94215/4)
+* [ ] Allow overriding of the JSON max upload size for the custom Express server. [Ref](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988)
 
 * Forms
-  * [ ] When a form is submitted, include the form's id/name in the message. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
-  * [ ] Add the element id/name to a file upload message. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
-  * [ ] When a form sends a file upload message, add a msg.parts property? [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
-  * [ ] If inputs are part of a form, only send the form data when the form is submitted.
+  * [ ] uib-element form - add onsubmit button handler rather than using hidden event handler. Same for reset.
 
 * Documentation
   * [ ] Properly document file uploads and how to handle them. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
-
-### New node: uib-sidebar
-
-* [x] New node to facilitate a sidebar UI [ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions/510).
-* [x] Single node
-* [x] Auto-creates sidebar when added to the page.
-* [x] Node should use built-in ACE/Monaco editor with a HTML default template to create the main layout.
-* [x] All input elements should automatically send data back to the node.
-* [x] Input elements should automatically send data to the output port.
-* [x] Check if DOMPurify is enabled in the Editor. It is.
-* [x] Check if resources/editor-common.{js|css} are available to the tab. They are.
-* [x] Incoming msg's should allow multiple `msg.sidebar.<html-id>` properties that will automatically update the props on the appropriate elements. E.g. `msg.sidebar.div1.innerHTML` with a value of some HTML should change the HTML content of the div with an id of `div1`.
-* [x] Apply DOMPurify to incoming and edited HTML content.
-
-* [ ] Documentation
-* [ ] Create a node-red action to display the tab.
-* [ ] Align forms/inputs to main processing.
-
-* Future possible enhancements:
-  * [ ] May want an alternative simpler input msg (as well as the full msg type) with just topic/payload that uses topic for html-id and payload for `value` if it exists on the element or innerText/HTML.
-  * [ ] May want to have multiple tabs possible by adding a name setting to the node. Restricting to a single sidebar for now.
-  * [ ] Might need a flag in the uibuilder setting.js prop that allows/disallows HTML content. Or maybe turns off DOMPurify.
-  * [ ] Allow file uploads larger than the max message size by splitting the file into chunks and reassembling on the server.
-  * [ ] Add a link to the help sidebar that has an `onclick` handler to show the uib sidebar.
-
+  * [ ] How-to for form handling.
 
 #### Consider
 
@@ -63,6 +39,8 @@ author: Julian Knight (Totally Information)
 * Move ti-base-component to a separate package. Publish separately. Include here.
 * Changing `uib-brand.css` to use more modern CSS, leaving it up to LightningCSS to build for older browsers. In particular, using nested definitions.
 * Live Request-Response capability. Mirroring core http-in/-response nodes but with uibuilder features. See [live.md](live.md).
+* Check message sizes. If >limit, split into chunks and use standard msg.parts to allow reassembly - both on the server AND on the client. Allow auto-splitting of messages for large messages and use the msg.parts feature from node-red core to allow easy re-constitution.
+* Allow http responses using transfer encoding chunked. [Ref](https://discourse.nodered.org/t/http-transfer-encoding-chunked/94332/6)
 
 
 ## Answers needed
