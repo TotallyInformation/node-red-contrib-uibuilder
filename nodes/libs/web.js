@@ -249,6 +249,10 @@ class UibWeb {
             const express = require('express')
             this.app = express()
 
+            // Ensure sensible processing of JSON and URL encoded data
+            this.app.use(express.json())
+            this.app.use(express.urlencoded({ extended: true }))
+
             // Use the Express server options from settings.js uibuilder.serverOptions (if any)
             Object.keys(uib.customServer.serverOptions).forEach( key => {
                 this.app.set(key, uib.customServer.serverOptions[key] )
@@ -266,14 +270,14 @@ class UibWeb {
                         this.server = require('https').createServer(RED.settings.uibuilder.https, this.app)
                     } catch (e) {
                         // Throw error - we don't want to continue if https is needed but we can't create the server
-                        throw new Error(`[uibuilder:web:webSetup:CreateServer]\n\t Cannot create uibuilder custom ExpressJS server.\n\t Check uibuilder.https in settings.js,\n\t make sure the key and cert files exist and are accessible.\n\t ${e.message}\n \n `)
+                        throw new Error(`🌐🛑[uibuilder:web:webSetup:CreateServer]\n\t Cannot create uibuilder custom ExpressJS server.\n\t Check uibuilder.https in settings.js,\n\t make sure the key and cert files exist and are accessible.\n\t ${e.message}\n \n `)
                     }
                 } else {
                     if ( RED.settings.https !== undefined ) { // eslint-disable-line no-lonely-if
                         this.server = require('https').createServer(RED.settings.https, this.app)
                     } else {
                         // Throw error - we don't want to continue if https is needed but we can't create the server
-                        throw new Error('[uibuilder:web:webSetup:CreateServer]\n\t Cannot create uibuilder custom ExpressJS server using NR https settings.\n\t Check https property in settings.js,\n\t make sure the key and cert files exist and are accessible.\n \n ')
+                        throw new Error('🌐🛑[uibuilder:web:webSetup:CreateServer]\n\t Cannot create uibuilder custom ExpressJS server using NR https settings.\n\t Check https property in settings.js,\n\t make sure the key and cert files exist and are accessible.\n \n ')
                     }
                 }
             } else {
@@ -298,7 +302,6 @@ class UibWeb {
             this.server.listen(uib.customServer.port, () => {
                 // uib.customServer.host = this.server.address().address // not very useful. Typically returns `::`
             })
-
         } else {
             log.trace(`🌐[uibuilder[:web:_webSetup] Using Node-RED ExpressJS server at ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${uib.nodeRoot === '' ? '/' : uib.nodeRoot}`)
 
@@ -309,6 +312,7 @@ class UibWeb {
         }
 
         if (uib.rootFolder === null) throw new Error('uib.rootFolder is null')
+        
         // Set views folder to uibRoot (but only if not overridden in settings)
         if ( !uib.customServer.serverOptions.views ) {
             this.app.set('views', join(uib.rootFolder, 'views') )
@@ -318,9 +322,6 @@ class UibWeb {
         }
 
         // Note: Keep the router vars separate so that they can be used for reporting
-
-        this.app.use(express.json())
-        this.app.use(express.urlencoded({ extended: true }))
 
         // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/`
         this.uibRouter = express.Router(this.#routerOptions)
