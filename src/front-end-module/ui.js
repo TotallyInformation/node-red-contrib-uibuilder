@@ -432,7 +432,6 @@ const Ui = class Ui {
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
     _uiLoad(ui) {
-
         // Self-loading ECMA Modules (e.g. web components)
         if (ui.components) {
             if (!Array.isArray(ui.components)) ui.components = [ui.components]
@@ -470,7 +469,6 @@ const Ui = class Ui {
 
             this.loadStyleTxt(ui.txtStyles.join('\n'))
         }
-
     } // --- end of _uiLoad ---
 
     /** Handle incoming _ui messages and loaded UI JSON files

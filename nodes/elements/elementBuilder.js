@@ -1,6 +1,6 @@
 /** Defines all no-code elements
  *
- * Copyright (c) 2024-2024 Julian Knight (Totally Information)
+ * Copyright (c) 2024-2025 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -368,6 +368,7 @@ module.exports = {
         // Add the form tag
         parent.components.push({
             'type': 'form',
+            'id': `form-${node.elementId}`,
             'components': [],
         })
 

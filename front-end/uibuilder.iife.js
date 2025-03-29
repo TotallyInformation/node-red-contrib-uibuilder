@@ -6901,20 +6901,29 @@
       });
     }
     /** Given a FileList array, send each file to Node-RED and return file metadata
-     * @param {FileList} files FileList array
+     * @param {HTMLInputElement} srcEl Reference to the source input element
      * @param {boolean=} noSend If true, don't send the file to Node-RED. Default is to send.
      * @returns {Array<object>} Metadata values from all files
      */
-    _processFilesInput(files, noSend = false) {
+    _processFilesInput(srcEl, noSend = false) {
       const value2 = [];
+      const files = srcEl.files;
+      const seqCount = files.length;
+      let seq = 0;
       for (const file of files) {
         const props = {};
+        seq++;
         for (const prop in file) {
           props[prop] = file[prop];
         }
         props.tempUrl = window.URL.createObjectURL(file);
         value2.push(props);
-        if (noSend !== true) this.uploadFile(file);
+        const meta = { seq, seqCount };
+        meta.id = srcEl.id;
+        if (srcEl.form) meta.formId = srcEl.form.id;
+        meta.tempUrl = props.tempUrl;
+        meta.data = srcEl.dataset;
+        if (noSend !== true) this.uploadFile(file, meta);
       }
       return value2;
     }
@@ -7016,9 +7025,6 @@
         return null;
       }
       let { value: value2, checked } = this.getFormElementValue(el);
-      if (el.type === "file" && el.files.length > 0) {
-        value2 = this._processFilesInput(el.files);
-      }
       const formDetails = {
         "id": id,
         "name": el.name,
@@ -7738,13 +7744,16 @@ ${document.documentElement.outerHTML}`;
           if (["fieldset", "object"].includes(frmEl.type)) return;
           const details = this.getFormElementDetails(frmEl);
           if (details) {
+            if (frmEl.type === "file" && frmEl.files.length > 0) {
+              details.value = this._processFilesInput(frmEl);
+            }
             formDetails[details.id] = details;
             payload[details.id] = details.value;
           }
         });
       } else {
         if (target.type === "file") {
-          payload = this._processFilesInput(target.files);
+          payload = this._processFilesInput(target);
         }
       }
       const classes = this.getElementClasses(target);
@@ -7846,8 +7855,9 @@ ${document.documentElement.outerHTML}`;
     /** Upload a file to Node-RED over Socket.IO
      * https://developer.mozilla.org/en-US/docs/Web/API/FileReader
      * @param {File} file Reference to File API object to upload
+     * @param {object} [meta] Optiona. Additional metadata to send with the file
      */
-    uploadFile(file) {
+    uploadFile(file, meta) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const arrayBuffer = e.target.result;
@@ -7857,7 +7867,11 @@ ${document.documentElement.outerHTML}`;
           fileName: file.name,
           type: file.type,
           lastModified: file.lastModifiedDate,
-          size: file.size
+          size: file.size,
+          clientId: this.clientId,
+          pageName: this.pageName,
+          tabId: this.tabId,
+          ...meta
         };
         const maxSize = this.maxHttpBufferSize - 500;
         if (arrayBuffer.byteLength >= maxSize) {

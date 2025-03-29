@@ -1454,14 +1454,18 @@ export const Uib = class Uib {
     }
 
     /** Given a FileList array, send each file to Node-RED and return file metadata
-     * @param {FileList} files FileList array
+     * @param {HTMLInputElement} srcEl Reference to the source input element
      * @param {boolean=} noSend If true, don't send the file to Node-RED. Default is to send.
      * @returns {Array<object>} Metadata values from all files
      */
-    _processFilesInput(files, noSend = false) {
+    _processFilesInput(srcEl, noSend = false) {
         const value = []
+        const files = srcEl.files
+        const seqCount = files.length
+        let seq = 0
         for (const file of files) {
             const props = {}
+            seq++
             // Walk through each file property
             for (const prop in file) {
                 props[prop] = file[prop]
@@ -1472,8 +1476,15 @@ export const Uib = class Uib {
 
             value.push(props)
 
-            // Auto-upload to Node-RED over Socket.IO
-            if (noSend !== true) this.uploadFile(file)
+            const meta = { seq, seqCount, }
+            meta.id = srcEl.id
+            // meta.srcElIds.name = srcEl.name
+            if (srcEl.form) meta.formId = srcEl.form.id
+            meta.tempUrl = props.tempUrl
+            meta.data = srcEl.dataset
+
+            // Auto-upload to Node-RED over Socket.IO {id: target.id, name: target.name, formId: target.parent.formID,}
+            if (noSend !== true) this.uploadFile(file, meta)
         }
         return value
     }
@@ -1594,14 +1605,14 @@ export const Uib = class Uib {
 
         let { value, checked, } = this.getFormElementValue(el) // eslint-disable-line prefer-const
 
+        // This is now done in eventSend rather than here for consistency with non-form sends.
         // For multi file input, get the file details as the value
         // el.files is a FileList type & each entry is a File type - have to process these manually - stupid HTML!
         // https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications
-        // NOTE: The eventSend fn calls uploadFiles if files present in form.
-        if (el.type === 'file' && el.files.length > 0) {
-            // Walk through each file in the FileList, get the details and send the file to Node-RED
-            value = this._processFilesInput(el.files)
-        }
+        // if (el.type === 'file' && el.files.length > 0) {
+        //     // Walk through each file in the FileList, get the details and send the file to Node-RED
+        //     value = this._processFilesInput(el.files)
+        // }
 
         const formDetails = {
             'id': id,
@@ -2526,6 +2537,15 @@ export const Uib = class Uib {
                 // NB: If type=files, this also sends the file to Node-RED
                 const details = this.getFormElementDetails(frmEl)
                 if (details) {
+                    // For type=file, get the file details as the value (array as might be multiple files).
+                    // el.files is a FileList type & each entry is a File type - have to process these manually - stupid HTML!
+                    // https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications
+                    if (frmEl.type === 'file' && frmEl.files.length > 0) {
+                        // Walk through each file in the FileList, get the details and send the file to Node-RED
+                        // details.value = this._processFilesInput(frmEl.files, frmEl)
+                        details.value = this._processFilesInput(frmEl)
+                    }
+
                     formDetails[details.id] = details
                     // simplified for addition to msg.payload
                     payload[details.id] = details.value
@@ -2534,7 +2554,8 @@ export const Uib = class Uib {
         } else {
             if (target.type === 'file') {
                 // Walk through each file in the FileList, get the details and send the file to Node-RED
-                payload = this._processFilesInput(target.files)
+                // payload = this._processFilesInput(target.files, {id: target?.id, name: target?.name,})
+                payload = this._processFilesInput(target)
             }
         }
 
@@ -2665,8 +2686,9 @@ export const Uib = class Uib {
     /** Upload a file to Node-RED over Socket.IO
      * https://developer.mozilla.org/en-US/docs/Web/API/FileReader
      * @param {File} file Reference to File API object to upload
+     * @param {object} [meta] Optiona. Additional metadata to send with the file
      */
-    uploadFile(file) {
+    uploadFile(file, meta) { // srcElIds, seq, seqCount
         // Create a new FileReader instance
         const reader = new FileReader()
 
@@ -2675,14 +2697,21 @@ export const Uib = class Uib {
             // Get the binary content of the file
             const arrayBuffer = e.target.result
 
-            // Send the binary content to the server
+            // Send the binary content to the server along with helpful metadata
             const msg = {
                 topic: this.topic || 'file-upload',
                 payload: arrayBuffer,
+                
                 fileName: file.name,
                 type: file.type,
                 lastModified: file.lastModifiedDate,
                 size: file.size,
+
+                clientId: this.clientId,
+                pageName: this.pageName,
+                tabId: this.tabId,
+                
+                ...meta,
             }
 
             // Only send if content not too large
