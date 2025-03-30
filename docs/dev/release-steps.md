@@ -3,7 +3,7 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2025-02-19 10:26:45
+updated: 2025-03-30 16:09:32
 ---
 
 This assumes all main updates have been done for this release and that local testing is complete.
@@ -15,14 +15,14 @@ When working on a feature branch, it may be necessary to release a new bug-fix r
 ```bash
 git switch main
 git pull origin main
-git switch v7.0.0
+git switch v7.3.0
 git merge main
 ```
 Now the Source Control panel in VSCode will have any files with conflicts marked. Click on them to view the conflict and resolve. Then do another commit and push.
 
 ## Creating a feature branch
 
-* On GitHub, click on the "Switch branches/tags" drop-down. Search for the new name - e.g. v7.0.0 - if it does not exist, GitHub will offer to create it from the current main branch.
+* On GitHub, click on the "Switch branches/tags" drop-down. Search for the new name - e.g. v7.3.0 - if it does not exist, GitHub will offer to create it from the current main branch.
 * In VSCode, switch to the SOURCE CONTROL sidebar, click on REMOTES, refresh if needed. Expand "origin" and click on the "Switch to branch..." icon.
 
 ## 01) Check the CHANGELOG
@@ -65,7 +65,7 @@ For conflicts that can't be merged in GitHub web interface, use VSCode command l
 ```bash
 git switch main
 git pull origin main
-git switch v7.0.0
+git switch v7.3.0
 git merge main
 ```
 Now the Source Control panel in VSCode will have any files with conflicts marked. Click on them to view the conflict and resolve. Then do another commit and push.
