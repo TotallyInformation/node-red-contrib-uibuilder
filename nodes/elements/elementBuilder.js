@@ -487,23 +487,26 @@ module.exports = {
                         'id': `${node.elementId}-btn-send`,
                         'attributes': {
                             type: 'button',
-                            title: 'Send the form data back to Node-RED'
+                            title: 'Send the form data back to Node-RED',
+                            onclick: "uibuilder.eventSend(event)"
                         },
-                        'events': {
-                            click: 'uibuilder.eventSend'
-                        },
+                        // Doing it this way, the click event is not visible in the HTML - not so good for saving the result
+                        // 'events': {
+                        //     click: 'uibuilder.eventSend'
+                        // },
                         'slot': 'Send',
                     },
                     {
                         'type': 'button',
                         'id': `${node.elementId}-btn-reset`,
                         'attributes': {
-                            type: 'button',
-                            title: 'Reset the form'
+                            type: 'reset',
+                            title: 'Reset the form',
                         },
-                        'events': {
-                            click: 'event.srcElement.form.reset'
-                        },
+                        // Not really needed and not visible in the HTML
+                        // 'events': {
+                        //     click: 'event.srcElement.form.reset'
+                        // },
                         'slot': 'Reset',
                     }
                 ]
