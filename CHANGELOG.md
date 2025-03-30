@@ -22,9 +22,9 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main)
+<!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
 
-<!-- Nothing currently. -->
+## [v7.2.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...v7.2.0)
 
 ### 📌 Highlights
 
