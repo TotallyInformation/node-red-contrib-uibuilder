@@ -3,7 +3,7 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2024-09-06 13:29:54
+updated: 2025-02-19 10:26:45
 ---
 
 This assumes all main updates have been done for this release and that local testing is complete.
@@ -48,7 +48,7 @@ Make sure version numbers are correct and aligned:
 
 * `npm outdated` & `npm update`.
 * Also check any templates that have dependencies defined (currently only the Svelte template).
-* After updates, run `npm run buildDocBundle` to ensure that Docsify is up-to-date.
+* After updates, run `npm run buildDocBundle` to ensure that Docsify is up-to-date for offline use.
 
 ## 04) Do a final commit & push to the dev branch
 

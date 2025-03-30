@@ -177,11 +177,10 @@ function userRouter(uib, log) {
     config.uib = uib
     config.log = log
 
-    /** uibuilder v3 unified Admin API router - new API commands should be added here
-     * Typical URL is: http://127.0.0.1:1880/uibuilder/api/xxxxx
+    /** TEST endpoint for future user-facing API's
      */
     UserRouter.get('/test', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-        console.log(' TEST API', {uib})
+        log.info('🌐📘[uibuilder:user-apis:test-api] TEST API', {uib})
         res.statusMessage = 'Instances listed'
         res.status(200).json( uib.instances )
     })

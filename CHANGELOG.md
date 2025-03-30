@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2025-01-02 15:52:18
+updated: 2025-01-17 20:14:34
 ---
 
 # Changelog
@@ -22,13 +22,128 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ------------
 
-## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.0.4...main)
+<!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
 
-<!-- Nothing currently. -->
+## [v7.2.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...v7.2.0)
 
 ### 📌 Highlights
 
-* **Any** *Node-RED custom node* can now send a message to a uibuilder client! In your runtime code, add `RED.events.emit('UIBUILDER/send/<url-name>', {payload: 'Hi from my custom node!'})` where `<url-name>` is the URL set in a deployed uibuilder node. The data will be sent to all browser tabs connected to that uibuilder endpoint. Note though that this bypasses any uib-cache node.
+* **NEW NODE** `uib-sidebar` - Creates a simple sidebar in the Node-RED Editor page. HTML for the sidebar is edited in the node. Messages sent to the node are passed to the sidebar letting you change any attributes and inner HTML or text dynamically. Any input elements in the HTML automatically send changes back to the output of the node. A new example flow is available that demonstrates useage.
+
+* Updated `applyTemplate` function in the ui/uibuilder client libraries, gives a lot more flexibility.
+
+* Input form improvements.
+
+  * `uib-element`'s form type now adds an HTML ID to the form itself in the format `form-<element-id>`. This means that using a button inside a form, the resulting message will identify the form that the button belongs to. This is particularly useful if you have multiple forms on a page.
+  * When using the `eventSend` function (which is also used by `uib-element`), file input types now add more meta-data to the returned file-upload message. See the details below. Making it easier to process the file upload and combine with other data from a form.
+
+* Bug fixes
+
+  * uibuilder no longer overrides Node-RED's built-in ExpressJS server settings in regards to JSON upload sizing.
+
+### **NEW** Node: `uib-sidebar`
+
+Creates a simple sidebar in the Node-RED Editor page. HTML for the sidebar is edited in the node.
+
+Messages sent to the node are passed to the sidebar allowing you to change any attributes and inner HTML or text dynamically.
+
+Any input HTML elements automatically send changes back to the output of the node (in the future, wrapping inputs in a form element will allow sending only on button press but this isn't yet implemented).
+
+This is the first release of this node and further improvements will be added in the future. Check the "next" and "roadmap" documents for future plans.
+
+A new example flow has been added to demonstrate the sidebar node.
+
+### Node: `uib-element`
+
+* The form element type:
+
+  * Now adds an HTML ID to the form itself in the format `form-<element-id>`. This means that using a button inside a form, the resulting message will identify the form that the button belongs to. This is particularly useful if you have multiple forms on a page.
+  * Adds the onclick event handler to the button onclick attribute rather than it being hidden away in separate event handler code. This means that *it will be retained if saving the resulting HTML*. Similarly, the reset button is now type="reset" for the same reason.
+
+### **NEW/UPDATED BUILT-IN WEB COMPONENTS** (AKA "Widgets")
+
+These are pre-built into the uibuilder client library and can be used in your HTML without the need for writing JavaScript.
+
+* All of the components built into the uibuilder client library have been updated to match the latest standards used in my [independent web components](https://wc.totallyinformation.net/) as these represent the latest HTML standards and best practices.
+
+* `<apply-template>` - Takes the content of a `<template>` HTML tag and appends that content as children of itself. Allowing you to re-use standard, repeatable HTML without the need for JavaScript coding and without the need of sending potentially lengthy HTML from Node-RED every time it is needed. Any existing content between the `<apply-template>` tags is replaced. However, if the template has a slot, the existing content is placed back into the slot. This allows you to wrap existing content with a template.
+
+* `<uib-meta>` - Display's facts about the current page such as its file size, when it was created and when it was last updated. Obtains the data from Node-RED. The `type` attribute updated for ease of use.
+
+* `<uib-var>` - A web component that can be used to display dynamic content. It can be used to display simple text, HTML, lists, tables, and more. It can also be used to send data back to Node-RED.
+
+### **NEW** Front-end library: `tinyDom.js`
+
+When used with UIBUILDER, exposes a new global object `dom`. Enables easy changes to your uibuilder-enhanced web pages by providing easy functions to add to, remove or update the existing page.
+
+Also includes a new message schema that allows you to send messages from Node-RED to the client to update the DOM. This is a much simplified low-code feature.
+
+See the [documentation](client-docs/fns/dom.md) for more information.
+
+### Front-end library: `uibuilder.js`
+
+* Form handling: File input types now add more meta-data to the returned file-upload message.
+
+  * A `seq` number and a `seqCount` for multi-file submissions.
+  * `id` is the HTML id of the source input element.
+  * `formId` is the HTML id of the form that the input element belongs to. The `formId` won't exist if the input was submitted without a form.
+  * `tempUrl`. This is probably the easiest property to use if you need to merge data with the main message since it will always be unique.
+  * `clientId`, `pageName` and `tabId`. This is duplicate data if you've turned on the `_uib` property in your uibuilder node but it should make it easier to filter/switch messages in your flows.
+  * `data` object. This contains any data-* attributes from the input element. Making it easier to attach additional information when uploading the file. You could use an `onchange` event on another input that updates a data-* attribute on the file input element.
+
+* **Updated functions**
+  * `eventSend` - Improved handling of file uploads including additional meta-data as shown above.
+  * `uploadFile` - Improved handling of file uploads. Now takes an optional 2nd object parameter of meta-data that will be added to the file-upload message.
+  * `applyTemplate`, `$`, `$$` - See ui.js section below.
+
+### Front-end library: `ui.js`
+
+NB: Updates to this, also update the main uibuilder client library.
+
+* **UPDATED FUNCTIONS**
+
+  * `applyTemplate` - Now has 3 modes of operation. `insert` appends the template as the 1ST CHILD of the target. `replace` replaces all of the child content of the target. `wrap` puts the targets previous content into the 1ST SLOT of the template (if present), this allows you to wrap existing content with a template. Also improved error handling and did some code cleanup.
+  * `$` - Now has an optional 3rd parameter to allow specifying the search root context. Defaults to `document` which was previously the only option. If used, must be a valid HTML element. Brings it further into line with similar functions in other libraries.
+  * `$$` - Now has an optional 2nd parameter to allow specifying the search root context. Defaults to `document` which was previously the only option. If used, must be a valid HTML element. Brings it further into line with similar functions in other libraries.
+
+### Server library: `web.js`
+
+* **Bug fix** Moved JSON and URL Encoded data upload middleware from being loaded for both custom and Node-RED ExpressJS servers to only being loaded for the custom server. [Ref.](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988) This was blocking people from uploading large JSON payloads when using Node-RED's built-in ExpressJS server.
+
+### Documentation
+
+* **NEW HOW-TO** - Form handling - How to handle user input in forms. This includes a full example of how to use the new `uib-element` node to create a form and send the data back to Node-RED as well as using individual input elements.
+* **NEW HOW-TO** - Send file to server - How to send a file to the Node-RED server using an HTML input element. This is useful for uploading files from a client to the server.
+* Updated the documentation of the `eventSend` FE function.
+* Updated the documentation for the `$` FE function.
+* Updated the documentation for the `$$` FE function.
+* Updated the documentation of the `uploadFile` FE function.
+* Updated the documentation of the `applyTemplate` FE function.
+* Updated the documentation for the new `uib-sidebar` node.
+* Docsify configuration updated so that the description for the currently shown page is reflected in the browser's meta description tag. This should help with search engine optimisation and when pasting a link from the GitHub version of the documentation into social media.
+
+### Other changes
+
+* Runtime log messages now all start with `🌐` to help them stand out from other log entries. All log output should then have `[....]` after the icon but before the information and data. The content of the braces being `uibuilder:` followed by additional information of what code module/function generated the log entry.
+* Runtime warning log messages now all start with `🌐⚠️` to help them stand out from other log entries.
+* Runtime error log messages now all start with `🌐🛑` to help them stand out from other log entries.
+* Much previously deprecated code has been removed.
+* Code linting has move from ESLINT v6 to v9. This was horrid work! And resulted in me raising 2 bugs with the ESLINT team. The new version of ESLINT is much more strict and has found a number of issues that were previously missed. This should result in better code quality.
+
+### Experimental
+
+These are future features being worked on but not yet ready for use.
+
+* `dom`/`tinyDom` - This is both a client-side new feature and a new message schema that facilitates data-driven DOM updates (e.g. web page updates) from both Node-RED and client code. It is a much simplified low-code feature. With it, you can easily create new content and update existing content on your web pages. It does, however, require some familiarity with HTML.
+
+* `logger` - A next-gen client-side logging library.
+
+
+## [v7.1.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...v7.0.4)
+
+### 📌 Highlights
+
+* **Any** *Node-RED custom node* can now send a message to a uibuilder client! In your runtime code, add `RED.events.emit('uibuilder/send/<url-name>', {payload: 'Hi from my custom node!'})` where `<url-name>` is the URL set in a deployed uibuilder node. The data will be sent to all browser tabs connected to that uibuilder endpoint. Note though that this bypasses any uib-cache node.
 
 * You can now send a message from Node-RED to a connected client from a Function Node! Simply add `RED.util.uib.send('uibname', {....})` to your function code. This will send a message to all connected clients for that uibuilder instance.
 
@@ -58,6 +173,10 @@ Please see the roadmap in the docs for the backlog of future planned development
 * The `uib-plugin` library now renamed to `uib-editor-plugin` for clarity.
 
 * New `uib-runtime-plugin` library added. Now manages most of the additions to `RED.util.uib` which contains functions made available to Node-RED function nodes.
+
+* 1st phase of standardising event id's. All now start with `uibuilder/`.
+
+* 1st phase of standardising log outputs. All will eventually start with `🌐` to help them stand out from other log entries.
 
 ### `uib-brand.css` styles & variables
 
@@ -106,6 +225,7 @@ Please see the roadmap in the docs for the backlog of future planned development
   * `buildHtmlTable` - Returns HTML of a table created from the input data.
   * `createTable` - Uses `buildTable` to create a new table and attaches to a parent element in the DOM.
   * `tblAddDataRow` - adds a new row to an existing table.
+  * `tblRemoveRow` - removes a row from an existing table.
   * `tblAddListener` - adds row/cell listeners to the 1st tbody of a table. Will send a msg back to Node-RED when used with uibuilder. Defaults to adding a `click` listener.
   * `tblGetCellName` - Returns a standardised table cell name. Either from a `data-col-name` attribute or a numeric reference like `C003`.
 * Added `data-col-reference` attribute to created tables - on the `thead` row that actually defines the columns. Making it easier to get a reliable column reference later.

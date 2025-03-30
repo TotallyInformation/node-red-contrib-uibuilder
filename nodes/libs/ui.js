@@ -1,6 +1,28 @@
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name2 in all)
+    __defProp(target, name2, { get: all[name2], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var ui_exports = {};
+__export(ui_exports, {
+  default: () => ui_default
+});
+module.exports = __toCommonJS(ui_exports);
 const Ui = class Ui2 {
   //#region --- Class variables ---
-  version = "7.1.0-node";
+  version = "7.2.0-node";
   // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
   sanitiseExtraTags = ["uib-var"];
   sanitiseExtraAttribs = ["variable", "report", "undefined"];
@@ -524,12 +546,19 @@ const Ui = class Ui2 {
    * type {HTMLElement}
    * @param {string} cssSelector A CSS Selector that identifies the element to return
    * @param {"el"|"text"|"html"|"attributes"|"attr"} [output] Optional. What type of output to return. Defaults to "el", the DOM element reference
-   * @returns {HTMLElement|string|InnerHTML|array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
+   * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
+   * @returns {HTMLElement|string|Array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
    */
-  $(cssSelector, output) {
-    let el = Ui2.doc.querySelector(cssSelector);
-    if (!el) {
-      Ui2.log(1, "Uib:$", `No element found for CSS selector ${cssSelector}`)();
+  $(cssSelector, output, context) {
+    if (!context) context = Ui2.doc;
+    if (!output) output = "el";
+    if (!context || !context.nodeType) {
+      Ui2.log(1, "Uib:$", `Invalid context element. Must be a valid HTML element.`, context)();
+      return null;
+    }
+    let el = context.querySelector(cssSelector);
+    if (!el || !el.nodeType) {
+      Ui2.log(1, "Uib:$", `No element found or element is not an HTML element for CSS selector ${cssSelector}`)();
       return null;
     }
     if (el.nodeName === "TEMPLATE") {
@@ -539,7 +568,6 @@ const Ui = class Ui2 {
         return null;
       }
     }
-    if (!output) output = "el";
     let out;
     try {
       switch (output.toLowerCase()) {
@@ -573,10 +601,16 @@ const Ui = class Ui2 {
   /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
    * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
    * @param {string} cssSelector A CSS Selector that identifies the elements to return
+   * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
    * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
    */
-  $$(cssSelector) {
-    return Array.from(Ui2.doc.querySelectorAll(cssSelector));
+  $$(cssSelector, context) {
+    if (!context) context = Ui2.doc;
+    if (!context || !context.nodeType) {
+      Ui2.log(1, "Uib:$$", `Invalid context element. Must be a valid HTML element.`, context)();
+      return null;
+    }
+    return Array.from(context.querySelectorAll(cssSelector));
   }
   /** Add 1 or several class names to an element
    * @param {string|string[]} classNames Single or array of classnames
@@ -586,43 +620,65 @@ const Ui = class Ui2 {
     if (!Array.isArray(classNames)) classNames = [classNames];
     if (el) el.classList.add(...classNames);
   }
-  // TODO Add ability to change slot content ...
   /** Apply a source template tag to a target html element
    * NOTES:
-   * - styles in ALL templates are accessible to all templates.
+   * - Any attributes are only applied to the 1ST ELEMENT of the template content. Use a wrapper div if you need to apply to multiple elements.
+   * - When using 'wrap' mode, the target content is placed into the template's 1ST <slot> only (if present).
+   * - styles in ALL templates are accessible to all templates & impact the whole page.
    * - scripts in templates are run AT TIME OF APPLICATION (so may run multiple times).
    * - scripts in templates are applied in order of application, so variables may not yet exist if defined in subsequent templates
    * @param {string} sourceId The HTML ID of the source element
    * @param {string} targetId The HTML ID of the target element
    * @param {object} config Configuration options
-   * @param {boolean=} config.onceOnly If true, the source will be adopted (the source is moved)
-   * @param {object=} config.attributes A set of key:value pairs that will be applied as attributes to the target
+   *   @param {boolean=} config.onceOnly   If true, the source will be adopted (the source is moved)
+   *   @param {object=}  config.attributes A set of key:value pairs that will be applied as attributes to the 1ST ELEMENT ONLY of the target
+   *   @param {'insert'|'replace'|'wrap'}  config.mode How to apply the template. Default is 'insert'. 'replace' will replace the targets innerHTML. 'wrap' is like 'replace' but will put any target content into the template's 1ST <slot> (if present).
    */
   applyTemplate(sourceId, targetId, config) {
-    if (!config) config = { onceOnly: false };
+    if (!config) config = {};
+    if (!config.onlyOnce) config.onlyOnce = false;
+    if (!config.mode) config.mode = "insert";
     const template = Ui2.doc.getElementById(sourceId);
+    if (!template || template.tagName !== "TEMPLATE") {
+      Ui2.log("error", "Ui:applyTemplate", `Source must be a <template>. id='${sourceId}'`)();
+      return;
+    }
     const target = Ui2.doc.getElementById(targetId);
-    if (template && target) {
-      let content;
-      try {
-        if (config.onceOnly !== true) content = Ui2.doc.importNode(template.content, true);
-        else content = Ui2.doc.adoptNode(template.content);
-      } catch (e) {
-        Ui2.log("error", "Ui:applyTemplate", `Source must be a <template>. id='${sourceId}'`)();
-        return;
+    if (!target) {
+      Ui2.log("error", "Ui:applyTemplate", `Target not found: id='${targetId}'`)();
+      return;
+    }
+    const targetContent = target.innerHTML ?? "";
+    if (targetContent && config.mode === "replace") {
+      Ui2.log("warn", "Ui:applyTemplate", `Target element is not empty, content is replaced. id='${targetId}'`)();
+    }
+    let templateContent;
+    if (config.onceOnly === true) templateContent = Ui2.doc.adoptNode(template.content);
+    else templateContent = Ui2.doc.importNode(template.content, true);
+    if (templateContent) {
+      if (config.attributes) {
+        const el = templateContent.firstElementChild;
+        Object.keys(config.attributes).forEach((attrib) => {
+          el.setAttribute(attrib, config.attributes[attrib]);
+        });
       }
-      if (content) {
-        if (config.attributes) {
-          const el = content.firstElementChild;
-          Object.keys(config.attributes).forEach((attrib) => {
-            el.setAttribute(attrib, config.attributes[attrib]);
-          });
+      if (config.mode === "insert") {
+        target.appendChild(templateContent);
+      } else if (config.mode === "replace") {
+        target.innerHTML = "";
+        target.appendChild(templateContent);
+      } else if (config.mode === "wrap") {
+        target.innerHTML = "";
+        target.appendChild(templateContent);
+        if (targetContent) {
+          const slot = target.getElementsByTagName("slot");
+          if (slot.length > 0) {
+            slot[0].innerHTML = targetContent;
+          }
         }
-        target.appendChild(content);
       }
     } else {
-      if (!template) Ui2.log("error", "Ui:applyTemplate", `Source not found: id='${sourceId}'`)();
-      if (!target) Ui2.log("error", "Ui:applyTemplate", `Target not found: id='${targetId}'`)();
+      Ui2.log("warn", "Ui:applyTemplate", `No valid content found in template`)();
     }
   }
   /** Converts markdown text input to HTML if the Markdown-IT library is loaded
@@ -868,9 +924,7 @@ const Ui = class Ui2 {
       type: node.nodeName,
       attributes: void 0,
       isUserInput: node.validity ? true : false,
-      // eslint-disable-line no-unneeded-ternary
       userInput: !node.validity ? void 0 : {
-        // eslint-disable-line multiline-ternary
         value: node.value,
         validity: void 0,
         willValidate: node.willValidate,
@@ -943,13 +997,12 @@ const Ui = class Ui2 {
       return Promise.reject(new Error("Notifications not permitted by user"));
     } else if (permit === "granted") {
       return this._showNotification(config);
-    } else {
-      permit = await Notification.requestPermission();
-      if (permit === "granted") {
-        return this._showNotification(config);
-      }
-      return Promise.reject(new Error("Notifications not permitted by user"));
     }
+    permit = await Notification.requestPermission();
+    if (permit === "granted") {
+      return this._showNotification(config);
+    }
+    return Promise.reject(new Error("Notifications not permitted by user"));
   }
   /** Remove All, 1 or more class names from an element
    * @param {undefined|null|""|string|string[]} classNames Single or array of classnames. If undefined, "" or null, remove all classes
@@ -1145,7 +1198,7 @@ const Ui = class Ui2 {
    * @property {boolean=} editable FOR FUTURE USE. Optional. Can cells in this column be edited?
    */
   /** Directly add a table to a parent element.
-   * @param {Array<object>|Array<array>|Object} data  Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
+   * @param {Array<object>|Array<Array>|object} data  Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
    * @param {object} [opts] Build options
    *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
    *   @param {HTMLElement|string} opts.parent Default=body. The table will be added as a child. May be an actual HTML element or a CSS Selector
@@ -1159,14 +1212,14 @@ const Ui = class Ui2 {
   /** Builds & returns an HTML table element from an array (or object) of objects
    * 1st row is used for columns unless you pass opts.cols to describe them.
    * If an object of objects, inner keys are used to populate th/td `data-col-name` attribs. Outer keys applied as row ID's.
-   * 
+   *
    * TODO
    * - Allow optional caption, heading, footers, optional collapse
    * - Multiple headings, footers
    * - colspans, rowspans
    * - multiple tbody
-   * 
-   * @param {Array<object>|Array<array>|Object} data Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
+   *
+   * @param {Array<object>|Array<Array>|object} data Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
    * @param {object} opts Table options
    *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
    *   @param {HTMLElement|string=} opts.parent If provided, the table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
@@ -1243,8 +1296,8 @@ const Ui = class Ui2 {
   /** Adds (or replaces) a single row in an existing table>tbody
    * NOTE: Row numbers use the rowIndex property of the row element.
    * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
-   * @param {object|array} rowData A single row of column/cell data
-   * @param {object} [options]
+   * @param {object|Array} rowData A single row of column/cell data
+   * @param {object} [options] Additional options
    *  @param {number=} options.body Optional, default=0. The tbody section to add the row to.
    *  @param {boolean=} options.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
    *  @param {string=} options.rowId Optional. HTML element ID for the added row
@@ -1252,7 +1305,7 @@ const Ui = class Ui2 {
    *  @param {number=} options.beforeRow Optional. If provided, the new row will be added before this row number. Ignored if afterRow is provided
    *  @param {number=} options.replaceRow Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
    *  @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
-   * 
+   *
    * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
    */
   tblAddRow(tbl, rowData = {}, options = {}) {
@@ -1320,7 +1373,7 @@ const Ui = class Ui2 {
    * @example tblAddListener('#eltest-tbl-table', {eventScope: 'cell'}, myVar2)
    *
    * @param {string} tblSelector The table CSS Selector
-   * @param {object} [options={}] Additional options
+   * @param {object} [options] Additional options. Default={}
    *   @param {"row"|"cell"=} options.eventScope Optional, default=row. Return data for either the whole row (as an object) or for the single cell clicked
    *   @param {"text"|"html"=} options.returnType Optional, default=text. Return text or html data
    *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
@@ -1370,7 +1423,7 @@ const Ui = class Ui2 {
    * @param {string|number} rowKey Key or index to use for column search
    * @param {Array<columnDefinition>=} colMeta Array of column definitions. If not provided, will need the HTML table element.
    * @param {HTMLTableElement=} tblEl If the colMeta table not provided, provide the HTML table element to do the lookup
-   * @returns 
+   * @returns {columnDefinition} Column metadata object
    */
   tblFindColMeta(rowKey, colMeta, tblEl) {
     if (!colMeta && !tblEl) throw new Error("[tblFindColMeta] Either the column metadata array or the HTML table element must be provided");
@@ -1394,8 +1447,8 @@ const Ui = class Ui2 {
   /** Returns either the existing or calculated column metadata given any table
    * First checks if the data is on the `cols` custom property of the table
    * If not, then looks 1st for a row with a `data-col-reference` attribute. Then for the first TR of the thead. Then for the first TR of the table.
-   * @param {HTMLTableElement} tblEl 
-   * @param {object} [options={}] 
+   * @param {HTMLTableElement} tblEl DOM table element
+   * @param {object} [options] Additional options. Default={}
    *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
    * @returns {Array<columnDefinition>} Column metadata = array of column definitions
    */
@@ -1430,7 +1483,7 @@ const Ui = class Ui2 {
   /** Remove a row from an existing table
    * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
    * @param {number} rowIndex The row number to remove (1st row is 0, last row is -1)
-   * @param {object} [options]
+   * @param {object} [options] Additional options
    *  @param {number=} options.body Optional, default=0. The tbody section to add the row to.
    */
   tblRemoveRow(tbl, rowIndex, options = {}) {
@@ -1451,4 +1504,4 @@ const Ui = class Ui2 {
   //#endregion --- table handling ---
   //#endregion ---- external methods ----
 };
-module.exports = Ui;
+var ui_default = Ui;

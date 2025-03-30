@@ -28,7 +28,7 @@
  * @typedef {import('../../typedefs').runtimeNode} runtimeNode
  * typedef {import('../typedefs.js')}
  * typedef {import('node-red')} Red
- * @typedef {import('Express')} Express
+ * typedef {import('Express')} Express
  * typedef {import('socket.io').Namespace} socketio.Namespace
  * typedef {import('socket.io').Socket} socketio.Socket
  */
@@ -101,7 +101,7 @@ const UibLib = {
         // const RED = /** @type {runtimeRED} */ uib.RED
         const log = uib.RED.log
 
-        log.trace(`[uibuilder:uiblib:instanceClose:${node.url}] Running instance close.`)
+        log.trace(`🌐[uibuilder[:uiblib:instanceClose:${node.url}] Running instance close.`)
 
         /** @type {object} instances[] Reference to the currently defined instances of uibuilder */
         const instances = uib.instances
@@ -109,14 +109,14 @@ const UibLib = {
         try { // Wrap this in a try to make sure that everything is working
             // Remove url folder if requested
             if ( uib.deleteOnDelete[node.url] === true ) {
-                log.trace(`✔️ [uibuilder:uiblib:instanceClose] Deleting instance folder. URL: ${node.url}`)
+                log.trace(`🌐[uibuilder:uiblib:instanceClose] Deleting instance folder. URL: ${node.url}`)
 
                 // Remove the flag in case someone recreates the same url!
                 delete uib.deleteOnDelete[node.url]
 
                 fslib.remove(path.join(uib.rootFolder, node.url))
                     .catch(err => {
-                        log.error(`🛑 [uibuilder:uiblib:processClose] Deleting instance folder failed. URL=${node.url}, Error: ${err.message}`)
+                        log.error(`🌐🛑[uibuilder:uiblib:processClose] Deleting instance folder failed. URL=${node.url}, Error: ${err.message}`)
                     })
             }
 
@@ -132,7 +132,7 @@ const UibLib = {
             // Disconnect all Socket.IO clients for this node instance
             sockets.removeNS(node)
         } catch (err) {
-            log.error(`[uibuilder:uiblib:instanceClose] Error in closure. Error: ${err.message}`, err)
+            log.error(`🌐🛑[uibuilder:uiblib:instanceClose] Error in closure. Error: ${err.message}`, err)
         }
 
         /*
@@ -278,26 +278,29 @@ const UibLib = {
             shell.stdout.on('data', (data) => {
                 const d = data.toString()
                 // Emit log event with data
-                // RED.events.emit('UIBUILDER/runOsCmd/log', d )
+                // RED.events.emit('uibuilder/runOsCmd/log', d )
                 out += d
                 // Don't emit chunks of output as this stops the final output from resolving
             })
             shell.stderr.on('data', (data) => {
                 const d = data.toString()
                 // Emit log event with data
-                // RED.events.emit('UIBUILDER/runOsCmd/log', d )
+                // RED.events.emit('uibuilder/runOsCmd/log', d )
                 out += d
             })
 
             shell.on('error', (err) => {
+                // @ts-ignore
                 err.all = out
+                // @ts-ignore
                 err.command = cmdOut
+                // @ts-ignore
                 err.code = 2
                 reject(err)
             })
 
             shell.on('close', (code) => {
-                // RED.events.emit('UIBUILDER/runOsCmd/end', { 'code': code } )
+                // RED.events.emit('uibuilder/runOsCmd/end', { 'code': code } )
                 // Return complete output
                 if (opts.out === 'bare') {
                     resolve(out)

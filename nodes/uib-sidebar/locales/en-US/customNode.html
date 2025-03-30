@@ -1,0 +1,42 @@
+<script type="text/html" data-help-name="uib-sidebar">
+        
+    <p>
+        Simple sidebar UI node, powered by UIBUILDER for Node-RED.
+    </p>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt class="optional">topic <span class="property-type">string</span></dt>
+        <dd>
+            Passed through if provided.
+        </dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">string</span></dt>
+        <dd>
+            The payload
+        </dd>
+
+        <dt>topic <span class="property-type">string</span></dt>
+        <dd>
+            The input topic.
+        </dd>
+    </dl>
+
+    <h3>Node Settings</h3>
+    <dl class="message-properties">
+        <dt class="optional">Name <span class="property-type">string</span></dt>
+        <dd>
+            Optional short description shown in the admin interface
+        </dd>
+
+        <dt>Topic <span class="property-type">string</span></dt>
+        <dd>
+            Fixed topic string. Only used if the input <code>msg</code> does not
+            contain a <code>topic</code> property.
+        </dd>
+    </dl>
+
+</script>

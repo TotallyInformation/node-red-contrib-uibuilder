@@ -114,7 +114,7 @@ class UibPackages {
 
         // Prevent setup from being called more than once
         if ( this.#isConfigured === true ) {
-            uib.RED.log.warn('[uibuilder:UibPackages:setup] Setup has already been called, it cannot be called again.')
+            uib.RED.log.warn('🌐⚠️[uibuilder:UibPackages:setup] Setup has already been called, it cannot be called again.')
             return
         }
 
@@ -122,12 +122,12 @@ class UibPackages {
         this.uib = uib
         const log = this.log = uib.RED.log
 
-        log.trace('[uibuilder:package-mgt:setup] Package Management setup started')
+        log.trace('🌐[uibuilder:package-mgt:setup] Package Management setup started')
 
         // ! HAVE TO CHECK IF uibRoot/package.json or uibRoot/node_modules EXISTS FIRST
         //   or checks and installs could happen at a parent level if it has a package.json
         if (!existsSync(uib.rootFolder, this.packageJson)) {
-            log.warn(`uibRoot package.json not found. Copying template file. ${uib.rootFolder}`)
+            log.warn(`🌐⚠️[uibuilder:package-mgt:setup] uibRoot package.json not found. Copying template file. ${uib.rootFolder}`)
             this.createBasicPj()
         }
 
@@ -141,13 +141,11 @@ class UibPackages {
         // TODO Good enough for now but all SHOULD be auto-fixable.
         if (this.dependencyProblems) {
             setTimeout(() => {
-                this.log.info('------------------------------------------------------')
-                this.log.warn([`Problems with uibuilder root package.json.\nRoot folder: ${this.uib.rootFolder}\nPlease resolve before continuing.`, this.dependencyProblems,])
-                this.log.info('------------------------------------------------------\n \n')
+                this.log.warn('------------------------------------------------------')
+                this.log.warn([`🌐⚠️[uibuilder:package-mgt:setup] Problems with uibuilder root package.json.\nRoot folder: ${this.uib.rootFolder}\nPlease resolve before continuing.`, this.dependencyProblems,])
+                this.log.warn('------------------------------------------------------\n \n')
             }, 3000)
         }
-
-        // console.log({pj, dependencyDetails: this.dependencyDetails})
 
         // SYNC - minimum update of the in-memory pj.uibuilder.packages with enough info to be able to serve the folders
         this.pkgsQuickUpd()
@@ -158,20 +156,20 @@ class UibPackages {
         // ASYNC - Re-build package.json uibuilder.packages with details & rewrite file (async)
         this.updateInstalledPackageDetails()
 
-        log.trace('[uibuilder:package-mgt:setup] Package Management setup completed')
+        log.trace('🌐[uibuilder:package-mgt:setup] Package Management setup completed')
     } // ---- End of setup ---- //
 
     /** Make sure that <uibRoot>/package.json exists and contains basic info
      * @returns {boolean} True if successful
      */
     createBasicPj() {
-        if (!this.log) console.error('[uibuilder:package-mgt:createBasicPj] this.log not defined!')
+        if (!this.log) console.error('🌐🛑[uibuilder:package-mgt:createBasicPj] this.log not defined!')
         try {
             const pj = copySync([__dirname, '..', '..', 'templates', 'uibroot-package.json'], [this.uib.rootFolder, 'package.json'])
-            this.log.trace(`[uibuilder:package-mgt:createBasicPj] Basic package.json created in "${this.uib.rootFolder}"`)
+            this.log.trace(`🌐[uibuilder[:package-mgt:createBasicPj] Basic package.json created in "${this.uib.rootFolder}"`)
             return pj
         } catch (e) {
-            this.log.error(`[uibuilder:package-mgt:createBasicPj] Basic package.json creation FAILED in "${this.uib.rootFolder}". ${e.message}`, e)
+            this.log.error(`🌐🛑[uibuilder:package-mgt:createBasicPj] Basic package.json creation FAILED in "${this.uib.rootFolder}". ${e.message}`, e)
             console.trace()
             return null
         }
@@ -207,7 +205,7 @@ class UibPackages {
             out = runOsCmdSync('npm', args, opts)
             out = JSON.parse(out)
         } catch (e) {
-            this.log.error(`npm list installed packages FAILED. ${e.message}`, e)
+            this.log.error(`🌐🛑[uibuilder:package-mgt:pkgCheck] npm list installed packages FAILED. ${e.message}`, e)
         }
         // console.timeEnd('⏱️ >> pkgCheckCmd')
 
@@ -258,36 +256,12 @@ class UibPackages {
             pkg.installFolder = this.dependencyDetails[pkgName].path || join(this.uib.rootFolder, 'node_modules', pkgName)
             // The base url used by uib - note this is changed if this is a scoped package
             pkg.packageUrl = '/' + pkgName
-            // this.log.debug(`[uibuilder:package-mgt:pkgsQuickUpd] Updating '${pkgName}'. Fldr: '${pkg.installFolder}', URL: '${pkg.packageUrl}'.`)
         }
 
         // Re-save the updated file
         // this.setUibRootPackageJson(pj)
         // this.writePackageJson(this.uib.rootFolder, pj)
     }
-
-    // TODO - REMOVE
-    /** Read the contents of a package.json file
-     * @param {string} folder The folder containing a package.json file
-     * @returns {object|null} Object representation of JSON if found otherwise null
-     */
-    // readPackageJson(folder) {
-    //     if ( this.log === undefined ) throw this.#logUndefinedError
-
-    //     // Does not need setup to have finished running
-
-    //     let file = null
-    //     try {
-    //         // ! TODO: Replace fs-extra
-    //         // const data = fs.readFileSync('./example.json')
-    //         // const obj = JSON.parse(data)
-    //         file = readJsonSync( join(folder, this.packageJson), 'utf8' )
-    //         this.log.trace(`[uibuilder:package-mgt:readPackageJson] package.json file read successfully from ${folder}`)
-    //     } catch (err) {
-    //         this.log.error(`[uibuilder:package-mgt:readPackageJson] Failed to read package.json file from  ${folder}`, this.packageJson, err)
-    //     }
-    //     return file
-    // } // ---- End of readPackageJson ---- //
 
     /** Write updated <folder>/package.json (async)
      * Also makes a backup copy to package.json.bak
@@ -301,60 +275,18 @@ class UibPackages {
 
         try { // Make a backup copy
             await copy(fileName, `${fileName}.bak`)
-            this.log.trace(`✔️ [uibuilder:package-mgt:writePackageJson] package.json file successfully backed up in ${folder}`)
+            this.log.trace(`🌐[uibuilder:package-mgt:writePackageJson] package.json file successfully backed up in ${folder}`)
         } catch (err) {
-            this.log.error(`🛑 [uibuilder:package-mgt:writePackageJson] Failed to copy package.json to backup.  ${folder}`, this.packageJson, err)
+            this.log.error(`🌐🛑[uibuilder:package-mgt:writePackageJson] Failed to copy package.json to backup.  ${folder}`, this.packageJson, err)
         }
 
         try {
             await writeJson(fileName, json, { spaces: 2 })
-            this.log.trace(`✔️ [uibuilder:package-mgt:writePackageJson] package.json file written successfully in ${folder}`)
+            this.log.trace(`🌐[uibuilder:package-mgt:writePackageJson] package.json file written successfully in ${folder}`)
         } catch (err) {
-            this.log.error(`🛑 [uibuilder:package-mgt:writePackageJson] Failed to write package.json.  ${folder}`, this.packageJson, err)
+            this.log.error(`🌐🛑[uibuilder:package-mgt:writePackageJson] Failed to write package.json.  ${folder}`, this.packageJson, err)
         }
     }
-
-    // TODO REMOVE
-    /* Get the uibRoot package.json and return as object. Or, if not exists, return minimal object
-     * Note: Does not directly update this.uibPackageJson because of async timing
-     * @returns {object} uibRoot/package.json contents or a minimal version as an object
-     */
-    // getUibRootPJ() {
-    //     if ( this.uib === undefined ) throw this.#uibUndefinedError
-    //     if ( this.log === undefined ) throw this.#logUndefinedError
-
-    //     // Does not need setup to have finished running
-
-    //     if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
-    //     const uibRoot = this.uib.rootFolder
-
-    //     const fileName = join( uibRoot, this.packageJson )
-
-    //     // Get it to class var or create minimal class var
-    //     let res = this.readPackageJson(uibRoot)
-
-    //     if (res === null) {
-    //         this.log.warn(`[uibuilder:package-mgt:getUibRootPJ] Could not read ${fileName}. Creating minimal version.`)
-    //         // Create a minimal pj
-    //         res = {
-    //             'name': 'uib_root',
-    //             'version': this.uib.version,
-    //             'description': 'Root configuration and data folder for uibuilder',
-    //             'scripts': {},
-    //             'dependencies': {},
-    //             'homepage': '',
-    //             'bugs': '',
-    //             'author': '',
-    //             'license': 'Apache-2.0',
-    //             'repository': '',
-    //             'uibuilder': {
-    //                 'packages': {},
-    //             },
-    //         }
-    //     }
-
-    //     return res
-    // }
 
     async updIndividualPkgDetails(pkgName, dependencyDetails) {
         if ( this.uibPackageJson === null ) throw new Error('[uibuilder:UibPackages.js:updIndividualPkgDetails] this.uibPackageJson is null')
@@ -462,128 +394,7 @@ class UibPackages {
         this.writePackageJson(rootFolder, pj)
     }
 
-    // TODO - REMOVE
-    /** Get <uibRoot>/package.json (create it if it doesn't exist), enhance with package details
-     * Also make version string same as uibuilder version
-     * @returns {object|null} Parsed version of <uibRoot>/package.json with uibuilder specific updates
-     */
-    // getUibRootPackageJson() {
-    //     if ( this.log === undefined ) throw this.#logUndefinedError
-    //     if ( this.uib === undefined ) throw this.#uibUndefinedError
-    //     if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
-
-    //     const log = this.log
-
-    //     if ( this.#isConfigured !== true ) {
-    //         log.warn('[uibuilder:UibPackages:getUibRootPackageJson] Cannot run. Setup has not been called.')
-    //         return null
-    //     }
-
-    //     const uibRoot = this.uib.rootFolder
-    //     const fileName = join( uibRoot, this.packageJson )
-
-    //     // ! IT HAS TO ALREADY EXIST - ~~Make sure it exists & contains valid JSON~~
-    //     // if ( !existsSync(fileName) ) {
-    //     //     log.warn('[uibuilder:package-mgt:getUibRootPackageJson] No uibRoot/package.json file, creating minimal file.')
-    //     //     this.setUibRootPackageJson()
-    //     // }
-
-    //     // Get it
-    //     let pj = {}
-    //     try {
-    //         pj = this.readPackageJson(uibRoot)
-    //     } catch (e) {
-    //         log.error(`[uibuilder:package-mgt:getUibRootPackageJson] Error reading ${fileName}. ${e.message}`)
-    //         this.uibPackageJson = null
-    //         return null
-    //     }
-
-    //     // Make sure there is a dependencies prop
-    //     if ( !pj.dependencies ) pj.dependencies = {}
-    //     // Make sure there is a uibuilder prop
-    //     if ( !pj.uibuilder ) pj.uibuilder = {}
-    //     // Reset the packages list, we rebuild it below
-    //     pj.uibuilder.packages = {}
-
-    //     if (this.uibPackageJson.dependencies !== pj.dependencies ) {
-    //         log.info('[uibuilder:package-mgt:getUibRootPackageJson] package.json dependencies changed')
-    //         // console.info({'pkg-deps': this.uibPackageJson.dependencies, 'memory-deps': pj.dependencies})
-    //     }
-
-    //     // Update the version string to match uibuilder version
-    //     pj.version = this.uib.version
-
-    //     // Make sure we have package details for all installed packages
-    //     Object.keys(pj.dependencies).forEach( packageName => {
-    //         // Get/Update package details
-    //         pj.uibuilder.packages[packageName] = this.getPackageDetails2(packageName, uibRoot)
-    //         // And save the version/location spec from the dependencies prop so everything is together
-    //         pj.uibuilder.packages[packageName].spec = pj.dependencies[packageName]
-
-    //         // Frig to pick up the version of Bootstrap installed with bootstrap-vue
-    //         if (packageName === 'bootstrap-vue' && !pj.dependencies.bootstrap ) {
-    //             pj.dependencies.bootstrap = pj.uibuilder.packages[packageName].bootstrap
-    //             pj.uibuilder.packages.bootstrap = this.getPackageDetails2('bootstrap', uibRoot)
-    //             pj.uibuilder.packages.bootstrap.spec = pj.dependencies.bootstrap
-    //         }
-    //     })
-
-    //     // Update the <uibRoot>/package.json file with updated details & Return it
-    //     // if (this.setUibRootPackageJson(pj) === true) return pj
-
-    //     // Failed
-    //     return null
-    // } // ----- End of getUibRootPackageJson() ----- //
-
-    // TODO - REMOVE
-    /** Write updated <uibRoot>/package.json
-     * @param {object} json The Object data to write to the file
-     * @returns {boolean|undefined} True if write was successful
-     */
-    // setUibRootPackageJson(json) {
-    //     if ( this.log === undefined ) throw this.#logUndefinedError
-    //     if ( this.uib === undefined ) throw this.#uibUndefinedError
-    //     if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
-
-    //     if ( this.#isConfigured !== true ) {
-    //         this.log.warn('[uibuilder:UibPackages:setUibRootPackageJson] Cannot run. Setup has not been called.')
-    //         return
-    //     }
-
-    //     const uibRoot = this.uib.rootFolder
-    //     const fileName = join( uibRoot, this.packageJson )
-
-    //     if (!json) {
-    //         this.log.warn('[uibuilder:package-mgt:setUibRootPackageJson] Using dummy json')
-    //         json = {
-    //             'name': 'uib_root',
-    //             'version': this.uib.version,
-    //             'description': 'Root configuration and data folder for uibuilder',
-    //             'scripts': {},
-    //             'dependencies': {},
-    //             'homepage': '',
-    //             'bugs': '',
-    //             'author': '',
-    //             'license': 'Apache-2.0',
-    //             'repository': '',
-    //             'uibuilder': {
-    //                 'packages': {},
-    //             }
-    //         }
-    //     }
-
-    //     try {
-    //         writeJsonSync(fileName, json, { spaces: 2 })
-    //         // Save it for use elsewhere
-    //         this.uibPackageJson = json
-    //         return true
-    //     } catch (e) {
-    //         this.log.error(`[uibuilder:package-mgt:setUibRootPackageJson] Error writing ${fileName}. ${e.message}`)
-    //         this.uibPackageJson = null
-    //         return false
-    //     }
-    // }
-
+ 
     /** Find install folder for a package - allows an array of locations to be given
      * NOTE: require.resolve can be a little ODD!
      *       When run from a linked package, it uses the link root not the linked location,
@@ -599,7 +410,7 @@ class UibPackages {
         if ( this.log === undefined ) throw this.#logUndefinedError
 
         if ( this.#isConfigured !== true ) {
-            this.log.warn('[uibuilder:UibPackages:getPackagePath] Cannot run. Setup has not been called.')
+            this.log.warn('🌐⚠️[uibuilder:UibPackages:getPackagePath] Cannot run. Setup has not been called.')
             return null
         }
 
@@ -611,95 +422,9 @@ class UibPackages {
             if (existsSync( loc )) return loc
         }
 
-        this.log.warn(`[uibuilder:package-mgt:getPackagePath2] PACKAGE ${packageName} NOT FOUND`)
+        this.log.warn(`🌐⚠️[uibuilder:package-mgt:getPackagePath2] PACKAGE ${packageName} NOT FOUND`)
         return null
     } // ----  End of getPackagePath2 ---- //
-
-    // TODO - REMOVE
-    /** Get the details for an installed package & update uibuilder specific details before returning it
-     * @param {string} packageName - Name of the package who's install folder we are looking for.
-     * @param {string} installRoot A uibuilder node instance - will search in node's root folder first
-     * @returns {object|null} Details object for an installed package
-     */
-    // getPackageDetails2(packageName, installRoot) {
-    //     if ( this.log === undefined ) throw this.#logUndefinedError
-
-    //     if ( this.#isConfigured !== true ) {
-    //         this.log.warn('[uibuilder:UibPackages:getPackagePath2] Cannot run. Setup has not been called.')
-    //         return null
-    //     }
-
-    //     // Trim the input just in case
-    //     packageName = packageName.trim()
-
-    //     const folder = this.getPackagePath2(packageName, installRoot)
-    //     if ( folder === null ) throw new Error('folder is null')
-    //     const pkgJson = this.readPackageJson(folder)
-
-    //     const pkgDetails = { 'installFolder': folder }
-    //     // if ( pkgDetails === undefined ) throw new Error('pkgDetails is undefined')
-    //     if (pkgJson.version) pkgDetails.installedVersion = pkgJson.version
-
-    //     /** If we can, lets work out what resource is actually needed
-    //      *  when using one of these packages in the browser.
-    //      *  If we can't, leave a ? to make it obvious
-    //      * Annoyingly, a few packages have decided to make the `browser` property an object instead of a string.
-    //      *   (e.g. vgauge) - ignore in that case as it isn't clear what the intent is.
-    //      */
-    //     if (pkgJson.browser && (typeof pkgJson.browser === 'string') ) pkgDetails.estimatedEntryPoint = pkgJson.browser
-    //     else if (pkgJson.jsdelivr) pkgDetails.estimatedEntryPoint = pkgJson.jsdelivr
-    //     else if (pkgJson.unpkg) pkgDetails.estimatedEntryPoint = pkgJson.unpkg
-    //     else if (pkgJson.main) pkgDetails.estimatedEntryPoint = pkgJson.main
-    //     else pkgDetails.estimatedEntryPoint = '?'
-    //     if ( pkgDetails.estimatedEntryPoint === 'none') pkgDetails.estimatedEntryPoint = '?'
-
-    //     // Homepage - used for a help ref in the Editor
-    //     if (pkgJson.homepage) pkgDetails.homepage = pkgJson.homepage
-    //     else pkgDetails.homepage = `https://www.npmjs.com/search?q=${packageName}`
-
-    //     // The base url used by uib - note this is changed if this is a scoped package
-    //     pkgDetails.packageUrl = '/' + packageName
-
-    //     // Work out what kind of package this is
-
-    //     // If the package name is npm @scoped, remove the scope, add leading / & track scope name
-    //     if ( pkgDetails.packageUrl.startsWith('@') ) {
-    //         pkgDetails.packageUrl = '/' + packageName.replace(/^@.*\//, '')
-    //         pkgDetails.scope = packageName.replace(pkgDetails.packageUrl, '')
-    //     }
-
-    //     // As the url may have changed (by removing scope), record the usable url
-    //     pkgDetails.url = `../uibuilder/vendor${pkgDetails.packageUrl}/${pkgDetails.estimatedEntryPoint}`
-
-    //     // Frig to pick up the version of Bootstrap installed with bootstrap-vue
-    //     if (packageName === 'bootstrap-vue') {
-    //         pkgDetails.bootstrap = pkgJson.dependencies.bootstrap
-    //     }
-
-    //     // Add current version details
-    //     // pkgDetails.outdated = this.npmOutdated(packageName)
-    //     // console.log('pkgDetails.outdated', pkgDetails.outdated)
-    //     // this.npmOutdated(packageName)
-    //     //     .then(res => {
-    //     //         try {
-    //     //             res = JSON.parse(res)
-    //     //         } catch(e) { /* */ }
-    //     //         if ( res[packageName] ) {
-    //     //             res = {
-    //     //                 current: res[packageName].current,
-    //     //                 wanted: res[packageName].wanted,
-    //     //                 latest: res[packageName].latest,
-    //     //             }
-    //     //         }
-    //     //         pkgDetails.outdated = res
-    //     //         return true
-    //     //     })
-    //     //     .catch( err => {
-    //     //         //
-    //     //     })
-
-    //     return pkgDetails
-    // } // ----  End of getPackageDetails2 ---- //
 
     /** Is the specified package installed into uibRoot (e.g. via the library manager)
      * @param {string} packageName The package name to check
@@ -707,7 +432,7 @@ class UibPackages {
      */
     isPackageInstalled(packageName) {
         if ( this.#isConfigured !== true ) {
-            this.log.warn('[uibuilder:UibPackages:isPackageInstalled] Cannot run. Setup has not been called.')
+            this.log.warn('🌐⚠️[uibuilder:UibPackages:isPackageInstalled] Cannot run. Setup has not been called.')
             return false
         }
         if (!this.uibPackageJson) return false
@@ -737,7 +462,7 @@ class UibPackages {
         if ( this.log === undefined ) throw this.#logUndefinedError
 
         if ( this.#isConfigured !== true ) {
-            this.log.warn('[uibuilder:UibPackages:npmInstallPackage] Cannot run. Setup has not been called.')
+            this.log.warn('🌐⚠️[uibuilder:UibPackages:npmInstallPackage] Cannot run. Setup has not been called.')
             return ''
         }
 
@@ -780,7 +505,7 @@ class UibPackages {
             throw myerr
         }
 
-        this.log.info(`[uibuilder:UibPackages:npmInstallPackage] npm output: \n ${out.all}\n `)
+        this.log.info(`🌐📘[uibuilder:UibPackages:npmInstallPackage] npm output: \n ${out.all}\n `)
 
         return out
     } // ---- End of installPackage ---- //
@@ -796,7 +521,7 @@ class UibPackages {
         if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
 
         if ( this.#isConfigured !== true ) {
-            this.log.warn('[uibuilder:UibPackages:npmRemovePackage] Cannot run. Setup has not been called.')
+            this.log.warn('🌐⚠️[uibuilder:UibPackages:npmRemovePackage] Cannot run. Setup has not been called.')
             return ''
         }
 
@@ -833,49 +558,10 @@ class UibPackages {
             myerr.command = out.command
             throw myerr
         }
-        this.log.info(`[uibuilder:UibPackages:npmRemovePackage] npm output: \n ${out.all}\n `)
+        this.log.info(`🌐📘[uibuilder:UibPackages:npmRemovePackage] npm output: \n ${out.all}\n `)
 
         return out
     } // ---- End of removePackage ---- //
-
-    // TODO REMOVE
-    /** List all npm packages installed at the top-level of a folder
-     * @param {string=} folder The folder to start the list in
-     * @returns {Promise<string>} Command output
-     */
-    // async npmListInstalled(folder) {
-    //     this.log.trace('[uibuilder:package-mgt:npmListInstalled] npm list installed started')
-    //     // console.trace('[uibuilder:package-mgt:npmListInstalled] npm list installed started')
-
-    //     const opts = this.npmCmdOpts
-    //     opts.cwd = folder
-    //     opts.out = 'bare' // returns just the output string
-
-    //     const args = [
-    //         'list',
-    //         '--long',
-    //         '--prod',
-    //         '--json',
-    //         '--depth=0',
-    //     ]
-
-    //     /** @type {string} */
-    //     let out
-    //     try {
-    //         console.time('ListInstalled')
-    //         out = await runOsCmd('npm', args, opts)
-    //         console.timeEnd('ListInstalled')
-    //     } catch (e) {
-    //         const myerr = new Error(`runOsCmd/npmListInstalled failed. ${e.message}`)
-    //         myerr.all = ''
-    //         myerr.code = 3
-    //         myerr.command = `npm ${args.join(' ')}`
-    //         throw myerr
-    //     }
-
-    //     this.log.trace('[uibuilder:package-mgt:npmListInstalled] npm list installed completed')
-    //     return out // we asked for bare output so out is a string
-    // } // ---- End of npmListInstalled ---- //
 
     /** Get the latest version string for a package
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
@@ -887,7 +573,7 @@ class UibPackages {
         if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
 
         if ( this.#isConfigured !== true ) {
-            this.log.warn('[uibuilder:UibPackages:npmOutdated] Cannot run. Setup has not been called.')
+            this.log.warn('🌐⚠️[uibuilder:UibPackages:npmOutdated] Cannot run. Setup has not been called.')
             return
         }
 
@@ -913,7 +599,7 @@ class UibPackages {
             throw myerr
         }
 
-        this.log.trace(`[uibuilder:UibPackages:npmOutdated] npm output: \n ${out}\n `)
+        this.log.trace(`🌐[uibuilder[:UibPackages:npmOutdated] npm output: \n ${out}\n `)
 
         return out // we asked for bare output so out is a string
     } // ---- End of npmOutdated ---- //
@@ -926,7 +612,7 @@ class UibPackages {
         if ( this.log === undefined ) throw this.#logUndefinedError
 
         if ( this.#isConfigured !== true ) {
-            this.log.warn('[uibuilder:UibPackages:npmUpdate] Cannot run. Setup has not been called.')
+            this.log.warn('🌐⚠️[uibuilder:UibPackages:npmUpdate] Cannot run. Setup has not been called.')
             return ''
         }
 
@@ -970,7 +656,7 @@ class UibPackages {
             throw myerr
         }
 
-        this.log.info(`[uibuilder:UibPackages:npmUpdate] npm output: \n ${out.all}\n `)
+        this.log.info(`🌐📘[uibuilder:UibPackages:npmUpdate] npm output: \n ${out.all}\n `)
 
         return out
         // return /** @type {string} */ (all)

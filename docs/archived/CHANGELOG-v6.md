@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2024-03-17 15:13:47
+updated: 2025-01-17 16:16:46
 ---
 
 # Changelog archive for uibuilder v5
@@ -248,7 +248,7 @@ The `<uib-var>` tag provides an easy way to get dynamically updated content into
 
 #### Editor panel improvements
 
-* Major rework of tracking node instances. Custom events are now fired: 'uibuilder:node-added', 'uibuilder:node-changed', 'uibuilder:node-deleted'. With the node in question passed as data in the event. For added nodes, an extra property `addType` is added to the node object and set to either "load" (fired when the Editor is loaded which adds all nodes), "new" (when a brand new instance is added, eg from the palette), or "paste/import". The tracking code is also now only ever instanciated once when the Editor is loaded.
+* Major rework of tracking node instances. Custom events are now fired: 'uibuilder/node-added', 'uibuilder/node-changed', 'uibuilder/node-deleted'. With the node in question passed as data in the event. For added nodes, an extra property `addType` is added to the node object and set to either "load" (fired when the Editor is loaded which adds all nodes), "new" (when a brand new instance is added, eg from the palette), or "paste/import". The tracking code is also now only ever instanciated once when the Editor is loaded.
 * Better and more consistent removal of URL setting when pasting or importing existing uibuilder nodes.
 * The Editor js has been moved out of the html file and put into `resources/uibuilder.js`. It is loaded by the html file in a link. This makes development a lot easier. The code also references `resources/ti-common.js` to ensure consistency.
 * Improved debug information. Debug output to Editor page console is automatic if environment variable NODE_ENV is set to 'dev' or 'development' (it used to be if running on localhost). Otherwise can be turned on by manually issueing `uibuilder.debug = true` on the browser console on the Editor page.

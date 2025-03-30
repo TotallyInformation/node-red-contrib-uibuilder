@@ -1,25 +1,18 @@
 // @ts-nocheck
-/* This is the Front-End JavaScript for uibuilder  in HTML Module form
-  It provides a number of global objects that can be used in your own javascript.
-  see the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
-
-  Please use the default index.js file for your own code and leave this as-is.
-  See Uib._meta for client version string
-
-  Copyright (c) 2022-2025 Julian Knight (Totally Information)
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
+/**
+ * @kind module
+ * @module uibuilder
+ * @description The client-side Front-End JavaScript for uibuilder in HTML Module form
+ *   It provides a number of global objects that can be used in your own javascript.
+ *   see the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
+ *
+ *   Please use the default index.js file for your own code and leave this as-is.
+ *   See Uib._meta for client version string
+ * @version 1.0.0
+ * @license Apache-2.0
+ * @author Julian Knight (Totally Information)
+ * @copyright (c) 2022-2025 Julian Knight (Totally Information)
+ */
 
 //#region --- Type Defs --- //
 /**
@@ -31,18 +24,23 @@
 // We need the Socket.IO & ui libraries & the uib-var component  --- //
 // @ts-ignore - Note: Only works when using esbuild to bundle
 import Ui from './ui'
-import io from 'socket.io-client'
+import io from 'socket.io-client' // eslint-disable-line import/no-named-as-default
 import UibVar from '../components/uib-var'
 import UibMeta from '../components/uib-meta'
 import ApplyTemplate from '../components/apply-template'
+// import { dom } from './tinyDom'
 
-const version = '7.1.0-src'
+// Incorporate the logger module - NB: This sets a global `log` object for use if it can.
+// import logger from './logger'
+
+const version = '7.2.0-src'
 
 //#region --- Module-level utility functions --- //
 
 // Detect whether the loaded library is minified or not
 const isMinified = !(/param/).test(function (param) { })
 
+// TODO - switch to logger module
 //#region --- print/console - debugging output functions --- //
 
 /** Custom logging. e.g. log(2, 'here:there', 'jiminy', {fred:'jim'})()
@@ -50,8 +48,7 @@ const isMinified = !(/param/).test(function (param) { })
  */
 function log() {
     // Get the args
-    const args = Array.prototype.slice.call(arguments)
-
+    const args = Array.from(arguments)
     // 1st arg is the log level/type
     let level = args.shift()
     let strLevel
@@ -183,8 +180,9 @@ log.default = 1
 let ll
 
 // Check if the script element was found and get the data-log-level attribute (only numeric levels allowed here)
+let scriptElement
 try {
-    const scriptElement = document.currentScript
+    scriptElement = document.currentScript
     ll = scriptElement.getAttribute('logLevel')
 } catch (e) {}
 
@@ -200,7 +198,7 @@ if (ll === undefined) {
 if (ll !== undefined) {
     ll = Number(ll)
     if (isNaN(ll)) {
-        console.warn( `[Uib:constructor] Cannot set logLevel to "${scriptElement.getAttribute('logLevel')}". Defaults to 0 (error).`)
+        console.warn( `[Uib:constructor] Cannot set logLevel to "${scriptElement?.getAttribute('logLevel')}". Defaults to 0 (error).`)
         log.default = 0
     } else log.default = ll
 }
@@ -246,7 +244,7 @@ function syntaxHighlight(json) {
         try {
             json = JSON.stringify(json, undefined, 4)
             // json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // eslint-disable-line newline-per-chained-call
-            json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) { // eslint-disable-line prefer-named-capture-group
+            json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
                 let cls = 'number'
                 if ((/^"/).test(match)) {
                     if ((/:$/).test(match)) {
@@ -293,7 +291,7 @@ export const Uib = class Uib {
     // event listener callbacks by property name
     // #events = {}
     // Socket.IO channel names
-    _ioChannels = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' }
+    _ioChannels = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder', }
     /** setInterval holder for pings @type {function|undefined} */
     #pingInterval
     // onChange event callbacks
@@ -328,7 +326,7 @@ export const Uib = class Uib {
         'navigate', 'scrollTo', 'set', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'watchUrlHash',
     ]
 
-    /** @type {{[key: string]: string}} Managed uibuilder variables */
+    /** @type {Object<string, string>} Managed uibuilder variables */
     #managedVars = {}
 
     // What status variables to show via showStatus()
@@ -460,7 +458,7 @@ export const Uib = class Uib {
         // Using callback so that they are updated automatically on (re)connect
         // Only put things in here that will be valid for a websocket connected session
         auth: (cb) => {
-            cb({ // eslint-disable-line n/no-callback-literal
+            cb({
                 clientVersion: version,
                 clientId: this.clientId,
                 pathName: window.location.pathname,
@@ -478,7 +476,7 @@ export const Uib = class Uib {
             polling: {
                 extraHeaders: {
                     'x-clientid': `${Uib._meta.displayName}; ${Uib._meta.type}; ${Uib._meta.version}; ${this.clientId}`,
-                }
+                },
             },
         },
     }
@@ -512,7 +510,7 @@ export const Uib = class Uib {
         }
 
         // Check for an old value
-        let oldVal = this[prop] ?? undefined
+        const oldVal = this[prop] ?? undefined
 
         // We must add the var to the uibuilder object
         this[prop] = val
@@ -529,8 +527,8 @@ export const Uib = class Uib {
         // this.emit(prop, val)
 
         // trigger an event on the prop name, pass both the name and value to the event details
-        this._dispatchCustomEvent('uibuilder:propertyChanged', { 'prop': prop, 'value': val, 'oldValue': oldVal, 'store': store, 'autoload': autoload })
-        this._dispatchCustomEvent(`uibuilder:propertyChanged:${prop}`, { 'prop': prop, 'value': val, 'oldValue': oldVal, 'store': store, 'autoload': autoload })
+        this._dispatchCustomEvent('uibuilder:propertyChanged', { 'prop': prop, 'value': val, 'oldValue': oldVal, 'store': store, 'autoload': autoload, })
+        this._dispatchCustomEvent(`uibuilder:propertyChanged:${prop}`, { 'prop': prop, 'value': val, 'oldValue': oldVal, 'store': store, 'autoload': autoload, })
 
         return val
     }
@@ -589,7 +587,7 @@ export const Uib = class Uib {
                     log('error', 'Uib:setStore', 'Cannot save autoload list. ', e)()
                 }
             }
-            this._dispatchCustomEvent('uibuilder:propertyStored', { 'prop': id, 'value': value, 'autoload': autoload })
+            this._dispatchCustomEvent('uibuilder:propertyStored', { 'prop': id, 'value': value, 'autoload': autoload, })
             return true
         } catch (e) {
             log('error', 'Uib:setStore', 'Cannot write to localStorage. ', e)()
@@ -624,7 +622,7 @@ export const Uib = class Uib {
     }
 
     /** Returns a list of uibuilder properties (variables) that can be watched with onChange
-     * @returns {{[key: string]: string}} List of uibuilder managed variables
+     * @returns {Object<string,string>} List of uibuilder managed variables
      */
     getManagedVarList() {
         return this.#managedVars
@@ -643,7 +641,7 @@ export const Uib = class Uib {
      * @param {*} details Any details to pass to event output
      */
     _dispatchCustomEvent(title, details) {
-        const event = new CustomEvent(title, { detail: details })
+        const event = new CustomEvent(title, { detail: details, })
         document.dispatchEvent(event)
     }
 
@@ -652,7 +650,7 @@ export const Uib = class Uib {
     /** Register on-change event listeners for uibuilder tracked properties
      * Make it possible to register a function that will be run when the property changes.
      * Note that you can create listeners for non-existant properties
-     * @example: uibuilder.onChange('msg', (msg) => { console.log('uibuilder.msg changed! It is now: ', msg) })
+     * @example uibuilder.onChange('msg', (msg) => { console.log('uibuilder.msg changed! It is now: ', msg) })
      *
      * @param {string} prop The property of uibuilder that we want to monitor
      * @param {Function} callback The function that will run when the property changes, parameter is the new value of the property after change
@@ -671,7 +669,7 @@ export const Uib = class Uib {
         // }
 
         // Make sure we have an object to receive the saved callback, update the latest reference number
-        if (!this.#propChangeCallbacks[prop]) this.#propChangeCallbacks[prop] = { _nextRef: 1 }
+        if (!this.#propChangeCallbacks[prop]) this.#propChangeCallbacks[prop] = { _nextRef: 1, }
         else this.#propChangeCallbacks[prop]._nextRef++
 
         const nextCbRef = this.#propChangeCallbacks[prop]._nextRef
@@ -700,7 +698,7 @@ export const Uib = class Uib {
 
     /** Register a change callback for a specific msg.topic
      * Similar to onChange but more convenient if needing to differentiate by msg.topic.
-     * @example: let otRef = uibuilder.onTopic('mytopic', function(){ console.log('Received a msg with msg.topic=`mytopic`. msg: ', this) })
+     * @example let otRef = uibuilder.onTopic('mytopic', function(){ console.log('Received a msg with msg.topic=`mytopic`. msg: ', this) })
      * To cancel a change listener: uibuilder.cancelTopic('mytopic', otRef)
      *
      * @param {string} topic The msg.topic we want to listen for
@@ -709,7 +707,7 @@ export const Uib = class Uib {
      */
     onTopic(topic, callback) {
         // Make sure we have an object to receive the saved callback, update the latest reference number
-        if (!this.#msgRecvdByTopicCallbacks[topic]) this.#msgRecvdByTopicCallbacks[topic] = { _nextRef: 1 }
+        if (!this.#msgRecvdByTopicCallbacks[topic]) this.#msgRecvdByTopicCallbacks[topic] = { _nextRef: 1, }
         else this.#msgRecvdByTopicCallbacks[topic]._nextRef++
 
         const nextCbRef = this.#msgRecvdByTopicCallbacks[topic]._nextRef
@@ -795,7 +793,7 @@ export const Uib = class Uib {
         window.addEventListener('hashchange', (event) => {
             this.set('urlHash', location.hash)
             if (this.#sendUrlHash === true) {
-                this.send({ topic: 'hashChange', payload: location.hash, newHash: this.keepHashFromUrl(event.newURL), oldHash: this.keepHashFromUrl(event.oldURL) })
+                this.send({ topic: 'hashChange', payload: location.hash, newHash: this.keepHashFromUrl(event.newURL), oldHash: this.keepHashFromUrl(event.oldURL), })
             }
         })
     }
@@ -837,7 +835,7 @@ export const Uib = class Uib {
         if (msg === true) {
             this.send({
                 payload: exists,
-                info: `Element "${cssSelector}" ${exists ? 'exists' : 'does not exist'}`
+                info: `Element "${cssSelector}" ${exists ? 'exists' : 'does not exist'}`,
             })
         }
 
@@ -914,7 +912,7 @@ export const Uib = class Uib {
     /** Makes a null or non-object into an object. If thing is already an object.
      * If not null, moves "thing" to {payload:thing}
      * @param {*} thing Thing to check
-     * @param {string} [property='payload'] property that "thing" is moved to if not null and not an object
+     * @param {string} [property] property that "thing" is moved to if not null and not an object. Default='payload'
      * @returns {!object} _
      */
     makeMeAnObject(thing, property) {
@@ -966,7 +964,7 @@ export const Uib = class Uib {
      * Half away from zero method (AKA "commercial" rounding), most common type
      * @param {number} num The number to be rounded
      * @param {number} decimalPlaces Number of DP's to round to
-     * @returns Rounded number
+     * @returns {number} Rounded number
      */
     round(num, decimalPlaces) {
         const p = Math.pow(10, decimalPlaces || 0)
@@ -1078,7 +1076,7 @@ export const Uib = class Uib {
     elementIsVisible() {
         const info = 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex'
         log('error', 'uib:elementIsVisible', info)()
-        this.send({ payload: 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex' })
+        this.send({ payload: 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex', })
         return false
     } // --- End of elementIsVisible --- //
 
@@ -1127,10 +1125,21 @@ export const Uib = class Uib {
      */
     applyTemplate = _ui.applyTemplate
 
+    /** Column metadata object definition
+     * @typedef columnDefinition
+     * @property {number} index The column index number
+     * @property {boolean} hasName Whether the column has a defined name or not
+     * @property {string} title The title of the column. Shown in the table header row
+     * @property {string=} name Optional. A defined column name that will be added as the `data-col-name` to all cells in the column if defined
+     * @property {string|number=} key Optional. A key value (currently unused)
+     * @property {"string"|"date"|"number"|"html"=} dataType FOR FUTURE USE. Optional. What type of data will this column contain?
+     * @property {boolean=} editable FOR FUTURE USE. Optional. Can cells in this column be edited?
+     */
+
     /** Builds an HTML table from an array (or object) of objects
      * 1st row is used for columns.
      * If an object of objects, inner keys are used to populate th/td `data-col-name` attribs.
-     * @param {Array<object>|Object} data Input data array or object
+     * @param {Array<object>|object} data Input data array or object
      * @param {object} opts Table options
      *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
      * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
@@ -1140,13 +1149,13 @@ export const Uib = class Uib {
     }
 
     /** Directly add a table to a parent element.
-     * @param {Array<object>|Array<array>|Object} data  Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
+     * @param {Array<object>|Array<Array>|object} data  Input data array or object. Object of objects gives named rows. Array of objects named cols. Array of arrays no naming.
      * @param {object} [opts] Build options
      *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
      *   @param {HTMLElement|string} opts.parent Default=body. The table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
      *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
      */
-    createTable(data=[], opts={parent: 'body'}) {
+    createTable(data=[], opts={parent: 'body',}) {
         _ui.createTable(data, opts)
     }
 
@@ -1257,7 +1266,7 @@ export const Uib = class Uib {
      * @example tblAddListener('#eltest-tbl-table', {eventScope: 'cell'}, myVar2)
      *
      * @param {string} tblSelector The table CSS Selector
-     * @param {object} [options={}] Additional options
+     * @param {object} [options] Additional options. Default={}
      *   @param {"row"|"cell"=} options.eventScope Optional, default=row. Return data for either the whole row (as an object) or for the single cell clicked
      *   @param {"text"|"html"=} options.returnType Optional, default=text. Return text or html data
      *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
@@ -1267,14 +1276,14 @@ export const Uib = class Uib {
      * @param {object=} out A variable reference that will be updated with the output data upon a click event
      */
     tblAddListener(tblSelector, options = {}, out = {}) {
-        return _ui.tblAddListener(tblSelector, options, out)
+        _ui.tblAddListener(tblSelector, options, out)
     }
 
     /** Adds (or replaces) a single row in an existing table>tbody
      * NOTE: Row numbers use the rowIndex property of the row element.
      * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
-     * @param {object|array} rowData A single row of column/cell data
-     * @param {object} [options]
+     * @param {object|Array} rowData A single row of column/cell data
+     * @param {object} [options] Additional options
      * @param {number=} options.body Optional, default=0. The tbody section to add the row to.
      * @param {boolean=} options.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
      * @param {string=} options.rowId Optional. HTML element ID for the added row
@@ -1282,7 +1291,7 @@ export const Uib = class Uib {
      * @param {number=} options.beforeRow Optional. If provided, the new row will be added before this row number. Ignored if afterRow is provided
      * @param {number=} options.replaceRow Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
      * @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
-     * 
+     *
      * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
      */
     tblAddRow(tbl, rowData={}, options={}) {
@@ -1292,11 +1301,11 @@ export const Uib = class Uib {
     /** Remove a row from an existing table
      * @param {string|HTMLTableElement} tbl Either a CSS Selector for the table or a reference to the HTML Table Element
      * @param {number} rowIndex The row number to remove (1st row is 0, last row is -1)
-     * @param {object} [options]
+     * @param {object} [options] Additional options
      *  @param {number=} options.body Optional, default=0. The tbody section to add the row to.
      */
     tblRemoveRow(tbl, rowIndex, options = {}) {
-        return _ui.tblRemoveRow(tbl, rowIndex, options)
+        _ui.tblRemoveRow(tbl, rowIndex, options)
     }
 
 
@@ -1445,14 +1454,18 @@ export const Uib = class Uib {
     }
 
     /** Given a FileList array, send each file to Node-RED and return file metadata
-     * @param {FileList} files FileList array
+     * @param {HTMLInputElement} srcEl Reference to the source input element
      * @param {boolean=} noSend If true, don't send the file to Node-RED. Default is to send.
      * @returns {Array<object>} Metadata values from all files
      */
-    _processFilesInput(files, noSend = false) {
+    _processFilesInput(srcEl, noSend = false) {
         const value = []
+        const files = srcEl.files
+        const seqCount = files.length
+        let seq = 0
         for (const file of files) {
             const props = {}
+            seq++
             // Walk through each file property
             for (const prop in file) {
                 props[prop] = file[prop]
@@ -1463,11 +1476,21 @@ export const Uib = class Uib {
 
             value.push(props)
 
-            // Auto-upload to Node-RED over Socket.IO
-            if (noSend !== true) this.uploadFile(file)
+            const meta = { seq, seqCount, }
+            meta.id = srcEl.id
+            // meta.srcElIds.name = srcEl.name
+            if (srcEl.form) meta.formId = srcEl.form.id
+            meta.tempUrl = props.tempUrl
+            meta.data = srcEl.dataset
+
+            // Auto-upload to Node-RED over Socket.IO {id: target.id, name: target.name, formId: target.parent.formID,}
+            if (noSend !== true) this.uploadFile(file, meta)
         }
         return value
     }
+
+    /** Easy creation/change of DOM elements, @see ./tinyDom.js */
+    // dom = dom
 
     /** Attempt to get target attributs - can fail for certain target types, if so, returns empty object
      * @param {HTMLElement} el Target element
@@ -1479,9 +1502,9 @@ export const Uib = class Uib {
         try {
             attribs = Object.assign({},
                 ...Array.from(el.attributes,
-                    ( { name, value } ) => {
+                    ( { name, value, } ) => {
                         if ( !ignoreAttribs.includes(name) ) {
-                            return ({ [name]: value })
+                            return ({ [name]: value, })
                         }
                         return undefined
                     }
@@ -1559,7 +1582,7 @@ export const Uib = class Uib {
             }
         }
 
-        return { value, checked }
+        return { value, checked, }
     }
 
     // ! TODO - Handle fieldsets
@@ -1580,16 +1603,16 @@ export const Uib = class Uib {
             return null
         }
 
-        let { value, checked } = this.getFormElementValue(el)
+        let { value, checked, } = this.getFormElementValue(el) // eslint-disable-line prefer-const
 
+        // This is now done in eventSend rather than here for consistency with non-form sends.
         // For multi file input, get the file details as the value
         // el.files is a FileList type & each entry is a File type - have to process these manually - stupid HTML!
         // https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications
-        // NOTE: The eventSend fn calls uploadFiles if files present in form.
-        if (el.type === 'file' && el.files.length > 0) {
-            // Walk through each file in the FileList, get the details and send the file to Node-RED
-            value = this._processFilesInput(el.files)
-        }
+        // if (el.type === 'file' && el.files.length > 0) {
+        //     // Walk through each file in the FileList, get the details and send the file to Node-RED
+        //     value = this._processFilesInput(el.files)
+        // }
 
         const formDetails = {
             'id': id,
@@ -1633,7 +1656,7 @@ export const Uib = class Uib {
      * // The resolved promise is only returned if the notification is clicked by the user.
      * // Can be used to send the response back to Node-RED
      * uibuilder.notify(notifyConfig).then( res => uibuilder.eventSend(res) )
-     * @ref https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
      * @param {object|string} config Notification config data or simple message string
      * @returns {Promise<Event>|null} A promise that resolves to the click event or null
      */
@@ -1681,7 +1704,7 @@ export const Uib = class Uib {
         return false
     }
 
-    /** * Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
+    /** Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
      * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
      * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
      * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
@@ -1785,13 +1808,13 @@ export const Uib = class Uib {
                             'components': [
                                 {
                                     'type': 'tbody',
-                                    'components': []
+                                    'components': [],
                                 }
-                            ]
+                            ],
                         }
-                    ]
+                    ],
                 }
-            ]
+            ],
         }
         const details = root.components[0].components[0].components[0].components
 
@@ -1889,19 +1912,19 @@ export const Uib = class Uib {
                     that.send({
                         _ui: {
                             cssSelector: cssSelector,
-                            uiChanges: out
+                            uiChanges: out,
                         },
                         topic: that.topic || `DOM Changes for '${cssSelector}'`,
                     })
                 }
                 // Log to info
                 if (showLog === true) {
-                    log('info', 'uibuilder.module.js:uiWatch', `DOM Changes for '${cssSelector}'`, { uiChanges: out }, { mutationList })()
+                    log('info', 'uibuilder.module.js:uiWatch', `DOM Changes for '${cssSelector}'`, { uiChanges: out, }, { mutationList, })()
                 }
             } )
 
             // Start observing the target node for configured mutations
-            this.#uiObservers[cssSelector].observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true })
+            this.#uiObservers[cssSelector].observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true, })
             log('trace', 'uibuilder.module.js:uiWatch', `Started Watching DOM changes for '${cssSelector}'`)()
         } else {
             this.#uiObservers[cssSelector].disconnect()
@@ -1939,7 +1962,7 @@ export const Uib = class Uib {
 
         if (startStop === true || startStop === undefined) {
             // Start observing the target node for configured mutations
-            this._htmlObserver.observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true })
+            this._htmlObserver.observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true, })
             log('trace', 'uibuilder.module.js:watchDom', 'Started Watching and saving DOM changes')()
         } else {
             this._htmlObserver.disconnect()
@@ -2023,7 +2046,7 @@ export const Uib = class Uib {
                     log('warn', `Uib:ioSetup:${this._ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${Uib._meta.version})`)()
                 }
 
-                if (this.autoSendReady === true) { // eslint-disable-line no-lonely-if
+                if (this.autoSendReady === true) {
                     log('trace', `Uib:ioSetup:${this._ioChannels.control}/client connect`, 'Auto-sending ready-for-content/replay msg to server')
                     // @since 0.4.8c Add cacheControl property for use with node-red-contrib-infocache
                     // @since 6.1.0 Don't bother, we use the "client connect" msg
@@ -2090,7 +2113,7 @@ export const Uib = class Uib {
 
         // Check whether the msg has already been processed - if so, we don't need to process again
         if (msg._uib_processed_by) return
-        else msg._uib_processed_by = '_msgRcvdEvents'
+        msg._uib_processed_by = '_msgRcvdEvents'
 
         // Handle msg._uib special requests
         if (msg._uib) {
@@ -2098,7 +2121,8 @@ export const Uib = class Uib {
             if (!this._forThis(msg._uib)) return
 
             /** Process a client reload request from Node-RED - as the page is reloaded, everything else is ignored
-             * Note that msg._ui.reload is also actioned via the _ui processing below */
+             * Note that msg._ui.reload is also actioned via the _ui processing below
+             */
             if (msg._uib.reload === true) {
                 log('trace', 'Uib:_msgRcvdEvents:_uib:reload', 'reloading')()
                 msg._uib_processed_by = '_msgRcvdEvents - reload'
@@ -2139,8 +2163,8 @@ export const Uib = class Uib {
     /** Internal send fn. Send a standard or control msg back to Node-RED via Socket.IO
      * NR will generally expect the msg to contain a payload topic
      * @param {object} msgToSend The msg object to send.
-     * @param {string} [channel=uiBuilderClient] The Socket.IO channel to use, must be in self.ioChannels or it will be ignored
-     * @param {string} [originator] A Node-RED node ID to return the message to
+     * @param {string} [channel] The Socket.IO channel to use, must be in self.ioChannels or it will be ignored. Default=uiBuilderClient
+     * @param {string} [originator] A Node-RED node ID to return the message to. Default=''
      */
     _send(msgToSend, channel, originator = '') {
         if (channel === null || channel === undefined) channel = this._ioChannels.client
@@ -2170,7 +2194,7 @@ export const Uib = class Uib {
 
         // Add the originator metadata if required
         if (originator === '' && this.originator !== '') originator = this.originator
-        if (originator !== '') Object.assign(msgToSend, { '_uib': { 'originator': originator } })
+        if (originator !== '') Object.assign(msgToSend, { '_uib': { 'originator': originator, }, })
 
         // If the msg does not have a topic - see if we want to add one
         if ( !Object.prototype.hasOwnProperty.call(msgToSend, 'topic') ) {
@@ -2251,7 +2275,7 @@ export const Uib = class Uib {
      */
     _uibCommand(msg) {
         if (!msg._uib || !msg._uib.command) {
-            log('error', 'uibuilder:_uibCommand', 'Invalid command message received', { msg })()
+            log('error', 'uibuilder:_uibCommand', 'Invalid command message received', { msg, })()
             msg.payload = msg.error = 'Invalid command message received'
             this.send(msg)
             return
@@ -2403,7 +2427,7 @@ export const Uib = class Uib {
     /** Request the current page's metadata from the server - response is handled automatically in _ctrlMsgFromServer */
     getPageMeta() {
         this.sendCtrl({
-            uibuilderCtrl: 'get page meta'
+            uibuilderCtrl: 'get page meta',
         })
     }
 
@@ -2464,7 +2488,7 @@ export const Uib = class Uib {
      * @param {MouseEvent|any} domevent DOM Event object
      * @param {string} [originator] A Node-RED node ID to return the message to
      */
-    eventSend(domevent, originator = '') { // eslint-disable-line sonarjs/cognitive-complexity
+    eventSend(domevent, originator = '') {
         // @ts-ignore Handle case where vue messes up `this`
         if ( this.$attrs ) {
             log('error', 'Uib:eventSend', '`this` has been usurped by VueJS. Make sure that you wrap the call in a function: `doEvent: function (event) { uibuilder.eventSend(event) },`' )()
@@ -2513,6 +2537,15 @@ export const Uib = class Uib {
                 // NB: If type=files, this also sends the file to Node-RED
                 const details = this.getFormElementDetails(frmEl)
                 if (details) {
+                    // For type=file, get the file details as the value (array as might be multiple files).
+                    // el.files is a FileList type & each entry is a File type - have to process these manually - stupid HTML!
+                    // https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications
+                    if (frmEl.type === 'file' && frmEl.files.length > 0) {
+                        // Walk through each file in the FileList, get the details and send the file to Node-RED
+                        // details.value = this._processFilesInput(frmEl.files, frmEl)
+                        details.value = this._processFilesInput(frmEl)
+                    }
+
                     formDetails[details.id] = details
                     // simplified for addition to msg.payload
                     payload[details.id] = details.value
@@ -2521,7 +2554,8 @@ export const Uib = class Uib {
         } else {
             if (target.type === 'file') {
                 // Walk through each file in the FileList, get the details and send the file to Node-RED
-                payload = this._processFilesInput(target.files)
+                // payload = this._processFilesInput(target.files, {id: target?.id, name: target?.name,})
+                payload = this._processFilesInput(target)
             }
         }
 
@@ -2529,10 +2563,10 @@ export const Uib = class Uib {
         const classes = this.getElementClasses(target)
 
         // Each `data-xxxx` attribute is added as a property
-        if (Object.keys(target.dataset).length > 0) payload = { ...payload, ...target.dataset }
+        if (Object.keys(target.dataset).length > 0) payload = { ...payload, ...target.dataset, }
 
         // Check for element value/check props
-        const { value, checked } = this.getFormElementValue(target)
+        const { value, checked, } = this.getFormElementValue(target)
         if (value !== null) payload.value = value
         if (checked !== null) payload.checked = checked
 
@@ -2572,7 +2606,7 @@ export const Uib = class Uib {
                 id: target.id !== '' ? target.id : undefined,
                 name: target.name !== '' ? target.name : undefined,
                 slotText: target.textContent ? target.textContent.substring(0, 255) : undefined,
-                dataset: {...target.dataset},
+                dataset: {...target.dataset,},
 
                 form: formDetails,
                 props: props,
@@ -2593,7 +2627,7 @@ export const Uib = class Uib {
                 clientId: this.clientId,
                 pageName: this.pageName,
                 tabId: this.tabId,
-            }
+            },
         }
 
         log('trace', 'Uib:eventSend', 'Sending msg to Node-RED', msg)()
@@ -2617,7 +2651,7 @@ export const Uib = class Uib {
     //       They do not auto-reconnect
 
     /** Send a msg to a pre-defined Socket.IO room
-     * @link https://socket.io/docs/v4/rooms/
+     * @see https://socket.io/docs/v4/rooms/
      * @param {string} room Name of a Socket.IO pre-defined room.
      * @param {*} msg Message to send
      */
@@ -2652,8 +2686,9 @@ export const Uib = class Uib {
     /** Upload a file to Node-RED over Socket.IO
      * https://developer.mozilla.org/en-US/docs/Web/API/FileReader
      * @param {File} file Reference to File API object to upload
+     * @param {object} [meta] Optiona. Additional metadata to send with the file
      */
-    uploadFile(file) {
+    uploadFile(file, meta) { // srcElIds, seq, seqCount
         // Create a new FileReader instance
         const reader = new FileReader()
 
@@ -2662,14 +2697,21 @@ export const Uib = class Uib {
             // Get the binary content of the file
             const arrayBuffer = e.target.result
 
-            // Send the binary content to the server
+            // Send the binary content to the server along with helpful metadata
             const msg = {
                 topic: this.topic || 'file-upload',
                 payload: arrayBuffer,
+                
                 fileName: file.name,
                 type: file.type,
                 lastModified: file.lastModifiedDate,
                 size: file.size,
+
+                clientId: this.clientId,
+                pageName: this.pageName,
+                tabId: this.tabId,
+                
+                ...meta,
             }
 
             // Only send if content not too large
@@ -2790,7 +2832,7 @@ export const Uib = class Uib {
     _onConnect() {
         // WARNING: You cannot change any of the this._socket.auth settings at this point
         log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. \nNamespace: ${this.ioNamespace}`)()
-        this._dispatchCustomEvent('uibuilder:socket:connected', { 'numConnections': this.connectedNum, 'isRecovery': this._socket.recovered })
+        this._dispatchCustomEvent('uibuilder:socket:connected', { 'numConnections': this.connectedNum, 'isRecovery': this._socket.recovered, })
 
         this._checkConnect() // resets any reconnection timers & sets connected flag
     }
@@ -3059,7 +3101,7 @@ export const Uib = class Uib {
         document.addEventListener('visibilitychange', () => {
             // hidden=unload, minimise. visible=un-minimise (not fired on load)
             this.set('isVisible', document.visibilityState === 'visible')
-            this.sendCtrl({ uibuilderCtrl: 'visibility', isVisible: this.isVisible })
+            this.sendCtrl({ uibuilderCtrl: 'visibility', isVisible: this.isVisible, })
             // navigator.userActivation is experimental Chromium only
             // console.log('visibilitychange', ':', `Document Event: visibilitychange. Visibility State: ${document.visibilityState}. User Activity- Has:${navigator.userActivation.hasBeenActive}, Is:${navigator.userActivation.isActive}`)
             // navigator.sendBeacon('./_clientLog', `${(new Date()).toISOString()} Document Event: visibilitychange. Visibility State: ${document.visibilityState}. User Activity- Has:${navigator.userActivation.hasBeenActive}, Is:${navigator.userActivation.isActive}`)
@@ -3211,7 +3253,7 @@ export const Uib = class Uib {
             attributes: true,
             attributeOldValue: true,
             attributeFilter: this.uibAttribs,
-            childList: true
+            childList: true,
         })
 
         this._dispatchCustomEvent('uibuilder:startComplete')
@@ -3255,6 +3297,15 @@ if (!window['$$']) {
     log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$$`, it is already in use. Use `uibuilder.$$` or `uib.$$` instead.')
 }
 
+// Assign `dom` to global window object unless it is already in use.
+// if (!window['dom']) {
+//     window['dom'] = dom
+// } else {
+//     log('warn', 'uibuilder.module.js', 'Cannot allocate the global `dom`, it is already in use. Use `uibuilder.dom` or `uib.dom` instead.')
+// }
+
+// THIS IS DONE IN THE logger.js Module (Assign `log` to global window object unless it is already in use.)
+
 // Assign `$ui` to global window object unless it is already in use.
 if (!window['$ui']) {
     /** @type {HTMLElement} */
@@ -3263,6 +3314,8 @@ if (!window['$ui']) {
     log('warn', 'uibuilder.module.js', 'Cannot allocate the global `$ui`, it is already in use. Use `uibuilder.$ui` or `uib.$ui` instead.')
 }
 
+// Try to add `on` to the standard window and document prototypes for convenience
+// This is an alias for `addEventListener`.
 if (!('on' in document)) {
     document.on = function (event, callback) {
         this.addEventListener(event, callback)
@@ -3274,6 +3327,8 @@ if (!('on' in window)) {
     }
 }
 
+// Try to add `query`, `queryAll`, and `on` to the standard Element prototype for convenience
+// These are aliases for `querySelector`, `querySelectorAll`, and `addEventListener` respectively.
 try {
     if (!('query' in Element)) {
         Element.prototype.query = function(selector) {

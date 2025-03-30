@@ -22,6 +22,8 @@
  * - Move other attrib change processing to setters
  */
 
+import TiBaseComponent from './ti-base-component'
+
 // const template = document.createElement('template')
 // template.innerHTML = /** @type {HTMLTemplateElement} */ /*html*/`<span></span>`
 // template.innerHTML = /** @type {HTMLTemplateElement} */ /*html*/`<link type="text/css" rel="stylesheet" href=""../uibuilder/uib-brand.min.css"" media="all"><span></span>`
@@ -29,13 +31,81 @@
 // {/* <style>@import url("../uibuilder/uib-brand.min.css");</style><span></span> */}
 // `
 
-class UibVar extends HTMLElement {
+/** Namespace
+ * @namespace Live
+ */
+
+/**
+ * @class
+ * @extends TiBaseComponent
+ * @description Define a new zero dependency custom web component will display a managed uibuilder variable.
+ *
+ * @element uib-var
+ * @memberOf Live
+
+ * METHODS FROM BASE: (see TiBaseComponent)
+ * STANDARD METHODS:
+  * @method attributeChangedCallback Called when an attribute is added, removed, updated or replaced
+  * @method connectedCallback Called when the element is added to a document
+  * @method constructor Construct the component
+  * @method disconnectedCallback Called when the element is removed from a document
+
+ * OTHER METHODS:
+  * None
+
+ * CUSTOM EVENTS:
+  * @fires uib-var:connected - When an instance of the component is attached to the DOM. `evt.details` contains the details of the element.
+  * @fires uib-var:ready - Alias for connected. The instance can handle property & attribute changes
+  * @fires uib-var:disconnected - When an instance of the component is removed from the DOM. `evt.details` contains the details of the element.
+  * @fires uib-var:attribChanged - When a watched attribute changes. `evt.details.data` contains the details of the change.
+  * NOTE that listeners can be attached either to the `document` or to the specific element instance.
+
+ * Standard watched attributes (common across all my components):
+  * @attr {string|boolean} inherit-style - Optional. Load external styles into component (only useful if using template). If present but empty, will default to './index.css'. Optionally give a URL to load.
+  * @attr {string} name - Optional. HTML name attribute. Included in output _meta prop.
+
+ * Other watched attributes:
+  * None
+
+ * PROPS FROM BASE: (see TiBaseComponent)
+ * OTHER STANDARD PROPS:
+  * @prop {string} componentVersion Static. The component version string (date updated). Also has a getter that returns component and base version strings.
+
+ * Other props:
+  * By default, all attributes are also created as properties
+
+ * @slot Default content display.
+
+ * @example
+  * <uib-var name="var01" topic="mytopic"></uib-var>
+  * <uib-var name="var02" variable="msg.payload"></uib-var>
+  * <uib-var name="var03" variable="msg.payload" type="json"></uib-var>
+  * <uib-var name="var04" variable="msg.payload" filter="uibuilder.get('msg.payload')"></uib-var>
+
+ * @see https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/custom-components?id=uib-var
+
+ * See https://github.com/runem/web-component-analyzer?tab=readme-ov-file#-how-to-document-your-components-using-jsdoc
+ */
+class UibVar extends TiBaseComponent {
     /** Component version */
-    static version = '2025-01-03'
+    static componentVersion = '2025-01-05'
+
+    /** Makes HTML attribute change watched
+     * @returns {Array<string>} List of all of the html attribs (props) listened to
+     */
+    static get observedAttributes() {
+        return [
+            // Standard watched attributes:
+            /* 'inherit-style', */ 'name',
+            // Other watched attributes:            
+            'filter', 'id', 'report', 
+            'topic', 'type', 'undefined', 'variable',
+        ]
+    }
+    
 
     //#region --- Class Properties ---
 
-    connected = false
     /** Name of the uibuilder mangaged variable to use @type {string} */
     #variable
     /** Current value of the watched variable */
@@ -54,42 +124,13 @@ class UibVar extends HTMLElement {
     type = 'plain'
     /** what are the available types? */
     types = ['plain', 'html', 'markdown', 'object', 'json', 'table', 'list', 'array']
-    /** Is UIBUILDER loaded? */
-    uib = !!window['uibuilder']
-    uibuilder = window['uibuilder']
 
-    /** Mini jQuery-like shadow dom selector (see constructor) */
-    $
-
-    /** Holds a count of how many instances of this component are on the page */
-    static _iCount = 0
-
-    // Makes HTML attribute change watched
-    static get observedAttributes() {
-        return [
-            'filter', 'id', 'name', 'report', 
-            'topic', 'type', 'undefined', 'variable',
-        ]
-    }
-
-    
     //#endregion --- Class Properties ---
 
     constructor() {
         super()
-        // this.shadow = this.attachShadow({ mode: 'open', delegatesFocus: true })
-        //  .append(template.content.cloneNode(true))
-
-        // this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot)
-
-        // Apply external styles to the shadow dom - assumes you use index.css in same url location as main url
-        // this.css = document.createElement('link')
-        // this.css.setAttribute('type', 'text/css')
-        // this.css.setAttribute('rel', 'stylesheet')
-        // this.css.setAttribute('href', './index.css')
-
-        // this.dispatchEvent(new Event('uib-var:construction', { bubbles: true, composed: true }))
-        this.uibuilder.log('trace', this.localName, `Constructor end`)
+        // Only attach the shadow dom if code and style isolation is needed - comment out if shadow dom not required
+        // if (template && template.content) this._construct(template.content.cloneNode(true))
     }
 
     /** Set the uibuilder variable name to watch */
@@ -143,8 +184,7 @@ class UibVar extends HTMLElement {
 
     // Runs when an instance is added to the DOM
     connectedCallback() {
-        // Make sure instance has an ID. Create an id from name or calculation if needed
-        this._ensureId()  // Keep at start.
+        this._connect() // Keep at start.
 
         // Initial process of key attributes
         this.variable = this.getAttribute('variable')
@@ -165,8 +205,7 @@ class UibVar extends HTMLElement {
             })
         }
 
-        // Keep at end. Let everyone know that an instance of the component has been disconnected
-        this._event('disconnected')
+        this._disconnect() // Keep at end.
     }
 
     /** Handle watched attributes
@@ -187,6 +226,8 @@ class UibVar extends HTMLElement {
         // Create a property from the value - WARN: Be careful with name clashes - triggers setters
         this[attrib] = newVal
 
+        // Add other dynamic attribute processing here.
+        // If attribute processing doesn't need to be dynamic, process in connectedCallback as that happens earlier in the lifecycle
         switch (attrib) {
             case 'undefined': {
                 if (newVal === '' || ['on', 'true', 'report'].includes(newVal.toLowerCase())) this.undef = true
@@ -259,49 +300,6 @@ class UibVar extends HTMLElement {
         // Keep at end. Let everyone know that an attribute has changed for this instance of the component
         this._event('attribChanged', { attribute: attrib, newVal: newVal, oldVal: oldVal })
     } // --- end of attributeChangedCallback --- //
-
-    /** Ensure that the component instance has a unique ID & check again if uib loaded */
-    _ensureId() {
-        // Check again if UIBUILDER for Node-RED is loaded
-        this.uib = !!window['uibuilder']
-        this.uibuilder = window['uibuilder']
-
-        if (!this.id) {
-            // if (!this.name) this.name = this.getAttribute('name')
-            // if (this.name) this.id = this.name.toLowerCase().replace(/\s/g, '_')
-            // else this.id = `${this.localName}-${++this.constructor._iCount}`
-            // @ts-ignore
-            this.id = `${this.localName}-${++this.constructor._iCount}`
-        }
-    }
-
-    /** Call from end of connectedCallback */
-    _ready() {
-        this.connected = true
-        this._event('connected')
-        this._event('ready')
-    }
-
-    /** Custom event dispacher `component-name:name` with detail data
-     * @example
-     *   this._event('ready')
-     * @example
-     *   this._event('ready', {age: 42, type: 'android'})
-     *
-     * @param {string} name A name to give the event, added to the component-name separated with a :
-     * @param {*=} data Optional data object to pass to event listeners via the evt.detail property
-     */
-    _event(name, data) {
-        this.dispatchEvent(new CustomEvent(`${this.localName}:${name}`, {
-            bubbles: true,
-            composed: true,
-            detail: {
-                id: this.id,
-                name: this.name,
-                data: data,
-            },
-        } ) )
-    }
 
     /** Process watched uibuilder variable value change
      * @param {*} value The value of the managed uibuilder variable
@@ -435,7 +433,7 @@ class UibVar extends HTMLElement {
                     globalFn = globalFn[part]
                 } )
             }
-            if (!globalFn && this.uib === true) globalFn = globalThis['uibuilder'][splitFilter[0]]
+            if (!globalFn && this.uib === true) globalFn = this.uibuilder[splitFilter[0]]
             if (globalFn && typeof globalFn !== 'function' ) globalFn = undefined
             if (globalFn) {
                 const argList = value === undefined ? [...this.filterArgs] : [value, ...this.filterArgs]

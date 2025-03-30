@@ -204,7 +204,7 @@ class UibSockets {
 
         // Prevent setup from being called more than once
         if ( this._isConfigured === true ) {
-            uib.RED.log.warn('[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
+            uib.RED.log.warn('🌐⚠️[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
             return
         }
 
@@ -229,12 +229,12 @@ class UibSockets {
                 const sioMsgOut = require( mwfile )
                 if ( typeof sioMsgOut === 'function' ) { // if exported, has to be a function
                     this.outboundMsgMiddleware = sioMsgOut
-                    this.log.trace('[uibuilder:socket:setup] sioMsgOut Middleware loaded successfully.')
+                    this.log.trace('🌐[uibuilder:socket:setup] sioMsgOut Middleware loaded successfully.')
                 } else {
-                    this.log.warn('[uibuilder:socket:setup] sioMsgOut Middleware failed to load - check that uibRoot/.config/sioMsgOut.js has a valid exported fn.')
+                    this.log.warn('🌐⚠️[uibuilder:socket:setup] sioMsgOut Middleware failed to load - check that uibRoot/.config/sioMsgOut.js has a valid exported fn.')
                 }
             } catch (e) {
-                this.log.warn(`[uibuilder:socket:setup] sioMsgOut middleware Failed to load. Reason: ${e.message}`)
+                this.log.warn(`🌐⚠️[uibuilder:socket:setup] sioMsgOut middleware Failed to load. Reason: ${e.message}`)
             }
         }
 
@@ -261,7 +261,7 @@ class UibSockets {
 
         const uibSocketPath = this.uib_socketPath = urlJoin(uib.nodeRoot, uib.moduleName, 'vendor', 'socket.io')
 
-        log.trace(`[uibuilder:socket:socketIoSetup] Socket.IO initialisation - Socket Path=${uibSocketPath}, CORS Origin=*` )
+        log.trace(`🌐[uibuilder[:socket:socketIoSetup] Socket.IO initialisation - Socket Path=${uibSocketPath}, CORS Origin=*` )
         // Socket.Io server options, see https://socket.io/docs/v4/server-options/
         let ioOptions = {
             'path': uibSocketPath,
@@ -334,9 +334,7 @@ class UibSockets {
             try {
                 out = RED.settings.uibuilder.hooks[hookName](data)
             } catch (e) {
-                this.log.warn(`[uibuilder:socket:hooks] Could not run 'uibuilder.hooks.${hookName}' hook in settings.js. ${e.message}`, { e, data })
-                // this.log.debug(`[uibuilder:socket:hooks:${hookName}] \n ${inspect(data)}`)
-                // console.warn(`[uibuilder:socket:hooks:${hookName}]`, { data })
+                this.log.warn(`🌐⚠️[uibuilder:socket:hooks] Could not run 'uibuilder.hooks.${hookName}' hook in settings.js. ${e.message}`, { e, data })
             }
         }
 
@@ -371,26 +369,24 @@ class UibSockets {
 
         // Run uibuilder.hooks.msgSending hook - NOTE: msg might be amended by the hook
         if (this.hooks('msgSending', { msg, node }) === false) {
-            log.warn(`[uibuilder:socket:sendToFe] outbound msg blocked for "${node.url}" by "uibuilder.hooks.msgSending" hook in settings.js`)
+            log.warn(`🌐⚠️[uibuilder:socket:sendToFe] outbound msg blocked for "${node.url}" by "uibuilder.hooks.msgSending" hook in settings.js`)
         }
 
         // Process outbound middleware (middleware is loaded in this.setup)
         try {
             this.outboundMsgMiddleware( msg, url, channel, ioNs )
         } catch (e) {
-            log.warn(`[uibuilder:socket:sendToFe] outboundMsgMiddleware middleware failed to run. Reason: ${e.message}`)
+            log.warn(`🌐⚠️[uibuilder:socket:sendToFe] outboundMsgMiddleware middleware failed to run. Reason: ${e.message}`)
         }
 
         // TODO: Sending should have some safety validation on it. Is msg an object? Is channel valid?
 
-        // if ( channel === uib.ioChannels.control ) console.log('>> getFileMeta: 4 >> ', msg, url, channel)
-
         // pass the complete msg object to the uibuilder client
         if (socketId) { // Send to specific client
-            log.trace(`[uibuilder:socket.js:sendToFe:${url}] msg sent on to client ${socketId}. Channel: ${channel}. ${JSON.stringify(msg)}`)
+            log.trace(`🌐[uibuilder[:socket.js:sendToFe:${url}] msg sent on to client ${socketId}. Channel: ${channel}. ${JSON.stringify(msg)}`)
             ioNs.to(socketId).emit(channel, msg)
         } else { // Broadcast
-            log.trace(`[uibuilder:socket.js:sendToFe:${url}] msg sent on to ALL clients. Channel: ${channel}. ${JSON.stringify(msg)}`)
+            log.trace(`🌐[uibuilder[:socket.js:sendToFe:${url}] msg sent on to ALL clients. Channel: ${channel}. ${JSON.stringify(msg)}`)
             ioNs.emit(channel, msg)
         }
     } // ---- End of sendToFe ---- //
@@ -414,15 +410,15 @@ class UibSockets {
 
         // Run uibuilder.hooks.msgSending hook - NOTE: msg might be amended by the hook
         if (this.hooks('msgSending', { msg, node }) === false) {
-            this.log.warn(`[uibuilder:socket:sendToFe2] outbound msg blocked for "${node.url}" by "uibuilder.hooks.msgSending" hook in settings.js`)
+            this.log.warn(`🌐⚠️[uibuilder:socket:sendToFe2] outbound msg blocked for "${node.url}" by "uibuilder.hooks.msgSending" hook in settings.js`)
         }
 
         // TODO: This should have some safety validation on it
         if (msg._socketId) {
-            this.log.trace(`[uibuilder:socket:sendToFe2:${node.url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
+            this.log.trace(`🌐[uibuilder[:socket:sendToFe2:${node.url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.to(msg._socketId).emit(uib.ioChannels.server, msg)
         } else {
-            this.log.trace(`[uibuilder:socket:sendToFe2:${node.url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
+            this.log.trace(`🌐[uibuilder[:socket:sendToFe2:${node.url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.emit(uib.ioChannels.server, msg)
         }
     } // ---- End of sendToFe2 ---- //
@@ -435,11 +431,11 @@ class UibSockets {
      * @param {string} [from] Optional. Trace what source fn triggered the send
      */
     sendCtrlMsg(msg, node, from = '') {
-        this.log.trace(`[uibuilder:sendCtrlMsg] FROM: '${from}'`)
+        this.log.trace(`🌐[uibuilder[:sendCtrlMsg] FROM: '${from}'`)
 
         // Run uibuilder.hooks.msgReceived hook - NOTE: msg might be amended by the hook
         if (this.hooks('msgReceived', { msg, node }) === false) {
-            this.log.warn(`[uibuilder:socket:sendToFe] Control msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
+            this.log.warn(`🌐⚠️[uibuilder:socket:sendToFe] Control msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
             return
         }
 
@@ -556,12 +552,12 @@ class UibSockets {
 
         // Run uibuilder.hooks.msgReceived hook - NOTE: msg might be amended by the hook
         if (this.hooks('msgReceived', { msg, node }) === false) {
-            this.log.warn(`[uibuilder:socket:sendToFe] msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
+            this.log.warn(`🌐⚠️[uibuilder:socket:sendToFe] msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
             return
         }
 
         if ( msg?._uib?.originator && (typeof msg._uib.originator === 'string') ) {
-            RED.events.emit(`UIBUILDER/return-to-sender/${msg._uib.originator}`, msg)
+            RED.events.emit(`uibuilder/return-to-sender/${msg._uib.originator}`, msg)
         } else {
             node.send(msg)
         }
@@ -579,7 +575,7 @@ class UibSockets {
         if (log === undefined) throw new Error('log is undefined')
 
         node.rcvMsgCount++
-        log.trace(`[uibuilder:socket:${node.url}] Data received from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
+        log.trace(`🌐[uibuilder[:socket:${node.url}] Data received from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
 
         // Make sure the incoming msg is a correctly formed Node-RED msg
         switch ( typeof msg ) {
@@ -625,7 +621,7 @@ class UibSockets {
         if (log === undefined) throw new Error('log is undefined')
 
         node.rcvMsgCount++
-        log.trace(`[uibuilder:socket:${node.url}] Control Msg from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
+        log.trace(`🌐[uibuilder[:socket:${node.url}] Control Msg from client, ID: ${socket.id}, Msg: ${JSON.stringify(msg)}`)
 
         // Make sure the incoming msg is a correctly formed Node-RED msg
         switch ( typeof msg ) {
@@ -715,12 +711,12 @@ class UibSockets {
                 const sioMiddleware = require(sioMwPath)
                 if ( typeof sioMiddleware === 'function' ) {
                     ioNs.use(sioMiddleware)
-                    log.trace(`[uibuilder:socket:addNs:${url}] Socket.IO sioMiddleware.js middleware loaded successfully for NS.`)
+                    log.trace(`🌐[uibuilder[:socket:addNs:${url}] Socket.IO sioMiddleware.js middleware loaded successfully for NS.`)
                 } else {
-                    log.warn(`[uibuilder:socket:addNs:${url}] Socket.IO middleware failed to load for NS - check that uibRoot/.config/sioMiddleware.js has a valid exported fn.`)
+                    log.warn(`🌐⚠️[uibuilder:socket:addNs:${url}] Socket.IO middleware failed to load for NS - check that uibRoot/.config/sioMiddleware.js has a valid exported fn.`)
                 }
             } catch (e) {
-                log.warn(`[uibuilder:socket:addNs:${url}] Socket.IO middleware failed to load for NS. Reason: ${e.message}`)
+                log.warn(`🌐⚠️[uibuilder:socket:addNs:${url}] Socket.IO middleware failed to load for NS. Reason: ${e.message}`)
             }
         }
 
@@ -728,7 +724,6 @@ class UibSockets {
         // NB: Only sockets can join rooms, not the server
         { // eslint-disable-line no-lone-blocks
             const thislog = log.trace
-            // const thislog = console.log
             ioNs.adapter.on('create-room', (room) => {
                 thislog(
                     `[uibuilder:socket:addNS:${url}] Room "${room}" was created`
@@ -752,25 +747,6 @@ class UibSockets {
         }
         //#endregion -- -- --
 
-        // ! TODO TEST REMOVE
-        // if (url === 'uib-router-eg') {
-        //     setInterval(() => {
-        //         // console.log(`ping uibuilder:fred. NS: ${url}`, '\n SIDS: ', ioNs.adapter.sids, '\n ROOMS: ', ioNs.adapter.rooms)
-        //         ioNs.to('uibuilder:fred').emit('uibuilder:fred', `Hello from the server. NS: "${url}"`)
-        //     }, 60000)
-        //     setInterval(() => {
-        //         // console.log(`ping uibuilder:fred. NS: ${url}`, '\n SIDS: ', ioNs.adapter.sids, '\n ROOMS: ', ioNs.adapter.rooms)
-        //         this.io.of('/').emit('uibuilder:global', 'Hello from the server. NS: "/"')
-        //     }, 60000)
-        //     // ioNs.join('uibuilder:fred')
-        //     ioNs.on('uibuilder:fred', (room, msg) => {
-        //         console.log('uibuilder:fred', room, msg)
-        //     })
-        //     this.io.on('uibuilder:fred', (room, msg) => {
-        //         console.log('[this.io] uibuilder:fred', room, msg)
-        //     })
-        // }
-
         const that = this
 
         // When a client connects to the server - create the socket listeners & do other stuff
@@ -783,7 +759,7 @@ class UibSockets {
 
                 node.ioClientsCount = ioNs.sockets.size
                 log.trace(
-                    `[uibuilder:socket:${url}:disconnect] Client disconnected, clientCount: ${ioNs.sockets.size}, Reason: ${reason}, ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}. For node ${node.id}`
+                    `🌐[uibuilder:socket:${url}:disconnect] Client disconnected, clientCount: ${ioNs.sockets.size}, Reason: ${reason}, ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}. For node ${node.id}`
                 )
                 node.statusDisplay.text = 'connected ' + ioNs.sockets.size
                 setNodeStatus( node )
@@ -808,7 +784,7 @@ class UibSockets {
                 that.sendCtrlMsg(ctrlMsg, node, 'addNS:disconnect')
 
                 // Let other nodes know a client is disconnecting (via custom event manager)
-                this.RED.events.emit(`UIBUILDER/${node.url}/clientDisconnect`, ctrlMsg)
+                this.RED.events.emit(`uibuilder/${node.url}/clientDisconnect`, ctrlMsg)
             }) // --- End of on-connection::on-disconnect() --- //
 
             // Listen for msgs from clients on standard channel
@@ -823,7 +799,7 @@ class UibSockets {
 
             // Listen for socket.io errors - output a control msg
             socket.on('error', function(err) {
-                log.error(`[uibuilder:socket:addNs:${url}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
+                log.error(`🌐🛑[uibuilder:socket:addNs:${url}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
 
                 // Let the control output port (port #2) know there has been an error
                 const { _uib, _client } = this.getClientDetails(socket, node)
@@ -857,7 +833,6 @@ class UibSockets {
             })
             // Allow clients to send message to a custom room
             socket.on('uib-room-send', (room, msg) => {
-                // console.log('uib-room-send', { room, msg })
                 ioNs.to(room).emit(room, msg, socket.handshake.auth)
                 // TODO Option to send on as a node-red msg
             })
@@ -869,7 +844,7 @@ class UibSockets {
             node.ioClientsCount = ioNs.sockets.size
 
             log.trace(
-                `[uibuilder:socket:addNS:${url}:connect] Client connected. ClientCount: ${ioNs.sockets.size}, Socket ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}, Recovered?: ${socket.recovered}, Client Version: ${socket.handshake.auth.clientVersion}. For node ${node.id}`
+                `🌐[uibuilder:socket:addNS:${url}:connect] Client connected. ClientCount: ${ioNs.sockets.size}, Socket ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}, Recovered?: ${socket.recovered}, Client Version: ${socket.handshake.auth.clientVersion}. For node ${node.id}`
             )
 
             if (uib.configFolder === null) throw new Error('uib.configFolder is undefined')
@@ -881,12 +856,12 @@ class UibSockets {
                     const sioUseMw = require( mwfile )
                     if ( typeof sioUseMw === 'function' ) { // if exported, has to be a function
                         socket.use(sioUseMw)
-                        log.trace(`[uibuilder:socket:onConnect:${url}] sioUse sioUse.js middleware loaded successfully for NS ${url}.`)
+                        log.trace(`🌐[uibuilder[:socket:onConnect:${url}] sioUse sioUse.js middleware loaded successfully for NS ${url}.`)
                     } else {
-                        log.warn(`[uibuilder:socket:onConnect:${url}] sioUse middleware failed to load for NS ${url} - check that uibRoot/.config/sioUse.js has a valid exported fn.`)
+                        log.warn(`🌐⚠️[uibuilder:socket:onConnect:${url}] sioUse middleware failed to load for NS ${url} - check that uibRoot/.config/sioUse.js has a valid exported fn.`)
                     }
                 } catch (e) {
-                    log.warn(`[uibuilder:socket:addNS:${url}] sioUse failed to load Use middleware. Reason: ${e.message}`)
+                    log.warn(`🌐⚠️[uibuilder:socket:addNS:${url}] sioUse failed to load Use middleware. Reason: ${e.message}`)
                 }
             }
 
@@ -933,13 +908,12 @@ class UibSockets {
             that.sendCtrlMsg(ctrlMsg, node, 'addNS:connection')
 
             // Let other nodes know a client is connecting (via custom event manager)
-            this.RED.events.emit(`UIBUILDER/${node.url}/clientConnect`, ctrlMsg)
+            this.RED.events.emit(`uibuilder/${node.url}/clientConnect`, ctrlMsg)
 
             //#endregion ---- run when client connects ---- //
 
             //#region ---- Rooms ----
             // Ensures uib is listening to all clients and pages
-            // console.log('socket auth: ', socket.handshake.auth)
             socket.join(`clientId:${socket.handshake.auth.clientId}`)
             socket.join(`pageName:${socket.handshake.auth.pageName}`)
             // Not bothering with a tabId room - gets filtered at client anyway

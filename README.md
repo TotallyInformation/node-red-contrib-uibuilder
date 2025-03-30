@@ -16,16 +16,11 @@
 
 <img class="dhide" align="right"  style="width:124px;" src="front-end/images/node-blue.svg" title="uibuilder icon" />
 
-# node-red-contrib-uibuilder
+# UIBUILDER FOR Node-RED
 
 UIBUILDER for Node-RED allows the easy creation of data-driven front-end web applications.
 
 It includes many helper features that can reduce or eliminate the need to write code for building data-driven web applications and user interfaces integrated with Node-RED.
-
-> [!NOTE]
-> UIBUILDER triggers a quality warning in the [Flows scorecard entry](https://flows.nodered.org/node/node-red-contrib-uibuilder/scorecard).
-> 
-> "Number of Dependencies" is >6 - this is due to the large number of features in UIBUILDER and is expected. Even so, v7 only has 7 dependencies. 1 more is due to be removed in a future release.
 
 ## Installation
 
@@ -47,7 +42,7 @@ cd ~/.node-red
 npm install node-red-contrib-uibuilder@v5
 ```
 
-To install development branches, please install from [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder). Branchnames are future version numbers, check GitHub for available branches:
+To install development branches, please install from [GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder). Branchnames are usually future version numbers, check GitHub for available branches:
 
 ```bash
 cd ~/.node-red
@@ -61,11 +56,11 @@ You will need to restart Node-RED if installing manually.
 
 * Servers:
   * Node-RED: v4+
-  * Node.js: v18+ LTS
-  * Platforms: Linux, Windows, MacOS, Raspberry Pi, Docker, etc.
+  * Node.js: v18+ LTS (matches Node-RED v4+ requirements)
+  * Platforms: Linux, Windows, MacOS, Raspberry Pi, Docker, FlowFuse, etc.
 * Browsers: 
   * CSS - 0.12% or above of global usage but not Internet Explorer ([ref.](https://browserslist.dev/?q=Pj0wLjEyJSwgbm90IGllID4gMA%3D%3D)). The uncompiled CSS should work in all current mainstream browsers. The compiled CSS (`uib-brand.min.css`) should work in browsers back to early 2019, possibly before. Enforced by [LightningCSS](https://lightningcss.com/).
-  * JavaScript - ES6+ so should work in all current mainstream browsers. The compiled JS (`uibuilder.min.js`) should work in browsers back to early 2019, possibly before. Enforced by [ESBuild](https://esbuild.github.io/).
+  * JavaScript - ES6+ so should work in all current mainstream browsers. The compiled JS (`uibuilder.min.{iife|esm}.js`) should work in browsers back to early 2019, possibly before. Enforced by [ESBuild](https://esbuild.github.io/). Script (IIFE) and Module (ESM) versions are provided.
 
 ## Updates
 
@@ -90,7 +85,7 @@ Within Node-RED, use the hamburger menu. Click Import. Click Examples. Select th
 
 The templates feature in UIBUILDER provides working front-end code of various configurations.
 
-Other examples can be found on the [Node-RED Flows site](https://flows.nodered.org/search?term=uibuilder) and the [UIBUILDER WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). Also see the FAQ's and answered questions on the [Node-RED Forum](https://discourse.nodered.org/tag/node-red-contrib-uibuilder).
+Other examples can be found on the [Node-RED Flows site](https://flows.nodered.org/search?term=uibuilder) and the [UIBUILDER WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki). Also see the [UIBUILDER tag on the Node-RED Forum](https://discourse.nodered.org/tag/uibuilder).
 
 ## Documentation and other links
 
@@ -114,7 +109,8 @@ Alternatively, use the [GitHub issues log](https://github.com/TotallyInformation
   - 📂 [Example Svelte External Template](https://github.com/TotallyInformation/uib-template-svelte-simple) - In case you want to build your own svelte app.
   - 📂 [Example Simple External Template](https://github.com/TotallyInformation/uib-template-test) - In case you want to build your own external template.
   - 📊 [uPlot UIBUILDER extension](https://github.com/TotallyInformation/nr-uibuilder-uplot) - Useful charts but also demonstrates how to build your own extension.
-  - 🔨 [Event Handler module used by UIBUILDER](https://github.com/TotallyInformation/ti-common-event-handler) - So you can see some of the inner workings.
+
+- 🧪 [Web Components Library](https://github.com/TotallyInformation/web-components) - A growing library of useful HTML Web Components. Useable with or without Node-RED & UIBUILDER. Some having specific enhancements for Node-RED but will still work well stand-alone. These now have their own dedicated documentation, demo and test website at https://wc.totallyinformation.net. Please check them out there.
 
 - 🔨 [ui library module used by UIBUILDER](https://github.com/TotallyInformation/ui.js) - Can be used stand-alone for turning UI standard config JSON into HTML.
 
@@ -126,8 +122,6 @@ Alternatively, use the [GitHub issues log](https://github.com/TotallyInformation
 - 🧪 [Test Nodes for Node-RED](https://github.com/TotallyInformation/uib-template-test) - Some test nodes for Node-RED that help you understand how everything works.
 
 - 🚤 [HotNipi Gauge Web Component](https://github.com/TotallyInformation/gauge-hotnipi) - A really nice looking gauge component. Works with Node-RED, UIBUILDER, or stand-alone.
-
-- 🧪 [Web Components Library](https://github.com/TotallyInformation/web-components) - A growing library of useful HTML Web Components. Useable with or without Node-RED & UIBUILDER. Some having specific enhancements for Node-RED but will still work well stand-alone.
 
 - 🧪 [Array Grouper](https://github.com/TotallyInformation/groupit) - Stand-alone function to reshape an array of objects.
 
@@ -141,7 +135,7 @@ The purpose of UIBUILDER is to:
 * Provide interface/data standards for exchanging data and controls between Node-RED and the web pages.
 * Enable the creation and management of multiple web apps from a single Node-RED instance.
 * Reduce the amount of front-end code (HTML/JavaScript) needed to create and manage a web app.
-* Reduce the knowledge required for creating reliable, accessible web apps by providing low-code and no-code features.
+* Reduce the knowledge required for creating reliable, accessible web apps by providing low-code and no-code features. But still ensure that any learning is applicable to general web development.
 * Make it easy to install and serve front-end libraries to support the development of more complex web apps.
 
 ## Features
@@ -150,7 +144,8 @@ The core features of UIBUILDER:
 
 * As far as possible, uses only vanilla, native HTML, CSS and JavaScript. Other than the Socket.IO client for communications (which is baked into the front-end library), no other front-end libraries are needed. UIBUILDER stays as close as possible to native HTML to avoid future compatibility issues. However, it does aim to make interaction with native HTML easier.
 * Nodes to enable zero-code translation of input data to usable and accessible web elements.
-* Capability for low-code, configuration-driven (data-driven) UI's. Creating a framework for describing a UI and translating to actual code without having to write code.
+* Capability for low-code, configuration-driven, data-driven UI's.
+* Creating a capability for describing a UI and translating to actual code without having to write code.
 * 2-way communications channel between the Node-RED server (back-end) and front-end UI.
 * A Node-RED node to act as the focus for communications with other nodes for additional ease of use.
 * Front-end library to: do the complex parts of the communications in the client browser; make manipulation of the UI easier and more consistent; make it easy to get data back to Node-RED as needed (both automatically and manually).
@@ -164,6 +159,9 @@ The core features of UIBUILDER:
 * Each `uibuilder` node instance provides a private 2-way communications channel between the Node-RED server (back-end) and browser (front-end) UI code.
 * Supports the use of standard web development workflows.
 * Allows the creation of a dedicated web service to facilitate independent security.
+* Allows any custom Node-RED node to communicate easily with a uibuilder enabled client via the Node-RED events system.
+* Provides server-side hydration of no-/low-code definitions into full HTML & easy saving to uibuilder folders.
+* Make it easy to develop event-driven UI's.
 
 <details><summary>No-code UI's</summary>
 
@@ -275,4 +273,7 @@ Many other people have contributed ideas and suggestions, thanks to everyone who
 
 <a href="https://stackexchange.com/users/1375993/julian-knight"><img src="https://stackexchange.com/users/flair/1375993.png" width="208" height="58" alt="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Julian Knight on Stack Exchange, a network of free, community-driven Q&amp;A sites" /></a>
 
-Please also check out my blog, [Much Ado About IT](https://it.knightnet.org.uk), it has information about all sorts of topics, mainly IT related, including Node-RED.
+Please also check out my blogs:
+
+* [Totally Information's Web Log](https://www.totallyinformation.net), "Ramblings by Julian Knight on all things Digital, Technology and Life". This is my new blog. It will have articles on Node-RED, web development, hardware reviews and more.
+* [Much Ado About IT](https://it.knightnet.org.uk), it has information about all sorts of topics, mainly IT related, including Node-RED. This is no longer being updated but it will be retained for reference.

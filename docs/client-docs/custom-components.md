@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2024-09-06 13:27:03
+updated: 2025-01-06 18:05:18
 ---
 
 The following custom web components are built into UIBUILDER:
@@ -16,7 +16,7 @@ The following custom web components are built into UIBUILDER:
 
 UIBUILDER can work with front-end frameworks such as REACT, VueJS, etc. However, it does not need them. But one thing that these frameworks often have are collections of components that you can add to your HTML. Each component will produce something useful in your web page such as an information card, tabbed interface, navigation menu, etc.
 
-For more modern browsers though, *there is an alternative to a framework and that is "[web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_Components)"*. These are a W3C international standard and they are defined using JavaScript. The [`uib-var`](#uib-var) & [`uib-meta`](#uib-meta) built-in components are examples of such components.
+For more modern browsers though, *there is an alternative to a framework and that is "[web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_Components)"*. These are a W3C international standard and they are defined using JavaScript. The built-in components described here are examples of such components.
 
 To make use of a web component, all that is needed is to load it as a library. Web components are written as ES Modules (ESM). In this form, you can only use them with the ESM version of the uibuilder client library and they will need loading as an `import` statement in your module `index.js` just like the client library itself. (`uib-var` & `uib-meta` are loaded for you though, you don't have to do anything).
 
@@ -27,7 +27,151 @@ Needless to say, any web components written by [TotallyInformation](https://gith
 > [!NOTE]
 > UIBUILDER's no-code `uib-element` node currently sends out low-code JSON data that describes each element, the uibuilder client library converts (hydrates) this configuration into HTML and inserts to or updates the page. While this is reasonably efficient since no actual HTML/JavaScript code is sent, it could be even more efficient by having a corresponding *web component* for each element. This is something that is likely to happen in a future release.
 
-## Built-in: `uib-var` :id=uib-var
+> [!TIP]
+> There is a more extensive package of web components available from [Totally Information](https://wc.totallyinformation.net). They are designed to work with or without UIBUILDER. Indeed they should work with other web servers and also with the Node-RED Dashboard or http-in/-response nodes.
+> 
+> The built-in components described here are built to the same standards used in the other package.
+
+> [!TIP]
+> The web components described on this page **do not need to be separately loaded** in your own front-end code. They are already included in the uibuilder client library. You can simply use them in your HTML.
+
+## Built-in: `<apply-template>` :id=apply-template
+
+This small but powerful component allows you to keep "templates" in your HTML that are copied to another place. The referenced template's content will _replace_ to the contents of the `<apply-template>` tag.
+
+> [!TIP]
+> If you have a `<slot></slot>` tag in your template, the original HTML contents of the `<apply-template>` tag will be moved into the slot.
+
+I've never understood why this isn't a standard HTML feature! Doing this by hand requires some significant knowledge. As always, UIBUILDER is here to make life easier but it still uses "just" standard HTML, CSS and JavaScript.
+
+> [!NOTE]
+> The uibuilder front-end library also has a built-in function [`uibuilder.applyTemplate((sourceId, targetId, config)`](client-docs/functions#applyTemplate). It does the same thing as this component but does it in JavaScript code so you can do `uibuilder.applyTemplate('template-1', 'more')` in code to get a similar effect. The main differences being that: You must supply the id of an element to which the template contents will be appended. And you can apply attributes to the _1st child element_ using the `config` parameter.
+
+### Attributes :id=apply-template-attribs
+
+#### template-id
+
+This attribute is required. The value must be the HTML id attribute value of the required `<template id="xxxx">....</template>` tag ("xxxx" in this example).
+
+This defines the source template. The contents of which will be copied ("applied") to replace the content of the `<apply-template>` tag.
+
+#### once
+
+If this attribute is present (it does not need a value), the source template will be emptied and cannot be re-used.
+
+This is helpful if you need to ensure that the source template can only ever be applied once.
+
+Technically, the content of the template is ["adopted"](https://developer.mozilla.org/en-US/docs/Web/API/Document/adoptNode) and so is not longer available in the template.
+
+### Example  :id=apply-template-examples
+
+```html
+<!doctype html><html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="../uibuilder/images/node-blue.ico">
+  <title>Apply-Template example - Node-RED uibuilder</title>
+  <meta name="description" content="Node-RED uibuilder - Apply-Template example">
+  <link type="text/css" rel="stylesheet" href="./index.css" media="all">
+  <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+
+  <!-- Define some templates -->
+  <template id="template-1">
+    <!-- Templates are not "live" on a page. Styles and scripts
+         are not active. The content does not show. -->
+    <style>
+      /* styles become global once applied */
+      .t1-green {
+        color:chartreuse
+      }
+    </style>
+    <h1 class="t1-green">Template 1</h1>
+    <slot><!-- existing content in the <apply-template> tag will appear here when applied --></slot>
+    <p class="warn">This is the content of template 1.</p>
+    <script>
+      /** Scripts are run in order of application of the template
+       * to the live page. They are run EVERY TIME the template
+       * is applied so may run more than once. */
+      console.log('template-1')
+      if (!window['template1']) {
+        /** This will only ever run once */
+        const myvar = 1
+        window['template1'] = true
+      }
+    </script>
+  </template>
+</head><body>
+  <h1 class="with-subtitle">Apply-Template Example</h1>
+  <div role="doc-subtitle">Using the uibuilder IIFE library.</div>
+
+  <div id="more">
+    <apply-template template-id="template-1">
+      <p style="background-color:darkred;">Something interesting within - this text will reappear in the slot position from the template.</p>
+    </apply-template>
+    <apply-template template-id="template-1">
+      <p>
+        ... Yes, you can apply a template >1 time as long as 
+        you haven't used the "once" attribute...
+      </p>
+    </apply-template>
+  </div>
+</body></html>
+```
+
+## Built-in: `<uib-meta>` :id=uib-meta
+
+Display metadata information about the containing page.
+
+This web component will output page data such as the created/last-updated dates and the page size. The outputs have some simple formatting options available.
+
+The uibuilder client library will automatically request this data from the uibuilder node which gets the data from the server's filing system.
+
+> [!NOTE]
+> This component could easily be extended to get things like the uibuilder node's title and description and other information if required.
+
+### Attributes :id=uib-meta-attribs
+
+#### type :id=uib-meta-type
+
+* `created` - the date/time the page's static file was created. This is the default output if `type` is not specified.
+* `updated` (AKA `modified`) - the last date/time the page's static file was updated.
+* `both` (or `created-updated` or `crup`) - Both the created and updated date/times.
+* `size` - The size of the page's static file in bytes.
+* `all` - All of the above.
+
+> [!NOTE]
+> The data is from the static file and so does not include updates/sizes from dynamic updates.
+> This makes it less useful for highly dynamic, data-driven pages. It is more useful for static wiki/blog/news style pages.
+
+#### format :id=uib-meta-format
+
+For date/time output:
+
+* `d` - Date only.
+* `dt` - Date and time.
+* `t` - Time only.
+
+Date and time values use the browser's locale specific outputs.
+
+For size output:
+
+* `k` - kilobytes (_bytes/1024_) to 1 decimal place.
+* `m` - megabytes (_bytes/(1024*1024)_) to 2 decimal places.
+
+### Examples :id=uib-meta-examples
+
+```html
+<div id="more">
+  <uib-meta type="created" format="t"></uib-meta><!-- Created time only --><br>
+  <uib-meta format="d"></uib-meta><!-- default: created. Date only --><br>
+  <uib-meta type="updated" format="dt"></uib-meta><br>
+  <uib-meta type="both" format="d"></uib-meta><br>
+  <uib-meta type="size" format="k"></uib-meta><br>
+</div>
+ ```
+
+## Built-in: `<uib-var>` :id=uib-var
 
 Include easily updated output on a web page.
 
@@ -179,137 +323,6 @@ Use a `uib-tag` node:
 
 ![example uib-tag node](image.png)
 
-## Built-in: `uib-meta` :id=uib-meta
-
-Display metadata information about the containing page.
-
-This web component will output page data such as the created/last-updated dates and the page size. The outputs have some simple formatting options available.
-
-The uibuilder client library will automatically request this data from the uibuilder node which gets the data from the server's filing system.
-
-> [!NOTE]
-> This component could easily be extended to get things like the uibuilder node's title and description and other information if required.
-
-### Attributes :id=uib-meta-attribs
-
-#### type :id=uib-meta-type
-
-* `created` - the date/time the page's static file was created. This is the default output if `type` is not specified.
-* `updated` (AKA `modified`) - the last date/time the page's static file was updated.
-* `crup` - Both the created and updated date/times.
-* `size` - The size of the page's static file in bytes.
-
-> [!NOTE]
-> The data is from the static file and so does not include updates/sizes from dynamic updates.
-> This makes it less useful for highly dynamic, data-driven pages. It is more useful for static wiki/blog/news style pages.
-
-#### format :id=uib-meta-format
-
-For date/time output:
-
-* `d` - Date only.
-* `dt` - Date and time.
-* `t` - Time only.
-
-Date and time values use the browser's locale specific outputs.
-
-For size output:
-
-* `k` - kilobytes (_bytes/1024_) to 1 decimal place.
-* `m` - megabytes (_bytes/(1024*1024)_) to 2 decimal places.
-
-### Examples :id=uib-meta-examples
-
-```html
-<div id="more">
-  <uib-meta type="created" format="t"></uib-meta><br>
-  <uib-meta format="d"></uib-meta><br>
-  <uib-meta type="updated" format="dt"></uib-meta><br>
-  <uib-meta type="crup" format="d"></uib-meta><br>
-  <uib-meta type="size" format="k"></uib-meta><br>
-</div>
- ```
-
-## Built-in: `apply-template` :id=apply-template
-
-This small but powerful component allows you to keep "templates" in your HTML that are copied to another place. The referenced template's content will be _appended_ to the contents of the `<apply-template>` tag.
-
-I've never understood why this isn't a standard HTML feature! Doing this by hand requires some significant knowledge. As always, UIBUILDER is here to make life easier but it still uses "just" standard HTML, CSS and JavaScript.
-
-> [!NOTE]
-> The uibuilder front-end library also has a built-in function [`uibuilder.applyTemplate((sourceId, targetId, config)`](client-docs/functions#applyTemplate). It does the same thing as this component but does it in JavaScript code so you can do `uib.applyTemplate('template-1', 'more')` in code to get a similar effect. The main differences being that: You must supply the id of an element to which the template contents will be appended. And you can apply attributes to the _1st child element_ using the `config` parameter.
-
-### Attributes :id=apply-template-attribs
-
-#### template-id
-
-This attribute is required. The value must be the HTML id attribute value of the required `<template id="xxxx">....</template>` tag ("xxxx" in this example).
-
-This defines the source template. The contents of which will be copied ("applied") to replace the content of the `<apply-template>` tag.
-
-#### once
-
-If this attribute is present (it does not need a value), the source template will be emptied and cannot be re-used.
-
-This is helpful if you need to ensure that the source template can only ever be applied once.
-
-Technically, the content of the template is ["adopted"](https://developer.mozilla.org/en-US/docs/Web/API/Document/adoptNode) and so is not longer available in the template.
-
-### Examples  :id=apply-template-examples
-
-```html
-<!doctype html><html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="../uibuilder/images/node-blue.ico">
-  <title>Apply-Template example - Node-RED uibuilder</title>
-  <meta name="description" content="Node-RED uibuilder - Apply-Template example">
-  <link type="text/css" rel="stylesheet" href="./index.css" media="all">
-  <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
-
-  <!-- Define some templates -->
-  <template id="template-1">
-    <!-- Templates are not "live" on a page. Styles and scripts
-         are not active. The content does not show. -->
-    <style>
-      /* styles become global once applied */
-      .t1-green {
-        color:chartreuse
-      }
-    </style>
-    <h1 class="t1-green">Template 1</h1>
-    <p class="warn">This is the content of template 1.</p>
-    <script>
-      /** Scripts are run in order of application of the template
-       * to the live page. They are run EVERY TIME the template
-       * is applied so may run more than once. */
-      console.log('template-1')
-      if (!window['template1']) {
-        /** This will only ever run once */
-        const myvar = 1
-        window['template1'] = true
-      }
-    </script>
-  </template>
-</head><body>
-  <h1 class="with-subtitle">Apply-Template Example</h1>
-  <div role="doc-subtitle">Using the uibuilder IIFE library.</div>
-
-  <div id="more">
-    <apply-template template-id="template-1">
-      <p>Something interesting within - template content added after this...</p>
-    </apply-template>
-    <apply-template template-id="template-1">
-      <p>
-        ... Yes, you can apply a template >1 time as long as 
-        you haven't used the "once" attribute...
-      </p>
-    </apply-template>
-  </div>
-</body></html>
-```
-
 ## External components
 
 Web components can be challenging to build but are often fairly simple. There are plenty of web resources to get you started with development of them. However, there are also a lot of existing components that you can easily make use of with Node-RED and UIBUILDER.
@@ -320,7 +333,13 @@ Some potentially useful components are shown below.
 
 ### Totally Information experimental web components
 
-Totally Information has a (so far experimental) set of web components that work with or without UIBUILDER though they will generally have extra features when used with. See the [TotallyInformation/web-components GitHub repo](https://github.com/TotallyInformation/web-components) for details. 
+Totally Information has a set of web components that work with or without UIBUILDER though they will generally have extra features when used with. 
+
+The components have [their own website](https://wc.totallyinformation.net) that shows demos, documentation and tests.
+
+The components have various levels of readiness. Some are ready to be used now and some are marked as "Alpha" quality and should only be used for testing.
+
+See the [TotallyInformation/web-components GitHub repo](https://github.com/TotallyInformation/web-components) for details. 
 
 ### HotNiPi Gauge component
 
