@@ -55,7 +55,10 @@ A new example flow has been added to demonstrate the sidebar node.
 
 ### Node: `uib-element`
 
-* The form element type adds an HTML ID to the form itself in the format `form-<element-id>`. This means that using a button inside a form, the resulting message will identify the form that the button belongs to. This is particularly useful if you have multiple forms on a page.
+* The form element type:
+
+  * Now adds an HTML ID to the form itself in the format `form-<element-id>`. This means that using a button inside a form, the resulting message will identify the form that the button belongs to. This is particularly useful if you have multiple forms on a page.
+  * Adds the onclick event handler to the button onclick attribute rather than it being hidden away in separate event handler code. This means that *it will be retained if saving the resulting HTML*. Similarly, the reset button is now type="reset" for the same reason.
 
 ### **NEW/UPDATED BUILT-IN WEB COMPONENTS** (AKA "Widgets")
 

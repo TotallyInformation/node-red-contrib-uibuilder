@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-03-29 16:31:06
+updated: 2025-03-30 15:06:13
 author: Julian Knight (Totally Information)
 ---
 
@@ -14,16 +14,14 @@ author: Julian Knight (Totally Information)
 
 ## To Do
 
+* [ ] **Started**. Move all nodes editor html to use modules. [Ref](https://discourse.nodered.org/t/text-javascript-vs-module-in-html/94215/4)
 * [ ] Improve brand.css font specification based on [Modern Font Stacks](https://github.com/system-fonts/modern-font-stacks).
-* [ ] Move all nodes editor html to use modules. [Ref](https://discourse.nodered.org/t/text-javascript-vs-module-in-html/94215/4)
 * [ ] Allow overriding of the JSON max upload size for the custom Express server. [Ref](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988)
-
-* Forms
-  * [ ] uib-element form - add onsubmit button handler rather than using hidden event handler. Same for reset.
 
 * Documentation
   * [ ] Properly document file uploads and how to handle them. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
   * [ ] How-to for form handling.
+  * [ ] Add thanks to the contributors in the readme.
 
 #### Consider
 
@@ -33,7 +31,7 @@ author: Julian Knight (Totally Information)
 * Add a link to the uibuilder help sidebar that has an `onclick` handler: `RED.actions.invoke('core:show-import-dialog')`
 * New help doc re CORS. [Ref](https://discourse.nodered.org/t/allow-cors-for-ui-builder/94838).
 * Get node-red to tell connected clients that it is closing/restarting. The client library should then close the connection and attempt to reconnect with a sensible delay. A reconnection should NOT trigger a cache replay. Maybe get the server to tell the client when to start reconnecting by sending a retry period - the client should slightly randomise that period to avoid all clients reconnecting at the same time.
-* Move Vue/Svelte templates to separate repo's - keep in the templates list but link to the new repo.
+* Move Vue/Svelte templates to separate repo's - keep in the templates list but link to the new repo. Use a monorepo. [Ref](https://chatgpt.com/share/67e94f7d-e054-8001-9976-c24cae872980).
 * How to have a "live" feature. This would be a mix of http-in/-response and uibuilder nodes. It would create a live endpoint that would be pre-populated with the uibuilder default ESM template. Would allow server-side rendering.
 * Move the uib-brand CSS to a separate package. Publish separately. Possibly as a sub-package of uibuilder.
 * Move ti-base-component to a separate package. Publish separately. Include here.
