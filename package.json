@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "degit": "^2.8.4",
-    "express": "^4.17.1",
+    "express": "^5.1.0",
     "fast-glob": "^3.2.7",
     "fs-extra": "^11.1.0",
     "jsdom": "^26.0.0",
