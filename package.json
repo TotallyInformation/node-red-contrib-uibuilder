@@ -23,7 +23,7 @@
   "devDependencies": {
     "@eslint/js": "^9.20.0",
     "@stylistic/eslint-plugin": "^4.0.1",
-    "@types/express": "^4.17.13",
+    "@types/express": "^5.0.1",
     "@types/jquery": "^3.5.25",
     "@types/jqueryui": "^1.12.19",
     "@types/node": "^18.19.24",
