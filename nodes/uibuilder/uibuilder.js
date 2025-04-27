@@ -26,7 +26,10 @@
  * @typedef {import('../../typedefs.js').uibuilderEditorVars} uibuilderEditorVars
  */
 
+//#region ------ uibuilder module-level globals ------ //
+
 //#region ------ Require packages ------ //
+
 // uibuilder custom
 const uiblib = require('../libs/uiblib.js')  // Utility library for uibuilder
 const tilib = require('../libs/tilib.js')   // General purpose library (by Totally Information)
@@ -50,7 +53,7 @@ try { // web
     var web = require('../libs/web.js') // eslint-disable-line no-var
 } catch (e) {
     console.error('[uibuilder] REQUIRE WEB failed::', e)
-}
+} 
 // try {
 //     var security      = require('./libs/sec-lib') // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
 // } catch (e) {
@@ -58,55 +61,16 @@ try { // web
 // }
 
 // Core node.js
+
 const path = require('path')
+
+// The uibuilder global configuration object, used throughout all nodes and libraries.
+const uibGlobalConfig = require('../libs/uibGlobalConfig.cjs')
 
 //#endregion ----- Require packages ----- //
 
-//#region ------ uibuilder module-level globals ------ //
-
-/** @type {uibConfig} */
-const uib = {
-    me: fslib.readJSONSync(path.join( __dirname, '..', '..', 'package.json' )),
-    moduleName: 'uibuilder',
-    nodeRoot: '',
-    deployments: {},
-    instances: {},
-    apps: {},
-    masterTemplateFolder: path.join( __dirname, '..', '..', 'templates' ),
-    masterStaticFeFolder: path.join( __dirname, '..', '..', 'front-end' ),
-    rootFolder: null,
-    configFolder: null,
-    configFolderName: '.config',
-    commonFolder: null,
-    commonFolderName: 'common',
-    sioUseMwName: 'sioUse.js',
-    sioMsgOutMwName: 'sioMsgOut.js',
-    ioChannels: { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder' },
-    nodeVersion: process.version.replace('v', '').split('.'),
-    staticOpts: {}, // { maxAge: 31536000, immutable: true, },
-    deleteOnDelete: {},
-    customServer: { // set correctly in libs/web.js:_webSetup()
-        port: undefined,
-        type: 'http',
-        host: undefined,
-        hostName: undefined,
-        isCustom: false,
-        // These will only be applied if using a custom ExpressJS server
-        serverOptions: {
-            // @since v7 - make Express URL's case-sensitive to match w3c guidelines and socket.io
-            'case sensitive routing': true,
-            // For security
-            'x-powered-by': false,
-        },
-    },
-    reDeployNeeded: '4.1.2',
-    degitEmitter: undefined,
-    RED: null,
-    instanceApiAllowed: false,
-}
-
-/** Current module version (taken from package.json) @constant {string} uib.version */
-uib.version = uib.me.version
+// `uib` is the previously used variable containing the uibuilder global configuration - slowly migrating to the module version.
+const uib = uibGlobalConfig
 
 /** Dummy logging
  * @type {Object<string, Function>} */
@@ -145,11 +109,13 @@ function externalEvents(node) {
 
 //#endregion ----- End of mod-level fns ----- //
 
-/** 1) The function that defines the node
+/** 1) The function that defines the node - runs even if no nodes are deployed
  * @param {runtimeRED} RED Node-RED's runtime object */
 function Uib(RED) {
+    // Keep a global reference to the RED object for convenience, especially in the libraries
     uib.RED = RED
 
+    // Lets get set up
     runtimeSetup() // (1a)
 
     /** 2) Register the node by name. This must be called before overriding any of the
@@ -186,7 +152,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     const RED = uib.RED
 
     // Add list all uibuilder apps function to RED.util so it can be used inside function nodes
-    // NOTE: Only add things here that require uibuilder configuration data which won't be available
+    // NOTE: Only add things here that require uibuilder configuration data or libraries which won't be available
     //       until after plugins are defined. Most things should be added in the the runtime plugin.
     RED.util.uib = {
         /** Return a list of all instances
@@ -203,7 +169,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
         send: (uibName, msg) => {
             const targetNode = RED.nodes.getNode(uib.apps[uibName].node)
             if ( !targetNode ) {
-                throw new Error(`[RED.util.uib.send] ERROR: uibuilder instance '${uibName}' not found`)
+                throw new Error(`🌐🛑[RED.util.uib.send] ERROR: uibuilder instance '${uibName}' not found`)
             }
             msg.from = 'server/function-node'
             sockets.sendToFe2(msg, targetNode)
@@ -225,7 +191,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
             initialised = true
             const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
             RED.log.info('+-----------------------------------------------------')
-            RED.log.info(`| ${uib.moduleName} v${uib.version} initialised 🌐`)
+            RED.log.info(`| 🌐 ${uib.moduleName} v${uib.version} initialised`)
             RED.log.info(`| root folder: ${uib.rootFolder}`)
             if ( uib.customServer.isCustom === true ) {
                 RED.log.info('| Using custom ExpressJS webserver at:')
@@ -252,7 +218,6 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
 
     /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
     userDir = RED.settings.userDir
-
     uib.rootFolder = path.join(userDir, uib.moduleName)
     // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
     if ( uiblib.getProps(RED, RED.settings.get('editorTheme'), 'projects.enabled') === true ) {
@@ -294,7 +259,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
         if ( settings.serverOptions ) {
             uib.customServer.serverOptions = Object.assign(uib.customServer.serverOptions, settings.serverOptions)
         }
-    } // --- end of settings.js --- //
+    }
 
     /** Locations for uib config can common folders */
     uib.configFolder = path.join(uib.rootFolder, uib.configFolderName)
@@ -302,7 +267,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
 
     //#endregion -------- Constants -------- //
 
-    // (a) Configure the UibFs handler class
+    // (a) Configure the UibFs handler class (requires uib.RED)
     fslib.setup(uib)
 
     //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
