@@ -846,7 +846,7 @@ const Ui = class Ui {
      */
     applyTemplate(sourceId, targetId, config) {
         if (!config) config = {}
-        if (!config.onlyOnce) config.onlyOnce = false
+        if (!config.onceOnly) config.onceOnly = false
         if (!config.mode) config.mode = 'insert'
 
         const template = Ui.doc.getElementById(sourceId)

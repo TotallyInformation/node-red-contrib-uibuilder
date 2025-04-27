@@ -624,7 +624,7 @@ var Ui = (_a = class {
    */
   applyTemplate(sourceId, targetId, config) {
     if (!config) config = {};
-    if (!config.onlyOnce) config.onlyOnce = false;
+    if (!config.onceOnly) config.onceOnly = false;
     if (!config.mode) config.mode = "insert";
     const template = _a.doc.getElementById(sourceId);
     if (!template || template.tagName !== "TEMPLATE") {
