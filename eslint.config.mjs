@@ -40,7 +40,7 @@ const browserMJS = [ // browser, latest, module
     'front-end/**/*.esm.js',
 ]
 const nodeCJS = [ // node, node18, cjs
-    'nodes\elements\elementBuilder.js',
+    'nodes/elements/elementBuilder.js',
     // NR runtime code
     // 'nodes/libs/*.js',
     'nodes/**/*.{js|cjs}',
@@ -215,6 +215,7 @@ const conf = [
                 jQuery: 'readonly',
                 RED: 'readonly',
                 uibuilder: 'writable',
+                console: 'readonly',
             },
         },
         // rules: {
@@ -233,6 +234,7 @@ const conf = [
             globals: {
                 ...globals.browser,
                 window: 'writable', // allow setting window global properties
+                globalThis: 'writable',
                 jQuery: 'readonly',
                 RED: 'readonly',
                 uibuilder: 'writable',
