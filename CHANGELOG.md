@@ -28,6 +28,9 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### 📌 Highlights
 
+### Background code improvements
+
+* Moved the uibuilder node's `uib` var to `nodes/libs/uibGlobalConfig.cjs` as a module. Enables being able to require it rather than pass it in libs and other nodes. Another step towards a more modular codebase.
 
 
 ## [v7.2.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.2.0...v7.1.0)
