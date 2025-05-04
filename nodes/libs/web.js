@@ -782,7 +782,7 @@ class UibWeb {
         if ( node.sourceFolder === undefined ) {
             try {
                 // Check if local dist folder contains an index.html & if NR can read it - fall through to catch if not
-                accessSync( join(node.customFolder, 'dist', defaultPageName), 'r' )
+                accessSync( join(node.instanceFolder, 'dist', defaultPageName), 'r' )
                 // If the ./dist/index.html exists use the dist folder...
                 customStatic = 'dist'
                 log.trace(`🌐[uibuilder[:web:setupInstanceStatic:${node.url}] Using local dist folder`)
@@ -795,7 +795,7 @@ class UibWeb {
             }
         }
 
-        const customFull = join(node.customFolder, customStatic)
+        const customFull = join(node.instanceFolder, customStatic)
 
         // Does the customStatic folder exist? If not, then create it
         try {
@@ -952,7 +952,7 @@ class UibWeb {
                         </tr>
                         <tr>
                             <th>Filing system path to front-end resources</th>
-                            <td>${node.customFolder}<br>
+                            <td>${node.instanceFolder}<br>
                                 Contains all of your UI code and other resources.
                                 Folders and files can be viewed, edited, created and deleted using the "Edit Files" button.
                                 You <b>MUST</b> keep at least the <code>src</code> and <code>dist</code> folders otherwise things may not work.
