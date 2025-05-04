@@ -1,4 +1,4 @@
-/* eslint-disable class-methods-use-this */
+/* eslint-disable jsdoc/valid-types */
 /** Manage uibuilder server files
  *
  * Copyright (c) 2023-2025 Julian Knight (Totally Information)
@@ -49,7 +49,7 @@ const fg = require('fast-glob')
 // const uibGlobalConfig = require('./uibGlobalConfig.cjs')
 
 class UibFs {
-    //#region --- Class vars ---
+    // #region --- Class vars ---
     /** PRIVATE Flag to indicate whether setup() has been run (ignore the false eslint error)
      * @type {boolean}
      */
@@ -69,11 +69,11 @@ class UibFs {
 
     /** Node's fs libs constants */
     constants = fs.constants
-    //#endregion --- ----- ---
+    // #endregion --- ----- ---
 
     // constructor() {} // ---- End of constructor ---- //
 
-    //#region ---- Utility methods ----
+    // #region ---- Utility methods ----
 
     /** Configure this class with uibuilder module specifics
      * @param {uibConfig} uib uibuilder module-level configuration
@@ -120,7 +120,7 @@ class UibFs {
     async walk(dir, ftype) {
         let files = await fs.readdir(dir)
         // @ts-ignore
-        files = await Promise.all(files.map(async file => {
+        files = await Promise.all(files.map(async (file) => {
             const filePath = join(dir, file)
             const stats = await fs.stat(filePath)
             if (stats.isDirectory()) {
@@ -138,9 +138,9 @@ class UibFs {
         return this.uib.rootFolder
     }
 
-    //#endregion ---- ---- ----
+    // #endregion ---- ---- ----
 
-    //#region ---- Async Methods ----
+    // #region ---- Async Methods ----
 
     /** Tests a user's permissions for the file or directory specified by path. The mode argument is an optional integer that specifies the accessibility checks to be performed
      * @param {string|Buffer|URL} path Path to test
@@ -156,11 +156,11 @@ class UibFs {
     async copy(src, dest, opts) {
         if (opts === undefined) {
             opts = {
-                'preserveTimestamps': true,
+                preserveTimestamps: true,
             }
         }
-        // @ts-ignore - opts.overwrite is an fs-extra setting
-        if (opts.hasOwnProperty('overwrite')) opts.force = opts.overwrite
+        // @ts-expect-error 2339 - opts.overwrite is an fs-extra setting, included for backwards compatibility
+        if (Object.prototype.hasOwnProperty.call(opts, 'overwrite')) opts.force = opts.overwrite
         // When copying, we always want everything
         opts.recursive = true
 
@@ -251,11 +251,11 @@ class UibFs {
         // const chkFolders = existsSync(join(uib.rootFolder, params.url))
     }
 
-    /**Removes a file or directory. The directory can have contents. If the path does not exist, silently does nothing. 
+    /** Removes a file or directory. The directory can have contents. If the path does not exist, silently does nothing.
      * @param {string} path Folder/File to remove
      */
     async remove(path) {
-        await fs.rm(path, {force:true,recursive:true,})
+        await fs.rm(path, { force: true, recursive: true, })
     }
 
     // TODO Move degit processing to its own function. Don't need the emitter on uib
@@ -271,9 +271,9 @@ class UibFs {
      */
     async replaceTemplate(url, template, extTemplate, cmd, templateConf, uib, log) {
         const res = {
-            'statusMessage': 'Something went wrong!',
-            'status': 500,
-            'json': undefined,
+            statusMessage: 'Something went wrong!',
+            status: 500,
+            json: undefined,
         }
 
         // Load a new template (params url, template, extTemplate)
@@ -297,12 +297,12 @@ class UibFs {
             const degit = require('degit')
 
             uib.degitEmitter = degit(extTemplate, {
-                cache: false,  // Fix for Issue #155 part 3 - degit error
+                cache: false, // Fix for Issue #155 part 3 - degit error
                 force: true,
                 verbose: false,
             })
 
-            uib.degitEmitter.on('info', info => {
+            uib.degitEmitter.on('info', (info) => {
                 log.trace(`🌐[uibuilder[:fs:replaceTemplate] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
             })
 
@@ -315,16 +315,16 @@ class UibFs {
             res.status = 200
 
             res.json = /** @type {*} */ ({
-                'url': url,
-                'template': template,
-                'extTemplate': extTemplate,
-                'cmd': cmd,
+                url: url,
+                template: template,
+                extTemplate: extTemplate,
+                cmd: cmd,
             })
             return res
         } else if ( Object.prototype.hasOwnProperty.call(templateConf, template) ) {
             // Otherwise, use internal template - copy whole template folder
             // const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
-            const fsOpts = { 'force': true, 'preserveTimestamps': true, 'recursive': true, }
+            const fsOpts = { force: true, preserveTimestamps: true, recursive: true, }
             /** Source template folder name */
             const srcTemplate = join( uib.masterTemplateFolder, template )
             try {
@@ -335,10 +335,10 @@ class UibFs {
                 res.statusMessage = statusMsg
                 res.status = 200
                 res.json = /** @type {*} */ ({
-                    'url': url,
-                    'template': template,
-                    'extTemplate': extTemplate,
-                    'cmd': cmd,
+                    url: url,
+                    template: template,
+                    extTemplate: extTemplate,
+                    cmd: cmd,
                 })
                 return res
             } catch (err) {
@@ -517,9 +517,9 @@ class UibFs {
         log.trace(`🌐[uibuilder:UibFs:writeInstanceFile] File write SUCCESS. url=${url}, file=${folder}/${fname}`)
     } // -- End of writeFile -- //
 
-    //#endregion ---- ---- ----
+    // #endregion ---- ---- ----
 
-    //#region ---- Callback methods ----
+    // #region ---- Callback methods ----
 
     /** Asynchronously copies the entire directory structure from src to dest, including subdirectories and files. Throws on fail.
      * @param {string|Array<string>|URL} src Source path to copy, if an array of strings, they will be path joined
@@ -530,11 +530,11 @@ class UibFs {
     copyCb(src, dest, opts, cb) {
         if (opts === undefined) {
             opts = {
-                'preserveTimestamps': true,
+                preserveTimestamps: true,
             }
         }
-        // @ts-ignore - opts.overwrite is an fs-extra setting
-        if (opts.hasOwnProperty('overwrite')) opts.force = opts.overwrite
+        // @ts-expect-error 2339 - opts.overwrite is an fs-extra setting, included for backwards compatibility
+        if (Object.prototype.hasOwnProperty.call(opts, 'overwrite')) opts.force = opts.overwrite
         // When copying, we always want everything
         opts.recursive = true
         // @ts-ignore - we allow an array of path segments
@@ -554,13 +554,13 @@ class UibFs {
      * @param {string|Buffer|URL|number} file File path to write to
      * @param {string|Buffer|DataView|object} data Data to write to file
      * @param {object=} options
-     * @param {function} callback Has err as only argument
+     * @param {Function} callback Has err as only argument
      */
     writeFileCb = writeFile
 
-    //#endregion ---- ---- ----
+    // #endregion ---- ---- ----
 
-    //#region ---- Synchronous methods ----
+    // #region ---- Synchronous methods ----
 
     /** Synchronously try access and error if fail.
      * @param {string} path Path to try to access
@@ -599,11 +599,11 @@ class UibFs {
     copySync(src, dest, opts) {
         if (opts === undefined) {
             opts = {
-                'preserveTimestamps': true,
+                preserveTimestamps: true,
             }
         }
-        // @ts-ignore - opts.overwrite is an fs-extra setting
-        if (opts.hasOwnProperty('overwrite')) opts.force = opts.overwrite
+        // @ts-expect-error 2339 - opts.overwrite is an fs-extra setting, included for backwards compatibility
+        if (Object.prototype.hasOwnProperty.call(opts, 'overwrite')) opts.force = opts.overwrite
         // When copying, we always want everything
         opts.recursive = true
 
@@ -673,9 +673,9 @@ class UibFs {
      */
     readFileSync = readFileSync
 
-    //#endregion ---- ---- ----
+    // #endregion ---- ---- ----
 
-    //#region ---- fs-extra passthrough methods that need replacement ----
+    // #region ---- fs-extra passthrough methods that need replacement ----
 
     /** Ensures that the directory exists. If the directory structure does not exist, it is created. If provided, options may specify the desired mode for the directory.
      * @param {string} dir Folder path to ensure
@@ -699,7 +699,7 @@ class UibFs {
      * @param {string} path Folder/file path to remove
      */
     removeSync = fsextra.removeSync
-    
+
     /** Writes an object to a JSON file.
      * https://github.com/jprichardson/node-fs-extra/blob/master/docs/writeJson.md
      * @param {string} file File path to write to
@@ -708,7 +708,7 @@ class UibFs {
      */
     writeJson = fsextra.writeJson
 
-    //#endregion ---- ---- ----
+    // #endregion ---- ---- ----
 } // ----- End of UibPackages ----- //
 
 /** Singleton model. Only 1 instance of UibWeb should ever exist.
