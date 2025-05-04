@@ -226,7 +226,8 @@ export default defineConfig([
         settings: {
             jsdoc: { mode: 'jsdoc', },
             // Better to pick up from package.json unless needing to override
-            // node: { version: '18.0.0', },
+            // package.json is restricted to >=v18 to match Node-RED. We want at least v18.4
+            node: { version: '18.4.0', },
         },
         rules: {
             ...jsdocRules,
