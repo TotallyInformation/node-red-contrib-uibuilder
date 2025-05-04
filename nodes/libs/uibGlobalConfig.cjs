@@ -26,7 +26,7 @@
  */
 
 const path = require('path')
-const fslib  = require('../libs/fs.js')   // File/folder handling library (by Totally Information)
+const fslib  = require('./fs.cjs')   // File/folder handling library (by Totally Information)
 
 const pkgJson = fslib.readJSONSync(path.join( __dirname, '..', '..', 'package.json' ))
 /** @type {uibConfig} */
@@ -96,6 +96,12 @@ const uibGlobalConfig = {
             'x-powered-by': false,
         },
     },
+
+    /** Copy of Node-RED settings.js nodeRoot property for convenience
+     * Set in uibuilder.js when creating the node - will be overwritten to "" if using
+     * a custom server for uibuilder.
+     */
+    nodeRoot: null,
 
     /** Are uibuilder node instances allowed to create their own API endpoints?
      * Updated in uibuilder.js from settings.js if it contains a uibuilder property
