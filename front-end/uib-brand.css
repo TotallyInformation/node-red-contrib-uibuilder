@@ -19,7 +19,7 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 2024-12-30
+ * @version: 2025-04-28
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -52,9 +52,15 @@
      * NOTE: no space between : and text!
      */
     --uib-css: uib-brand;
+
+    /* For nicer emoji's use this as the font-family */
+    --emoji-fonts: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji";
+
     /* Sans-serif is much easier to read on-screen */
-    /* --font-family: sans-serif; */
-    --font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    /* Update 2025-04-28 to use https://github.com/system-fonts/modern-font-stacks - incl better emoji's as well */
+    --font-family: system-ui, sans-serif, var(--emoji-fonts);
+    --code-font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace, var(--emoji-fonts);
+    --cursive-font-family: 'Segoe Print', 'Bradley Hand', Chilanka, TSCu_Comic, casual, cursive, var(--emoji-fonts);
 
     --brand-hue: 200;
     --text-hue: var(--brand-hue);
@@ -83,11 +89,6 @@
 
     /* For the .grid-fit class, the minimum child element size */
     --grid-fit-min: 15rem;
-
-    /* For nicer emoji's use this as the font-family */
-    --emoji-fonts: "Twemoji Mozilla", "Apple Color Emoji", "Segoe UI Emoji",
-        "Segoe UI Symbol", "Noto Color Emoji", "EmojiOne Color", "Android Emoji",
-        sans-serif;
 
     /*#region --- Brand --- */
     --brand: hsl(
