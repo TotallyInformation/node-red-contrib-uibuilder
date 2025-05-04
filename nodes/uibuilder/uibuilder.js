@@ -510,7 +510,7 @@ function nodeInstance(config) {
     // TODO Add check for src folder?
     if ( customFoldersOK === true ) {
         // local custom folders are there ...
-        log.trace(`🌐[uibuilder[:nodeInstance:${this.url}] Using local front-end folders in: ${this.customFolder}` )
+        log.trace(`🌐[uibuilder:nodeInstance:${this.url}] Using local front-end folders in: ${this.customFolder}` )
     } else {
         // Local custom folders are not right!
         log.error(`🌐🛑[uibuilder:nodeInstance:${this.url}] Wanted to use local front-end folders in ${this.customFolder} but could not`)
