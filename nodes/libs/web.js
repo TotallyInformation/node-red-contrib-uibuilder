@@ -34,7 +34,7 @@ const express = require('express')
 const socketjs = require('./socket.js')
 // const { getNs } = require('./socket.js') // NO! This gives an error because of incorrect `this` binding
 const { getClientId, sortApps } = require('./uiblib')
-const { accessSync, existsSync, mkdirSync, fgSync } = require('./fs.js')
+const { accessSync, existsSync, mkdirSync, fgSync } = require('./fs.cjs')
 const { mylog, urlJoin } = require('./tilib') // dumpReq, mylog
 // WARNING: Don't try to deconstruct this, if you do the initial uibPackageJson access fails for some reason
 const packageMgt = require('./package-mgt.js')

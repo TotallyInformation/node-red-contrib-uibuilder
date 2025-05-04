@@ -26,7 +26,7 @@
 const express = require('express')
 const path = require('path')
 const fg = require('fast-glob') // https://github.com/mrmlnc/fast-glob
-const fslib = require('./fs')  // Utility library for uibuilder
+const fslib = require('./fs.cjs')  // Utility library for uibuilder
 const web = require('./web')
 const sockets = require('./socket')
 const packageMgt = require('./package-mgt')

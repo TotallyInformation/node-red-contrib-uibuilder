@@ -33,7 +33,7 @@ const { JSDOM } = jsdom
 // Ui class copied from src/front-end-module/ui.js
 const Ui = require('../libs/ui.js')
 // uibuilder file handler
-const fs = require('../libs/fs.js')
+const fs = require('../libs/fs.cjs')
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.

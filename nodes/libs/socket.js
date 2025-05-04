@@ -28,7 +28,7 @@
  */
 
 const { join }     = require('path')
-const { existsSync, getFileMeta } = require('./fs')
+const { existsSync, getFileMeta } = require('./fs.cjs')
 const socketio = require('socket.io')
 const { urlJoin }    = require('./tilib')    // General purpose library (by Totally Information)
 const { setNodeStatus }   = require('./uiblib')   // Utility library for uibuilder

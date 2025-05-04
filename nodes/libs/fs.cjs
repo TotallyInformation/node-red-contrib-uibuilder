@@ -31,18 +31,22 @@
  * @typedef {import('../../typedefs.js').uibPackageJson} uibPackageJson
  */
 
-const { join, relative, normalize } = require('node:path')
+// ! WARNING: Take care not to end up with circular requires. e.g. libs/socket.js or uiblib.js cannot be required here
+
+const { join, relative, normalize, } = require('node:path')
 // To be removed when feasible - https://github.com/jprichardson/node-fs-extra
 const fsextra = require('fs-extra')
 // Async
 const fs = require('node:fs/promises')
 // cb
-const { cp, writeFile } = require('node:fs')
+const { cp, writeFile, } = require('node:fs')
 // Sync
-const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readFileSync } = require('node:fs')
+const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readFileSync, } = require('node:fs')
 // TODO Remove in future?
 const fg = require('fast-glob')
-// WARNING: Take care not to end up with circular requires. e.g. libs/socket.js or uiblib.js cannot be required here
+// ! We cannot use uibGlobalConfig here because it causes circular requires (its module uses this fs library)
+// The uibuilder global configuration object, used throughout all nodes and libraries.
+// const uibGlobalConfig = require('./uibGlobalConfig.cjs')
 
 class UibFs {
     //#region --- Class vars ---
@@ -74,9 +78,8 @@ class UibFs {
     /** Configure this class with uibuilder module specifics
      * @param {uibConfig} uib uibuilder module-level configuration
      */
-    setup( uib ) {
-        if ( !uib ) throw new Error('[uibuilder:UibFs:setup] Called without required uib parameter or uib is undefined.')
-        if ( uib.RED === null ) throw new Error('[uibuilder:UibFs:setup] uib.RED is null')
+    setup(uib) {
+        if ( uib.RED === null ) throw new Error('[uibuilder:UibFs:setup] uibGlobalConfig.RED is null')
 
         // Prevent setup from being called more than once
         if ( this.#isConfigured === true ) {
@@ -178,7 +181,7 @@ class UibFs {
      * @returns {Promise< {created:Date,modified:Date,size:number,[pageName:string]} | {error:string,[originalError:string]} >} File stats
      */
     async getFileMeta(fname) {
-        if (!fname) return { error: 'No file provided' }
+        if (!fname) return { error: 'No file provided', }
 
         let stat
         try {
@@ -191,7 +194,7 @@ class UibFs {
         } catch (e) {
             stat = {
                 error: 'Could not get file metadata',
-                originalError: e.message // take care not to leak this to end users
+                originalError: e.message, // take care not to leak this to end users
             }
         }
         return stat
@@ -252,7 +255,7 @@ class UibFs {
      * @param {string} path Folder/File to remove
      */
     async remove(path) {
-        await fs.rm(path, {force:true,recursive:true})
+        await fs.rm(path, {force:true,recursive:true,})
     }
 
     // TODO Move degit processing to its own function. Don't need the emitter on uib
@@ -321,7 +324,7 @@ class UibFs {
         } else if ( Object.prototype.hasOwnProperty.call(templateConf, template) ) {
             // Otherwise, use internal template - copy whole template folder
             // const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
-            const fsOpts = { 'force': true, 'preserveTimestamps': true, 'recursive': true }
+            const fsOpts = { 'force': true, 'preserveTimestamps': true, 'recursive': true, }
             /** Source template folder name */
             const srcTemplate = join( uib.masterTemplateFolder, template )
             try {
@@ -437,7 +440,7 @@ class UibFs {
                     name: uibnode.url,
                     customFolder: uibnode.customFolder,
                     liveFolder: uibnode.sourceFolder,
-                }
+                },
             },
         }
         if (!isCustom) {
@@ -492,7 +495,7 @@ class UibFs {
             // If createFolder flag set, attempt to create the folder
             if (createFolder === true) {
                 try {
-                    await fs.mkdir(fullFolder, { recursive: true }) // Add mode?
+                    await fs.mkdir(fullFolder, { recursive: true, }) // Add mode?
                 } catch (err) {
                     throw new Error(`Cannot create folder. ${err.message} [uibuilder:UibFs:writeInstanceFile]`, err)
                 }

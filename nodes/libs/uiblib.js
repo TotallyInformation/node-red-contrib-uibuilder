@@ -37,7 +37,7 @@ const path = require('node:path')
 const { promisify } = require('node:util')
 const crypto = require('node:crypto')
 const { spawn, spawnSync } = require('node:child_process')
-const fslib = require('./fs.js')
+const fslib = require('./fs.cjs')
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
 
 /** Encode data in a buffer as Base32 with a url-safe alphabet.
