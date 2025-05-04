@@ -34,7 +34,7 @@
 const uiblib = require('../libs/uiblib.js')  // Utility library for uibuilder
 const tilib = require('../libs/tilib.js')   // General purpose library (by Totally Information)
 const packageMgt = require('../libs/package-mgt.js')
-const fslib  = require('../libs/fs.js')   // File/folder handling library (by Totally Information)
+const fslib  = require('../libs/fs.cjs')   // File/folder handling library (by Totally Information)
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
 try { // templateConf
     // Template configuration metadata
@@ -180,6 +180,7 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
     }
 
     //#region ----- back-end debugging ----- //
+    // @ts-ignore
     log = RED.log
     log.trace('🌐[uibuilder:runtimeSetup] ----------------- uibuilder - module started -----------------')
     //#endregion ----- back-end debugging ----- //
@@ -267,8 +268,8 @@ function runtimeSetup() { // eslint-disable-line sonarjs/cognitive-complexity
 
     //#endregion -------- Constants -------- //
 
-    // (a) Configure the UibFs handler class (requires uib.RED)
-    fslib.setup(uib)
+    // (a) Configure the UibFs handler class (requires uib.RED - now using the uibGlobalConfig module)
+    fslib.setup(uib) // Cannot reuired uib in fs module as it creates a circular dependency
 
     //#region ----- Set up uibuilder root, root/.config & root/common folders ----- //
 
