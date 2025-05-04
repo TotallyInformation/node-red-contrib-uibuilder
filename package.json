@@ -10,7 +10,8 @@
     "edit-docs": "%LOCALAPPDATA%/Programs/Typora/Typora.exe ./",
     "buildDocBundle": "node ./src/doc-bundle/build.js",
     "buildSidebar": "node ./bin/docsify-auto-sidebar.js",
-    "graph": "madge --image ./docs/dev/runtime-deps.svg ./nodes"
+    "graph": "madge --image ./docs/dev/runtime-deps.svg ./nodes",
+    "inspectEslintConfig": "npx @eslint/config-inspector@latest"
   },
   "dependencies": {
     "degit": "^2.8.4",
