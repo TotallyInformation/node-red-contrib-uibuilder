@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/no-undefined-types */
 // @ts-nocheck
 /* eslint-disable no-irregular-whitespace */
 /** Define typedefs for linting and JSDoc/ts checks - does not actually contain live code
@@ -285,7 +286,7 @@
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
  *
- * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
+ * @property {string} instanceFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
  * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
  * @property {object} ioChannels The channel names for Socket.IO
