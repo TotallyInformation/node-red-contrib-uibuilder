@@ -1,3 +1,6 @@
+/* eslint-disable jsdoc/valid-types */
+/* eslint-disable n/no-unpublished-import */
+/* eslint-disable import/no-unresolved */
 // @ts-nocheck
 /**
  * https://www.npmjs.com/search?q=eslint-config
@@ -38,29 +41,30 @@ const jsdocRules = {
     }],
     'jsdoc/no-multi-asterisk': 'off',
     'jsdoc/no-undefined-types': ['error', {
-        'definedTypes': ['NodeListOf', 'ProxyHandler'],
+        definedTypes: ['JQuery', 'NodeListOf', 'ProxyHandler'],
     }],
     'jsdoc/tag-lines': 'off',
 }
 const stylisticRules = {
-    '@stylistic/js/brace-style': ["error", "1tbs", { "allowSingleLine": true }],
+    '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: true, }],
     '@stylistic/comma-dangle': ['error', {
-        'arrays': 'only-multiline',
-        'objects': 'always',
-        'imports': 'never',
-        'exports': 'always-multiline',
-        'functions': 'never',
-        'importAttributes': 'never',
-        'dynamicImports': 'never',
+        arrays: 'only-multiline',
+        objects: 'always',
+        imports: 'never',
+        exports: 'always-multiline',
+        functions: 'never',
+        importAttributes: 'never',
+        dynamicImports: 'never',
     }],
     '@stylistic/eol-last': ['error', 'always'],
     '@stylistic/indent': ['error', 4, {
-        'SwitchCase': 1,
+        SwitchCase: 1,
     }],
+    '@stylistic/indent-binary-ops': ['error', 4],
     '@stylistic/linebreak-style': ['error', 'unix'],
     '@stylistic/lines-between-class-members': 'off',
     '@stylistic/newline-per-chained-call': ['error', {
-        'ignoreChainWithDepth': 2,
+        ignoreChainWithDepth: 2,
     }],
     '@stylistic/no-confusing-arrow': 'error',
     '@stylistic/no-extra-semi': 'error',
@@ -69,17 +73,17 @@ const stylisticRules = {
     '@stylistic/semi': ['error', 'never'],
     '@stylistic/space-before-function-paren': 'off',
     '@stylistic/spaced-comment': ['error', 'always', {
-        'line': {
-            'exceptions': ['*', '#region', '#endregion', ],
+        line: {
+            exceptions: ['*', '#region', '#endregion'],
         },
-        'block': {
-            'exceptions': ['*', ],
+        block: {
+            exceptions: ['*'],
         },
     }],
     '@stylistic/space-in-parens': 'off',
     '@stylistic/quotes': ['error', 'single', {
-        'avoidEscape': true,
-        'allowTemplateLiterals': 'always',
+        avoidEscape: true,
+        allowTemplateLiterals: 'always',
     }],
 }
 const generalRules = {
@@ -110,14 +114,14 @@ export default defineConfig([
                 jQuery: 'readonly',
                 RED: 'readonly',
                 uibuilder: 'writable',
-                '$': 'readonly',
-                '$$': 'readonly',
+                $: 'readonly',
+                $$: 'readonly',
                 // console: 'readonly',
             },
         },
         linterOptions: {
-			reportUnusedInlineConfigs: "error",
-		},
+            reportUnusedInlineConfigs: 'error',
+        },
         plugins: {
             'js': js,
             'pluginPromise': pluginPromise,
@@ -155,14 +159,14 @@ export default defineConfig([
                 jQuery: 'readonly',
                 RED: 'readonly',
                 uibuilder: 'writable',
-                '$': 'readonly',
-                '$$': 'readonly',
+                $: 'readonly',
+                $$: 'readonly',
                 // console: 'readonly',
             },
         },
         linterOptions: {
-			reportUnusedInlineConfigs: "error",
-		},
+            reportUnusedInlineConfigs: 'error',
+        },
         plugins: {
             'js': js,
             'pluginPromise': pluginPromise,
@@ -192,7 +196,7 @@ export default defineConfig([
     // Node.js (v18) CommonJS, no-build
     {
         // files: nodeCJS,
-        files: ['**/*.{js,cjs}', ],
+        files: ['**/*.{js,cjs}'],
         ignores: ['resources/*.{js,cjs}'],
         languageOptions: {
             sourceType: 'commonjs',
@@ -202,8 +206,8 @@ export default defineConfig([
             // globals: globals.browser,
         },
         linterOptions: {
-			reportUnusedInlineConfigs: "error",
-		},
+            reportUnusedInlineConfigs: 'error',
+        },
         plugins: {
             'js': js,
             'pluginImport': pluginImport,
@@ -234,8 +238,8 @@ export default defineConfig([
     // Node.js (LTS) ESM, ESBUILD
     {
         // files: nodeMJS,
-        files: ['**/*.mjs', ],
-        ignores: ['resources/*.{js,cjs,mjs}', ],
+        files: ['**/*.mjs'],
+        ignores: ['resources/*.{js,cjs,mjs}'],
         languageOptions: {
             sourceType: 'module',
             // Will be overridden by the n plugin which detects the correct node.js version from package.json
@@ -244,8 +248,8 @@ export default defineConfig([
             // globals: globals.browser,
         },
         linterOptions: {
-			reportUnusedInlineConfigs: "error",
-		},
+            reportUnusedInlineConfigs: 'error',
+        },
         plugins: {
             'js': js,
             'pluginImport': pluginImport,
