@@ -28,6 +28,10 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### 📌 Highlights
 
+### `uib-brand.css` styles & variables
+
+* Improved default font specifications based on [Modern Font Stacks](https://github.com/system-fonts/modern-font-stacks).
+
 ### Background code improvements
 
 * Moved the uibuilder node's `uib` var to `nodes/libs/uibGlobalConfig.cjs` as a module. Enables being able to require it rather than pass it in libs and other nodes. Another step towards a more modular codebase.

@@ -3,23 +3,25 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-04-22 12:09:54
+updated: 2025-05-04 12:00:53
 author: Julian Knight (Totally Information)
 ---
 
+## In Progress
+
+* [ ] Move all nodes editor html to use modules. [Ref](https://discourse.nodered.org/t/text-javascript-vs-module-in-html/94215/4)
+* [ ] No need to pass uib var now it is in a module, can simply require it.
+
 ## To Fix
 
-* Docs - need to make the title and meta-data dynamic to the page/link.
-* ui.js - applyTemplate - config.onceOnly not config.onlyOnce
+* Failed rename of instance folder gets stuck.
 * Form CSS: 
   * Input fields should not have a black background in light mode.
 
 ## To Do
 
-* [ ] **Started**. Move all nodes editor html to use modules. [Ref](https://discourse.nodered.org/t/text-javascript-vs-module-in-html/94215/4)
-* [ ] Improve brand.css font specification based on [Modern Font Stacks](https://github.com/system-fonts/modern-font-stacks).
+* [ ] Allow standard templates to be loaded from a URL, not just external ones.
 * [ ] Allow overriding of the JSON max upload size for the custom Express server. [Ref](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988)
-* [ ] No need to pass uib var now it is in a module, can simply require it.
 
 * Documentation
   * [ ] Properly document file uploads and how to handle them. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
@@ -57,6 +59,8 @@ author: Julian Knight (Totally Information)
 ## Ideas
 
 * Move uib-brand.css to a new sub-package. Publish separately.
+* Enhance CSS with ideas from [OpenProps](https://open-props.style).
+* Move all runtime code to ESM's and rely on ESBUILD to build the runtime. This will allow us to use the latest JS features but retain backwards compatibility.
 
 ## New documentation
 
