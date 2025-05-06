@@ -1,4 +1,4 @@
-/* eslint-disable block-scoped-var */
+/* eslint-disable jsdoc/valid-types */
 /**
  * Copyright (c) 2024-2025 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 'use strict'
 
 /** --- Type Defs ---
@@ -60,17 +60,17 @@ function onAdd() {
          * @param {string} int Locale to use for number format (default=en-GB)
          * @returns {string} Formatted number as a string
          */
-        dp: (inp, dp, int) => {
-            if (!int) int = 'en-GB'
-            if (!dp) dp = 1
-            return inp.toLocaleString(int, { 'minimumFractionDigits': dp, 'maximumFractionDigits': dp })
+        dp: (inp, dp = 1, int = 'en-GB') => {
+            // if (!int) int = 'en-GB'
+            // if (!dp) dp = 1
+            return inp.toLocaleString(int, { minimumFractionDigits: dp, maximumFractionDigits: dp, })
         },
 
         // WARNING: Plugins are defined EARLY so they won't have access to the uibuilder library/startup data yet
         //          So some plugins are defined in the base uibuilder node instead.
 
         // In case another plugin defines more of these and is processed first
-        ...RED.util.uib
+        ...RED.util.uib,
     }
 }
 
