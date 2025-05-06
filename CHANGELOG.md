@@ -32,10 +32,16 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * Improved default font specifications based on [Modern Font Stacks](https://github.com/system-fonts/modern-font-stacks).
 
+### Runtime Plugin
+
+* **FIX** Error in `RED.util.uib.dp` that always returned a single decimal place if zero dp's were requested.
+
+
 ### Background code improvements
 
 * Moved the uibuilder node's `uib` var to `nodes/libs/uibGlobalConfig.cjs` as a module. Enables being able to require it rather than pass it in libs and other nodes. Another step towards a more modular codebase.
 * Started renaming js files to better indicate whether they use script/CommonJS (`*.cjs`), or ESM (`*.mjs`). Mostly to help with ESLINT.
+* Lots of code cleanup and linting to make the code more readable and maintainable.
 
 
 ## [v7.2.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.2.0...v7.1.0)
