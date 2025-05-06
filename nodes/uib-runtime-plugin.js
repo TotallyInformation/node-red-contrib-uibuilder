@@ -61,8 +61,6 @@ function onAdd() {
          * @returns {string} Formatted number as a string
          */
         dp: (inp, dp = 1, int = 'en-GB') => {
-            // if (!int) int = 'en-GB'
-            // if (!dp) dp = 1
             return inp.toLocaleString(int, { minimumFractionDigits: dp, maximumFractionDigits: dp, })
         },
 
