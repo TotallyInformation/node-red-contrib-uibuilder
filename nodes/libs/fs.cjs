@@ -39,14 +39,17 @@ const fsextra = require('fs-extra')
 // Async
 const fs = require('node:fs/promises')
 // cb
-const { cp, writeFile, } = require('node:fs')
+const { cp, writeFile, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // Sync
-const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readFileSync, } = require('node:fs')
+const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readFileSync, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // TODO Remove in future?
 const fg = require('fast-glob')
 // ! We cannot use uibGlobalConfig here because it causes circular requires (its module uses this fs library)
 // The uibuilder global configuration object, used throughout all nodes and libraries.
 // const uibGlobalConfig = require('./uibGlobalConfig.cjs')
+
+// Holder for degit which is only loaded when needed
+let degit = null
 
 class UibFs {
     // #region --- Class vars ---
@@ -79,7 +82,7 @@ class UibFs {
      * @param {uibConfig} uib uibuilder module-level configuration
      */
     setup(uib) {
-        if ( uib.RED === null ) throw new Error('[uibuilder:UibFs:setup] uibGlobalConfig.RED is null')
+        if ( uib.RED === null ) throw new Error('uib.RED is null, check setup order [UibFs:setup]')
 
         // Prevent setup from being called more than once
         if ( this.#isConfigured === true ) {
@@ -108,7 +111,7 @@ class UibFs {
      */
     throwOnFolderEscape(fname, note) {
         if (fname.includes('..')) {
-            throw new Error(`Path includes '..'. Folder traversal not permitted. '${fname}' [uibuilder:UibFs:throwOnFolderEscape] ${note}`)
+            throw new Error(`Path includes '..'. Folder traversal not permitted. '${fname}'. ${note} [UibFs:throwOnFolderEscape]`)
         }
     }
 
@@ -170,9 +173,9 @@ class UibFs {
         if (Array.isArray(dest)) dest = join(dest)
 
         try {
-            await fs.cp(src, dest, opts)
+            await fs.cp(src, dest, opts) // eslint-disable-line n/no-unsupported-features/node-builtins
         } catch (e) {
-            throw new Error(`uib libs/fs.js copy could not copy '${src}' to '${dest}'. ${e.message}`)
+            throw new Error(`Could not copy '${src}' to '${dest}'. ${e.message} [UibFs:copy]`)
         }
     }
 
@@ -206,8 +209,8 @@ class UibFs {
      * @returns {Promise<string[]>} List of discovered html files with their folder if needed
      */
     async getInstanceLiveHtmlFiles(url) {
-        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [uibuilder:UibFs:writeInstanceFile]')
-        if ( this.uib.RED === null ) throw new Error('uib.RED is null [uibuilder:UibFs:writeInstanceFile] ')
+        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:writeInstanceFile]')
+        if ( this.uib.RED === null ) throw new Error('uib.RED is null. Check setup order [UibFs:writeInstanceFile]')
 
         const RED = this.uib.RED
 
@@ -219,7 +222,7 @@ class UibFs {
 
         // Make sure we got a node
         if (!node) {
-            RED.log.error(`🌐🛑[uibuilder:fs:getInstanceLiveHtmlFiles] No node found for url="${url}" - called before all nodes loaded in Node-RED?`)
+            RED.log.error(`🌐🛑[UibFs:getInstanceLiveHtmlFiles] No node found for url="${url}" - called before all nodes loaded in Node-RED?`)
             return []
         }
 
@@ -260,101 +263,119 @@ class UibFs {
 
     // TODO Move degit processing to its own function. Don't need the emitter on uib
     /** Replace template in front-end instance folder
-     * @param {string} url The uib instance URL
-     * @param {string} template Name of one of the built-in templates including 'blank' and 'external'
-     * @param {string|undefined} extTemplate Optional external template name to be passed to degit. See degit options for details.
-     * @param {string} cmd 'replaceTemplate' if called from admin-router:POST, otherwise can be anything descriptive & unique by caller
-     * @param {object} templateConf Template configuration object
-     * @param {object} uib uibuilder's master variables
-     * @param {object} log uibuilder's Log functions (normally points to RED.log)
-     * @returns {Promise} {statusMessage, status, (json)}
+     * @param {object} opts Options object
+     * @param {string} opts.url The uib instance URL
+     * @param {string} opts.template Name of one of the built-in templates including 'blank' and 'external'
+     * @param {string|undefined} opts.extTemplate Optional external template name to be passed to degit. See degit options for details.
+     * @param {string} opts.cmd 'replaceTemplate' if called from admin-router:POST, otherwise can be anything descriptive & unique by caller
+     * @param {object} opts.templateConf Template configuration object
+     * @param {object} opts.uib uibuilder's master variables
+     * @param {object} opts.log uibuilder's Log functions (normally points to RED.log)
+     * @returns {Promise<string|Error>} statusMessage or error object
      */
-    async replaceTemplate(url, template, extTemplate, cmd, templateConf, uib, log) {
-        const res = {
-            statusMessage: 'Something went wrong!',
-            status: 500,
-            json: undefined,
-        }
+    async replaceTemplate(opts) {
+        const { url, template, cmd, templateConf, uib, log, } = opts
+        let { extTemplate, } = opts
+        // const res = {
+        //     statusMessage: 'Something went wrong!',
+        //     status: 500,
+        //     json: undefined,
+        // }
 
-        // Load a new template (params url, template, extTemplate)
+        // Check for external template name if template is 'external'
         if ( template === 'external' && ( (!extTemplate) || extTemplate.length === 0) ) {
-            const statusMsg = `External template selected but no template name provided. template=external, url=${url}, cmd=${cmd}`
-            log.error(`🌐🛑[uibuilder:fs:replaceTemplate]. ${statusMsg}`)
-            res.statusMessage = statusMsg
-            res.status = 500
-            return res
+            const e = new Error(`External template selected but no template name provided. template=external, url=${url}, cmd=${cmd} [UibFs:replaceTemplate]`)
+            e.name = 'NONAME'
+            throw e
+            // const statusMsg = `External template selected but no template name provided. template=external, url=${url}, cmd=${cmd}`
+            // log.error(`🌐🛑[UibFs:replaceTemplate]. ${statusMsg}`)
+            // res.statusMessage = statusMsg
+            // res.status = 500
+            // return res
         }
 
         /** Destination folder name */
         const fullname = join(uib.rootFolder, url)
 
         if ( extTemplate ) extTemplate = extTemplate.trim()
-        if ( extTemplate === undefined ) throw new Error('extTemplate is undefined')
+        if ( extTemplate === undefined ) throw new Error('extTemplate is undefined [UibFs:replaceTemplate]')
 
-        // TODO Move degit processing to its own function. Don't need the emitter on uib
+        // TODO Move degit processing to its own function
         // If template="external" & extTemplate not blank - use degit to load
         if ( template === 'external' ) {
-            const degit = require('degit')
+            if (degit === null) degit = require('degit')
 
-            uib.degitEmitter = degit(extTemplate, {
+            const degitEmitter = degit(extTemplate, {
                 cache: false, // Fix for Issue #155 part 3 - degit error
                 force: true,
                 verbose: false,
             })
 
-            uib.degitEmitter.on('info', (info) => {
+            degitEmitter.on('info', (info) => {
                 log.trace(`🌐[uibuilder[:fs:replaceTemplate] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
             })
 
-            await uib.degitEmitter.clone(fullname)
+            await degitEmitter.clone(fullname)
 
             // console.log({myclone})
             const statusMsg = `Degit successfully copied template '${extTemplate}' to '${fullname}'.`
             log.info(`🌐📘[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=${cmd}`)
-            res.statusMessage = statusMsg
-            res.status = 200
+            return statusMsg
 
-            res.json = /** @type {*} */ ({
-                url: url,
-                template: template,
-                extTemplate: extTemplate,
-                cmd: cmd,
-            })
-            return res
+            // res.statusMessage = statusMsg
+            // res.status = 200
+
+            // res.json = /** @type {*} */ ({
+            //     url: url,
+            //     template: template,
+            //     extTemplate: extTemplate,
+            //     cmd: cmd,
+            // })
+            // return res
         } else if ( Object.prototype.hasOwnProperty.call(templateConf, template) ) {
             // Otherwise, use internal template - copy whole template folder
-            // const fsOpts = { 'overwrite': true, 'preserveTimestamps': true }
             const fsOpts = { force: true, preserveTimestamps: true, recursive: true, }
             /** Source template folder name */
             const srcTemplate = join( uib.masterTemplateFolder, template )
             try {
                 // NB: fs.cp is still experimental even in node.js v20 - but seems stable since v16
-                await fs.cp(srcTemplate, fullname, fsOpts)
+                await fs.cp(srcTemplate, fullname, fsOpts) // eslint-disable-line n/no-unsupported-features/node-builtins
                 const statusMsg = `Successfully copied template ${template} to ${url}.`
-                log.info(`🌐📘[uibuilder:fs:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
-                res.statusMessage = statusMsg
-                res.status = 200
-                res.json = /** @type {*} */ ({
-                    url: url,
-                    template: template,
-                    extTemplate: extTemplate,
-                    cmd: cmd,
-                })
-                return res
+                log.info(`🌐📘[UibFs:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
+                return statusMsg
+
+                // res.statusMessage = statusMsg
+                // res.status = 200
+                // res.json = /** @type {*} */ ({
+                //     url: url,
+                //     template: template,
+                //     extTemplate: extTemplate,
+                //     cmd: cmd,
+                // })
+                // return res
             } catch (err) {
-                const statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message}.`
-                log.error(`🌐🛑[uibuilder:fs:replaceTemplate] ${statusMsg}`, err)
-                res.statusMessage = statusMsg
-                res.status = 500
-                return res
+                const e = new Error(`Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message} [UibFs:replaceTemplate]`)
+                e.name = 'COPYFAIL'
+                e.cause = err
+                throw e
+
+                // const statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message}.`
+                // log.error(`🌐🛑[UibFs:replaceTemplate] ${statusMsg}`, err)
+                // res.statusMessage = statusMsg
+                // res.status = 500
+                // return res
             }
         } else {
             // Shouldn't ever be able to occur - but still :-)
-            const statusMsg = `Template '${template}' does not exist. url=${url}, cmd=${cmd}.`
-            log.error(`🌐🛑[uibuilder:fs:replaceTemplate] ${statusMsg}`)
-            res.statusMessage = statusMsg
-            res.status = 500
-            return res
+            const e = new Error(`Template '${template}' does not exist. url=${url}, cmd=${cmd}  [UibFs:replaceTemplate]`)
+            e.name = 'NOTEXIST'
+            throw e
+
+            // const statusMsg = `Template '${template}' does not exist. url=${url}, cmd=${cmd}  [UibFs:replaceTemplate]`
+            // log.error(`🌐🛑[UibFs:replaceTemplate] ${statusMsg}`)
+            // res.statusMessage = statusMsg
+            // res.status = 500
+            // return res
         }
     } // ----- End of replaceTemplate() ----- //
 
@@ -368,8 +389,8 @@ class UibFs {
      * @returns {Promise<any>} List of found files
      */
     async searchInstance(uibId, live, filter, exclude, urlOut, fullPrefix) {
-        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [uibuilder:UibFs:searchInstance]')
-        if ( this.uib.RED === null ) throw new Error('uib.RED is null [uibuilder:UibFs:searchInstance] ')
+        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:searchInstance]')
+        if ( this.uib.RED === null ) throw new Error('uib.RED is null, check setup order [UibFs:searchInstance] ')
         const RED = this.uib.RED
 
         // Get node instance paths
@@ -465,8 +486,8 @@ class UibFs {
      * @returns {Promise} Success if write is successful
      */
     async writeInstanceFile(url, folder, fname, data, createFolder = false, reload = false) {
-        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [uibuilder:UibFs:writeInstanceFile]')
-        if ( this.uib.RED === null ) throw new Error('uib.RED is null [uibuilder:UibFs:writeInstanceFile] ')
+        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:writeInstanceFile]')
+        if ( this.uib.RED === null ) throw new Error('uib.RED is null, check setup order [UibFs:writeInstanceFile] ')
 
         const log = this.uib.RED.log
 
@@ -497,10 +518,10 @@ class UibFs {
                 try {
                     await fs.mkdir(fullFolder, { recursive: true, }) // Add mode?
                 } catch (err) {
-                    throw new Error(`Cannot create folder. ${err.message} [uibuilder:UibFs:writeInstanceFile]`, err)
+                    throw new Error(`Cannot create folder. ${err.message} [UibFs:writeInstanceFile]`, err)
                 }
             } else {
-                throw new Error(`Folder does not exist. "${fullFolder}" [uibuilder:UibFs:writeInstanceFile]`)
+                throw new Error(`Folder does not exist. "${fullFolder}" [UibFs:writeInstanceFile]`)
             }
         }
 
@@ -511,7 +532,7 @@ class UibFs {
             await fs.writeFile(fullname, data)
             // await fs.outputFile(fullname, data)
         } catch (err) {
-            throw new Error(`File write FAIL. ${err.message} [uibuilder:UibFs:writeInstanceFile]`, err)
+            throw new Error(`File write FAIL. ${err.message} [UibFs:writeInstanceFile]`, err)
         }
 
         log.trace(`🌐[uibuilder:UibFs:writeInstanceFile] File write SUCCESS. url=${url}, file=${folder}/${fname}`)
@@ -546,7 +567,7 @@ class UibFs {
             // @ts-ignore
             cp(src, dest, opts, cb)
         } catch (e) {
-            throw new Error(`uib libs/fs.js copyCb could not copy '${src}' to '${dest}'. ${e.message}`)
+            throw new Error(`Could not copy '${src}' to '${dest}'. ${e.message} [UibFs:copyCb]`)
         }
     }
 
@@ -614,8 +635,28 @@ class UibFs {
             if (Array.isArray(dest)) dest = join(...dest)
             cpSync(src, dest, opts)
         } catch (e) {
-            throw new Error(`uib libs/fs.js copySync could not copy '${src}' to '${dest}'. ${e.message}`)
+            throw new Error(`Could not copy '${src}' to '${dest}'. ${e.message} [UibFs:copySync]`)
         }
+    }
+
+    /** Ensures that the directory exists. If the directory structure does not exist, it is created. If provided, options may specify the desired mode for the directory.
+     * @param {string} dir Folder path to ensure
+     * @param {object|number=} opts Mode if number, else { mode: <Integer> }
+     * @returns {string|undefined} Returns the path to the created directory or undefined if it can't be created
+     */
+    ensureDirSync(dir, opts) {
+        // Handle if opts is a number (mode)
+        const options = typeof opts === 'number' ? { mode: opts, } : opts
+
+        if (!this.existsSync(dir)) {
+            try {
+                this.mkdirSync(dir, { recursive: true, ...(options || {}), })
+            } catch (e) {
+                throw new Error('Could not create directory [UibFs:ensureDirSync]', e)
+            }
+        }
+
+        return dir
     }
 
     // ensureFolder({ folder, copyFrom,  }) {
@@ -626,7 +667,7 @@ class UibFs {
     // }
 
     /** Does the path exist? Pass 1 or more args which are joined & then checked
-     * @param {...string} path FS Path to check, multiple strings are path.join'd
+     * param {...string} path FS Path to check, multiple strings are path.join'd
      * @returns {boolean} True if path exists
      */
     existsSync() {
@@ -661,7 +702,7 @@ class UibFs {
         try {
             return JSON.parse(readFileSync(file, 'utf8'))
         } catch (e) {
-            e.message = `${file}: ${e.message}`
+            e.message = `${file}: ${e.message} [UibFs:readJSONSync]`
             throw e
         }
     }
@@ -676,12 +717,6 @@ class UibFs {
     // #endregion ---- ---- ----
 
     // #region ---- fs-extra passthrough methods that need replacement ----
-
-    /** Ensures that the directory exists. If the directory structure does not exist, it is created. If provided, options may specify the desired mode for the directory.
-     * @param {string} dir Folder path to ensure
-     * @param {object|number=} opts Mode if number, else { mode: <Integer> }
-     */
-    ensureDirSync = fsextra.ensureDirSync
 
     /** Ensures that the file exists. If the file that is requested to be created is in directories that do not exist, these directories are created. If the file already exists, it is NOT MODIFIED.
      * @param {string} file File path to ensure
