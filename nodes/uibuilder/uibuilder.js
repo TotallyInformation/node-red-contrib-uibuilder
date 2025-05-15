@@ -465,43 +465,29 @@ function nodeInstance(config) {
     }
 
     // Does the instance folder exist? If not, create it and copy requested template to it. Otherwise make sure it is accessible.
-    // TODO replace with fslib.ensureFolder()
     let instanceFoldersOK = true
     if ( !fslib.existsSync(this.instanceFolder) ) {
-        // Does not exist so check whether built-in or external template wanted
-        if ( this.templateFolder !== 'external' ) {
-            // Internal template wanted - so copy it now
-            const cpyOpts = { preserveTimestamps: true, }
+        // Folder does not exist so create it
+        try {
+            fslib.ensureDirSync(this.instanceFolder) // creates the folder if it doesn't exist
+        } catch (e) {
+            log.error(`🌐🛑[uibuilder:nodeInstance] CREATE OF INSTANCE FOLDER '${this.instanceFolder}' FAILED. Fatal. Error=${e.message}`, e)
+            instanceFoldersOK = false
+        }
 
-            const copyFrom = path.join( uib.masterTemplateFolder, this.templateFolder )
-            try {
-                fslib.copySync( copyFrom, this.instanceFolder, cpyOpts)
-                log.info(`🌐📘[uibuilder:nodeInstance:${this.url}] Created instance folder ${this.instanceFolder} and copied template files from ${copyFrom}` )
-            } catch (e) {
-                log.error(`🌐🛑[uibuildernodeInstance] CREATE OF INSTANCE FOLDER '${this.instanceFolder}' & COPY OF TEMPLATE '${copyFrom}' FAILED. Fatal. Error=${e.message}`, e)
-                instanceFoldersOK = false
-            }
-        } else {
-            // External template wanted so try to load it
-            fslib.replaceTemplate(this.url, this.templateFolder, this.extTemplate, 'startup-CopyTemplate', templateConf, uib, log)
-                .then( () => { // resp => {
-                    // resp.statusMessage
-                    log.info(`🌐📘[uibuilder:nodeInstance:${this.url}] Created instance folder ${this.instanceFolder} and copied external template files from ${this.templateFolder}` )
-                    return true
-                })
-                .catch( (err) => {
-                    let statusMsg
-                    if ( err.code === 'MISSING_REF' ) {
-                        statusMsg = `Degit clone error. CHECK External Template Name. Name='${this.extTemplate}', url=${this.url}, cmd=startup-CopyTemplate. ${err.message}`
-                    } else {
-                        let mystr
-                        if ( this.templateFolder === 'external' ) mystr = `, ${this.extTemplate}`
-                        statusMsg = `Replace template error. ${err.message}. url=${this.url}. ${this.templateFolder}${mystr}`
-                    }
-                    log.error(`🌐🛑[uibuilder:nodeInstance:replaceTemplate] ${statusMsg}`, err)
-                } )
+        // Copy the template files to the instance folder (replaceTemplate is actually async but we don't care about the result)
+        if (instanceFoldersOK === true) {
+            (async () => {
+                try {
+                    await fslib.replaceTemplate({ url: this.url, template: this.templateFolder, extTemplate: this.extTemplate, cmd: 'startup-CheckTemplate', templateConf, uib, log, })
+                } catch (e) {
+                    log.error(`🌐🛑[uibuilder:nodeInstance] COPY OF TEMPLATE '${this.templateFolder}' FAILED. Fatal. Error=${e.message}`, e)
+                    instanceFoldersOK = false
+                }
+            })()
         }
     } else {
+        // Instance folder already exists so check that it is accessible
         try {
             fslib.accessSync(this.instanceFolder, 'w')
         } catch (e) {
