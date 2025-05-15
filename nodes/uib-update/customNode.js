@@ -1,8 +1,8 @@
-/* eslint-disable sonarjs/no-duplicate-string */
+/* eslint-disable jsdoc/valid-types */
 /** Send an update to a specific front-end element.
  * The FE library will update the UI accordingly.
  *
- * Copyright (c) 2023-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2025 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@
  * @typedef {import('../../typedefs').uibUpdNode} uibUpdNode <= Change this to be specific to this node
  */
 
-//#region ----- Module level variables ---- //
+// #region ----- Module level variables ---- //
 
-const { promisify } = require('util')
+const { promisify, } = require('util')
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -41,9 +41,9 @@ const mod = {
     nodeName: 'uib-update', // Note that 'uib-update' will be replaced with actual node-name. Do not forget to also add to package.json
 }
 
-//#endregion ----- Module level variables ---- //
+// #endregion ----- Module level variables ---- //
 
-//#region ----- Module-level support functions ----- //
+// #region ----- Module-level support functions ----- //
 
 /** Get an individual value for a typed input field
  * @param {string} propName Name of the node property to check
@@ -57,7 +57,7 @@ async function getSource(propName, node, msg) {
         try {
             node[propName] = await mod.evaluateNodeProperty(node[src], node[srcType], node, msg)
         } catch (e) {
-            node.warn(`Cannot evaluate source for ${propName}. ${e.message} (${srcType})`)
+            node.warn(`🌐⚠️[uibuilder:uib-update:getSource] Cannot evaluate source for ${propName}. ${e.message} (${srcType})`)
         }
     }
 }
@@ -67,7 +67,6 @@ async function getSource(propName, node, msg) {
  * @param {runtimeNode & uibUpdNode} node reference to node instance
  */
 async function buildUi(msg, node) {
-
     // Get all of the typed input values (in parallel)
     await Promise.all([
         getSource('mode', node, msg),
@@ -82,11 +81,11 @@ async function buildUi(msg, node) {
             if (msgMode === 'update' || msgMode === 'delete' || msgMode === 'remove') {
                 node.mode = msgMode
             } else {
-                node.error(`Invalid mode. msg.mode must be 'update' or 'delete'. ${msg.mode}`)
+                node.error(`🌐🛑[uibuilder:uib-update:buildUi] Invalid mode. msg.mode must be 'update' or 'delete'. ${msg.mode}`)
                 return
             }
         } else {
-            node.error('Invalid mode. msg.mode requested but it does not exist on current msg')
+            node.error('🌐🛑[uibuilder:uib-update:buildUi] Invalid mode. msg.mode requested but it does not exist on current msg')
             return
         }
     }
@@ -96,27 +95,26 @@ async function buildUi(msg, node) {
         if (!Array.isArray(msg._ui)) msg._ui = [msg._ui]
         node._ui = msg._ui
     } else node._ui = []
-    
+
     if (node.mode === 'delete' || node.mode === 'remove') {
         node._ui.push({
-            'method': 'removeAll',
-            'components': [
+            method: 'removeAll',
+            components: [
                 node.cssSelector,
-            ]
+            ],
         })
     } else {
         node._ui.push({
-            'method': 'update',
-            'components': [
+            method: 'update',
+            components: [
                 {
-                    'selector': node.cssSelector,
-                    'slot': node.slotContent,
-                    'attributes': node.attribs,
+                    selector: node.cssSelector,
+                    slot: node.slotContent,
+                    attributes: node.attribs,
                 }
-            ]
+            ],
         })
     }
-
 } // -- end of buildUI -- //
 
 /** Build the output and send the msg (clone input msg and add _ui prop)
@@ -131,7 +129,7 @@ function emitMsg(msg, node) {
         ...msg,
         ...{
             _ui: node._ui,
-        }
+        },
     }
     delete msg2.payload
 
@@ -150,8 +148,7 @@ function emitMsg(msg, node) {
  * @param {Function} done Per msg finish function, node-red v1+
  * @this {runtimeNode & uibUpdNode}
  */
-async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
-
+async function inputMsgHandler(msg, send, done) {
     // const RED = mod.RED
 
     // TODO: Accept cache-replay and cache-clear
@@ -164,7 +161,7 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 
     // If msg has _ui property - is it from the client? If so, remove it.
     if (msg._ui && msg._ui.from && msg._ui.from === 'client') delete msg._ui
-    
+
     // Save the last input msg for replay to new client connections, creates/update this._ui
     await buildUi(msg, this)
 
@@ -173,7 +170,6 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 
     // We are done
     done()
-
 } // ----- end of inputMsgHandler ----- //
 
 /** 2) This is run when an actual instance of our node is committed to a flow
@@ -216,10 +212,9 @@ function nodeInstance(config) {
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)
-
 } // ---- End of nodeInstance ---- //
 
-//#endregion ----- Module-level support functions ----- //
+// #endregion ----- Module-level support functions ----- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
  * @param {runtimeRED} RED The Node-RED runtime object

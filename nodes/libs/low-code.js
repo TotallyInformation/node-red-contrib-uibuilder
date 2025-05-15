@@ -1,7 +1,7 @@
-/* eslint-disable class-methods-use-this */
+/* eslint-disable jsdoc/valid-types */
 /** Build UI elements by output of low-code JSON
  *
- * Copyright (c) 2023-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2025 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -25,6 +25,7 @@
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs.js').runtimeNode} runtimeNode
  * @typedef {import('../../typedefs.js').uibNode} uibNode
+ * @typedef {import('../../typedefs.js').LibLowCodeNode} LibLowCodeNode
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
  * @typedef {import('../../typedefs.js').uibPackageJson} uibPackageJson
  */
@@ -55,19 +56,18 @@ class UibLowCode {
         this.#isConfigured = true
     } // ---- End of setup ---- //
 
-    //#region --- Modes ---
+    // #region --- Modes ---
     // remove
     // removeAll
     // replace
     // update
-    //#endregion --- Modes ---
+    // #endregion --- Modes ---
 
     /** Create/update the _ui object and retain for replay
      * @param {*} msg incoming msg
-     * @param {runtimeNode} node reference to node instance
+     * @param {runtimeNode & LibLowCodeNode} node reference to node instance
      */
     async buildUi(msg, node) {
-
         // Allow combination of msg._ui and this node allowing chaining of the nodes
         if ( msg._ui ) {
             if (!Array.isArray(msg._ui)) msg._ui = [msg._ui]
@@ -81,15 +81,15 @@ class UibLowCode {
         // If mode is remove, then simply do that and return
         if ( msg.mode === 'delete' || msg.mode === 'remove' ) {
             if (!node.elementId) {
-                node.warn('[low-code:buildUi] Cannot remove element as no HTML ID provided')
+                node.warn('🌐⚠️[ubuilder:low-code:buildUi] Cannot remove element as no HTML ID provided')
                 return
             }
 
             node._ui.push( {
-                'method': 'remove',
-                'components': [
+                method: 'remove',
+                components: [
                     `#${node.elementId}`,
-                ]
+                ],
             } )
             return
         }
@@ -98,18 +98,18 @@ class UibLowCode {
         if (!node.elementId) msg.mode = 'add'
 
         node._ui.push({
-            'method': msg.mode === 'add' ? 'add' : 'replace',
-            'components': [
+            method: msg.mode === 'add' ? 'add' : 'replace',
+            components: [
                 {
-                    'type': node.tag,
-                    'id': node.elementId,
-                    'parent': node.parent,
-                    'position': node.position,
-                    'slot': node.slotPropMarkdown === false ? node.slotContent : undefined,
-                    'slotMarkdown': node.slotPropMarkdown === true ? node.slotContent : undefined,
-                    'attributes': node.attribs,
+                    type: node.tag,
+                    id: node.elementId,
+                    parent: node.parent,
+                    position: node.position,
+                    slot: node.slotPropMarkdown === false ? node.slotContent : undefined,
+                    slotMarkdown: node.slotPropMarkdown === true ? node.slotContent : undefined,
+                    attributes: node.attribs,
                 },
-            ]
+            ],
         })
     } // -- end of buildUI -- //
 } // ----- End of Class ----- //

@@ -1,8 +1,9 @@
+/* eslint-disable jsdoc/valid-types */
 /** v3 Admin API ExpressJS Router Handler
  *
  * See: https://expressjs.com/en/4x/api.html#router, https://expressjs.com/en/guide/routing.html
  *
- * Copyright (c) 2021-2024 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2025 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -26,18 +27,18 @@
 const express = require('express')
 const path = require('path')
 const fg = require('fast-glob') // https://github.com/mrmlnc/fast-glob
-const fslib = require('./fs.cjs')  // Utility library for uibuilder
+const fslib = require('./fs.cjs') // Utility library for uibuilder
 const web = require('./web')
 const sockets = require('./socket')
 const packageMgt = require('./package-mgt')
-const templateConf  = require('../../templates/template_dependencies') // Template configuration metadata
+const templateConf = require('../../templates/template_dependencies') // Template configuration metadata
 const elements = require('../elements/elements.js')
 
 const v3AdminRouter = express.Router() // eslint-disable-line new-cap
 
-const errUibRootFldr = new Error('uib.rootFolder is null')
+const errUibRootFldr = new Error('uib.rootFolder is null [uibuilder:admin-api-v3]')
 
-//#region === REST API Validation functions === //
+// #region === REST API Validation functions === //
 
 /** Validate url query parameter
  * @param {object} params The GET (res.query) or POST (res.body) parameters
@@ -45,7 +46,7 @@ const errUibRootFldr = new Error('uib.rootFolder is null')
  * @returns {{statusMessage: string, status: number}} Status message
  */
 function chkParamUrl(params) {
-    const res = { 'statusMessage': '', 'status': 0 }
+    const res = { statusMessage: '', status: 0, }
 
     // We have to have a url to work with - the url defines the start folder
     if ( params.url === undefined ) {
@@ -94,7 +95,7 @@ function chkParamUrl(params) {
  * @returns {{statusMessage: string, status: number}} Status message
  */
 function chkParamFname(params) {
-    const res = { 'statusMessage': '', 'status': 0 }
+    const res = { statusMessage: '', status: 0, }
     const fname = params.fname
 
     // We have to have an fname (file name) to work with
@@ -131,7 +132,7 @@ function chkParamFname(params) {
  * @returns {{statusMessage: string, status: number}} Status message
  */
 function chkParamFldr(params) {
-    const res = { 'statusMessage': '', 'status': 0 }
+    const res = { statusMessage: '', status: 0, }
     const folder = params.folder
 
     // we have to have a folder name
@@ -162,7 +163,7 @@ function chkParamFldr(params) {
     return res
 } // ---- End of fn chkParamFldr ---- //
 
-//#endregion === End of API validation functions === //
+// #endregion === End of API validation functions === //
 
 /** Get the description & options HTML for an element and return to caller
  * @param {object} params All parameters from the HTTP call
@@ -205,7 +206,7 @@ function doGetOneElement(params, rootFolder, req, res) {
     }
 
     res.statusMessage = `No-code element ${params.elType} options returned`
-    res.status(200).json( { descHtml, optsHtml } )
+    res.status(200).json( { descHtml, optsHtml, } )
 }
 
 /** Return a router but allow parameters to be passed in
@@ -214,7 +215,6 @@ function doGetOneElement(params, rootFolder, req, res) {
  * @returns {express.Router} The v3 admin API ExpressJS router
  */
 function adminRouterV3(uib, log) {
-
     /** uibuilder v3 unified Admin API router - new API commands should be added here
      * Typical URL is: http://127.0.0.1:1880/red/uibuilder/admin/nodeurl?cmd=listfolders
      */
@@ -272,7 +272,7 @@ function adminRouterV3(uib, log) {
                 case 'checkpackage': {
                     // We must have a packageName
                     if (!params.packageName) {
-                        log.error(`🌐🛑[uibuilder:adminRouterV3:GET] Admin API. cmd=${checkpackage}. 'packageName' parameter not provided. url=${params.url}`)
+                        log.error(`🌐🛑[uibuilder:adminRouterV3:GET] Admin API. cmd=${params.cmd}. 'packageName' parameter not provided. url=${params.url}`)
                         res.statusMessage = 'packageName parameter not provided'
                         res.status(500).end()
                         return
@@ -321,7 +321,7 @@ function adminRouterV3(uib, log) {
                     log.trace(`🌐[uibuilder[:adminRouterV3:GET] Admin API. List all folders and files. url=${params.url}, root fldr=${uib.rootFolder}`)
 
                     // get list of all (sub)folders (follow symlinks as well)
-                    const out = { 'root': [] }
+                    const out = { root: [], }
                     const root2 = uib.rootFolder.replace(/\\/g, '/')
                     fg.stream(
                         [
@@ -348,7 +348,7 @@ function adminRouterV3(uib, log) {
                             markDirectories: true,
                         }
                     )
-                        .on('data', entry => {
+                        .on('data', (entry) => {
                             entry = entry.replace(`${root2}/${params.url}/`, '')
                             let fldr
                             if ( entry.endsWith('/') ) {
@@ -410,7 +410,7 @@ function adminRouterV3(uib, log) {
                             markDirectories: false,
                         }
                     )
-                        .on('data', entry => {
+                        .on('data', (entry) => {
                             entry = entry.replace(`${root2}/${params.url}/`, '')
                             out.push(entry)
                         })
@@ -424,7 +424,6 @@ function adminRouterV3(uib, log) {
 
                 // List all of the deployed instance urls
                 case 'listinstances': {
-
                     log.trace('🌐[uibuilder:adminRouterV3:GET:listinstances] Returning a list of deployed URLs (instances of uib).')
 
                     /** @returns {boolean} True if the given url exists, else false */
@@ -446,7 +445,7 @@ function adminRouterV3(uib, log) {
                         if (middleware.route) { // routes registered directly on the app
                             const path = middleware.route.path
                             const methods = middleware.route.methods
-                            routes.push({ path: path, methods: methods })
+                            routes.push({ path: path, methods: methods, })
                         } else if (middleware.name === 'router') { // router middleware
                             middleware.handle.stack.forEach(function(handler) {
                                 route = handler.route
@@ -464,7 +463,7 @@ function adminRouterV3(uib, log) {
 
                 default: {
                     res.statusMessage = 'cmd parameter missing or incorrect'
-                    res.status(500).json( { error: res.statusMessage } )
+                    res.status(500).json( { error: res.statusMessage, } )
                     break
                 }
             }
@@ -496,7 +495,7 @@ function adminRouterV3(uib, log) {
 
                     res.statusMessage = 'PUT successful'
                     res.status(200).json({
-                        newVersion: ''
+                        newVersion: '',
                     })
                     return
                 }
@@ -506,10 +505,10 @@ function adminRouterV3(uib, log) {
             log.trace(`🌐[uibuilder:adminRouterV3:PUT] Unsuccessful. command=${params.cmd}, url=${params.url}`)
             res.statusMessage = 'PUT unsuccessful'
             res.status(500).json({
-                'cmd': params.cmd,
-                'fullname': fullname,
-                'params': params,
-                'message': 'PUT unsuccessful',
+                cmd: params.cmd,
+                fullname: fullname,
+                params: params,
+                message: 'PUT unsuccessful',
             })
         })
 
@@ -522,28 +521,28 @@ function adminRouterV3(uib, log) {
             params.type = 'post'
 
             if ( params.cmd === 'replaceTemplate' ) {
-                fslib.replaceTemplate(params.url, params.template, params.extTemplate, params.cmd, templateConf, uib, log)
-                    .then( resp => {
-                        res.statusMessage = resp.statusMessage
-                        if ( resp.status === 200 ) res.status(200).json(resp.json)
-                        else res.status(resp.status).end()
+                fslib.replaceTemplate({ url: params.url, template: params.template, extTemplate: params.extTemplate, cmd: params.cmd, templateConf, uib, log, })
+                    .then( (statusMessage) => {
+                        // @ts-ignore
+                        res.statusMessage = statusMessage
+                        res.status(200).json({ statusMessage, })
                         // Reload connected clients if required by sending them a reload msg
                         if ( params.reload === 'true' ) {
                             sockets.sendToFe2(
                                 {
-                                    '_uib': {
-                                        'reload': true,
-                                    }
+                                    _uib: {
+                                        reload: true,
+                                    },
                                 },
                                 // @ts-ignore
                                 {
-                                    url: params.url
+                                    url: params.url,
                                 }
                             )
                         }
                         return true
                     })
-                    .catch( err => {
+                    .catch( (err) => {
                         let statusMsg, mystr
                         if ( err.code === 'MISSING_REF' ) {
                             statusMsg = `Degit clone error. CHECK External Template Name. Name='${params.extTemplate}', url=${params.url}, cmd=${params.cmd}. ${err.message}`
@@ -618,11 +617,10 @@ function adminRouterV3(uib, log) {
                 log.trace(`🌐[uibuilder:adminRouterV3:POST] Admin API. Folder/File create SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
                 res.statusMessage = 'Folder/File created successfully'
                 res.status(200).json({
-                    'fullname': fullname,
-                    'params': params,
+                    fullname: fullname,
+                    params: params,
                 })
             } // end of else
-
         }) // --- End of POST processing --- //
 
         // Delete a folder or a file
@@ -683,7 +681,7 @@ function adminRouterV3(uib, log) {
 
             // try to delete folder/file - if fail, return error
             try {
-                fslib.removeSync(fullname)  // deletes both files and folders
+                fslib.removeSync(fullname) // deletes both files and folders
             } catch (e) {
                 const statusMsg = `could not delete ${params.cmd === 'deletefolder' ? 'folder' : 'file'}. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}, error=${e.message}`
                 log.error(`🌐🛑[uibuilder:adminRouterV3:DELETE] Admin API. ${statusMsg}`)
@@ -695,8 +693,8 @@ function adminRouterV3(uib, log) {
             log.trace(`🌐[uibuilder:adminRouterV3:DELETE] Admin API. Folder/File delete SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
             res.statusMessage = 'Folder/File deleted successfully'
             res.status(200).json({
-                'fullname': fullname,
-                'params': params,
+                fullname: fullname,
+                params: params,
             })
         })
 

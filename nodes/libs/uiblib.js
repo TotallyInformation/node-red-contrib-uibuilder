@@ -1,9 +1,9 @@
-/* eslint-disable max-params */
+/* eslint-disable jsdoc/valid-types */
 /* eslint-env node es2017 */
 /**
  * Utility library for uibuilder
  *
- * Copyright (c) 2017-2024 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2025 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -17,7 +17,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 'use strict'
 
 /** --- Type Defs ---
@@ -34,9 +34,9 @@
  */
 
 const path = require('node:path')
-const { promisify } = require('node:util')
+const { promisify, } = require('node:util')
 const crypto = require('node:crypto')
-const { spawn, spawnSync } = require('node:child_process')
+const { spawn, spawnSync, } = require('node:child_process')
 const fslib = require('./fs.cjs')
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
 
@@ -52,7 +52,7 @@ function encodeNanoId(buff, length, size) {
     let bits = 0
     let value = 0
     let output = ''
-    const alphaLen = 59  // was 31 in original (alphabet was only 0-9a-z = 32 chars)
+    const alphaLen = 59 // was 31 in original (alphabet was only 0-9a-z = 32 chars)
     const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghjkmnpqrstvwxyz_-'
 
     for (let i = 0; i < size; i++) {
@@ -115,7 +115,7 @@ const UibLib = {
                 delete uib.deleteOnDelete[node.url]
 
                 fslib.remove(path.join(uib.rootFolder, node.url))
-                    .catch(err => {
+                    .catch((err) => {
                         log.error(`🌐🛑[uibuilder:uiblib:processClose] Deleting instance folder failed. URL=${node.url}, Error: ${err.message}`)
                     })
             }
@@ -127,7 +127,7 @@ const UibLib = {
             this.setNodeStatus(node)
 
             // Let all the clients know we are closing down
-            sockets.sendToFe({ 'uibuilderCtrl': 'shutdown' }, node, uib.ioChannels.control)
+            sockets.sendToFe({ uibuilderCtrl: 'shutdown', }, node, uib.ioChannels.control)
 
             // Disconnect all Socket.IO clients for this node instance
             sockets.removeNS(node)
@@ -247,7 +247,7 @@ const UibLib = {
                 if (msg) node[propName] = await evaluateNodeProperty(node[src], node[srcType], node, msg)
                 else node[propName] = await evaluateNodeProperty(node[src], node[srcType], node)
             } catch (e) {
-                node.warn(`Cannot evaluate source for ${propName}. ${e.message} (${srcType})`)
+                node.warn(`🌐⚠️[uibuilder:uiblib:getSource] Cannot evaluate source for ${propName}. ${e.message} (${srcType})`)
             }
         }
     },
@@ -306,9 +306,9 @@ const UibLib = {
                     resolve(out)
                 } else {
                     resolve({
-                        'all': `\n------------------------------------------------------\n[uibuilder:uiblib:runOsCmd]\nCommand:\n  "${cmdOut}"\n  Completed with code ${code}\n  \n${out}\n------------------------------------------------------\n`,
-                        'code': code,
-                        'command': cmdOut,
+                        all: `\n------------------------------------------------------\n[uibuilder:uiblib:runOsCmd]\nCommand:\n  "${cmdOut}"\n  Completed with code ${code}\n  \n${out}\n------------------------------------------------------\n`,
+                        code: code,
+                        command: cmdOut,
                     })
                 }
             })
@@ -332,10 +332,9 @@ const UibLib = {
 
         if (opts.out === 'bare') {
             return out.stdout.toString()
-        } else {
-            out.command = `${cmd} ${args.join(' ')}`
-            return out
         }
+        out.command = `${cmd} ${args.join(' ')}`
+        return out
     },
 
     /** Sort a uibuilder instances object by url instead of the natural order added

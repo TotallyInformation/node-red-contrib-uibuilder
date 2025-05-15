@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/valid-types */
 /** Defines all no-code elements
  *
  * Copyright (c) 2024-2025 Julian Knight (Totally Information)
@@ -33,7 +34,6 @@ module.exports = {
      * @param {runtimeNode & uibElNode} node reference to node instance
      */
     buildUi: async function buildUi(msg, node) {
-
         // Allow combination of msg._ui and this node allowing chaining of the nodes
         if ( msg._ui ) {
             if (!Array.isArray(msg._ui)) msg._ui = [msg._ui]
@@ -47,15 +47,15 @@ module.exports = {
         // If mode is remove, then simply do that and return
         if ( msg.mode === 'delete' || msg.mode === 'remove' ) {
             if (!node.elementId) {
-                node.warn('[uib-element:buildUi] Cannot remove element as no HTML ID provided')
+                node.warn('🌐⚠️[uibuilder:uib-element:buildUi] Cannot remove element as no HTML ID provided')
                 return
             }
 
             node._ui.push({
-                'method': 'removeAll',
-                'components': [
+                method: 'removeAll',
+                components: [
                     `#${node.elementId}`,
-                ]
+                ],
             })
             return
         }
@@ -69,8 +69,8 @@ module.exports = {
 
         // Add the outer component which is always a div
         node._ui.push({
-            'method': msg.mode === 'add' ? 'add' : 'replace',
-            'components': [],
+            method: msg.mode === 'add' ? 'add' : 'replace',
+            components: [],
         } )
         let parent = node._ui[node._ui.length - 1]
 
@@ -165,7 +165,7 @@ module.exports = {
         }
 
         if (err.length > 0) {
-            node.error(err, node)
+            node.error(`🌐🛑[uibuilder:uib-element:elementBuilder:buildUi] ${err}`, node)
         }
     },
 
@@ -180,13 +180,13 @@ module.exports = {
         if (!parent.components) parent.components = []
         parent.components.push(
             {
-                'type': 'div',
-                'id': node.elementId,
-                'parent': node.parent,
-                'position': node.position,
-                'attributes': {},
-                'components': [],
-            },
+                type: 'div',
+                id: node.elementId,
+                parent: node.parent,
+                position: node.position,
+                attributes: {},
+                components: [],
+            }
         )
         return node._ui[node._ui.length - 1].components[0]
     },
@@ -208,11 +208,11 @@ module.exports = {
         if (!parent.components) parent.components = []
         parent.components.push(
             {
-                'type': node.headingLevel,
-                'id': hdId,
-                'slot': node.heading,
-                'components': [],
-            },
+                type: node.headingLevel,
+                id: hdId,
+                slot: node.heading,
+                components: [],
+            }
         )
 
         return parent
@@ -231,8 +231,8 @@ module.exports = {
 
         // Add the ol/ul tag
         parent.components.push({
-            'type': node.elementtype,
-            'slot': node.data,
+            type: node.elementtype,
+            slot: node.data,
         })
 
         return err
@@ -253,8 +253,8 @@ module.exports = {
 
         // Add the dl tag
         parent.components.push({
-            'type': node.elementtype,
-            'components': [],
+            type: node.elementtype,
+            components: [],
         })
 
         // Convenient references
@@ -276,14 +276,14 @@ module.exports = {
             if (!Array.isArray(tbl[row])) tbl[row] = Object.entries(tbl[row])[0]
 
             const listIndex = listRows.push( {
-                'type': 'div',
+                type: 'div',
                 // 'id': `${node.elementId}-data-R${rowNum}`,
-                'attributes': {
+                attributes: {
                     // NB: Making all indexes 1-based for consistency
                     // 'data-row-index': rowNum,
                     // 'class': ((rowNum) % 2  === 0) ? 'even' : 'odd'
                 },
-                'components': [],
+                components: [],
             } )
             // Add a row name attrib from the object key if the input is an object
             if ( node.data !== null && node.data.constructor.name === 'Object' ) {
@@ -308,10 +308,9 @@ module.exports = {
                 }
 
                 listRows[listIndex - 1].components.push( {
-                    'type': lType,
-                    'slot': tbl[row][indx],
+                    type: lType,
+                    slot: tbl[row][indx],
                 } )
-
             })
         } )
 
@@ -342,12 +341,12 @@ module.exports = {
 
         // No wrapping div at this end - done in the client, so deal with parent/position here
         parent.components.push( {
-            'id': node.elementId,
-            'type': md === true ? 'div' : node.elementtype,
-            'parent': node.parent,
-            'position': node.position,
-            'slot': md !== true ? data : undefined,
-            'slotMarkdown': md === true ? data : undefined,
+            id: node.elementId,
+            type: md === true ? 'div' : node.elementtype,
+            parent: node.parent,
+            position: node.position,
+            slot: md !== true ? data : undefined,
+            slotMarkdown: md === true ? data : undefined,
         } )
 
         return err
@@ -367,9 +366,9 @@ module.exports = {
 
         // Add the form tag
         parent.components.push({
-            'type': 'form',
-            'id': `form-${node.elementId}`,
-            'components': [],
+            type: 'form',
+            id: `form-${node.elementId}`,
+            components: [],
         })
 
         // Convenient references
@@ -408,7 +407,7 @@ module.exports = {
                     frmRow.onfocus = 'this.dataset.oldValue = this.value'
                 } catch (e) {
                     // Catch edge-case where the form row input is a string (incorrect use of template node to send input data)
-                    node.error(`[uib-element:elementBuilder:buildSForm] Failed to add onchange/onfocus. Form incomplete. Check input data. ${e.message}`, e)
+                    node.error(`🌐🛑[uibuilder:uib-element:elementBuilder:buildSForm] Failed to add onchange/onfocus. Form incomplete. Check input data. ${e.message}`, e)
                     return
                 }
             }
@@ -418,9 +417,9 @@ module.exports = {
             // TODO Maybe wrap all buttons in a single row at the end of the form?
             // Create the form row (label and input wrapped in a div)
             const rLen = frmBody.components.push( {
-                'type': 'div',
-                'components': [], // label and input/form/select/button - 2 for input, 1 for button
-                'attributes': {},
+                type: 'div',
+                components: [], // label and input/form/select/button - 2 for input, 1 for button
+                attributes: {},
             } )
             const row = frmBody.components[rLen - 1]
 
@@ -440,28 +439,28 @@ module.exports = {
             if (frmRow.type === 'button') {
                 btnCount++ // keep track of the number of buttons
                 const len = row.components.push({
-                    'type': 'button',
-                    'attributes': frmRow,
-                    'slot': frmRow.label,
+                    type: 'button',
+                    attributes: frmRow,
+                    slot: frmRow.label,
                 })
                 row.components[len - 1].attributes.type = 'button'
             } else {
                 row.components.push({
-                    'type': 'label',
-                    'attributes': {
-                        'for': frmRow.id,
+                    type: 'label',
+                    attributes: {
+                        for: frmRow.id,
                     },
-                    'slot': frmRow.label ? frmRow.label : `${frmRow.type}:`,
+                    slot: frmRow.label ? frmRow.label : `${frmRow.type}:`,
                 })
                 const n = row.components.push({
-                    'type': tag,
-                    'id': frmRow.id,
-                    'attributes': frmRow,
+                    type: tag,
+                    id: frmRow.id,
+                    attributes: frmRow,
                 })
                 // Dropdown select - add selection options
                 if ( frmRow.type === 'select' && 'options' in frmRow ) {
                     row.components[n - 1].components = []
-                    frmRow.options.forEach( opt => {
+                    frmRow.options.forEach( (opt) => {
                         row.components[n - 1].components.push({
                             type: 'option',
                             attributes: {
@@ -479,27 +478,27 @@ module.exports = {
         if (btnCount < 1) {
             // frmBody.components[frmBody.components.length - 1].components.push({
             frmBody.components.push({
-                'type': 'div',
-                'attributes': {},
-                'components': [
+                type: 'div',
+                attributes: {},
+                components: [
                     {
-                        'type': 'button',
-                        'id': `${node.elementId}-btn-send`,
-                        'attributes': {
+                        type: 'button',
+                        id: `${node.elementId}-btn-send`,
+                        attributes: {
                             type: 'button',
                             title: 'Send the form data back to Node-RED',
-                            onclick: "uibuilder.eventSend(event)"
+                            onclick: 'uibuilder.eventSend(event)',
                         },
                         // Doing it this way, the click event is not visible in the HTML - not so good for saving the result
                         // 'events': {
                         //     click: 'uibuilder.eventSend'
                         // },
-                        'slot': 'Send',
+                        slot: 'Send',
                     },
                     {
-                        'type': 'button',
-                        'id': `${node.elementId}-btn-reset`,
-                        'attributes': {
+                        type: 'button',
+                        id: `${node.elementId}-btn-reset`,
+                        attributes: {
                             type: 'reset',
                             title: 'Reset the form',
                         },
@@ -507,9 +506,9 @@ module.exports = {
                         // 'events': {
                         //     click: 'event.srcElement.form.reset'
                         // },
-                        'slot': 'Reset',
+                        slot: 'Reset',
                     }
-                ]
+                ],
             })
         }
 
@@ -532,16 +531,16 @@ module.exports = {
 
         // Add the table and thead/tbody tags
         parent.components.push({
-            'type': node.elementtype,
-            'id': `${node.elementId}-table`,
-            'components': [
+            type: node.elementtype,
+            id: `${node.elementId}-table`,
+            components: [
                 {
-                    'type': 'thead',
-                    'components': []
+                    type: 'thead',
+                    components: [],
                 },
                 {
-                    'type': 'tbody',
-                    'components': []
+                    type: 'tbody',
+                    components: [],
                 }
             ],
         })
@@ -564,12 +563,12 @@ module.exports = {
                 // Create the header row
                 thead.components = [
                     {
-                        'type': 'tr',
+                        type: 'tr',
                         // 'id': `${node.elementId}-head-r${hdrRowNum}`,
                         // 'attributes': {
                         //     'data-hdr-row-index': hdrRowNum,
                         // },
-                        'components': []
+                        components: [],
                     }
                 ]
 
@@ -581,14 +580,14 @@ module.exports = {
                 cols.forEach( (colName, k) => {
                     const colNum = k + 1
                     thead.components[0].components.push({
-                        'type': 'th',
+                        type: 'th',
                         // 'id': `${node.elementId}-head-r${hdrRowNum}-c${colNum}`,
-                        'attributes': {
+                        attributes: {
                             // 'data-hdr-row-index': hdrRowNum,
                             'data-col-index': colNum,
                             'data-col-name': colName,
                         },
-                        'slot': colName
+                        slot: colName,
                     })
                 } )
             }
@@ -598,10 +597,10 @@ module.exports = {
 
             // Create the data row
             const rLen = tbody.components.push( {
-                'type': 'tr',
+                type: 'tr',
                 // 'id': `${node.elementId}-data-R${rowNum}`,
-                'components': [],
-                'attributes': {},
+                components: [],
+                attributes: {},
             } )
             // // Add the row index attrib and even/odd class
             // tbody.components[rLen - 1].attributes = {
@@ -619,13 +618,13 @@ module.exports = {
             // TODO Allow for class overrides in node
 
             // Build the columns
-            cols.forEach(  (colName, j) => {
+            cols.forEach( (colName, j) => {
                 const colNum = j + 1
 
                 tbody.components[rLen - 1].components.push({
-                    'type': 'td',
+                    type: 'td',
                     // 'id': `${node.elementId}-data-R${rowNum}-C${colNum}`,
-                    'attributes': {
+                    attributes: {
                         // 'class': ((rowNum) % 2  === 0) ? 'even' : 'odd',
                         // 'data-row-index': rowNum,
                         // NB: Making all indexes 1-based for consistency
@@ -633,7 +632,7 @@ module.exports = {
                         'data-col-name': colName,
                         'class': `r${rowNum} c${colNum}`,
                     },
-                    'slot': tbl[row][colName],
+                    slot: tbl[row][colName],
                 })
             } )
         } )
@@ -656,22 +655,22 @@ module.exports = {
 
         parent.method = 'add'
         const rLen = parent.components.push({
-            'type': 'tr',
-            'parent': `${node.parent} > table > tbody`,
-            'position': node.position,
-            'components': [],
+            type: 'tr',
+            parent: `${node.parent} > table > tbody`,
+            position: node.position,
+            components: [],
         })
         // const rowNum = -10
-        Object.keys(node.data).forEach(  (colName, j) => {
+        Object.keys(node.data).forEach( (colName, j) => {
             const colNum = j + 1
 
             parent.components[rLen - 1].components.push({
-                'type': 'td',
-                'attributes': {
+                type: 'td',
+                attributes: {
                     'data-col-index': colNum,
                     'data-col-name': colName,
                 },
-                'slot': node.data[colName],
+                slot: node.data[colName],
             })
         } )
 
@@ -698,8 +697,8 @@ module.exports = {
         }
 
         parent.components.push({
-            'type': node.tag,
-            'slot': node.data[0]
+            type: node.tag,
+            slot: node.data[0],
         })
 
         // parent.components.push({
@@ -746,34 +745,34 @@ module.exports = {
         const err = ''
 
         parent.components.push({
-            'type': 'title',
+            type: 'title',
             // title tags can appear in SVGs as well so limit this
-            'selector': 'head title',
-            'slot': node.data[0]
+            selector: 'head title',
+            slot: node.data[0],
         })
 
         parent.components.push({
-            'type': 'h1',
-            'selector': 'h1',
-            'parent': node.parent ? node.parent : 'body',
-            'position': 'first',
-            'attributes': {
-                'class': 'with-subtitle',
+            type: 'h1',
+            selector: 'h1',
+            parent: node.parent ? node.parent : 'body',
+            position: 'first',
+            attributes: {
+                class: 'with-subtitle',
             },
-            'slot': node.data.shift(),
+            slot: node.data.shift(),
         })
 
         if (node.data.length > 0) {
             node.data.forEach( (element, i) => {
                 parent.components.push({
-                    'type': 'div',
-                    'selector': 'div[role="doc-subtitle"] ',
-                    'parent': node.parent ? node.parent : 'body',
-                    'position': 'last',
-                    'attributes': {
-                        'role': 'doc-subtitle',
+                    type: 'div',
+                    selector: 'div[role="doc-subtitle"] ',
+                    parent: node.parent ? node.parent : 'body',
+                    position: 'last',
+                    attributes: {
+                        role: 'doc-subtitle',
                     },
-                    'slot': element,
+                    slot: element,
                 })
             } )
         }
@@ -796,8 +795,8 @@ module.exports = {
 
         // Add the ol/ul tag
         parent.components.push({
-            'type': node.elementtype,
-            'components': [],
+            type: node.elementtype,
+            components: [],
         })
 
         // Convenient references
@@ -811,14 +810,14 @@ module.exports = {
 
             // Create next list row
             listRows.push( {
-                'type': 'li',
+                type: 'li',
                 // 'id': `${node.elementId}-data-R${rowNum}`,
-                'attributes': {
+                attributes: {
                     // NB: Making all indexes 1-based for consistency
                     // 'data-row-index': rowNum,
                     // 'class': ((rowNum) % 2  === 0) ? 'even' : 'odd'
                 },
-                'slot': tbl[row]
+                slot: tbl[row],
             } )
             // Add a row name attrib from the object key if the input is an object
             if ( node.data !== null && node.data.constructor.name === 'Object' ) {
@@ -845,15 +844,15 @@ module.exports = {
         parent.method = 'add'
 
         // const rowNum = -10
-        Object.keys(node.data).forEach(  (rowName, j) => {
+        Object.keys(node.data).forEach( (rowName, j) => {
             parent.components.push({
-                'type': 'li',
-                'parent': `${node.parent} > ul`,
-                'position': node.position,
+                type: 'li',
+                parent: `${node.parent} > ul`,
+                position: node.position,
                 // 'attributes': {
                 //     'data-row-name': rowName,
                 // },
-                'slot': node.data[j],
+                slot: node.data[j],
             })
         } )
 

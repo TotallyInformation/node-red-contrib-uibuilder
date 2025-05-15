@@ -1,8 +1,9 @@
-/* eslint-disable sonarjs/no-duplicate-string */
+/* eslint-disable jsdoc/valid-types */
+// @ts-nocheck
 /** Send an update to a specific front-end element.
  * The FE library will update the UI accordingly.
  *
- * Copyright (c) 2023-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2025 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +26,9 @@
  * @typedef {import('../../typedefs').uibTagNode} uibTagNode <= Change this to be specific to this node
  */
 
-//#region ----- Module level variables ---- //
+// #region ----- Module level variables ---- //
 
-const { getSource } = require('../libs/uiblib')
+const { getSource, } = require('../libs/uiblib')
 // const lowCode = require('../libs/low-code')
 
 /** Main (module) variables - acts as a configuration object
@@ -42,16 +43,15 @@ const mod = {
     nodeName: 'uib-tag', // Note that 'uib-update' will be replaced with actual node-name. Do not forget to also add to package.json
 }
 
-//#endregion ----- Module level variables ---- //
+// #endregion ----- Module level variables ---- //
 
-//#region ----- Module-level support functions ----- //
+// #region ----- Module-level support functions ----- //
 
 /** Create/update the _ui object and retain for replay
  * @param {*} msg incoming msg
  * @param {runtimeNode & uibTagNode} node reference to node instance
  */
 async function buildUi(msg, node) {
-
     // Allow combination of msg._ui and this node allowing chaining of the nodes
     if ( msg._ui ) {
         if (!Array.isArray(msg._ui)) msg._ui = [msg._ui]
@@ -65,16 +65,16 @@ async function buildUi(msg, node) {
     // If mode is remove, then simply do that and return
     if ( msg.mode === 'delete' || msg.mode === 'remove' ) {
         if (!node.elementId) {
-            node.warn('[uib-element:buildUi] Cannot remove element as no HTML ID provided')
+            node.warn('🌐⚠️[uibuilder:uib-element:buildUi] Cannot remove element as no HTML ID provided')
             return
         }
 
         node._ui.push(
             {
-                'method': 'removeAll',
-                'components': [
+                method: 'removeAll',
+                components: [
                     `#${node.elementId}`,
-                ]
+                ],
             }
         )
         return
@@ -84,18 +84,18 @@ async function buildUi(msg, node) {
     if (!node.elementId) msg.mode = 'add'
 
     node._ui.push({
-        'method': msg.mode === 'add' ? 'add' : 'replace',
-        'components': [
+        method: msg.mode === 'add' ? 'add' : 'replace',
+        components: [
             {
-                'type': node.tag,
-                'id': node.elementId,
-                'parent': node.parent,
-                'position': node.position,
-                'slot': node.slotPropMarkdown === false ? node.slotContent : undefined,
-                'slotMarkdown': node.slotPropMarkdown === true ? node.slotContent : undefined,
-                'attributes': node.attribs,
+                type: node.tag,
+                id: node.elementId,
+                parent: node.parent,
+                position: node.position,
+                slot: node.slotPropMarkdown === false ? node.slotContent : undefined,
+                slotMarkdown: node.slotPropMarkdown === true ? node.slotContent : undefined,
+                attributes: node.attribs,
             },
-        ]
+        ],
     })
 } // -- end of buildUI -- //
 
@@ -111,7 +111,7 @@ function emitMsg(msg, node) {
         ...msg,
         ...{
             _ui: node._ui,
-        }
+        },
     }
     delete msg2.payload
 
@@ -130,8 +130,7 @@ function emitMsg(msg, node) {
  * @param {Function} done Per msg finish function, node-red v1+
  * @this {runtimeNode & uibTagNode}
  */
-async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
-
+async function inputMsgHandler(msg, send, done) {
     const RED = mod.RED
 
     // TODO: Accept cache-replay and cache-clear
@@ -215,7 +214,7 @@ function nodeInstance(config) {
     this.on('input', inputMsgHandler)
 } // ---- End of nodeInstance ---- //
 
-//#endregion ----- Module-level support functions ----- //
+// #endregion ----- Module-level support functions ----- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
  * @param {runtimeRED} RED The Node-RED runtime object
