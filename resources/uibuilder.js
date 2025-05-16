@@ -1234,7 +1234,7 @@ function populateTemplateDropdown(node) {
     if ( RED.settings && RED.settings.uibuilderTemplates ) {
         uibuilderTemplates = RED.settings.uibuilderTemplates
     } else {
-        console.error(`[uibuilder:populateTemplateDropdown] Cannot access RED.settings for node ${node.id}`)
+        console.error(`🌐🛑[uibuilder:populateTemplateDropdown] Cannot access RED.settings for node ${node.id}`)
     }
 
     // Load each option - first entry will be the default
@@ -1296,10 +1296,12 @@ function checkDependencies() {
     }
 } // --- end of function checkDependencies --- //
 
-/** Load a template */
-function loadTemplate() {
+/** Load a template
+ * @param {object} myNotification The notification object so we can close it if needed
+ */
+function loadTemplate(myNotification) {
     // Get the current file, folder & url
-    const template = $('#node-input-templateFolder').val()
+    const templateFolder = $('#node-input-templateFolder').val()
     const extTemplate = $('#node-input-extTemplate').val()
     const url = $('#node-input-url').val()
     const reload = $('#node-input-reload').prop('checked')
@@ -1357,7 +1359,7 @@ function btnTemplate() {
                     text: 'OK, overwrite',
                     // class:"primary",
                     click: function() { // (e) {
-                        loadTemplate()
+                        loadTemplate(myNotification)
                         myNotification.close()
                     },
                 }
@@ -2041,7 +2043,7 @@ RED.nodes.registerType(moduleName, {
             delete uiace.editor
             uiace.editorLoaded = false
         }
-    }, // ---- End of oneditcancel ---- //
+    },
 
     /** Handle window resizing for the editor */
     oneditresize: function() { // (size) {
@@ -2053,7 +2055,7 @@ RED.nodes.registerType(moduleName, {
         try {
             $('#node-input-packageList').editableList('height', getLibrariesListHeight())
         } catch (e) {}
-    }, // ---- End of oneditcancel ---- //
+    },
 
     /** Show notification warning before allowing delete */
     oneditdelete: function() {
@@ -2109,5 +2111,5 @@ RED.nodes.registerType(moduleName, {
                 ],
             })
         }
-    }, // ---- End of oneditdelete ---- //
-}) // ---- End of registerType() ---- //
+    },
+})
