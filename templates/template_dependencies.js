@@ -16,29 +16,18 @@ module.exports = {
         name: 'Minimal template (default)',
         folder: 'blank',
         dependencies: [],
-        description: 'Default minimal template. Uses the IIFE client & no front-end framework library.',
+        description: 'Default minimal template. Uses the IIFE client & no front-end framework library. The <code>index.js</code> file is commented out because you may not need it at all.',
     },
-    'iife-blank-client': {
-        name: 'No framework, IIFE client',
-        folder: 'iife-blank-client',
+    'ext-extended-iife': {
+        name: 'Extended example using the IIFE client',
+        folder: 'ext-extended-iife',
+        location: 'totallyinformation/uib-extended-template', // GitHub
         dependencies: [],
-        description: 'Minimal template using the IIFE client library.',
+        description: 'The IIFE client library can be slightly easier to use than delving into ES Modules. This is similar to the default template but includes some extended features to play with.  See <u><a href="https://github.com/TotallyInformation/uib-extended-template" target="_blank">README.md</a></u> for details.',
     },
-    'esm-blank-client': {
-        name: 'No framework, ESM client',
-        folder: 'esm-blank-client',
-        dependencies: [],
-        description: 'Minimal template using the ESM client library.',
-    },
-    'svelte-basic': {
-        name: 'Svelte Basic',
-        folder: 'svelte-basic',
-        dependencies: [],
-        description: 'Simple Svelte template. Requires Svelte installation, see README.md',
-    },
-    'ext-simple': {
-        name: 'Simple External Template',
-        folder: 'ext-simple',
+    'ext-simple-esm': {
+        name: 'Simple External ES Module Template',
+        folder: 'ext-simple-esm',
         location: 'totallyinformation/uib-template-test', // GitHub
         dependencies: [],
         description: 'Simple basic ES Module template loaded from GitHub. See <u><a href="https://github.com/TotallyInformation/uib-template-test" target="_blank">README.md</a></u> for details.',
@@ -48,14 +37,14 @@ module.exports = {
         folder: 'ext-svelte',
         location: 'TotallyInformation/uib-template-svelte-simple', // GitHub
         dependencies: [],
-        description: 'Simple Svelte template loaded from GitHub. Requires Svelte installation, see <u><a href="https://github.com/TotallyInformation/uib-template-svelte-simple" target="_blank">README.md</a></u> for details.',
+        description: 'Simple Svelte template loaded from GitHub. Requires <code>npm install</code> to be run to install the development dependencies. See <u><a href="https://github.com/TotallyInformation/uib-template-svelte-simple" target="_blank">README.md</a></u> for details.<br>Don\'t forget to change the default Serve folder on the Advanced tab to "dist" for this template to work correctly.',
     },
     'ext-iife-vue3-nobuild': {
         name: 'Vue3 no build step, IIFE client (External)',
         folder: 'ext-iife-vue3-nobuild',
         location: 'TotallyInformation/uib-template-iife-vue3-nobuild', // GitHub
         dependencies: ['vue'],
-        description: 'Very simple Vue v3+ template that does not require a build step. Uses the IIFE uib client library. Requires Vue v3+ installation in Libraries. See <u><a href="https://github.com/TotallyInformation/uib-template-iife-vue3-nobuild" target="_blank">README.md</a></u> for details.',
+        description: 'Very simple Vue v3 template that does not require a build step. Uses the IIFE uib client library. Requires Vue v3+ installation in Libraries. See <u><a href="https://github.com/TotallyInformation/uib-template-iife-vue3-nobuild" target="_blank">README.md</a></u> for details.',
     },
     // DO NOT REMOVE THIS ONE OR YOU WILL NOT BE ABLE TO LOAD EXTERNAL TEMPLATES
     'external': {
