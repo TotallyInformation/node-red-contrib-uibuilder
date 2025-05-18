@@ -3,7 +3,7 @@ title: uibuilder instance template processing
 description: |
   The process to create/change the the template of a uibuilder instance.
 created: 2025-05-04 19:36:47
-updated: 2025-05-04 19:57:13
+updated: 2025-05-18 13:19:58
 ---
 
 ## New uibuilder node
@@ -35,7 +35,9 @@ url: url,
 
 The API calls `fslib.replaceTemplate(params.url, params.template, params.extTemplate, params.cmd, templateConf, uib, log)`.
 
-The Editor is whether successful or not. If, on the Files tab of the config, the "Reload connected clients on save?" flag is set, the `reload` var is set to `true` and any connected clients are sent a control message to reload their page.
+The Editor is notified whether successful or not. 
+
+When successful.  If, on the Files tab of the config, the "Reload connected clients on save?" flag is set, the `reload` var is set to `true` and any connected clients are sent a control message to reload their page.
 
 
 
