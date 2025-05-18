@@ -479,7 +479,15 @@ function nodeInstance(config) {
         if (instanceFoldersOK === true) {
             (async () => {
                 try {
-                    await fslib.replaceTemplate({ url: this.url, template: this.templateFolder, extTemplate: this.extTemplate, cmd: 'startup-CheckTemplate', templateConf, uib, log, })
+                    await fslib.replaceTemplate({
+                        url: this.url,
+                        template: this.templateFolder,
+                        extTemplate: this.extTemplate,
+                        cmd: 'startup-CheckTemplate',
+                        templateConf,
+                        uib,
+                        log,
+                    })
                 } catch (e) {
                     log.error(`🌐🛑[uibuilder:nodeInstance] COPY OF TEMPLATE '${this.templateFolder}' FAILED. Fatal. Error=${e.message}`, e)
                     instanceFoldersOK = false
