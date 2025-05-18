@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-05-17 16:22:46
+updated: 2025-05-18 19:56:16
 author: Julian Knight (Totally Information)
 ---
 
@@ -33,9 +33,6 @@ author: Julian Knight (Totally Information)
 
 #### Consider
 
-* Replace all template eslint configs with new version (see actions example). Also add stylelint. And update pacage.json.
-* Add fe dependencies install button to uibuilder node.
-  * Add option for auto-install of dependencies when using an external template.
 * Implement the `dom` (`tinyDOM`) FE library.
 * Implement the `logger` FE library.
 * Adding `hooks` to web.js to allow easier header overrides. `httpHeaders`.
@@ -54,7 +51,17 @@ author: Julian Knight (Totally Information)
 * New possible node: `uib-events` - a node that listens for events from the uibuilder runtime.
 * Create a [Gridstack](https://gridstackjs.com/) demo.
 * For uibindex page: sort the url list.
-* For templates, show the dependency list.
+* For templates:
+  * Replace all template eslint configs with new version (see actions example). Also add stylelint. And update pacage.json.
+  * Add fe dependencies install button to uibuilder node.
+  * Add option for auto-install of dependencies when using an external template.
+  * Update the package.json files for the ext. repos - also fix the svelte browser prop.
+  * Show the dependency list.
+  * Check for external template udpates.
+  * Add std npm scripts: `build`, `createGit`, `commit`, `push`.
+  * Maybe move dependecy list for external templates to its package.json?
+  * Maybe add automated dependency loader?
+  * New external templates? GRID and FLEX. (or just use examples?)
 
 
 ## Answers needed

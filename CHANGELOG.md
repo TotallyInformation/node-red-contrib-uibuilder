@@ -31,10 +31,15 @@ Please see the roadmap in the docs for the backlog of future planned development
 * UIBUILDER standard templates can now be external repositories, loaded via Degit. You could already load an arbitrary template this way but now some of the standard templates have been moved so that they can be more easily maintained. The selected template now also shows a description.
 * Several templates have now been removed from core. They are now relegated to a [separate repository](https://github.com/TotallyInformation/deprecated-uibuilder-templates) and will no longer be updated. Of course, you can still copy the code yourself should you need a head-start and want to use them.
 * Most of the remaining templates are now external. They will reside in their own repositories on GitHub and can be maintained separately to UIBUILDER.
+* Templates now include a `tsconfig.json` file and a `/types` folder that describes the uibuilder client library. When writing front-end code, you should now get better code completion, descriptions and type checking.
 
 ### `uib-brand.css` styles & variables
 
 * Improved default font specifications based on [Modern Font Stacks](https://github.com/system-fonts/modern-font-stacks).
+
+### uibuilder client library
+
+* TypeScript definition files now included. This gives a much better experience when using the client library. It works for JavaScript not just TypeScript. All of the templates now also contain copies.
 
 ### Runtime Plugin
 
@@ -43,6 +48,9 @@ Please see the roadmap in the docs for the backlog of future planned development
 ### Node: `uibuilder`
 
 * Updated template processing to allow standard templates to be external.
+* Templates now show a description in the Editor config.
+* Removed templates: `esm-blank-client`, `esm-vue3-nobuild`, `iife-blank-client`, `iife-vue3-nobuild`, `svelte-basic`, `vue2-bootstrap`,`vue2-simple`. Reference copies placed in the [deprecated templates repository](https://github.com/TotallyInformation/deprecated-uibuilder-templates).
+* External templates added: "Extended IIFE example", "Simple external ES module", "External Svelte", "Vie3 no build step, IIFE client". Each with a link to the corresponding GitHub repository.
 
 ### Background code improvements
 
