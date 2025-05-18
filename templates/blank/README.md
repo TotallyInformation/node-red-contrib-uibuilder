@@ -4,13 +4,9 @@
 
 This is about the simplest template you can get for uibuilder. Is is also (as of uibuilder v5+), the default template.
 
-It does not use any frameworks and has no other dependencies.
+It does not use any frameworks and has no other dependencies. It demonstrates that you can use uibuilder purely with HTML/JavaScript or even just HTML and still easily build a simple, dynamic, data-driven user interface with the help of Node-RED.
 
-It demonstrates that you can use uibuilder purely with HTML/JavaScript or even just HTML and still easily build a simple, dynamic, data-driven user interface with the help of Node-RED.
-
-All it does is start up uibuilder.
-
-From uibuilder v6.1.0+, it uses the IIFE client library.
+All it does is load the uibuilder client library and connect to Node-RED.
 
 ## Folders
 
@@ -19,6 +15,7 @@ From uibuilder v6.1.0+, it uses the IIFE client library.
 * `/dist/` - the default folder for serving files as web resources where a build step is used. In that case, the `/src` folder is the source used by the build tool and `/dist` is the destination for the build (the "distribution" folder).
 * `/routes/` - This folder can contain `.js` files defining routing middleware for uibuilder's ExpressJS web server.
 * `/api/` - This folder can contain `.js` files defining REST API's specific to this uibuilder instance.
+* `/types/` - Contains typescript definition files (`*.d.ts`) for the uibuilder client library. This is not used by uibuilder but can be used by your IDE to provide type checking and auto-completion for the uibuilder client library. This is useful if you are using TypeScript or JavaScript with type checking enabled. Remember to update these for new uibuilder versions.
 
 The above folders will all pre-exist for the built-in uibuilder templates. The folders can safely be removed if not needed but one folder must exist to serve the web resources from (this cannot be the root folder).
 
@@ -41,6 +38,7 @@ Also note that you can use **linked** folders and files in this folder structure
 * `src/index.html`: REQUIRED. Contains your basic HTML and will be the file loaded and displayed in the browser when going to the uibuilder defined URL.
 * `src/index.js`: Contains all of the logic for your UI. It must be linked to in the html file. Optional.
 * `src/index.css`: Contains your custom CSS for styling. It must be linked to in the html file. Optional.
+* `tsconfig.json`: A configuration file for TypeScript. This can be used by your IDE to provide descriptions, type checking and auto-completion for the uibuilder client library. This is useful if you are using TypeScript or JavaScript with type checking enabled. Uses the typescript definition files in the `/types` folder, remember to update these for new uibuilder versions.
 
 Note that only the `package.json` and `index.html` files are actually _required_. uibuilder will not function as expected without them.
 

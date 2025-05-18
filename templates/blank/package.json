@@ -1,11 +1,11 @@
 {
   "name": "uib-blank",
-  "version": "6.1.0",
+  "version": "7.3.0",
   "private": true,
   "description": "This is about the simplest template you can get for uibuilder.",
   "browser": "./src/index.js",
   "scripts": {
-    "build": "echo \"Error: no build process specified\" && exit 1"
+    "build": "echo \"No build process specified\""
   },
   "keywords": ["uibuilder", "node-red", "node-red-contrib-uibuilder"],
   "author": "Julian Knight (Totally Information)",
