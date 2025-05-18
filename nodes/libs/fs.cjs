@@ -276,33 +276,50 @@ class UibFs {
     async replaceTemplate(opts) {
         const { url, template, cmd, templateConf, uib, log, } = opts
         let { extTemplate, } = opts
-        // const res = {
-        //     statusMessage: 'Something went wrong!',
-        //     status: 500,
-        //     json: undefined,
-        // }
 
         // Check for external template name if template is 'external'
-        if ( template === 'external' && ( (!extTemplate) || extTemplate.length === 0) ) {
-            const e = new Error(`External template selected but no template name provided. template=external, url=${url}, cmd=${cmd} [UibFs:replaceTemplate]`)
-            e.name = 'NONAME'
+        // if ( template === 'external' && ( (!extTemplate) || extTemplate.length === 0) ) {
+        //     const e = new Error(`External template selected but no template name provided. template=external, url=${url}, cmd=${cmd} [UibFs:replaceTemplate]`)
+        //     e.name = 'NONAME'
+        //     throw e
+        //     // const statusMsg = `External template selected but no template name provided. template=external, url=${url}, cmd=${cmd}`
+        //     // log.error(`🌐🛑[UibFs:replaceTemplate]. ${statusMsg}`)
+        //     // res.statusMessage = statusMsg
+        //     // res.status = 500
+        //     // return res
+        // }
+
+        // Get selected template definition from templateConf
+        const templateDef = templateConf[template]
+        // Error if no definition found
+        if ( !templateDef ) {
+            const e = new Error(`Template '${template}' does not exist in template definitions. url=${url}, cmd=${cmd} [UibFs:replaceTemplate]`)
+            e.name = 'TEMPLATENOTEXIST'
             throw e
-            // const statusMsg = `External template selected but no template name provided. template=external, url=${url}, cmd=${cmd}`
-            // log.error(`🌐🛑[UibFs:replaceTemplate]. ${statusMsg}`)
-            // res.statusMessage = statusMsg
-            // res.status = 500
-            // return res
         }
+
+        const { folder, location, dependencies, } = templateDef
 
         /** Destination folder name */
         const fullname = join(uib.rootFolder, url)
 
-        if ( extTemplate ) extTemplate = extTemplate.trim()
-        if ( extTemplate === undefined ) throw new Error('extTemplate is undefined [UibFs:replaceTemplate]')
-
         // TODO Move degit processing to its own function
-        // If template="external" & extTemplate not blank - use degit to load
-        if ( template === 'external' ) {
+        /** If external - use degit to load - we have to use `location`, not just `folder` to allow for external std templates @since v7.3.0 */
+        if ( folder === 'external' || location ) {
+            // If both location and extTemplate are not set or blank, throw error
+            if ( (location === undefined || location.length === 0) && (extTemplate === undefined || extTemplate.length === 0) ) {
+                const e = new Error(`External template selected but no template location provided. Cannot procede. url=${url}, cmd=${cmd} [UibFs:replaceTemplate]`)
+                e.name = 'NONAME'
+                throw e
+            }
+
+            // If extTemplate is set, use that over location
+            if ( extTemplate === undefined || extTemplate.length === 0 ) {
+                extTemplate = location
+            }
+            extTemplate = extTemplate.trim()
+
+            // We only need to get degit once (not needed at all unless we come here)
             if (degit === null) degit = require('degit')
 
             const degitEmitter = degit(extTemplate, {
@@ -312,70 +329,40 @@ class UibFs {
             })
 
             degitEmitter.on('info', (info) => {
-                log.trace(`🌐[uibuilder[:fs:replaceTemplate] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
+                log.trace(`🌐[uibuilder:fs:replaceTemplate] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
             })
 
-            await degitEmitter.clone(fullname)
+            try {
+                await degitEmitter.clone(fullname)
+            } catch (err) {
+                const e = new Error(`Failed to copy template from '${extTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message} [UibFs:replaceTemplate]`)
+                e.name = 'TEMPLATECOPYFAIL'
+                e.cause = err
+                throw e
+            }
 
-            // console.log({myclone})
             const statusMsg = `Degit successfully copied template '${extTemplate}' to '${fullname}'.`
             log.info(`🌐📘[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=${cmd}`)
             return statusMsg
+        }
 
-            // res.statusMessage = statusMsg
-            // res.status = 200
+        // If here, must be an internal template & we know the config exists
 
-            // res.json = /** @type {*} */ ({
-            //     url: url,
-            //     template: template,
-            //     extTemplate: extTemplate,
-            //     cmd: cmd,
-            // })
-            // return res
-        } else if ( Object.prototype.hasOwnProperty.call(templateConf, template) ) {
-            // Otherwise, use internal template - copy whole template folder
-            const fsOpts = { force: true, preserveTimestamps: true, recursive: true, }
-            /** Source template folder name */
-            const srcTemplate = join( uib.masterTemplateFolder, template )
-            try {
-                // NB: fs.cp is still experimental even in node.js v20 - but seems stable since v16
-                await fs.cp(srcTemplate, fullname, fsOpts) // eslint-disable-line n/no-unsupported-features/node-builtins
-                const statusMsg = `Successfully copied template ${template} to ${url}.`
-                log.info(`🌐📘[UibFs:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
-                return statusMsg
-
-                // res.statusMessage = statusMsg
-                // res.status = 200
-                // res.json = /** @type {*} */ ({
-                //     url: url,
-                //     template: template,
-                //     extTemplate: extTemplate,
-                //     cmd: cmd,
-                // })
-                // return res
-            } catch (err) {
-                const e = new Error(`Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message} [UibFs:replaceTemplate]`)
-                e.name = 'COPYFAIL'
-                e.cause = err
-                throw e
-
-                // const statusMsg = `Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message}.`
-                // log.error(`🌐🛑[UibFs:replaceTemplate] ${statusMsg}`, err)
-                // res.statusMessage = statusMsg
-                // res.status = 500
-                // return res
-            }
-        } else {
-            // Shouldn't ever be able to occur - but still :-)
-            const e = new Error(`Template '${template}' does not exist. url=${url}, cmd=${cmd}  [UibFs:replaceTemplate]`)
-            e.name = 'NOTEXIST'
+        // Use internal template - copy whole template folder
+        const fsOpts = { force: true, preserveTimestamps: true, recursive: true, }
+        /** Source template folder name */
+        const srcTemplate = join( uib.masterTemplateFolder, template )
+        try {
+            // NB: fs.cp is still experimental even in node.js v20 - but seems stable since v16
+            await fs.cp(srcTemplate, fullname, fsOpts) // eslint-disable-line n/no-unsupported-features/node-builtins
+            const statusMsg = `Successfully copied template ${template} to ${url}.`
+            log.info(`🌐📘[UibFs:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
+            return statusMsg
+        } catch (err) {
+            const e = new Error(`Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message} [UibFs:replaceTemplate]`)
+            e.name = 'COPYFAIL'
+            e.cause = err
             throw e
-
-            // const statusMsg = `Template '${template}' does not exist. url=${url}, cmd=${cmd}  [UibFs:replaceTemplate]`
-            // log.error(`🌐🛑[UibFs:replaceTemplate] ${statusMsg}`)
-            // res.statusMessage = statusMsg
-            // res.status = 500
-            // return res
         }
     } // ----- End of replaceTemplate() ----- //
 
