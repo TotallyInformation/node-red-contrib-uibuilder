@@ -33,7 +33,7 @@ Also note that you can use **linked** folders and files in this folder structure
 
 * `package.json`: REQUIRED. Defines the basic structure, name, description of the project and defines any local development dependencies if any. Also works with `npm` allowing the installation of dev packages (such as build or linting tools).
 * `README.md`: This file. Change this to describe your web app and provide documentation for it.
-* `.eslintrc.js`: A pre-configured configuration for the ESLINT tool. Helps when writing front-end code.
+* `eslint.config.js`: A pre-configured configuration for the ESLINT tool. Helps when writing front-end code. Note that you need at least eslint v8+ installed for this to work.
 * `LICENSE`: A copy of the Apache 2.0 license. Replace with a different license if needed. Always license your code. Apache 2.0 matches the licensing of uibuilder.
 * `src/index.html`: REQUIRED. Contains your basic HTML and will be the file loaded and displayed in the browser when going to the uibuilder defined URL.
 * `src/index.js`: Contains all of the logic for your UI. It must be linked to in the html file. Optional.
