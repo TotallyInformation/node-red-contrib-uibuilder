@@ -1930,6 +1930,10 @@ function onEditPrepare(node) {
         })
         .appendTo($('div.red-ui-tray-toolbar'))
 
+    // Update the open and node details buttons below the url
+    $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${node.url}`)
+    $('#uibinstanceconf').prop('href', `./uibuilder/instance/${node.url}?cmd=showinstancesettings`)
+
     getFolders()
 
     // Show uibuilder version
