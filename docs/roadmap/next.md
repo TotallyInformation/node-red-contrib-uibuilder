@@ -3,13 +3,12 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-05-18 19:56:16
+updated: 2025-05-25 21:10:23
 author: Julian Knight (Totally Information)
 ---
 
 ## In Progress
 
-* [ ] Move Vue/Svelte templates to separate repo's - keep in the templates list but link to the new repo. Use a monorepo. [Ref](https://chatgpt.com/share/67e94f7d-e054-8001-9976-c24cae872980).
 * [ ] Remove remaining ~~5~~ 4 fsextra functions from fs lib. `ensureDirSync` is completed.
 * Background rework
   * [ ] Move all nodes editor html to use modules. [Ref](https://discourse.nodered.org/t/text-javascript-vs-module-in-html/94215/4)
@@ -17,6 +16,7 @@ author: Julian Knight (Totally Information)
 
 ## To Fix
 
+* uibuilder node's "Node details" buttone tries to open `https://home.knightnet.co.uk/red/uibuilder/instance/_url_?cmd=showinstancesettings`. `_url_` should be replaced with the instance URL.
 * Failed rename of instance folder gets stuck.
 * Form CSS: 
   * Input fields should not have a black background in light mode.
@@ -55,13 +55,15 @@ author: Julian Knight (Totally Information)
   * Replace all template eslint configs with new version (see actions example). Also add stylelint. And update pacage.json.
   * Add fe dependencies install button to uibuilder node.
   * Add option for auto-install of dependencies when using an external template.
-  * Update the package.json files for the ext. repos - also fix the svelte browser prop.
   * Show the dependency list.
   * Check for external template udpates.
   * Add std npm scripts: `build`, `createGit`, `commit`, `push`.
   * Maybe move dependecy list for external templates to its package.json?
-  * Maybe add automated dependency loader?
   * New external templates? GRID and FLEX. (or just use examples?)
+* Prepare for ExpressJS v5. Not likely to arrive before Node-RED v5 but quite a few breaking changes. [Ref](https://expressjs.com/en/guide/migrating-5.html)
+  * `nodes/libs/admin-api-{v2,v3}.js`
+  * `nodes/libs/web.js`
+  * [Path route matching syntax has changed 😵‍💫](https://expressjs.com/en/guide/migrating-5.html#path-syntax)
 
 
 ## Answers needed

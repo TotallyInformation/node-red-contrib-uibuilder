@@ -51,6 +51,8 @@ Please see the roadmap in the docs for the backlog of future planned development
 * Templates now show a description in the Editor config.
 * Removed templates: `esm-blank-client`, `esm-vue3-nobuild`, `iife-blank-client`, `iife-vue3-nobuild`, `svelte-basic`, `vue2-bootstrap`,`vue2-simple`. Reference copies placed in the [deprecated templates repository](https://github.com/TotallyInformation/deprecated-uibuilder-templates).
 * External templates added: "Extended IIFE example", "Simple external ES module", "External Svelte", "Vie3 no build step, IIFE client". Each with a link to the corresponding GitHub repository.
+* **FIXED** The `uibuilder` node's "Node details" button now correctly opens the instance settings page in the Node-RED Editor. It was previously trying to open a non-existent page.
+* **FIXED** The `uibuilder` node's "Node details" button now correctly opens the instance details page.
 
 ### Background code improvements
 
