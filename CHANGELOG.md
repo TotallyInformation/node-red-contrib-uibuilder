@@ -28,10 +28,33 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### 📌 Highlights
 
+* A new documentation section called "Creating Web UI's" has been added. The idea is to provide quick-reference guides on how to create common page elements and layouts using UIBUILDER. Some of the articles that were pare of the "Using UIBUILDER" section have been moved to this new section for clarity. _What else needs to go here? Please let me know in the Node-RED Forum._
+
 * UIBUILDER standard templates can now be external repositories, loaded via Degit. You could already load an arbitrary template this way but now some of the standard templates have been moved so that they can be more easily maintained. The selected template now also shows a description.
-* Several templates have now been removed from core. They are now relegated to a [separate repository](https://github.com/TotallyInformation/deprecated-uibuilder-templates) and will no longer be updated. Of course, you can still copy the code yourself should you need a head-start and want to use them.
-* Most of the remaining templates are now external. They will reside in their own repositories on GitHub and can be maintained separately to UIBUILDER.
-* Templates now include a `tsconfig.json` file and a `/types` folder that describes the uibuilder client library. When writing front-end code, you should now get better code completion, descriptions and type checking.
+
+  * Several templates have now been removed from core. They are now relegated to a [separate repository](https://github.com/TotallyInformation/deprecated-uibuilder-templates) and will no longer be updated. Of course, you can still copy the code yourself should you need a head-start and want to use them.
+  * Most of the remaining templates are now external. They will reside in their own repositories on GitHub and can be maintained separately to UIBUILDER.
+  * Templates now include a `tsconfig.json` file and a `/types` folder that describes the uibuilder client library. When writing front-end code, you should now get better code completion, descriptions and type checking.
+
+* The templates now all have an updated `<div id="more" uib-topic="more"></div>` element. While this has been a staple of the templates and examples for a while, the addition of the `uib-topic="more"` attribute means that you can now show the content of a msg.payload without having to write any JavaScript code. Don't forget to set `msg.topic` to `"more"` so that the uibuilder client library knows where to send the message.
+
+Don't forget to try loading the updated templates to see the improvements.
+
+### Documentation
+
+* **NEW** Section: "Creating Web UI's"
+  * **NEW** (Draft) Creating a web app - How to create a web app using UIBUILDER
+  * **NEW** Grid layouts - Creating a content-heavy grid layout using CSS Grid
+  * **NEW** Dashboard layouts - Creating a dashboard-style layout using CSS Grid
+  * **NEW** Forms: User input handling - Handling input using forms and other input elements
+  * _SOON_ Tables
+  * _SOON_ Charts
+  * _SOON_ Maps
+  * _SOON_ Articles
+  * _SOON_ Lists
+  * _SOON_ Cards
+
+Please let me know if you want to see other content in this section.
 
 ### `uib-brand.css` styles & variables
 
@@ -44,6 +67,7 @@ Please see the roadmap in the docs for the backlog of future planned development
 ### Runtime Plugin
 
 * **FIX** Error in `RED.util.uib.dp` that always returned a single decimal place if zero dp's were requested.
+* **NEW** `RED.util.uib.truthy(val)` - Returns true if the value is truthy. This is useful for checking if a value is set or not. See the details in the documentation.
 
 ### Node: `uibuilder`
 
