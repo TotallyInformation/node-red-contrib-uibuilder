@@ -3,7 +3,7 @@ title: Enhancements to the Node-RED function node
 description: |
   UIBUILDER adds some functional extensions to Node-RED's Function Node. This page describes them.
 created: 2024-06-14 20:53:10
-updated: 2025-01-03 15:16:23
+updated: 2025-05-27 17:25:31
 ---
 
 ## Send message to clients
@@ -116,3 +116,26 @@ const cb = (obj) => {
 RED.util.uib.deepObjFind(msg._ui, matcher, cb)
 ```
 
+
+## Truthy
+
+`RED.util.uib.truthy(inp)` returns TRUE if the input is "[truthy](https://developer.mozilla.org/en-US/docs/Glossary/Truthy)", otherwise FALSE.
+
+This function is also available in the uibuilder client library as `uibuilder.truthy(inp)` for use in your front-end code.
+
+### Parameters
+
+Any of following inputs will return TRUE:
+'on', 'On', 'ON', 'true', 'True', 'TRUE', '1', true, 1
+
+Any of following inputs will return FALSE:
+'off', 'Off', 'OFF', 'false', 'False', 'FALSE', '0', false, 0
+
+### Example
+
+```javascript
+// All these output TRUE
+node.warn( RED.util.uib.truthy("True") )
+node.warn( RED.util.uib.truthy("On") )
+node.warn( RED.util.uib.truthy(1) )
+```
