@@ -26,7 +26,7 @@
 
 //#region ----- Module level variables ---- //
 
-const fslib  = require('../libs/fs')   // File/folder handling library (by Totally Information)
+const fslib  = require('../libs/fs.cjs')   // File/folder handling library (by Totally Information)
 // const uiblib = require('../libs/uiblib')  // Utility library for uibuilder
 const { setNodeStatus } = require('../libs/uiblib')  // Utility library for uibuilder
 

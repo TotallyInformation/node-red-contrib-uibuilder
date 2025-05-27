@@ -1,5 +1,5 @@
 <!--
-    Copyright (c) 2017-2024 Julian Knight (Totally Information)
+    Copyright (c) 2017-2025 Julian Knight (Totally Information)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@
                     <label for="node-input-extTemplate"><i class="fa fa-globe"></i> External</label>
                     <input type="text" id="node-input-extTemplate" placeholder="totallyinformation/uib-template-test">
                 </div>
-    
+
                 <div aria-label="Button to load new template" class="form-row">
                     <label for="btn-load-template"></label>
                     <button class="btn" id="btn-load-template" title="Load selected template, overwriting existing files">
@@ -80,11 +80,9 @@
                     </button>
                 </div>
                 
+                <div aria-label="Template description" id="template-descr" style="max-width: var(--min-editor-panel-width);font-style:italic;"></div>
+                <hr>
                 <div aria-label="How to use the template selector" style="max-width: var(--min-editor-panel-width);">
-                    <p>
-                        By default, <span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> uses the default minimal template.
-                        If you wish to use a different template, select and load it here.
-                    </p>
                     <p>
                         Selecting a Template from the drop-down <b>does not</b> load the template.
                     </p>

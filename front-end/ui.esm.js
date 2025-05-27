@@ -13,7 +13,7 @@ var Ui = (_a = class {
    */
   constructor(win, extLog, jsonHighlight) {
     //#region --- Class variables ---
-    __publicField(this, "version", "7.2.0-src");
+    __publicField(this, "version", "7.3.0-src");
     // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
     __publicField(this, "sanitiseExtraTags", ["uib-var"]);
     __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -605,7 +605,7 @@ var Ui = (_a = class {
    */
   applyTemplate(sourceId, targetId, config) {
     if (!config) config = {};
-    if (!config.onlyOnce) config.onlyOnce = false;
+    if (!config.onceOnly) config.onceOnly = false;
     if (!config.mode) config.mode = "insert";
     const template = _a.doc.getElementById(sourceId);
     if (!template || template.tagName !== "TEMPLATE") {

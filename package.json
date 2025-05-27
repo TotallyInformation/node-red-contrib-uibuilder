@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "7.2.0",
+  "version": "7.3.0",
   "description": "Easily create data-driven web UI's for Node-RED. Single- & Multi-page. Multiple UI's. Work with existing web development workflows or mix and match with no-code/low-code features.",
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",
@@ -10,7 +10,8 @@
     "edit-docs": "%LOCALAPPDATA%/Programs/Typora/Typora.exe ./",
     "buildDocBundle": "node ./src/doc-bundle/build.js",
     "buildSidebar": "node ./bin/docsify-auto-sidebar.js",
-    "graph": "madge --image ./docs/dev/runtime-deps.svg ./nodes"
+    "graph": "madge --image ./docs/dev/runtime-deps.svg ./nodes",
+    "inspectEslintConfig": "npx @eslint/config-inspector@latest"
   },
   "dependencies": {
     "degit": "^2.8.4",

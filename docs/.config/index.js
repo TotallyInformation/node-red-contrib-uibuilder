@@ -137,7 +137,6 @@ window.$docsify = { //  eslint-disable-line no-undef
                 footer[3] = `Copyright &copy; ${strYr}`
 
                 return content
-
             }) // ------- End of Custom Plugin ------- //
 
             // Runs against the rendered HTML for each page
@@ -145,6 +144,12 @@ window.$docsify = { //  eslint-disable-line no-undef
                 html = html.replace(/UIBUILDER/g, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
                 next(html + footer.join(''))
             })
+
+            // Invoked on each page load after new HTML has been appended to the DOM
+            // hook.doneEach(() => {
+            //     // replace the <title> tag
+            //     document.title = document.title.replace(/<title>(.*?)<\/title>/, '<title>UIBUILDER: $1')
+            // })
         },
 
         // function toc(hook, vm) {

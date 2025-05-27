@@ -1,8 +1,10 @@
+/* eslint-disable jsdoc/valid-types */
+/* eslint-disable jsdoc/no-undefined-types */
 // @ts-nocheck
 /* eslint-disable no-irregular-whitespace */
 /** Define typedefs for linting and JSDoc/ts checks - does not actually contain live code
  *
- * Copyright (c) 2017-2024 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2025 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -184,6 +186,7 @@
  * @property {Function} util.uib.listAllApps : Return a list of all uibuilder instances
  * @property {Function} util.uib.dp : Return a formatted number using a specified locale and number of decimal places
  * @property {Function} util.uib.send : Send a message to a client via a uibuilder instance
+ * @property {Function} util.uib.truthy : Returns true/false or a default value for truthy/falsy and other values
  *
  * @property {object} plugins Node-RED plugins
  * @property {Function} plugins.registerPlugin : [Function: registerPlugin],
@@ -285,7 +288,7 @@
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
  *
- * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
+ * @property {string} instanceFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
  * @property {number} rcvMsgCount How many msg's received since last reset or redeploy?
  * @property {object} ioChannels The channel names for Socket.IO
@@ -560,6 +563,19 @@
  *   slotPropMarkdown: boolean;
  *   _ui: any;
  * }} uibUpdNode
+ */
+
+/** LibLowCodeNode (nodes/libs/low-code.js)
+ * @typedef {{
+ * _ui: any;
+ * elementId: string;
+ * parent: string;
+ * tag: string;
+ * position: string|number;
+ * slotPropMarkdown: boolean;
+ * slotContent: string;
+ * attribs: object;
+ * }} LibLowCodeNode
  */
 
 /** MsgAuth

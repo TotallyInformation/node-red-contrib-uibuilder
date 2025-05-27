@@ -28,7 +28,7 @@
  */
 
 const { join }     = require('path')
-const { existsSync, getFileMeta } = require('./fs')
+const { existsSync, getFileMeta } = require('./fs.cjs')
 const socketio = require('socket.io')
 const { urlJoin }    = require('./tilib')    // General purpose library (by Totally Information)
 const { setNodeStatus }   = require('./uiblib')   // Utility library for uibuilder
@@ -645,7 +645,7 @@ class UibSockets {
         switch (msg.uibuilderCtrl) { // eslint-disable-line sonarjs/no-small-switch
             case 'get page meta': {
                 // This returns the data straight back to the requesting client, does not output to port #2
-                getFileMeta(join(node.customFolder, node.sourceFolder, msg.pageName))
+                getFileMeta(join(node.instanceFolder, node.sourceFolder, msg.pageName))
                     .then( (fstats) => {
                         fstats.pageName = msg.pageName
                         // Send the details back to the FE

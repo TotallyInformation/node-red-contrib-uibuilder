@@ -25,7 +25,7 @@
 
 const express = require('express')
 const path = require('path')
-const fslib = require('./fs.js')
+const fslib = require('./fs.cjs')
 // const uiblib = require('./uiblib')  // Utility library for uibuilder
 const web = require('./web')
 const sockets = require('./socket')

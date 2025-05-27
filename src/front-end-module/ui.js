@@ -32,7 +32,7 @@
 
 const Ui = class Ui {
     //#region --- Class variables ---
-    version = '7.2.0-src'
+    version = '7.3.0-src'
 
     // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
     sanitiseExtraTags = ['uib-var']
@@ -846,7 +846,7 @@ const Ui = class Ui {
      */
     applyTemplate(sourceId, targetId, config) {
         if (!config) config = {}
-        if (!config.onlyOnce) config.onlyOnce = false
+        if (!config.onceOnly) config.onceOnly = false
         if (!config.mode) config.mode = 'insert'
 
         const template = Ui.doc.getElementById(sourceId)

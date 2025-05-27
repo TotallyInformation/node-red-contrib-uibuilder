@@ -26,7 +26,7 @@
  */
 
 const { join } = require('node:path')
-const { copy, copySync, existsSync, writeJson } = require('./fs.js')
+const { copy, copySync, existsSync, writeJson } = require('./fs.cjs')
 const { runOsCmd, runOsCmdSync } = require('./uiblib.js')
 
 class UibPackages {

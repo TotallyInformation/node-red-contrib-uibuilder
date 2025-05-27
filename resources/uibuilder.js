@@ -1,16 +1,16 @@
+/* eslint-disable @stylistic/newline-per-chained-call */
 // @ts-nocheck
-/* eslint-disable sonarjs/no-duplicate-string, es/no-object-values, strict */
 
 // Now loading as a module so no need to further Isolate this code
-//#region --------- module variables for the panel --------- //
+// #region --------- module variables for the panel --------- //
 
 // RED._debug({topic: 'RED.settings', payload:RED.settings})
 
 // NOTE: window.uibuilder is added by editor-common.js - see `resources` folder
-const uibuilder = window['uibuilder']
+const uibuilder = window['uibuilder'] // eslint-disable-line no-redeclare
 const log = uibuilder.log
 /** Module name must match this nodes html file @constant {string} moduleName */
-const moduleName  = 'uibuilder'
+const moduleName = 'uibuilder'
 
 /** Track which urls have been used - required for error handling in url validation. Only use for URL tracking */
 const editorInstances = uibuilder.editorUibInstances
@@ -27,20 +27,21 @@ let packages = uibuilder.packages
  * @property {boolean} fullscreen Is the editor in fullscreen mode?
  */
 const uiace = {
-    'format': 'html',
-    'folder': 'src',
-    'fname': 'index.html',
-    'fullscreen': false
+    format: 'html',
+    folder: 'src',
+    fname: 'index.html',
+    fullscreen: false,
 }
 /** placeholder for instance folder list
- * @type {Array<string>} */
+    @type {Array<string>}
+*/
 let folders = []
 
-//#endregion ------------------------------------------------- //
+// #endregion ------------------------------------------------- //
 
-//#region --------- module functions for the panel --------- //
+// #region --------- module functions for the panel --------- //
 
-//#region ==== Package Management Functions ==== //
+// #region ==== Package Management Functions ==== //
 
 /** Perform a call to the package update v3 API
  * @param {JQuery.ClickEvent<HTMLElement, undefined, HTMLElement, HTMLElement>} evt jQuery Click Event
@@ -74,12 +75,12 @@ function doPkgUpd(evt) {
             if (data.success === true) {
                 packages = uibuilder.packages = data.result[1]
 
-                console.log('[uibuilder:doPkgUpd:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
+                console.log('🌐[uibuilder:doPkgUpd:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
                 RED.notify(`Successful update of npm package ${packageName}`, 'success')
                 displayVer.innerHTML = data.result[1][packageName].installedVersion
                 $(evt.target).remove() // removes the update button
             } else {
-                console.log('[uibuilder:doPkgUpd:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ')
+                console.log('🌐[uibuilder:doPkgUpd:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ')
                 RED.notify(`FAILED update of npm package ${packageName}`, 'error')
             }
 
@@ -87,23 +88,23 @@ function doPkgUpd(evt) {
             $('i.spinner').hide()
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            console.error('[uibuilder:doPkgUpd:get] Error ' + textStatus, errorThrown)
+            console.error('🌐🛑[uibuilder:doPkgUpd:get] Error ' + textStatus, errorThrown)
             RED.notify(`FAILED update of npm package ${packageName}`, 'error')
 
             $('i.spinner').hide()
 
             return 'addPackageRow failed'
             // TODO otherwise highlight input
-        }
+        },
     })
 
     $.ajax({
         type: 'PUT',
         dataType: 'json',
-        url: './uibuilder/admin/' + evt.data.node.url,  // v3 api
+        url: './uibuilder/admin/' + evt.data.node.url, // v3 api
         data: {
-            'cmd': 'updatepackage',
-            'pkgName': evt.data.pkgName,
+            cmd: 'updatepackage',
+            pkgName: evt.data.pkgName,
         },
         beforeSend: function(jqXHR) {
             const authTokens = RED.settings.get('auth-tokens')
@@ -116,13 +117,15 @@ function doPkgUpd(evt) {
 
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-            console.error( '[uibuilder:doPkgUpd:PUT] Error ' + textStatus, errorThrown )
-            RED.notify(`uibuilder: Package update for '${evt.data.pkgName}' failed.<br>${errorThrown}`, { type: 'error' })
+            console.error( '🌐🛑[uibuilder:doPkgUpd:PUT] Error ' + textStatus, errorThrown )
+            RED.notify(`uibuilder: Package update for '${evt.data.pkgName}' failed.<br>${errorThrown}`, { type: 'error', })
         })
 
     // Assuming update worked, hide the button - And update version string
-    $(`#upd_${evt.data.pkgName}`).hide()
-        .next().text('XXX')
+    $(`#upd_${evt.data.pkgName}`)
+        .hide()
+        .next()
+        .text('XXX')
 }
 
 /** AddItem function for package list
@@ -132,11 +135,11 @@ function doPkgUpd(evt) {
  * @param {string|*} data data object for the row. {} if add button pressed, else data passed to addItem method
  */
 function addPackageRow(node, element, index, data) {
-    let hRow = ''; let pkgSpec = null
+    let hRow = ''
+    let pkgSpec = null
 
     if (Object.entries(data).length === 0) { // Add button was pressed so we have no packageName, create an input form instead
-
-        hRow  = `
+        hRow = `
             <div>
                 <label for="packageList-input-${index}" style="width:3em;">Name:</label>
                 <input type="text" id="packageList-input-${index}" title="" style="width:80%" placeholder="Valid npm package name">
@@ -169,7 +172,7 @@ function addPackageRow(node, element, index, data) {
         let upd = ''
         if ( pkgSpec.outdated && pkgSpec.outdated.wanted && pkgSpec.installedVersion !== pkgSpec.outdated.wanted ) {
             upd = `<button id="upd_${data}" style="color:orange;background-color:black;" title="Click to update (or install again to get a non-standard version)">UPDATE: ${pkgSpec.outdated.wanted}</button>`
-            $('#node-input-packageList').on('click', `#upd_${data}`, { pkgName: data, node: node }, doPkgUpd)
+            $('#node-input-packageList').on('click', `#upd_${data}`, { pkgName: data, node: node, }, doPkgUpd)
         }
 
         // addItem method was called with a packageName passed
@@ -202,11 +205,11 @@ function addPackageRow(node, element, index, data) {
     if (Object.entries(data).length === 0) {
         // @ts-expect-error ts(2339)
         $(`#packageList-input-${index}`).tooltip({
-            content: 'Enter one of:<ul><li>An npm package name (optionally with leading)</li><li>A GitHub user/repo</li><li>A filing system path to a local package</li></ul>Ensure that you select the correct "From" dropdown.'
+            content: 'Enter one of:<ul><li>An npm package name (optionally with leading)</li><li>A GitHub user/repo</li><li>A filing system path to a local package</li></ul>Ensure that you select the correct "From" dropdown.',
         })
         // @ts-expect-error ts(2339)
         $(`#packageList-ver-${index}`).tooltip({
-            content: 'Optional. Branch, Tag or Version to install (defaults to @latest)'
+            content: 'Optional. Branch, Tag or Version to install (defaults to @latest)',
         })
     }
 
@@ -245,17 +248,16 @@ function addPackageRow(node, element, index, data) {
                     if ( data.success === true) {
                         packages = uibuilder.packages = data.result[1]
 
-                        console.log('[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
+                        console.log('🌐[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
                         RED.notify(`Successful installation of npm package ${packageName} for ${node.url}`, 'success')
-                        RED._debug({ topic: 'UIBUILDER Library Install', result: 'success', payload: packageName, output: npmOutput })
+                        RED._debug({ topic: 'UIBUILDER Library Install', result: 'success', payload: packageName, output: npmOutput, })
 
                         // reset and populate the list
                         $('#node-input-packageList').editableList('empty')
                         // @ts-ignore
                         $('#node-input-packageList').editableList('addItems', Object.keys(packages))
-
                     } else {
-                        console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ' )
+                        console.log('🌐[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ' )
                         RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
                     }
 
@@ -263,12 +265,12 @@ function addPackageRow(node, element, index, data) {
                     $('i.spinner').hide()
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-                    console.log('[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', textStatus, '\n ', errorThrown, '\n ' )
+                    console.log('🌐[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', textStatus, '\n ', errorThrown, '\n ' )
                     RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
-                }
+                },
             })
                 .fail(function(_jqXHR, textStatus, errorThrown) {
-                    console.error( '[uibuilder:addPackageRow:get] Error ' + textStatus, errorThrown )
+                    console.error( '🌐🛑[uibuilder:addPackageRow:get] Error ' + textStatus, errorThrown )
                     RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
 
                     $('i.spinner').hide()
@@ -284,7 +286,6 @@ function addPackageRow(node, element, index, data) {
  * @returns {string|null} Result text
  */
 function removePackageRow(packageName) {
-
     // If package name is an empty object - user removed an add row so ignore
     if ( (packageName === '') || (typeof packageName !== 'string') ) {
         return 'No package'
@@ -310,13 +311,12 @@ function removePackageRow(packageName) {
             }
         },
         success: function(data) {
-
             if ( data.success === true) {
-                console.log('[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
+                console.log('🌐[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
                 RED.notify('Successfully uninstalled npm package ' + packageName, 'success')
                 if ( packages[packageName] ) delete packages[packageName]
             } else {
-                console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
+                console.log('🌐[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
                 RED.notify(`FAILED to uninstall npm package ${packageName}`, 'error')
                 // Put the entry back again
                 $('#node-input-packageList').editableList('addItem', packageName)
@@ -325,12 +325,12 @@ function removePackageRow(packageName) {
             $('i.spinner').hide()
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            console.log('[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', packageName, '\n\n', textStatus, '\n ', errorThrown, '\n ' )
+            console.log('🌐[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', packageName, '\n\n', textStatus, '\n ', errorThrown, '\n ' )
             RED.notify(`FAILED to uninstall npm package ${packageName}`, 'error')
-        }
+        },
     })
         .fail(function(_jqXHR, textStatus, errorThrown) {
-            console.error( '[uibuilder:removePackageRow:get] Error ' + textStatus, errorThrown )
+            console.error( '🌐🛑[uibuilder:removePackageRow:get] Error ' + textStatus, errorThrown )
             RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
 
             // Put the entry back again
@@ -345,9 +345,9 @@ function removePackageRow(packageName) {
     return null
 } // ---- End of removePackageRow ---- //
 
-//#endregion ==== Package Management Functions ==== //
+// #endregion ==== Package Management Functions ==== //
 
-//#region ==== File Management Functions ==== //
+// #region ==== File Management Functions ==== //
 
 /** Return a file type from a file name (or default to txt)
  *  ftype can be used in ACE editor modes
@@ -361,7 +361,6 @@ function fileType(fname) {
     if ( fparts[0] === '' ) fparts.shift()
     if (fparts.length > 1) {
         // Get the last element of the array
-        // eslint-disable-next-line newline-per-chained-call
         const fext = fparts.pop().toLowerCase().trim()
         switch (fext) {
             case 'js':
@@ -421,15 +420,15 @@ function getFileContents() {
     const url = $('#node-input-url').val()
 
     /** Get the chosen folder name - use the default/last saved on first load
-     * @type {string} */
-    // @ts-ignore
+     * @type {string}
+     */
     let folder = $('#node-input-folder').val()
     if ( folder === null ) {
         folder = localStorage.getItem('uibuilder.' + url + '.folder') || uiace.folder
     }
     /** Get the chosen filename - use the default/last saved on first load
-     * @type {string} */
-    // @ts-ignore
+     * @type {string}
+     */
     let fname = $('#node-input-filename').val()
     if ( fname === null ) {
         fname = localStorage.getItem('uibuilder.' + url + '.selectedFile') || uiace.fname
@@ -452,9 +451,9 @@ function getFileContents() {
         url: 'uibuilder/uibgetfile',
         method: 'GET',
         data: { // converted to URL parameters
-            'url': url,
-            'fname': fname,
-            'folder': folder,
+            url: url,
+            fname: fname,
+            folder: folder,
         },
         beforeSend: function(jqXHR) {
             const authTokens = RED.settings.get('auth-tokens')
@@ -469,7 +468,7 @@ function getFileContents() {
             uiace.editorSession.setValue(data)
             // Set the editor file mode
             uiace.editorSession.setMode({
-                path: 'ace/mode/' + filetype, v: Date.now()
+                path: 'ace/mode/' + filetype, v: Date.now(),
             })
             // Mark the current session as clean
             uiace.editorSession.getUndoManager().isClean()
@@ -478,7 +477,7 @@ function getFileContents() {
         },
     })
         .fail(function(_jqXHR, textStatus, errorThrown) {
-            console.error( '[uibuilder:getFileContents:get] Error ' + textStatus, errorThrown )
+            console.error( '🌐🛑[uibuilder:getFileContents:get] Error ' + textStatus, errorThrown )
             uiace.editorSession.setValue('')
             $('#node-input-template-editor').hide()
             $('#node-input-template-editor-no-file').show()
@@ -494,14 +493,14 @@ function getFileContents() {
  * @param {string} [selectedFile] Optional. If present will select this filename after refresh, otherwise 1st file is selected.
  */
 function getFileList(selectedFile) {
-    //#region --- Collect variables from Config UI ---
+    // #region --- Collect variables from Config UI ---
     const url = /** @type {string} */ ($('#node-input-url').val())
     let folder = /** @type {string} */ ($('#node-input-folder').val())
     const f = /** @type {string} */ ($('#node-input-filename').val())
 
     // Whether or not to force the index.(html|js|css) files to be copied over if missing
     // var nodeInputCopyIndex = $('#node-input-copyIndex').is(':checked')
-    //#endregion -------------------------------------
+    // #endregion -------------------------------------
 
     // Collect the current filename from various places
     if ( selectedFile === undefined ) selectedFile = /** @type {string} */ (f)
@@ -523,7 +522,7 @@ function getFileList(selectedFile) {
         dataType: 'json',
         url: './uibuilder/admin/' + url,
         data: {
-            'cmd': 'listall',
+            cmd: 'listall',
         },
         beforeSend: function(jqXHR) {
             const authTokens = RED.settings.get('auth-tokens')
@@ -532,9 +531,10 @@ function getFileList(selectedFile) {
             }
         },
     })
-        // eslint-disable-next-line no-unused-vars
         .done(function(data, _textStatus, jqXHR) {
-            let firstFile = ''; let indexHtml = false; let selected = false
+            let firstFile = ''
+            let indexHtml = false
+            let selected = false
 
             // build folder list, pre-select src if no current folder selected #node-input-folder - Object.keys(res)
             const folders = Object.keys(data).sort()
@@ -585,20 +585,16 @@ function getFileList(selectedFile) {
             uiace.format = fileType(uiace.fname)
             // Persist the file name selection
             localStorage.setItem('uibuilder.' + url + '.selectedFile', uiace.fname)
-
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-
-            console.error( '[uibuilder:getFileList:getJSON] Error ' + textStatus, errorThrown )
+            console.error( '🌐🛑[uibuilder:getFileList:getJSON] Error ' + textStatus, errorThrown )
             uiace.fname = ''
             uiace.format = 'text'
-            RED.notify(`uibuilder: Folder and file listing error.<br>${errorThrown}`, { type: 'error' })
-
+            RED.notify(`uibuilder: Folder and file listing error.<br>${errorThrown}`, { type: 'error', })
         })
         .always(function() {
             getFileContents()
         })
-
 } // --- End of getFileList --- //
 
 /** Get a full list of instance folders (minus protected ones). Updates folders global var. */
@@ -611,7 +607,7 @@ function getFolders() {
         dataType: 'json',
         url: './uibuilder/admin/' + url,
         data: {
-            'cmd': 'listfolders',
+            cmd: 'listfolders',
         },
         beforeSend: function(jqXHR) {
             const authTokens = RED.settings.get('auth-tokens')
@@ -629,7 +625,7 @@ function getFolders() {
                 value: 'sourceFolders',
                 options: folders,
             }
-        ]
+        ],
     })
 } // --- End of getFolders --- //
 
@@ -646,8 +642,8 @@ function createNewFolder(folder) {
         dataType: 'json',
         url: `./uibuilder/admin/${url}`,
         data: {
-            'folder': folder,
-            'cmd': 'newfolder',
+            folder: folder,
+            cmd: 'newfolder',
         },
         beforeSend: function(jqXHR) {
             const authTokens = RED.settings.get('auth-tokens')
@@ -657,7 +653,7 @@ function createNewFolder(folder) {
         },
     })
         .done(function() { // data, textStatus, jqXHR) {
-            RED.notify(`uibuilder: Folder <code>${folder}</code> Created.`, { type: 'success' })
+            RED.notify(`uibuilder: Folder <code>${folder}</code> Created.`, { type: 'success', })
             // Rebuild the file list
             getFileList()
             // Rebuild the folder list
@@ -666,7 +662,7 @@ function createNewFolder(folder) {
             return 'Create folder succeeded'
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-            RED.notify(`uibuilder: Create Folder Error.<br>${errorThrown}`, { type: 'error' })
+            RED.notify(`uibuilder: Create Folder Error.<br>${errorThrown}`, { type: 'error', })
             return 'Create folder failed'
         })
 } // --- End of createNewFile --- //
@@ -685,9 +681,9 @@ function createNewFile(fname) {
         dataType: 'json',
         url: `./uibuilder/admin/${url}`,
         data: {
-            'folder': folder,
-            'fname': fname,
-            'cmd': 'newfile',
+            folder: folder,
+            fname: fname,
+            cmd: 'newfile',
         },
         beforeSend: function(jqXHR) {
             const authTokens = RED.settings.get('auth-tokens')
@@ -697,15 +693,15 @@ function createNewFile(fname) {
         },
     })
         .done(function() { // data, textStatus, jqXHR) {
-            RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Created.`, { type: 'success' })
+            RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Created.`, { type: 'success', })
             // Rebuild the file list
             getFileList(fname)
 
             return 'Create file succeeded'
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-            console.error( '[uibuilder:createNewFile:post] Error ' + textStatus, errorThrown )
-            RED.notify(`uibuilder: Create File Error.<br>${errorThrown}`, { type: 'error' })
+            console.error( '🌐🛑[uibuilder:createNewFile:post] Error ' + textStatus, errorThrown )
+            RED.notify(`uibuilder: Create File Error.<br>${errorThrown}`, { type: 'error', })
             return 'Create file failed'
         })
 } // --- End of createNewFile --- //
@@ -723,8 +719,8 @@ function deleteFolder() {
         dataType: 'json',
         url: `./uibuilder/admin/${url}`,
         data: {
-            'folder': folder,
-            'cmd': 'deletefolder',
+            folder: folder,
+            cmd: 'deletefolder',
         },
         beforeSend: function(jqXHR) {
             const authTokens = RED.settings.get('auth-tokens')
@@ -734,18 +730,17 @@ function deleteFolder() {
         },
     })
         .done(function() { // data, textStatus, jqXHR) {
-            RED.notify(`uibuilder: Folder <code>${folder}</code> deleted.`, { type: 'success' })
+            RED.notify(`uibuilder: Folder <code>${folder}</code> deleted.`, { type: 'success', })
             // Rebuild the file list
             getFileList()
 
             return 'Delete folder succeeded'
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-            console.error( '[uibuilder:deleteFolder:delete] Error ' + textStatus, errorThrown )
-            RED.notify(`uibuilder: Delete Folder Error.<br>${errorThrown}`, { type: 'error' })
+            console.error( '🌐🛑[uibuilder:deleteFolder:delete] Error ' + textStatus, errorThrown )
+            RED.notify(`uibuilder: Delete Folder Error.<br>${errorThrown}`, { type: 'error', })
             return 'Delete folder failed'
         })
-
 } // --- End of deleteFolder --- //
 
 /** Call v3 admin API to delete the currently selected file
@@ -762,9 +757,9 @@ function deleteFile() {
         dataType: 'json',
         url: `./uibuilder/admin/${url}`,
         data: {
-            'folder': folder,
-            'fname': fname,
-            'cmd': 'deletefile',
+            folder: folder,
+            fname: fname,
+            cmd: 'deletefile',
         },
         beforeSend: function(jqXHR) {
             const authTokens = RED.settings.get('auth-tokens')
@@ -774,18 +769,17 @@ function deleteFile() {
         },
     })
         .done(function() { // data, textStatus, jqXHR) {
-            RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Deleted.`, { type: 'success' })
+            RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Deleted.`, { type: 'success', })
             // Rebuild the file list
             getFileList(fname)
 
             return 'Delete file succeeded'
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-            console.error( '[uibuilder:deleteFile:delete] Error ' + textStatus, errorThrown )
-            RED.notify(`uibuilder: Delete File Error.<br>${errorThrown}`, { type: 'error' })
+            console.error( '🌐🛑[uibuilder:deleteFile:delete] Error ' + textStatus, errorThrown )
+            RED.notify(`uibuilder: Delete File Error.<br>${errorThrown}`, { type: 'error', })
             return 'Delete file failed'
         })
-
 } // --- End of deleteFile --- //
 
 /** Set the height of the ACE text editor box */
@@ -829,7 +823,7 @@ function setACEheight() {
 
         // subtract height of each row from the total
         for (let i = 0; i < rows.length; i++) {
-            height -= $(rows[i]).outerHeight(true) // eslint-disable-line no-unused-vars
+            height -= $(rows[i]).outerHeight(true)
         }
 
         // Set the height of the edit box - no longer needed, using calc CSS
@@ -848,10 +842,10 @@ function saveFile() {
     // NOTE: Cannot use jQuery POST function as it sets headers node trigger a CORS error. Do it using native requests only.
     // Clients will be reloaded if the reload checkbox is set.
     const request = new XMLHttpRequest()
-    const params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val() +
-        '&url=' + $('#node-input-url').val() +
-        '&reload=' + $('#node-input-reload').prop('checked') +
-        '&data=' + encodeURIComponent(uiace.editorSession.getValue())
+    const params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val()
+        + '&url=' + $('#node-input-url').val()
+        + '&reload=' + $('#node-input-reload').prop('checked')
+        + '&data=' + encodeURIComponent(uiace.editorSession.getValue())
     request.open('POST', 'uibuilder/uibputfile', true)
     request.onreadystatechange = function() {
         if (this.readyState === XMLHttpRequest.DONE) {
@@ -900,9 +894,9 @@ function vscodeLink(node) {
     }
 }
 
-//#endregion ==== File Management Functions ==== //
+// #endregion ==== File Management Functions ==== //
 
-//#region ==== Validation Functions ==== //
+// #region ==== Validation Functions ==== //
 // These are called on editor load & node added to flow as well as on form change
 // Use `$('#node-input-url').length > 0` to check if form exists
 
@@ -910,7 +904,7 @@ function vscodeLink(node) {
  * @param {object} node Pass in this
  */
 function updateDeployedInstances(node) {
-    uibuilder.deployedUibInstances =  uibuilder.getDeployedUrls()
+    uibuilder.deployedUibInstances = uibuilder.getDeployedUrls()
     if ( node ) node.isDeployed = uibuilder.deployedUibInstances[node.id] !== undefined
 }
 
@@ -927,7 +921,7 @@ function queryFolderExists(url) {
         dataType: 'json',
         url: `./uibuilder/admin/${url}`,
         data: {
-            'cmd': 'checkfolder',
+            cmd: 'checkfolder',
         },
         beforeSend: function(jqXHR) {
             const authTokens = RED.settings.get('auth-tokens')
@@ -940,7 +934,7 @@ function queryFolderExists(url) {
         },
         error: function(jqXHR, textStatus, errorThrown) {
             if (errorThrown !== 'Not Found') {
-                console.error( '[uibuilder:queryFolderExists] Error ' + textStatus, errorThrown )
+                console.error( '🌐🛑[uibuilder:queryFolderExists] Error ' + textStatus, errorThrown )
             }
             check = false
         },
@@ -958,13 +952,13 @@ function enableEdit(urlErrors, enable = true) {
         $('#node-input-templateFolder, #btn-load-template')
             .prop('disabled', false)
             .css({
-                'cursor': 'pointer',
+                cursor: 'pointer',
             })
 
         // Enable tabs and links
         $('#red-ui-tab-tab-files, #red-ui-tab-tab-libraries, #red-ui-tab-tab-security, #red-ui-tab-tab-advanced, info')
             .css({
-                'cursor': 'pointer',
+                cursor: 'pointer',
             })
         $('#red-ui-tab-tab-files>a, #red-ui-tab-tab-libraries>a, #red-ui-tab-tab-security>a, #red-ui-tab-tab-advanced>a, info>a')
             .prop('disabled', false)
@@ -979,8 +973,8 @@ function enableEdit(urlErrors, enable = true) {
             .prop('disabled', false)
             .css({
                 // 'pointer-events': 'auto',
-                'cursor': 'pointer',
-                'opacity': 1,
+                cursor: 'pointer',
+                opacity: 1,
             })
 
         // Clear the errors
@@ -990,13 +984,13 @@ function enableEdit(urlErrors, enable = true) {
         $('#node-input-templateFolder, #btn-load-template')
             .prop('disabled', true)
             .css({
-                'cursor': 'not-allowed',
+                cursor: 'not-allowed',
             })
 
         // Disable tabs and links
         $('#red-ui-tab-tab-files, #red-ui-tab-tab-libraries, #red-ui-tab-tab-security, #red-ui-tab-tab-advanced, info')
             .css({
-                'cursor': 'not-allowed',
+                cursor: 'not-allowed',
             })
         $('#red-ui-tab-tab-files>a, #red-ui-tab-tab-libraries>a, #red-ui-tab-tab-security>a, #red-ui-tab-tab-advanced>a, info>a')
             .prop('disabled', true)
@@ -1011,8 +1005,8 @@ function enableEdit(urlErrors, enable = true) {
             .prop('disabled', true)
             .css({
                 // 'pointer-events': 'none',
-                'cursor': 'not-allowed',
-                'opacity': 0.3,
+                cursor: 'not-allowed',
+                opacity: 0.3,
             })
 
         // Show the errors
@@ -1029,7 +1023,7 @@ function enableEdit(urlErrors, enable = true) {
  * @param {*} node Reference to node definition
  * @param {*} value Value
  */
-function debugUrl(node, value) { // eslint-disable-line no-unused-vars
+function debugUrl(node, value) {
     if (!uibuilder.debug) return
 
     console.groupCollapsed(`>> validateUrl >> ${node.id}`)
@@ -1051,12 +1045,11 @@ function debugUrl(node, value) { // eslint-disable-line no-unused-vars
  * @param {string} value The url value to validate
  * @returns {boolean} true = valid
  * @this {*}
- **/
+ */
 function validateUrl(value) {
     if ($('#node-input-url').is(':visible')) {
         // Update the DEPLOYED instances list (also updates this.isDeployed) - not needed on Editor load
         updateDeployedInstances(this)
-        // console.log(this.url, '#node-input-url IS VISIBLE. ', 'Changed? ', this.changed)
     }
 
     // this.urlValid = false
@@ -1077,8 +1070,8 @@ function validateUrl(value) {
 
     // Must be >0 chars
     if ( value === undefined || value === '' ) {
-        this.urlErrors.none = 'Must not be empty' }
-    else { // These will fail for empty value
+        this.urlErrors.none = 'Must not be empty'
+    } else { // These will fail for empty value
         // Max 20 chars
         if ( value.length > 20 ) {
             this.urlErrors.len = 'Too long, must be <= 20 chars'
@@ -1095,22 +1088,16 @@ function validateUrl(value) {
             this.urlErrors.bslash = 'Cannot contain <code>\\</code>'
         }
         // Cannot contain spaces
-        if ( value.indexOf(' ') !== -1 ) {
-            this.urlErrors.sp = 'Cannot contain spaces' }
+        if ( value.indexOf(' ') !== -1 ) this.urlErrors.sp = 'Cannot contain spaces'
         // Cannot start with _ or .
-        if ( value.substring(0, 1) === '_' ) {
-            this.urlErrors.strtU = 'Cannot start with <code>_</code> (underscore)' }
-        if ( value.substring(0, 1) === '.' ) {
-            this.urlErrors.strtDot = 'Cannot start with <code>.</code> (dot)' }
+        if ( value.substring(0, 1) === '_' ) this.urlErrors.strtU = 'Cannot start with <code>_</code> (underscore)'
+        if ( value.substring(0, 1) === '.' ) this.urlErrors.strtDot = 'Cannot start with <code>.</code> (dot)'
         // Cannot be 'templates' as this is a reserved value (for v2)
-        if ( value.toLowerCase().substring(0, 9) === 'templates' ) {
-            this.urlErrors.templ = 'Cannot be "templates"' }
+        if ( value.toLowerCase().substring(0, 9) === 'templates' ) this.urlErrors.templ = 'Cannot be "templates"'
         // Cannot be 'common' as this is a reserved value
-        if ( value.toLowerCase().substring(0, 9) === 'common' ) {
-            this.urlErrors.templ = 'Cannot be "common"' }
+        if ( value.toLowerCase().substring(0, 9) === 'common' ) this.urlErrors.templ = 'Cannot be "common"'
         // Must not be `uibuilder` (breaking change in v5)
-        if ( value.toLowerCase() === 'uibuilder' ) {
-            this.urlErrors.uibname = 'Cannot be "uibuilder" (since v5)' }
+        if ( value.toLowerCase() === 'uibuilder' ) this.urlErrors.uibname = 'Cannot be "uibuilder" (since v5)'
     }
 
     // TODO ?MAYBE? Notify's shouldn't be here - only needed if "Done" (or event change)
@@ -1134,7 +1121,7 @@ function validateUrl(value) {
         /** If the folder already exists but not in another node */
         if ( this.urlEditorDup === false && this.folderExists === true && this.urlChanged === true ) {
             log('>> folder already exists >>', this.url, this.id)
-            RED.notify(`<b>WARNING</b>: <p>The folder for the chosen URL (${value}) is already exists.<br>It will be adopted by this node.</p>`, { type: 'warning' })
+            RED.notify(`<b>WARNING</b>: <p>The folder for the chosen URL (${value}) is already exists.<br>It will be adopted by this node.</p>`, { type: 'warning', })
         }
 
         if ( this.folderExists === false ) {
@@ -1146,7 +1133,7 @@ function validateUrl(value) {
     if ( this.isDeployed && this.deployedUrlChanged === true ) {
         log('[uib] >> deployed url changed >> this.url:', this.url, ', this.oldUrl:', this.oldUrl, this.id)
         this.urlErrors.warnChange = `Renaming from ${this.url} to ${value}. <b>MUST</b> redeploy now`
-        RED.notify(`<b>NOTE</b>: <p>You are renaming the url from ${this.url} to ${value}.<br>You <b>MUST</b> redeploy before doing anything else.</p>`, { type: 'warning' })
+        RED.notify(`<b>NOTE</b>: <p>You are renaming the url from ${this.url} to ${value}.<br>You <b>MUST</b> redeploy before doing anything else.</p>`, { type: 'warning', })
     }
 
     // Process panel display for valid/invalid URL - NB repeated once in oneditprepare cause 1st time this is called, the panel doesn't yet exist
@@ -1165,7 +1152,7 @@ function validateUrl(value) {
     // debugUrl(this, value)
 
     // Add exception if the only error is that the fldr doesn't yet exist
-    if ( Object.keys(this.urlErrors).length === 1 &&  this.urlErrors.fldNotExist ) {
+    if ( Object.keys(this.urlErrors).length === 1 && this.urlErrors.fldNotExist ) {
         this.okToGo = true
         return true
     }
@@ -1177,7 +1164,7 @@ function validateUrl(value) {
  * If security is on, must contain a number
  * @returns {boolean} true = valid, false = not valid
  * @this {*}
- **/
+ */
 // function validateSessLen() {
 //     // NB: `this` is the node instance configuration as at last press of Done
 //     // TODO: Add display comment to help user
@@ -1194,7 +1181,7 @@ function validateUrl(value) {
 /** Validation Function: Validate the jwtSecret property
  * If security is on, must contain text
  * @returns {boolean} true = valid, false = not valid
- **/
+ */
 // function validateSecret() { // eslint-disable-line no-unused-vars
 //     // NB: `this` is the node instance configuration as at last press of Done
 //     // TODO: Add display comment to help user
@@ -1230,9 +1217,9 @@ function validateVersion() {
     return true
 }
 
-//#endregion ==== Validation Functions ==== //
+// #endregion ==== Validation Functions ==== //
 
-//#region ==== Template Management Functions ==== //
+// #region ==== Template Management Functions ==== //
 
 /** Populate the template selection dropdown
  * Uses a file that is `require`d in uibuilder.js
@@ -1246,11 +1233,11 @@ function populateTemplateDropdown(node) {
     if ( RED.settings && RED.settings.uibuilderTemplates ) {
         uibuilderTemplates = RED.settings.uibuilderTemplates
     } else {
-        console.error(`[uibuilder:populateTemplateDropdown] Cannot access RED.settings for node ${node.id}`)
+        console.error(`🌐🛑[uibuilder:populateTemplateDropdown] Cannot access RED.settings for node ${node.id}`)
     }
 
     // Load each option - first entry will be the default
-    Object.values(uibuilderTemplates).forEach( templ => { // eslint-disable-line es/no-object-values
+    Object.values(uibuilderTemplates).forEach( (templ) => {
         // Build the drop-down
         $('#node-input-templateFolder').append($('<option>', {
             value: templ.folder,
@@ -1274,19 +1261,22 @@ function populateTemplateDropdown(node) {
 
 /** Check whether the currently selected template's npm dependencies are installed
  * If not, warn the user to install them.
+ * @returns {object|null} The template object or null if not found
  */
 function checkDependencies() {
     const folder = /** @type {string} */ ($('#node-input-templateFolder').val())
 
-    if ( !RED.settings.uibuilderTemplates[folder] ) {
-        console.error(`[uibuilder:checkDependencies] Template name not found: ${folder}`)
-        return
+    const template = RED.settings.uibuilderTemplates[folder]
+
+    if ( !template) {
+        console.error(`🌐🛑[uibuilder:checkDependencies] Template name not found: ${folder}`)
+        return null
     }
 
-    const deps = RED.settings.uibuilderTemplates[folder].dependencies || []
+    const deps = template.dependencies || []
     const missing = []
 
-    deps.forEach( depName => {
+    deps.forEach( (depName) => {
         if ( !packages[depName] ) missing.push(depName)
     })
 
@@ -1301,18 +1291,21 @@ function checkDependencies() {
                     class: 'primary',
                     click: function() { // (e) {
                         myNotification.close()
-                    }
+                    },
                 }
-            ]
+            ],
         })
     }
 
+    return template
 } // --- end of function checkDependencies --- //
 
-/** Load a template */
-function loadTemplate() {
+/** Load a template
+ * @param {object} myNotification The notification object so we can close it if needed
+ */
+function loadTemplate(myNotification) {
     // Get the current file, folder & url
-    const template = $('#node-input-templateFolder').val()
+    const templateFolder = $('#node-input-templateFolder').val()
     const extTemplate = $('#node-input-extTemplate').val()
     const url = $('#node-input-url').val()
     const reload = $('#node-input-reload').prop('checked')
@@ -1322,11 +1315,11 @@ function loadTemplate() {
         dataType: 'json',
         url: `./uibuilder/admin/${url}`,
         data: {
-            'template': template,
-            'extTemplate': extTemplate,
-            'cmd': 'replaceTemplate',
-            'reload': reload,
-            'url': url,
+            template: templateFolder,
+            extTemplate: extTemplate,
+            cmd: 'replaceTemplate',
+            reload: reload,
+            url: url,
         },
         beforeSend: function(jqXHR) {
             const authTokens = RED.settings.get('auth-tokens')
@@ -1336,12 +1329,12 @@ function loadTemplate() {
         },
     })
         .done(function(data, textStatus, jqXHR) {
-            RED.notify(`<b>uibuilder</b>:<br><br>${jqXHR.statusText}<br>`, { type: 'success' })
+            RED.notify(`<b>uibuilder</b>:<br><br>${jqXHR.statusText}<br>`, { type: 'success', })
             return 'Template load succeeded'
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-            console.error( '[uibuilder:loadTemplate] Error ' + textStatus, errorThrown )
-            RED.notify(`<b>uibuilder</b>:<br><br>Template Load Error.<br><br>${errorThrown}<br>`, { type: 'error' })
+            console.error( '🌐🛑[uibuilder:loadTemplate] Error ' + textStatus, errorThrown )
+            RED.notify(`<b>uibuilder</b>:<br><br>Template Load Error.<br><br>${errorThrown}<br>`, { type: 'error', })
             return 'Template load failed'
         })
 } // --- End of loadTemplate() --- //
@@ -1364,20 +1357,51 @@ function btnTemplate() {
                     class: 'primary',
                     click: function() { // (e) {
                         myNotification.close()
-                    }
+                    },
                 },
                 {
                     text: 'OK, overwrite',
                     // class:"primary",
                     click: function() { // (e) {
-                        loadTemplate()
+                        loadTemplate(myNotification)
                         myNotification.close()
-                    }
+                    },
                 }
-            ]
+            ],
         }
     )
 } // --- End of btnTemplate() --- //
+
+/** Handle a template dropdown change
+ * @param {object} templateDetails The template details object
+ */
+function templateChange(templateDetails) {
+    const elLocation = $('#node-input-extTemplate')
+    const etInput = $('#et-input')
+    // If template.location is not empty, show the location but make it read only
+    if ( templateDetails && templateDetails.location ) {
+        elLocation
+            .val(templateDetails.location)
+            .prop('readonly', true)
+        etInput.show()
+        // .css('background-color', '#eee')
+    } else if ( $('#node-input-templateFolder').val() === 'external' ) {
+        // Unhide the external template name input if external selected
+        elLocation
+            .val('')
+            .prop('readonly', false)
+        etInput.show()
+    } else {
+        // Reset and hide the external template name input
+        elLocation
+            .val('')
+            .prop('readonly', false)
+        etInput.hide()
+        // .css('background-color', '#fff')
+    }
+    // Show the template description
+    if ( templateDetails && templateDetails.description ) $('#template-descr').html(templateDetails.description)
+}
 
 /** Configure the template dropdown & setup button handlers (called from onEditPrepare)
  * @param {object} node A reference to the panel's `this` object
@@ -1393,24 +1417,21 @@ function templateSettings(node) {
             $('#show-templ-props').html('<i class="fa fa-caret-right"></i> Template Settings')
         }
     })
+
     // Populate the template selection drop-down and select default (in advanced)
     populateTemplateDropdown(node)
-    checkDependencies()
-    // Unhide the external template name input if external selected
-    if ( $('#node-input-templateFolder').val() === 'external' ) $('#et-input').show()
-    // Handle change of template
+
+    // Handle change of template - NB: Change also happens when panel is opened.
     $('#node-input-templateFolder').on('change', function() { // (e) {
         // update the help tip
-        if ( RED.settings.uibuilderTemplates[node.templateFolder] ) {
-            $('#node-templSel-info').text(RED.settings.uibuilderTemplates[node.templateFolder].description) }
-        // Check if the dependencies are installed, warn if not
-        checkDependencies()
-        // Unhide the external template name input if external selected
-        if ( $('#node-input-templateFolder').val() === 'external' ) {
-            $('#et-input').show() }
-        else {
-            $('#et-input').hide() }
+        if ( RED.settings.uibuilderTemplates[node.templateFolder] )
+            $('#node-templSel-info').text(RED.settings.uibuilderTemplates[node.templateFolder].description)
+        // Check if the dependencies are installed, warn if not + return the template details
+        const templateDetails = checkDependencies()
+        // Show the template location if needed
+        templateChange(templateDetails)
     })
+
     // Button press for loading new template
     $('#btn-load-template').on('click', function(e) {
         e.preventDefault() // don't trigger normal click event
@@ -1418,7 +1439,7 @@ function templateSettings(node) {
     })
 }
 
-//#endregion ==== Template Management Functions ==== //
+// #endregion ==== Template Management Functions ==== //
 
 /** Set initial hidden & checkbox states (called from onEditPrepare)
  * @param {object} node A reference to the panel's `this` object
@@ -1442,7 +1463,8 @@ function setInitialStates(node) {
  */
 function showServerInUse(node) {
     $('#uib-svr-type').text(uibuilder.serverType)
-    $('#uib-svr').text(uibuilder.urlPrefix).attr('href', `${uibuilder.urlPrefix}${node.url}`)
+    $('#uib-svr').text(uibuilder.urlPrefix)
+        .attr('href', `${uibuilder.urlPrefix}${node.url}`)
 
     $('#uib-svr-fldr').empty()
     if (node.url) {
@@ -1497,21 +1519,21 @@ function tabFiles(node) {
         uiace.editor = RED.editor.createEditor({
             id: 'node-input-template-editor',
             mode: 'ace/mode/' + uiace.format,
-            value: node.template
+            value: node.template,
         })
         // Keep a reference to the current editor session
         uiace.editorSession = uiace.editor.getSession()
         /** If the editor has changes, enable the save & reset buttons
          * using input event instead of change since it's called with some timeout
          * which is needed by the undo (which takes some time to update)
-         **/
+         */
         uiace.editor.on('input', function() {
             // Is the editor clean?
             fileIsClean(uiace.editorSession.getUndoManager().isClean())
         })
         /* uiace.editorSession.on('change', function(delta) {
             // delta.start, delta.end, delta.lines, delta.action
-            console.log('ACE Editor CHANGE Event', delta)
+            console.log('🌐ACE Editor CHANGE Event', delta)
         }) */
         uiace.editorLoaded = true
 
@@ -1581,7 +1603,9 @@ function prepTabs(node) {
         collapsible: false,
         onchange: function(tab) {
             // Show only the content (i.e. the children) of the selected tabsheet, and hide the others
-            $('#tabs-content').children().hide() // eslint-disable-line newline-per-chained-call
+            $('#tabs-content')
+                .children()
+                .hide()
             $('#' + tab.id).show()
 
             // ? Could move these to their own show event. Might even unload some stuff on hide?
@@ -1604,11 +1628,11 @@ function prepTabs(node) {
         },
     })
 
-    tabs.addTab({ id: 'tab-core',      label: 'Core'      })
-    tabs.addTab({ id: 'tab-files',     label: 'Files'     })
-    tabs.addTab({ id: 'tab-libraries', label: 'Libraries' })
+    tabs.addTab({ id: 'tab-core', label: 'Core', })
+    tabs.addTab({ id: 'tab-files', label: 'Files', })
+    tabs.addTab({ id: 'tab-libraries', label: 'Libraries', })
     // tabs.addTab({ id: 'tab-security',  label: 'Security'  })
-    tabs.addTab({ id: 'tab-advanced',  label: 'Advanced'  })
+    tabs.addTab({ id: 'tab-advanced', label: 'Advanced', })
 } // ---- End of preTabs ---- //
 
 /** File Editor */
@@ -1643,7 +1667,7 @@ function fileEditor() {
         })
     // @ts-ignore
     $('#fldr-new-dialog').dialog({ // define the dialog box
-        autoOpen: false, modal: true, closeOnEscape: true, // eslint-disable-line object-property-newline
+        autoOpen: false, modal: true, closeOnEscape: true,
         buttons: [
             {
                 text: 'Create',
@@ -1658,7 +1682,7 @@ function fileEditor() {
                         .prop('disabled', true)
                     // @ts-ignore
                     $( this ).dialog( 'close' )
-                }
+                },
             }, {
                 text: 'Cancel',
                 click: function() {
@@ -1668,14 +1692,14 @@ function fileEditor() {
                         .prop('disabled', true)
                     // @ts-ignore
                     $( this ).dialog( 'close' )
-                }
+                },
             },
-        ]
+        ],
     })
         .keyup(function(e) { // make enter key fire the create
             // @ts-ignore
-            if (e.keyCode == $.ui.keyCode.ENTER) { // eslint-disable-line eqeqeq
-                $('#fldr_new_dialog_new').trigger('click') }
+            if (e.keyCode == $.ui.keyCode.ENTER)
+                $('#fldr_new_dialog_new').trigger('click')
         })
     $('#btn-fldr-new').on('click', function() { // (e) {
         $('#fldr_url').html( /** @type {string} */ ($('#node-input-url').val()) )
@@ -1685,7 +1709,7 @@ function fileEditor() {
     // Handle the folder delete button
     // @ts-ignore
     $('#fldr-del-dialog').dialog({
-        autoOpen: false, modal: true, closeOnEscape: true, // eslint-disable-line object-property-newline
+        autoOpen: false, modal: true, closeOnEscape: true,
         buttons: [
             {
                 text: 'Delete',
@@ -1695,15 +1719,15 @@ function fileEditor() {
                     deleteFolder()
                     // @ts-ignore
                     $( this ).dialog( 'close' )
-                }
+                },
             }, {
                 text: 'Cancel',
                 click: function() {
                     // @ts-ignore
                     $( this ).dialog( 'close' )
-                }
+                },
             },
-        ]
+        ],
     })
     $('#btn-fldr-del').on('click', function() { // (e) {
         $('#fldr-del-dialog_del').addClass('input-error')
@@ -1738,13 +1762,11 @@ function fileEditor() {
         e.preventDefault() // don't trigger normal click event
 
         saveFile()
-
     })
 
-    //#region Handle the Delete file button
-    // @ts-ignore
+    // #region Handle the Delete file button
     $('#edit_delete_dialog').dialog({
-        autoOpen: false, modal: true, closeOnEscape: true, // eslint-disable-line object-property-newline
+        autoOpen: false, modal: true, closeOnEscape: true,
         buttons: [
             {
                 text: 'Delete',
@@ -1754,15 +1776,15 @@ function fileEditor() {
                     deleteFile()
                     // @ts-ignore
                     $( this ).dialog( 'close' )
-                }
+                },
             }, {
                 text: 'Cancel',
                 click: function() {
                     // @ts-ignore
                     $( this ).dialog( 'close' )
-                }
+                },
             },
-        ]
+        ],
     })
     $('#edit-delete').on('click', function() { // (e) {
         $('#edit_del_dialog_del').addClass('input-error')
@@ -1780,12 +1802,11 @@ function fileEditor() {
             $('#edit-delete-recopy').css('color', '')
                 .text('')
         }
-        // @ts-ignore
         $('#edit_delete_dialog').dialog('open')
     })
-    //#endregion
+    // #endregion
 
-    //#region Handle the New file button
+    // #region Handle the New file button
     $('#edit_new_dialog_new').addClass('input-error')
         .prop('disabled', true)
     $('#edit-input-newname').addClass('input-error')
@@ -1800,9 +1821,8 @@ function fileEditor() {
                     .prop('disabled', false)
             }
         })
-    // @ts-ignore
     $('#edit_new_dialog').dialog({
-        autoOpen: false, modal: true, closeOnEscape: true, // eslint-disable-line object-property-newline
+        autoOpen: false, modal: true, closeOnEscape: true,
         buttons: [
             {
                 text: 'Create',
@@ -1817,7 +1837,7 @@ function fileEditor() {
                         .prop('disabled', true)
                     // @ts-ignore
                     $( this ).dialog( 'close' )
-                }
+                },
             }, {
                 text: 'Cancel',
                 click: function() {
@@ -1827,14 +1847,13 @@ function fileEditor() {
                         .prop('disabled', true)
                     // @ts-ignore
                     $( this ).dialog( 'close' )
-                }
+                },
             },
-        ]
+        ],
     })
         .keyup(function(e) { // make enter key fire the create
-            // @ts-ignore
-            if (e.keyCode == $.ui.keyCode.ENTER) { // eslint-disable-line eqeqeq
-                $('#edit_new_dialog_new').click() }
+            if (e.keyCode == $.ui.keyCode.ENTER)
+                $('#edit_new_dialog_new').click()
         })
     $('#edit-new').on('click', function() { // (e) {
         $('#file_url').html( /** @type {string} */ ($('#node-input-url').val()) )
@@ -1842,7 +1861,7 @@ function fileEditor() {
         // @ts-ignore
         $('#edit_new_dialog').dialog('open')
     })
-    //#endregion
+    // #endregion
 
     // Handle the expander button (show full screen editor) - from core function node
     $('#node-function-expand-js').on('click', function(e) {
@@ -1866,7 +1885,7 @@ function fileEditor() {
                         fileIsClean(false)
                     }
                 }, 300)
-            }
+            },
         })
 
         // Are we in fullscreen? Variable is updated when oneditresize calls setACEheight()
@@ -1881,7 +1900,6 @@ function fileEditor() {
         //     // Already in fullscreen so lets exit, triggers oneditresize()
         //     document.exitFullscreen()
         // }
-
     })
 } // ---- End of fileEditor ----
 
@@ -1912,9 +1930,11 @@ function onEditPrepare(node) {
         })
         .appendTo($('div.red-ui-tray-toolbar'))
 
-    getFolders()
+    // Update the open and node details buttons below the url
+    $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${node.url}`)
+    $('#uibinstanceconf').prop('href', `./uibuilder/instance/${node.url}?cmd=showinstancesettings`)
 
-    // console.log('>> ONEDITPREPARE: NODE >>', node)
+    getFolders()
 
     // Show uibuilder version
     $('#uib_version').text(RED.settings.uibuilderCurrentVersion)
@@ -1934,9 +1954,6 @@ function onEditPrepare(node) {
     // Configure the template dropdown & setup button handlers
     templateSettings(node)
 
-    // security settings
-    // securitySettings()
-
     // Show the server in use
     showServerInUse(node)
 
@@ -1946,8 +1963,8 @@ function onEditPrepare(node) {
     // })
 
     // Show url errors for 1 time when panel 1st opens (after that, the verify fn takes over)
-    if ( node.url === undefined || node.url === '' ) {
-        enableEdit(node.urlErrors, Object.keys(node.urlErrors).length < 1) }
+    if ( node.url === undefined || node.url === '' )
+        enableEdit(node.urlErrors, Object.keys(node.urlErrors).length < 1)
 
     fileEditor()
 
@@ -1969,8 +1986,6 @@ function onEditPrepare(node) {
  * 7. Updates the deployed version if there are changes or if an update is required.
  */
 function onEditSave(node) {
-    // console.log('>>>> node >>>', node)
-
     // Get rid of the editor
     if ( uiace.editorLoaded === true ) {
         uiace.editor.destroy()
@@ -1991,30 +2006,30 @@ function onEditSave(node) {
     if ( node.changed || node.mustChange ) node.deployedVersion = RED.settings.uibuilderCurrentVersion
 } // ---- End of onEditSave ---- //
 
-//#endregion ------------------------------------------------- //
+// #endregion ------------------------------------------------- //
 
 // Register the node type, defaults and set up the edit fns
 RED.nodes.registerType(moduleName, {
-    //#region --- options --- //
+    // #region --- options --- //
     defaults: {
-        name: { value: '' },
-        topic: { value: '' },
-        url: { required: true, validate: validateUrl },
+        name: { value: '', },
+        topic: { value: '', },
+        url: { required: true, validate: validateUrl, },
         okToGo: {}, // Set by validateUrl, tells runtime if we are good to configure the node
-        fwdInMessages: { value: false },   // Should we send input msg's direct to output as well as the front-end?
-        allowScripts: { value: false },    // Should we allow msg's to send JavaScript to the front-end?
-        allowStyles: { value: false },     // Should we allow msg's to send CSS styles to the front-end?
-        copyIndex: { value: true },        // DEPRECATED Should the default template files be copied to the instance src folder?
-        templateFolder: { value: defaultTemplate },  // Folder for selected template
-        extTemplate: { value: '' }, // Only if templateFolder=external, degit name
-        showfolder: { value: false },      // Should a web index view of all source files be made available?
-        oldUrl: { value: undefined },      // If the url has been changed, this is the previous url
-        reload: { value: false },          // If true, all connected clients will be reloaded if a file is changed on the edit screens
+        fwdInMessages: { value: false, }, // Should we send input msg's direct to output as well as the front-end?
+        allowScripts: { value: false, }, // Should we allow msg's to send JavaScript to the front-end?
+        allowStyles: { value: false, }, // Should we allow msg's to send CSS styles to the front-end?
+        copyIndex: { value: true, }, // DEPRECATED Should the default template files be copied to the instance src folder?
+        templateFolder: { value: defaultTemplate, }, // Folder for selected template
+        extTemplate: { value: '', }, // Only if templateFolder=external, degit name
+        showfolder: { value: false, }, // Should a web index view of all source files be made available?
+        oldUrl: { value: undefined, }, // If the url has been changed, this is the previous url
+        reload: { value: false, }, // If true, all connected clients will be reloaded if a file is changed on the edit screens
         sourceFolder: { value: 'src', required: true, }, // Which folder to use for front-end code? (src or dist)
-        deployedVersion: { validate: validateVersion },
-        showMsgUib: { value: false },    // Show msg._uib in standard msgs (client id, ip, page name)
-        title: { value: '' },    // Optional short description for this instance
-        descr: { value: '' },    // Optional long description for this instance
+        deployedVersion: { validate: validateVersion, },
+        showMsgUib: { value: false, }, // Show msg._uib in standard msgs (client id, ip, page name)
+        title: { value: '', }, // Optional short description for this instance
+        descr: { value: '', }, // Optional long description for this instance
         editurl: {}, // shortcut url for editing the FE code
     },
     inputs: 1,
@@ -2035,7 +2050,7 @@ RED.nodes.registerType(moduleName, {
     // credentials: {
     //     jwtSecret: { type: 'password' },  // text or password
     // },
-    //#endregion --- options --- //
+    // #endregion --- options --- //
 
     /** Prepares the Editor panel */
     oneditprepare: function() { onEditPrepare(this) },
@@ -2056,19 +2071,17 @@ RED.nodes.registerType(moduleName, {
             delete uiace.editor
             uiace.editorLoaded = false
         }
-    }, // ---- End of oneditcancel ---- //
+    },
 
     /** Handle window resizing for the editor */
     oneditresize: function() { // (size) {
-        // console.log('UIBUILDER WIDTH: ', $('#red-ui-editor-stack > div > div.red-ui-tray-body-wrapper > div > div:nth-child(2) > div:nth-child(1)').css('width'))
-
         setACEheight()
 
         // Set correct height of the libraries list
         try {
             $('#node-input-packageList').editableList('height', getLibrariesListHeight())
         } catch (e) {}
-    }, // ---- End of oneditcancel ---- //
+    },
 
     /** Show notification warning before allowing delete */
     oneditdelete: function() {
@@ -2094,9 +2107,9 @@ RED.nodes.registerType(moduleName, {
                             $.ajax({
                                 type: 'PUT',
                                 dataType: 'json',
-                                url: './uibuilder/admin/' + that.url,  // v3 api
+                                url: './uibuilder/admin/' + that.url, // v3 api
                                 data: {
-                                    'cmd': 'deleteondelete',
+                                    cmd: 'deleteondelete',
                                 },
                                 beforeSend: function(jqXHR) {
                                     const authTokens = RED.settings.get('auth-tokens')
@@ -2106,23 +2119,23 @@ RED.nodes.registerType(moduleName, {
                                 },
                             })
                                 .fail(function(jqXHR, textStatus, errorThrown) {
-                                    console.error( '[uibuilder:oneditdelete:PUT] Error ' + textStatus, errorThrown )
-                                    RED.notify(`uibuilder: Request url folder delete - error.<br>Folder will not be deleted, please delete manually.<br>${errorThrown}`, { type: 'error' })
+                                    console.error( '🌐🛑[uibuilder:oneditdelete:PUT] Error ' + textStatus, errorThrown )
+                                    RED.notify(`uibuilder: Request url folder delete - error.<br>Folder will not be deleted, please delete manually.<br>${errorThrown}`, { type: 'error', })
                                 })
 
                             myNotify.close()
-                            RED.notify(`The folder <i>${that.url}</i> will be deleted when you redeploy.`, { type: 'compact' })
-                        }
+                            RED.notify(`The folder <i>${that.url}</i> will be deleted when you redeploy.`, { type: 'compact', })
+                        },
                     },
                     {
                         text: 'NO',
                         class: 'primary',
                         click: function() { // (e) {
                             myNotify.close()
-                        }
+                        },
                     }
-                ]
+                ],
             })
         }
-    }, // ---- End of oneditdelete ---- //
-}) // ---- End of registerType() ---- //
+    },
+})

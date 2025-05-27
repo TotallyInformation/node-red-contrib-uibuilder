@@ -41,7 +41,7 @@ const htmlmin = require('gulp-htmlmin')
 const jeditor = require('gulp-json-editor')
 // const gulpEsbuild = require('gulp-esbuild')
 const { createGulpEsbuild } = require('gulp-esbuild')
-const gulpEsbuild = createGulpEsbuild()
+const gulpEsbuild = createGulpEsbuild({})
 
 const sourcemaps = require("gulp-sourcemaps");
 const browserslist = require('browserslist');
@@ -72,7 +72,7 @@ const stdio = 'inherit'
 // @ts-ignore Find the module version in the package.json
 const { version } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
-const release = '7.2.0'
+const release = '7.3.0'
 // Wanted node.js version - used for ESBUILD
 const nodeVersion = 'node18.12'
 
