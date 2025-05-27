@@ -3,7 +3,7 @@ title: Updating web UI content and attributes dynamically from Node-RED
 description: |
   A quick FAQ explaining the different ways to include and dynamically change data on your web pages from Node-RED.
 created: 2024-06-19 10:29:37
-updated: 2025-01-02 16:12:34
+updated: 2025-05-27 19:40:26
 ---
 
 > [!TIP]
@@ -15,16 +15,23 @@ The structure of a UI in HTML is defined using `elements` which are represented 
 
 UIBUILDER has a number of easy methods for updating your web pages based on data from Node-RED or on processing in the browser. Some of these methods will require you to be able to identify an element based on a [CSS Selector](/how-to/css-selectors). Others allow updates based on a Node-RED message `topic` property or on a local variable managed by uibuilder.
 
+> [!TIP]
+> In v7.3.0, all of the templates for uibuilder were updated to include a `<div id="more" uib-topic="more"></div>` element. This lets you send a message like `{topic:'more', payload:'This is some text'}` to update the content of that element. This is a great way to get started with dynamic updates without needing to know any front-end code. The payload can be simple text or HTML. More details about `uib-topic` are given in [option 1](#uibtopic) below.
+
 There are basically 4 options for easy page content updates:
 
 In HTML:
 
-1. The custom `uib-topic` attribute on any HTML tag will auto-process incoming data.
-2. The custom `<uib-var>` component also auto-processes data and has some additional rendering options: text, HTML, Markdown, json, table, and list.
+1. The custom `uib-topic` *attribute* on any HTML tag will auto-process incoming data.
+2. The custom `<uib-var>` *component* also auto-processes data and has some additional rendering options: 
+    
+    `text`, `html`, `markdown`, `json`, `table`, and `list`.
 
 In front-end JavaScript:
 
 3. Front-end JavaScript code can listen for incoming data manually using the `uibuilder.onChange('msg', (msg)=>{...})` or `uibuilder.onTopic('topicname', (msg)=>{...})` functions. JavaScript code can easily update your web page using standard web API functions or uibuilder helper functions.
+
+  e.g. `document.getElementById('p001').innerHTML = msg.payload;` or `$('#p001').html(msg.payload);`
 
 In Node-RED:
 
@@ -35,11 +42,11 @@ Options 1 and 2 are described here. Option 3 is described in the client document
 > [!TIP]
 > As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance.
 
-## 1) Using the `uib-topic` attribute :id=uibtopic
+## 1) Using the `uib-topic` _attribute_ :id=uibtopic
 
-UIBUILDER introduces a custom attribute `uib-topic` (or `data-uib-topic` if you prefer) for any HTML element.
+UIBUILDER introduces a custom _attribute_ `uib-topic` (or `data-uib-topic` if you prefer) for any HTML element.
 
-Using this attribute on *any* HTML tag, enables content and attributes to be updated automatically with a simple message from Node-RED. This is generally the easiest method for updating your web page based on data from Node-RED.
+Using this _attribute_ on *any* HTML tag, enables content and attributes to be updated automatically with a simple message from Node-RED. This is generally the easiest method for updating your web page based on data from Node-RED.
 
 For example, including `<p uib-topic="mytopic">No message</p>` in your HTML and then, in Node-RED, sending a message to the uibuilder node containing a `msg.payload` of *"Hello from Node-RED"*, will replace the *"No message"* text with the hello message.
 
@@ -48,9 +55,9 @@ Include a `msg.attributes` property to automatically update the elements attribu
 > [!NOTE]
 > HTML element attributes are **always** text strings. If you use any other data type, it will be converted to a string.
 >
-> Using the `uib-topic` attribute allows text or HTML content in `msg.payload`, it does not allow Markdown content. However, content is still sanitised if the [DOMPurify library](/client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) is loaded.
+> Using the `uib-topic` attribute allows text or HTML content in `msg.payload`, it does *not* allow Markdown content. However, content is still sanitised if the [DOMPurify library](/client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) is loaded.
 
-## 2) Using the `uib-var` custom web component :id=uibvar
+## 2) Using the `uib-var` custom _web component_ :id=uibvar
 
 UIBUILDER also includes its own *custom* web element [`<uib-var>`](/client-docs/custom-components#uib-var). 
 
@@ -59,7 +66,7 @@ It is used by including its tag in your HTML. For example `<uib-var topic="mytop
 It has a number of additional features over using the simpler `uib-topic` attribute: 
 
 * You can use either a set `topic` or a managed variable. One that is updated using `uibuilder.set('varname', value)` locally or a command from Node-RED to update the content. You can even use a JavaScript function to generate or format output.
-* It can show HTML, plain text, Markdown (if the [Markdown-IT library](/client-docs/readme#_2-markdown-it-converts-markdown-markup-into-html) is loaded) or a formatted JSON object as content.
+* It can show HTML, plain text, Markdown (if the [Markdown-IT library](/client-docs/readme#_2-markdown-it-converts-markdown-markup-into-html) is loaded) or a formatted JSON object as content. It can also display a table or list of items from an array or object.
 * It can let Node-RED know when the variable changes (great for allowing change from a number of different sources including front-end code).
 * It allows for _filters_ to be applied to the content to alter the display. Great for formatting numbers or dates for example.
 * Will sanitise any HTML updates if the [DOMPurify library](/client-docs/readme#_1-dompurify-sanitises-html-to-ensure-safety-and-security) is loaded. Good if you are allowing HTML/Markdown content to be defined by user input.
