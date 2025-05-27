@@ -1,4 +1,4 @@
-# uibuilder Template: Blank
+# uibuilder Template: Blank (Default)
 
 > NOTE: You can replace the contents of this README with text that describes your UI.
 
@@ -7,6 +7,14 @@ This is about the simplest template you can get for uibuilder. Is is also (as of
 It does not use any frameworks and has no other dependencies. It demonstrates that you can use uibuilder purely with HTML/JavaScript or even just HTML and still easily build a simple, dynamic, data-driven user interface with the help of Node-RED.
 
 All it does is load the uibuilder client library and connect to Node-RED.
+
+## UI
+
+Initially only shows an H1 heading with a sub-heading. However, it contains a `<div>` with the id "`more`" which is used by many of the examples in the Node-RED import library.
+
+In addition, the `more` div uses uibuilder's `uib-topic` special attribute which allows it to be used as a target for messages sent from Node-RED. This is a useful feature that allows you to easily update the content of the page without having to write any JavaScript code. Send a message containing `{ topic: 'more', payload: 'Hello World' }` to the `uibuilder` node and the content of the `more` div will be updated with "Hello World". Note that the payload can contain HTML. As an example, use an inject node with `msg.payload` set to use a JSONata expression like `"<b style='background-color:var(--error)'>Hello!</b> This is a message from Node-RED at " & $moment()`. Don't forget to set `msg.topic` to `more` so that the uibuilder client library knows where to send the message.
+
+> **WARNING**: Using the "more" topic completely overwrites the contents of the `more` div.
 
 ## Folders
 
@@ -53,3 +61,17 @@ uibuilder will happily serve up any number of web pages from a single instance. 
 Note that each html file is a separate page and requires its own JavaScript and uibuilder library reference. When moving between pages, remember that every page is stand-alone, a new environment. You can share one `index.js` file between multiple pages if you prefer but each page will run a separate instance.
 
 If multiple pages are connected to the same uibuilder instance, they will all get the same broadcast messages from Node-RED. So if you want to handle different messages on different pages, remember to filter them in your front-end JavaScript in `uibuilder.onChange('msg', ....)` function. Turn on the advanced flag for including a `msg._uib` property in output if you need to differentiate between pages and/or clients in Node-RED.
+
+## URL endpoints
+
+When specifying links in your HTML, CSS and JavaScript files, you should use relative URLs. e.g. `./index.mjs` will load that file from the `src` folder or wherever else you have told uibuilder to use.
+
+When using uibuilder's server-side resources, you will generally use `../uibuilder/....`, for example `../uibuilder/uib-brand.min.css` as seen in the default `index.css` file. When accessing a front-end library being served by uibuilder, you can use the form `../uibuilder/vendor/....`. Use the "Full details" button in the uibuilder node to see all of the possible endpoints you may want to use.
+
+
+## License
+
+This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
+
+This template may be used however you like. It is provided as a test template for uibuilder and is not intended to be a full template. You are free to use it as a starting point for your own template or to use it as-is if you find it useful.
+
