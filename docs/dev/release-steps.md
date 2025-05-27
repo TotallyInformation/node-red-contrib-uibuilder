@@ -3,7 +3,7 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2025-05-27 19:45:28
+updated: 2025-05-27 19:56:11
 author: Julian Knight (Totally Information)
 ---
 
@@ -53,11 +53,12 @@ Make sure version numbers are correct and aligned:
 ## 04) Do a final commit & push to the dev branch
 
 * Commit and push
-* Check DeepScan and Snyk results and resolve any issues.
 
 ## 05) Merge GitHub dev branch to main
 
 * Do a pull request, dev branch to main.
+* Check DeepScan and Snyk results and resolve any issues.
+  * If issues, fix and update the PR.
 * If any conflicts, do `git merge main` on VSCode command line (in the dev branch).
 
 For conflicts that can't be merged in GitHub web interface, use VSCode command line:
