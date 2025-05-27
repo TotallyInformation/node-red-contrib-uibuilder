@@ -1400,7 +1400,7 @@ function templateChange(templateDetails) {
         // .css('background-color', '#fff')
     }
     // Show the template description
-    $('#template-descr').html(templateDetails.description)
+    if ( templateDetails && templateDetails.description ) $('#template-descr').html(templateDetails.description)
 }
 
 /** Configure the template dropdown & setup button handlers (called from onEditPrepare)
