@@ -64,6 +64,19 @@ function onAdd() {
             return inp.toLocaleString(int, { minimumFractionDigits: dp, maximumFractionDigits: dp, })
         },
 
+        /** Returns true/false or a default value for truthy/falsy and other values
+         * @param {string|number|boolean|*} val The value to test
+         * @param {any} deflt Default value to use if the value is not truthy/falsy
+         * @returns {boolean|any} The truth! Or the default
+         */
+        truthy: (val, deflt) => {
+            let ret
+            if (['on', 'On', 'ON', 'true', 'True', 'TRUE', '1', true, 1].includes(val)) ret = true
+            else if (['off', 'Off', 'OFF', 'false', 'False', 'FALSE', '0', false, 0].includes(val)) ret = false
+            else ret = deflt
+            return ret
+        },
+
         // WARNING: Plugins are defined EARLY so they won't have access to the uibuilder library/startup data yet
         //          So some plugins are defined in the base uibuilder node instead.
 
