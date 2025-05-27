@@ -51,4 +51,4 @@ esbuild.build({
     })
 
 console.log('App target: ', resolve('../../docs/.config/app.js'))
-console.log('ESBUILD Bundle input: ', resolve('src/doc-bundle/bundle-input.js'))
+console.log('ESBUILD Bundle input: ', resolve('src/doc-bundle/bundle-input.mjs'))
