@@ -186,6 +186,7 @@
  * @property {Function} util.uib.listAllApps : Return a list of all uibuilder instances
  * @property {Function} util.uib.dp : Return a formatted number using a specified locale and number of decimal places
  * @property {Function} util.uib.send : Send a message to a client via a uibuilder instance
+ * @property {Function} util.uib.truthy : Returns true/false or a default value for truthy/falsy and other values
  *
  * @property {object} plugins Node-RED plugins
  * @property {Function} plugins.registerPlugin : [Function: registerPlugin],
