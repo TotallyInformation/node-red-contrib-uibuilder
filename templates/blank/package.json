@@ -1,6 +1,6 @@
 {
   "name": "uib-blank",
-  "version": "7.3.0",
+  "version": "2025-05-27",
   "private": true,
   "description": "This is about the simplest template you can get for uibuilder.",
   "browser": "./src/index.js",
