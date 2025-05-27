@@ -2,19 +2,19 @@
  * Build bundles using ESBUILD for Docsify and plugins to allow offline use.
  */
 
-const esbuild = require('esbuild')
-const { resolve } = require('path')
+const esbuild = require('esbuild') // eslint-disable-line n/no-unpublished-require
+const { resolve, } = require('path')
 
 /** Build a single output app.js from docsify & all needed plugins */
 esbuild.build({
     entryPoints: [
-        'src/doc-bundle/bundle-input.js'
+        'src/doc-bundle/bundle-input.mjs'
     ],
     format: 'iife',
     bundle: true,
     minify: true,
     sourcemap: true,
-    outfile: resolve('../../docs/.config/app.js',),
+    outfile: resolve('../../docs/.config/app.js'),
     // outdir: resolve('../../docs/.config/',),
     platform: 'browser',
     target: [
@@ -43,12 +43,12 @@ esbuild.build({
     bundle: true,
     minify: true,
     // outfile: resolve('../../docs/.config/app.css',),
-    outdir: resolve('../../docs/.config/',),
+    outdir: resolve('../../docs/.config/'),
 })
     .catch((error) => {
         console.error(error)
         process.exit(1) // eslint-disable-line n/no-process-exit
     })
 
-console.log('App target: ', resolve('../../docs/.config/app.js',))
-console.log('ESBUILD Bundle input: ', resolve('src/doc-bundle/bundle-input.js',))
+console.log('App target: ', resolve('../../docs/.config/app.js'))
+console.log('ESBUILD Bundle input: ', resolve('src/doc-bundle/bundle-input.js'))
