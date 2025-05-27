@@ -3,7 +3,8 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2025-03-30 16:09:32
+updated: 2025-05-26 12:10:40
+author: Julian Knight (Totally Information)
 ---
 
 This assumes all main updates have been done for this release and that local testing is complete.
@@ -25,7 +26,7 @@ Now the Source Control panel in VSCode will have any files with conflicts marked
 * On GitHub, click on the "Switch branches/tags" drop-down. Search for the new name - e.g. v7.3.0 - if it does not exist, GitHub will offer to create it from the current main branch.
 * In VSCode, switch to the SOURCE CONTROL sidebar, click on REMOTES, refresh if needed. Expand "origin" and click on the "Switch to branch..." icon.
 
-## 01) Check the CHANGELOG
+## 01) Check docs/roadmap/next.md
 
 * For outstanding issues that need resolving before release.
 * Move any remaining To Do items to the roadmap for future changes.
