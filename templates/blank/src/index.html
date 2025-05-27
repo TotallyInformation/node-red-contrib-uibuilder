@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="../uibuilder/images/node-blue.ico">
 
-    <title>Blank template - Node-RED uibuilder</title>
-    <meta name="description" content="Node-RED uibuilder - Blank template">
+    <title>Blank template - Node-RED UIBUILDER</title>
+    <meta name="description" content="Node-RED UIBUILDER - Blank template">
 
     <!-- Your own CSS (defaults to loading uibuilders css)-->
     <link type="text/css" rel="stylesheet" href="./index.css" media="all">
@@ -21,6 +21,8 @@
     <h1 class="with-subtitle">Blank Template</h1>
     <div role="doc-subtitle">Using UIBUILDER for Node-RED</div>
 
-    <div id="more"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>
+    <!-- '#more' is used as a parent for dynamic HTML content in examples
+         Also, send {topic:"more", payload:"Hello from <b>Node-RED</b>"} to auto-display the payload -->
+    <div id="more" uib-topic="more"></div>
 
 </body></html>
