@@ -3,8 +3,7 @@ title: Creating a web app using uibuilder and Node-RED
 description: |
   Some recommendations on how to use uibuilder to create data-driven web applications.
 created: 2022-01-05 14:36:24
-lastUpdated: 2023-09-30 13:10:57
-updated: 2023-12-30 17:01:41
+updated: 2025-05-26 17:46:35
 ---
 
 While it does a few other things to help as well, uibuilder primarily provides these services:
@@ -93,8 +92,8 @@ At present, only the Svelte development server will work correctly without you m
 For all other development servers, you will need to make the following changes:
 
 1. In `index.html` - replace the default `./xxxx` and `../uibuilder/xxxx` URL's with ones that start with the correct Node-RED/uibuilder server. e.g. `http://localhost:1880/xxxx`.
-2. In `indx.js` - replace the `uibuilder.start()` with `uibuilder.start({ioNamespace: 'http://localhost:1880/aa'})` (example) where the protocol, server name and port are your Node-RED/uibuilder server as above and `/aa` is the `uibuilder` node instances URL with a leading `/`. That is the Socket.io namespace.
+2. In `index.js` - If the uibuilder client cannot connect back to Node-RED, add `uibuilder.start({ioNamespace: 'http://localhost:1880/aa'})` (example, correct for your own locations) where the protocol, server name, and port are your Node-RED/uibuilder server as above and `/aa` is the `uibuilder` node instances URL with a leading `/`. That is the Socket.io communications namespace.
 
-Don't forget to change these back when you are putting your code live. Though your live code will still work, it would be more fragile and would break if you change the server details.
+Don't forget to change these back when you are putting your code live. Though your live code would still work, it would be more fragile and would break if you change the server details.
 
 It is also possible that you could automate these changes using the build tool. Using environment variables to tell the tool which url's to use. If not, you could automate the whole process using a tool such as [GulpJS](https://gulpjs.com/).
