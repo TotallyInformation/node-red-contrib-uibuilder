@@ -33,7 +33,7 @@ import ApplyTemplate from '../components/apply-template'
 // Incorporate the logger module - NB: This sets a global `log` object for use if it can.
 // import logger from './logger'
 
-const version = '7.3.0-src'
+const version = '7.4.0-src'
 
 //#region --- Module-level utility functions --- //
 

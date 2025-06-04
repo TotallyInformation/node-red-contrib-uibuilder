@@ -5563,7 +5563,7 @@
 
   // src/front-end-module/uibuilder.module.js
   var import_meta = {};
-  var version = "7.3.0-iife";
+  var version = "7.4.0-iife";
   var isMinified = !/param/.test(function(param) {
   });
   function log() {
