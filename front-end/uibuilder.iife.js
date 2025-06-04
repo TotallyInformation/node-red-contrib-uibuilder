@@ -6245,6 +6245,7 @@
     /** Standard fn to create a custom event with details & dispatch it
      * @param {string} title The event name
      * @param {*} details Any details to pass to event output
+     * @private
      */
     _dispatchCustomEvent(title, details) {
       const event2 = new CustomEvent(title, { detail: details });
@@ -6338,6 +6339,7 @@
     /** Check supplied msg from server for a timestamp - if received, work out & store difference to browser time
      * @param {object} receivedMsg A message object recieved from Node-RED
      * @returns {void} Updates self.serverTimeOffset if different to previous value
+     * @private
      */
     _checkTimestamp(receivedMsg) {
       if (Object.prototype.hasOwnProperty.call(receivedMsg, "serverTimestamp")) {
@@ -6351,6 +6353,7 @@
     }
     /** Set up an event listener to watch for hash changes
      * and set the watchable urlHash variable
+     * @private
      */
     _watchHashChanges() {
       this.set("urlHash", location.hash);
@@ -6823,6 +6826,7 @@
      *          as possible. Async so that calling function does not need to wait.
      * Observer is set up in the start() function
      * @param {MutationRecord[]} mutations Array of Mutation Records
+     * @private
      */
     async _uibAttribObserver(mutations) {
       mutations.forEach(async (m) => {
@@ -6855,6 +6859,7 @@
      *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
      *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
      * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
+     * @private
      */
     async _uibAttrScanOne(el) {
       log("trace", "uibuilder:_uibAttrScanOne", "Setting up auto-processor for: ", el)();
@@ -6888,6 +6893,7 @@
     /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
      * Async so that calling function does not need to wait.
      * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
+     * @private
      */
     async _uibAttrScanAll(parentEl) {
       if (!Array.isArray(parentEl)) parentEl = [parentEl];
@@ -6904,6 +6910,7 @@
      * @param {HTMLInputElement} srcEl Reference to the source input element
      * @param {boolean=} noSend If true, don't send the file to Node-RED. Default is to send.
      * @returns {Array<object>} Metadata values from all files
+     * @private
      */
     _processFilesInput(srcEl, noSend = false) {
       const value2 = [];
@@ -7356,6 +7363,7 @@
     //#region ------- Message Handling (To/From Node-RED) -------- //
     /** Handles original control msgs (not to be confused with "new" msg._uib controls)
      * @param {*} receivedCtrlMsg The msg received on the socket.io control channel
+     * @private
      */
     _ctrlMsgFromServer(receivedCtrlMsg) {
       if (receivedCtrlMsg === null) {
@@ -7404,6 +7412,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     /** Do we want to process something? Check pageName, clientId, tabId. Defaults to yes.
      * @param {*} obj Either a msg._ui or msg._uib object to check
      * @returns {boolean} True if we should process the inbound _ui/_uib msg, false if not.
+     * @private
      */
     _forThis(obj) {
       let r = true;
@@ -7421,7 +7430,10 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       }
       return r;
     }
-    // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
+    /** Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
+     * @param {object} msg The message received from Node-RED
+     * @private
+     */
     _msgRcvdEvents(msg) {
       this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
       if (msg.topic) this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg);
@@ -7463,6 +7475,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
      * @param {object} msgToSend The msg object to send.
      * @param {string} [channel] The Socket.IO channel to use, must be in self.ioChannels or it will be ignored. Default=uiBuilderClient
      * @param {string} [originator] A Node-RED node ID to return the message to. Default=''
+     * @private
      */
     _send(msgToSend, channel, originator = "") {
       if (channel === null || channel === void 0) channel = this._ioChannels.client;
@@ -7513,6 +7526,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
      * @callback ioSetupFromServer Called from ioSetup/this._socket.on(this.#ioChannels.server, this.stdMsgFromServer.bind(this))
      * @param {object} receivedMsg The msg object from Node-RED
      * @this Uib
+     * @private
      */
     _stdMsgFromServer(receivedMsg) {
       receivedMsg = this.makeMeAnObject(receivedMsg, "payload");
@@ -7529,6 +7543,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     // -- End of websocket receive DATA msg from Node-RED -- //
     /** Process msg._uib.command - Remember to update #extCommands with new allowed commands
      * @param {object} msg Msg from Node-RED containing a msg._uib object
+     * @private
      */
     _uibCommand(msg) {
       if (!msg._uib || !msg._uib.command) {
@@ -7892,6 +7907,7 @@ ${document.documentElement.outerHTML}`;
      * since 2017-11-10 v1.0.1 Check cookie first then url. cookie works even if the path is more complex (e.g. sub-folder)
      * since 2020-01-25 Removed httpRoot from namespace to prevent proxy induced errors
      * @returns {string} Socket.IO namespace
+     * @private
      */
     _getIOnamespace() {
       let ioNamespace;
@@ -7917,6 +7933,7 @@ ${document.documentElement.outerHTML}`;
      * @param {number} [factor] Multiplication factor for subsequent checks (delay*factor). Default=1.5
      * @param {number} [depth] Recursion depth
      * @returns {boolean|undefined} Whether or not Socket.IO is connected to uibuilder in Node-RED
+     * @private
      */
     _checkConnect(delay, factor, depth = 1) {
       if (navigator.onLine === false) return;
@@ -7945,7 +7962,9 @@ ${document.documentElement.outerHTML}`;
     }
     // --- End of checkConnect Fn--- //
     // See message handling section for msg receipt handlers
-    /** Called by _ioSetup when Socket.IO connects to Node-RED */
+    /** Called by _ioSetup when Socket.IO connects to Node-RED
+     * @private
+     */
     _onConnect() {
       log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. 
 Namespace: ${this.ioNamespace}`)();
@@ -7954,6 +7973,7 @@ Namespace: ${this.ioNamespace}`)();
     }
     /** Called by _ioSetup when Socket.IO disconnects from Node-RED
      * @param {string} reason Disconnection title
+     * @private
      */
     _onDisconnect(reason) {
       log("info", "Uib:ioSetup:socket-disconnect", `\u26D4 Socket Disconnected. Reason: ${reason}`)();
@@ -7963,6 +7983,7 @@ Namespace: ${this.ioNamespace}`)();
     /** Setup Socket.io
      * since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
      * @returns {boolean} Attaches socket.io manager to self._socket and updates self.ioNamespace & self.ioPath as needed
+     * @private
      */
     _ioSetup() {
       if (lookup2 === void 0) {
@@ -8005,7 +8026,9 @@ Namespace: ${this.ioNamespace}`)();
       return true;
     }
     // ---- End of ioSetup ---- //
-    /** Connect to global namespace & create global listener that updates the `globalMsg` var */
+    /** Connect to global namespace & create global listener that updates the `globalMsg` var
+     * @private
+     */
     _connectGlobal() {
       this._socketGlobal = lookup2("/", this.socketOptions);
       this._socketGlobal.onAny((...args) => {
