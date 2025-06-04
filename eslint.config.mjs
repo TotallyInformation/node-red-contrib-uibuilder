@@ -148,7 +148,7 @@ export default defineConfig([
     // Browser (Latest) ESM, ESBUILD
     {
         files: ['**/*.mjs'],
-        ignores: ['nodes/**/*.{js,cjs,mjs}'],
+        ignores: ['nodes/**/*.{js,cjs,mjs}', 'stylelint.config.mjs'],
         // ...pluginImport.flatConfigs.recommended,
         languageOptions: {
             sourceType: 'module',
@@ -197,7 +197,7 @@ export default defineConfig([
     {
         // files: nodeCJS,
         files: ['**/*.{js,cjs}'],
-        ignores: ['resources/*.{js,cjs}'],
+        ignores: ['resources/*.{js,cjs}', 'src/front-end-modules/**/*.*'],
         languageOptions: {
             sourceType: 'commonjs',
             // Will be overridden by the n plugin which detects the correct node.js version from package.json
@@ -240,7 +240,7 @@ export default defineConfig([
     {
         // files: nodeMJS,
         files: ['**/*.mjs'],
-        ignores: ['resources/*.{js,cjs,mjs}'],
+        ignores: ['resources/*.{js,cjs,mjs}', 'src/front-end-module/**/*.*'],
         languageOptions: {
             sourceType: 'module',
             // Will be overridden by the n plugin which detects the correct node.js version from package.json
