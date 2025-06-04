@@ -1,3 +1,5 @@
+/* eslint-disable jsdoc/check-param-names */
+/* eslint-disable @stylistic/no-multi-spaces */
 // @ts-nocheck
 /**
  * @kind module
@@ -14,12 +16,12 @@
  * @copyright (c) 2022-2025 Julian Knight (Totally Information)
  */
 
-//#region --- Type Defs --- //
+// #region --- Type Defs --- //
 /**
  * A string containing HTML markup
  * @typedef {string} html
  */
-//#endregion --- Type Defs --- //
+// #endregion --- Type Defs --- //
 
 // We need the Socket.IO & ui libraries & the uib-var component  --- //
 // @ts-ignore - Note: Only works when using esbuild to bundle
@@ -35,13 +37,13 @@ import ApplyTemplate from '../components/apply-template'
 
 const version = '7.4.0-src'
 
-//#region --- Module-level utility functions --- //
+// #region --- Module-level utility functions --- //
 
 // Detect whether the loaded library is minified or not
 const isMinified = !(/param/).test(function (param) { })
 
 // TODO - switch to logger module
-//#region --- print/console - debugging output functions --- //
+// #region --- print/console - debugging output functions --- //
 
 /** Custom logging. e.g. log(2, 'here:there', 'jiminy', {fred:'jim'})()
  * @returns {Function} Log function @example log(2, 'here:there', 'jiminy', {fred:'jim'})()
@@ -131,7 +133,7 @@ log.LOG_STYLES = {
         css: 'background: red; color: black;',
         txtCss: 'color: red; ',
         pre: '⛔ ',
-        console: 'error',  // or trace
+        console: 'error', // or trace
     },
     // 1
     warn: {
@@ -269,22 +271,21 @@ function syntaxHighlight(json) {
 /** msg._ui handling functions */
 const _ui = new Ui(window, log, syntaxHighlight)
 
-//#endregion --- Module-level utility functions --- //
+// #endregion --- Module-level utility functions --- //
 
 /** Define and export the Uib class - note that an instance of the class is also exported in the wrap-up
  * @typicalname uibuilder
  */
 export const Uib = class Uib {
-
-    //#region --- Static variables ---
+    // #region --- Static variables ---
     static _meta = {
         version: version,
         type: 'module',
         displayName: 'uibuilder',
     }
-    //#endregion ---- ---- ---- ----
+    // #endregion ---- ---- ---- ----
 
-    //#region private class vars
+    // #region private class vars
 
     // How many times has the loaded instance connected to Socket.IO (detect if not a new load?)
     connectedNum = 0
@@ -331,30 +332,30 @@ export const Uib = class Uib {
 
     // What status variables to show via showStatus()
     #showStatus = {
-        online: { 'var': 'online', 'label': 'Online?', 'description': 'Is the browser online?', },
-        ioConnected: { 'var': 'ioConnected', 'label': 'Socket.IO connected?', 'description': 'Is Socket.IO connected?', },
-        connectedNum: { 'var': 'connectedNum', 'label': '# reconnections', 'description': 'How many times has Socket.IO had to reconnect since last page load?', },
+        online: { var: 'online', label: 'Online?', description: 'Is the browser online?', },
+        ioConnected: { var: 'ioConnected', label: 'Socket.IO connected?', description: 'Is Socket.IO connected?', },
+        connectedNum: { var: 'connectedNum', label: '# reconnections', description: 'How many times has Socket.IO had to reconnect since last page load?', },
 
-        clientId: { 'var': 'clientId', 'label': 'Client ID', 'description': 'Static client unique id set in Node-RED. Only changes when browser is restarted.', },
-        tabId: { 'var': 'tabId', 'label': 'Browser tab ID', 'description': 'Static unique id for the browser\'s current tab', },
-        cookies: { 'var': 'cookies', 'label': 'Cookies', 'description': 'Cookies set in Node-RED', },
-        httpNodeRoot: { 'var': 'httpNodeRoot', 'label': 'httpNodeRoot', 'description': 'From Node-RED\' settings.js, affects URL\'s. May be wrong for pages in sub-folders', },
-        pageName: { 'var': 'pageName', 'label': 'Page name', 'description': 'Actual name of this page', },
+        clientId: { var: 'clientId', label: 'Client ID', description: 'Static client unique id set in Node-RED. Only changes when browser is restarted.', },
+        tabId: { var: 'tabId', label: 'Browser tab ID', description: 'Static unique id for the browser\'s current tab', },
+        cookies: { var: 'cookies', label: 'Cookies', description: 'Cookies set in Node-RED', },
+        httpNodeRoot: { var: 'httpNodeRoot', label: 'httpNodeRoot', description: 'From Node-RED\' settings.js, affects URL\'s. May be wrong for pages in sub-folders', },
+        pageName: { var: 'pageName', label: 'Page name', description: 'Actual name of this page', },
 
-        ioNamespace: { 'var': 'ioNamespace', 'label': 'SIO namespace', 'description': 'Socket.IO namespace - unique to each uibuilder node instance', },
+        ioNamespace: { var: 'ioNamespace', label: 'SIO namespace', description: 'Socket.IO namespace - unique to each uibuilder node instance', },
         // ioPath: { 'var': 'ioPath', 'label': 'SIO path', 'description': '', }, // no longer needed in the modern client
-        socketError: { 'var': 'socketError', 'label': 'Socket error', 'description': 'If the Socket.IO connection has failed, says why', },
+        socketError: { var: 'socketError', label: 'Socket error', description: 'If the Socket.IO connection has failed, says why', },
 
-        msgsSent: { 'var': 'msgsSent', 'label': '# msgs sent', 'description': 'How many standard messages have been sent to Node-RED?', },
-        msgsReceived: { 'var': 'msgsReceived', 'label': '# msgs received', 'description': 'How many standard messages have been received from Node-RED?', },
-        msgsSentCtrl: { 'var': 'msgsSentCtrl', 'label': '# control msgs sent', 'description': 'How many control messages have been sent to Node-RED?', },
-        msgsCtrlReceived: { 'var': 'msgsCtrlReceived', 'label': '# control msgs received', 'description': 'How many control messages have been received from Node-RED?', },
-        originator: { 'var': 'originator', 'label': 'Node Originator', 'description': 'If the last msg from Node-RED was from a `uib-sender` node, this will be its node id so that messasges can be returned to it', },
-        topic: { 'var': 'topic', 'label': 'Default topic', 'description': 'Optional default topic to be included in outgoing standard messages', },
+        msgsSent: { var: 'msgsSent', label: '# msgs sent', description: 'How many standard messages have been sent to Node-RED?', },
+        msgsReceived: { var: 'msgsReceived', label: '# msgs received', description: 'How many standard messages have been received from Node-RED?', },
+        msgsSentCtrl: { var: 'msgsSentCtrl', label: '# control msgs sent', description: 'How many control messages have been sent to Node-RED?', },
+        msgsCtrlReceived: { var: 'msgsCtrlReceived', label: '# control msgs received', description: 'How many control messages have been received from Node-RED?', },
+        originator: { var: 'originator', label: 'Node Originator', description: 'If the last msg from Node-RED was from a `uib-sender` node, this will be its node id so that messasges can be returned to it', },
+        topic: { var: 'topic', label: 'Default topic', description: 'Optional default topic to be included in outgoing standard messages', },
 
-        started: { 'var': 'started', 'label': 'Has uibuilder client started?', 'description': 'Whether `uibuilder.start()` ran successfully. This should self-run and should not need to be run manually', },
-        version: { 'var': 'version', 'label': 'uibuilder client version', 'description': 'The version of the loaded uibuilder client library', },
-        serverTimeOffset: { 'var': 'serverTimeOffset', 'label': 'Server time offset (Hrs)', 'description': 'The number of hours difference between the Node-red server and the client', },
+        started: { var: 'started', label: 'Has uibuilder client started?', description: 'Whether `uibuilder.start()` ran successfully. This should self-run and should not need to be run manually', },
+        version: { var: 'version', label: 'uibuilder client version', description: 'The version of the loaded uibuilder client library', },
+        serverTimeOffset: { var: 'serverTimeOffset', label: 'Server time offset (Hrs)', description: 'The number of hours difference between the Node-red server and the client', },
     }
 
     // Track ui observers (see uiWatch)
@@ -366,10 +367,10 @@ export const Uib = class Uib {
 
     //#endregion
 
-    //#region public class vars
+    // #region public class vars
 
     // TODO Move to proper getters
-    //#region ---- Externally read-only (via .get method) ---- //
+    // #region ---- Externally read-only (via .get method) ---- //
     // version - moved to _meta
     /** Client ID set by uibuilder on connect */
     clientId = ''
@@ -417,10 +418,10 @@ export const Uib = class Uib {
     markdown = false
     // Current URL hash. Initial set is done from start->watchHashChanges via a set to make it watched
     urlHash = location.hash
-    //#endregion ---- ---- ---- ---- //
+    // #endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
-    //#region ---- Externally Writable (via .set method, read via .get method) ---- //
+    // #region ---- Externally Writable (via .set method, read via .get method) ---- //
     /** Default originator node id - empty string by default
      * @type {string}
      */
@@ -435,9 +436,9 @@ export const Uib = class Uib {
     uibrouterinstance
     /** Set by uibrouter, do not set manually */
     uibrouter_CurrentRoute
-    //#endregion ---- ---- ---- ---- //
+    // #endregion ---- ---- ---- ---- //
 
-    //#region ---- These are unlikely to be needed externally: ----
+    // #region ---- These are unlikely to be needed externally: ----
     autoSendReady = true
     httpNodeRoot = '' // Node-RED setting (via cookie)
     ioNamespace = ''
@@ -480,14 +481,22 @@ export const Uib = class Uib {
             },
         },
     }
-    //#endregion -- not external --
+    // #endregion -- not external --
 
-    //#endregion --- End of variables ---
+    // #endregion --- End of variables ---
 
-    //#region ------- Getters and Setters ------- //
+    // #region ------- Getters and Setters ------- //
 
     // Change logging level dynamically (affects both console. and print.)
-    set logLevel(level) { log.level = level; console.log('%c❗ info%c [logLevel]', `${log.LOG_STYLES.level} ${log.LOG_STYLES.info.css}`, `${log.LOG_STYLES.head} ${log.LOG_STYLES.info.txtCss}`, `Set to ${level} (${log.LOG_STYLES.names[level]})`) /* changeLogLevel(level)*/ }
+    set logLevel(level) {
+        log.level = level
+        console.log(
+            '%c❗ info%c [logLevel]',
+            `${log.LOG_STYLES.level} ${log.LOG_STYLES.info.css}`,
+            `${log.LOG_STYLES.head} ${log.LOG_STYLES.info.txtCss}`,
+            `Set to ${level} (${log.LOG_STYLES.names[level]})`
+        ) /* changeLogLevel(level)*/
+    }
     get logLevel() { return log.level }
 
     get meta() { return Uib._meta }
@@ -527,8 +536,8 @@ export const Uib = class Uib {
         // this.emit(prop, val)
 
         // trigger an event on the prop name, pass both the name and value to the event details
-        this._dispatchCustomEvent('uibuilder:propertyChanged', { 'prop': prop, 'value': val, 'oldValue': oldVal, 'store': store, 'autoload': autoload, })
-        this._dispatchCustomEvent(`uibuilder:propertyChanged:${prop}`, { 'prop': prop, 'value': val, 'oldValue': oldVal, 'store': store, 'autoload': autoload, })
+        this._dispatchCustomEvent('uibuilder:propertyChanged', { prop: prop, value: val, oldValue: oldVal, store: store, autoload: autoload, })
+        this._dispatchCustomEvent(`uibuilder:propertyChanged:${prop}`, { prop: prop, value: val, oldValue: oldVal, store: store, autoload: autoload, })
 
         return val
     }
@@ -587,7 +596,7 @@ export const Uib = class Uib {
                     log('error', 'Uib:setStore', 'Cannot save autoload list. ', e)()
                 }
             }
-            this._dispatchCustomEvent('uibuilder:propertyStored', { 'prop': id, 'value': value, 'autoload': autoload, })
+            this._dispatchCustomEvent('uibuilder:propertyStored', { prop: id, value: value, autoload: autoload, })
             return true
         } catch (e) {
             log('error', 'Uib:setStore', 'Cannot write to localStorage. ', e)()
@@ -632,9 +641,9 @@ export const Uib = class Uib {
         return Object.keys(this.#propChangeCallbacks)
     }
 
-    //#endregion ------- -------- ------- //
+    // #endregion ------- -------- ------- //
 
-    //#region ------- Our own event handling system ---------- //
+    // #region ------- Our own event handling system ---------- //
 
     /** Standard fn to create a custom event with details & dispatch it
      * @param {string} title The event name
@@ -766,9 +775,9 @@ export const Uib = class Uib {
     //     if (this.#events[prop]) delete this.#events[prop]
     // }
 
-    //#endregion ---------- End of event handling system ---------- //
+    // #endregion ---------- End of event handling system ---------- //
 
-    //#region ------- General Utility Functions -------- //
+    // #region ------- General Utility Functions -------- //
 
     /** Check supplied msg from server for a timestamp - if received, work out & store difference to browser time
      * @param {object} receivedMsg A message object recieved from Node-RED
@@ -1083,11 +1092,11 @@ export const Uib = class Uib {
         return false
     } // --- End of elementIsVisible --- //
 
-    //#endregion -------- -------- -------- //
+    // #endregion -------- -------- -------- //
 
-    //#region ------- UI handlers --------- //
+    // #region ------- UI handlers --------- //
 
-    //#region -- Direct to _ui --
+    // #region -- Direct to _ui --
     // ! NOTE: Direct assignments change the target `this` to here. Use with caution
     // However, also note that the window/jsdom and the window.document
     // references are now static in _ui so not impacted by this.
@@ -1147,7 +1156,7 @@ export const Uib = class Uib {
      *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
      * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
      */
-    buildHtmlTable(data, opts={}) {
+    buildHtmlTable(data, opts = {}) {
         return _ui.buildHtmlTable(data, opts)
     }
 
@@ -1158,7 +1167,7 @@ export const Uib = class Uib {
      *   @param {HTMLElement|string} opts.parent Default=body. The table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
      *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
      */
-    createTable(data=[], opts={parent: 'body',}) {
+    createTable(data = [], opts = { parent: 'body', }) {
         _ui.createTable(data, opts)
     }
 
@@ -1297,7 +1306,7 @@ export const Uib = class Uib {
      *
      * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
      */
-    tblAddRow(tbl, rowData={}, options={}) {
+    tblAddRow(tbl, rowData = {}, options = {}) {
         return _ui.tblAddRow(tbl, rowData, options)
     }
 
@@ -1310,7 +1319,6 @@ export const Uib = class Uib {
     tblRemoveRow(tbl, rowIndex, options = {}) {
         _ui.tblRemoveRow(tbl, rowIndex, options)
     }
-
 
     /** Show a pop-over "toast" dialog or a modal alert
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
@@ -1350,7 +1358,7 @@ export const Uib = class Uib {
         _ui.uiEnhanceElement(el, component)
     }
 
-    //#endregion -- direct to _ui --
+    // #endregion -- direct to _ui --
 
     /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
      * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
@@ -1360,7 +1368,7 @@ export const Uib = class Uib {
      * @private
      */
     async _uibAttribObserver(mutations/* , observer */) {
-        mutations.forEach( async m => { // async so process does not wait
+        mutations.forEach( async (m) => { // async so process does not wait
             log('trace', 'uibuilder:_uibAttribObserver', 'Mutations ', m)()
             // Deal with attribute changes
             if (m.attributeName && (m.attributeName.startsWith('uib') || m.attributeName.startsWith('data-uib'))) {
@@ -1369,7 +1377,7 @@ export const Uib = class Uib {
             } else if (m.addedNodes.length > 0) {
                 // And deal with newly added elements (e.g. from route change)
                 // Check for added nodes with uib attribs
-                m.addedNodes.forEach( async n => { // async so process does not wait
+                m.addedNodes.forEach( async (n) => { // async so process does not wait
                     // Attributes are a map and we need an array
                     let aNames = []
                     try { // Nodes might not always have attributes
@@ -1378,14 +1386,14 @@ export const Uib = class Uib {
                     // Get any added elements that have uib attribs
                     const intersect = this.arrayIntersect(this.uibAttribs, aNames)
                     // Process them
-                    intersect.forEach( async el => {
+                    intersect.forEach( async (el) => {
                         this._uibAttrScanOne(el)
                     })
                     // And get any children of the added elements that have uib attribs (a node might not have querySelectorAll method)
                     let uibChildren = []
                     if (n.querySelectorAll) uibChildren = n.querySelectorAll(this.#uibAttrSel)
                     // Process them
-                    uibChildren.forEach( async el => {
+                    uibChildren.forEach( async (el) => {
                         this._uibAttrScanOne(el)
                     })
                 })
@@ -1447,12 +1455,12 @@ export const Uib = class Uib {
      */
     async _uibAttrScanAll(parentEl) {
         if (!Array.isArray(parentEl)) parentEl = [parentEl]
-        parentEl.forEach( async p => { // async so process does not wait
+        parentEl.forEach( async (p) => { // async so process does not wait
             const uibChildren = p.querySelectorAll(this.#uibAttrSel)
             // log('trace', 'uibuilder:_uibAttrScanAll:forEach:children', 'p, uibChildren: ', p, uibChildren)()
             if (uibChildren.length > 0) {
                 // console.log('existing elements uib attrib', uibChildren)
-                uibChildren.forEach( el => {
+                uibChildren.forEach( (el) => {
                     this._uibAttrScanOne(el) // async so process does not wait
                 })
             }
@@ -1541,7 +1549,7 @@ export const Uib = class Uib {
      */
     getElementCustomProps(el) {
         const props = {}
-        Object.keys(el).forEach( key => {
+        Object.keys(el).forEach( (key) => {
             if (key.startsWith('_')) return // Exclude private
             props[key] = el[key]
         })
@@ -1622,10 +1630,10 @@ export const Uib = class Uib {
         // }
 
         const formDetails = {
-            'id': id,
-            'name': el.name,
-            'valid': el.checkValidity(),
-            'type': el.type,
+            id: id,
+            name: el.name,
+            valid: el.checkValidity(),
+            type: el.type,
         }
         if (value !== null) formDetails.value = value
         if (checked !== null) formDetails.checked = checked
@@ -1671,11 +1679,11 @@ export const Uib = class Uib {
         if (config.return) return _ui.notification(config)
 
         _ui.notification(config)
-            .then( res => { // eslint-disable-line promise/always-return
+            .then( (res) => { // eslint-disable-line promise/always-return
                 log('info', 'Uib:notification', 'Notification completed event', res)()
                 // if (config.return) return res
             })
-            .catch( err => {
+            .catch( (err) => {
                 log('error', 'Uib:notification', 'Notification error event', err)()
             })
         return null
@@ -1811,11 +1819,11 @@ export const Uib = class Uib {
                     },
                     components: [
                         {
-                            'type': 'table',
-                            'components': [
+                            type: 'table',
+                            components: [
                                 {
-                                    'type': 'tbody',
-                                    'components': [],
+                                    type: 'tbody',
+                                    components: [],
                                 }
                             ],
                         }
@@ -1825,23 +1833,23 @@ export const Uib = class Uib {
         }
         const details = root.components[0].components[0].components[0].components
 
-        Object.values(this.#showStatus).forEach( entry => {
+        Object.values(this.#showStatus).forEach( (entry) => {
             details.push({
-                'type': 'tr',
-                'attributes': {
+                type: 'tr',
+                attributes: {
                     title: entry.description,
                 },
-                'components': [
+                components: [
                     {
-                        'type': 'th',
-                        'slot': entry.label,
+                        type: 'th',
+                        slot: entry.label,
                     },
                     {
-                        'type': 'td',
-                        'attributes': {
+                        type: 'td',
+                        attributes: {
                             'data-varType': entry.var,
                         },
-                        'slot': entry.var === 'version' ? Uib._meta.version : JSON.stringify(this[entry.var]),
+                        slot: entry.var === 'version' ? Uib._meta.version : JSON.stringify(this[entry.var]),
                     }
                 ],
             })
@@ -1882,7 +1890,7 @@ export const Uib = class Uib {
             this.#uiObservers[cssSelector] = new MutationObserver( function( mutationList /* , observer */ ) {
                 const out = []
 
-                mutationList.forEach( mu => {
+                mutationList.forEach( (mu) => {
                     // console.log({ mu })
                     const oMu = {
                         type: mu.type,
@@ -1977,9 +1985,9 @@ export const Uib = class Uib {
         }
     } // ---- End of watchDom ---- //
 
-    //#endregion -------- -------- -------- //
+    // #endregion -------- -------- -------- //
 
-    //#region ------- HTML cache --------- //
+    // #region ------- HTML cache --------- //
 
     /** Clear the saved DOM from localStorage */
     clearHtmlCache() {
@@ -2009,16 +2017,15 @@ export const Uib = class Uib {
         this.setStore('htmlCache', document.documentElement.innerHTML)
     }
 
-    //#endregion -------- -------- -------- //
+    // #endregion -------- -------- -------- //
 
-    //#region ------- Message Handling (To/From Node-RED) -------- //
+    // #region ------- Message Handling (To/From Node-RED) -------- //
 
     /** Handles original control msgs (not to be confused with "new" msg._uib controls)
      * @param {*} receivedCtrlMsg The msg received on the socket.io control channel
      * @private
      */
     _ctrlMsgFromServer(receivedCtrlMsg) {
-
         // Make sure that msg is an object & not null
         if (receivedCtrlMsg === null) {
             receivedCtrlMsg = {}
@@ -2207,7 +2214,7 @@ export const Uib = class Uib {
 
         // Add the originator metadata if required
         if (originator === '' && this.originator !== '') originator = this.originator
-        if (originator !== '') Object.assign(msgToSend, { '_uib': { 'originator': originator, }, })
+        if (originator !== '') Object.assign(msgToSend, { _uib: { originator: originator, }, })
 
         // If the msg does not have a topic - see if we want to add one
         if ( !Object.prototype.hasOwnProperty.call(msgToSend, 'topic') ) {
@@ -2257,7 +2264,6 @@ export const Uib = class Uib {
      * @private
      */
     _stdMsgFromServer(receivedMsg) {
-
         // Make sure that msg is an object & not null
         receivedMsg = this.makeMeAnObject(receivedMsg, 'payload')
 
@@ -2418,7 +2424,7 @@ export const Uib = class Uib {
                         this.send(msg)
                         return true
                     })
-                    .catch( err => {
+                    .catch( (err) => {
                         log(0, 'Uib:_uibCommand', 'Error: ', err)()
                     })
             } else {
@@ -2621,7 +2627,7 @@ export const Uib = class Uib {
                 id: target.id !== '' ? target.id : undefined,
                 name: target.name !== '' ? target.name : undefined,
                 slotText: target.textContent ? target.textContent.substring(0, 255) : undefined,
-                dataset: {...target.dataset,},
+                dataset: { ...target.dataset, },
 
                 form: formDetails,
                 props: props,
@@ -2716,7 +2722,7 @@ export const Uib = class Uib {
             const msg = {
                 topic: this.topic || 'file-upload',
                 payload: arrayBuffer,
-                
+
                 fileName: file.name,
                 type: file.type,
                 lastModified: file.lastModifiedDate,
@@ -2725,7 +2731,7 @@ export const Uib = class Uib {
                 clientId: this.clientId,
                 pageName: this.pageName,
                 tabId: this.tabId,
-                
+
                 ...meta,
             }
 
@@ -2735,7 +2741,6 @@ export const Uib = class Uib {
                 msg.payload = undefined
                 msg.error = `File is too large to send. File size: ${arrayBuffer.byteLength}. Max msg size: ${maxSize}`
                 log('error', 'Uib:uploadFile', msg.error)()
-
             }
 
             this.send(msg)
@@ -2744,9 +2749,9 @@ export const Uib = class Uib {
         // Read the file as an ArrayBuffer
         reader.readAsArrayBuffer(file)
     }
-    //#endregion -------- ------------ -------- //
+    // #endregion -------- ------------ -------- //
 
-    //#region ------- Socket.IO -------- //
+    // #region ------- Socket.IO -------- //
 
     /** Return the Socket.IO namespace
      * The cookie method is the most reliable but this falls back to trying to work it
@@ -2758,7 +2763,6 @@ export const Uib = class Uib {
      * @private
      */
     _getIOnamespace() {
-
         let ioNamespace
 
         /** Try getting the namespace cookie. */
@@ -2855,17 +2859,17 @@ export const Uib = class Uib {
         log(
             'info',
             'Uib:ioSetup',
-            `✅ SOCKET CONNECTED.\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`,
+            `✅ SOCKET CONNECTED.\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
         )()
 
-        this._dispatchCustomEvent('uibuilder:socket:connected', { 'numConnections': this.connectedNum, 'isRecovery': this._socket.recovered, })
+        this._dispatchCustomEvent('uibuilder:socket:connected', { numConnections: this.connectedNum, isRecovery: this._socket.recovered, })
 
-        this._socket.io.engine.on("upgrade", () => {
+        this._socket.io.engine.on('upgrade', () => {
             this.currentTransport = this._socket.io.engine.transport.name
             log(
                 'trace',
                 'Uib:_onConnect:onUpgrade',
-                `SOCKET CONNECTION UPGRADED.\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`,
+                `SOCKET CONNECTION UPGRADED.\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
             )()
         })
 
@@ -2875,7 +2879,7 @@ export const Uib = class Uib {
                 log(
                     'error',
                     'Uib:Connection',
-                    `Connected to Node-RED but NO SOCKET UPGRADE!\n➡️ CHECK NETWORK and any PROXIES for issues. ⬅️\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`,
+                    `Connected to Node-RED but NO SOCKET UPGRADE!\n➡️ CHECK NETWORK and any PROXIES for issues. ⬅️\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
                 )()
             }
         }, 2000)
@@ -2905,7 +2909,6 @@ export const Uib = class Uib {
      * @private
      */
     _ioSetup() {
-
         // Just a notification, actual load is done outside the class (see start of file)
         if (io === undefined) {
             log('error', 'Uib:ioSetup', 'Socket.IO client not loaded, Node-RED comms will not work')()
@@ -2963,8 +2966,8 @@ export const Uib = class Uib {
             this._dispatchCustomEvent('uibuilder:socket:disconnected', err)
         })
 
-        this._socket.io.engine.on("connection_error", (err) => {
-             log(
+        this._socket.io.engine.on('connection_error', (err) => {
+            log(
                 'error',
                 'Uib:ioSetup:io:engine:connection_error',
                 err.code, // 3
@@ -3042,9 +3045,9 @@ export const Uib = class Uib {
         if (this.#timerid) window.clearTimeout(this.#timerid)
     }
 
-    //#endregion -------- ------------ -------- //
+    // #endregion -------- ------------ -------- //
 
-    //#region Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
+    // #region Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
 
     /** Attempt to load a service worker
      * https://yonatankra.com/how-service-workers-sped-up-our-website-by-97-5/
@@ -3110,9 +3113,9 @@ export const Uib = class Uib {
     //     })
     // }
 
-    //#endregion ! EXPERIMENTAL
+    // #endregion ! EXPERIMENTAL
 
-    //#region ------- Class construction & startup method -------- //
+    // #region ------- Class construction & startup method -------- //
 
     constructor() {
         log('trace', 'Uib:constructor', 'Starting')()
@@ -3180,7 +3183,7 @@ export const Uib = class Uib {
 
         this.set('ioNamespace', this._getIOnamespace())
 
-        //#region - Try to make sure client uses Socket.IO client version from the uibuilder module (using cookie or path) @since v2.0.0 2019-02-24 allows for httpNodeRoot
+        // #region - Try to make sure client uses Socket.IO client version from the uibuilder module (using cookie or path) @since v2.0.0 2019-02-24 allows for httpNodeRoot
 
         /** httpNodeRoot (to set path) */
         if ('uibuilder-webRoot' in this.cookies) {
@@ -3188,7 +3191,7 @@ export const Uib = class Uib {
             log('trace', 'Uib:constructor', `httpNodeRoot set by cookie to "${this.httpNodeRoot}"`)()
         } else {
             // split current url path, eliminate any blank elements and trailing or double slashes
-            const fullPath = window.location.pathname.split('/').filter(function (t) { return t.trim() !== '' })
+            const fullPath = window.location.pathname.split('/').filter(function (t) { return t.trim() !== '' }) // eslint-disable-line @stylistic/max-statements-per-line
             /** handle url includes file name - @since v2.0.5 Extra check for 0 length, Issue #73. */
             if (fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
             fullPath.pop() // gives the last path section of the url
@@ -3319,10 +3322,10 @@ export const Uib = class Uib {
         this._dispatchCustomEvent('uibuilder:startComplete')
     }
 
-    //#endregion -------- ------------ -------- //
+    // #endregion -------- ------------ -------- //
 } // ==== End of Class Uib ====
 
-//#region --- Wrap up - get things started, define globals & web components ---
+// #region --- Wrap up - get things started, define globals & web components ---
 
 // Create an instance (we will only ever want one)
 const uibuilder = new Uib()
@@ -3419,4 +3422,4 @@ customElements.define('uib-var', UibVar)
 customElements.define('uib-meta', UibMeta)
 customElements.define('apply-template', ApplyTemplate)
 
-//#endregion --- Wrap up ---
+// #endregion --- Wrap up ---

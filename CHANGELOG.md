@@ -24,6 +24,18 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 <!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
 
+## [v7.4.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.0...v7.3.0)
+
+### 📌 Highlights
+
+### uibuilder client library
+
+* New variable `uibuilder.get('currentTransport')`
+  
+  Will either be `websocket` or `polling`. This is set when the connection is established and may change if the connection is lost and re-established. Should generally be `websocket` after a few ms. If still set to `polling`, then either there are network issues or there is a poorly configured proxy server in the way. If you are using a proxy server, it should be configured to allow WebSocket connections. Even with `polling`, the connection should still work but it will be slower and less efficient.
+  
+  A console error message will be logged if the transport is not `websocket` after a few seconds.
+
 ## [v7.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.3.0...v7.2.0)
 
 ### 📌 Highlights
