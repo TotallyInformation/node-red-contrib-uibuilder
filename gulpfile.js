@@ -1,5 +1,8 @@
-/* eslint-disable n/no-unpublished-require, sonarjs/no-duplicate-string, jsdoc/require-param, jsdoc/require-jsdoc */
-
+/* eslint-disable jsdoc/require-param */
+/* eslint-disable n/no-unpublished-require */
+// @ts-nocheck
+/* eslint-disable @stylistic/no-multi-spaces */
+/* eslint-disable jsdoc/require-jsdoc */
 /**
  * https://semaphoreci.com/community/tutorials/getting-started-with-gulp-js
  * https://gulpjs.com/plugins/
@@ -40,13 +43,13 @@ const greplace = require('gulp-replace')
 const htmlmin = require('gulp-htmlmin')
 const jeditor = require('gulp-json-editor')
 // const gulpEsbuild = require('gulp-esbuild')
-const { createGulpEsbuild } = require('gulp-esbuild')
+const { createGulpEsbuild, } = require('gulp-esbuild')
 const gulpEsbuild = createGulpEsbuild({})
 
-const sourcemaps = require("gulp-sourcemaps");
-const browserslist = require('browserslist');
-const { transform, browserslistToTargets } = require('lightningcss');
-const lightningcss = require("gulp-lightningcss");
+const sourcemaps = require('gulp-sourcemaps')
+const browserslist = require('browserslist')
+const { transform, browserslistToTargets, } = require('lightningcss')
+const lightningcss = require('gulp-lightningcss')
 
 const execa = require('execa')
 
@@ -70,7 +73,7 @@ const nodeSrcRoot = 'src/editor'
 const stdio = 'inherit'
 
 // @ts-ignore Find the module version in the package.json
-const { version } = JSON.parse(fs.readFileSync('package.json'))
+const { version, } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
 const release = '7.4.0'
 // Wanted node.js version - used for ESBUILD
@@ -114,14 +117,14 @@ console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js
  *  - Add text replace to ensure 2021 in (c) blocks is current year
  */
 
-//#region ---- packing FE components ----
+// #region ---- packing FE components ----
 
-//#region -- ESbuild client library ---
+// #region -- ESbuild client library ---
 /** ESBuild front-end as ES Module minified
  * @param {Function} cb Callback
  */
 function packfeModuleMin(cb) {
-    src(`${feModuleSrc}/uibuilder.module.js`)
+    src(`${feModuleSrc}/uibuilder.module.mjs`)
         .pipe(gulpEsbuild({
             outfile: 'uibuilder.esm.min.js',
             bundle: true,
@@ -150,7 +153,7 @@ function packfeModuleMin(cb) {
                 // 'opera75',   // Mar 24, 2021
                 // 'firefox89', // Jun 1, 2021
                 // 'safari15',  // Sep 20, 2021
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[packfeModuleMin] ERROR ', err)
@@ -180,7 +183,7 @@ function packfeModule(cb) {
             sourcemap: false,
             target: [
                 'es2020',
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[packfeModule] ERROR ', err)
@@ -228,7 +231,7 @@ function packfeIIFEmin(cb) {
                 // 'opera75',   // Mar 24, 2021
                 // 'firefox89', // Jun 1, 2021
                 // 'safari15',  // Sep 20, 2021
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[packfeIIFEmin] ERROR ', err)
@@ -256,7 +259,7 @@ function packfeIIFE(cb) {
             sourcemap: false,
             target: [
                 'es2020',
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[packfeIIFE] ERROR ', err)
@@ -275,9 +278,9 @@ function packfeIIFE(cb) {
 
     // cb()
 }
-//#endregion -- ESbuild NEW client library ---
+// #endregion -- ESbuild NEW client library ---
 
-//#region -- ESbuild UI client library ---
+// #region -- ESbuild UI client library ---
 /** ESBuild ui.js as ES Module minified
  * @param {Function} cb Callback
  */
@@ -311,7 +314,7 @@ function packUiEsmMin(cb) {
                 // 'opera75',   // Mar 24, 2021
                 // 'firefox89', // Jun 1, 2021
                 // 'safari15',  // Sep 20, 2021
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[packUiEsmMin] ERROR ', err)
@@ -338,7 +341,7 @@ function packUiEsm(cb) {
             sourcemap: false,
             target: [
                 'es2020',
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[packUiEsm] ERROR ', err)
@@ -384,7 +387,7 @@ function packUiIIFEmin(cb) {
                 // 'opera75',   // Mar 24, 2021
                 // 'firefox89', // Jun 1, 2021
                 // 'safari15',  // Sep 20, 2021
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[packUiIIFEmin] ERROR ', err)
@@ -411,7 +414,7 @@ function packUiIIFE(cb) {
             sourcemap: false,
             target: [
                 'es2020',
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[packUiIIFE] ERROR ', err)
@@ -439,7 +442,7 @@ function packUiNode(cb) {
             packages: 'external',
             target: [
                 nodeVersion,
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[packUiNode] ERROR ', err)
@@ -452,9 +455,9 @@ function packUiNode(cb) {
             cb()
         })
 }
-//#endregion -- ESbuild UI client library ---
+// #endregion -- ESbuild UI client library ---
 
-//#region -- ESbuild components --
+// #region -- ESbuild components --
 /** ESBuild front-end as IIFE minified
  * @param {Function} cb Callback
  */
@@ -531,9 +534,9 @@ function packUiNode(cb) {
 //         })
 // }
 
-//#endregion -- ---- --
+// #endregion -- ---- --
 
-//#region -- ESbuild uibrouter --
+// #region -- ESbuild uibrouter --
 function buildUibRouterIIFE(cb) {
     src(`${feModuleSrc}/uibrouter.js`)
         .pipe(gulpEsbuild({
@@ -545,7 +548,7 @@ function buildUibRouterIIFE(cb) {
             sourcemap: false,
             target: [
                 'es2020',
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[buildUibRouterIIFE] ERROR ', err)
@@ -567,7 +570,7 @@ function buildUibRouterIIFEmin(cb) {
             sourcemap: true,
             target: [
                 'es2020',
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[buildUibRouterIIFE] ERROR ', err)
@@ -589,7 +592,7 @@ function buildUibRouterESM(cb) {
             sourcemap: false,
             target: [
                 'es2020',
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[buildUibRouterIIFE] ERROR ', err)
@@ -611,7 +614,7 @@ function buildUibRouterESMmin(cb) {
             sourcemap: true,
             target: [
                 'es2020',
-            ]
+            ],
         }))
         .on('error', function(err) {
             console.error('[buildUibRouterIIFE] ERROR ', err)
@@ -622,13 +625,13 @@ function buildUibRouterESMmin(cb) {
             cb()
         })
 }
-//#endregion -- ---- --
+// #endregion -- ---- --
 
-//#region -- tests --
+// #region -- tests --
 /** Pack (Uglify) front-end IIFE ES6 task
  * @param {Function} cb Callback
  */
-function packfeIIFEes6(cb) { // eslint-disable-line no-unused-vars
+function packfeIIFEes6(cb) {
     try {
         src(`${feModuleSrc}/uibuilder.module.js`)
             .pipe(gulpEsbuild({
@@ -659,7 +662,7 @@ function packfeIIFEes6(cb) { // eslint-disable-line no-unused-vars
                     // 'opera75',   // Mar 24, 2021
                     // 'firefox89', // Jun 1, 2021
                     // 'safari15',  // Sep 20, 2021
-                ]
+                ],
             }))
             .pipe(greplace(/="(.*)-mod"/, '="$1-es6.min"'))
             .pipe(dest(feDestAlt))
@@ -674,7 +677,7 @@ function packfeIIFEes6(cb) { // eslint-disable-line no-unused-vars
                 sourcemap: false,
                 target: [
                     'es2016',
-                ]
+                ],
             }))
             .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-es6"'))
             .pipe(dest(feDestAlt))
@@ -688,7 +691,7 @@ function packfeIIFEes6(cb) { // eslint-disable-line no-unused-vars
 /** Pack (Uglify) front-end IIFE ES5 task - DOES NOT WORK!
  * @param {Function} cb Callback
  */
-function packfeIIFEes5(cb) { // eslint-disable-line no-unused-vars
+function packfeIIFEes5(cb) {
     try {
         src(`${feModuleSrc}/uibuilder.module.js`)
             .pipe(gulpEsbuild({
@@ -719,7 +722,7 @@ function packfeIIFEes5(cb) { // eslint-disable-line no-unused-vars
                     // 'opera75',   // Mar 24, 2021
                     // 'firefox89', // Jun 1, 2021
                     // 'safari15',  // Sep 20, 2021
-                ]
+                ],
             }))
             .pipe(greplace(/="(.*)-mod"/, '="$1-es5.min"'))
             .pipe(dest(feDestAlt))
@@ -734,7 +737,7 @@ function packfeIIFEes5(cb) { // eslint-disable-line no-unused-vars
                 sourcemap: false,
                 target: [
                     'es5',
-                ]
+                ],
             }))
             .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-es5"'))
             .pipe(dest(feDestAlt))
@@ -747,10 +750,10 @@ function packfeIIFEes5(cb) { // eslint-disable-line no-unused-vars
 }
 //#endregion
 
-//#endregion ---- ---- ----
+// #endregion ---- ---- ----
 
 // Allows iOS Safari back to v12, excludes IE
-let targets = browserslistToTargets(browserslist('>=0.12%, not ie > 0'));
+const targets = browserslistToTargets(browserslist('>=0.12%, not ie > 0'))
 // console.log(targets)
 
 const lightningcss_options = {
@@ -766,9 +769,9 @@ const lightningcss_options = {
 function minifyBrandCSS(cb) {
     src(`${feDest}/uib-brand.css`)
         .pipe(sourcemaps.init())
-            .pipe(lightningcss(lightningcss_options))
-            .pipe(rename('uib-brand.min.css'))
-        .pipe(sourcemaps.write(""))
+        .pipe(lightningcss(lightningcss_options))
+        .pipe(rename('uib-brand.min.css'))
+        .pipe(sourcemaps.write(''))
         .pipe(dest(feDest))
         .on('end', function() {
             // in case of success
@@ -779,12 +782,12 @@ function minifyBrandCSS(cb) {
 /** See the buildDocBundle script in package.json for building the Docsify bundle for offline use */
 // function buildDocsApp(cb) {}
 
-//#region ---- Build node panels ----
+// #region ---- Build node panels ----
 
 /** Build the uib-element panel */
 function buildPanelUibElement(cb) {
     try {
-        src(`${nodeSrcRoot}/uib-element/main.html`, ) // { since: lastRun(buildMe) } )
+        src(`${nodeSrcRoot}/uib-element/main.html` ) // { since: lastRun(buildMe) } )
             // .pipe(debug({title:'debug1',minimal:false}))
             .pipe( include() )
             // Rename output to $dirname/editor.html
@@ -806,7 +809,7 @@ function buildPanelUibElement(cb) {
 /** Combine the parts of uib-update.html */
 function buildPanelUpdate(cb) {
     try {
-        src(`${nodeSrcRoot}/uib-update/main.html`, ) // { since: lastRun(buildMe) } )
+        src(`${nodeSrcRoot}/uib-update/main.html` ) // { since: lastRun(buildMe) } )
             // .pipe(debug({title:'debug1',minimal:false}))
             .pipe( include() )
             // Rename output to $dirname/editor.html
@@ -828,7 +831,7 @@ function buildPanelUpdate(cb) {
 /** Combine the parts of uib-tag.html */
 function buildPanelTag(cb) {
     try {
-        src(`${nodeSrcRoot}/uib-tag/main.html`, ) // { since: lastRun(buildMe) } )
+        src(`${nodeSrcRoot}/uib-tag/main.html` ) // { since: lastRun(buildMe) } )
             // .pipe(debug({title:'debug1',minimal:false}))
             .pipe( include() )
             // Rename output to $dirname/editor.html
@@ -850,7 +853,7 @@ function buildPanelTag(cb) {
 /** Combine the parts of uib-html.html */
 function buildPanelHTML(cb) {
     try {
-        src(`${nodeSrcRoot}/uib-html/main.html`, ) // { since: lastRun(buildMe) } )
+        src(`${nodeSrcRoot}/uib-html/main.html` ) // { since: lastRun(buildMe) } )
             // .pipe(debug({title:'debug1',minimal:false}))
             .pipe( include() )
             // Rename output to $dirname/editor.html
@@ -869,7 +872,7 @@ function buildPanelHTML(cb) {
     cb()
 }
 
-//#endregion ---- ---- ----
+// #endregion ---- ---- ----
 
 // const buildme = parallel(buildPanelUib, buildPanelSender, buildPanelReceiver)
 const buildme = parallel(
@@ -877,7 +880,7 @@ const buildme = parallel(
     buildPanelUibElement,
     buildPanelUpdate,
     buildPanelTag,
-    buildPanelHTML,
+    buildPanelHTML
 )
 
 const buildNewFe = parallel(
@@ -940,7 +943,7 @@ function watchme(cb) {
     cb()
 }
 
-//#region ---- set versions ----
+// #region ---- set versions ----
 
 /** Set uibuilder version in package.json */
 function setPackageVersion(cb) {
@@ -948,7 +951,7 @@ function setPackageVersion(cb) {
         // bump version without committing and tagging
         // await execa('npm', ['version', release, '--no-git-tag-version'], {stdio})
         src('./package.json')
-            .pipe(jeditor({ 'version': release } ) )
+            .pipe(jeditor({ version: release, } ) )
             .pipe(dest('.') )
         console.log(`setPackageVersion: Setting version to ${release}` )
     } else {
@@ -960,7 +963,7 @@ function setPackageVersion(cb) {
 function setPackageLockVersion(cb) {
     if (version !== release) {
         src('./package-lock.json')
-            .pipe(jeditor({ 'version': release } ) )
+            .pipe(jeditor({ version: release, } ) )
             .pipe(dest('.') )
         console.log(`setPackageVersion: Setting version to ${release}` )
     }
@@ -974,7 +977,7 @@ function notifyOtherVersions(cb) {
     cb()
 }
 
-//#endregion ---- ---- ----
+// #endregion ---- ---- ----
 
 /** Create a new GitHub tag for a release (only if release ver # different to last committed tag) */
 async function createTag(cb) {
@@ -994,9 +997,9 @@ async function createTag(cb) {
         // const commitMsg = `chore: release ${release}`
         // await execa('git', ['add', '.'], { stdio })
         // await execa('git', ['commit', '--message', commitMsg], { stdio })
-        await execa('git', ['tag', `v${release}`], { stdio })
-        await execa('git', ['push', '--follow-tags'], { stdio })
-        await execa('git', ['push', 'origin', '--tags'], { stdio })
+        await execa('git', ['tag', `v${release}`], { stdio, })
+        await execa('git', ['push', '--follow-tags'], { stdio, })
+        await execa('git', ['push', 'origin', '--tags'], { stdio, })
     } else {
         console.log('Requested release version is same as the latest tag - not creating tag')
     }
