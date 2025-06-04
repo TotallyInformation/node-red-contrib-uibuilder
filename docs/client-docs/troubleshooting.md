@@ -3,8 +3,7 @@ title: Technical details for the modern, modular front-end client `uibuilder.esm
 description: |
   In general, uibuilder is very robust and will rarely give any problems. However, here are a few issues that have been seen in the past.
 created: 2022-06-11 14:15:26
-lastUpdated: 2023-01-04 15:40:54
-updated: 2023-12-30 17:01:41
+updated: 2025-06-04 17:05:42
 ---
 
 ## Vendor files are not loading
@@ -14,6 +13,18 @@ If you are getting 404 errors on your vendor files (such as vue or some other fr
 As standard, it is recommended to access files using a relative URL as in `<script type="module" async src="../uibuilder/vendor/@totallyinformation/web-components/components/syntax-highlight.js"></script>` but this is incorrect for a file served from a sub-folder. In the previous example, you would need `<script type="module" async src="../../uibuilder/vendor/@totallyinformation/web-components/components/syntax-highlight.js"></script>` - note the extra level of `../`. This would need to be added to all relative URL's. 
 
 Alternatively, you can, of course, use absolute URLs such as `<script type="module" async src="http://localhost:1880/uibuilder/vendor/@totallyinformation/web-components/components/syntax-highlight.js"></script>`, however *this isn't recommended* since it can make your code rather fragile. If you make any changes to your Node-RED environment, you might have to make changes to all of your URL's as well.
+
+## Socket.IO poor performance
+
+First thing to check is whether Socket.IO was able to upgrade its connection from `polling` to `websocket`. If it is still using `polling` after a few ms, then you will see a performance hit both at the client and potentially at the Node-RED server.
+
+If you see the console error "Connected to Node-RED but NO SOCKET UPGRADE! ➡️ CHECK NETWORK and any PROXIES for issues. ⬅️", then you will need to check your network and any proxy servers that may be in the way. 
+
+The most common cause of this is a proxy server that has not been correctly configured to proxy the websocket protocol.
+
+The less common cause is that your network performing poorly (or with very high latency) such that the websocket connection cannot be maintained. In this case, you will want to check the Networks tab in your browser's developer tools. You may see the connection "upgrading" to websockets and then dropping back to `polling`.
+
+The problem may be made worse if you are sending very large messages. In that case, it is possible to tune Socket.IO's settings to allow longer ping times.
 
 ## Socket.IO refuses to connect
 
