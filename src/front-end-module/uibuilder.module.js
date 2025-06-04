@@ -2803,7 +2803,7 @@ export const Uib = class Uib {
         if (!delay) delay = this.retryMs
         if (!factor) factor = this.retryFactor
 
-        log('trace', 'Uib:checkConnect', `Checking connection. Connected: ${this._socket.connected}. Timer: ${this.#timerid}. Depth: ${depth}. Delay: ${delay}. Factor: ${factor}`, this._socket)()
+        log('trace', 'Uib:checkConnect', `Checking connection.\nConnected: ${this._socket.connected}.\nTimer: ${this.#timerid}. Depth: ${depth}. Delay: ${delay}. Factor: ${factor}.\nTransport: ${this.currentTransport}`, this._socket)()
 
         // If we are connected ...
         if (this._socket.connected === true) {
@@ -2849,9 +2849,36 @@ export const Uib = class Uib {
      * @private
      */
     _onConnect() {
+        this.currentTransport = this._socket.io.engine.transport.name
+
         // WARNING: You cannot change any of the this._socket.auth settings at this point
-        log('info', 'Uib:ioSetup', `✅ SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. \nNamespace: ${this.ioNamespace}`)()
+        log(
+            'info',
+            'Uib:ioSetup',
+            `✅ SOCKET CONNECTED.\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`,
+        )()
+
         this._dispatchCustomEvent('uibuilder:socket:connected', { 'numConnections': this.connectedNum, 'isRecovery': this._socket.recovered, })
+
+        this._socket.io.engine.on("upgrade", () => {
+            this.currentTransport = this._socket.io.engine.transport.name
+            log(
+                'trace',
+                'Uib:_onConnect:onUpgrade',
+                `SOCKET CONNECTION UPGRADED.\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`,
+            )()
+        })
+
+        // If, 2 seconds after connection, we don't have an upgrade to websockets, warn the user.
+        setTimeout(() => {
+            if (this.currentTransport !== 'websocket') {
+                log(
+                    'error',
+                    'Uib:Connection',
+                    `Connected to Node-RED but NO SOCKET UPGRADE!\n➡️ CHECK NETWORK and any PROXIES for issues. ⬅️\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`,
+                )()
+            }
+        }, 2000)
 
         this._checkConnect() // resets any reconnection timers & sets connected flag
     }
@@ -2926,7 +2953,7 @@ export const Uib = class Uib {
             this.set('ioConnected', false)
             this.set('socketError', err)
             this._dispatchCustomEvent('uibuilder:socket:disconnected', err)
-        }) // --- End of socket connect error processing ---
+        })
 
         // Socket.io error - from the server (socket.use middleware triggered an error response)
         this._socket.on('error', (err) => {
@@ -2934,7 +2961,17 @@ export const Uib = class Uib {
             this.set('ioConnected', false)
             this.set('socketError', err)
             this._dispatchCustomEvent('uibuilder:socket:disconnected', err)
-        }) // --- End of socket error processing ---
+        })
+
+        this._socket.io.engine.on("connection_error", (err) => {
+             log(
+                'error',
+                'Uib:ioSetup:io:engine:connection_error',
+                err.code, // 3
+                err.message, // "Bad request"
+                err.context // { name: 'TRANSPORT_MISMATCH', transport: 'websocket', previousTransport: 'polling' }
+            )()
+        })
 
         // Ensure we are connected, retry if not
         this._checkConnect()
@@ -3383,5 +3420,3 @@ customElements.define('uib-meta', UibMeta)
 customElements.define('apply-template', ApplyTemplate)
 
 //#endregion --- Wrap up ---
-
-// EOF

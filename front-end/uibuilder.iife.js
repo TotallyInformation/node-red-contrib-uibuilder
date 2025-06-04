@@ -7939,7 +7939,10 @@ ${document.documentElement.outerHTML}`;
       if (navigator.onLine === false) return;
       if (!delay) delay = this.retryMs;
       if (!factor) factor = this.retryFactor;
-      log("trace", "Uib:checkConnect", `Checking connection. Connected: ${this._socket.connected}. Timer: ${__privateGet(this, _timerid)}. Depth: ${depth}. Delay: ${delay}. Factor: ${factor}`, this._socket)();
+      log("trace", "Uib:checkConnect", `Checking connection.
+Connected: ${this._socket.connected}.
+Timer: ${__privateGet(this, _timerid)}. Depth: ${depth}. Delay: ${delay}. Factor: ${factor}.
+Transport: ${this.currentTransport}`, this._socket)();
       if (this._socket.connected === true) {
         if (__privateGet(this, _timerid)) {
           window.clearTimeout(__privateGet(this, _timerid));
@@ -7966,9 +7969,40 @@ ${document.documentElement.outerHTML}`;
      * @private
      */
     _onConnect() {
-      log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. 
-Namespace: ${this.ioNamespace}`)();
+      this.currentTransport = this._socket.io.engine.transport.name;
+      log(
+        "info",
+        "Uib:ioSetup",
+        `\u2705 SOCKET CONNECTED.
+Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.
+Namespace: ${this.ioNamespace}
+Transport: ${this.currentTransport}`
+      )();
       this._dispatchCustomEvent("uibuilder:socket:connected", { "numConnections": this.connectedNum, "isRecovery": this._socket.recovered });
+      this._socket.io.engine.on("upgrade", () => {
+        this.currentTransport = this._socket.io.engine.transport.name;
+        log(
+          "trace",
+          "Uib:_onConnect:onUpgrade",
+          `SOCKET CONNECTION UPGRADED.
+Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.
+Namespace: ${this.ioNamespace}
+Transport: ${this.currentTransport}`
+        )();
+      });
+      setTimeout(() => {
+        if (this.currentTransport !== "websocket") {
+          log(
+            "error",
+            "Uib:Connection",
+            `Connected to Node-RED but NO SOCKET UPGRADE!
+\u27A1\uFE0F CHECK NETWORK and any PROXIES for issues. \u2B05\uFE0F
+Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.
+Namespace: ${this.ioNamespace}
+Transport: ${this.currentTransport}`
+          )();
+        }
+      }, 2e3);
       this._checkConnect();
     }
     /** Called by _ioSetup when Socket.IO disconnects from Node-RED
@@ -8021,6 +8055,18 @@ Namespace: ${this.ioNamespace}`)();
         this.set("ioConnected", false);
         this.set("socketError", err);
         this._dispatchCustomEvent("uibuilder:socket:disconnected", err);
+      });
+      this._socket.io.engine.on("connection_error", (err) => {
+        log(
+          "error",
+          "Uib:ioSetup:io:engine:connection_error",
+          err.code,
+          // 3
+          err.message,
+          // "Bad request"
+          err.context
+          // { name: 'TRANSPORT_MISMATCH', transport: 'websocket', previousTransport: 'polling' }
+        )();
       });
       this._checkConnect();
       return true;
