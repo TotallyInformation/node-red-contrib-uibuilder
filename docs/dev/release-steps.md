@@ -3,7 +3,7 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2025-05-27 19:56:11
+updated: 2025-05-29 10:16:03
 author: Julian Knight (Totally Information)
 ---
 
@@ -49,6 +49,10 @@ Make sure version numbers are correct and aligned:
 
 * `npm outdated` & `npm update`.
 * After updates, run `npm run buildDocBundle` to ensure that Docsify is up-to-date for offline use.
+
+## 03a) Update the docs bundle
+
+* Run `npm run buildDocBundle` to update the docs bundle.
 
 ## 04) Do a final commit & push to the dev branch
 
