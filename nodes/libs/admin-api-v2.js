@@ -1,3 +1,5 @@
+/* eslint-disable jsdoc/no-multi-asterisks */
+/* eslint-disable jsdoc/valid-types */
 /** v2 Admin API ExpressJS Router Handler
  *
  * See: https://expressjs.com/en/4x/api.html#router, https://expressjs.com/en/guide/routing.html
@@ -29,14 +31,16 @@ const fslib = require('./fs.cjs')
 // const uiblib = require('./uiblib')  // Utility library for uibuilder
 const web = require('./web')
 const sockets = require('./socket')
-const packageMgt                    = require('./package-mgt')
-const tilib  = require('./tilib')   // General purpose library (by Totally Information)
+const packageMgt = require('./package-mgt')
+const tilib = require('./tilib') // General purpose library (by Totally Information)
+const { rootFolder, } = require('./uibGlobalConfig.cjs')
+const uib = require('../libs/uibGlobalConfig.cjs') // UIBUILDER's global config object
 
 const errUibRootFldr = new Error('uib.rootFolder is null')
 
 const v2AdminRouter = express.Router() // eslint-disable-line new-cap
 
-//#region === REST API Validation functions === //
+// #region === REST API Validation functions === //
 
 /** Validate url query parameter
  * @param {object} params The GET (res.query) or POST (res.body) parameters
@@ -44,7 +48,7 @@ const v2AdminRouter = express.Router() // eslint-disable-line new-cap
  * @returns {{statusMessage: string, status: number}} Status message
  */
 function chkParamUrl(params) {
-    const res = { 'statusMessage': '', 'status': 0 }
+    const res = { statusMessage: '', status: 0, }
 
     // We have to have a url to work with - the url defines the start folder
     if ( params.url === undefined ) {
@@ -93,7 +97,7 @@ function chkParamUrl(params) {
  * @returns {{statusMessage: string, status: number}} Status message
  */
 function chkParamFname(params) {
-    const res = { 'statusMessage': '', 'status': 0 }
+    const res = { statusMessage: '', status: 0, }
     const fname = params.fname
 
     // We have to have an fname (file name) to work with
@@ -130,7 +134,7 @@ function chkParamFname(params) {
  * @returns {{statusMessage: string, status: number}} Status message
  */
 function chkParamFldr(params) {
-    const res = { 'statusMessage': '', 'status': 0 }
+    const res = { statusMessage: '', status: 0, }
     const folder = params.folder
 
     // we have to have a folder name
@@ -161,14 +165,13 @@ function chkParamFldr(params) {
     return res
 } // ---- End of fn chkParamFldr ---- //
 
-//#endregion === End of API validation functions === //
+// #endregion === End of API validation functions === //
 
 /** uibuilder detailed information page
- * @param {uibConfig} uib Reference to uibuilder's master uib object
  * @param {string} urlPrefix The URL href prefix
  * @returns {string} HTML string output
  */
-function detailsPage(uib, urlPrefix) {
+function detailsPage(urlPrefix) {
     if (uib.rootFolder === null) throw errUibRootFldr
     const rootFolder = uib.rootFolder
 
@@ -215,7 +218,7 @@ function detailsPage(uib, urlPrefix) {
                     <th>Server Filing System Folder</th>
                 </tr></thead><tbody>
     `
-    Object.keys(uib.instances).forEach(key => {
+    Object.keys(uib.instances).forEach((key) => {
         page += `
             <tr>
                 <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, uib.instances[key]).replace('/', '')}" target="_blank">${uib.instances[key]}</a></td>
@@ -256,7 +259,7 @@ function detailsPage(uib, urlPrefix) {
             </tr></thead><tbody>
     `
     const installedPackages = packageMgt.uibPackageJson.uibuilder.packages
-    Object.keys(installedPackages).forEach(packageName => {
+    Object.keys(installedPackages).forEach((packageName) => {
         const pj = installedPackages[packageName]
 
         page += `
@@ -398,7 +401,7 @@ function detailsPage(uib, urlPrefix) {
         <hr>
         <h3>Per-Instance Client-Facing Routes</h3>
     `
-    Object.keys(routes.instances).forEach( url => {
+    Object.keys(routes.instances).forEach( (url) => {
         page += `
             <h4>${url}</h4>
             ${web.htmlBuildTable( web.routers.instances[url], ['name', 'desc', 'path', 'type', 'folder'] )}
@@ -428,13 +431,40 @@ function detailsPage(uib, urlPrefix) {
     return page
 }
 
+/** Return diagnostics information as JSON
+ * @returns {object} An object containing diagnostics information
+ */
+function diagnostics() {
+    const RED = uib.RED
+    const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
+    let serverLocation
+    if (uib.customServer.isCustom === true ) {
+        serverLocation = [
+            `${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot}`,
+            `${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`
+        ]
+    } else {
+        [
+            `${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`,
+        ]
+    }
+    return {
+        version: uib.version,
+        rootFolder: uib.rootFolder,
+        configFolder: uib.configFolder,
+        commonFolder: uib.commonFolder,
+        serverLocation: serverLocation,
+        installedLibraries: Object.keys(packageMgt.uibPackageJson.uibuilder.packages),
+        uib: uib,
+    }
+}
+
 /** Return a router but allow parameters to be passed in
  * @param {uibConfig} uib Reference to uibuilder's master uib object
  * @param {*} log Reference to uibuilder's log functions
  * @returns {express.Router} The v3 admin API ExpressJS router
  */
-function adminRouterV2(uib, log) {
-
+function adminRouterV2(log) {
     /** uibuilder v3 unified Admin API router - new API commands should be added here */
     // admin_Router_V3.route('/:url')
 
@@ -444,9 +474,9 @@ function adminRouterV2(uib, log) {
      * @param {string} url The admin api url to create
      * @param {object} permissions The permissions required for access
      * @param {Function} cb
-     **/
+     */
     v2AdminRouter.get('/uibgetfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-        //#region --- Parameter validation ---
+        // #region --- Parameter validation ---
         /** req.query parameters
          * url
          * fname
@@ -480,7 +510,7 @@ function adminRouterV2(uib, log) {
             res.status(chkFldr.status).end()
             return
         }
-        //#endregion ---- ----
+        // #endregion ---- ----
 
         log.trace(`🌐[uibuilder[:apiv2:uibgetfile] Admin API. File get requested. url=${params.url}, file=${params.folder}/${params.fname}`)
 
@@ -500,11 +530,11 @@ function adminRouterV2(uib, log) {
                 req.query.fname,
                 {
                     // Prevent injected relative paths from escaping `src` folder
-                    'root': filePathRoot,
+                    root: filePathRoot,
                     // Turn off caching
-                    'lastModified': false,
-                    'cacheControl': false,
-                    'dotfiles': 'allow',
+                    lastModified: false,
+                    cacheControl: false,
+                    dotfiles: 'allow',
                 }
             )
         } else {
@@ -518,9 +548,9 @@ function adminRouterV2(uib, log) {
      * @param {string} url The admin api url to create
      * @param {object} permissions The permissions required for access (Express middleware)
      * @param {Function} cb
-     **/
+     */
     v2AdminRouter.post('/uibputfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-        //#region ====== Parameter validation ====== //
+        // #region ====== Parameter validation ====== //
         const params = req.body
 
         const chkUrl = chkParamUrl(params)
@@ -546,7 +576,7 @@ function adminRouterV2(uib, log) {
             res.status(chkFldr.status).end()
             return
         }
-        //#endregion ====== ====== //
+        // #endregion ====== ====== //
 
         log.trace(`🌐[uibuilder[:apiv2:uibputfile] Admin API. File put requested. url=${params.url}, file=${params.folder}/${params.fname}, reload? ${params.reload}`)
 
@@ -555,7 +585,6 @@ function adminRouterV2(uib, log) {
 
         const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
 
-        // eslint-disable-next-line no-unused-vars
         fslib.writeFileCb(fullname, req.body.data, function (err) {
             if (err) {
                 // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
@@ -571,13 +600,13 @@ function adminRouterV2(uib, log) {
                 if ( params.reload === 'true' ) {
                     sockets.sendToFe2(
                         {
-                            '_uib': {
-                                'reload': true,
-                            }
+                            _uib: {
+                                reload: true,
+                            },
                         },
                         // @ts-ignore
                         {
-                            url: params.url
+                            url: params.url,
                         }
                     )
                 }
@@ -592,7 +621,9 @@ function adminRouterV2(uib, log) {
         log.trace('🌐[uibuilder:apiv2:uibindex] User Page/API. List all available uibuilder endpoints')
 
         // If using own Express server, correct the URL's
-        const url = new URL(req.headers.referer)
+        let url = new URL(`http://${req.headers.host}${req.originalUrl}`)
+        if (req.headers.referer) url = new URL(req.headers.referer)
+        else if (req.headers.origin) new URL(req.headers.origin)
         url.pathname = ''
         if (uib.customServer.port) {
             // @ts-expect-error ts(2322)
@@ -602,6 +633,10 @@ function adminRouterV2(uib, log) {
 
         /** Return full details based on type parameter */
         switch (req.query.type) {
+            case 'diagnostics': {
+                res.json(diagnostics())
+                break
+            }
             case 'json': {
                 res.json(uib.instances)
                 break
@@ -612,7 +647,7 @@ function adminRouterV2(uib, log) {
             }
             // default to 'html' output type
             default: {
-                const page = detailsPage(uib, urlPrefix)
+                const page = detailsPage(urlPrefix)
                 res.send(page)
                 break
             }
@@ -636,7 +671,7 @@ function adminRouterV2(uib, log) {
      * @param {string} req.query.cmd Command to run (see notes for this function)
      */
     v2AdminRouter.get('/uibnpmmanage', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-        //#region --- Parameter validation (cmd, package) ---
+        // #region --- Parameter validation (cmd, package) ---
 
         const params = req.query
 
@@ -668,6 +703,7 @@ function adminRouterV2(uib, log) {
             res.status(500).end()
             return
         }
+        // @ts-ignore
         if ( params.package.length > 255 ) {
             log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package name parameter is too long (>255 characters)')
             res.statusMessage = 'package name parameter is too long. Max 255 characters'
@@ -687,7 +723,7 @@ function adminRouterV2(uib, log) {
             }
         }
 
-        //#endregion ---- ----
+        // #endregion ---- ----
 
         const folder = RED.settings.userDir
 
@@ -713,7 +749,7 @@ function adminRouterV2(uib, log) {
                         // Update the packageList
                         web.serveVendorPackages()
 
-                        res.json({ 'success': true, 'result': [npmOutput, packageMgt.uibPackageJson.uibuilder.packages] })
+                        res.json({ success: true, result: [npmOutput, packageMgt.uibPackageJson.uibuilder.packages], })
 
                         // return success
                         return true
@@ -721,7 +757,7 @@ function adminRouterV2(uib, log) {
                     .catch((err) => {
                         // err has extra props: {all:string, code:number, command:string}
                         log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage:${params.cmd}] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
-                        res.json({ 'success': false, 'result': err.all })
+                        res.json({ success: false, result: err.all, })
                         return false
                     })
                 break
@@ -740,12 +776,12 @@ function adminRouterV2(uib, log) {
                         // Update the packageList
                         web.serveVendorPackages()
 
-                        res.json({ 'success': true, 'result': npmOutput })
+                        res.json({ success: true, result: npmOutput, })
                         return true
                     })
                     .catch((err) => {
                         log.warn(`🌐⚠️[uibuilder:apiv2:uibnpmmanage:remove] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
-                        res.json({ 'success': false, 'result': err.all })
+                        res.json({ success: false, result: err.all, })
                         return false
                     })
                 break
@@ -763,5 +799,3 @@ function adminRouterV2(uib, log) {
 }
 
 module.exports = adminRouterV2
-
-// EOF
