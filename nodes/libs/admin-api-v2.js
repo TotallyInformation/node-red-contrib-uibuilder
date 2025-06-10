@@ -4,7 +4,7 @@
  *
  * See: https://expressjs.com/en/4x/api.html#router, https://expressjs.com/en/guide/routing.html
  *
- * Copyright (c) 2021-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2025 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
