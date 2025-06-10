@@ -14,6 +14,7 @@
   * [Zero-code UI creation](using/zero-code-ui.md "Dynamically creating web UI's")
   * [Easy UI updates](/using/easy-ui-updates.md "Updating web UI content and attributes dynamically from Node-RED")
   * [Common design patterns](/using/design-patterns.md "Common ways to create web apps and dashboards with Node-RED and UIBUILDER")
+  * [Style Best Practice](/creating-uis/css-best-practice.md "Some simple guidelines and good practices for creating flexible layouts using CSS")
   * [Grid layouts](/creating-uis/grid-layouts.md "Creating a content-heavy grid layout using CSS Grid")
   * [Dashboard layouts](/creating-uis/dashboard-layouts.md "Creating a dashboard-style layout using CSS Grid")
   * [Forms: User input handling](creating-uis/form-handling.md "Handling input using forms and other input elements")
