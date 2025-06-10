@@ -187,7 +187,7 @@ class UibWeb {
         } )
 
         // TODO: Move v2 API's to V3
-        this.adminRouterV2 = require('./admin-api-v2')(this.uib, this.log)
+        this.adminRouterV2 = require('./admin-api-v2')(this.log)
         this.routers.admin.push( { name: 'Admin API v2', path: `${this.RED.settings.httpAdminRoot}uibuilder/*`, desc: 'Various older admin APIs used by the uibuilder Editor panel', type: 'Router', } )
 
         /** Serve up the admin root for uibuilder on /<httpAdminRoot>/uibuilder/ */
@@ -812,9 +812,11 @@ class UibWeb {
         const indexFile = join(customFull, defaultPageName)
         if ( !existsSync(indexFile) ) {
             // We will try 1 more time because creation is async on initial deploy and this can take a few ms
-            if ( !existsSync(indexFile) ) {
-                node.warn(`🌐⚠️[uibuilder:web:setupInstanceStatic:${node.url}] Cannot show default page, index.html does not exist in ${customFull}.`)
-            }
+            setTimeout(() => {
+                if ( !existsSync(indexFile) ) {
+                    node.warn(`🌐⚠️[uibuilder:web:setupInstanceStatic:${node.url}] Cannot show default page, index.html does not exist in ${customFull}.`)
+                }
+            }, 100)
         }
 
         // Track the route
