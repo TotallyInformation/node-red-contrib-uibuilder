@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-05-27 18:06:09
+updated: 2025-06-10 14:20:02
 author: Julian Knight (Totally Information)
 ---
 
@@ -24,14 +24,24 @@ author: Julian Knight (Totally Information)
 
 ## To Do
 
+* [ ] For the `uib-topic` attribute, allow msg.payload to be an array or object. Consider adding a `uib-fmt` attribute to allow output specification:
+  * `uib-fmt="json"` - output as a syntax highlighted JSON object.
+  * `uib-fmt="list"` - output as an HTML list.
+  * `uib-fmt="table"` - output as an HTML table.
+
 * [ ] Allow overriding of the JSON max upload size for the custom Express server. [Ref](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988)
 
 * Documentation
+  * [ ] Add content to grid and dash layout docs.
   * [ ] Properly document file uploads and how to handle them. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
   * [ ] Add thanks to the contributors in the readme.
 
 #### Consider
 
+* Move log reference into the `uibGlobalConfig` object. Remove passed references.
+* Some form of more direct RPC implementation between client and server. What functions might the server be able to do for the client? What might the server want to ask of or control on the client?
+  * A latency test might be useful.
+* Having a different web icon for the docs pages from actual uibuilder instance pagess. This would allow the user to easily distinguish between the two.
 * Implement the `dom` (`tinyDOM`) FE library.
 * Implement the `logger` FE library.
 * Adding `hooks` to web.js to allow easier header overrides. `httpHeaders`.

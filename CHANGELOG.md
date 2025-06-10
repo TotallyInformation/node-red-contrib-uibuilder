@@ -36,6 +36,17 @@ Please see the roadmap in the docs for the backlog of future planned development
   
   A console error message will be logged if the transport is not `websocket` after a few seconds.
 
+### Node-RED Admin endpoints
+
+* `<nrAdminURL>/uibuilder/uibindex?type=diagnostics` is a new variation on the `uibindex` endpoint. It returns diagnostics information in JSON format that shows uibuilder detailed diagnostic information. You must have an active Node-RED Editor session to be able to access this endpoint.
+
+### Server library: `admin-api-v2.js`
+
+* **FIX** `/uibindex` route incorrectly assumed the presence of `req.headers.referer`.
+* **NEW** `/uibindex?type=diagnostics` added. Returns diagnostics information in JSON format that shows uibuilder detailed diagnostic information. You must have an active Node-RED Editor session to be able to access this endpoint.
+* Switched from passing the uib master variable to use the `uibGlobalConfig` module. This is a step towards a more modular codebase.
+
+
 ## [v7.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.3.0...v7.2.0)
 
 ### 📌 Highlights
