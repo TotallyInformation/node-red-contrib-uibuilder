@@ -33,7 +33,6 @@ const web = require('./web')
 const sockets = require('./socket')
 const packageMgt = require('./package-mgt')
 const tilib = require('./tilib') // General purpose library (by Totally Information)
-const { rootFolder, } = require('./uibGlobalConfig.cjs')
 const uib = require('../libs/uibGlobalConfig.cjs') // UIBUILDER's global config object
 
 const errUibRootFldr = new Error('uib.rootFolder is null')
@@ -460,7 +459,6 @@ function diagnostics() {
 }
 
 /** Return a router but allow parameters to be passed in
- * @param {uibConfig} uib Reference to uibuilder's master uib object
  * @param {*} log Reference to uibuilder's log functions
  * @returns {express.Router} The v3 admin API ExpressJS router
  */
