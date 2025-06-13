@@ -1012,9 +1012,12 @@ button.compact {
 
 /*#region ---- Status Grid ---- */
 .status-grid {
+    --status-grid-min: 14em;
+    --status-grid-max: 1fr;
+    --status-grid-gap: 0.5rem;
     display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(14em, 1fr));
-    gap:0.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(var(--status-grid-min), var(--status-grid-max)));
+    gap: var(--status-grid-gap);
     list-style-position: inside;
 }
 .status-heading {
