@@ -48,7 +48,6 @@ Make sure version numbers are correct and aligned:
 ## 03) Do a dependency update
 
 * `npm outdated` & `npm update`.
-* After updates, run `npm run buildDocBundle` to ensure that Docsify is up-to-date for offline use.
 
 ## 03a) Update the docs bundle
 

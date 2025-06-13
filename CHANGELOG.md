@@ -26,7 +26,7 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ## v7.4.0
 
-[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.0...v7.3.0).
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.3.0...v7.4.0).
 
 ### 📌 Highlights
 
