@@ -1416,6 +1416,7 @@ export const Uib = class Uib {
         this.onTopic(topic, (msg) => {
             log('trace', 'uibuilder:_uibAttrScanOne', `Msg with topic "${topic}" received. msg content: `, msg)()
             msg._uib_processed_by = '_uibAttrScanOne' // record that this has already been processed
+
             // Process msg.attributes
             if (Object.prototype.hasOwnProperty.call(msg, 'attributes')) {
                 try {
@@ -1424,6 +1425,21 @@ export const Uib = class Uib {
                     }
                 } catch (e) {
                     log(0, 'uibuilder:attribute-processing', 'Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.')()
+                }
+            }
+
+            // Process msg.dataset
+            if (Object.prototype.hasOwnProperty.call(msg, 'dataset')) {
+                console.log('uibuilder:dataset-processing', 'Processing dataset for element', el, msg.dataset)
+                try {
+                    for (const [key, value] of Object.entries(msg.dataset)) {
+                        // Convert to kebab-case for dataset
+                        // const kebabKey = k.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+                        // el.dataset[kebabKey] = v
+                        el.dataset[key] = value
+                    }
+                } catch (e) {
+                    log('error', 'uibuilder:dataset-processing', 'Failed to set dataset. Ensure that msg.dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.')()
                 }
             }
 
