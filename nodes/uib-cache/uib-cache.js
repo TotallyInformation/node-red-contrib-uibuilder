@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/valid-types */
 /** Takes a msg input and caches it then passes it through.
  *  If it receives a cache-replay control msg, it dumps the cache.
  *  If it receives a cache-empty control msg, it empties the cache.
@@ -27,7 +28,7 @@
  * typedef {import('../typedefs.js').myNode} myNode
  */
 
-//#region ----- Module level variables ---- //
+// #region ----- Module level variables ---- //
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -39,9 +40,9 @@ const mod = {
     nodeName: 'uib-cache',
 }
 
-//#endregion ----- Module level variables ---- //
+// #endregion ----- Module level variables ---- //
 
-//#region ----- Module-level support functions ----- //
+// #region ----- Module-level support functions ----- //
 
 /** Set status msg in Editor
  * @param {runtimeNode & cacheNode} node Reference to node instance
@@ -50,15 +51,14 @@ function setNodeStatus(node) {
     let len = 0
     if (node.cache) len = Object.keys(node.cache).length
 
-    node.status({ fill: 'blue', shape: 'dot', text: `${node.cacheKey} entries: ${len}` })
+    node.status({ fill: 'blue', shape: 'dot', text: `${node.cacheKey} entries: ${len}`, })
 } // ---- end of setStatus ---- //
 
 /** Trim all of the cache to the requested number of entries
  * @param {runtimeNode & cacheNode} node Reference to node instance
  */
 function trimCacheAll(node) {
-
-    Object.keys(node.cache).forEach( key => {
+    Object.keys(node.cache).forEach( (key) => {
         const msgs = node.cache[key]
         // See if the array is now too long - if so, slice it down to size
         if ( msgs.length > node.num ) {
@@ -68,7 +68,6 @@ function trimCacheAll(node) {
 
     // Save the cache
     node.setC(node.varName, node.cache, node.storeName)
-
 } // ---- end of trimCache ---- //
 
 /** Add a new msg to the cache, dropping excessive entries if needed
@@ -101,20 +100,17 @@ function addToCache(msg, node) {
     node.setC(node.varName, node.cache, node.storeName)
 
     setNodeStatus(node)
-
 } // ---- end of addToCache ---- //
 
 /** Clear the cache
  * @param {runtimeNode & cacheNode} node Reference to node instance
  */
 function clearCache(node) {
-
     // Save the cache or initialise it if new
     node.setC(node.varName, {}, node.storeName)
     node.cache = {}
 
     setNodeStatus(node)
-
 } // ---- end of clearCache ---- //
 
 /** Send the cache
@@ -123,17 +119,16 @@ function clearCache(node) {
  * @param {object} msg Reference to the input message
  */
 function sendCache(send, node, msg) {
-
     const toSend = []
 
-    Object.values(node.cache).forEach( cachedMsgs => {
+    Object.values(node.cache).forEach( (cachedMsgs) => {
         // toSend.push(...cachedMsgs)
 
-        cachedMsgs.forEach( cachedMsg => {
+        cachedMsgs.forEach( (cachedMsg) => {
             if (mod.RED === null) return
 
             // Has to be a clone to prevent changes from downstream nodes
-            const clone =  mod.RED.util.cloneMessage(cachedMsg)
+            const clone = mod.RED.util.cloneMessage(cachedMsg)
 
             // Add replay indicator
             if (!clone._uib) clone._uib = {}
@@ -148,11 +143,9 @@ function sendCache(send, node, msg) {
             // send( clone )
             toSend.push( clone )
         })
-
     })
 
     send([toSend])
-
 } // ---- end of sendCache ---- //
 
 // TODO: Adjust processes for all msg caching
@@ -169,7 +162,7 @@ function sendCache(send, node, msg) {
  * @param {Function} done Per msg finish function, node-red v1+
  * @this {runtimeNode & cacheNode}
  */
-function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
+function inputMsgHandler(msg, send, done) {
     // As a module-level named function, it will inherit `mod` and other module-level variables
 
     // If you need it - or just use mod.RED if you prefer:
@@ -208,7 +201,6 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
 
     // We are done
     // done()
-
 } // ----- end of inputMsgHandler ----- //
 
 /** 2) This is run when an actual instance of our node is committed to a flow
@@ -277,7 +269,7 @@ function nodeInstance(config) {
      */
 }
 
-//#endregion ----- Module-level support functions ----- //
+// #endregion ----- Module-level support functions ----- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
  * @param {runtimeRED} RED The Node-RED runtime object
