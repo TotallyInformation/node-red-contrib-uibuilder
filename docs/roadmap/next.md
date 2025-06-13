@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-06-10 14:20:02
+updated: 2025-06-13 12:57:55
 author: Julian Knight (Totally Information)
 ---
 
@@ -32,12 +32,13 @@ author: Julian Knight (Totally Information)
 * [ ] Allow overriding of the JSON max upload size for the custom Express server. [Ref](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988)
 
 * Documentation
-  * [ ] Add content to grid and dash layout docs.
+  * [ ] Add content to Lists, Maps, Tables, Dashboard Layouts, Cards, Articles.
   * [ ] Properly document file uploads and how to handle them. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
   * [ ] Add thanks to the contributors in the readme.
 
 #### Consider
 
+* For onTopic and uib-topic, allow wildcards in the topic name.
 * Move log reference into the `uibGlobalConfig` object. Remove passed references.
 * Some form of more direct RPC implementation between client and server. What functions might the server be able to do for the client? What might the server want to ask of or control on the client?
   * A latency test might be useful.
@@ -72,6 +73,12 @@ author: Julian Knight (Totally Information)
   * `nodes/libs/admin-api-{v2,v3}.js`
   * `nodes/libs/web.js`
   * [Path route matching syntax has changed 😵‍💫](https://expressjs.com/en/guide/migrating-5.html#path-syntax)
+* web worker support.
+  *  Add a `uib-worker` endpoint (per instance) that serves a worker script.
+  *  The worker should handle uibuilder comms. Would need a shared worker and that does not work with Safari.
+  *  It should be created dynamically based on the instance. So that it is pre-defined with the correct Socket.IO namespace, etc.
+* A manifest file for offline use.
+  *  Requires a change to the templates.
 
 
 ## Answers needed

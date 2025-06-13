@@ -3,11 +3,10 @@ title: How to create data-driven web applications using UIBUILDER
 description: |
   Using UIBUILDER with the Node-RED server enables anyone to easily create data-driven web applications. This guide shows how to use the uibuilder nodes to create a basic web app that can be extended to create more complex applications.
 created: 2025-05-26 12:07:24
-updated: 2025-05-26 12:12:33
+updated: 2025-06-13 12:55:55
 author: Julian Knight (Totally Information)
+status: Draft
 ---
-
-> STATUS: Draft.
 
 Node-RED is a powerful server tool that allows you to easily manage data and integrate with other systems. While it has a built-in method for creating web endpoints (`http-in` and `http-response` nodes), using that to create a full web application can be complex and time-consuming.
 
