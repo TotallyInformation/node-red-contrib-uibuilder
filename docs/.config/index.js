@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use strict'
 
-window.$docsify = { //  eslint-disable-line no-undef
+window.$docsify = {
     loadSidebar: '.config/sidebar.md',
     name: 'UIBUILDER Documentation v7',
     repo: 'TotallyInformation/node-red-contrib-uibuilder',
@@ -34,7 +34,7 @@ window.$docsify = { //  eslint-disable-line no-undef
     search: {
         depth: 3,
         noData: 'No results!',
-        placeholder: 'Search...'
+        placeholder: 'Search...',
     },
     pagination: {
         crossChapter: true,
@@ -52,7 +52,7 @@ window.$docsify = { //  eslint-disable-line no-undef
         // https://github.com/justintien/docsify-plugin-toc
         tocMaxLevel: 3,
         target: 'h2, h3',
-        ignoreHeaders:  ['<!-- {docsify-ignore} -->', '<!-- {docsify-ignore-all} -->']
+        ignoreHeaders: ['<!-- {docsify-ignore} -->', '<!-- {docsify-ignore-all} -->'],
     },
 
     plugins: [
@@ -86,40 +86,41 @@ window.$docsify = { //  eslint-disable-line no-undef
                 footer[5] = ''
 
                 if (vm.frontmatter) { // vm only exists per page, requires plugin
-                    //#region --- Add front-matter (YAML) standard metadata to each page if present ---
-                    if (vm.frontmatter.description) {
-                        content = `${vm.frontmatter.description}\n\n${content}`
+                    const fm = vm.frontmatter
+                    // #region --- Add front-matter (YAML) standard metadata to each page if present ---
+                    if (fm.description) {
+                        content = `${fm.description}\n\n${content}`
                         // Update the output page's description meta tag
                         const desc = document.querySelector('meta[name="description"]')
-                        if (desc) desc.setAttribute('content', vm.frontmatter.description)
+                        if (desc) desc.setAttribute('content', fm.description)
                     }
 
-                    if (vm.frontmatter.status) {
-                        content = `> Status: ${vm.frontmatter.status}\n\n${content}`
+                    if (fm.status) {
+                        content = `> Status: ${fm.status}\n\n${content}`
                     }
 
-                    if (vm.frontmatter.title) {
-                        content = `# ${vm.frontmatter.title}\n\n${content}`
+                    if (fm.title) {
+                        content = `# ${fm.title}\n\n${content}`
                     }
-                    //#endregion ---  ---
+                    // #endregion ---  ---
 
-                    //#region --- Add page specific (c) and last updated date to each page if available from YAML front-matter ---
-                    if (vm.frontmatter.created) { // uib docs/Obsidian
-                        mydate = new Date(vm.frontmatter.created)
+                    // #region --- Add page specific (c) and last updated date to each page if available from YAML front-matter ---
+                    if (fm.created) { // uib docs/Obsidian
+                        mydate = new Date(fm.created)
                         yearFrom = mydate.getFullYear()
-                    } else if (vm.frontmatter.date) { // Hugo
-                        mydate = new Date(vm.frontmatter.date)
+                    } else if (fm.date) { // Hugo
+                        mydate = new Date(fm.date)
                         yearFrom = mydate.getFullYear()
                     }
 
-                    if (vm.frontmatter.updated) { // Obsidian
-                        mydate = new Date(vm.frontmatter.updated)
+                    if (fm.updated) { // Obsidian
+                        mydate = new Date(fm.updated)
                         yearTo = mydate.getFullYear()
-                    } else if (vm.frontmatter.lastUpdated) { // uib/IT Stds docs
-                        mydate = new Date(vm.frontmatter.lastUpdated)
+                    } else if (fm.lastUpdated) { // uib/IT Stds docs
+                        mydate = new Date(fm.lastUpdated)
                         yearTo = mydate.getFullYear()
-                    } else if (vm.frontmatter.Lastmod) { // Hugo
-                        mydate = new Date(vm.frontmatter.Lastmod)
+                    } else if (fm.Lastmod) { // Hugo
+                        mydate = new Date(fm.Lastmod)
                         yearTo = mydate.getFullYear()
                     }
 
@@ -129,9 +130,8 @@ window.$docsify = { //  eslint-disable-line no-undef
                         strYr = yearFrom + '-' + yearTo
                     }
 
-                    footer[5] = ` Updated ${mydate.toLocaleString('en-GB', { dateStyle: 'medium' })}.`
-                    //#endregion ---  ---
-
+                    footer[5] = ` Updated ${mydate.toLocaleString('en-GB', { dateStyle: 'medium', })}.`
+                    // #endregion ---  ---
                 } // ---- End of if front-matter ---- //
 
                 footer[3] = `Copyright &copy; ${strYr}`
@@ -192,7 +192,7 @@ window.$docsify = { //  eslint-disable-line no-undef
     ],
 }
 
-//#region --- lyingdragon/docsify-plugin-page-toc ---
+// #region --- lyingdragon/docsify-plugin-page-toc ---
 
 // To collect headings and then add to the page ToC
 const pageToC = (headings, path) => {
@@ -200,7 +200,7 @@ const pageToC = (headings, path) => {
     // let toc = ['<div class="page_toc">', '<p class="title">Contents</p>']
     let toc = [
         '<div class="page_toc">',
-        '<h2>Page Contents</h2>', 
+        '<h2>Page Contents</h2>',
         // '<ul class="">'
     ]
     headings = document.querySelectorAll(`.markdown-section ${window.$docsify['toc'].target}`)
@@ -226,9 +226,8 @@ const pageToC = (headings, path) => {
         toc.push('</div>')
         // toc.push('</ul>')
         return toc.join('')
-    } else {
-        return ''
     }
+    return ''
 }
 
 // To generate each ToC item
@@ -257,4 +256,4 @@ const generateToC = (level, newLevel, html) => {
     return out
 }
 
-//#endregion --- lyingdragon/docsify-plugin-page-toc ---
+// #endregion --- lyingdragon/docsify-plugin-page-toc ---

@@ -1,12 +1,39 @@
+var __create = Object.create;
 var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
 };
 var __defNormalProp = (obj, key, value2) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value: value2 }) : obj[key] = value2;
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined") return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+});
 var __export = (target, all) => {
   for (var name2 in all)
     __defProp(target, name2, { get: all[name2], enumerable: true });
 };
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 var __publicField = (obj, key, value2) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value2);
 var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
 var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
@@ -64,12 +91,11 @@ var Ui = (_a = class {
         highlight: function(str, lang) {
           if (lang && window["hljs"] && window["hljs"].getLanguage(lang)) {
             try {
-              return `<pre class="">
-                                    <code class="hljs border">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+              return '<pre class="">\n                                    <code class="hljs border">'.concat(window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value, "</code></pre>");
             } finally {
             }
           }
-          return `<pre class="hljs border"><code>${_a.md.utils.escapeHtml(str).trim()}</code></pre>`;
+          return '<pre class="hljs border"><code>'.concat(_a.md.utils.escapeHtml(str).trim(), "</code></pre>");
         }
       };
       _a.md = _a.win["markdownit"](_a.mdOpts);
@@ -92,18 +118,18 @@ var Ui = (_a = class {
         if (window["hljs"]) {
           if (lang && window["hljs"].getLanguage(lang)) {
             try {
-              return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+              return '<pre><code class="hljs border language-'.concat(lang, '" data-language="').concat(lang, '" title="Source language: \'').concat(lang, "'\">").concat(window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value, "</code></pre>");
             } finally {
             }
           } else {
             try {
               const high = window["hljs"].highlightAuto(str);
-              return `<pre><code class="hljs border language-${high.language}" data-language="${high.language}" title="Source language estimated by HighlightJS: '${high.language}'">${high.value}</code></pre>`;
+              return '<pre><code class="hljs border language-'.concat(high.language, '" data-language="').concat(high.language, '" title="Source language estimated by HighlightJS: \'').concat(high.language, "'\">").concat(high.value, "</code></pre>");
             } finally {
             }
           }
         }
-        return `<pre><code class="border">${_a.md.utils.escapeHtml(str).trim()}</code></pre>`;
+        return '<pre><code class="border">'.concat(_a.md.utils.escapeHtml(str).trim(), "</code></pre>");
       }
     };
     _a.md = _a.win["markdownit"](_a.mdOpts);
@@ -177,7 +203,7 @@ var Ui = (_a = class {
   _uiAdd(ui, isRecurse) {
     _a.log("trace", "Ui:_uiManager:add", "Starting _uiAdd")();
     ui.components.forEach((compToAdd, i) => {
-      _a.log("trace", `Ui:_uiAdd:components-forEach:${i}`, "Component to add: ", compToAdd)();
+      _a.log("trace", "Ui:_uiAdd:components-forEach:".concat(i), "Component to add: ", compToAdd)();
       let newEl;
       switch (compToAdd.type) {
         // If trying to insert raw html, wrap in a div
@@ -236,7 +262,7 @@ var Ui = (_a = class {
     if (comp.attributes) {
       Object.keys(comp.attributes).forEach((attrib) => {
         if (attrib === "class" && Array.isArray(comp.attributes[attrib])) comp.attributes[attrib].join(" ");
-        _a.log("trace", "_uiComposeComponent:attributes-forEach", `Attribute: '${attrib}', value: '${comp.attributes[attrib]}'`)();
+        _a.log("trace", "_uiComposeComponent:attributes-forEach", "Attribute: '".concat(attrib, "', value: '").concat(comp.attributes[attrib], "'"))();
         if (attrib === "value") el.value = comp.attributes[attrib];
         if (attrib.startsWith("xlink:")) el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
         else el.setAttribute(attrib, comp.attributes[attrib]);
@@ -252,10 +278,10 @@ var Ui = (_a = class {
         if (type.toLowerCase === "onclick") type = "click";
         try {
           el.addEventListener(type, (evt) => {
-            new Function("evt", `${comp.events[type]}(evt)`)(evt);
+            new Function("evt", "".concat(comp.events[type], "(evt)"))(evt);
           });
         } catch (err) {
-          _a.log("error", "Ui:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
+          _a.log("error", "Ui:_uiComposeComponent", "Add event '".concat(type, "' for element '").concat(comp.type, "': Cannot add event handler. ").concat(err.message))();
         }
       });
     }
@@ -283,7 +309,7 @@ var Ui = (_a = class {
    */
   _uiExtendEl(parentEl, components, ns = "") {
     components.forEach((compToAdd, i) => {
-      _a.log("trace", `Ui:_uiExtendEl:components-forEach:${i}`, compToAdd)();
+      _a.log("trace", "Ui:_uiExtendEl:components-forEach:".concat(i), compToAdd)();
       let newEl;
       compToAdd.ns = ns;
       if (compToAdd.ns === "html") {
@@ -312,7 +338,7 @@ var Ui = (_a = class {
     if (ui.components) {
       if (!Array.isArray(ui.components)) ui.components = [ui.components];
       ui.components.forEach(async (component) => {
-        import(component);
+        Promise.resolve().then(() => __toESM(__require(component)));
       });
     }
     if (ui.srcScripts) {
@@ -347,7 +373,7 @@ var Ui = (_a = class {
     msg._ui.forEach((ui, i) => {
       if (ui.mode && !ui.method) ui.method = ui.mode;
       if (!ui.method) {
-        _a.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i}]. Ignoring. `, ui)();
+        _a.log("error", "Ui:_uiManager", "No method defined for msg._ui[".concat(i, "]. Ignoring. "), ui)();
         return;
       }
       ui.payload = msg.payload;
@@ -390,7 +416,7 @@ var Ui = (_a = class {
           break;
         }
         default: {
-          _a.log("error", "Ui:_uiManager", `Invalid msg._ui[${i}].method (${ui.method}). Ignoring`)();
+          _a.log("error", "Ui:_uiManager", "Invalid msg._ui[".concat(i, "].method (").concat(ui.method, "). Ignoring"))();
           break;
         }
       }
@@ -416,7 +442,7 @@ var Ui = (_a = class {
         try {
           el.remove();
         } catch (err) {
-          _a.log("trace", "Ui:_uiRemove", `Could not remove. ${err.message}`)();
+          _a.log("trace", "Ui:_uiRemove", "Could not remove. ".concat(err.message))();
         }
       });
     });
@@ -428,20 +454,20 @@ var Ui = (_a = class {
   _uiReplace(ui) {
     _a.log("trace", "Ui:_uiReplace", "Starting")();
     ui.components.forEach((compToReplace, i) => {
-      _a.log("trace", `Ui:_uiReplace:components-forEach:${i}`, "Component to replace: ", compToReplace)();
+      _a.log("trace", "Ui:_uiReplace:components-forEach:".concat(i), "Component to replace: ", compToReplace)();
       let elToReplace;
       if (compToReplace.id) {
         elToReplace = _a.doc.getElementById(compToReplace.id);
       } else if (compToReplace.selector || compToReplace.select) {
         elToReplace = _a.doc.querySelector(compToReplace.selector);
       } else if (compToReplace.name) {
-        elToReplace = _a.doc.querySelector(`[name="${compToReplace.name}"]`);
+        elToReplace = _a.doc.querySelector('[name="'.concat(compToReplace.name, '"]'));
       } else if (compToReplace.type) {
         elToReplace = _a.doc.querySelector(compToReplace.type);
       }
-      _a.log("trace", `Ui:_uiReplace:components-forEach:${i}`, "Element to replace: ", elToReplace)();
+      _a.log("trace", "Ui:_uiReplace:components-forEach:".concat(i), "Element to replace: ", elToReplace)();
       if (elToReplace === void 0 || elToReplace === null) {
-        _a.log("trace", `Ui:_uiReplace:components-forEach:${i}:noReplace`, "Cannot find the DOM element. Adding instead.", compToReplace)();
+        _a.log("trace", "Ui:_uiReplace:components-forEach:".concat(i, ":noReplace"), "Cannot find the DOM element. Adding instead.", compToReplace)();
         this._uiAdd({ components: [compToReplace] }, false);
         return;
       }
@@ -483,16 +509,16 @@ var Ui = (_a = class {
     _a.log("trace", "UI:_uiUpdate:update", "Starting _uiUpdate", ui)();
     if (!ui.components) ui.components = [Object.assign({}, ui)];
     ui.components.forEach((compToUpd, i) => {
-      _a.log("trace", "_uiUpdate:components-forEach", `Start loop #${i}`, compToUpd)();
+      _a.log("trace", "_uiUpdate:components-forEach", "Start loop #".concat(i), compToUpd)();
       let elToUpd;
       if (compToUpd.parentEl) {
         elToUpd = compToUpd.parentEl;
       } else if (compToUpd.id) {
-        elToUpd = _a.doc.querySelectorAll(`#${compToUpd.id}`);
+        elToUpd = _a.doc.querySelectorAll("#".concat(compToUpd.id));
       } else if (compToUpd.selector || compToUpd.select) {
         elToUpd = _a.doc.querySelectorAll(compToUpd.selector);
       } else if (compToUpd.name) {
-        elToUpd = _a.doc.querySelectorAll(`[name="${compToUpd.name}"]`);
+        elToUpd = _a.doc.querySelectorAll('[name="'.concat(compToUpd.name, '"]'));
       } else if (compToUpd.type) {
         elToUpd = _a.doc.querySelectorAll(compToUpd.type);
       }
@@ -500,26 +526,26 @@ var Ui = (_a = class {
         _a.log("warn", "Ui:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
         return;
       }
-      _a.log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
+      _a.log("trace", "_uiUpdate:components-forEach", "Element(s) to update. Count: ".concat(elToUpd.length), elToUpd)();
       if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload;
       elToUpd.forEach((el, j) => {
-        _a.log("trace", "_uiUpdate:components-forEach", `Updating element #${j}`, el)();
+        _a.log("trace", "_uiUpdate:components-forEach", "Updating element #".concat(j), el)();
         this._uiComposeComponent(el, compToUpd);
         if (compToUpd.components) {
-          _a.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component`, compToUpd, el)();
+          _a.log("trace", "_uiUpdate:nested-component", "Element #".concat(j, " - nested-component"), compToUpd, el)();
           const nc = { _ui: [] };
           compToUpd.components.forEach((nestedComp, k) => {
             const method = nestedComp.method || compToUpd.method || ui.method;
             if (nestedComp.method) delete nestedComp.method;
             if (!Array.isArray(nestedComp)) nestedComp = [nestedComp];
-            _a.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component #${k}`, nestedComp)();
+            _a.log("trace", "_uiUpdate:nested-component", "Element #".concat(j, " - nested-component #").concat(k), nestedComp)();
             nc._ui.push({
               method,
               parentEl: el,
               components: nestedComp
             });
           });
-          _a.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component new manager`, nc)();
+          _a.log("trace", "_uiUpdate:nested-component", "Element #".concat(j, " - nested-component new manager"), nc)();
           this._uiManager(nc);
         }
       });
@@ -541,18 +567,18 @@ var Ui = (_a = class {
     if (!context) context = _a.doc;
     if (!output) output = "el";
     if (!context || !context.nodeType) {
-      _a.log(1, "Uib:$", `Invalid context element. Must be a valid HTML element.`, context)();
+      _a.log(1, "Uib:$", "Invalid context element. Must be a valid HTML element.", context)();
       return null;
     }
     let el = context.querySelector(cssSelector);
     if (!el || !el.nodeType) {
-      _a.log(1, "Uib:$", `No element found or element is not an HTML element for CSS selector ${cssSelector}`)();
+      _a.log(1, "Uib:$", "No element found or element is not an HTML element for CSS selector ".concat(cssSelector))();
       return null;
     }
     if (el.nodeName === "TEMPLATE") {
       el = el.content.firstElementChild;
       if (!el) {
-        _a.log(0, "Uib:$", `Template selected for CSS selector ${cssSelector} but it is empty`)();
+        _a.log(0, "Uib:$", "Template selected for CSS selector ".concat(cssSelector, " but it is empty"))();
         return null;
       }
     }
@@ -582,7 +608,7 @@ var Ui = (_a = class {
       }
     } catch (e) {
       out = el;
-      _a.log(1, "Uib:$", `Could not process output type "${output}" for CSS selector ${cssSelector}, returned the DOM element. ${e.message}`, e)();
+      _a.log(1, "Uib:$", 'Could not process output type "'.concat(output, '" for CSS selector ').concat(cssSelector, ", returned the DOM element. ").concat(e.message), e)();
     }
     return out;
   }
@@ -595,7 +621,7 @@ var Ui = (_a = class {
   $$(cssSelector, context) {
     if (!context) context = _a.doc;
     if (!context || !context.nodeType) {
-      _a.log(1, "Uib:$$", `Invalid context element. Must be a valid HTML element.`, context)();
+      _a.log(1, "Uib:$$", "Invalid context element. Must be a valid HTML element.", context)();
       return null;
     }
     return Array.from(context.querySelectorAll(cssSelector));
@@ -623,22 +649,23 @@ var Ui = (_a = class {
    *   @param {'insert'|'replace'|'wrap'}  config.mode How to apply the template. Default is 'insert'. 'replace' will replace the targets innerHTML. 'wrap' is like 'replace' but will put any target content into the template's 1ST <slot> (if present).
    */
   applyTemplate(sourceId, targetId, config) {
+    var _a3;
     if (!config) config = {};
     if (!config.onceOnly) config.onceOnly = false;
     if (!config.mode) config.mode = "insert";
     const template = _a.doc.getElementById(sourceId);
     if (!template || template.tagName !== "TEMPLATE") {
-      _a.log("error", "Ui:applyTemplate", `Source must be a <template>. id='${sourceId}'`)();
+      _a.log("error", "Ui:applyTemplate", "Source must be a <template>. id='".concat(sourceId, "'"))();
       return;
     }
     const target = _a.doc.getElementById(targetId);
     if (!target) {
-      _a.log("error", "Ui:applyTemplate", `Target not found: id='${targetId}'`)();
+      _a.log("error", "Ui:applyTemplate", "Target not found: id='".concat(targetId, "'"))();
       return;
     }
-    const targetContent = target.innerHTML ?? "";
+    const targetContent = (_a3 = target.innerHTML) != null ? _a3 : "";
     if (targetContent && config.mode === "replace") {
-      _a.log("warn", "Ui:applyTemplate", `Target element is not empty, content is replaced. id='${targetId}'`)();
+      _a.log("warn", "Ui:applyTemplate", "Target element is not empty, content is replaced. id='".concat(targetId, "'"))();
     }
     let templateContent;
     if (config.onceOnly === true) templateContent = _a.doc.adoptNode(template.content);
@@ -666,7 +693,7 @@ var Ui = (_a = class {
         }
       }
     } else {
-      _a.log("warn", "Ui:applyTemplate", `No valid content found in template`)();
+      _a.log("warn", "Ui:applyTemplate", "No valid content found in template")();
     }
   }
   /** Converts markdown text input to HTML if the Markdown-IT library is loaded
@@ -681,7 +708,7 @@ var Ui = (_a = class {
     try {
       return _a.md.render(mdText.trim());
     } catch (e) {
-      _a.log(0, "uibuilder:convertMarkdown", `Could not render Markdown. ${e.message}`, e)();
+      _a.log(0, "uibuilder:convertMarkdown", "Could not render Markdown. ".concat(e.message), e)();
       return '<p class="border error">Could not render Markdown<p>';
     }
   }
@@ -711,11 +738,11 @@ var Ui = (_a = class {
     try {
       response = await fetch(url2);
     } catch (error) {
-      _a.log(0, "Ui:include", `Fetch of file '${url2}' failed. `, error.message)();
+      _a.log(0, "Ui:include", "Fetch of file '".concat(url2, "' failed. "), error.message)();
       return error.message;
     }
     if (!response.ok) {
-      _a.log(0, "Ui:include", `Fetch of file '${url2}' failed. Status='${response.statusText}'`)();
+      _a.log(0, "Ui:include", "Fetch of file '".concat(url2, "' failed. Status='").concat(response.statusText, "'"))();
       return response.statusText;
     }
     const contentType = await response.headers.get("content-type");
@@ -762,7 +789,7 @@ var Ui = (_a = class {
       }
       case "image": {
         data = await response.blob();
-        slot = `<img src="${URL.createObjectURL(data)}">`;
+        slot = '<img src="'.concat(URL.createObjectURL(data), '">');
         if (_a.win["DOMPurify"]) {
           txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
           _a.log("warn", "Ui:include:image", txtReturn)();
@@ -771,7 +798,7 @@ var Ui = (_a = class {
       }
       case "video": {
         data = await response.blob();
-        slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`;
+        slot = '<video controls autoplay><source src="'.concat(URL.createObjectURL(data), '"></video>');
         if (_a.win["DOMPurify"]) {
           txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
           _a.log("warn", "Ui:include:video", txtReturn)();
@@ -782,10 +809,10 @@ var Ui = (_a = class {
       case "text":
       default: {
         data = await response.blob();
-        slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`;
+        slot = '<iframe style="resize:both;width:inherit;height:inherit;" src="'.concat(URL.createObjectURL(data), '">');
         if (_a.win["DOMPurify"]) {
           txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
-          _a.log("warn", `Ui:include:${type}`, txtReturn)();
+          _a.log("warn", "Ui:include:".concat(type), txtReturn)();
         }
         break;
       }
@@ -799,7 +826,7 @@ var Ui = (_a = class {
         uiOptions
       ]
     });
-    _a.log("trace", `Ui:include:${type}`, txtReturn)();
+    _a.log("trace", "Ui:include:".concat(type), txtReturn)();
     return txtReturn;
   }
   // ---- End of include() ---- //
@@ -861,12 +888,12 @@ var Ui = (_a = class {
     }
     fetch(url2).then((response) => {
       if (response.ok === false) {
-        throw new Error(`Could not load '${url2}'. Status ${response.status}, Error: ${response.statusText}`);
+        throw new Error("Could not load '".concat(url2, "'. Status ").concat(response.status, ", Error: ").concat(response.statusText));
       }
-      _a.log("trace", "Ui:loadui:then1", `Loaded '${url2}'. Status ${response.status}, ${response.statusText}`)();
+      _a.log("trace", "Ui:loadui:then1", "Loaded '".concat(url2, "'. Status ").concat(response.status, ", ").concat(response.statusText))();
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        throw new TypeError(`Fetch '${url2}' did not return JSON, ignoring`);
+        throw new TypeError("Fetch '".concat(url2, "' did not return JSON, ignoring"));
       }
       return response.json();
     }).then((data) => {
@@ -922,7 +949,7 @@ var Ui = (_a = class {
       }
     };
     if (["UL", "OL"].includes(node.nodeName)) {
-      const listEntries = _a.doc.querySelectorAll(`${cssSelector} li`);
+      const listEntries = _a.doc.querySelectorAll("".concat(cssSelector, " li"));
       if (listEntries) {
         thisOut.list = {
           "entries": listEntries.length
@@ -930,7 +957,7 @@ var Ui = (_a = class {
       }
     }
     if (node.nodeName === "DL") {
-      const listEntries = _a.doc.querySelectorAll(`${cssSelector} dt`);
+      const listEntries = _a.doc.querySelectorAll("".concat(cssSelector, " dt"));
       if (listEntries) {
         thisOut.list = {
           "entries": listEntries.length
@@ -938,9 +965,9 @@ var Ui = (_a = class {
       }
     }
     if (node.nodeName === "TABLE") {
-      const bodyEntries = _a.doc.querySelectorAll(`${cssSelector} > tbody > tr`);
-      const headEntries = _a.doc.querySelectorAll(`${cssSelector} > thead > tr`);
-      const cols = _a.doc.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
+      const bodyEntries = _a.doc.querySelectorAll("".concat(cssSelector, " > tbody > tr"));
+      const headEntries = _a.doc.querySelectorAll("".concat(cssSelector, " > thead > tr"));
+      const cols = _a.doc.querySelectorAll("".concat(cssSelector, " > tbody > tr:last-child > *"));
       if (bodyEntries || headEntries || cols) {
         thisOut.table = {
           "headRows": headEntries ? headEntries.length : 0,
@@ -1054,14 +1081,14 @@ var Ui = (_a = class {
    */
   showDialog(type, ui, msg) {
     let content = "";
-    if (msg.payload && typeof msg.payload === "string") content += `<div>${msg.payload}</div>`;
-    if (ui.content) content += `<div>${ui.content}</div>`;
+    if (msg.payload && typeof msg.payload === "string") content += "<div>".concat(msg.payload, "</div>");
+    if (ui.content) content += "<div>".concat(ui.content, "</div>");
     if (content === "") {
       _a.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
       return;
     }
     if (!ui.title && msg.topic) ui.title = msg.topic;
-    if (ui.title) content = `<p class="toast-head">${ui.title}</p><p>${content}</p>`;
+    if (ui.title) content = '<p class="toast-head">'.concat(ui.title, "</p><p>").concat(content, "</p>");
     if (ui.noAutohide) ui.noAutoHide = ui.noAutohide;
     if (ui.noAutoHide) ui.autohide = !ui.noAutoHide;
     if (ui.autoHideDelay) {
@@ -1072,7 +1099,7 @@ var Ui = (_a = class {
     if (type === "alert") {
       ui.modal = true;
       ui.autohide = false;
-      content = `<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> ${content}`;
+      content = '<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> '.concat(content);
     }
     let toaster = _a.doc.getElementById("toaster");
     if (toaster === null) {
@@ -1089,7 +1116,7 @@ var Ui = (_a = class {
     }
     const toast = _a.doc.createElement("div");
     toast.title = "Click to clear this notifcation";
-    toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
+    toast.setAttribute("class", "toast ".concat(ui.variant ? ui.variant : "", " ").concat(type));
     toast.innerHTML = content;
     toast.setAttribute("role", "alertdialog");
     if (ui.modal) toast.setAttribute("aria-modal", ui.modal);
@@ -1141,7 +1168,7 @@ var Ui = (_a = class {
         }
         if (prop === void 0 || prop === null) {
           if (propName.toLowerCase() === "value") out.push(node.innerText);
-          else out.push(`Property '${propName}' not found`);
+          else out.push("Property '".concat(propName, "' not found"));
         } else {
           const p = {};
           const cType = prop.constructor.name.toLowerCase();
@@ -1225,7 +1252,7 @@ var Ui = (_a = class {
       out.textContent = "Input data is not an array or an object, cannot create a table.";
       return out;
     }
-    if (rowKeys.length > 1e3) _a.log(1, "Uib:buildHtmlTable", `Warning, data is ${rowKeys.length} rows. Anything over 1,000 can get very slow to complete.`)();
+    if (rowKeys.length > 1e3) _a.log(1, "Uib:buildHtmlTable", "Warning, data is ".concat(rowKeys.length, " rows. Anything over 1,000 can get very slow to complete."))();
     const tbl = _a.doc.createElement("table");
     const thead = _a.doc.createElement("thead");
     const headerRow = _a.doc.createElement("tr");
@@ -1239,7 +1266,7 @@ var Ui = (_a = class {
           "index": i,
           "hasName": hasName,
           "name": hasName ? col : void 0,
-          "key": col ?? i,
+          "key": col != null ? col : i,
           "title": col
         });
       });
@@ -1275,7 +1302,7 @@ var Ui = (_a = class {
       try {
         parentEl.appendChild(tbl);
       } catch (e) {
-        throw new Error(`[ui.js:buildHtmlTable] Could not add table to parent. ${e.message}`);
+        throw new Error("[ui.js:buildHtmlTable] Could not add table to parent. ".concat(e.message));
       }
       return;
     }
@@ -1298,20 +1325,20 @@ var Ui = (_a = class {
    */
   tblAddRow(tbl, rowData = {}, options = {}) {
     const tblType = Object.prototype.toString.apply(tbl);
-    if (Object.prototype.toString.apply(options) !== "[object Object]") throw new Error(`[tblAddDataRow] options must be an object`);
+    if (Object.prototype.toString.apply(options) !== "[object Object]") throw new Error("[tblAddDataRow] options must be an object");
     const dataType = Object.prototype.toString.apply(rowData);
-    if (dataType !== "[object Object]" && dataType !== "[object Array]") throw new Error(`[tblAddDataRow] rowData MUST be an object or an array containing column/cell data for each column`);
+    if (dataType !== "[object Object]" && dataType !== "[object Array]") throw new Error("[tblAddDataRow] rowData MUST be an object or an array containing column/cell data for each column");
     let tblEl;
     if (tblType === "[object HTMLTableElement]") {
       tblEl = tbl;
     } else {
       tblEl = _a.doc.querySelector(tbl);
-      if (!tblEl) throw new Error(`[tblAddDataRow] Table with CSS Selector "${tbl}" not found`);
+      if (!tblEl) throw new Error('[tblAddDataRow] Table with CSS Selector "'.concat(tbl, '" not found'));
     }
     if (!options.body) options.body = 0;
     if (!("allowHTML" in options)) options.allowHTML = false;
     const tbodyEl = tblEl.getElementsByTagName("tbody")[options.body];
-    if (!tbodyEl) throw new Error(`[tblAddDataRow] Table must have a tbody tag, tbody section ${options.body} does not exist`);
+    if (!tbodyEl) throw new Error("[tblAddDataRow] Table must have a tbody tag, tbody section ".concat(options.body, " does not exist"));
     if (!options.cols) options.cols = this.tblGetColMeta(tblEl);
     const colMeta = options.cols;
     const rowEl = _a.doc.createElement("tr");
@@ -1324,7 +1351,10 @@ var Ui = (_a = class {
       cols.push(cellEl);
     }
     Object.keys(rowData).forEach((colKey, i, row) => {
-      let foundEl = cols.find((col) => col?.colMeta?.name === colKey);
+      let foundEl = cols.find((col) => {
+        var _a3;
+        return ((_a3 = col == null ? void 0 : col.colMeta) == null ? void 0 : _a3.name) === colKey;
+      });
       let foundRowData;
       if (foundEl) {
         foundRowData = rowData[colKey];
@@ -1372,7 +1402,7 @@ var Ui = (_a = class {
    */
   tblAddListener(tblSelector, options = {}, out = {}) {
     const table = _a.doc.querySelector(tblSelector);
-    if (!table) throw new Error(`Table with CSS Selector "${tblSelector}" not found`);
+    if (!table) throw new Error('Table with CSS Selector "'.concat(tblSelector, '" not found'));
     if (typeof out !== "object") throw new Error('The "out" argument MUST be an object');
     if (!options.eventScope) options.eventScope = "row";
     if (!options.returnType) options.returnType = "text";
@@ -1399,9 +1429,9 @@ var Ui = (_a = class {
           const colName = this.tblGetCellName(clickedCell, options.pad);
           out[colName] = options.returnType === "text" ? clickedCell.textContent.trim() : clickedCell.innerHTML;
         }
-        _a.log(options.logLevel, "Ui:tblAddClickListener", `${options.eventScope} ${options.eventType} on row=${rowIndex}, col=${cellIndex}, data: `, out)();
+        _a.log(options.logLevel, "Ui:tblAddClickListener", "".concat(options.eventScope, " ").concat(options.eventType, " on row=").concat(rowIndex, ", col=").concat(cellIndex, ", data: "), out)();
         if (options.send === true && _a.win["uibuilder"]) _a.win["uibuilder"].send({
-          topic: `${tblSelector} ${options.eventScope} ${options.eventType}`,
+          topic: "".concat(tblSelector, " ").concat(options.eventScope, " ").concat(options.eventType),
           payload: out
         });
       }
@@ -1430,7 +1460,8 @@ var Ui = (_a = class {
    * @returns {string} A cell name
    */
   tblGetCellName(cellEl, pad = 3) {
-    return cellEl.getAttribute("data-col-name") ?? `C${String(cellEl.cellIndex + 1).padStart(pad, "0")}`;
+    var _a3;
+    return (_a3 = cellEl.getAttribute("data-col-name")) != null ? _a3 : "C".concat(String(cellEl.cellIndex + 1).padStart(pad, "0"));
   }
   /** Returns either the existing or calculated column metadata given any table
    * First checks if the data is on the `cols` custom property of the table
@@ -1441,11 +1472,12 @@ var Ui = (_a = class {
    * @returns {Array<columnDefinition>} Column metadata = array of column definitions
    */
   tblGetColMeta(tblEl, options = {}) {
+    var _a3, _b, _c;
     if (!options.pad) options.pad = 3;
     if (tblEl.cols) return tblEl.cols;
-    let cols = tblEl.querySelector("tr[data-col-reference]")?.children;
-    if (!cols) cols = tblEl.querySelector("thead>tr:first-of-type")?.children;
-    if (!cols) cols = tblEl.querySelector("tr:first-of-type")?.children;
+    let cols = (_a3 = tblEl.querySelector("tr[data-col-reference]")) == null ? void 0 : _a3.children;
+    if (!cols) cols = (_b = tblEl.querySelector("thead>tr:first-of-type")) == null ? void 0 : _b.children;
+    if (!cols) cols = (_c = tblEl.querySelector("tr:first-of-type")) == null ? void 0 : _c.children;
     if (!cols) {
       _a.log(1, "Ui:tblGetColMeta", "No columns found in table")();
       return [];
@@ -1456,7 +1488,7 @@ var Ui = (_a = class {
       const hasName = !!cellEl.dataset.colName;
       const colName = cellEl.dataset.colName;
       const colIndex = cellEl.cellIndex + 1;
-      const colKey = hasName ? colName : `C${String(cellEl.cellIndex + 1).padStart(options.pad, "0")}`;
+      const colKey = hasName ? colName : "C".concat(String(cellEl.cellIndex + 1).padStart(options.pad, "0"));
       colData.push({
         index: colIndex,
         hasName,
@@ -1476,17 +1508,17 @@ var Ui = (_a = class {
    */
   tblRemoveRow(tbl, rowIndex, options = {}) {
     const tblType = Object.prototype.toString.apply(tbl);
-    if (Object.prototype.toString.apply(options) !== "[object Object]") throw new Error(`[tblRemoveRow] options must be an object`);
+    if (Object.prototype.toString.apply(options) !== "[object Object]") throw new Error("[tblRemoveRow] options must be an object");
     let tblEl;
     if (tblType === "[object HTMLTableElement]") {
       tblEl = tbl;
     } else {
       tblEl = _a.doc.querySelector(tbl);
-      if (!tblEl) throw new Error(`[tblRemoveRow] Table with CSS Selector "${tbl}" not found`);
+      if (!tblEl) throw new Error('[tblRemoveRow] Table with CSS Selector "'.concat(tbl, '" not found'));
     }
     if (!options.body) options.body = 0;
     const tbodyEl = tblEl.getElementsByTagName("tbody")[options.body];
-    if (!tbodyEl) throw new Error(`[tblAddDataRow] Table must have a tbody tag, tbody section ${options.body} does not exist`);
+    if (!tbodyEl) throw new Error("[tblAddDataRow] Table must have a tbody tag, tbody section ".concat(options.body, " does not exist"));
     tbodyEl.deleteRow(rowIndex);
   }
   //#endregion --- table handling ---
@@ -2601,7 +2633,7 @@ var WT = class extends Transport {
         read();
         const packet = { type: "open" };
         if (this.query.sid) {
-          packet.data = `{"sid":"${this.query.sid}"}`;
+          packet.data = '{"sid":"'.concat(this.query.sid, '"}');
         }
         this._writer.write(packet).then(() => this.onOpen());
       });
@@ -4896,7 +4928,7 @@ var _TiBaseComponent = class _TiBaseComponent extends HTMLElement {
   }
   /** Report the current component version string */
   static get version() {
-    return `${this.componentVersion} (Base: ${this.baseVersion})`;
+    return "".concat(this.componentVersion, " (Base: ").concat(this.baseVersion, ")");
   }
   /** Optionally apply an external linked style sheet (called from connectedCallback)
    * @param {*} url The URL for the linked style sheet
@@ -4910,7 +4942,7 @@ var _TiBaseComponent = class _TiBaseComponent extends HTMLElement {
     linkEl.setAttribute("rel", "stylesheet");
     linkEl.setAttribute("href", url2);
     this.shadowRoot.appendChild(linkEl);
-    console.info(`[${this.localName}] Inherit-style requested. Loading: "${url2}"`);
+    console.info("[".concat(this.localName, '] Inherit-style requested. Loading: "').concat(url2, '"'));
   }
   /** OPTIONAL. Update runtime configuration, return complete config
    * @param {object|undefined} config If present, partial or full set of options. If undefined, fn returns the current full option settings
@@ -4942,13 +4974,14 @@ var _TiBaseComponent = class _TiBaseComponent extends HTMLElement {
   ensureId() {
     this.uib = !!window["uibuilder"];
     if (!this.id) {
-      this.id = `${this.localName}-${++this.constructor._iCount}`;
+      this.id = "".concat(this.localName, "-").concat(++this.constructor._iCount);
     }
   }
   /** Creates the $ and $$ fns that do css selections against the shadow dom */
   createShadowSelectors() {
-    this.$ = this.shadowRoot?.querySelector.bind(this.shadowRoot);
-    this.$$ = this.shadowRoot?.querySelectorAll.bind(this.shadowRoot);
+    var _a3, _b;
+    this.$ = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector.bind(this.shadowRoot);
+    this.$$ = (_b = this.shadowRoot) == null ? void 0 : _b.querySelectorAll.bind(this.shadowRoot);
   }
   // TODO Needs enhancing - does nothing at the moment
   /** Handle a `uibuilder:msg:_ui:update:${this.id}` custom event
@@ -4966,7 +4999,7 @@ var _TiBaseComponent = class _TiBaseComponent extends HTMLElement {
    * @param {*=} data Optional data object to pass to event listeners via the evt.detail property
    */
   _event(name2, data) {
-    this.dispatchEvent(new CustomEvent(`${this.localName}:${name2}`, {
+    this.dispatchEvent(new CustomEvent("".concat(this.localName, ":").concat(name2), {
       bubbles: true,
       composed: true,
       detail: {
@@ -4992,7 +5025,7 @@ var _TiBaseComponent = class _TiBaseComponent extends HTMLElement {
   }
   /** Standardised disconnection. Call from the END of disconnectedCallback fn */
   _disconnect() {
-    document.removeEventListener(`uibuilder:msg:_ui:update:${this.id}`, this._uibMsgHandler);
+    document.removeEventListener("uibuilder:msg:_ui:update:".concat(this.id), this._uibMsgHandler);
     this._event("disconnected");
   }
   /** Call from end of connectedCallback */
@@ -5064,7 +5097,7 @@ var UibVar = class extends ti_base_component_default {
         this.splitVarName = varName.split(/[\.\[\]\'\"]/);
         __privateSet(this, _variable, varName = this.splitVarName.shift());
       } catch (e) {
-        throw new Error(`[${this.localName}] variable attribute: Name split failed on "${varName}". ${e.message}`);
+        throw new Error("[".concat(this.localName, '] variable attribute: Name split failed on "').concat(varName, '". ').concat(e.message));
       }
     }
     if (__privateGet(this, _varCb)) this.uibuilder.cancelChange(varName, __privateGet(this, _varCb));
@@ -5138,7 +5171,7 @@ var UibVar = class extends ti_base_component_default {
         newVal = newVal.slice(0, 127);
         const f = newVal.replace(/\s/g, "").match(/([a-zA-Z_$][a-zA-Z_$0-9.-]+)(\((.*)\))?/);
         if (!f) {
-          console.warn(`\u26A0\uFE0F [uib-var] Filter function "${newVal}" invalid. Cannot process.`);
+          console.warn('\u26A0\uFE0F [uib-var] Filter function "'.concat(newVal, '" invalid. Cannot process.'));
           break;
         }
         this.filter = f[1];
@@ -5152,7 +5185,7 @@ var UibVar = class extends ti_base_component_default {
             if (isNaN(x)) {
               let y = x.replace(/^["'`]/, "").replace(/["'`]$/, "");
               try {
-                y = new Function(`return ${y}`)();
+                y = new Function("return ".concat(y))();
               } catch (e) {
               }
               return y;
@@ -5202,7 +5235,7 @@ var UibVar = class extends ti_base_component_default {
    * @param {object} msg The value of the managed uibuilder variable
    */
   _topicChange(msg) {
-    this.uibuilder.log("trace", this.localName, `Topic msg received: '${msg.topic}'`, msg);
+    this.uibuilder.log("trace", this.localName, "Topic msg received: '".concat(msg.topic, "'"), msg);
     this.value = msg.payload;
     this.showVar();
     if (this.report === true) this.uibuilder.send({ topic: msg.topic, payload: this.value || void 0, source: this.localName, id: this.id });
@@ -5211,7 +5244,7 @@ var UibVar = class extends ti_base_component_default {
    * @param {boolean} chkVal If true (default), check for undefined value. False used to run filter even with no value set.
    */
   showVar(chkVal = true) {
-    this.uibuilder.log("trace", this.localName, `showVar. chkVal: '${chkVal}'. Value=`, this.value);
+    this.uibuilder.log("trace", this.localName, "showVar. chkVal: '".concat(chkVal, "'. Value="), this.value);
     if (chkVal === true && !this.value && this.undef !== true) {
       return;
     }
@@ -5224,7 +5257,7 @@ var UibVar = class extends ti_base_component_default {
       }
       case "json":
       case "object": {
-        out = `<pre class="syntax-highlight">${this.uib ? this.uibuilder.syntaxHighlight(val) : val}</pre>`;
+        out = '<pre class="syntax-highlight">'.concat(this.uib ? this.uibuilder.syntaxHighlight(val) : val, "</pre>");
         break;
       }
       case "table": {
@@ -5236,7 +5269,7 @@ var UibVar = class extends ti_base_component_default {
         if (!Array.isArray(val)) val = [val];
         out = "<ul>";
         val.forEach((li) => {
-          out += `<li>${li}</li>`;
+          out += "<li>".concat(li, "</li>");
         });
         out += "</ul>";
         break;
@@ -5275,9 +5308,9 @@ var UibVar = class extends ti_base_component_default {
       if (globalFn && typeof globalFn !== "function") globalFn = void 0;
       if (globalFn) {
         const argList = value2 === void 0 ? [...this.filterArgs] : [value2, ...this.filterArgs];
-        value2 = Reflect.apply(globalFn, value2 ?? globalFn, argList);
+        value2 = Reflect.apply(globalFn, value2 != null ? value2 : globalFn, argList);
       } else {
-        console.warn(`\u26A0\uFE0F [uib-var] Filter function "${this.filter}" ${typeof globalFn === "object" ? "is an object not a function" : "not found"}`);
+        console.warn('\u26A0\uFE0F [uib-var] Filter function "'.concat(this.filter, '" ').concat(typeof globalFn === "object" ? "is an object not a function" : "not found"));
       }
     }
     return value2;
@@ -5390,29 +5423,29 @@ var UibMeta = class extends ti_base_component_default {
     let out;
     switch (this.type.toLowerCase()) {
       case "all": {
-        out = `Created: ${this.doFormat(this.value.created, "dt")}, Updated: ${this.doFormat(this.value.modified, "dt")}`;
-        out += `, Size: ${this.doFormat(this.value.size, "num")}b`;
+        out = "Created: ".concat(this.doFormat(this.value.created, "dt"), ", Updated: ").concat(this.doFormat(this.value.modified, "dt"));
+        out += ", Size: ".concat(this.doFormat(this.value.size, "num"), "b");
         break;
       }
       case "size": {
-        out = `Size: ${this.doFormat(this.value.size, "num")}b`;
+        out = "Size: ".concat(this.doFormat(this.value.size, "num"), "b");
         break;
       }
       case "modified":
       case "updated": {
-        out = `Updated: ${this.doFormat(this.value.modified, "dt")}`;
+        out = "Updated: ".concat(this.doFormat(this.value.modified, "dt"));
         break;
       }
       case "both":
       // both created and updated dates
       case "created-updated":
       case "crup": {
-        out = `Created: ${this.doFormat(this.value.created, "dt")}, Updated: ${this.doFormat(this.value.modified, "dt")}`;
+        out = "Created: ".concat(this.doFormat(this.value.created, "dt"), ", Updated: ").concat(this.doFormat(this.value.modified, "dt"));
         break;
       }
       case "created":
       default: {
-        out = `Created: ${this.doFormat(this.value.created, "dt")}`;
+        out = "Created: ".concat(this.doFormat(this.value.created, "dt"));
         break;
       }
     }
@@ -5443,12 +5476,12 @@ var UibMeta = class extends ti_base_component_default {
         break;
       }
       case "k": {
-        if (type === "num") out = `${uibuilder.round(val / 1024, 1)} k`;
+        if (type === "num") out = "".concat(uibuilder.round(val / 1024, 1), " k");
         else out = val;
         break;
       }
       case "m": {
-        if (type === "num") out = `${uibuilder.round(val / 1048576, 2)} M`;
+        if (type === "num") out = "".concat(uibuilder.round(val / 1048576, 2), " M");
         else out = val;
         break;
       }
@@ -5519,7 +5552,7 @@ var ApplyTemplate = class extends ti_base_component_default {
     }
     const template = document.getElementById(templateId);
     if (!template || template.tagName !== "TEMPLATE") {
-      throw new Error(`[ApplyTemplate] Source must be a <template>. id='${templateId}'`);
+      throw new Error("[ApplyTemplate] Source must be a <template>. id='".concat(templateId, "'"));
     }
     const existContent = this.innerHTML;
     this.innerHTML = "";
@@ -5560,8 +5593,8 @@ __publicField(ApplyTemplate, "componentVersion", "2025-01-05");
 var apply_template_default = ApplyTemplate;
 window["ApplyTemplate"] = ApplyTemplate;
 
-// src/front-end-module/uibuilder.module.js
-var version = "7.3.0-esm";
+// src/front-end-module/uibuilder.module.mjs
+var version = "7.4.0-esm";
 var isMinified = !/param/.test(function(param) {
 });
 function log() {
@@ -5624,9 +5657,9 @@ function log() {
   return Function.prototype.bind.call(
     console[log.LOG_STYLES[strLevel].console],
     console,
-    `%c${log.LOG_STYLES[strLevel].pre}${strLevel}%c [${head}]`,
-    `${log.LOG_STYLES.level} ${log.LOG_STYLES[strLevel].css}`,
-    `${log.LOG_STYLES.head} ${log.LOG_STYLES[strLevel].txtCss}`,
+    "%c".concat(log.LOG_STYLES[strLevel].pre).concat(strLevel, "%c [").concat(head, "]"),
+    "".concat(log.LOG_STYLES.level, " ").concat(log.LOG_STYLES[strLevel].css),
+    "".concat(log.LOG_STYLES.head, " ").concat(log.LOG_STYLES[strLevel].txtCss),
     ...args
   );
 }
@@ -5697,7 +5730,7 @@ if (ll === void 0) {
 if (ll !== void 0) {
   ll = Number(ll);
   if (isNaN(ll)) {
-    console.warn(`[Uib:constructor] Cannot set logLevel to "${scriptElement?.getAttribute("logLevel")}". Defaults to 0 (error).`);
+    console.warn('[Uib:constructor] Cannot set logLevel to "'.concat(scriptElement == null ? void 0 : scriptElement.getAttribute("logLevel"), '". Defaults to 0 (error).'));
     log.default = 0;
   } else log.default = ll;
 }
@@ -5721,10 +5754,10 @@ function syntaxHighlight(json) {
         } else if (/null/.test(match)) {
           cls = "null";
         }
-        return `<span class="${cls}">${match}</span>`;
+        return '<span class="'.concat(cls, '">').concat(match, "</span>");
       });
     } catch (e) {
-      json = `Syntax Highlight ERROR: ${e.message}`;
+      json = "Syntax Highlight ERROR: ".concat(e.message);
     }
   }
   return json;
@@ -5732,8 +5765,8 @@ function syntaxHighlight(json) {
 var _ui = new ui_default(window, log, syntaxHighlight);
 var _a2, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _uniqueElID, _extCommands, _managedVars, _showStatus, _uiObservers, _uibAttrSel;
 var Uib = (_a2 = class {
-  //#endregion -------- ------------ -------- //
-  //#region Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
+  // #endregion -------- ------------ -------- //
+  // #region Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
   /** Attempt to load a service worker
    * https://yonatankra.com/how-service-workers-sped-up-our-website-by-97-5/
    * @param {string} fileName Name of service worker js file (without .js extension)
@@ -5795,11 +5828,11 @@ var Uib = (_a2 = class {
   //         },
   //     })
   // }
-  //#endregion ! EXPERIMENTAL
-  //#region ------- Class construction & startup method -------- //
+  // #endregion ! EXPERIMENTAL
+  // #region ------- Class construction & startup method -------- //
   constructor() {
-    //#endregion ---- ---- ---- ----
-    //#region private class vars
+    // #endregion ---- ---- ---- ----
+    // #region private class vars
     // How many times has the loaded instance connected to Socket.IO (detect if not a new load?)
     __publicField(this, "connectedNum", 0);
     // event listener callbacks by property name
@@ -5855,36 +5888,36 @@ var Uib = (_a2 = class {
     __privateAdd(this, _managedVars, {});
     // What status variables to show via showStatus()
     __privateAdd(this, _showStatus, {
-      online: { "var": "online", "label": "Online?", "description": "Is the browser online?" },
-      ioConnected: { "var": "ioConnected", "label": "Socket.IO connected?", "description": "Is Socket.IO connected?" },
-      connectedNum: { "var": "connectedNum", "label": "# reconnections", "description": "How many times has Socket.IO had to reconnect since last page load?" },
-      clientId: { "var": "clientId", "label": "Client ID", "description": "Static client unique id set in Node-RED. Only changes when browser is restarted." },
-      tabId: { "var": "tabId", "label": "Browser tab ID", "description": "Static unique id for the browser's current tab" },
-      cookies: { "var": "cookies", "label": "Cookies", "description": "Cookies set in Node-RED" },
-      httpNodeRoot: { "var": "httpNodeRoot", "label": "httpNodeRoot", "description": "From Node-RED' settings.js, affects URL's. May be wrong for pages in sub-folders" },
-      pageName: { "var": "pageName", "label": "Page name", "description": "Actual name of this page" },
-      ioNamespace: { "var": "ioNamespace", "label": "SIO namespace", "description": "Socket.IO namespace - unique to each uibuilder node instance" },
+      online: { var: "online", label: "Online?", description: "Is the browser online?" },
+      ioConnected: { var: "ioConnected", label: "Socket.IO connected?", description: "Is Socket.IO connected?" },
+      connectedNum: { var: "connectedNum", label: "# reconnections", description: "How many times has Socket.IO had to reconnect since last page load?" },
+      clientId: { var: "clientId", label: "Client ID", description: "Static client unique id set in Node-RED. Only changes when browser is restarted." },
+      tabId: { var: "tabId", label: "Browser tab ID", description: "Static unique id for the browser's current tab" },
+      cookies: { var: "cookies", label: "Cookies", description: "Cookies set in Node-RED" },
+      httpNodeRoot: { var: "httpNodeRoot", label: "httpNodeRoot", description: "From Node-RED' settings.js, affects URL's. May be wrong for pages in sub-folders" },
+      pageName: { var: "pageName", label: "Page name", description: "Actual name of this page" },
+      ioNamespace: { var: "ioNamespace", label: "SIO namespace", description: "Socket.IO namespace - unique to each uibuilder node instance" },
       // ioPath: { 'var': 'ioPath', 'label': 'SIO path', 'description': '', }, // no longer needed in the modern client
-      socketError: { "var": "socketError", "label": "Socket error", "description": "If the Socket.IO connection has failed, says why" },
-      msgsSent: { "var": "msgsSent", "label": "# msgs sent", "description": "How many standard messages have been sent to Node-RED?" },
-      msgsReceived: { "var": "msgsReceived", "label": "# msgs received", "description": "How many standard messages have been received from Node-RED?" },
-      msgsSentCtrl: { "var": "msgsSentCtrl", "label": "# control msgs sent", "description": "How many control messages have been sent to Node-RED?" },
-      msgsCtrlReceived: { "var": "msgsCtrlReceived", "label": "# control msgs received", "description": "How many control messages have been received from Node-RED?" },
-      originator: { "var": "originator", "label": "Node Originator", "description": "If the last msg from Node-RED was from a `uib-sender` node, this will be its node id so that messasges can be returned to it" },
-      topic: { "var": "topic", "label": "Default topic", "description": "Optional default topic to be included in outgoing standard messages" },
-      started: { "var": "started", "label": "Has uibuilder client started?", "description": "Whether `uibuilder.start()` ran successfully. This should self-run and should not need to be run manually" },
-      version: { "var": "version", "label": "uibuilder client version", "description": "The version of the loaded uibuilder client library" },
-      serverTimeOffset: { "var": "serverTimeOffset", "label": "Server time offset (Hrs)", "description": "The number of hours difference between the Node-red server and the client" }
+      socketError: { var: "socketError", label: "Socket error", description: "If the Socket.IO connection has failed, says why" },
+      msgsSent: { var: "msgsSent", label: "# msgs sent", description: "How many standard messages have been sent to Node-RED?" },
+      msgsReceived: { var: "msgsReceived", label: "# msgs received", description: "How many standard messages have been received from Node-RED?" },
+      msgsSentCtrl: { var: "msgsSentCtrl", label: "# control msgs sent", description: "How many control messages have been sent to Node-RED?" },
+      msgsCtrlReceived: { var: "msgsCtrlReceived", label: "# control msgs received", description: "How many control messages have been received from Node-RED?" },
+      originator: { var: "originator", label: "Node Originator", description: "If the last msg from Node-RED was from a `uib-sender` node, this will be its node id so that messasges can be returned to it" },
+      topic: { var: "topic", label: "Default topic", description: "Optional default topic to be included in outgoing standard messages" },
+      started: { var: "started", label: "Has uibuilder client started?", description: "Whether `uibuilder.start()` ran successfully. This should self-run and should not need to be run manually" },
+      version: { var: "version", label: "uibuilder client version", description: "The version of the loaded uibuilder client library" },
+      serverTimeOffset: { var: "serverTimeOffset", label: "Server time offset (Hrs)", description: "The number of hours difference between the Node-red server and the client" }
     });
     // Track ui observers (see uiWatch)
     __privateAdd(this, _uiObservers, {});
     // List of uib specific attributes that will be watched and processed dynamically
     __publicField(this, "uibAttribs", ["uib-topic", "data-uib-topic"]);
-    __privateAdd(this, _uibAttrSel, `[${this.uibAttribs.join("], [")}]`);
+    __privateAdd(this, _uibAttrSel, "[".concat(this.uibAttribs.join("], ["), "]"));
     //#endregion
-    //#region public class vars
+    // #region public class vars
     // TODO Move to proper getters
-    //#region ---- Externally read-only (via .get method) ---- //
+    // #region ---- Externally read-only (via .get method) ---- //
     // version - moved to _meta
     /** Client ID set by uibuilder on connect */
     __publicField(this, "clientId", "");
@@ -5932,9 +5965,9 @@ var Uib = (_a2 = class {
     __publicField(this, "markdown", false);
     // Current URL hash. Initial set is done from start->watchHashChanges via a set to make it watched
     __publicField(this, "urlHash", location.hash);
-    //#endregion ---- ---- ---- ---- //
+    // #endregion ---- ---- ---- ---- //
     // TODO Move to proper getters/setters
-    //#region ---- Externally Writable (via .set method, read via .get method) ---- //
+    // #region ---- Externally Writable (via .set method, read via .get method) ---- //
     /** Default originator node id - empty string by default
      * @type {string}
      */
@@ -5949,8 +5982,8 @@ var Uib = (_a2 = class {
     __publicField(this, "uibrouterinstance");
     /** Set by uibrouter, do not set manually */
     __publicField(this, "uibrouter_CurrentRoute");
-    //#endregion ---- ---- ---- ---- //
-    //#region ---- These are unlikely to be needed externally: ----
+    // #endregion ---- ---- ---- ---- //
+    // #region ---- These are unlikely to be needed externally: ----
     __publicField(this, "autoSendReady", true);
     __publicField(this, "httpNodeRoot", "");
     // Node-RED setting (via cookie)
@@ -5992,15 +6025,15 @@ var Uib = (_a2 = class {
         // Can only set headers when polling
         polling: {
           extraHeaders: {
-            "x-clientid": `${_a2._meta.displayName}; ${_a2._meta.type}; ${_a2._meta.version}; ${this.clientId}`
+            "x-clientid": "".concat(_a2._meta.displayName, "; ").concat(_a2._meta.type, "; ").concat(_a2._meta.version, "; ").concat(this.clientId)
           }
         }
       }
     });
     // --- End of elementIsVisible --- //
-    //#endregion -------- -------- -------- //
-    //#region ------- UI handlers --------- //
-    //#region -- Direct to _ui --
+    // #endregion -------- -------- -------- //
+    // #region ------- UI handlers --------- //
+    // #region -- Direct to _ui --
     // ! NOTE: Direct assignments change the target `this` to here. Use with caution
     // However, also note that the window/jsdom and the window.document
     // references are now static in _ui so not impacted by this.
@@ -6059,7 +6092,7 @@ var Uib = (_a2 = class {
     log("trace", "Uib:constructor", "Client ID: ", this.clientId)();
     this.set("tabId", window.sessionStorage.getItem("tabId"));
     if (!this.tabId) {
-      this.set("tabId", `t${Math.floor(Math.random() * 1e6)}`);
+      this.set("tabId", "t".concat(Math.floor(Math.random() * 1e6)));
       window.sessionStorage.setItem("tabId", this.tabId);
     }
     document.addEventListener("load", () => {
@@ -6072,26 +6105,26 @@ var Uib = (_a2 = class {
     document.addEventListener("uibuilder:propertyChanged", (event2) => {
       if (!__privateGet(this, _isShowStatus)) return;
       if (event2.detail.prop in __privateGet(this, _showStatus)) {
-        document.querySelector(`td[data-vartype="${event2.detail.prop}"]`).innerText = JSON.stringify(event2.detail.value);
+        document.querySelector('td[data-vartype="'.concat(event2.detail.prop, '"]')).innerText = JSON.stringify(event2.detail.value);
       }
     });
     this.set("ioNamespace", this._getIOnamespace());
     if ("uibuilder-webRoot" in this.cookies) {
       this.set("httpNodeRoot", this.cookies["uibuilder-webRoot"]);
-      log("trace", "Uib:constructor", `httpNodeRoot set by cookie to "${this.httpNodeRoot}"`)();
+      log("trace", "Uib:constructor", 'httpNodeRoot set by cookie to "'.concat(this.httpNodeRoot, '"'))();
     } else {
       const fullPath = window.location.pathname.split("/").filter(function(t) {
         return t.trim() !== "";
       });
       if (fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith(".html")) fullPath.pop();
       fullPath.pop();
-      this.set("httpNodeRoot", `/${fullPath.join("/")}`);
-      log("trace", "[Uib:constructor]", `httpNodeRoot set by URL parsing to "${this.httpNodeRoot}". NOTE: This may fail for pages in sub-folders.`)();
+      this.set("httpNodeRoot", "/".concat(fullPath.join("/")));
+      log("trace", "[Uib:constructor]", 'httpNodeRoot set by URL parsing to "'.concat(this.httpNodeRoot, '". NOTE: This may fail for pages in sub-folders.'))();
     }
     this.set("ioPath", this.urlJoin(this.httpNodeRoot, _a2._meta.displayName, "vendor", "socket.io"));
-    log("trace", "Uib:constructor", `ioPath: "${this.ioPath}"`)();
-    this.set("pageName", window.location.pathname.replace(`${this.ioNamespace}/`, ""));
-    if (this.pageName.endsWith("/")) this.set("pageName", `${this.pageName}index.html`);
+    log("trace", "Uib:constructor", 'ioPath: "'.concat(this.ioPath, '"'))();
+    this.set("pageName", window.location.pathname.replace("".concat(this.ioNamespace, "/"), ""));
+    if (this.pageName.endsWith("/")) this.set("pageName", "".concat(this.pageName, "index.html"));
     if (this.pageName === "") this.set("pageName", "index.html");
     try {
       const autoloadVars = this.getStore("_uibAutoloadVars");
@@ -6105,13 +6138,18 @@ var Uib = (_a2 = class {
     this._dispatchCustomEvent("uibuilder:constructorComplete");
     log("trace", "Uib:constructor", "Ending")();
   }
-  //#endregion -- not external --
-  //#endregion --- End of variables ---
-  //#region ------- Getters and Setters ------- //
+  // #endregion -- not external --
+  // #endregion --- End of variables ---
+  // #region ------- Getters and Setters ------- //
   // Change logging level dynamically (affects both console. and print.)
   set logLevel(level) {
     log.level = level;
-    console.log("%c\u2757 info%c [logLevel]", `${log.LOG_STYLES.level} ${log.LOG_STYLES.info.css}`, `${log.LOG_STYLES.head} ${log.LOG_STYLES.info.txtCss}`, `Set to ${level} (${log.LOG_STYLES.names[level]})`);
+    console.log(
+      "%c\u2757 info%c [logLevel]",
+      "".concat(log.LOG_STYLES.level, " ").concat(log.LOG_STYLES.info.css),
+      "".concat(log.LOG_STYLES.head, " ").concat(log.LOG_STYLES.info.txtCss),
+      "Set to ".concat(level, " (").concat(log.LOG_STYLES.names[level], ")")
+    );
   }
   get logLevel() {
     return log.level;
@@ -6129,17 +6167,18 @@ var Uib = (_a2 = class {
    * @returns {*} Input value
    */
   set(prop, val, store = false, autoload = false) {
+    var _a3;
     if (prop.startsWith("_") || prop.startsWith("#")) {
-      log("warn", "Uib:set", `Cannot use set() on protected property "${prop}"`)();
-      return `Cannot use set() on protected property "${prop}"`;
+      log("warn", "Uib:set", 'Cannot use set() on protected property "'.concat(prop, '"'))();
+      return 'Cannot use set() on protected property "'.concat(prop, '"');
     }
-    const oldVal = this[prop] ?? void 0;
+    const oldVal = (_a3 = this[prop]) != null ? _a3 : void 0;
     this[prop] = val;
     __privateGet(this, _managedVars)[prop] = prop;
     if (store === true) this.setStore(prop, val, autoload);
-    log("trace", "Uib:set", `prop set - prop: ${prop}, val: `, val, ` store: ${store}, autoload: ${autoload}`)();
-    this._dispatchCustomEvent("uibuilder:propertyChanged", { "prop": prop, "value": val, "oldValue": oldVal, "store": store, "autoload": autoload });
-    this._dispatchCustomEvent(`uibuilder:propertyChanged:${prop}`, { "prop": prop, "value": val, "oldValue": oldVal, "store": store, "autoload": autoload });
+    log("trace", "Uib:set", "prop set - prop: ".concat(prop, ", val: "), val, " store: ".concat(store, ", autoload: ").concat(autoload))();
+    this._dispatchCustomEvent("uibuilder:propertyChanged", { prop, value: val, oldValue: oldVal, store, autoload });
+    this._dispatchCustomEvent("uibuilder:propertyChanged:".concat(prop), { prop, value: val, oldValue: oldVal, store, autoload });
     return val;
   }
   /** Function to get the value of a uibuilder property
@@ -6149,14 +6188,14 @@ var Uib = (_a2 = class {
    */
   get(prop) {
     if (prop.startsWith("_") || prop.startsWith("#")) {
-      log("warn", "Uib:get", `Cannot use get() on protected property "${prop}"`)();
+      log("warn", "Uib:get", 'Cannot use get() on protected property "'.concat(prop, '"'))();
       return;
     }
     if (prop === "version") return _a2._meta.version;
     if (prop === "msgsCtrl") return this.msgsCtrlReceived;
     if (prop === "reconnections") return this.connectedNum;
     if (this[prop] === void 0) {
-      log("warn", "Uib:get", `get() - property "${prop}" is undefined`)();
+      log("warn", "Uib:get", 'get() - property "'.concat(prop, '" is undefined'))();
     }
     return this[prop];
   }
@@ -6196,7 +6235,7 @@ var Uib = (_a2 = class {
           log("error", "Uib:setStore", "Cannot save autoload list. ", e)();
         }
       }
-      this._dispatchCustomEvent("uibuilder:propertyStored", { "prop": id, "value": value2, "autoload": autoload });
+      this._dispatchCustomEvent("uibuilder:propertyStored", { prop: id, value: value2, autoload });
       return true;
     } catch (e) {
       log("error", "Uib:setStore", "Cannot write to localStorage. ", e)();
@@ -6238,11 +6277,12 @@ var Uib = (_a2 = class {
   getWatchedVars() {
     return Object.keys(__privateGet(this, _propChangeCallbacks));
   }
-  //#endregion ------- -------- ------- //
-  //#region ------- Our own event handling system ---------- //
+  // #endregion ------- -------- ------- //
+  // #region ------- Our own event handling system ---------- //
   /** Standard fn to create a custom event with details & dispatch it
    * @param {string} title The event name
    * @param {*} details Any details to pass to event output
+   * @private
    */
   _dispatchCustomEvent(title, details) {
     const event2 = new CustomEvent(title, { detail: details });
@@ -6331,24 +6371,26 @@ var Uib = (_a2 = class {
   // clearListener(prop) {
   //     if (this.#events[prop]) delete this.#events[prop]
   // }
-  //#endregion ---------- End of event handling system ---------- //
-  //#region ------- General Utility Functions -------- //
+  // #endregion ---------- End of event handling system ---------- //
+  // #region ------- General Utility Functions -------- //
   /** Check supplied msg from server for a timestamp - if received, work out & store difference to browser time
    * @param {object} receivedMsg A message object recieved from Node-RED
    * @returns {void} Updates self.serverTimeOffset if different to previous value
+   * @private
    */
   _checkTimestamp(receivedMsg) {
     if (Object.prototype.hasOwnProperty.call(receivedMsg, "serverTimestamp")) {
       const serverTimestamp = new Date(receivedMsg.serverTimestamp);
       const offset = Math.round((/* @__PURE__ */ new Date() - serverTimestamp) / 36e5);
       if (offset !== this.serverTimeOffset) {
-        log("trace", `Uib:checkTimestamp:${this._ioChannels.server} (server)`, `Offset changed to: ${offset} from: ${this.serverTimeOffset}`)();
+        log("trace", "Uib:checkTimestamp:".concat(this._ioChannels.server, " (server)"), "Offset changed to: ".concat(offset, " from: ").concat(this.serverTimeOffset))();
         this.set("serverTimeOffset", offset);
       }
     }
   }
   /** Set up an event listener to watch for hash changes
    * and set the watchable urlHash variable
+   * @private
    */
   _watchHashChanges() {
     this.set("urlHash", location.hash);
@@ -6375,7 +6417,7 @@ var Uib = (_a2 = class {
     try {
       data = JSON.stringify(this.get(varToCopy));
     } catch (e) {
-      log("error", "copyToClipboard", `Could not copy "${varToCopy}" to clipboard.`, e.message)();
+      log("error", "copyToClipboard", 'Could not copy "'.concat(varToCopy, '" to clipboard.'), e.message)();
     }
     navigator.clipboard.writeText(data);
   }
@@ -6393,7 +6435,7 @@ var Uib = (_a2 = class {
     if (msg === true) {
       this.send({
         payload: exists,
-        info: `Element "${cssSelector}" ${exists ? "exists" : "does not exist"}`
+        info: 'Element "'.concat(cssSelector, '" ').concat(exists ? "exists" : "does not exist")
       });
     }
     return exists;
@@ -6409,7 +6451,7 @@ var Uib = (_a2 = class {
    */
   formatNumber(value2, decimalPlaces, intl, opts) {
     if (isNaN(value2)) {
-      log("error", "formatNumber", `Value must be a number. Value type: "${typeof value2}"`)();
+      log("error", "formatNumber", 'Value must be a number. Value type: "'.concat(typeof value2, '"'))();
       return "NaN";
     }
     if (!opts) opts = {};
@@ -6422,7 +6464,7 @@ var Uib = (_a2 = class {
     try {
       out = Number(value2).toLocaleString(intl, opts);
     } catch (e) {
-      log("error", "formatNumber", `${e.message}. value=${value2}, dp=${decimalPlaces}, intl="${intl}", opts=${JSON.stringify(opts)}`)();
+      log("error", "formatNumber", "".concat(e.message, ". value=").concat(value2, ", dp=").concat(decimalPlaces, ', intl="').concat(intl, '", opts=').concat(JSON.stringify(opts)))();
       return "NaN";
     }
     return out;
@@ -6469,7 +6511,7 @@ var Uib = (_a2 = class {
   makeMeAnObject(thing, property) {
     if (!property) property = "payload";
     if (typeof property !== "string") {
-      log("warn", "uibuilder:makeMeAnObject", `WARNING: property parameter must be a string and not: ${typeof property}`)();
+      log("warn", "uibuilder:makeMeAnObject", "WARNING: property parameter must be a string and not: ".concat(typeof property))();
       property = "payload";
     }
     let out = {};
@@ -6500,11 +6542,11 @@ var Uib = (_a2 = class {
       const parts2 = path.split(/[\.\[\]\'\"]/).filter(Boolean);
       let data = window;
       for (const part of parts2) {
-        data = data?.[part];
+        data = data == null ? void 0 : data[part];
       }
       return data;
     } catch (error) {
-      log("error", "uibuilder:resolveDataSource", `Error resolving data source "${path}", returned 'null'. ${error.message}`)();
+      log("error", "uibuilder:resolveDataSource", 'Error resolving data source "'.concat(path, "\", returned 'null'. ").concat(error.message))();
       return null;
     }
   }
@@ -6553,11 +6595,11 @@ var Uib = (_a2 = class {
       clearInterval(__privateGet(this, _pingInterval));
       __privateSet(this, _pingInterval, void 0);
     }
-    oReq.open("GET", `${this.httpNodeRoot}/uibuilder/ping?t=${Number(/* @__PURE__ */ new Date())}`);
+    oReq.open("GET", "".concat(this.httpNodeRoot, "/uibuilder/ping?t=").concat(Number(/* @__PURE__ */ new Date())));
     oReq.send();
     if (ms > 0) {
       __privateSet(this, _pingInterval, setInterval(() => {
-        oReq.open("GET", `${this.httpNodeRoot}/uibuilder/ping?t=${Number(/* @__PURE__ */ new Date())}`);
+        oReq.open("GET", "".concat(this.httpNodeRoot, "/uibuilder/ping?t=").concat(Number(/* @__PURE__ */ new Date())));
         oReq.send();
       }, ms));
     }
@@ -6815,12 +6857,13 @@ var Uib = (_a2 = class {
   uiEnhanceElement(el, component) {
     _ui.uiEnhanceElement(el, component);
   }
-  //#endregion -- direct to _ui --
+  // #endregion -- direct to _ui --
   /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
    * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
    *          as possible. Async so that calling function does not need to wait.
    * Observer is set up in the start() function
    * @param {MutationRecord[]} mutations Array of Mutation Records
+   * @private
    */
   async _uibAttribObserver(mutations) {
     mutations.forEach(async (m) => {
@@ -6853,12 +6896,13 @@ var Uib = (_a2 = class {
    *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
    *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
    * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
+   * @private
    */
   async _uibAttrScanOne(el) {
     log("trace", "uibuilder:_uibAttrScanOne", "Setting up auto-processor for: ", el)();
     const topic = el.getAttribute("uib-topic") || el.getAttribute("data-uib-topic");
     this.onTopic(topic, (msg) => {
-      log("trace", "uibuilder:_uibAttrScanOne", `Msg with topic "${topic}" received. msg content: `, msg)();
+      log("trace", "uibuilder:_uibAttrScanOne", 'Msg with topic "'.concat(topic, '" received. msg content: '), msg)();
       msg._uib_processed_by = "_uibAttrScanOne";
       if (Object.prototype.hasOwnProperty.call(msg, "attributes")) {
         try {
@@ -6867,6 +6911,16 @@ var Uib = (_a2 = class {
           }
         } catch (e) {
           log(0, "uibuilder:attribute-processing", "Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.")();
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(msg, "dataset")) {
+        console.log("uibuilder:dataset-processing", "Processing dataset for element", el, msg.dataset);
+        try {
+          for (const [key, value2] of Object.entries(msg.dataset)) {
+            el.dataset[key] = value2;
+          }
+        } catch (e) {
+          log("error", "uibuilder:dataset-processing", "Failed to set dataset. Ensure that msg.dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.")();
         }
       }
       const hasChecked = Object.prototype.hasOwnProperty.call(msg, "checked");
@@ -6886,6 +6940,7 @@ var Uib = (_a2 = class {
   /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
    * Async so that calling function does not need to wait.
    * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
+   * @private
    */
   async _uibAttrScanAll(parentEl) {
     if (!Array.isArray(parentEl)) parentEl = [parentEl];
@@ -6902,6 +6957,7 @@ var Uib = (_a2 = class {
    * @param {HTMLInputElement} srcEl Reference to the source input element
    * @param {boolean=} noSend If true, don't send the file to Node-RED. Default is to send.
    * @returns {Array<object>} Metadata values from all files
+   * @private
    */
   _processFilesInput(srcEl, noSend = false) {
     const value2 = [];
@@ -7024,10 +7080,10 @@ var Uib = (_a2 = class {
     }
     let { value: value2, checked } = this.getFormElementValue(el);
     const formDetails = {
-      "id": id,
-      "name": el.name,
-      "valid": el.checkValidity(),
-      "type": el.type
+      id,
+      name: el.name,
+      valid: el.checkValidity(),
+      type: el.type
     };
     if (value2 !== null) formDetails.value = value2;
     if (checked !== null) formDetails.checked = checked;
@@ -7077,7 +7133,7 @@ var Uib = (_a2 = class {
    * @returns {string|null} A hopefully unique element ID
    */
   returnElementId(el) {
-    return el.id !== "" ? el.id : el.name !== "" ? `${el.name}-${++__privateWrapper(this, _uniqueElID)._}` : el.type ? `${el.type}-${++__privateWrapper(this, _uniqueElID)._}` : `${el.localName}-${++__privateWrapper(this, _uniqueElID)._}`;
+    return el.id !== "" ? el.id : el.name !== "" ? "".concat(el.name, "-").concat(++__privateWrapper(this, _uniqueElID)._) : el.type ? "".concat(el.type, "-").concat(++__privateWrapper(this, _uniqueElID)._) : "".concat(el.localName, "-").concat(++__privateWrapper(this, _uniqueElID)._);
   }
   /** Scroll the page
    * https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
@@ -7193,11 +7249,11 @@ var Uib = (_a2 = class {
           },
           components: [
             {
-              "type": "table",
-              "components": [
+              type: "table",
+              components: [
                 {
-                  "type": "tbody",
-                  "components": []
+                  type: "tbody",
+                  components: []
                 }
               ]
             }
@@ -7208,21 +7264,21 @@ var Uib = (_a2 = class {
     const details = root.components[0].components[0].components[0].components;
     Object.values(__privateGet(this, _showStatus)).forEach((entry) => {
       details.push({
-        "type": "tr",
-        "attributes": {
+        type: "tr",
+        attributes: {
           title: entry.description
         },
-        "components": [
+        components: [
           {
-            "type": "th",
-            "slot": entry.label
+            type: "th",
+            slot: entry.label
           },
           {
-            "type": "td",
-            "attributes": {
+            type: "td",
+            attributes: {
               "data-varType": entry.var
             },
-            "slot": entry.var === "version" ? _a2._meta.version : JSON.stringify(this[entry.var])
+            slot: entry.var === "version" ? _a2._meta.version : JSON.stringify(this[entry.var])
           }
         ]
       });
@@ -7242,7 +7298,7 @@ var Uib = (_a2 = class {
   uiWatch(cssSelector, startStop = "toggle", send = true, showLog = true) {
     const targetNode = document.querySelector(cssSelector);
     if (!targetNode) {
-      log("warn", "uibuilder.module.js:uiWatch", `CSS Selector '${cssSelector}' not found.`)();
+      log("warn", "uibuilder.module.js:uiWatch", "CSS Selector '".concat(cssSelector, "' not found."))();
       return false;
     }
     if (startStop === "toggle" || startStop === void 0 || startStop === null) {
@@ -7283,19 +7339,19 @@ var Uib = (_a2 = class {
               cssSelector,
               uiChanges: out
             },
-            topic: that.topic || `DOM Changes for '${cssSelector}'`
+            topic: that.topic || "DOM Changes for '".concat(cssSelector, "'")
           });
         }
         if (showLog === true) {
-          log("info", "uibuilder.module.js:uiWatch", `DOM Changes for '${cssSelector}'`, { uiChanges: out }, { mutationList })();
+          log("info", "uibuilder.module.js:uiWatch", "DOM Changes for '".concat(cssSelector, "'"), { uiChanges: out }, { mutationList })();
         }
       });
       __privateGet(this, _uiObservers)[cssSelector].observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true });
-      log("trace", "uibuilder.module.js:uiWatch", `Started Watching DOM changes for '${cssSelector}'`)();
+      log("trace", "uibuilder.module.js:uiWatch", "Started Watching DOM changes for '".concat(cssSelector, "'"))();
     } else {
       __privateGet(this, _uiObservers)[cssSelector].disconnect();
       delete __privateGet(this, _uiObservers)[cssSelector];
-      log("trace", "uibuilder.module.js:uiWatch", `Stopped Watching DOM changes for '${cssSelector}'`)();
+      log("trace", "uibuilder.module.js:uiWatch", "Stopped Watching DOM changes for '".concat(cssSelector, "'"))();
     }
     return startStop;
   }
@@ -7326,8 +7382,8 @@ var Uib = (_a2 = class {
     }
   }
   // ---- End of watchDom ---- //
-  //#endregion -------- -------- -------- //
-  //#region ------- HTML cache --------- //
+  // #endregion -------- -------- -------- //
+  // #region ------- HTML cache --------- //
   /** Clear the saved DOM from localStorage */
   clearHtmlCache() {
     this.removeStore("htmlCache");
@@ -7350,10 +7406,11 @@ var Uib = (_a2 = class {
   saveHtmlCache() {
     this.setStore("htmlCache", document.documentElement.innerHTML);
   }
-  //#endregion -------- -------- -------- //
-  //#region ------- Message Handling (To/From Node-RED) -------- //
+  // #endregion -------- -------- -------- //
+  // #region ------- Message Handling (To/From Node-RED) -------- //
   /** Handles original control msgs (not to be confused with "new" msg._uib controls)
    * @param {*} receivedCtrlMsg The msg received on the socket.io control channel
+   * @private
    */
   _ctrlMsgFromServer(receivedCtrlMsg) {
     if (receivedCtrlMsg === null) {
@@ -7366,24 +7423,23 @@ var Uib = (_a2 = class {
     this._checkTimestamp(receivedCtrlMsg);
     this.set("ctrlMsg", receivedCtrlMsg);
     this.set("msgsCtrlReceived", ++this.msgsCtrlReceived);
-    log("trace", "Uib:ioSetup:_ctrlMsgFromServer", `Channel '${this._ioChannels.control}'. Received control msg #${this.msgsCtrlReceived}`, receivedCtrlMsg)();
+    log("trace", "Uib:ioSetup:_ctrlMsgFromServer", "Channel '".concat(this._ioChannels.control, "'. Received control msg #").concat(this.msgsCtrlReceived), receivedCtrlMsg)();
     switch (receivedCtrlMsg.uibuilderCtrl) {
       // Node-RED is shutting down
       case "shutdown": {
-        log("info", `Uib:ioSetup:${this._ioChannels.control}`, '\u274C Received "shutdown" from server')();
+        log("info", "Uib:ioSetup:".concat(this._ioChannels.control), '\u274C Received "shutdown" from server')();
         this.set("serverShutdown", void 0);
         break;
       }
       /** We are connected to the server - 1st msg from server */
       case "client connect": {
-        log("trace", `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server', receivedCtrlMsg)();
-        log("info", `Uib:ioSetup:${this._ioChannels.control}`, `\u2705 Server connected. Version: ${receivedCtrlMsg.version}
-Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours. Max msg size: ${receivedCtrlMsg.maxHttpBufferSize}`)();
+        log("trace", "Uib:ioSetup:".concat(this._ioChannels.control), 'Received "client connect" from server', receivedCtrlMsg)();
+        log("info", "Uib:ioSetup:".concat(this._ioChannels.control), "\u2705 Server connected. Version: ".concat(receivedCtrlMsg.version, "\nServer time: ").concat(receivedCtrlMsg.serverTimestamp, ", Sever time offset: ").concat(this.serverTimeOffset, " hours. Max msg size: ").concat(receivedCtrlMsg.maxHttpBufferSize))();
         if (!_a2._meta.version.startsWith(receivedCtrlMsg.version.split("-")[0])) {
-          log("warn", `Uib:ioSetup:${this._ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${_a2._meta.version})`)();
+          log("warn", "Uib:ioSetup:".concat(this._ioChannels.control), "Server version (".concat(receivedCtrlMsg.version, ") not the same as the client version (").concat(_a2._meta.version, ")"))();
         }
         if (this.autoSendReady === true) {
-          log("trace", `Uib:ioSetup:${this._ioChannels.control}/client connect`, "Auto-sending ready-for-content/replay msg to server");
+          log("trace", "Uib:ioSetup:".concat(this._ioChannels.control, "/client connect"), "Auto-sending ready-for-content/replay msg to server");
         }
         this.maxHttpBufferSize = receivedCtrlMsg.maxHttpBufferSize;
         break;
@@ -7394,7 +7450,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         break;
       }
       default: {
-        log("trace", `uibuilder:ioSetup:${this._ioChannels.control}`, `Received ${receivedCtrlMsg.uibuilderCtrl} from server`);
+        log("trace", "uibuilder:ioSetup:".concat(this._ioChannels.control), "Received ".concat(receivedCtrlMsg.uibuilderCtrl, " from server"));
       }
     }
   }
@@ -7402,6 +7458,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
   /** Do we want to process something? Check pageName, clientId, tabId. Defaults to yes.
    * @param {*} obj Either a msg._ui or msg._uib object to check
    * @returns {boolean} True if we should process the inbound _ui/_uib msg, false if not.
+   * @private
    */
   _forThis(obj) {
     let r = true;
@@ -7419,10 +7476,13 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     }
     return r;
   }
-  // Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
+  /** Handle received messages - Process some msgs internally, emit specific events on document that make it easy for coders to use
+   * @param {object} msg The message received from Node-RED
+   * @private
+   */
   _msgRcvdEvents(msg) {
     this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
-    if (msg.topic) this._dispatchCustomEvent(`uibuilder:msg:topic:${msg.topic}`, msg);
+    if (msg.topic) this._dispatchCustomEvent("uibuilder:msg:topic:".concat(msg.topic), msg);
     if (msg._uib_processed_by) return;
     msg._uib_processed_by = "_msgRcvdEvents";
     if (msg._uib) {
@@ -7461,6 +7521,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
    * @param {object} msgToSend The msg object to send.
    * @param {string} [channel] The Socket.IO channel to use, must be in self.ioChannels or it will be ignored. Default=uiBuilderClient
    * @param {string} [originator] A Node-RED node ID to return the message to. Default=''
+   * @private
    */
   _send(msgToSend, channel, originator = "") {
     if (channel === null || channel === void 0) channel = this._ioChannels.client;
@@ -7480,7 +7541,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     }
     msgToSend._socketId = this._socket.id;
     if (originator === "" && this.originator !== "") originator = this.originator;
-    if (originator !== "") Object.assign(msgToSend, { "_uib": { "originator": originator } });
+    if (originator !== "") Object.assign(msgToSend, { _uib: { originator } });
     if (!Object.prototype.hasOwnProperty.call(msgToSend, "topic")) {
       if (this.topic !== void 0 && this.topic !== "") msgToSend.topic = this.topic;
       else {
@@ -7501,7 +7562,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       this.set("sentCtrlMsg", msgToSend);
       numMsgs = this.set("msgsSentCtrl", ++this.msgsSentCtrl);
     }
-    log("trace", "Uib:_send", ` Channel '${channel}'. Sending msg #${numMsgs}`, msgToSend)();
+    log("trace", "Uib:_send", " Channel '".concat(channel, "'. Sending msg #").concat(numMsgs), msgToSend)();
     this._socket.emit(channel, msgToSend);
   }
   // --- End of Send Msg Fn --- //
@@ -7511,6 +7572,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
    * @callback ioSetupFromServer Called from ioSetup/this._socket.on(this.#ioChannels.server, this.stdMsgFromServer.bind(this))
    * @param {object} receivedMsg The msg object from Node-RED
    * @this Uib
+   * @private
    */
   _stdMsgFromServer(receivedMsg) {
     receivedMsg = this.makeMeAnObject(receivedMsg, "payload");
@@ -7522,13 +7584,15 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     if (!("_ui" in receivedMsg && !("payload" in receivedMsg))) {
       this.set("msg", receivedMsg);
     }
-    log("info", "Uib:ioSetup:stdMsgFromServer", `Channel '${this._ioChannels.server}'. Received msg #${this.msgsReceived}.`, receivedMsg)();
+    log("info", "Uib:ioSetup:stdMsgFromServer", "Channel '".concat(this._ioChannels.server, "'. Received msg #").concat(this.msgsReceived, "."), receivedMsg)();
   }
   // -- End of websocket receive DATA msg from Node-RED -- //
   /** Process msg._uib.command - Remember to update #extCommands with new allowed commands
    * @param {object} msg Msg from Node-RED containing a msg._uib object
+   * @private
    */
   _uibCommand(msg) {
+    var _a3;
     if (!msg._uib || !msg._uib.command) {
       log("error", "uibuilder:_uibCommand", "Invalid command message received", { msg })();
       msg.payload = msg.error = "Invalid command message received";
@@ -7537,12 +7601,12 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
     }
     const cmd = msg._uib.command;
     if (!__privateGet(this, _extCommands).includes(cmd.trim())) {
-      log("error", "Uib:_uibCommand", `Command '${cmd} is not allowed to be called externally`)();
+      log("error", "Uib:_uibCommand", "Command '".concat(cmd, " is not allowed to be called externally"))();
       return;
     }
     const prop = msg._uib.prop;
     const value2 = msg._uib.value;
-    const quiet = msg._uib.quiet ?? false;
+    const quiet = (_a3 = msg._uib.quiet) != null ? _a3 : false;
     let response, info;
     switch (cmd) {
       // case 'elementIsVisible': { // temporarily deprecated
@@ -7552,7 +7616,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       // }
       case "elementExists": {
         response = this.elementExists(prop, false);
-        info = `Element "${prop}" ${response ? "exists" : "does not exist"}`;
+        info = 'Element "'.concat(prop, '" ').concat(response ? "exists" : "does not exist");
         break;
       }
       case "get": {
@@ -7620,19 +7684,19 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
         break;
       }
       default: {
-        log("warning", "Uib:_uibCommand", `Command '${cmd}' not yet implemented`)();
+        log("warning", "Uib:_uibCommand", "Command '".concat(cmd, "' not yet implemented"))();
         break;
       }
     }
     if (quiet !== true) {
       if (response === void 0) {
-        response = `'${prop}' is undefined`;
+        response = "'".concat(prop, "' is undefined");
       }
       if (Object(response).constructor === Promise) {
         response.then((data) => {
           msg.payload = msg._uib.response = data;
           msg.info = msg._uib.info = info;
-          if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
+          if (!msg.topic) msg.topic = this.topic || "uib ".concat(cmd, " for '").concat(prop, "'");
           this.send(msg);
           return true;
         }).catch((err) => {
@@ -7641,7 +7705,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
       } else {
         msg.payload = msg._uib.response = response;
         msg.info = msg._uib.info = info;
-        if (!msg.topic) msg.topic = this.topic || `uib ${cmd} for '${prop}'`;
+        if (!msg.topic) msg.topic = this.topic || "uib ".concat(cmd, " for '").concat(prop, "'");
         this.send(msg);
       }
     }
@@ -7653,7 +7717,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
    */
   beaconLog(txtToSend, logLevel) {
     if (!logLevel) logLevel = "debug";
-    navigator.sendBeacon("./_clientLog", `${logLevel}::${txtToSend}`);
+    navigator.sendBeacon("./_clientLog", "".concat(logLevel, "::").concat(txtToSend));
   }
   /** Request the current page's metadata from the server - response is handled automatically in _ctrlMsgFromServer */
   getPageMeta() {
@@ -7667,8 +7731,7 @@ Server time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serve
    * @returns {string} The HTML as a string
    */
   htmlSend(originator = "", send = true) {
-    const out = `<!doctype html>
-${document.documentElement.outerHTML}`;
+    const out = "<!doctype html>\n".concat(document.documentElement.outerHTML);
     const msg = {
       payload: out,
       length: out.length,
@@ -7724,7 +7787,7 @@ ${document.documentElement.outerHTML}`;
     }
     if (!domevent || !domevent.constructor) domevent = event;
     if (!domevent.constructor.name.endsWith("Event") || !domevent.currentTarget) {
-      log("warn", "Uib:eventSend", `ARGUMENT NOT A DOM EVENT - use data attributes not function arguments to pass data. Arg Type: ${domevent.constructor.name}`, domevent)();
+      log("warn", "Uib:eventSend", "ARGUMENT NOT A DOM EVENT - use data attributes not function arguments to pass data. Arg Type: ".concat(domevent.constructor.name), domevent)();
       return;
     }
     domevent.preventDefault();
@@ -7761,7 +7824,7 @@ ${document.documentElement.outerHTML}`;
     if (checked !== null) payload.checked = checked;
     let nprops;
     if (Object.prototype.toString.call(target) === "[object Notification]") {
-      payload = `notification-${target.userAction}`;
+      payload = "notification-".concat(target.userAction);
       nprops = {
         // userAction: target.userAction, // uib custom prop: click, close or error
         actions: target.actions,
@@ -7874,15 +7937,15 @@ ${document.documentElement.outerHTML}`;
       const maxSize = this.maxHttpBufferSize - 500;
       if (arrayBuffer.byteLength >= maxSize) {
         msg.payload = void 0;
-        msg.error = `File is too large to send. File size: ${arrayBuffer.byteLength}. Max msg size: ${maxSize}`;
+        msg.error = "File is too large to send. File size: ".concat(arrayBuffer.byteLength, ". Max msg size: ").concat(maxSize);
         log("error", "Uib:uploadFile", msg.error)();
       }
       this.send(msg);
     };
     reader.readAsArrayBuffer(file);
   }
-  //#endregion -------- ------------ -------- //
-  //#region ------- Socket.IO -------- //
+  // #endregion -------- ------------ -------- //
+  // #region ------- Socket.IO -------- //
   /** Return the Socket.IO namespace
    * The cookie method is the most reliable but this falls back to trying to work it
    * out from the URL if cookies not available. That won't work if page is in a sub-folder.
@@ -7890,6 +7953,7 @@ ${document.documentElement.outerHTML}`;
    * since 2017-11-10 v1.0.1 Check cookie first then url. cookie works even if the path is more complex (e.g. sub-folder)
    * since 2020-01-25 Removed httpRoot from namespace to prevent proxy induced errors
    * @returns {string} Socket.IO namespace
+   * @private
    */
   _getIOnamespace() {
     let ioNamespace;
@@ -7900,13 +7964,13 @@ ${document.documentElement.outerHTML}`;
       });
       if (u.length > 0 && u[u.length - 1].endsWith(".html")) u.pop();
       ioNamespace = u.pop();
-      log("trace", "uibuilder.module.js:getIOnamespace", `Socket.IO namespace found via url path: ${ioNamespace}`)();
+      log("trace", "uibuilder.module.js:getIOnamespace", "Socket.IO namespace found via url path: ".concat(ioNamespace))();
     } else {
-      log("trace", "uibuilder.module.js:getIOnamespace", `Socket.IO namespace found via cookie: ${ioNamespace}`)();
+      log("trace", "uibuilder.module.js:getIOnamespace", "Socket.IO namespace found via cookie: ".concat(ioNamespace))();
     }
     this.url = ioNamespace;
     ioNamespace = "/" + ioNamespace;
-    log("trace", "uibuilder.module.js:getIOnamespace", `Final Socket.IO namespace: ${ioNamespace}`)();
+    log("trace", "uibuilder.module.js:getIOnamespace", "Final Socket.IO namespace: ".concat(ioNamespace))();
     return ioNamespace;
   }
   // --- End of set IO namespace --- //
@@ -7915,12 +7979,13 @@ ${document.documentElement.outerHTML}`;
    * @param {number} [factor] Multiplication factor for subsequent checks (delay*factor). Default=1.5
    * @param {number} [depth] Recursion depth
    * @returns {boolean|undefined} Whether or not Socket.IO is connected to uibuilder in Node-RED
+   * @private
    */
   _checkConnect(delay, factor, depth = 1) {
     if (navigator.onLine === false) return;
     if (!delay) delay = this.retryMs;
     if (!factor) factor = this.retryFactor;
-    log("trace", "Uib:checkConnect", `Checking connection. Connected: ${this._socket.connected}. Timer: ${__privateGet(this, _timerid)}. Depth: ${depth}. Delay: ${delay}. Factor: ${factor}`, this._socket)();
+    log("trace", "Uib:checkConnect", "Checking connection.\nConnected: ".concat(this._socket.connected, ".\nTimer: ").concat(__privateGet(this, _timerid), ". Depth: ").concat(depth, ". Delay: ").concat(delay, ". Factor: ").concat(factor, ".\nTransport: ").concat(this.currentTransport), this._socket)();
     if (this._socket.connected === true) {
       if (__privateGet(this, _timerid)) {
         window.clearTimeout(__privateGet(this, _timerid));
@@ -7933,7 +7998,7 @@ ${document.documentElement.outerHTML}`;
     this.set("ioConnected", false);
     if (__privateGet(this, _timerid)) window.clearTimeout(__privateGet(this, _timerid));
     __privateSet(this, _timerid, window.setTimeout(() => {
-      log("warn", "Uib:checkConnect:setTimeout", `Socket.IO reconnection attempt. Current delay: ${delay}. Depth: ${depth}`)();
+      log("warn", "Uib:checkConnect:setTimeout", "Socket.IO reconnection attempt. Current delay: ".concat(delay, ". Depth: ").concat(depth))();
       this._socket.disconnect();
       this._socket.connect();
       __privateSet(this, _timerid, null);
@@ -7943,24 +8008,49 @@ ${document.documentElement.outerHTML}`;
   }
   // --- End of checkConnect Fn--- //
   // See message handling section for msg receipt handlers
-  /** Called by _ioSetup when Socket.IO connects to Node-RED */
+  /** Called by _ioSetup when Socket.IO connects to Node-RED
+   * @private
+   */
   _onConnect() {
-    log("info", "Uib:ioSetup", `\u2705 SOCKET CONNECTED. Connection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}. 
-Namespace: ${this.ioNamespace}`)();
-    this._dispatchCustomEvent("uibuilder:socket:connected", { "numConnections": this.connectedNum, "isRecovery": this._socket.recovered });
+    this.currentTransport = this._socket.io.engine.transport.name;
+    log(
+      "info",
+      "Uib:ioSetup",
+      "\u2705 SOCKET CONNECTED.\nConnection count: ".concat(this.connectedNum, ", Is a Recovery?: ").concat(this._socket.recovered, ".\nNamespace: ").concat(this.ioNamespace, "\nTransport: ").concat(this.currentTransport)
+    )();
+    this._dispatchCustomEvent("uibuilder:socket:connected", { numConnections: this.connectedNum, isRecovery: this._socket.recovered });
+    this._socket.io.engine.on("upgrade", () => {
+      this.currentTransport = this._socket.io.engine.transport.name;
+      log(
+        "trace",
+        "Uib:_onConnect:onUpgrade",
+        "SOCKET CONNECTION UPGRADED.\nConnection count: ".concat(this.connectedNum, ", Is a Recovery?: ").concat(this._socket.recovered, ".\nNamespace: ").concat(this.ioNamespace, "\nTransport: ").concat(this.currentTransport)
+      )();
+    });
+    setTimeout(() => {
+      if (this.currentTransport !== "websocket") {
+        log(
+          "error",
+          "Uib:Connection",
+          "Connected to Node-RED but NO SOCKET UPGRADE!\n\u27A1\uFE0F CHECK NETWORK and any PROXIES for issues. \u2B05\uFE0F\nConnection count: ".concat(this.connectedNum, ", Is a Recovery?: ").concat(this._socket.recovered, ".\nNamespace: ").concat(this.ioNamespace, "\nTransport: ").concat(this.currentTransport)
+        )();
+      }
+    }, 2e3);
     this._checkConnect();
   }
   /** Called by _ioSetup when Socket.IO disconnects from Node-RED
    * @param {string} reason Disconnection title
+   * @private
    */
   _onDisconnect(reason) {
-    log("info", "Uib:ioSetup:socket-disconnect", `\u26D4 Socket Disconnected. Reason: ${reason}`)();
+    log("info", "Uib:ioSetup:socket-disconnect", "\u26D4 Socket Disconnected. Reason: ".concat(reason))();
     this._dispatchCustomEvent("uibuilder:socket:disconnected", reason);
     this._checkConnect();
   }
   /** Setup Socket.io
    * since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
    * @returns {boolean} Attaches socket.io manager to self._socket and updates self.ioNamespace & self.ioPath as needed
+   * @private
    */
   _ioSetup() {
     if (lookup2 === void 0) {
@@ -7979,7 +8069,7 @@ Namespace: ${this.ioNamespace}`)();
       this.set("ioConnected", false);
     }
     this.socketOptions.path = this.ioPath;
-    log("trace", "Uib:ioSetup", `About to create IO object. Transports: [${this.socketOptions.transports.join(", ")}]`)();
+    log("trace", "Uib:ioSetup", "About to create IO object. Transports: [".concat(this.socketOptions.transports.join(", "), "]"))();
     this._socket = lookup2(this.ioNamespace, this.socketOptions);
     this._connectGlobal();
     this._socket.on("connect", this._onConnect.bind(this));
@@ -7988,22 +8078,36 @@ Namespace: ${this.ioNamespace}`)();
     this._socket.on("disconnect", this._onDisconnect.bind(this));
     this._socket.on("connect_error", (err) => {
       if (navigator.onLine === false) return;
-      log("error", "Uib:ioSetup:connect_error", `\u274C Socket.IO Connect Error. Reason: ${err.message}`, err)();
+      log("error", "Uib:ioSetup:connect_error", "\u274C Socket.IO Connect Error. Reason: ".concat(err.message), err)();
       this.set("ioConnected", false);
       this.set("socketError", err);
       this._dispatchCustomEvent("uibuilder:socket:disconnected", err);
     });
     this._socket.on("error", (err) => {
-      log("error", "Uib:ioSetup:error", `\u274C Socket.IO Error. Reason: ${err.message}`, err)();
+      log("error", "Uib:ioSetup:error", "\u274C Socket.IO Error. Reason: ".concat(err.message), err)();
       this.set("ioConnected", false);
       this.set("socketError", err);
       this._dispatchCustomEvent("uibuilder:socket:disconnected", err);
+    });
+    this._socket.io.engine.on("connection_error", (err) => {
+      log(
+        "error",
+        "Uib:ioSetup:io:engine:connection_error",
+        err.code,
+        // 3
+        err.message,
+        // "Bad request"
+        err.context
+        // { name: 'TRANSPORT_MISMATCH', transport: 'websocket', previousTransport: 'polling' }
+      )();
     });
     this._checkConnect();
     return true;
   }
   // ---- End of ioSetup ---- //
-  /** Connect to global namespace & create global listener that updates the `globalMsg` var */
+  /** Connect to global namespace & create global listener that updates the `globalMsg` var
+   * @private
+   */
   _connectGlobal() {
     this._socketGlobal = lookup2("/", this.socketOptions);
     this._socketGlobal.onAny((...args) => {
@@ -8032,10 +8136,8 @@ Namespace: ${this.ioNamespace}`)();
     if (this.started === true) {
       log("info", "Uib:start", "Start function already called. Resetting Socket.IO and msg handler.")();
     }
-    log("log", "Uib:start", "Cookies: ", this.cookies, `
-Client ID: ${this.clientId}`)();
-    log("trace", "Uib:start", "ioNamespace: ", this.ioNamespace, `
-ioPath: ${this.ioPath}`)();
+    log("log", "Uib:start", "Cookies: ", this.cookies, "\nClient ID: ".concat(this.clientId))();
+    log("trace", "Uib:start", "ioNamespace: ", this.ioNamespace, "\nioPath: ".concat(this.ioPath))();
     if (options) {
       if (options.ioNamespace) this.set("ioNamespace", options.ioNamespace);
       if (options.ioPath) this.set("ioPath", options.ioPath);
@@ -8056,7 +8158,7 @@ ioPath: ${this.ioPath}`)();
         this.set("vueVersion", window["Vue"].version);
       } catch (e) {
       }
-      log("trace", "Uib:start", `VueJS is loaded. Version: ${this.vueVersion}`)();
+      log("trace", "Uib:start", "VueJS is loaded. Version: ".concat(this.vueVersion))();
     } else {
       log("trace", "Uib:start", "VueJS is not loaded.")();
     }
@@ -8089,8 +8191,8 @@ ioPath: ${this.ioPath}`)();
     });
     this._dispatchCustomEvent("uibuilder:startComplete");
   }
-  //#endregion -------- ------------ -------- //
-}, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _uniqueElID = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), _uibAttrSel = new WeakMap(), //#region --- Static variables ---
+  // #endregion -------- ------------ -------- //
+}, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _uniqueElID = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), _uibAttrSel = new WeakMap(), // #region --- Static variables ---
 __publicField(_a2, "_meta", {
   version,
   type: "module",

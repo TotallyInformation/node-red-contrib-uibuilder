@@ -24,6 +24,57 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 <!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
 
+## v7.4.0
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.0...v7.3.0).
+
+### 📌 Highlights
+
+### uibuilder client library
+
+* New variable `uibuilder.get('currentTransport')`
+  
+  Will either be `websocket` or `polling`. This is set when the connection is established and may change if the connection is lost and re-established. Should generally be `websocket` after a few ms. If still set to `polling`, then either there are network issues or there is a poorly configured proxy server in the way. If you are using a proxy server, it should be configured to allow WebSocket connections. Even with `polling`, the connection should still work but it will be slower and less efficient.
+  
+  A console error message will be logged if the transport is not `websocket` after a few seconds.
+
+* When using the custom HTML attribute `uib-topic`: `msg.dataset` is now processed along with `msg.attributes` and `msg.payload`. `msg.dataset` must be an object, each key becomes a `data-*` attribute on the element.
+
+### `uib-cache` node
+
+* **FIXED** Setting the "# messages" to zero should have retained unlimited messages for each "Cache by" property. It wasn't working correctly. Now fixed. Many thanks to [Manjunath Satyamurthy](https://discourse.nodered.org/u/smanjunath211) in the Node-RED Forum for reporting this issue.
+
+### `uib-brand.css` front-end styles
+
+* Amended `.status-grid` class to use 3 variables: `--status-grid-min`, `--status-grid-max`, and `--status-grid-gap`. This allows the grid to be more flexible and responsive. The default values have not changed but you can now override them in your own CSS.
+
+### Documentation
+
+* Creating UIs:
+  * Grid Layouts - Now a more complete article on how to create responsive, content-heavy grid layouts.
+  * CSS Best Practice - Some simple guidelines and good practices for creating flexible layouts using CSS.
+  * Charts - A new article on how to create charts using the uibuilder client library. This is a work in progress and will be updated as more information becomes available.
+  * Form Handling - A new article on how to handle user input using forms and other input elements. This is a work in progress and will be updated as more information becomes available.
+  * Creating Web Apps - How to create data-driven web applications using UIBUILDER. Article updated.
+  * Several other articles are still awaiting content. Lists, Maps, Tables, Dashboard Layouts, Cards, Articles.
+
+### Node-RED Admin endpoints
+
+* `<nrAdminURL>/uibuilder/uibindex?type=diagnostics` is a new variation on the `uibindex` endpoint. It returns diagnostics information in JSON format that shows uibuilder detailed diagnostic information. You must have an active Node-RED Editor session to be able to access this endpoint.
+
+> [!WARNING]
+> Please take care with the use of this endpoint as it contains sensitive information about your uibuilder instances.
+
+### Server library: `admin-api-v2.js`
+
+* **FIX** `/uibindex` route incorrectly assumed the presence of `req.headers.referer`.
+* **NEW** `/uibindex?type=diagnostics` added. Returns diagnostics information in JSON format that shows uibuilder detailed diagnostic information. You must have an active Node-RED Editor session to be able to access this endpoint.
+* Switched from passing the uib master variable to use the `uibGlobalConfig` module. This is a step towards a more modular codebase.
+
+### Devlopment processes
+
+* Rebuilt the gump build process for the front end client library. Now simplified and more robust.
+
 ## [v7.3.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.3.0...v7.2.0)
 
 ### 📌 Highlights

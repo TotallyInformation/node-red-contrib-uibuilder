@@ -3,7 +3,9 @@ title: Handling user input using forms and other input elements
 description: |
   HTML includes a very rich and powerful set of form elements that can be used to collect user input. This document describes how to use them with uibuilder and Node-RED.
 created: 2025-03-28 20:10:02
-updated: 2025-05-26 11:27:59
+updated: 2025-06-13 12:54:41
+status: Draft
+author: Julian Knight (Totally Information)
 ---
 
 ## No-code forms

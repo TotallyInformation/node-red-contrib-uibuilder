@@ -3,7 +3,7 @@ title: Variables used in the modern client
 description: |
   Details about the variables used in the uibuilder modern front-end client library. Some variables are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2025-01-01 14:58:38
+updated: 2025-06-04 16:55:00
 ---
 
 ## Read/write
@@ -30,6 +30,10 @@ Always use `uibuilder.get('varname', value)` to obtain the value of these. You c
 * `connectedNum` - How many times the page has had to reconnect to Socket.IO.
 * `cookies` - The collection of cookies provided by uibuilder.
 * `ctrlMsg` - Copy of last control msg object received from sever.
+* `currentTransport` - The current transport being used by Socket.IO.
+
+  This is set when the connection is established and may change if the connection is lost and re-established. Should generally be `websocket` after a few ms. If still set to `polling`, then either there are network issues or there is a poorly configured proxy server in the way. If you are using a proxy server, it should be configured to allow WebSocket connections. Even with `polling`, the connection should still work but it will be slower and less efficient. A console error message will be logged if the transport is not `websocket` after a few seconds.
+
 * `ioConnected` - Is Socket.IO client connected to the server?
 * `isMinified` - Whether or not the library was loaded from a minified version.
 * `isVisible` - Whether or not, the current page is showing to the user.

@@ -1,7 +1,5 @@
-/* eslint-disable sonarjs/no-duplicate-string */
-
 // Isolate this code
-;(function () {
+;(function () { // eslint-disable-line @stylistic/no-extra-semi
     'use strict'
 
     // NOTE: window.uibuilder is added - see `resources` folder
@@ -11,14 +9,14 @@
     // const log = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
-    const moduleName  = 'uib-cache'
+    const moduleName = 'uib-cache'
 
     /** Populate the store dropdown */
     function populateUseStoreDropdown() {
         const storeNames = []
 
-        RED.settings.context.stores.forEach( store => {
-            storeNames.push({ value: store, label: store })
+        RED.settings.context.stores.forEach( (store) => {
+            storeNames.push({ value: store, label: store, })
         })
 
         $('#node-input-storeName').typedInput({
@@ -27,7 +25,7 @@
                     value: 'storeNames',
                     options: storeNames,
                 }
-            ]
+            ],
         })
     }
 
@@ -43,7 +41,6 @@
      */
     function keyVisibility(isVisible) {
         if (isVisible === true) {
-
             $('#cacheKey-row').show()
             $('#help-per').show()
             $('#caspan').hide()
@@ -72,20 +69,18 @@
 
         // Populate Type dropdown: node, flow, global
         $('#node-input-storeContext').typedInput({
+            // @ts-ignore
             type: 'contextType',
             types: [
                 {
                     value: 'contextType',
                     options: [
-                        // @ts-expect-error
-                        { value: 'context', label: 'Node' },
-                        // @ts-expect-error
-                        { value: 'flow', label: 'Flow' },
-                        // @ts-expect-error
-                        { value: 'global', label: 'Global' },
-                    ]
+                        { value: 'context', label: 'Node', },
+                        { value: 'flow', label: 'Flow', },
+                        { value: 'global', label: 'Global', },
+                    ],
                 }
-            ]
+            ],
         })
 
         // Set up context store select drop-down
@@ -101,11 +96,15 @@
             keyVisibility(!$(this).is(':checked'))
         })
 
-        $('#node-input-storeContext').on('change',  function() {
+        $('#node-input-storeContext').on('change', function() {
             if ( $(this).val() === 'context' ) {
-                $('#node-input-varName').val('uib_cache').prop( 'disabled', true )
+                $('#node-input-varName')
+                    .val('uib_cache')
+                    .prop( 'disabled', true )
             } else {
-                $('#node-input-varName').val(`uib_cache_${node.id}`).prop( 'disabled', false )
+                $('#node-input-varName')
+                    .val(`uib_cache_${node.id}`)
+                    .prop( 'disabled', false )
             }
         })
 
@@ -114,17 +113,17 @@
 
     RED.nodes.registerType(moduleName, {
         defaults: {
-            cacheall: { value: false },
-            cacheKey: { value: 'topic' },
-            newcache: { value: true },
-            num: { value: 1, required: true },
+            cacheall: { value: false, },
+            cacheKey: { value: 'topic', },
+            newcache: { value: true, },
+            num: { value: 1, required: true, },
             // persistence: { value: false },
-            storeName: { value: 'default', required: true },
-            name: { value: '' },
+            storeName: { value: 'default', required: true, },
+            name: { value: '', },
             // store: { },
             // store-type: {},
-            storeContext: { value: 'context' },
-            varName: { value: 'uib_cache', required: true }
+            storeContext: { value: 'context', },
+            varName: { value: 'uib_cache', required: true, },
         },
         // align:'right',
         inputs: 1,
