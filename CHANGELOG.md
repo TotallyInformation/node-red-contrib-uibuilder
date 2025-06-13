@@ -24,7 +24,9 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 <!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
 
-## [v7.4.0](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.0...v7.3.0)
+## v7.4.0
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.0...v7.3.0).
 
 ### 📌 Highlights
 
@@ -40,7 +42,7 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### `uib-cache` node
 
-* **FIXED** Setting the "# messages" to zero should have retained unlimited messages for each "Cache by" property. It wasn't working correctly in v7.3.0. Now fixed. Many thanks to [Manjunath Satyamurthy](https://discourse.nodered.org/u/smanjunath211) in the Node-RED Forum for reporting this issue.
+* **FIXED** Setting the "# messages" to zero should have retained unlimited messages for each "Cache by" property. It wasn't working correctly. Now fixed. Many thanks to [Manjunath Satyamurthy](https://discourse.nodered.org/u/smanjunath211) in the Node-RED Forum for reporting this issue.
 
 ### `uib-brand.css` front-end styles
 
