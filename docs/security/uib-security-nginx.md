@@ -10,7 +10,7 @@ updated: 2024-03-23 16:53:34
 > This page is DRAFT. I realise that it will confuse more than help as it stands. However, if you can be bothered to read through it a couple of times, you will realise that it already gives you many pointers on how to secure a uibuilder front-end web app using NGINX. Indeed it gives lots of information for securing any web site or web app using NGINX. 😁<br>I will be creating a step-by-step guide at some point and that should help simplify things.
 
 > [!WARNING]
-> This page is offered as a set of ideas for securing Node-RED and uibuilder using NGINX, it comes with no guarantee or warrantee of accuracy or security.
+> This page is offered as a set of ideas for securing Node-RED and uibuilder using NGINX, it comes with no guarantee or warranty of accuracy or security.
 
 Please refer to the [Securing uib web apps page](Programming/uibuilder/docs/security/security.md) for an overview of security, terminology and securing uibuilder and Node-RED.
 
