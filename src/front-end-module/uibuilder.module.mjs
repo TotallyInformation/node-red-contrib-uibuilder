@@ -10,7 +10,6 @@
  *
  *   Please use the default index.js file for your own code and leave this as-is.
  *   See Uib._meta for client version string
- * @version 1.0.0
  * @license Apache-2.0
  * @author Julian Knight (Totally Information)
  * @copyright (c) 2022-2025 Julian Knight (Totally Information)
@@ -35,7 +34,7 @@ import ApplyTemplate from '../components/apply-template'
 // Incorporate the logger module - NB: This sets a global `log` object for use if it can.
 // import logger from './logger'
 
-const version = '7.4.0-src'
+const version = '7.4.1-src'
 
 // #region --- Module-level utility functions --- //
 
