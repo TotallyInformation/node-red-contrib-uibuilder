@@ -7097,41 +7097,43 @@
     async _uibAttrScanOne(el) {
       log("trace", "uibuilder:_uibAttrScanOne", "Setting up auto-processor for: ", el)();
       const topic = el.getAttribute("uib-topic") || el.getAttribute("data-uib-topic");
-      this.onTopic(topic, (msg) => {
-        log("trace", "uibuilder:_uibAttrScanOne", 'Msg with topic "'.concat(topic, '" received. msg content: '), msg)();
-        msg._uib_processed_by = "_uibAttrScanOne";
-        if (Object.prototype.hasOwnProperty.call(msg, "attributes")) {
-          try {
-            for (const [k, v] of Object.entries(msg.attributes)) {
-              el.setAttribute(k, v);
+      if (topic) {
+        this.onTopic(topic, (msg) => {
+          log("trace", "uibuilder:_uibAttrScanOne", 'Msg with topic "'.concat(topic, '" received. msg content: '), msg)();
+          msg._uib_processed_by = "_uibAttrScanOne";
+          if (Object.prototype.hasOwnProperty.call(msg, "attributes")) {
+            try {
+              for (const [k, v] of Object.entries(msg.attributes)) {
+                el.setAttribute(k, v);
+              }
+            } catch (e) {
+              log(0, "uibuilder:attribute-processing", "Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.")();
             }
-          } catch (e) {
-            log(0, "uibuilder:attribute-processing", "Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.")();
           }
-        }
-        if (Object.prototype.hasOwnProperty.call(msg, "dataset")) {
-          console.log("uibuilder:dataset-processing", "Processing dataset for element", el, msg.dataset);
-          try {
-            for (const [key, value2] of Object.entries(msg.dataset)) {
-              el.dataset[key] = value2;
+          if (Object.prototype.hasOwnProperty.call(msg, "dataset")) {
+            console.log("uibuilder:dataset-processing", "Processing dataset for element", el, msg.dataset);
+            try {
+              for (const [key, value2] of Object.entries(msg.dataset)) {
+                el.dataset[key] = value2;
+              }
+            } catch (e) {
+              log("error", "uibuilder:dataset-processing", "Failed to set dataset. Ensure that msg.dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.")();
             }
-          } catch (e) {
-            log("error", "uibuilder:dataset-processing", "Failed to set dataset. Ensure that msg.dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.")();
           }
-        }
-        const hasChecked = Object.prototype.hasOwnProperty.call(msg, "checked");
-        const hasValue = Object.prototype.hasOwnProperty.call(msg, "value");
-        if (hasValue || hasChecked) {
-          if (el.type && (el.type === "checkbox" || el.type === "radio")) {
-            if (hasChecked) el.checked = this.truthy(msg.checked, false);
-            else if (hasValue) el.checked = this.truthy(msg.value, false);
-          } else {
-            if (hasValue) el.value = msg.value;
-            else if (hasChecked) el.value = this.truthy(msg.checked, false);
+          const hasChecked = Object.prototype.hasOwnProperty.call(msg, "checked");
+          const hasValue = Object.prototype.hasOwnProperty.call(msg, "value");
+          if (hasValue || hasChecked) {
+            if (el.type && (el.type === "checkbox" || el.type === "radio")) {
+              if (hasChecked) el.checked = this.truthy(msg.checked, false);
+              else if (hasValue) el.checked = this.truthy(msg.value, false);
+            } else {
+              if (hasValue) el.value = msg.value;
+              else if (hasChecked) el.value = this.truthy(msg.checked, false);
+            }
           }
-        }
-        if (Object.prototype.hasOwnProperty.call(msg, "payload")) this.replaceSlot(el, msg.payload);
-      });
+          if (Object.prototype.hasOwnProperty.call(msg, "payload")) this.replaceSlot(el, msg.payload);
+        });
+      }
     }
     /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
      * Async so that calling function does not need to wait.
