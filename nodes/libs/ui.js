@@ -22,7 +22,7 @@ __export(ui_exports, {
 module.exports = __toCommonJS(ui_exports);
 const Ui = class Ui2 {
   //#region --- Class variables ---
-  version = "7.4.1-node";
+  version = "7.5.0-node";
   // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
   sanitiseExtraTags = ["uib-var"];
   sanitiseExtraAttribs = ["variable", "report", "undefined"];

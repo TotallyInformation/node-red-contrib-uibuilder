@@ -10,6 +10,7 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Please see the roadmap in the docs for the backlog of future planned developments.
 
+
 ## Compatibility of current release
 
 * Servers:
@@ -23,6 +24,15 @@ Please see the roadmap in the docs for the backlog of future planned development
 ------------
 
 <!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
+
+## v7.5.0
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.0...v7.5.0).
+
+### 📌 Highlights
+
+
+
 
 ## v7.4.0
 

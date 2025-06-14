@@ -32,7 +32,7 @@
 
 const Ui = class Ui {
     //#region --- Class variables ---
-    version = '7.4.1-src'
+    version = '7.5.0-src'
 
     // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
     sanitiseExtraTags = ['uib-var']

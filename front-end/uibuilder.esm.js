@@ -59,7 +59,7 @@ var Ui = (_a = class {
    */
   constructor(win, extLog, jsonHighlight) {
     //#region --- Class variables ---
-    __publicField(this, "version", "7.4.1-src");
+    __publicField(this, "version", "7.5.0-src");
     // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
     __publicField(this, "sanitiseExtraTags", ["uib-var"]);
     __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -5594,7 +5594,7 @@ var apply_template_default = ApplyTemplate;
 window["ApplyTemplate"] = ApplyTemplate;
 
 // src/front-end-module/uibuilder.module.mjs
-var version = "7.4.1-esm";
+var version = "7.5.0-esm";
 var isMinified = !/param/.test(function(param) {
 });
 function log() {
