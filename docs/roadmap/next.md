@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-06-13 12:57:55
+updated: 2025-06-14 16:05:12
 author: Julian Knight (Totally Information)
 ---
 
@@ -23,6 +23,15 @@ author: Julian Knight (Totally Information)
   * Input fields should not have a black background in light mode.
 
 ## To Do
+
+* [ ] Reactivity - phase 1
+  * [x] Create a reactive wrapper `uibuilder.reactive()`.
+    * [x] Move to separate class file
+    * [ ] Add `reactive` and `getReactiveClass` to function reference.
+  * [ ] Create a MutationObserver for any DOM attributes that start with `:` (`uib-bind`) or `@` (`uib-on`).
+    * [ ] Extend to allow `uib-show` (show/hide elements).
+    * [ ] Extend to allow `uib-text` (innerText).
+    * [ ] Extend to allow `uib-model` (two-way data binding for input elements).
 
 * [ ] For the `uib-topic` attribute, allow msg.payload to be an array or object. Consider adding a `uib-fmt` attribute to allow output specification:
   * `uib-fmt="json"` - output as a syntax highlighted JSON object.
