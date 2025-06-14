@@ -945,6 +945,7 @@ function watchme(cb) {
     // source files that require updates of the main front-end module
     const feSrc = [
         'src/front-end-module/uibuilder.module.mjs',
+        'src/front-end-module/reactive.mjs',
         'src/front-end-module/tinyDom.js',
         'src/front-end-module/logger.js',
         'src/components/uib-var.js',

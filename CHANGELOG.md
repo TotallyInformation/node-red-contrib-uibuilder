@@ -31,8 +31,25 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### 📌 Highlights
 
+### uibuilder client library
 
+* **NEW** function `uibuilder.reactive(srcvar)`
 
+  This function allows you to create a reactive variable. It outputs a custom event when the variable changes (including deep object changes). It returns the reactive version of the variable. This also has several new methods:
+  * `onChange(property, callback)`: Adds a listener that triggers the callback when the specified property of the reactive variable changes. If `'*'` is specified, it listens for any change to the variable. It returns a reference to the callback that can be used to remove the listener later. The reference also has a `cancel()` method
+  * `cancelChange(callbackRef)`: Removes a listener using a saved callback reference.
+  
+  > [!WARNING]
+  > If the reactive variable is a *primative* type (string, number, boolean), then the you MUST use the `myvar.value = 42` syntax to change the value. If you use `myvar = 42`, then the reactive variable will overwritten. The `value` property will also let you change a primative even if it has been created with `const`.
+
+### Documentation
+
+* Rearranged the sidebar for additional clarity.
+* **NEW** "Reactive UI's" in the client section. This is a new section that describes how to use the reactive attributes in UIBUILDER to create dynamic web pages with minimal code. It includes a summary of the available attributes and how to use them.
+
+### Devlopment changes
+
+* **NEW** file `src\front-end-module\reactive.mjs` - contains the new `Reactive` class that implements the reactive variable functionality. This is a new module that can be used in the front-end client library but can also be used independently. This is provided as source only for now. Though it is compiled into the client library as well and so available via the `uibuilder.getReactiveClass()` and `uibuilder.reactive()` functions.
 
 ## v7.4.0
 

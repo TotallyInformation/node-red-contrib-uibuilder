@@ -29,6 +29,7 @@ import io from 'socket.io-client' // eslint-disable-line import/no-named-as-defa
 import UibVar from '../components/uib-var'
 import UibMeta from '../components/uib-meta'
 import ApplyTemplate from '../components/apply-template'
+import { reactive as createReactive, Reactive } from './reactive.mjs'
 // import { dom } from './tinyDom'
 
 // Incorporate the logger module - NB: This sets a global `log` object for use if it can.
@@ -104,6 +105,13 @@ function log() {
             break
         }
 
+        case 'print': {
+            if (log.level < 0) break
+            level = 0
+            strLevel = 'print'
+            break
+        }
+
         default: {
             level = -1
             break
@@ -128,6 +136,12 @@ function log() {
 // Nice console styling
 log.LOG_STYLES = {
     // 0
+    print: {
+        css: 'background: grey; color: yellow;',
+        txtCss: 'color: grey;',
+        pre: '➡️',
+        console: 'log',
+    },
     error: {
         css: 'background: red; color: black;',
         txtCss: 'color: red; ',
@@ -170,7 +184,7 @@ log.LOG_STYLES = {
         console: 'log',
     },
 
-    names: ['error', 'warn', 'info', 'log', 'debug', 'trace'],
+    names: ['print', 'error', 'warn', 'info', 'log', 'debug', 'trace'],
     reset: 'color: inherit;',
     head: 'font-weight:bold; font-style:italic;',
     level: 'font-weight:bold; border-radius: 3px; padding: 2px 5px; display:inline-block;',
@@ -948,6 +962,25 @@ export const Uib = class Uib {
     navigate(url) {
         if (url) window.location.href = url
         return window.location
+    }
+
+    /** Wrap a provided variable in a proxy object so that it can be used reactively
+     * @param {*} srcvar The source variable to wrap
+     * @returns {Proxy} A proxy object that can be used reactively
+     */
+    reactive(srcvar) {
+        return createReactive(srcvar)
+    }
+
+    /** Get the Reactive class for advanced usage
+     * @returns {Function} The Reactive class constructor
+     * @example
+     * const ReactiveClass = uib.getReactiveClass()
+     * const reactiveInstance = new ReactiveClass(data, customEventDispatcher)
+     * const proxy = reactiveInstance.create()
+     */
+    getReactiveClass() {
+        return Reactive
     }
 
     // ! TODO change ui uib-* attributes to use this

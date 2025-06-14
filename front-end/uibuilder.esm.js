@@ -5593,6 +5593,171 @@ __publicField(ApplyTemplate, "componentVersion", "2025-01-05");
 var apply_template_default = ApplyTemplate;
 window["ApplyTemplate"] = ApplyTemplate;
 
+// src/front-end-module/reactive.mjs
+var Reactive = class {
+  // Version of the reactive module
+  /** Create a new Reactive instance
+   * @param {*} srcvar The source variable to wrap
+   */
+  constructor(srcvar) {
+    this.target = typeof srcvar === "object" && srcvar !== null ? srcvar : { value: srcvar };
+    this.changeListeners = /* @__PURE__ */ new Map();
+    this.listenerIdCounter = 0;
+  }
+  /** Helper function to check if an object is already reactive
+   * @param {*} obj Object to check
+   * @returns {boolean} True if the object is already reactive
+   * @private
+   */
+  _isReactive(obj) {
+    return obj && obj.__v_isReactive === true;
+  }
+  /** Helper function to trigger all change listeners
+   * @param {string} propertyPath Full property path (e.g., "user.name")
+   * @param {*} value New value
+   * @param {*} oldValue Previous value
+   * @param {*} target The target object
+   * @private
+   */
+  _triggerListeners(propertyPath, value2, oldValue, target) {
+    this.changeListeners.forEach((callback) => {
+      try {
+        callback(value2, oldValue, propertyPath, target);
+      } catch (error) {
+        console.warn('[uibuilder:reactive] Error in onChange listener for "'.concat(propertyPath, '":'), error);
+      }
+    });
+  }
+  /** Helper function to make an object reactive with property path tracking
+   * @param {*} obj Object to make reactive
+   * @param {string} basePath Base property path for nested objects
+   * @returns {Proxy} Reactive proxy object
+   * @private
+   */
+  _createReactiveObject(obj, basePath = "") {
+    if (!obj || typeof obj !== "object") return obj;
+    if (this._isReactive(obj)) return obj;
+    if (Element && obj instanceof Element || typeof obj === "function" || obj instanceof Date || obj instanceof RegExp) {
+      console.warn("[uibuilder:reactive] Can not proxy DOM elements, functions or other special objects");
+      return obj;
+    }
+    const proxy = new Proxy(obj, {
+      get: (target, key, receiver) => {
+        if (key === "__v_isReactive") return true;
+        if (key === "onChange") {
+          return (callback) => {
+            if (typeof callback !== "function") {
+              throw new Error("[uibuilder:reactive] onChange callback must be a function");
+            }
+            const listenerId = ++this.listenerIdCounter;
+            this.changeListeners.set(listenerId, callback);
+            return {
+              id: listenerId,
+              cancel: () => {
+                this.changeListeners.delete(listenerId);
+              }
+            };
+          };
+        }
+        if (key === "cancelChange") {
+          return (listenerRef) => {
+            if (!listenerRef || typeof listenerRef.cancel !== "function") {
+              console.warn("[uibuilder:reactive] Invalid listener reference provided to cancelChange");
+              return false;
+            }
+            try {
+              listenerRef.cancel();
+              return true;
+            } catch (error) {
+              console.warn("[uibuilder:reactive] Error cancelling listener:", error);
+              return false;
+            }
+          };
+        }
+        const result = Reflect.get(target, key, receiver);
+        if (result && typeof result === "object" && !this._isReactive(result)) {
+          const newPath = basePath ? "".concat(basePath, ".").concat(String(key)) : String(key);
+          return this._createReactiveObject(result, newPath);
+        }
+        return result;
+      },
+      set: (target, key, value2, receiver) => {
+        if (key === "__v_isReactive" || key === "onChange" || key === "cancelChange") return true;
+        const oldValue = target[key];
+        const hadKey = Object.prototype.hasOwnProperty.call(target, key);
+        const result = Reflect.set(target, key, value2, receiver);
+        if (!hadKey || value2 !== oldValue) {
+          const propertyPath = basePath ? "".concat(basePath, ".").concat(String(key)) : String(key);
+          this._triggerListeners(propertyPath, value2, oldValue, receiver);
+          try {
+            this._dispatchCustomEvent("uibuilder:reactive:propertyChanged", {
+              property: propertyPath,
+              value: value2,
+              oldValue,
+              target: receiver
+            });
+          } catch (error) {
+            console.warn("[uibuilder:reactive] Error dispatching custom event:", error);
+          }
+        }
+        return result;
+      },
+      deleteProperty: (target, key) => {
+        const hadKey = Object.prototype.hasOwnProperty.call(target, key);
+        const oldValue = target[key];
+        const result = Reflect.deleteProperty(target, key);
+        if (hadKey && result) {
+          const propertyPath = basePath ? "".concat(basePath, ".").concat(String(key)) : String(key);
+          this._triggerListeners(propertyPath, void 0, oldValue, target);
+          try {
+            this._dispatchCustomEvent("uibuilder:reactive:propertyDeleted", {
+              property: propertyPath,
+              oldValue,
+              target
+            });
+          } catch (error) {
+            console.warn("[uibuilder:reactive] Error dispatching delete event:", error);
+          }
+        }
+        return result;
+      }
+    });
+    return proxy;
+  }
+  /** Standard fn to create a custom event with details & dispatch it
+   * @param {string} title The event name
+   * @param {*} details Any details to pass to event output
+   * @private
+   */
+  _dispatchCustomEvent(title, details) {
+    const event2 = new CustomEvent(title, { detail: details });
+    document.dispatchEvent(event2);
+  }
+  /** Create and return the reactive proxy
+   * @returns {Proxy} A proxy object that can be used reactively
+   */
+  create() {
+    return this._createReactiveObject(this.target);
+  }
+  /** Get the number of active listeners
+   * @returns {number} Number of active change listeners
+   */
+  getListenerCount() {
+    return this.changeListeners.size;
+  }
+  /** Clear all listeners
+   * @returns {void}
+   */
+  clearAllListeners() {
+    this.changeListeners.clear();
+  }
+};
+__publicField(Reactive, "version", "2025-06-14");
+function reactive(srcvar) {
+  const reactiveInstance = new Reactive(srcvar);
+  return reactiveInstance.create();
+}
+
 // src/front-end-module/uibuilder.module.mjs
 var version = "7.5.0-esm";
 var isMinified = !/param/.test(function(param) {
@@ -5646,6 +5811,12 @@ function log() {
       strLevel = "error";
       break;
     }
+    case "print": {
+      if (log.level < 0) break;
+      level = 0;
+      strLevel = "print";
+      break;
+    }
     default: {
       level = -1;
       break;
@@ -5665,6 +5836,12 @@ function log() {
 }
 log.LOG_STYLES = {
   // 0
+  print: {
+    css: "background: grey; color: yellow;",
+    txtCss: "color: grey;",
+    pre: "\u27A1\uFE0F",
+    console: "log"
+  },
   error: {
     css: "background: red; color: black;",
     txtCss: "color: red; ",
@@ -5707,7 +5884,7 @@ log.LOG_STYLES = {
     pre: "",
     console: "log"
   },
-  names: ["error", "warn", "info", "log", "debug", "trace"],
+  names: ["print", "error", "warn", "info", "log", "debug", "trace"],
   reset: "color: inherit;",
   head: "font-weight:bold; font-style:italic;",
   level: "font-weight:bold; border-radius: 3px; padding: 2px 5px; display:inline-block;"
@@ -6530,6 +6707,23 @@ var Uib = (_a2 = class {
   navigate(url2) {
     if (url2) window.location.href = url2;
     return window.location;
+  }
+  /** Wrap a provided variable in a proxy object so that it can be used reactively
+   * @param {*} srcvar The source variable to wrap
+   * @returns {Proxy} A proxy object that can be used reactively
+   */
+  reactive(srcvar) {
+    return reactive(srcvar);
+  }
+  /** Get the Reactive class for advanced usage
+   * @returns {Function} The Reactive class constructor
+   * @example
+   * const ReactiveClass = uib.getReactiveClass()
+   * const reactiveInstance = new ReactiveClass(data, customEventDispatcher)
+   * const proxy = reactiveInstance.create()
+   */
+  getReactiveClass() {
+    return Reactive;
   }
   // ! TODO change ui uib-* attributes to use this
   /** Convert a string attribute into an variable/constant reference
@@ -8262,6 +8456,14 @@ export {
   uibuilder_module_default as default,
   uibuilder2 as uibuilder
 };
+/**
+ * @kind module
+ * @module reactive
+ * @description Reactive proxy implementation for uibuilder (Loosely based on Vue.js v3 reactivity)
+ * @license Apache-2.0
+ * @author Julian Knight (Totally Information)
+ * @copyright (c) 2025 Julian Knight (Totally Information)
+ */
 /**
  * @kind module
  * @module uibuilder
