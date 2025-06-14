@@ -4,7 +4,7 @@
         "checkJs": true,
         "strictNullChecks": false,
         "strict": false,
-        "lib": ["ES2022"],
+        "lib": ["ES2022",  "DOM"],
         "module": "commonjs",
         "moduleResolution": "node",
         "target": "es2022",
