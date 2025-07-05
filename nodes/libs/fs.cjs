@@ -44,6 +44,7 @@ const { cp, writeFile, } = require('node:fs') // eslint-disable-line n/no-unsupp
 const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readFileSync, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // TODO Remove in future?
 const fg = require('fast-glob')
+const process = require('node:process')
 // ! We cannot use uibGlobalConfig here because it causes circular requires (its module uses this fs library)
 // The uibuilder global configuration object, used throughout all nodes and libraries.
 // const uibGlobalConfig = require('./uibGlobalConfig.cjs')
@@ -668,6 +669,8 @@ class UibFs {
      */
     fgSync(glob) {
         if (!glob) return []
+        // convert path to pattern before execution on Windows machines; otherwise nothing will be found
+        fg.convertPathToPattern(glob)
         return fg.sync(glob)
     }
 
