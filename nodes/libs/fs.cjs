@@ -669,7 +669,7 @@ class UibFs {
      */
     fgSync(glob) {
         if (!glob) return []
-        // convert path to pattern before execution on Windows machines; otherwise nothing will be found
+        // convert path to pattern before execution; otherwise nothing may be found (on Windows)
         fg.convertPathToPattern(glob)
         return fg.sync(glob)
     }
