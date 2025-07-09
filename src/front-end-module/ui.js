@@ -1345,7 +1345,7 @@ const Ui = class Ui {
 
         let content = ''
         // Main body content
-        if (msg.payload && typeof msg.payload === 'string') content += `<div>${msg.payload}</div>`
+        if (msg && msg.payload && typeof msg.payload === 'string') content += `<div>${msg.payload}</div>`
         if (ui.content) content += `<div>${ui.content}</div>`
         // Toast wont show anyway if content is empty, may as well warn user
         if (content === '') {

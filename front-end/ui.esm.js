@@ -1035,7 +1035,7 @@ var Ui = (_a = class {
    */
   showDialog(type, ui, msg) {
     let content = "";
-    if (msg.payload && typeof msg.payload === "string") content += `<div>${msg.payload}</div>`;
+    if (msg && msg.payload && typeof msg.payload === "string") content += `<div>${msg.payload}</div>`;
     if (ui.content) content += `<div>${ui.content}</div>`;
     if (content === "") {
       _a.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
