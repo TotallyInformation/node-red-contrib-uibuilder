@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-06-14 16:05:12
+updated: 2025-06-25 16:24:03
 author: Julian Knight (Totally Information)
 ---
 
@@ -24,6 +24,8 @@ author: Julian Knight (Totally Information)
 
 ## To Do
 
+* [ ] Dialog
+  * [ ] component(?) that can consume a template and display it as a dialog. [ref](https://discourse.nodered.org/t/uibuilder-help-in-developing-a-dashboard/97478/18)
 * [ ] Reactivity - phase 1
   * [x] Create a reactive wrapper `uibuilder.reactive()`.
     * [x] Move to separate class file
@@ -40,6 +42,9 @@ author: Julian Knight (Totally Information)
 
 * [ ] Allow overriding of the JSON max upload size for the custom Express server. [Ref](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988)
 
+* CSS
+  * [ ] Make `form > label` use a variable for `align-self`. 
+
 * Documentation
   * [ ] Add content to Lists, Maps, Tables, Dashboard Layouts, Cards, Articles.
   * [ ] Properly document file uploads and how to handle them. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
@@ -47,6 +52,7 @@ author: Julian Knight (Totally Information)
 
 #### Consider
 
+* Auto-generate a manifest web endpoint that delivers a manifest file for the current uibuilder instance. This would allow clients to have a faster startup. [ref](https://discourse.nodered.org/t/add-pwa-feature-to-uibuilder/97807/2)
 * For onTopic and uib-topic, allow wildcards in the topic name.
 * Move log reference into the `uibGlobalConfig` object. Remove passed references.
 * Some form of more direct RPC implementation between client and server. What functions might the server be able to do for the client? What might the server want to ask of or control on the client?
