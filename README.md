@@ -268,6 +268,7 @@ You can also support the development of UIBUILDER by sponsoring the development.
 - [Colin J (mudwalkercj)](https://github.com/mudwalkercj) - Thanks for helping with the documentation.
 - [Marcus Davies](https://discourse.nodered.org/u/marcus-j-davies) - Many thanks for the encouragement and for the 3d logo.
 - [Fabio Marzocca (fmarzocca)](https://discourse.nodered.org/u/fmarzocca)) - Many thanks for help with the design and testing of the uibrouter front-end router library.
+- [MysteryCode (mutec)](https://github.com/mutec)) - Thanks for the PR to fix up the standardised use of fast-glob for returning lists of files.
 
 Many other people have contributed ideas and suggestions, thanks to everyone who does, they are most welcome.
 
