@@ -1392,6 +1392,9 @@ export const Uib = class Uib {
 
     // #endregion -- direct to _ui --
 
+    // ! TODO: Rework attrib handling to allow for uib-* and data-uib-* AND :* attributes
+    //   See other bookmarks as well
+
     /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
      * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
      *          as possible. Async so that calling function does not need to wait.
@@ -1402,7 +1405,7 @@ export const Uib = class Uib {
     async _uibAttribObserver(mutations/* , observer */) {
         mutations.forEach( async (m) => { // async so process does not wait
             log('trace', 'uibuilder:_uibAttribObserver', 'Mutations ', m)()
-            // Deal with attribute changes
+            // ! wrong - Deal with attribute changes
             if (m.attributeName && (m.attributeName.startsWith('uib') || m.attributeName.startsWith('data-uib'))) {
                 // log(0, 'attribute mutation', m.attributeName, m.target.getAttribute(m.attributeName), m.oldValue, m )()
                 this._uibAttrScanOne(m.target)
@@ -1415,7 +1418,7 @@ export const Uib = class Uib {
                     try { // Nodes might not always have attributes
                         aNames = [...n.attributes]
                     } catch (e) {}
-                    // Get any added elements that have uib attribs
+                    // ! wrong - Get any added elements that have uib attribs
                     const intersect = this.arrayIntersect(this.uibAttribs, aNames)
                     // Process them
                     intersect.forEach( async (el) => {
@@ -1423,6 +1426,7 @@ export const Uib = class Uib {
                     })
                     // And get any children of the added elements that have uib attribs (a node might not have querySelectorAll method)
                     let uibChildren = []
+                    // ! wrong
                     if (n.querySelectorAll) uibChildren = n.querySelectorAll(this.#uibAttrSel)
                     // Process them
                     uibChildren.forEach( async (el) => {
@@ -1430,6 +1434,59 @@ export const Uib = class Uib {
                     })
                 })
             }
+        })
+    }
+
+    _processUibTopic(el, topic) {
+        // Create a topic listener
+        this.onTopic(topic, (msg) => {
+            log('trace', 'uibuilder:_uibAttrScanOne', `Msg with topic "${topic}" received. msg content: `, msg)()
+            msg._uib_processed_by = '_uibAttrScanOne' // record that this has already been processed
+
+            // Process msg.attributes
+            if (Object.prototype.hasOwnProperty.call(msg, 'attributes')) {
+                try {
+                    for (const [k, v] of Object.entries(msg.attributes)) {
+                        el.setAttribute(k, v)
+                    }
+                } catch (e) {
+                    log(0, 'uibuilder:attribute-processing', 'Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.')()
+                }
+            }
+
+            // Process msg.dataset
+            if (Object.prototype.hasOwnProperty.call(msg, 'dataset')) {
+                console.log('uibuilder:dataset-processing', 'Processing dataset for element', el, msg.dataset)
+                try {
+                    for (const [key, value] of Object.entries(msg.dataset)) {
+                        // Convert to kebab-case for dataset
+                        // const kebabKey = k.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+                        // el.dataset[kebabKey] = v
+                        el.dataset[key] = value
+                    }
+                } catch (e) {
+                    log('error', 'uibuilder:dataset-processing', 'Failed to set dataset. Ensure that msg.dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.')()
+                }
+            }
+
+            // Process msg.value (or set checked if boolean - for checkboxes)
+            // TODO Move this to a common function
+            const hasChecked = Object.prototype.hasOwnProperty.call(msg, 'checked')
+            const hasValue = Object.prototype.hasOwnProperty.call(msg, 'value')
+            if ( hasValue || hasChecked ) {
+                if (el.type && (el.type === 'checkbox' || el.type === 'radio')) {
+                    if (hasChecked) el.checked = this.truthy(msg.checked, false)
+                    else if (hasValue) el.checked = this.truthy(msg.value, false)
+                } else {
+                    if (hasValue) el.value = msg.value
+                    else if (hasChecked) el.value = this.truthy(msg.checked, false)
+                }
+            }
+
+            // TODO (MAYBE) Process msg.classes and msg.styles. msg.props (for non-string data)?
+
+            // Process msg.payload (applied as slot HTML) - NB: Will process <script> & <style>
+            if (Object.prototype.hasOwnProperty.call(msg, 'payload')) this.replaceSlot(el, msg.payload)
         })
     }
 
@@ -1443,59 +1500,56 @@ export const Uib = class Uib {
      */
     async _uibAttrScanOne(el) {
         log('trace', 'uibuilder:_uibAttrScanOne', 'Setting up auto-processor for: ', el)()
-        const topic = el.getAttribute('uib-topic') || el.getAttribute('data-uib-topic')
-        if (topic) {
-            // Create a topic listener
-            this.onTopic(topic, (msg) => {
-                log('trace', 'uibuilder:_uibAttrScanOne', `Msg with topic "${topic}" received. msg content: `, msg)()
-                msg._uib_processed_by = '_uibAttrScanOne' // record that this has already been processed
-
-                // Process msg.attributes
-                if (Object.prototype.hasOwnProperty.call(msg, 'attributes')) {
-                    try {
-                        for (const [k, v] of Object.entries(msg.attributes)) {
-                            el.setAttribute(k, v)
-                        }
-                    } catch (e) {
-                        log(0, 'uibuilder:attribute-processing', 'Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.')()
-                    }
-                }
-
-                // Process msg.dataset
-                if (Object.prototype.hasOwnProperty.call(msg, 'dataset')) {
-                    console.log('uibuilder:dataset-processing', 'Processing dataset for element', el, msg.dataset)
-                    try {
-                        for (const [key, value] of Object.entries(msg.dataset)) {
-                            // Convert to kebab-case for dataset
-                            // const kebabKey = k.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
-                            // el.dataset[kebabKey] = v
-                            el.dataset[key] = value
-                        }
-                    } catch (e) {
-                        log('error', 'uibuilder:dataset-processing', 'Failed to set dataset. Ensure that msg.dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.')()
-                    }
-                }
-
-                // Process msg.value (or set checked if boolean - for checkboxes)
-                // TODO Move this to a common function
-                const hasChecked = Object.prototype.hasOwnProperty.call(msg, 'checked')
-                const hasValue = Object.prototype.hasOwnProperty.call(msg, 'value')
-                if ( hasValue || hasChecked ) {
-                    if (el.type && (el.type === 'checkbox' || el.type === 'radio')) {
-                        if (hasChecked) el.checked = this.truthy(msg.checked, false)
-                        else if (hasValue) el.checked = this.truthy(msg.value, false)
-                    } else {
-                        if (hasValue) el.value = msg.value
-                        else if (hasChecked) el.value = this.truthy(msg.checked, false)
-                    }
-                }
-
-                // TODO (MAYBE) Process msg.classes and msg.styles. msg.props (for non-string data)?
-
-                // Process msg.payload (applied as slot HTML) - NB: Will process <script> & <style>
-                if (Object.prototype.hasOwnProperty.call(msg, 'payload')) this.replaceSlot(el, msg.payload)
-            })
+        // Get all of the elements attributes that start with uib- or data-uib- or :
+        if (!el || !el.attributes) {
+            // log('warn', 'uibuilder:_uibAttrScanOne', 'No element or no attributes found. Skipping.', el)()
+            return
         }
+        // Get the attributes that start with uib- or data-uib-
+        let uibAttribs = [...el.attributes].filter(attr => attr.name.startsWith('uib-') || attr.name.startsWith('data-uib-') || attr.name.startsWith(':'))
+        // If no uib attributes, then skip
+        if (uibAttribs.length === 0) {
+            // log('trace', 'uibuilder:_uibAttrScanOne', 'No uib attributes found. Skipping.', el)()
+            return
+        }
+        // Remove duplicates
+        uibAttribs = [...new Set(uibAttribs)]
+
+        uibAttribs.forEach((attr) => {
+            if (attr?.name === 'uib-topic' || attr?.name === 'data-uib-topic') this._processUibTopic(el, attr.value)
+            // Check for uib-bind:* attributes
+            else if (attr?.name.startsWith('uib-bind:') || attr?.name.startsWith('data-uib-bind:') || attr?.name.startsWith(':')) {
+                // Get the bind name
+                const bindName = attr.name.replace(/^(uib-bind:|data-uib-bind:|:)/, '')
+                // log('print', 'uibuilder:_uibAttrScanOne', 'Processing uib-bind:', bindName, 'for element:', el)()
+                // treat the attribute value as a javascript function, run the function safely
+                let value = attr.value
+                try {
+                    value = (new Function(`return (${attr.value})`))()
+                    log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 1 uib-bind attribute:', bindName, 'with value:', value)()
+                } catch (e) {
+                    log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 1 uib-bind attribute:', bindName, 'with value:', value)()
+                    try {
+                        console.log(globalThis)
+                        value = globalThis[attr.value] ?? attr.value
+                        // value = (new Function(`return (window.${attr.value})`))()
+                        log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 2 uib-bind attribute:', bindName, 'with value:', value)()
+                    } catch (e) {
+                        log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 2 uib-bind attribute:', bindName, 'with value:', value)()
+                    }
+                }
+
+                // set the attribute names by bindName to the value of the attribute
+                if (bindName && value) {
+                    // Set the attribute to the value of the bindName
+                    el.setAttribute(bindName, value)
+                    // If the bindName is 'value', then also set the value of the element
+                    if (bindName === 'value') el.value = value
+                } else {
+                    log('warn', 'uibuilder:_uibAttrScanOne', 'Invalid uib-bind attribute:', attr.name, 'with value:', value, 'for element:', el)()
+                }
+            }
+        })
     }
 
     /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
@@ -1506,6 +1560,7 @@ export const Uib = class Uib {
     async _uibAttrScanAll(parentEl) {
         if (!Array.isArray(parentEl)) parentEl = [parentEl]
         parentEl.forEach( async (p) => { // async so process does not wait
+            // ! wrong
             const uibChildren = p.querySelectorAll(this.#uibAttrSel)
             // log('trace', 'uibuilder:_uibAttrScanAll:forEach:children', 'p, uibChildren: ', p, uibChildren)()
             if (uibChildren.length > 0) {

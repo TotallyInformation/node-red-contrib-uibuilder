@@ -1082,7 +1082,7 @@
      */
     showDialog(type, ui, msg) {
       let content = "";
-      if (msg.payload && typeof msg.payload === "string") content += "<div>".concat(msg.payload, "</div>");
+      if (msg && msg.payload && typeof msg.payload === "string") content += "<div>".concat(msg.payload, "</div>");
       if (ui.content) content += "<div>".concat(ui.content, "</div>");
       if (content === "") {
         _a.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
@@ -7054,6 +7054,8 @@
       _ui.uiEnhanceElement(el, component);
     }
     // #endregion -- direct to _ui --
+    // ! TODO: Rework attrib handling to allow for uib-* and data-uib-* AND :* attributes
+    //   See other bookmarks as well
     /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
      * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
      *          as possible. Async so that calling function does not need to wait.
@@ -7086,6 +7088,43 @@
         }
       });
     }
+    _processUibTopic(el, topic) {
+      this.onTopic(topic, (msg) => {
+        log("trace", "uibuilder:_uibAttrScanOne", 'Msg with topic "'.concat(topic, '" received. msg content: '), msg)();
+        msg._uib_processed_by = "_uibAttrScanOne";
+        if (Object.prototype.hasOwnProperty.call(msg, "attributes")) {
+          try {
+            for (const [k, v] of Object.entries(msg.attributes)) {
+              el.setAttribute(k, v);
+            }
+          } catch (e) {
+            log(0, "uibuilder:attribute-processing", "Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.")();
+          }
+        }
+        if (Object.prototype.hasOwnProperty.call(msg, "dataset")) {
+          console.log("uibuilder:dataset-processing", "Processing dataset for element", el, msg.dataset);
+          try {
+            for (const [key, value2] of Object.entries(msg.dataset)) {
+              el.dataset[key] = value2;
+            }
+          } catch (e) {
+            log("error", "uibuilder:dataset-processing", "Failed to set dataset. Ensure that msg.dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.")();
+          }
+        }
+        const hasChecked = Object.prototype.hasOwnProperty.call(msg, "checked");
+        const hasValue = Object.prototype.hasOwnProperty.call(msg, "value");
+        if (hasValue || hasChecked) {
+          if (el.type && (el.type === "checkbox" || el.type === "radio")) {
+            if (hasChecked) el.checked = this.truthy(msg.checked, false);
+            else if (hasValue) el.checked = this.truthy(msg.value, false);
+          } else {
+            if (hasValue) el.value = msg.value;
+            else if (hasChecked) el.value = this.truthy(msg.checked, false);
+          }
+        }
+        if (Object.prototype.hasOwnProperty.call(msg, "payload")) this.replaceSlot(el, msg.payload);
+      });
+    }
     /** Check a single HTML element for uib attributes and add auto-processors as needed.
      * Async so that calling function does not need to wait.
      * Understands only uib-topic at present. Msgs received on the topic can have:
@@ -7096,44 +7135,41 @@
      */
     async _uibAttrScanOne(el) {
       log("trace", "uibuilder:_uibAttrScanOne", "Setting up auto-processor for: ", el)();
-      const topic = el.getAttribute("uib-topic") || el.getAttribute("data-uib-topic");
-      if (topic) {
-        this.onTopic(topic, (msg) => {
-          log("trace", "uibuilder:_uibAttrScanOne", 'Msg with topic "'.concat(topic, '" received. msg content: '), msg)();
-          msg._uib_processed_by = "_uibAttrScanOne";
-          if (Object.prototype.hasOwnProperty.call(msg, "attributes")) {
-            try {
-              for (const [k, v] of Object.entries(msg.attributes)) {
-                el.setAttribute(k, v);
-              }
-            } catch (e) {
-              log(0, "uibuilder:attribute-processing", "Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.")();
-            }
-          }
-          if (Object.prototype.hasOwnProperty.call(msg, "dataset")) {
-            console.log("uibuilder:dataset-processing", "Processing dataset for element", el, msg.dataset);
-            try {
-              for (const [key, value2] of Object.entries(msg.dataset)) {
-                el.dataset[key] = value2;
-              }
-            } catch (e) {
-              log("error", "uibuilder:dataset-processing", "Failed to set dataset. Ensure that msg.dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.")();
-            }
-          }
-          const hasChecked = Object.prototype.hasOwnProperty.call(msg, "checked");
-          const hasValue = Object.prototype.hasOwnProperty.call(msg, "value");
-          if (hasValue || hasChecked) {
-            if (el.type && (el.type === "checkbox" || el.type === "radio")) {
-              if (hasChecked) el.checked = this.truthy(msg.checked, false);
-              else if (hasValue) el.checked = this.truthy(msg.value, false);
-            } else {
-              if (hasValue) el.value = msg.value;
-              else if (hasChecked) el.value = this.truthy(msg.checked, false);
-            }
-          }
-          if (Object.prototype.hasOwnProperty.call(msg, "payload")) this.replaceSlot(el, msg.payload);
-        });
+      if (!el || !el.attributes) {
+        return;
       }
+      let uibAttribs = [...el.attributes].filter((attr) => attr.name.startsWith("uib-") || attr.name.startsWith("data-uib-") || attr.name.startsWith(":"));
+      if (uibAttribs.length === 0) {
+        return;
+      }
+      uibAttribs = [...new Set(uibAttribs)];
+      uibAttribs.forEach((attr) => {
+        var _a3;
+        if ((attr == null ? void 0 : attr.name) === "uib-topic" || (attr == null ? void 0 : attr.name) === "data-uib-topic") this._processUibTopic(el, attr.value);
+        else if ((attr == null ? void 0 : attr.name.startsWith("uib-bind:")) || (attr == null ? void 0 : attr.name.startsWith("data-uib-bind:")) || (attr == null ? void 0 : attr.name.startsWith(":"))) {
+          const bindName = attr.name.replace(/^(uib-bind:|data-uib-bind:|:)/, "");
+          let value2 = attr.value;
+          try {
+            value2 = new Function("return (".concat(attr.value, ")"))();
+            log("print", "uibuilder:_uibAttrScanOne", "SUCCESS 1 uib-bind attribute:", bindName, "with value:", value2)();
+          } catch (e) {
+            log("print", "uibuilder:_uibAttrScanOne", "\u{1F7E5}Error 1 uib-bind attribute:", bindName, "with value:", value2)();
+            try {
+              console.log(globalThis);
+              value2 = (_a3 = globalThis[attr.value]) != null ? _a3 : attr.value;
+              log("print", "uibuilder:_uibAttrScanOne", "SUCCESS 2 uib-bind attribute:", bindName, "with value:", value2)();
+            } catch (e2) {
+              log("print", "uibuilder:_uibAttrScanOne", "\u{1F7E5}Error 2 uib-bind attribute:", bindName, "with value:", value2)();
+            }
+          }
+          if (bindName && value2) {
+            el.setAttribute(bindName, value2);
+            if (bindName === "value") el.value = value2;
+          } else {
+            log("warn", "uibuilder:_uibAttrScanOne", "Invalid uib-bind attribute:", attr.name, "with value:", value2, "for element:", el)();
+          }
+        }
+      });
     }
     /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
      * Async so that calling function does not need to wait.
