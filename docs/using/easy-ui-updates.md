@@ -3,7 +3,7 @@ title: Updating web UI content and attributes dynamically from Node-RED
 description: |
   A quick FAQ explaining the different ways to include and dynamically change data on your web pages from Node-RED.
 created: 2024-06-19 10:29:37
-updated: 2025-05-27 19:40:26
+updated: 2025-07-09 17:54:25
 ---
 
 > [!TIP]
