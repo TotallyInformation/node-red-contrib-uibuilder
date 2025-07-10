@@ -24,6 +24,24 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 <!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
 
+## v7.4.2
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.1...v7.4.2).
+
+* Dependabot updates to dependencies.
+* Merge PR #553 from mutec: Fixes an issue with the glob function in `libs/fs.cjs`. Only impacts Windows users.
+* Fix issue [#546](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/546). Issues with the client ui library's showDialogue function.
+* Update the ui showDialogue function - improving layout and updating the CSS styles in the `uib-brand.css` file.
+
+## v7.4.1
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.0...v7.4.1).
+
+* Dependabot updates to dependencies.
+* Correct typo & update release steps in documentation.
+* ESLINT and TS minor corrections.
+* Remove spurious require from admin-api-v2.
+
 ## v7.4.0
 
 [Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.3.0...v7.4.0).
