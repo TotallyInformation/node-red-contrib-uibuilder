@@ -49,17 +49,17 @@
     }
   });
 
-  // src/front-end-module/ui.js
+  // src/front-end-module/ui.mjs
   var _a;
   var Ui = (_a = class {
-    //#endregion --- class variables ---
+    // #endregion --- class variables ---
     /** Called when `new Ui(...)` is called
      * @param {globalThis} win Either the browser global window or jsdom dom.window
      * @param {Function} [extLog] A function that returns a function for logging
      * @param {Function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
      */
     constructor(win, extLog, jsonHighlight) {
-      //#region --- Class variables ---
+      // #region --- Class variables ---
       __publicField(this, "version", "7.5.0-src");
       // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
       __publicField(this, "sanitiseExtraTags", ["uib-var"]);
@@ -102,7 +102,7 @@
         _a.md = _a.win["markdownit"](_a.mdOpts);
       }
     }
-    //#region ---- Internal Methods ----
+    // #region ---- Internal Methods ----
     _markDownIt() {
       if (!_a.win["markdownit"]) return;
       if (!this.ui_md_plugins && _a.win["uibuilder"] && _a.win["uibuilder"].ui_md_plugins) this.ui_md_plugins = _a.win["uibuilder"].ui_md_plugins;
@@ -553,8 +553,8 @@
       });
     }
     // --- end of _uiUpdate ---
-    //#endregion ---- -------- ----
-    //#region ---- External Methods ----
+    // #endregion ---- -------- ----
+    // #region ---- External Methods ----
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
      * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
      * If the selected element is a <template>, returns the first child element.
@@ -1075,12 +1075,26 @@
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
-     * @param {"notify"|"alert"} type Dialog type
-     * @param {object} ui standardised ui data
-     * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
+     * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
+     * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
+     * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
      * @returns {void}
+     * @example
+     * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
+     * @example
+     * Ui.showDialog('alert', null, msg)
      */
     showDialog(type, ui, msg) {
+      if (!type || !["notify", "alert"].includes(type)) {
+        type = "notify";
+      }
+      if (!ui) {
+        ui = {
+          noAutohide: true,
+          modal: true,
+          appendToast: false
+        };
+      }
       let body = "";
       if (msg.payload && typeof msg.payload === "string") body += "<div>".concat(msg.payload, "</div>");
       if (ui.content) body += "<div>".concat(ui.content, "</div>");
@@ -1206,7 +1220,7 @@
     uiEnhanceElement(el, comp) {
       this._uiComposeComponent(el, comp);
     }
-    //#region --- table handling ---
+    // #region --- table handling ---
     /** Column metadata object definition
      * @typedef columnDefinition
      * @property {number} index The column index number
@@ -1526,8 +1540,8 @@
       if (!tbodyEl) throw new Error("[tblAddDataRow] Table must have a tbody tag, tbody section ".concat(options.body, " does not exist"));
       tbodyEl.deleteRow(rowIndex);
     }
-    //#endregion --- table handling ---
-    //#endregion ---- external methods ----
+    // #endregion --- table handling ---
+    // #endregion ---- external methods ----
   }, /** Reference to DOM window - must be passed in the constructor
    * Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
    * @type {Window}
@@ -7027,10 +7041,14 @@
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
-     * @param {"notify"|"alert"} type Dialog type
-     * @param {object} ui standardised ui data
-     * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
+     * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
+     * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
+     * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
      * @returns {void}
+     * @example
+     * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
+     * @example
+     * Ui.showDialog('alert', null, msg)
      */
     showDialog(type, ui, msg) {
       _ui.showDialog(type, ui, msg);

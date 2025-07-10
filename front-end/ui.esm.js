@@ -1,18 +1,45 @@
+var __create = Object.create;
 var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined") return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+});
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
-// src/front-end-module/ui.js
+// src/front-end-module/ui.mjs
 var _a;
 var Ui = (_a = class {
-  //#endregion --- class variables ---
+  // #endregion --- class variables ---
   /** Called when `new Ui(...)` is called
    * @param {globalThis} win Either the browser global window or jsdom dom.window
    * @param {Function} [extLog] A function that returns a function for logging
    * @param {Function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
    */
   constructor(win, extLog, jsonHighlight) {
-    //#region --- Class variables ---
+    // #region --- Class variables ---
     __publicField(this, "version", "7.5.0-src");
     // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
     __publicField(this, "sanitiseExtraTags", ["uib-var"]);
@@ -45,18 +72,17 @@ var Ui = (_a = class {
         highlight: function(str, lang) {
           if (lang && window["hljs"] && window["hljs"].getLanguage(lang)) {
             try {
-              return `<pre class="">
-                                    <code class="hljs border">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+              return '<pre class="">\n                                    <code class="hljs border">'.concat(window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value, "</code></pre>");
             } finally {
             }
           }
-          return `<pre class="hljs border"><code>${_a.md.utils.escapeHtml(str).trim()}</code></pre>`;
+          return '<pre class="hljs border"><code>'.concat(_a.md.utils.escapeHtml(str).trim(), "</code></pre>");
         }
       };
       _a.md = _a.win["markdownit"](_a.mdOpts);
     }
   }
-  //#region ---- Internal Methods ----
+  // #region ---- Internal Methods ----
   _markDownIt() {
     if (!_a.win["markdownit"]) return;
     if (!this.ui_md_plugins && _a.win["uibuilder"] && _a.win["uibuilder"].ui_md_plugins) this.ui_md_plugins = _a.win["uibuilder"].ui_md_plugins;
@@ -73,18 +99,18 @@ var Ui = (_a = class {
         if (window["hljs"]) {
           if (lang && window["hljs"].getLanguage(lang)) {
             try {
-              return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+              return '<pre><code class="hljs border language-'.concat(lang, '" data-language="').concat(lang, '" title="Source language: \'').concat(lang, "'\">").concat(window["hljs"].highlight(str, { language: lang, ignoreIllegals: true }).value, "</code></pre>");
             } finally {
             }
           } else {
             try {
               const high = window["hljs"].highlightAuto(str);
-              return `<pre><code class="hljs border language-${high.language}" data-language="${high.language}" title="Source language estimated by HighlightJS: '${high.language}'">${high.value}</code></pre>`;
+              return '<pre><code class="hljs border language-'.concat(high.language, '" data-language="').concat(high.language, '" title="Source language estimated by HighlightJS: \'').concat(high.language, "'\">").concat(high.value, "</code></pre>");
             } finally {
             }
           }
         }
-        return `<pre><code class="border">${_a.md.utils.escapeHtml(str).trim()}</code></pre>`;
+        return '<pre><code class="border">'.concat(_a.md.utils.escapeHtml(str).trim(), "</code></pre>");
       }
     };
     _a.md = _a.win["markdownit"](_a.mdOpts);
@@ -158,7 +184,7 @@ var Ui = (_a = class {
   _uiAdd(ui, isRecurse) {
     _a.log("trace", "Ui:_uiManager:add", "Starting _uiAdd")();
     ui.components.forEach((compToAdd, i) => {
-      _a.log("trace", `Ui:_uiAdd:components-forEach:${i}`, "Component to add: ", compToAdd)();
+      _a.log("trace", "Ui:_uiAdd:components-forEach:".concat(i), "Component to add: ", compToAdd)();
       let newEl;
       switch (compToAdd.type) {
         // If trying to insert raw html, wrap in a div
@@ -217,7 +243,7 @@ var Ui = (_a = class {
     if (comp.attributes) {
       Object.keys(comp.attributes).forEach((attrib) => {
         if (attrib === "class" && Array.isArray(comp.attributes[attrib])) comp.attributes[attrib].join(" ");
-        _a.log("trace", "_uiComposeComponent:attributes-forEach", `Attribute: '${attrib}', value: '${comp.attributes[attrib]}'`)();
+        _a.log("trace", "_uiComposeComponent:attributes-forEach", "Attribute: '".concat(attrib, "', value: '").concat(comp.attributes[attrib], "'"))();
         if (attrib === "value") el.value = comp.attributes[attrib];
         if (attrib.startsWith("xlink:")) el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, comp.attributes[attrib]);
         else el.setAttribute(attrib, comp.attributes[attrib]);
@@ -233,10 +259,10 @@ var Ui = (_a = class {
         if (type.toLowerCase === "onclick") type = "click";
         try {
           el.addEventListener(type, (evt) => {
-            new Function("evt", `${comp.events[type]}(evt)`)(evt);
+            new Function("evt", "".concat(comp.events[type], "(evt)"))(evt);
           });
         } catch (err) {
-          _a.log("error", "Ui:_uiComposeComponent", `Add event '${type}' for element '${comp.type}': Cannot add event handler. ${err.message}`)();
+          _a.log("error", "Ui:_uiComposeComponent", "Add event '".concat(type, "' for element '").concat(comp.type, "': Cannot add event handler. ").concat(err.message))();
         }
       });
     }
@@ -264,7 +290,7 @@ var Ui = (_a = class {
    */
   _uiExtendEl(parentEl, components, ns = "") {
     components.forEach((compToAdd, i) => {
-      _a.log("trace", `Ui:_uiExtendEl:components-forEach:${i}`, compToAdd)();
+      _a.log("trace", "Ui:_uiExtendEl:components-forEach:".concat(i), compToAdd)();
       let newEl;
       compToAdd.ns = ns;
       if (compToAdd.ns === "html") {
@@ -293,7 +319,7 @@ var Ui = (_a = class {
     if (ui.components) {
       if (!Array.isArray(ui.components)) ui.components = [ui.components];
       ui.components.forEach(async (component) => {
-        import(component);
+        Promise.resolve().then(() => __toESM(__require(component)));
       });
     }
     if (ui.srcScripts) {
@@ -328,7 +354,7 @@ var Ui = (_a = class {
     msg._ui.forEach((ui, i) => {
       if (ui.mode && !ui.method) ui.method = ui.mode;
       if (!ui.method) {
-        _a.log("error", "Ui:_uiManager", `No method defined for msg._ui[${i}]. Ignoring. `, ui)();
+        _a.log("error", "Ui:_uiManager", "No method defined for msg._ui[".concat(i, "]. Ignoring. "), ui)();
         return;
       }
       ui.payload = msg.payload;
@@ -371,7 +397,7 @@ var Ui = (_a = class {
           break;
         }
         default: {
-          _a.log("error", "Ui:_uiManager", `Invalid msg._ui[${i}].method (${ui.method}). Ignoring`)();
+          _a.log("error", "Ui:_uiManager", "Invalid msg._ui[".concat(i, "].method (").concat(ui.method, "). Ignoring"))();
           break;
         }
       }
@@ -397,7 +423,7 @@ var Ui = (_a = class {
         try {
           el.remove();
         } catch (err) {
-          _a.log("trace", "Ui:_uiRemove", `Could not remove. ${err.message}`)();
+          _a.log("trace", "Ui:_uiRemove", "Could not remove. ".concat(err.message))();
         }
       });
     });
@@ -409,20 +435,20 @@ var Ui = (_a = class {
   _uiReplace(ui) {
     _a.log("trace", "Ui:_uiReplace", "Starting")();
     ui.components.forEach((compToReplace, i) => {
-      _a.log("trace", `Ui:_uiReplace:components-forEach:${i}`, "Component to replace: ", compToReplace)();
+      _a.log("trace", "Ui:_uiReplace:components-forEach:".concat(i), "Component to replace: ", compToReplace)();
       let elToReplace;
       if (compToReplace.id) {
         elToReplace = _a.doc.getElementById(compToReplace.id);
       } else if (compToReplace.selector || compToReplace.select) {
         elToReplace = _a.doc.querySelector(compToReplace.selector);
       } else if (compToReplace.name) {
-        elToReplace = _a.doc.querySelector(`[name="${compToReplace.name}"]`);
+        elToReplace = _a.doc.querySelector('[name="'.concat(compToReplace.name, '"]'));
       } else if (compToReplace.type) {
         elToReplace = _a.doc.querySelector(compToReplace.type);
       }
-      _a.log("trace", `Ui:_uiReplace:components-forEach:${i}`, "Element to replace: ", elToReplace)();
+      _a.log("trace", "Ui:_uiReplace:components-forEach:".concat(i), "Element to replace: ", elToReplace)();
       if (elToReplace === void 0 || elToReplace === null) {
-        _a.log("trace", `Ui:_uiReplace:components-forEach:${i}:noReplace`, "Cannot find the DOM element. Adding instead.", compToReplace)();
+        _a.log("trace", "Ui:_uiReplace:components-forEach:".concat(i, ":noReplace"), "Cannot find the DOM element. Adding instead.", compToReplace)();
         this._uiAdd({ components: [compToReplace] }, false);
         return;
       }
@@ -464,16 +490,16 @@ var Ui = (_a = class {
     _a.log("trace", "UI:_uiUpdate:update", "Starting _uiUpdate", ui)();
     if (!ui.components) ui.components = [Object.assign({}, ui)];
     ui.components.forEach((compToUpd, i) => {
-      _a.log("trace", "_uiUpdate:components-forEach", `Start loop #${i}`, compToUpd)();
+      _a.log("trace", "_uiUpdate:components-forEach", "Start loop #".concat(i), compToUpd)();
       let elToUpd;
       if (compToUpd.parentEl) {
         elToUpd = compToUpd.parentEl;
       } else if (compToUpd.id) {
-        elToUpd = _a.doc.querySelectorAll(`#${compToUpd.id}`);
+        elToUpd = _a.doc.querySelectorAll("#".concat(compToUpd.id));
       } else if (compToUpd.selector || compToUpd.select) {
         elToUpd = _a.doc.querySelectorAll(compToUpd.selector);
       } else if (compToUpd.name) {
-        elToUpd = _a.doc.querySelectorAll(`[name="${compToUpd.name}"]`);
+        elToUpd = _a.doc.querySelectorAll('[name="'.concat(compToUpd.name, '"]'));
       } else if (compToUpd.type) {
         elToUpd = _a.doc.querySelectorAll(compToUpd.type);
       }
@@ -481,34 +507,34 @@ var Ui = (_a = class {
         _a.log("warn", "Ui:_uiManager:update", "Cannot find the DOM element. Ignoring.", compToUpd)();
         return;
       }
-      _a.log("trace", "_uiUpdate:components-forEach", `Element(s) to update. Count: ${elToUpd.length}`, elToUpd)();
+      _a.log("trace", "_uiUpdate:components-forEach", "Element(s) to update. Count: ".concat(elToUpd.length), elToUpd)();
       if (!compToUpd.slot && compToUpd.payload) compToUpd.slot = compToUpd.payload;
       elToUpd.forEach((el, j) => {
-        _a.log("trace", "_uiUpdate:components-forEach", `Updating element #${j}`, el)();
+        _a.log("trace", "_uiUpdate:components-forEach", "Updating element #".concat(j), el)();
         this._uiComposeComponent(el, compToUpd);
         if (compToUpd.components) {
-          _a.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component`, compToUpd, el)();
+          _a.log("trace", "_uiUpdate:nested-component", "Element #".concat(j, " - nested-component"), compToUpd, el)();
           const nc = { _ui: [] };
           compToUpd.components.forEach((nestedComp, k) => {
             const method = nestedComp.method || compToUpd.method || ui.method;
             if (nestedComp.method) delete nestedComp.method;
             if (!Array.isArray(nestedComp)) nestedComp = [nestedComp];
-            _a.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component #${k}`, nestedComp)();
+            _a.log("trace", "_uiUpdate:nested-component", "Element #".concat(j, " - nested-component #").concat(k), nestedComp)();
             nc._ui.push({
               method,
               parentEl: el,
               components: nestedComp
             });
           });
-          _a.log("trace", "_uiUpdate:nested-component", `Element #${j} - nested-component new manager`, nc)();
+          _a.log("trace", "_uiUpdate:nested-component", "Element #".concat(j, " - nested-component new manager"), nc)();
           this._uiManager(nc);
         }
       });
     });
   }
   // --- end of _uiUpdate ---
-  //#endregion ---- -------- ----
-  //#region ---- External Methods ----
+  // #endregion ---- -------- ----
+  // #region ---- External Methods ----
   /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
    * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
    * If the selected element is a <template>, returns the first child element.
@@ -522,18 +548,18 @@ var Ui = (_a = class {
     if (!context) context = _a.doc;
     if (!output) output = "el";
     if (!context || !context.nodeType) {
-      _a.log(1, "Uib:$", `Invalid context element. Must be a valid HTML element.`, context)();
+      _a.log(1, "Uib:$", "Invalid context element. Must be a valid HTML element.", context)();
       return null;
     }
     let el = context.querySelector(cssSelector);
     if (!el || !el.nodeType) {
-      _a.log(1, "Uib:$", `No element found or element is not an HTML element for CSS selector ${cssSelector}`)();
+      _a.log(1, "Uib:$", "No element found or element is not an HTML element for CSS selector ".concat(cssSelector))();
       return null;
     }
     if (el.nodeName === "TEMPLATE") {
       el = el.content.firstElementChild;
       if (!el) {
-        _a.log(0, "Uib:$", `Template selected for CSS selector ${cssSelector} but it is empty`)();
+        _a.log(0, "Uib:$", "Template selected for CSS selector ".concat(cssSelector, " but it is empty"))();
         return null;
       }
     }
@@ -563,7 +589,7 @@ var Ui = (_a = class {
       }
     } catch (e) {
       out = el;
-      _a.log(1, "Uib:$", `Could not process output type "${output}" for CSS selector ${cssSelector}, returned the DOM element. ${e.message}`, e)();
+      _a.log(1, "Uib:$", 'Could not process output type "'.concat(output, '" for CSS selector ').concat(cssSelector, ", returned the DOM element. ").concat(e.message), e)();
     }
     return out;
   }
@@ -576,7 +602,7 @@ var Ui = (_a = class {
   $$(cssSelector, context) {
     if (!context) context = _a.doc;
     if (!context || !context.nodeType) {
-      _a.log(1, "Uib:$$", `Invalid context element. Must be a valid HTML element.`, context)();
+      _a.log(1, "Uib:$$", "Invalid context element. Must be a valid HTML element.", context)();
       return null;
     }
     return Array.from(context.querySelectorAll(cssSelector));
@@ -604,22 +630,23 @@ var Ui = (_a = class {
    *   @param {'insert'|'replace'|'wrap'}  config.mode How to apply the template. Default is 'insert'. 'replace' will replace the targets innerHTML. 'wrap' is like 'replace' but will put any target content into the template's 1ST <slot> (if present).
    */
   applyTemplate(sourceId, targetId, config) {
+    var _a2;
     if (!config) config = {};
     if (!config.onceOnly) config.onceOnly = false;
     if (!config.mode) config.mode = "insert";
     const template = _a.doc.getElementById(sourceId);
     if (!template || template.tagName !== "TEMPLATE") {
-      _a.log("error", "Ui:applyTemplate", `Source must be a <template>. id='${sourceId}'`)();
+      _a.log("error", "Ui:applyTemplate", "Source must be a <template>. id='".concat(sourceId, "'"))();
       return;
     }
     const target = _a.doc.getElementById(targetId);
     if (!target) {
-      _a.log("error", "Ui:applyTemplate", `Target not found: id='${targetId}'`)();
+      _a.log("error", "Ui:applyTemplate", "Target not found: id='".concat(targetId, "'"))();
       return;
     }
-    const targetContent = target.innerHTML ?? "";
+    const targetContent = (_a2 = target.innerHTML) != null ? _a2 : "";
     if (targetContent && config.mode === "replace") {
-      _a.log("warn", "Ui:applyTemplate", `Target element is not empty, content is replaced. id='${targetId}'`)();
+      _a.log("warn", "Ui:applyTemplate", "Target element is not empty, content is replaced. id='".concat(targetId, "'"))();
     }
     let templateContent;
     if (config.onceOnly === true) templateContent = _a.doc.adoptNode(template.content);
@@ -647,7 +674,7 @@ var Ui = (_a = class {
         }
       }
     } else {
-      _a.log("warn", "Ui:applyTemplate", `No valid content found in template`)();
+      _a.log("warn", "Ui:applyTemplate", "No valid content found in template")();
     }
   }
   /** Converts markdown text input to HTML if the Markdown-IT library is loaded
@@ -662,7 +689,7 @@ var Ui = (_a = class {
     try {
       return _a.md.render(mdText.trim());
     } catch (e) {
-      _a.log(0, "uibuilder:convertMarkdown", `Could not render Markdown. ${e.message}`, e)();
+      _a.log(0, "uibuilder:convertMarkdown", "Could not render Markdown. ".concat(e.message), e)();
       return '<p class="border error">Could not render Markdown<p>';
     }
   }
@@ -692,11 +719,11 @@ var Ui = (_a = class {
     try {
       response = await fetch(url);
     } catch (error) {
-      _a.log(0, "Ui:include", `Fetch of file '${url}' failed. `, error.message)();
+      _a.log(0, "Ui:include", "Fetch of file '".concat(url, "' failed. "), error.message)();
       return error.message;
     }
     if (!response.ok) {
-      _a.log(0, "Ui:include", `Fetch of file '${url}' failed. Status='${response.statusText}'`)();
+      _a.log(0, "Ui:include", "Fetch of file '".concat(url, "' failed. Status='").concat(response.statusText, "'"))();
       return response.statusText;
     }
     const contentType = await response.headers.get("content-type");
@@ -743,7 +770,7 @@ var Ui = (_a = class {
       }
       case "image": {
         data = await response.blob();
-        slot = `<img src="${URL.createObjectURL(data)}">`;
+        slot = '<img src="'.concat(URL.createObjectURL(data), '">');
         if (_a.win["DOMPurify"]) {
           txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
           _a.log("warn", "Ui:include:image", txtReturn)();
@@ -752,7 +779,7 @@ var Ui = (_a = class {
       }
       case "video": {
         data = await response.blob();
-        slot = `<video controls autoplay><source src="${URL.createObjectURL(data)}"></video>`;
+        slot = '<video controls autoplay><source src="'.concat(URL.createObjectURL(data), '"></video>');
         if (_a.win["DOMPurify"]) {
           txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
           _a.log("warn", "Ui:include:video", txtReturn)();
@@ -763,10 +790,10 @@ var Ui = (_a = class {
       case "text":
       default: {
         data = await response.blob();
-        slot = `<iframe style="resize:both;width:inherit;height:inherit;" src="${URL.createObjectURL(data)}">`;
+        slot = '<iframe style="resize:both;width:inherit;height:inherit;" src="'.concat(URL.createObjectURL(data), '">');
         if (_a.win["DOMPurify"]) {
           txtReturn = "Include successful. BUT DOMPurify loaded which may block its use.";
-          _a.log("warn", `Ui:include:${type}`, txtReturn)();
+          _a.log("warn", "Ui:include:".concat(type), txtReturn)();
         }
         break;
       }
@@ -780,7 +807,7 @@ var Ui = (_a = class {
         uiOptions
       ]
     });
-    _a.log("trace", `Ui:include:${type}`, txtReturn)();
+    _a.log("trace", "Ui:include:".concat(type), txtReturn)();
     return txtReturn;
   }
   // ---- End of include() ---- //
@@ -842,12 +869,12 @@ var Ui = (_a = class {
     }
     fetch(url).then((response) => {
       if (response.ok === false) {
-        throw new Error(`Could not load '${url}'. Status ${response.status}, Error: ${response.statusText}`);
+        throw new Error("Could not load '".concat(url, "'. Status ").concat(response.status, ", Error: ").concat(response.statusText));
       }
-      _a.log("trace", "Ui:loadui:then1", `Loaded '${url}'. Status ${response.status}, ${response.statusText}`)();
+      _a.log("trace", "Ui:loadui:then1", "Loaded '".concat(url, "'. Status ").concat(response.status, ", ").concat(response.statusText))();
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        throw new TypeError(`Fetch '${url}' did not return JSON, ignoring`);
+        throw new TypeError("Fetch '".concat(url, "' did not return JSON, ignoring"));
       }
       return response.json();
     }).then((data) => {
@@ -903,7 +930,7 @@ var Ui = (_a = class {
       }
     };
     if (["UL", "OL"].includes(node.nodeName)) {
-      const listEntries = _a.doc.querySelectorAll(`${cssSelector} li`);
+      const listEntries = _a.doc.querySelectorAll("".concat(cssSelector, " li"));
       if (listEntries) {
         thisOut.list = {
           "entries": listEntries.length
@@ -911,7 +938,7 @@ var Ui = (_a = class {
       }
     }
     if (node.nodeName === "DL") {
-      const listEntries = _a.doc.querySelectorAll(`${cssSelector} dt`);
+      const listEntries = _a.doc.querySelectorAll("".concat(cssSelector, " dt"));
       if (listEntries) {
         thisOut.list = {
           "entries": listEntries.length
@@ -919,9 +946,9 @@ var Ui = (_a = class {
       }
     }
     if (node.nodeName === "TABLE") {
-      const bodyEntries = _a.doc.querySelectorAll(`${cssSelector} > tbody > tr`);
-      const headEntries = _a.doc.querySelectorAll(`${cssSelector} > thead > tr`);
-      const cols = _a.doc.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`);
+      const bodyEntries = _a.doc.querySelectorAll("".concat(cssSelector, " > tbody > tr"));
+      const headEntries = _a.doc.querySelectorAll("".concat(cssSelector, " > thead > tr"));
+      const cols = _a.doc.querySelectorAll("".concat(cssSelector, " > tbody > tr:last-child > *"));
       if (bodyEntries || headEntries || cols) {
         thisOut.table = {
           "headRows": headEntries ? headEntries.length : 0,
@@ -1028,15 +1055,29 @@ var Ui = (_a = class {
    * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
    *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
    *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
-   * @param {"notify"|"alert"} type Dialog type
-   * @param {object} ui standardised ui data
-   * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
+   * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
+   * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
+   * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
    * @returns {void}
+   * @example
+   * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
+   * @example
+   * Ui.showDialog('alert', null, msg)
    */
   showDialog(type, ui, msg) {
+    if (!type || !["notify", "alert"].includes(type)) {
+      type = "notify";
+    }
+    if (!ui) {
+      ui = {
+        noAutohide: true,
+        modal: true,
+        appendToast: false
+      };
+    }
     let body = "";
-    if (msg.payload && typeof msg.payload === "string") body += `<div>${msg.payload}</div>`;
-    if (ui.content) body += `<div>${ui.content}</div>`;
+    if (msg.payload && typeof msg.payload === "string") body += "<div>".concat(msg.payload, "</div>");
+    if (ui.content) body += "<div>".concat(ui.content, "</div>");
     if (body === "") {
       _a.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
       return;
@@ -1058,7 +1099,7 @@ var Ui = (_a = class {
       ui.modal = true;
       ui.autohide = false;
     }
-    content = `<div class="toast-head">${icon}${title}</div><div class="toast-body">${body}</div>`;
+    content = '<div class="toast-head">'.concat(icon).concat(title, '</div><div class="toast-body">').concat(body, "</div>");
     let toaster = _a.doc.getElementById("toaster");
     if (toaster === null) {
       toaster = _a.doc.createElement("div");
@@ -1074,7 +1115,7 @@ var Ui = (_a = class {
     }
     const toast = _a.doc.createElement("div");
     toast.title = "Click to clear this notifcation";
-    toast.setAttribute("class", `toast ${ui.variant ? ui.variant : ""} ${type}`);
+    toast.setAttribute("class", "toast ".concat(ui.variant ? ui.variant : "", " ").concat(type));
     toast.innerHTML = content;
     toast.setAttribute("role", "alertdialog");
     if (ui.modal) toast.setAttribute("aria-modal", ui.modal);
@@ -1126,7 +1167,7 @@ var Ui = (_a = class {
         }
         if (prop === void 0 || prop === null) {
           if (propName.toLowerCase() === "value") out.push(node.innerText);
-          else out.push(`Property '${propName}' not found`);
+          else out.push("Property '".concat(propName, "' not found"));
         } else {
           const p = {};
           const cType = prop.constructor.name.toLowerCase();
@@ -1159,7 +1200,7 @@ var Ui = (_a = class {
   uiEnhanceElement(el, comp) {
     this._uiComposeComponent(el, comp);
   }
-  //#region --- table handling ---
+  // #region --- table handling ---
   /** Column metadata object definition
    * @typedef columnDefinition
    * @property {number} index The column index number
@@ -1210,7 +1251,7 @@ var Ui = (_a = class {
       out.textContent = "Input data is not an array or an object, cannot create a table.";
       return out;
     }
-    if (rowKeys.length > 1e3) _a.log(1, "Uib:buildHtmlTable", `Warning, data is ${rowKeys.length} rows. Anything over 1,000 can get very slow to complete.`)();
+    if (rowKeys.length > 1e3) _a.log(1, "Uib:buildHtmlTable", "Warning, data is ".concat(rowKeys.length, " rows. Anything over 1,000 can get very slow to complete."))();
     const tbl = _a.doc.createElement("table");
     const thead = _a.doc.createElement("thead");
     const headerRow = _a.doc.createElement("tr");
@@ -1224,7 +1265,7 @@ var Ui = (_a = class {
           "index": i,
           "hasName": hasName,
           "name": hasName ? col : void 0,
-          "key": col ?? i,
+          "key": col != null ? col : i,
           "title": col
         });
       });
@@ -1260,7 +1301,7 @@ var Ui = (_a = class {
       try {
         parentEl.appendChild(tbl);
       } catch (e) {
-        throw new Error(`[ui.js:buildHtmlTable] Could not add table to parent. ${e.message}`);
+        throw new Error("[ui.js:buildHtmlTable] Could not add table to parent. ".concat(e.message));
       }
       return;
     }
@@ -1283,20 +1324,20 @@ var Ui = (_a = class {
    */
   tblAddRow(tbl, rowData = {}, options = {}) {
     const tblType = Object.prototype.toString.apply(tbl);
-    if (Object.prototype.toString.apply(options) !== "[object Object]") throw new Error(`[tblAddDataRow] options must be an object`);
+    if (Object.prototype.toString.apply(options) !== "[object Object]") throw new Error("[tblAddDataRow] options must be an object");
     const dataType = Object.prototype.toString.apply(rowData);
-    if (dataType !== "[object Object]" && dataType !== "[object Array]") throw new Error(`[tblAddDataRow] rowData MUST be an object or an array containing column/cell data for each column`);
+    if (dataType !== "[object Object]" && dataType !== "[object Array]") throw new Error("[tblAddDataRow] rowData MUST be an object or an array containing column/cell data for each column");
     let tblEl;
     if (tblType === "[object HTMLTableElement]") {
       tblEl = tbl;
     } else {
       tblEl = _a.doc.querySelector(tbl);
-      if (!tblEl) throw new Error(`[tblAddDataRow] Table with CSS Selector "${tbl}" not found`);
+      if (!tblEl) throw new Error('[tblAddDataRow] Table with CSS Selector "'.concat(tbl, '" not found'));
     }
     if (!options.body) options.body = 0;
     if (!("allowHTML" in options)) options.allowHTML = false;
     const tbodyEl = tblEl.getElementsByTagName("tbody")[options.body];
-    if (!tbodyEl) throw new Error(`[tblAddDataRow] Table must have a tbody tag, tbody section ${options.body} does not exist`);
+    if (!tbodyEl) throw new Error("[tblAddDataRow] Table must have a tbody tag, tbody section ".concat(options.body, " does not exist"));
     if (!options.cols) options.cols = this.tblGetColMeta(tblEl);
     const colMeta = options.cols;
     const rowEl = _a.doc.createElement("tr");
@@ -1309,7 +1350,10 @@ var Ui = (_a = class {
       cols.push(cellEl);
     }
     Object.keys(rowData).forEach((colKey, i, row) => {
-      let foundEl = cols.find((col) => col?.colMeta?.name === colKey);
+      let foundEl = cols.find((col) => {
+        var _a2;
+        return ((_a2 = col == null ? void 0 : col.colMeta) == null ? void 0 : _a2.name) === colKey;
+      });
       let foundRowData;
       if (foundEl) {
         foundRowData = rowData[colKey];
@@ -1357,7 +1401,7 @@ var Ui = (_a = class {
    */
   tblAddListener(tblSelector, options = {}, out = {}) {
     const table = _a.doc.querySelector(tblSelector);
-    if (!table) throw new Error(`Table with CSS Selector "${tblSelector}" not found`);
+    if (!table) throw new Error('Table with CSS Selector "'.concat(tblSelector, '" not found'));
     if (typeof out !== "object") throw new Error('The "out" argument MUST be an object');
     if (!options.eventScope) options.eventScope = "row";
     if (!options.returnType) options.returnType = "text";
@@ -1384,9 +1428,9 @@ var Ui = (_a = class {
           const colName = this.tblGetCellName(clickedCell, options.pad);
           out[colName] = options.returnType === "text" ? clickedCell.textContent.trim() : clickedCell.innerHTML;
         }
-        _a.log(options.logLevel, "Ui:tblAddClickListener", `${options.eventScope} ${options.eventType} on row=${rowIndex}, col=${cellIndex}, data: `, out)();
+        _a.log(options.logLevel, "Ui:tblAddClickListener", "".concat(options.eventScope, " ").concat(options.eventType, " on row=").concat(rowIndex, ", col=").concat(cellIndex, ", data: "), out)();
         if (options.send === true && _a.win["uibuilder"]) _a.win["uibuilder"].send({
-          topic: `${tblSelector} ${options.eventScope} ${options.eventType}`,
+          topic: "".concat(tblSelector, " ").concat(options.eventScope, " ").concat(options.eventType),
           payload: out
         });
       }
@@ -1415,7 +1459,8 @@ var Ui = (_a = class {
    * @returns {string} A cell name
    */
   tblGetCellName(cellEl, pad = 3) {
-    return cellEl.getAttribute("data-col-name") ?? `C${String(cellEl.cellIndex + 1).padStart(pad, "0")}`;
+    var _a2;
+    return (_a2 = cellEl.getAttribute("data-col-name")) != null ? _a2 : "C".concat(String(cellEl.cellIndex + 1).padStart(pad, "0"));
   }
   /** Returns either the existing or calculated column metadata given any table
    * First checks if the data is on the `cols` custom property of the table
@@ -1426,11 +1471,12 @@ var Ui = (_a = class {
    * @returns {Array<columnDefinition>} Column metadata = array of column definitions
    */
   tblGetColMeta(tblEl, options = {}) {
+    var _a2, _b, _c;
     if (!options.pad) options.pad = 3;
     if (tblEl.cols) return tblEl.cols;
-    let cols = tblEl.querySelector("tr[data-col-reference]")?.children;
-    if (!cols) cols = tblEl.querySelector("thead>tr:first-of-type")?.children;
-    if (!cols) cols = tblEl.querySelector("tr:first-of-type")?.children;
+    let cols = (_a2 = tblEl.querySelector("tr[data-col-reference]")) == null ? void 0 : _a2.children;
+    if (!cols) cols = (_b = tblEl.querySelector("thead>tr:first-of-type")) == null ? void 0 : _b.children;
+    if (!cols) cols = (_c = tblEl.querySelector("tr:first-of-type")) == null ? void 0 : _c.children;
     if (!cols) {
       _a.log(1, "Ui:tblGetColMeta", "No columns found in table")();
       return [];
@@ -1441,7 +1487,7 @@ var Ui = (_a = class {
       const hasName = !!cellEl.dataset.colName;
       const colName = cellEl.dataset.colName;
       const colIndex = cellEl.cellIndex + 1;
-      const colKey = hasName ? colName : `C${String(cellEl.cellIndex + 1).padStart(options.pad, "0")}`;
+      const colKey = hasName ? colName : "C".concat(String(cellEl.cellIndex + 1).padStart(options.pad, "0"));
       colData.push({
         index: colIndex,
         hasName,
@@ -1461,21 +1507,21 @@ var Ui = (_a = class {
    */
   tblRemoveRow(tbl, rowIndex, options = {}) {
     const tblType = Object.prototype.toString.apply(tbl);
-    if (Object.prototype.toString.apply(options) !== "[object Object]") throw new Error(`[tblRemoveRow] options must be an object`);
+    if (Object.prototype.toString.apply(options) !== "[object Object]") throw new Error("[tblRemoveRow] options must be an object");
     let tblEl;
     if (tblType === "[object HTMLTableElement]") {
       tblEl = tbl;
     } else {
       tblEl = _a.doc.querySelector(tbl);
-      if (!tblEl) throw new Error(`[tblRemoveRow] Table with CSS Selector "${tbl}" not found`);
+      if (!tblEl) throw new Error('[tblRemoveRow] Table with CSS Selector "'.concat(tbl, '" not found'));
     }
     if (!options.body) options.body = 0;
     const tbodyEl = tblEl.getElementsByTagName("tbody")[options.body];
-    if (!tbodyEl) throw new Error(`[tblAddDataRow] Table must have a tbody tag, tbody section ${options.body} does not exist`);
+    if (!tbodyEl) throw new Error("[tblAddDataRow] Table must have a tbody tag, tbody section ".concat(options.body, " does not exist"));
     tbodyEl.deleteRow(rowIndex);
   }
-  //#endregion --- table handling ---
-  //#endregion ---- external methods ----
+  // #endregion --- table handling ---
+  // #endregion ---- external methods ----
 }, /** Reference to DOM window - must be passed in the constructor
  * Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
  * @type {Window}

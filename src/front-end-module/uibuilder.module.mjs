@@ -24,7 +24,7 @@
 
 // We need the Socket.IO & ui libraries & the uib-var component  --- //
 // @ts-ignore - Note: Only works when using esbuild to bundle
-import Ui from './ui'
+import Ui from './ui.mjs'
 import io from 'socket.io-client' // eslint-disable-line import/no-named-as-default
 import UibVar from '../components/uib-var'
 import UibMeta from '../components/uib-meta'
@@ -1356,10 +1356,14 @@ export const Uib = class Uib {
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
-     * @param {"notify"|"alert"} type Dialog type
-     * @param {object} ui standardised ui data
-     * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
+     * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
+     * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
+     * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
      * @returns {void}
+     * @example
+     * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
+     * @example
+     * Ui.showDialog('alert', null, msg)
      */
     showDialog(type, ui, msg) {
         _ui.showDialog(type, ui, msg)
