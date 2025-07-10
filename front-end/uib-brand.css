@@ -637,6 +637,9 @@ thead th, thead td {
     color: var(--text2);
     font-weight: bolder;
     background: var(--surface4);
+    /* Make table headers stick to page when scrolling */
+    position: -webkit-sticky;
+    position: sticky;
 }
 tfoot th, tfoot td {
     color: var(--text2);
