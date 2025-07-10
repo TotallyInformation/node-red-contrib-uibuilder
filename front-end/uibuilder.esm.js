@@ -952,7 +952,7 @@ var Ui = (_a = class {
       const listEntries = _a.doc.querySelectorAll("".concat(cssSelector, " li"));
       if (listEntries) {
         thisOut.list = {
-          "entries": listEntries.length
+          entries: listEntries.length
         };
       }
     }
@@ -960,7 +960,7 @@ var Ui = (_a = class {
       const listEntries = _a.doc.querySelectorAll("".concat(cssSelector, " dt"));
       if (listEntries) {
         thisOut.list = {
-          "entries": listEntries.length
+          entries: listEntries.length
         };
       }
     }
@@ -970,9 +970,9 @@ var Ui = (_a = class {
       const cols = _a.doc.querySelectorAll("".concat(cssSelector, " > tbody > tr:last-child > *"));
       if (bodyEntries || headEntries || cols) {
         thisOut.table = {
-          "headRows": headEntries ? headEntries.length : 0,
-          "bodyRows": bodyEntries ? bodyEntries.length : 0,
-          "columns": cols ? cols.length : 0
+          headRows: headEntries ? headEntries.length : 0,
+          bodyRows: bodyEntries ? bodyEntries.length : 0,
+          columns: cols ? cols.length : 0
         };
       }
     }
@@ -1281,11 +1281,11 @@ var Ui = (_a = class {
       opts.cols = [];
       Object.keys(data[0]).forEach((col, i) => {
         opts.cols.push({
-          "index": i,
-          "hasName": hasName,
-          "name": hasName ? col : void 0,
-          "key": col != null ? col : i,
-          "title": col
+          index: i,
+          hasName,
+          name: hasName ? col : void 0,
+          key: col != null ? col : i,
+          title: col
         });
       });
     }

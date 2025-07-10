@@ -81,7 +81,7 @@ const Ui = class Ui {
 
         // If a suitable function not passed in, create a dummy one
         if (extLog) Ui.log = extLog
-        else Ui.log = function() { return function() {} }
+        else Ui.log = function() { return function() {} } // eslint-disable-line @stylistic/max-statements-per-line
 
         // If a JSON HTML highlighting function passed then use it, else a dummy fn
         if (jsonHighlight) this.syntaxHighlight = jsonHighlight
@@ -154,7 +154,7 @@ const Ui = class Ui {
                 Ui.log('error', 'Ui:_markDownIt:plugins', 'Could not load plugins, ui_md_plugins is not an array')()
                 return
             }
-            this.ui_md_plugins.forEach( plugin => {
+            this.ui_md_plugins.forEach( (plugin) => {
                 if (typeof plugin === 'string') {
                     Ui.md.use(Ui.win[plugin])
                 } else {
@@ -179,17 +179,17 @@ const Ui = class Ui {
             const notify = new Notification(config.title, config)
             return new Promise( (resolve, reject) => {
                 // Doesn't ever seem to fire (at least in Chromium)
-                notify.addEventListener('close', ev => {
+                notify.addEventListener('close', (ev) => {
                     // @ts-ignore
                     ev.currentTarget.userAction = 'close'
                     resolve(ev)
                 })
-                notify.addEventListener('click', ev => {
+                notify.addEventListener('click', (ev) => {
                     // @ts-ignore
                     ev.currentTarget.userAction = 'click'
                     resolve(ev)
                 })
-                notify.addEventListener('error', ev => {
+                notify.addEventListener('error', (ev) => {
                     // @ts-ignore
                     ev.currentTarget.userAction = 'error'
                     reject(ev)
@@ -436,7 +436,7 @@ const Ui = class Ui {
         if (ui.components) {
             if (!Array.isArray(ui.components)) ui.components = [ui.components]
 
-            ui.components.forEach(async component => {
+            ui.components.forEach(async (component) => {
                 // NOTE: This happens asynchronously but we don't wait
                 import(component)
             })
@@ -445,7 +445,7 @@ const Ui = class Ui {
         if (ui.srcScripts) {
             if (!Array.isArray(ui.srcScripts)) ui.srcScripts = [ui.srcScripts]
 
-            ui.srcScripts.forEach(script => {
+            ui.srcScripts.forEach((script) => {
                 this.loadScriptSrc(script)
             })
         }
@@ -459,7 +459,7 @@ const Ui = class Ui {
         if (ui.srcStyles) {
             if (!Array.isArray(ui.srcStyles)) ui.srcStyles = [ui.srcStyles]
 
-            ui.srcStyles.forEach(sheet => {
+            ui.srcStyles.forEach((sheet) => {
                 this.loadStyleSrc(sheet)
             })
         }
@@ -561,7 +561,7 @@ const Ui = class Ui {
             if (all !== true) els = [Ui.doc.querySelector(compToRemove)]
             else els = Ui.doc.querySelectorAll(compToRemove)
 
-            els.forEach(el => {
+            els.forEach((el) => {
                 try {
                     el.remove()
                 } catch (err) {
@@ -874,7 +874,7 @@ const Ui = class Ui {
             // Apply config.attributes to the 1ST ELEMENT ONLY of the template content
             if (config.attributes) {
                 const el = templateContent.firstElementChild
-                Object.keys(config.attributes).forEach( attrib => {
+                Object.keys(config.attributes).forEach( (attrib) => {
                     // Apply each attribute and value
                     el.setAttribute(attrib, config.attributes[attrib])
                 })
@@ -1116,7 +1116,7 @@ const Ui = class Ui {
         }
 
         fetch(url)
-            .then(response => {
+            .then((response) => {
                 if (response.ok === false) {
                     // Ui.log('warn', 'Ui:loadui:then1', `Could not load '${url}'. Status ${response.status}, Error: ${response.statusText}`)()
                     throw new Error(`Could not load '${url}'. Status ${response.status}, Error: ${response.statusText}`)
@@ -1131,7 +1131,7 @@ const Ui = class Ui {
                 // Returns parsed json to next .then
                 return response.json()
             })
-            .then(data => {
+            .then((data) => {
                 if (data !== undefined) {
                     Ui.log('trace', 'Ui:loadui:then2', 'Parsed JSON successfully obtained')()
                     // Call the _uiManager
@@ -1140,7 +1140,7 @@ const Ui = class Ui {
                 }
                 return false
             })
-            .catch(err => {
+            .catch((err) => {
                 Ui.log('warn', 'Ui:loadui:catch', 'Error. ', err)()
             })
     } // --- end of loadui
@@ -1178,21 +1178,23 @@ const Ui = class Ui {
             attributes: undefined,
 
             isUserInput: node.validity ? true : false,
-            userInput: !node.validity ? undefined : {
-                value: node.value,
-                validity: undefined,
-                willValidate: node.willValidate,
-                valueAsDate: node.valueAsDate,
-                valueAsNumber: node.valueAsNumber,
-                type: node.type,
-            },
+            userInput: !node.validity
+                ? undefined
+                : {
+                    value: node.value,
+                    validity: undefined,
+                    willValidate: node.willValidate,
+                    valueAsDate: node.valueAsDate,
+                    valueAsNumber: node.valueAsNumber,
+                    type: node.type,
+                },
         }
 
         if (['UL', 'OL'].includes(node.nodeName)) {
             const listEntries = Ui.doc.querySelectorAll(`${cssSelector} li`)
             if (listEntries) {
                 thisOut.list = {
-                    'entries': listEntries.length,
+                    entries: listEntries.length,
                 }
             }
         }
@@ -1200,19 +1202,19 @@ const Ui = class Ui {
             const listEntries = Ui.doc.querySelectorAll(`${cssSelector} dt`)
             if (listEntries) {
                 thisOut.list = {
-                    'entries': listEntries.length,
+                    entries: listEntries.length,
                 }
             }
         }
         if (node.nodeName === 'TABLE') {
             const bodyEntries = Ui.doc.querySelectorAll(`${cssSelector} > tbody > tr`)
             const headEntries = Ui.doc.querySelectorAll(`${cssSelector} > thead > tr`)
-            const cols = Ui.doc.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`)  // #eltest > table > tbody > tr:nth-child(3)
+            const cols = Ui.doc.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`) // #eltest > table > tbody > tr:nth-child(3)
             if (bodyEntries || headEntries || cols) {
                 thisOut.table = {
-                    'headRows': headEntries ? headEntries.length : 0,
-                    'bodyRows': bodyEntries ? bodyEntries.length : 0,
-                    'columns': cols ? cols.length : 0,
+                    headRows: headEntries ? headEntries.length : 0,
+                    bodyRows: bodyEntries ? bodyEntries.length : 0,
+                    columns: cols ? cols.length : 0,
                 }
             }
         }
@@ -1344,7 +1346,6 @@ const Ui = class Ui {
      * Ui.showDialog('alert', null, msg)
      */
     showDialog(type, ui, msg) {
-
         // #region -- Check properties --
 
         if (!type || !['notify', 'alert'].includes(type)) {
@@ -1353,9 +1354,9 @@ const Ui = class Ui {
 
         if (!ui) {
             ui = {
-                noAutohide:true,
-                modal:true,
-                appendToast:false,
+                noAutohide: true,
+                modal: true,
+                appendToast: false,
             }
         }
 
@@ -1470,7 +1471,7 @@ const Ui = class Ui {
 
         const out = []
 
-        selection.forEach(node => {
+        selection.forEach((node) => {
             // Specific property asked for ...
             if (propName) {
                 if (propName === 'classes') propName = 'class'
@@ -1544,7 +1545,7 @@ const Ui = class Ui {
      *   @param {HTMLElement|string} opts.parent Default=body. The table will be added as a child. May be an actual HTML element or a CSS Selector
      *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
      */
-    createTable(data=[], opts={parent: 'body',}) {
+    createTable(data = [], opts = { parent: 'body', }) {
         if (!opts.parent) throw new Error('[ui.js:createTable] opts.parent must be provided')
         this.buildHtmlTable(data, opts)
     }
@@ -1567,7 +1568,7 @@ const Ui = class Ui {
      *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
      * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
      */
-    buildHtmlTable(data, opts={}) {
+    buildHtmlTable(data, opts = {}) {
         // If data is an object of objects, convert it to an array of objects
         let rowKeys
         const dataType = Object.prototype.toString.apply(data)
@@ -1601,11 +1602,11 @@ const Ui = class Ui {
             opts.cols = []
             Object.keys(data[0]).forEach( (col, i) => {
                 opts.cols.push({
-                    'index': i,
-                    'hasName': hasName,
-                    'name': hasName ? col : undefined,
-                    'key': col ?? i,
-                    'title': col,
+                    index: i,
+                    hasName: hasName,
+                    name: hasName ? col : undefined,
+                    key: col ?? i,
+                    title: col,
                 })
             })
         }
@@ -1613,7 +1614,7 @@ const Ui = class Ui {
         tbl.cols = opts.cols
 
         // Add the table column headings
-        opts.cols.forEach(col => {
+        opts.cols.forEach((col) => {
             const thEl = Ui.doc.createElement('th')
             thEl.textContent = col.title
             // @ts-ignore
@@ -1674,7 +1675,7 @@ const Ui = class Ui {
      *
      * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
      */
-    tblAddRow(tbl, rowData={}, options={}) {
+    tblAddRow(tbl, rowData = {}, options = {}) {
         const tblType = Object.prototype.toString.apply(tbl)
 
         if (Object.prototype.toString.apply(options) !== '[object Object]') throw new Error(`[tblAddDataRow] options must be an object`)
@@ -1813,7 +1814,7 @@ const Ui = class Ui {
 
                 if (options.eventScope === 'row') {
                     // Loop through each <td> in the clicked row
-                    clickedRow.querySelectorAll('td').forEach(cell => {
+                    clickedRow.querySelectorAll('td').forEach((cell) => {
                         const colName = this.tblGetCellName(cell, options.pad)
                         out[colName] = options.returnType === 'text' ? cell.textContent.trim() : cell.innerHTML
                     })
