@@ -1069,10 +1069,6 @@ const Ui = class Ui2 {
     if (msg.payload && typeof msg.payload === "string") body += `<div>${msg.payload}</div>`;
     if (ui.content) body += `<div>${ui.content}</div>`;
     if (body === "") {
-    let content = "";
-    if (msg && msg.payload && typeof msg.payload === "string") content += `<div>${msg.payload}</div>`;
-    if (ui.content) content += `<div>${ui.content}</div>`;
-    if (content === "") {
       Ui2.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
       return;
     }
