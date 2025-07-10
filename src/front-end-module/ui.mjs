@@ -31,7 +31,7 @@
 // }
 
 const Ui = class Ui {
-    //#region --- Class variables ---
+    // #region --- Class variables ---
     version = '7.5.0-src'
 
     // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
@@ -58,7 +58,7 @@ const Ui = class Ui {
     static md
     /** Optional Markdown-IT Plugins */
     ui_md_plugins
-    //#endregion --- class variables ---
+    // #endregion --- class variables ---
 
     /** Called when `new Ui(...)` is called
      * @param {globalThis} win Either the browser global window or jsdom dom.window
@@ -113,7 +113,7 @@ const Ui = class Ui {
         }
     }
 
-    //#region ---- Internal Methods ----
+    // #region ---- Internal Methods ----
 
     _markDownIt() {
         // If Markdown-IT pre-loaded, then configure it now
@@ -372,7 +372,7 @@ const Ui = class Ui {
             })
         }
 
-        //#region Add Slot content to innerHTML
+        // #region Add Slot content to innerHTML
         if (comp.slot) {
             this.replaceSlot(el, comp.slot)
         }
@@ -380,7 +380,7 @@ const Ui = class Ui {
 
         // TODO Add multi-slot capability (default slot must always be processed first as innerHTML is replaced)
 
-        //#region Add Slot Markdown content to innerHTML IF marked library is available
+        // #region Add Slot Markdown content to innerHTML IF marked library is available
         if (comp.slotMarkdown) {
             this.replaceSlotMarkdown(el, comp)
         }
@@ -727,9 +727,9 @@ const Ui = class Ui {
         })
     } // --- end of _uiUpdate ---
 
-    //#endregion ---- -------- ----
+    // #endregion ---- -------- ----
 
-    //#region ---- External Methods ----
+    // #region ---- External Methods ----
 
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
      * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
@@ -1334,14 +1334,30 @@ const Ui = class Ui {
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
-     * @param {"notify"|"alert"} type Dialog type
-     * @param {object} ui standardised ui data
-     * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
+     * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
+     * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
+     * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
      * @returns {void}
+     * @example
+     * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
+     * @example
+     * Ui.showDialog('alert', null, msg)
      */
     showDialog(type, ui, msg) {
 
         // #region -- Check properties --
+
+        if (!type || !['notify', 'alert'].includes(type)) {
+            type = 'notify' // Default to notify
+        }
+
+        if (!ui) {
+            ui = {
+                noAutohide:true,
+                modal:true,
+                appendToast:false,
+            }
+        }
 
         let body = ''
         // Main body content
@@ -1508,7 +1524,7 @@ const Ui = class Ui {
         this._uiComposeComponent(el, comp)
     }
 
-    //#region --- table handling ---
+    // #region --- table handling ---
 
     /** Column metadata object definition
      * @typedef columnDefinition
@@ -1924,9 +1940,9 @@ const Ui = class Ui {
         tbodyEl.deleteRow(rowIndex)
     }
 
-    //#endregion --- table handling ---
+    // #endregion --- table handling ---
 
-    //#endregion ---- external methods ----
+    // #endregion ---- external methods ----
 }
 
 export default Ui
