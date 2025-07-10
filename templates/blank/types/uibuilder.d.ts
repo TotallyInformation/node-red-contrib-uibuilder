@@ -2,7 +2,7 @@
 
 /**
  * Make the uibuilder instance globally available (from uibuilder.module.d.ts)
- * @version 7.3.0
+ * @version 7.5.0
  */
 declare global {
     // Use typeof import to reference the Uib class from the module

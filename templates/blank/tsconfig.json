@@ -10,5 +10,5 @@
     "baseUrl": "./src",
     "typeRoots": ["./types"]
   },
-  "include": ["types", "src/**/*.js"]
+  "include": ["types", "src/**/*.{js,cjs,mjs}"]
 }
