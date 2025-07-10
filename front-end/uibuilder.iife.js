@@ -60,7 +60,7 @@
      */
     constructor(win, extLog, jsonHighlight) {
       //#region --- Class variables ---
-      __publicField(this, "version", "7.4.1-src");
+      __publicField(this, "version", "7.4.2-src");
       // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
       __publicField(this, "sanitiseExtraTags", ["uib-var"]);
       __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -1081,15 +1081,16 @@
      * @returns {void}
      */
     showDialog(type, ui, msg) {
-      let content = "";
-      if (msg.payload && typeof msg.payload === "string") content += "<div>".concat(msg.payload, "</div>");
-      if (ui.content) content += "<div>".concat(ui.content, "</div>");
-      if (content === "") {
+      let body = "";
+      if (msg.payload && typeof msg.payload === "string") body += "<div>".concat(msg.payload, "</div>");
+      if (ui.content) body += "<div>".concat(ui.content, "</div>");
+      if (body === "") {
         _a.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
         return;
       }
-      if (!ui.title && msg.topic) ui.title = msg.topic;
-      if (ui.title) content = '<p class="toast-head">'.concat(ui.title, "</p><p>").concat(content, "</p>");
+      let title = "";
+      if (ui.title) title = ui.title;
+      else if (msg.topic) title = msg.topic;
       if (ui.noAutohide) ui.noAutoHide = ui.noAutohide;
       if (ui.noAutoHide) ui.autohide = !ui.noAutoHide;
       if (ui.autoHideDelay) {
@@ -1097,11 +1098,14 @@
         ui.delay = ui.autoHideDelay;
       } else ui.autoHideDelay = 1e4;
       if (!Object.prototype.hasOwnProperty.call(ui, "autohide")) ui.autohide = true;
+      let content = "";
+      let icon = "";
       if (type === "alert") {
+        icon = '<svg viewBox="0 0 192.146 192.146"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg>';
         ui.modal = true;
         ui.autohide = false;
-        content = '<svg viewBox="0 0 192.146 192.146" style="width:30;background-color:transparent;"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg> '.concat(content);
       }
+      content = '<div class="toast-head">'.concat(icon).concat(title, '</div><div class="toast-body">').concat(body, "</div>");
       let toaster = _a.doc.getElementById("toaster");
       if (toaster === null) {
         toaster = _a.doc.createElement("div");
@@ -5596,7 +5600,7 @@
 
   // src/front-end-module/uibuilder.module.mjs
   var import_meta = {};
-  var version = "7.4.1-iife";
+  var version = "7.4.2-iife";
   var isMinified = !/param/.test(function(param) {
   });
   function log() {
