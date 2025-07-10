@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-06-25 16:24:03
+updated: 2025-07-09 17:54:25
 author: Julian Knight (Totally Information)
 ---
 

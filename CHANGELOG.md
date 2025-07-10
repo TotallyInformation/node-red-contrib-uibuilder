@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2025-01-17 20:14:34
+updated: 2025-07-10 11:20:28
 ---
 
 # Changelog
@@ -50,6 +50,24 @@ Please see the roadmap in the docs for the backlog of future planned development
 ### Devlopment changes
 
 * **NEW** file `src\front-end-module\reactive.mjs` - contains the new `Reactive` class that implements the reactive variable functionality. This is a new module that can be used in the front-end client library but can also be used independently. This is provided as source only for now. Though it is compiled into the client library as well and so available via the `uibuilder.getReactiveClass()` and `uibuilder.reactive()` functions.
+
+## v7.4.2
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.1...v7.4.2).
+
+* Dependabot updates to dependencies.
+* Merge PR #553 from mutec: Fixes an issue with the glob function in `libs/fs.cjs`. Only impacts Windows users.
+* Fix issue [#546](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/546). Issues with the client ui library's showDialogue function.
+* Update the ui showDialogue function - improving layout and updating the CSS styles in the `uib-brand.css` file.
+
+## v7.4.1
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.0...v7.4.1).
+
+* Dependabot updates to dependencies.
+* Correct typo & update release steps in documentation.
+* ESLINT and TS minor corrections.
+* Remove spurious require from admin-api-v2.
 
 ## v7.4.0
 

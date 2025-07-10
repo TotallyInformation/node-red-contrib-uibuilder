@@ -986,6 +986,8 @@ button.compact {
 }
 .toast {
     /* all: unset;  */
+    background: var(--surface1);
+    color: var(--text2);
     border: 4px solid var(--text3);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow2);
@@ -1006,7 +1008,19 @@ button.compact {
     padding:1em; margin-bottom:.5em; margin-top:.5em;
     z-index:999;
 }
-.toast-head {font-weight:bold}
+.toast-head > svg {
+    width: 30px;
+    background-color: var(--surface1);
+    fill: var(--warning-intense);
+    float: left;
+    margin: .5em .8em 0.5em .1em;
+}
+.toast-head {
+    font-weight: bold
+}
+.toast-body {
+    clear: both;
+}
 
 /*#endregion -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
 
