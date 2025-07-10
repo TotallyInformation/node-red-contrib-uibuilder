@@ -53,6 +53,10 @@ Make sure version numbers are correct and aligned:
 
 * Run `npm run buildDocBundle` to update the docs bundle.
 
+## 03b) Update the client library typescript definitions
+
+These are in `templates\blank\types`. They are updated by asking Copilot *"Update the typescript descripion files in `./templates/blank/types` to match the updated version of `./src/front-end-module/uibuilder.module.mjs`"*
+
 ## 04) Do a final commit & push to the dev branch
 
 * Commit and push
