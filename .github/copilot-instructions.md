@@ -5,6 +5,8 @@
 - Follow project ESLINT configurations
 - Ensure WCAG 2.2 Level AA compliance
 - Apply Shift-Left security practices
+- Adherence to Best Practices: All suggestions, architectural patterns, and solutions must align with widely accepted industry best practices and established design principles. Avoid experimental, obscure, or overly "creative" approaches. Stick to what is proven and reliable.
+- Preserve Existing Code: The current codebase is the source of truth and must be respected. Prefer preservation of existing structure, style, and logic, however, present good alternatives where they exist.
 
 ## Code Style
 
