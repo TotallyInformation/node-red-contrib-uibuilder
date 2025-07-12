@@ -197,6 +197,7 @@
 /** runtimeNode
  * @typedef {object} runtimeNode Local copy of the node instance config + other info
  * @property {Function} send Send a Node-RED msg to an output port
+ * @property {Function} receive Sends the node an input message (e.g. a msg to itself)
  * @property {Function} done Dummy done Function for pre-Node-RED 1.0 servers
  * @property {Function} context get/set context data. Also .flow and .global contexts
  * @property {Function} on Event listeners for the node instance ('input', 'close')
@@ -207,13 +208,15 @@
  * @property {Function} trace Trace level log output
  * @property {Function} debug Debug level log output
  * @property {Function} status Show a status message under the node in the Editor
+ *
  * @property {object=} credentials Optional secured credentials
- * @property {string=} name Internal.
- * @property {string=} id Internal. uid of node instance.
+ * @property {string=} name name of the node
+ * @property {string=} id id of the node
  * @property {string=} type Internal. Type of node instance.
  * @property {string=} z Internal. uid of ???
  * @property {string=} g Internal. uid of ???
  * @property {[Array<string>]=} wires Internal. Array of Array of strings. The wires attached to this node instance (uid's)
+ *
  * @property {number=} _wireCount Count of connected wires
  * @property {string=} _wire ID of connected wire
  * @property {[Array<Function>]=} _closeCallbacks ??
