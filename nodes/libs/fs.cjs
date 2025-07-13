@@ -572,6 +572,7 @@ class UibFs {
     // #region ---- Synchronous methods ----
 
     /** Synchronously try access and error if fail.
+     * @throws Error if required access not available
      * @param {string} path Path to try to access
      * @param {'r'|'w'|'rw'|number} mode Modes required to work: r, w or rw
      */
