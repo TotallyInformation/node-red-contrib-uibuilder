@@ -31,6 +31,19 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### 📌 Highlights
 
+* uibuilder installation will now **ERROR** and stop if the Node-RED userDir folder is not writable. This is to prevent the uibuilder node from being misconfigured and not working correctly. The error message will show the userDir folder that is not writable.
+
+### uibuilder node
+
+* **NEW** Two new Editor actions have been added. This enables you to run these actions from keyboard shortcuts.
+
+  * `open-uibuilder-site` - opens the selected uibuilder instances web site in a new browser tab.
+  * `edit-uibuilder-site` - opens the selected uibuilder instances source folder in your full IDE. THe configuration for this comes from the "Code Editor URL" in the node's advanced properties tab (defaulting to VS Code).
+
+### `uib-brand.css` front-end styles
+
+* Updated the table header styles to make them sticky. This means that the table headers will remain visible when scrolling down a long table. This is particularly useful for large tables with many rows.
+
 ### uibuilder client library
 
 * **NEW** function `uibuilder.reactive(srcvar)`
@@ -42,10 +55,28 @@ Please see the roadmap in the docs for the backlog of future planned development
   > [!WARNING]
   > If the reactive variable is a *primative* type (string, number, boolean), then the you MUST use the `myvar.value = 42` syntax to change the value. If you use `myvar = 42`, then the reactive variable will overwritten. The `value` property will also let you change a primative even if it has been created with `const`.
 
+* Updated the client library type description files. They are available in the `types` folder of the `blank` template. There is a `tsconfig.json` file in the root of that template that includes the type definitions. This means that you can now get better code completion, descriptions and type checking when using the client library in your own code. Feel free to copy the file and the folder to your own projects.
+
+  > [!WARNING]
+  > The type definitions are not automatically updated when the client library is updated. You will need to update them manually by copying the files from UIBUILDER's `templates/blank/src/front-end-module` folder.
+
+* Updated the `showDialog` function:
+
+  * Allow more flexible use. Any of the parameters can now be `null` and the function will use sensible defaults. That lets you simple call `uibuilder.showDialog(null, null, msg)` to get a notification that overlays the rest of the page and can be dismissed simply by clicking anywhere on the page. Note that the actual definition of the function resides in the `ui.js` source module.
+  * Allow any keypress or touch to dismiss the dialog.
+
+* UI library source file renamed from `ui.js` to `ui.mjs`. This is to make it clearer that it is an ES module. The file is still compiled into the client library as before. The gulp build process has been updated to reflect this change and simplified in line with the main client module build.
+
+### uibuilder configuration
+
+* Updated the template middleware files that are copied to `<uibRoot>/.config/*.js-template` on each restart. Added links to uibuilder documentation and pointed out the use of the message and security hooks now available via the Node-RED settings.js file.
+
 ### Documentation
 
 * Rearranged the sidebar for additional clarity.
 * **NEW** "Reactive UI's" in the client section. This is a new section that describes how to use the reactive attributes in UIBUILDER to create dynamic web pages with minimal code. It includes a summary of the available attributes and how to use them.
+* Updated `uib-configuration` documentation to show the latest settings.js options including the msg, client and socket.io hooks. These allow you to enhance or override the `msg._client` data, simulate user authentication, block message send/receive, and redirect unauthenticated users.
+* Updated the `security/authenticated-client-properties` documentation. Added a tip about the hooks in the settings.js file.
 
 ### Devlopment changes
 
@@ -57,8 +88,8 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * Dependabot updates to dependencies.
 * Merge PR #553 from mutec: Fixes an issue with the glob function in `libs/fs.cjs`. Only impacts Windows users.
-* Fix issue [#546](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/546). Issues with the client ui library's showDialogue function.
-* Update the ui showDialogue function - improving layout and updating the CSS styles in the `uib-brand.css` file.
+* Fix issue [#546](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/546). Issues with the client ui library's `showDialog` function.
+* Update the ui `showDialog` function - improving layout and updating the CSS styles in the `uib-brand.css` file.
 
 ## v7.4.1
 
