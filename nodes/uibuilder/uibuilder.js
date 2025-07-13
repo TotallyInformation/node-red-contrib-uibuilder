@@ -154,6 +154,14 @@ function runtimeSetup() {
     if ( uib.RED === null ) return
     const RED = uib.RED
 
+    // Check that the Node-RED userDir folder is writable - completely error if not
+    try {
+        fslib.accessSync( RED.settings.userDir, 'rw' ) // try to access read/write
+        RED.log.trace(`🌐[uibuilder:runtimeSetup] uibRoot folder is read/write accessible. ${RED.settings.userDir}`)
+    } catch (e) {
+        throw new Error(`🌐🛑[uibuilder:runtimeSetup] UIBUILDER cannot be configured,\n  Node-RED userDir folder "${RED.settings.userDir}" is not writable.`, e)
+    }
+
     // Add list all uibuilder apps function to RED.util so it can be used inside function nodes
     // NOTE: Only add things here that require uibuilder configuration data or libraries which won't be available
     //       until after plugins are defined. Most things should be added in the the runtime plugin.
