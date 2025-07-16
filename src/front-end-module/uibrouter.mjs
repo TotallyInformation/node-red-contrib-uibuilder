@@ -4,7 +4,7 @@
  * Included in node-red-contrib-uibuilder but is not dependent on it.
  * May be used in other contexts as desired.
  *
- * Copyright (c) 2023-2024 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2025 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -48,10 +48,10 @@
  * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
  */
 
-class UibRouter { // eslint-disable-line no-unused-vars
-    //#region --- Variables ---
+class UibRouter {
+    // #region --- Variables ---
     /** Class version */
-    static version = '1.4.0' // 2024-04-07
+    static version = '7.5.0-src'
     /** Ensures only 1 class instance on a page */
     static #instanceExists = false
     /** Options for Markdown-IT if available (set in constructor) */
@@ -75,9 +75,9 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
     safety = 0
     uibuilder = false
-    //#endregion --- ----- ---
+    // #endregion --- ----- ---
 
-    //#region --- Internal Methods ---
+    // #region --- Internal Methods ---
     /** Class constructor
      * @param {UibRouterConfig} routerConfig Configuration object
      */
@@ -128,12 +128,16 @@ class UibRouter { // eslint-disable-line no-unused-vars
             console.info('[uibrouter] Pre-loading all external templates')
             // Load all external route templates async in parallel - NB: Object.values works on both arrays and objects
             // Note that final `then` is called even if no external routes are given
-            Promise.allSettled(Object.values(routerConfig.routes).filter(r => r.type && r.type === 'url').map(this._loadExternal))
-                .then( results => {
-                    results.filter( res => res.status === 'rejected').forEach(res => {
+            Promise.allSettled(
+                Object.values(routerConfig.routes)
+                    .filter(r => r.type && r.type === 'url')
+                    .map(this._loadExternal)
+            )
+                .then( (results) => {
+                    results.filter( res => res.status === 'rejected').forEach((res) => {
                         console.error(res.reason)
                     })
-                    results.filter( res => res.status === 'fulfilled').forEach(res => {
+                    results.filter( res => res.status === 'fulfilled').forEach((res) => {
                         console.log('allSettled results', res, results)
                         this._appendExternalTemplates(res.value)
                     })
@@ -141,7 +145,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
                     this._start()
                     return true
                 })
-                .catch( reason => {
+                .catch( (reason) => {
                     console.error(reason)
                 })
         }
@@ -173,7 +177,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         const head = document.getElementsByTagName('head')[0]
         let errors = 0
         // Append the loaded content to the main container
-        loadedElements.forEach(element => {
+        loadedElements.forEach((element) => {
             if (Array.isArray(element)) {
                 console.error(...element)
                 errors++
@@ -192,11 +196,11 @@ class UibRouter { // eslint-disable-line no-unused-vars
         await this.doRoute(this.keepHashFromUrl(window.location.hash))
 
         // After initial route set, listen for url hash changes and process route change
-        window.addEventListener('hashchange', (event) => this._hashChange(event) )
+        window.addEventListener('hashchange', event => this._hashChange(event) )
 
         // Events on fully loaded ...
         document.dispatchEvent(new CustomEvent('uibrouter:loaded'))
-        if (this.uibuilder) uibuilder.set('uibrouter', 'loaded') // eslint-disable-line no-undef
+        if (this.uibuilder) uibuilder.set('uibrouter', 'loaded')
 
         this.#startDone = true // Don't run this again
     }
@@ -233,7 +237,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         // Fetch failed?
         if (response.ok === false) throw new Error(`[uibrouter:loadExternal] Fetch failed to return data for route: ${routeDefinition.id}, src: ${routeDefinition.src}. Status: ${response.statusText} (${response.status})`, [routeDefinition.id, routeDefinition.src, response.status, response.statusText])
 
-        /** @type {string & any[]} */
+        /** type {string & any[]} */
         let htmlText = await response.text()
 
         // If Markdown & library loaded, convert from markdown to HTML
@@ -259,7 +263,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
      */
     _applyScripts(tempContainer) {
         const scripts = tempContainer.querySelectorAll('script')
-        scripts.forEach( scr => {
+        scripts.forEach( (scr) => {
             const newScript = document.createElement('script')
             newScript.textContent = scr.innerText
             tempContainer.append(newScript)
@@ -286,7 +290,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
                 if (window['hljs']) {
                     if (lang && window['hljs'].getLanguage(lang)) {
                         try {
-                            return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window['hljs'].highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
+                            return `<pre><code class="hljs border language-${lang}" data-language="${lang}" title="Source language: '${lang}'">${window['hljs'].highlight(str, { language: lang, ignoreIllegals: true, }).value}</code></pre>`
                         } finally { } // eslint-disable-line no-empty
                     } else {
                         try {
@@ -304,7 +308,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
                 console.error('[uibrouter:_markDownIt:plugins] Could not load plugins, config.mdPlugins is not an array')
                 return
             }
-            this.config.mdPlugins.forEach( plugin => {
+            this.config.mdPlugins.forEach( (plugin) => {
                 if (typeof plugin === 'string') {
                     UibRouter.md.use(window[plugin])
                 } else {
@@ -320,7 +324,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
      */
     _normaliseRouteDefns(routeDefns) {
         if (!Array.isArray(routeDefns)) routeDefns = [routeDefns]
-        routeDefns.forEach( defn => {
+        routeDefns.forEach( (defn) => {
             let fmt = defn.format || 'html'
             fmt = fmt.toLowerCase()
             if (fmt === 'markdown') fmt = 'md'
@@ -352,7 +356,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
             details: this.getRouteConfigById(newRouteId),
         })
     }
-    //#endregion --- ----- --
+    // #endregion --- ----- --
 
     /** Process a routing request
      * All errors throw so make sure to try/catch calls to this method.
@@ -412,8 +416,8 @@ class UibRouter { // eslint-disable-line no-unused-vars
         // If no defined valid route id, undo and report error
         if (!newRouteId || !this.routeIds.has(newRouteId)) {
             // Events on route change fail ...
-            document.dispatchEvent(new CustomEvent('uibrouter:route-change-failed', { detail: { newRouteId, oldRouteId } }))
-            if (this.uibuilder) uibuilder.set('uibrouter', 'route change failed') // eslint-disable-line no-undef
+            document.dispatchEvent(new CustomEvent('uibrouter:route-change-failed', { detail: { newRouteId, oldRouteId, }, }))
+            if (this.uibuilder) uibuilder.set('uibrouter', 'route change failed')
             // If ID's the same, this happened on load and would keep failing so revert to default
             if (newRouteId === oldRouteId) oldRouteId = ''
             // Don't throw an error here, it stops the menu highlighting from working
@@ -467,8 +471,8 @@ class UibRouter { // eslint-disable-line no-unused-vars
         // Roll back the route change if the new route cannot be shown
         if (routeShown === false) {
             // Events on route change fail ...
-            document.dispatchEvent(new CustomEvent('uibrouter:route-change-failed', { detail: { newRouteId, oldRouteId } }))
-            if (this.uibuilder) uibuilder.set('uibrouter', 'route change failed') // eslint-disable-line no-undef
+            document.dispatchEvent(new CustomEvent('uibrouter:route-change-failed', { detail: { newRouteId, oldRouteId, }, }))
+            if (this.uibuilder) uibuilder.set('uibrouter', 'route change failed')
             // If ID's the same, this happened on load and would keep failing so revert to default
             if (newRouteId === oldRouteId) oldRouteId = ''
             // Don't throw an error here, it stops the menu highlighting from working
@@ -496,7 +500,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         this.setCurrentMenuItems()
 
         // Events on route changed ...
-        document.dispatchEvent(new CustomEvent('uibrouter:route-changed', { detail: { newRouteId, oldRouteId } }))
+        document.dispatchEvent(new CustomEvent('uibrouter:route-changed', { detail: { newRouteId, oldRouteId, }, }))
         this._uibRouteChange(newRouteId)
     }
 
@@ -507,7 +511,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         if (!extOther) throw new Error('[uibrouter:loadOther] At least 1 load definition must be provided')
         if (!Array.isArray(extOther)) extOther = [extOther]
 
-        extOther.forEach( async f => {
+        extOther.forEach( async (f) => {
             const parent = document.querySelector(f.container)
             if (!parent) return // Nothing to do if parent does not exist on page
 
@@ -520,7 +524,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
             // Fetch failed?
             if (response.ok === false) throw new Error(`[uibrouter:loadOther] Fetch failed to return data '${f.id}', src: '${f.src}'. Status: ${response.statusText} (${response.status})`, [f.id, f.src, response.status, response.statusText])
 
-            /** @type {string & any[]} */
+            /** type {string & any[]} */
             const htmlText = await response.text()
 
             // We fetched it, so now load it to the DOM
@@ -571,7 +575,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
         }
 
         // Then tell the world
-        document.dispatchEvent(new CustomEvent('uibrouter:route-loaded', { routeId: routeId }))
+        document.dispatchEvent(new CustomEvent('uibrouter:route-loaded', { routeId: routeId, }))
 
         // If we get here, everything is good
         return true
@@ -664,8 +668,13 @@ class UibRouter { // eslint-disable-line no-unused-vars
      * @returns {string[]} Array of route id's or route url hashes
      */
     routeList(returnHash) {
-        if (returnHash === true) return this.routeIds.map((r) => returnHash === true ? `#${r.id}` : r.id)
-        return this.routeIds
+        const routeIds = [...this.routeIds]
+        if (returnHash === true) {
+            return routeIds.map((r) => {
+                return returnHash === true ? `#${r.id}` : r.id
+            })
+        }
+        return [...this.routeIds]
     }
 
     /** Add new route definitions to the existing ones
@@ -680,14 +689,18 @@ class UibRouter { // eslint-disable-line no-unused-vars
         // and update the routeIds list
         this._updateRouteIds()
         // Let everyone know it all finished
-        document.dispatchEvent(new CustomEvent('uibrouter:routes-added', { detail: routeDefn }))
+        document.dispatchEvent(new CustomEvent('uibrouter:routes-added', { detail: routeDefn, }))
         if (this.uibuilder) uibuilder.set('uibrouter', 'routes added')
 
         if (this.config.templateLoadAll) {
             // Load all external route templates async in parallel - NB: Object.values works on both arrays and objects
-            Promise.allSettled(Object.values(routeDefn).filter(r => r.type && r.type === 'url').map(this._loadExternal))
-                .then( results => {
-                    results.filter( res => res.status === 'rejected').forEach(res => {
+            Promise.allSettled(
+                Object.values(routeDefn)
+                    .filter(r => r.type && r.type === 'url')
+                    .map(this._loadExternal)
+            )
+                .then( (results) => {
+                    results.filter( res => res.status === 'rejected').forEach((res) => {
                         console.error(res.reason)
                     })
                     // results.filter( res => res.status === 'fulfilled').forEach(res => {})
@@ -697,11 +710,11 @@ class UibRouter { // eslint-disable-line no-unused-vars
                     // and update the routeIds list
                     this._updateRouteIds()
                     // Let everyone know it all finished
-                    document.dispatchEvent(new CustomEvent('uibrouter:routes-added', { detail: routeDefn }))
+                    document.dispatchEvent(new CustomEvent('uibrouter:routes-added', { detail: routeDefn, }))
                     if (this.uibuilder) uibuilder.set('uibrouter', 'routes added')
                     return true
                 })
-                .catch( reason => {
+                .catch( (reason) => {
                     console.error(reason)
                 })
         }
@@ -732,17 +745,17 @@ class UibRouter { // eslint-disable-line no-unused-vars
 
         if (!Array.isArray(templateIds)) templateIds = [templateIds]
 
-        templateIds.forEach( routeId => {
+        templateIds.forEach( (routeId) => {
             if (externalOnly === true && !this.isRouteExternal(routeId)) return
             this.unloadTemplate(routeId, externalOnly)
         } )
     }
 
-    //#region --- utils for page display & processing ---
+    // #region --- utils for page display & processing ---
     setCurrentMenuItems() {
         // const items = document.querySelectorAll(`li[data-route="${this.currentRouteId}"]`)
         const items = document.querySelectorAll('li[data-route]')
-        items.forEach( item => {
+        items.forEach( (item) => {
             if (item.dataset.route === this.currentRouteId) {
                 item.classList.add('currentRoute')
                 item.setAttribute('aria-current', 'page')
@@ -782,7 +795,7 @@ class UibRouter { // eslint-disable-line no-unused-vars
             return '<p class="border error">Could not render Markdown<p>'
         }
     }
-    //#endregion ---- ----- ----
+    // #endregion ---- ----- ----
 
     // TODO
     // deleteRoutes(aRoutes) {
