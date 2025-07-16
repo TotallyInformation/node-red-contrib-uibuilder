@@ -11,5 +11,5 @@
         "noEmit": true,
         "typeRoots": [".", "./types"]
       },
-      "include": ["./types", "./**/*.js", "uibuilder.module.mjs", "ui.mjs"]
+      "include": ["./types", "./**/*.js", "uibuilder.module.mjs", "ui.mjs", "uibrouter.mjs"]
 }
