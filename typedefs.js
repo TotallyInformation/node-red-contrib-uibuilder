@@ -682,6 +682,15 @@
  * @property {string} src REQUIRED. url of external template to load
  * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
  */
+/** routeMenu
+ * @typedef {object} routeMenu
+ * @property {string} id REQUIRED. Unique (to page) ID. Used as the menu container
+ * @property {"horizontal"|"vertical"} menuType OPTIONAL. Type of menu to create. Default is "horizontal".
+
+ * @property {string} src REQUIRED. url of external template to load
+ * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
+ * @property {string} [title] OPTIONAL. Text to use as a short title for the route
+ */
 
 /** Node-RED WidgetTypedInputType
  * @typedef { Array<"bin"|"bool"|"date"|"env"|"flow"|"global"|"json"|"jsonata"|"msg"|"num"|"re"|"str"> } WidgetTypedInputType

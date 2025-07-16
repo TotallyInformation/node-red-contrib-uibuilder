@@ -3,12 +3,14 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-07-09 17:54:25
+updated: 2025-07-16 21:29:42
 author: Julian Knight (Totally Information)
 ---
 
 ## In Progress
 
+* Router improvements
+  * [ ] Auto-menu generation for menus.
 * Background rework (may take several releases):
   * [ ] Changing `uib-brand.css` to use more modern CSS, leaving it up to LightningCSS to build for older browsers. In particular, using nested definitions.
   * [ ] Remove remaining ~~5~~ 4 fsextra functions from fs lib. `ensureDirSync` is completed.

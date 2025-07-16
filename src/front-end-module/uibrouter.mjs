@@ -46,7 +46,16 @@
  * @property {string} id REQUIRED. Unique (to page) ID. Will be applied to loaded content.
  * @property {string} src REQUIRED. url of external template to load
  * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
- */
+ *
+ * @typedef {object} routeMenu
+ * @property {string} id REQUIRED. Unique (to page) ID. Used as the menu container
+ * @property {"horizontal"|"vertical"} [menuType] OPTIONAL. Type of menu to create. Default is "horizontal"
+ * @property {string} [label] OPTIONAL. Text to use as an accessible label for the nav element
+ *
+ * @property {string} src REQUIRED. url of external template to load
+ * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
+ * @property {string} [title] OPTIONAL. Text to use as a short title for the route
+*/
 
 class UibRouter {
     // #region --- Variables ---
@@ -120,6 +129,8 @@ class UibRouter {
         if (this.config.otherLoad) this.loadOther(this.config.otherLoad)
 
         this._updateRouteIds()
+
+        if (this.config.routeMenus) this.createMenus(this.config.routeMenus)
 
         // Only pre-load all templates if requested (default is not to)
         if (this.config.templateLoadAll === false) {
@@ -357,6 +368,107 @@ class UibRouter {
         })
     }
     // #endregion --- ----- --
+
+    /** Create requested navigation menus
+     * @param {Array<routeMenu>} menus Array of menu definitions. Each entry is a routeMenu object
+     */
+    createMenus(menus) {
+        if (!Array.isArray(menus) || menus.length < 1) {
+            console.warn('[uibrouter:createMenus] No valid routeMenus array provided or is empty')
+            return
+        }
+
+        menus.forEach((menu) => {
+            if (!menu.id) {
+                console.warn(`[uibrouter:createMenus] Invalid menu definition: ${JSON.stringify(menu)}`)
+                return
+            }
+            // Get a reference to the menu container or exit (don't throw)
+            const menuContainer = document.getElementById(menu.id)
+            if (!menuContainer) {
+                console.warn(`[uibrouter:createMenus] Menu container with id '${menu.id}' not found.`)
+                return
+            }
+            menuContainer.style.position = 'relative'
+
+            // TODO:
+            // - Set aria references using reflection. https://developer.mozilla.org/en-US/docs/Web/API/Element#instance_properties_reflected_from_aria_element_references
+            // - Vertical menus
+            // - menu icon & tooltip
+            // - entry icons and tooltips (from description)
+
+            // Create a new nav element
+            const navEl = document.createElement('nav')
+            if (menu?.label) navEl.setAttribute('aria-label', menu.label)
+            // Add the "horizontal" (default) or "vertical" class to navEl
+            if (menu?.menuType !== 'vertical') navEl.classList.add('horizontal')
+            else navEl.classList.add('vertical')
+
+            // Button to togggle the menu (only shown on small screens & horizontal menus)
+            const btnEl = document.createElement('button')
+            btnEl.classList.add('menu-toggle')
+            btnEl.innerHTML = `
+                <svg viewBox="0 0 0.8 0.8" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0.1 0.15h0.6a0.05 0.05 0 0 1 0 0.1H0.1a0.05 0.05 0 1 1 0 -0.1m0 0.2h0.6a0.05 0.05 0 0 1 0 0.1H0.1a0.05 0.05 0 1 1 0 -0.1m0 0.2h0.6a0.05 0.05 0 0 1 0 0.1H0.1a0.05 0.05 0 0 1 0 -0.1"/>
+                </svg>
+            `
+            // ariaControls => ulEl
+            navEl.appendChild(btnEl)
+
+            // List to contain the menu items
+            const ulEl = document.createElement('ul')
+            ulEl.classList.add('routemenu')
+            ulEl.setAttribute('role', 'menubar')
+            this.config.routes.forEach((route) => {
+                if (!route.id) return // No route id, skip this one
+                // Create a list item for the route
+                const liEl = document.createElement('li')
+                liEl.setAttribute('role', 'none') // No role for the list item
+                // Create a link for the route
+                const aEl = document.createElement('a')
+                aEl.setAttribute('role', 'menuitem') // Set the role for the link
+                aEl.setAttribute('href', `#${route.id}`) // Set the href
+                aEl.setAttribute('data-route', route.id) // Set the data-route attribute
+                aEl.innerText = route?.title || route.id // Use the title or id as the link text
+                liEl.appendChild(aEl)
+                ulEl.appendChild(liEl)
+            })
+            navEl.appendChild(ulEl)
+
+            menuContainer.appendChild(navEl)
+
+            // Open menu on nav click if hamburger is visible and menu is closed
+            navEl.addEventListener('mouseup', (e) => {
+                if (window.innerWidth > 600) return
+                if (ulEl.contains(e.target)) return // Just let normal routing work
+                toggleMenu()
+            })
+            // Close menu on resize above 600px
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 600) {
+                    closeMenu()
+                }
+            })
+            /** toggle the menu */
+            function toggleMenu() {
+                if (navEl.getAttribute('aria-expanded') === 'true') {
+                    closeMenu()
+                } else {
+                    setTimeout(() => {
+                        navEl.setAttribute('aria-expanded', true)
+                        btnEl.setAttribute('aria-expanded', true)
+                        document.addEventListener('mouseup', closeMenu)
+                    }, 0)
+                }
+            }
+            /** Close the menu */
+            function closeMenu() {
+                navEl.setAttribute('aria-expanded', false)
+                btnEl.setAttribute('aria-expanded', false)
+                document.addEventListener('mouseup', closeMenu)
+            }
+        })
+    }
 
     /** Process a routing request
      * All errors throw so make sure to try/catch calls to this method.
@@ -754,7 +866,7 @@ class UibRouter {
     // #region --- utils for page display & processing ---
     setCurrentMenuItems() {
         // const items = document.querySelectorAll(`li[data-route="${this.currentRouteId}"]`)
-        const items = document.querySelectorAll('li[data-route]')
+        const items = document.querySelectorAll('li[data-route], a[data-route]')
         items.forEach( (item) => {
             if (item.dataset.route === this.currentRouteId) {
                 item.classList.add('currentRoute')

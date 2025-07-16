@@ -52,6 +52,7 @@
       this._setRouteContainer();
       if (this.config.otherLoad) this.loadOther(this.config.otherLoad);
       this._updateRouteIds();
+      if (this.config.routeMenus) this.createMenus(this.config.routeMenus);
       if (this.config.templateLoadAll === false) {
         this._start();
       } else {
@@ -244,6 +245,78 @@
       });
     }
     // #endregion --- ----- --
+    /** Create requested navigation menus
+     * @param {Array<routeMenu>} menus Array of menu definitions. Each entry is a routeMenu object
+     */
+    createMenus(menus) {
+      if (!Array.isArray(menus) || menus.length < 1) {
+        console.warn("[uibrouter:createMenus] No valid routeMenus array provided or is empty");
+        return;
+      }
+      menus.forEach((menu) => {
+        if (!menu.id) {
+          console.warn("[uibrouter:createMenus] Invalid menu definition: ".concat(JSON.stringify(menu)));
+          return;
+        }
+        const menuContainer = document.getElementById(menu.id);
+        if (!menuContainer) {
+          console.warn("[uibrouter:createMenus] Menu container with id '".concat(menu.id, "' not found."));
+          return;
+        }
+        menuContainer.style.position = "relative";
+        const navEl = document.createElement("nav");
+        if (menu == null ? void 0 : menu.label) navEl.setAttribute("aria-label", menu.label);
+        if ((menu == null ? void 0 : menu.menuType) !== "vertical") navEl.classList.add("horizontal");
+        else navEl.classList.add("vertical");
+        const btnEl = document.createElement("button");
+        btnEl.classList.add("menu-toggle");
+        btnEl.innerHTML = '\n                <svg viewBox="0 0 0.8 0.8" xmlns="http://www.w3.org/2000/svg">\n                    <path d="M0.1 0.15h0.6a0.05 0.05 0 0 1 0 0.1H0.1a0.05 0.05 0 1 1 0 -0.1m0 0.2h0.6a0.05 0.05 0 0 1 0 0.1H0.1a0.05 0.05 0 1 1 0 -0.1m0 0.2h0.6a0.05 0.05 0 0 1 0 0.1H0.1a0.05 0.05 0 0 1 0 -0.1"/>\n                </svg>\n            ';
+        navEl.appendChild(btnEl);
+        const ulEl = document.createElement("ul");
+        ulEl.classList.add("routemenu");
+        ulEl.setAttribute("role", "menubar");
+        this.config.routes.forEach((route) => {
+          if (!route.id) return;
+          const liEl = document.createElement("li");
+          liEl.setAttribute("role", "none");
+          const aEl = document.createElement("a");
+          aEl.setAttribute("role", "menuitem");
+          aEl.setAttribute("href", "#".concat(route.id));
+          aEl.setAttribute("data-route", route.id);
+          aEl.innerText = (route == null ? void 0 : route.title) || route.id;
+          liEl.appendChild(aEl);
+          ulEl.appendChild(liEl);
+        });
+        navEl.appendChild(ulEl);
+        menuContainer.appendChild(navEl);
+        navEl.addEventListener("mouseup", (e) => {
+          if (window.innerWidth > 600) return;
+          if (ulEl.contains(e.target)) return;
+          toggleMenu();
+        });
+        window.addEventListener("resize", () => {
+          if (window.innerWidth > 600) {
+            closeMenu();
+          }
+        });
+        function toggleMenu() {
+          if (navEl.getAttribute("aria-expanded") === "true") {
+            closeMenu();
+          } else {
+            setTimeout(() => {
+              navEl.setAttribute("aria-expanded", true);
+              btnEl.setAttribute("aria-expanded", true);
+              document.addEventListener("mouseup", closeMenu);
+            }, 0);
+          }
+        }
+        function closeMenu() {
+          navEl.setAttribute("aria-expanded", false);
+          btnEl.setAttribute("aria-expanded", false);
+          document.addEventListener("mouseup", closeMenu);
+        }
+      });
+    }
     /** Process a routing request
      * All errors throw so make sure to try/catch calls to this method.
      * @param {PointerEvent|MouseEvent|HashChangeEvent|TouchEvent|string} routeSource Either string containing route id or DOM Event object either click/touch on element containing `href="#routeid"` or Hash URL change event
@@ -517,7 +590,7 @@
     }
     // #region --- utils for page display & processing ---
     setCurrentMenuItems() {
-      const items = document.querySelectorAll("li[data-route]");
+      const items = document.querySelectorAll("li[data-route], a[data-route]");
       items.forEach((item) => {
         if (item.dataset.route === this.currentRouteId) {
           item.classList.add("currentRoute");
