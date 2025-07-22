@@ -80,7 +80,7 @@ const { version, } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
 const release = '7.5.0'
 // Wanted node.js version - used for ESBUILD
-const nodeVersion = 'node18.15'
+const nodeVersion = 'node18.5'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js Build Version: ${nodeVersion}`)
 
@@ -342,8 +342,8 @@ async function buildUiModule() {
         throw new Error(`UI Library ESM (unminified) Build failed. ${e.message}`)
     }
 
-    try { // ESBuild ui.mjs as a Node.js library
-        const outFilePath = `nodes/libs/ui.js`
+    try { // ESBuild ui.mjs as a Node.js cjs library
+        const outFilePath = `nodes/libs/ui.cjs`
         await esbuild.build({
             entryPoints: [entryPoint],
             outfile: outFilePath,
@@ -354,6 +354,7 @@ async function buildUiModule() {
             sourcemap: false,
             loader: {
                 '.mjs': 'js',
+                '.cjs': 'js',
             },
             packages: 'external',
             target: esbTarget,
@@ -484,300 +485,6 @@ async function buildModule(config) {
         throw new Error(`[${config.name} Library] ESM (unminified) Build failed. ${e.message}`)
     }
 }
-
-// #region -- ESbuild components --
-/** ESBuild front-end as IIFE minified
- * @param {Function} cb Callback
- */
-// function buildUibVarIIFEmin(cb) {
-//     src('src/components/uib-var.js')
-//         .pipe(gulpEsbuild({
-//             outfile: 'uib-var.iife.min.js',
-//             bundle: true,
-//             format: 'iife',
-//             platform: 'browser',
-//             minify: true,
-//             sourcemap: true,
-//             target: [
-//                 // 'es2019',
-//                 // Start of 2019
-//                 'chrome72',
-//                 'safari12.1',
-//                 'firefox65',
-//                 'opera58',
-
-//                 // For private class fields:
-//                 // 'chrome74',   // Apr 23, 2019
-//                 // 'opera62',    // Jun 27, 2019
-//                 // 'edge79',     // Jan 15, 2020
-//                 // 'safari14.1', // Apr 26, 2021
-//                 // 'firefox90',  // Jul 13, 2021
-
-//                 // If we need top-level await
-//                 // 'chrome89',  // March 1, 2021
-//                 // 'edge89',
-//                 // 'opera75',   // Mar 24, 2021
-//                 // 'firefox89', // Jun 1, 2021
-//                 // 'safari15',  // Sep 20, 2021
-//             ]
-//         }))
-//         .on('error', function(err) {
-//             console.error('[buildUibVarIIFEmin] ERROR ', err)
-//             cb(err)
-//         })
-//         // .pipe(greplace(/="(.*)-src"/, '="$1-iife.min"'))
-//         .pipe(dest(feDest))
-//         .on('end', function() {
-//             // in case of success
-//             cb()
-//         })
-// }
-/** ESBuild front-end as IIFE (not minified)
- * @param {Function} cb Callback
- */
-// function buildUibVarIIFE(cb) {
-//     src('src/components/uib-var.js')
-//         .pipe(gulpEsbuild({
-//             outfile: 'uib-var.iife.js',
-//             bundle: true,
-//             format: 'iife',
-//             platform: 'browser',
-//             minify: false,
-//             sourcemap: false,
-//             target: [
-//                 'es2020',
-//             ]
-//         }))
-//         .on('error', function(err) {
-//             console.error('[buildUibVarIIFE] ERROR ', err)
-//             cb(err)
-//         })
-//         // .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-iife"'))
-//         // .pipe(debug({title: '>>> '}))
-//         .pipe(dest('front-end/'))
-//         // .pipe(dest(`${feDest}/`))
-//         .on('end', function() {
-//             // in case of success
-//             cb()
-//         })
-// }
-
-// #endregion -- ---- --
-
-// #region -- ESbuild uibrouter --
-// function buildUibRouterIIFE(cb) {
-//     src(`${feModuleSrc}/uibrouter.js`)
-//         .pipe(gulpEsbuild({
-//             outfile: 'uibrouter.iife.js',
-//             bundle: true,
-//             format: 'iife',
-//             platform: 'browser',
-//             minify: false,
-//             sourcemap: false,
-//             target: [
-//                 'es2020',
-//             ],
-//         }))
-//         .on('error', function(err) {
-//             console.error('[buildUibRouterIIFE] ERROR ', err)
-//             cb(err)
-//         })
-//         .pipe(dest('front-end/utils/'))
-//         .on('end', function() {
-//             cb()
-//         })
-// }
-// function buildUibRouterIIFEmin(cb) {
-//     src(`${feModuleSrc}/uibrouter.js`)
-//         .pipe(gulpEsbuild({
-//             outfile: 'uibrouter.iife.min.js',
-//             bundle: true,
-//             format: 'iife',
-//             platform: 'browser',
-//             minify: true,
-//             sourcemap: true,
-//             target: [
-//                 'es2020',
-//             ],
-//         }))
-//         .on('error', function(err) {
-//             console.error('[buildUibRouterIIFE] ERROR ', err)
-//             cb(err)
-//         })
-//         .pipe(dest('front-end/utils/'))
-//         .on('end', function() {
-//             cb()
-//         })
-// }
-// function buildUibRouterESM(cb) {
-//     src(`${feModuleSrc}/uibrouter.js`)
-//         .pipe(gulpEsbuild({
-//             outfile: 'uibrouter.esm.js',
-//             bundle: true,
-//             format: 'esm',
-//             platform: 'browser',
-//             minify: false,
-//             sourcemap: false,
-//             target: [
-//                 'es2020',
-//             ],
-//         }))
-//         .on('error', function(err) {
-//             console.error('[buildUibRouterIIFE] ERROR ', err)
-//             cb(err)
-//         })
-//         .pipe(dest('front-end/utils/'))
-//         .on('end', function() {
-//             cb()
-//         })
-// }
-// function buildUibRouterESMmin(cb) {
-//     src(`${feModuleSrc}/uibrouter.js`)
-//         .pipe(gulpEsbuild({
-//             outfile: 'uibrouter.esm.min.js',
-//             bundle: true,
-//             format: 'esm',
-//             platform: 'browser',
-//             minify: true,
-//             sourcemap: true,
-//             target: [
-//                 'es2020',
-//             ],
-//         }))
-//         .on('error', function(err) {
-//             console.error('[buildUibRouterIIFE] ERROR ', err)
-//             cb(err)
-//         })
-//         .pipe(dest('front-end/utils/'))
-//         .on('end', function() {
-//             cb()
-//         })
-// }
-// #endregion -- ---- --
-
-// #region -- tests --
-/** Pack (Uglify) front-end IIFE ES6 task
- * @param {Function} cb Callback
- */
-function packfeIIFEes6(cb) {
-    try {
-        src(`${feModuleSrc}/uibuilder.module.mjs`)
-            .pipe(gulpEsbuild({
-                outfile: 'uibuilder.es6.min.js',
-                bundle: true,
-                format: 'iife',
-                platform: 'browser',
-                minify: true,
-                sourcemap: true,
-                target: [
-                    'es2016',
-                    // Start of 2019
-                    // 'chrome72',
-                    // 'safari12.1',
-                    // 'firefox65',
-                    // 'opera58',
-
-                    // For private class fields:
-                    // 'chrome74',   // Apr 23, 2019
-                    // 'opera62',    // Jun 27, 2019
-                    // 'edge79',     // Jan 15, 2020
-                    // 'safari14.1', // Apr 26, 2021
-                    // 'firefox90',  // Jul 13, 2021
-
-                    // If we need top-level await
-                    // 'chrome89',  // March 1, 2021
-                    // 'edge89',
-                    // 'opera75',   // Mar 24, 2021
-                    // 'firefox89', // Jun 1, 2021
-                    // 'safari15',  // Sep 20, 2021
-                ],
-            }))
-            .pipe(greplace(/="(.*)-mod"/, '="$1-es6.min"'))
-            .pipe(dest(feDestAlt))
-
-        src(`${feModuleSrc}/uibuilder.module.mjs`)
-            .pipe(gulpEsbuild({
-                outfile: 'uibuilder.es6.js',
-                bundle: true,
-                format: 'iife',
-                platform: 'browser',
-                minify: false,
-                sourcemap: false,
-                target: [
-                    'es2016',
-                ],
-            }))
-            .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-es6"'))
-            .pipe(dest(feDestAlt))
-
-        // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.mjs`, `${feDest}/uibuilder.esm.js`)
-    } catch (e) {
-        console.error('Could not pack uibuilder.module.mjs for es6', e)
-    }
-    cb()
-}
-/** Pack (Uglify) front-end IIFE ES5 task - DOES NOT WORK!
- * @param {Function} cb Callback
- */
-function packfeIIFEes5(cb) {
-    try {
-        src(`${feModuleSrc}/uibuilder.module.mjs`)
-            .pipe(gulpEsbuild({
-                outfile: 'uibuilder.es5.min.js',
-                bundle: true,
-                format: 'iife',
-                platform: 'browser',
-                minify: true,
-                sourcemap: true,
-                target: [
-                    'es5',
-                    // Start of 2019
-                    // 'chrome72',
-                    // 'safari12.1',
-                    // 'firefox65',
-                    // 'opera58',
-
-                    // For private class fields:
-                    // 'chrome74',   // Apr 23, 2019
-                    // 'opera62',    // Jun 27, 2019
-                    // 'edge79',     // Jan 15, 2020
-                    // 'safari14.1', // Apr 26, 2021
-                    // 'firefox90',  // Jul 13, 2021
-
-                    // If we need top-level await
-                    // 'chrome89',  // March 1, 2021
-                    // 'edge89',
-                    // 'opera75',   // Mar 24, 2021
-                    // 'firefox89', // Jun 1, 2021
-                    // 'safari15',  // Sep 20, 2021
-                ],
-            }))
-            .pipe(greplace(/="(.*)-mod"/, '="$1-es5.min"'))
-            .pipe(dest(feDestAlt))
-
-        src(`${feModuleSrc}/uibuilder.module.mjs`)
-            .pipe(gulpEsbuild({
-                outfile: 'uibuilder.es5.js',
-                bundle: true,
-                format: 'iife',
-                platform: 'browser',
-                minify: false,
-                sourcemap: false,
-                target: [
-                    'es5',
-                ],
-            }))
-            .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-es5"'))
-            .pipe(dest(feDestAlt))
-
-        // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.mjs`, `${feDest}/uibuilder.esm.js`)
-    } catch (e) {
-        console.error('Could not pack uibuilder.module.mjs for es5', e)
-    }
-    cb()
-}
-//#endregion
-
 // #endregion ---- ---- ----
 
 // Allows iOS Safari back to v12, excludes IE
@@ -911,35 +618,6 @@ const buildme = parallel(
 )
 
 const buildNewFe = buildFeModule
-
-/* Ignored for now
-function buildNodeLibs(cb) {
-    src(`src/libs/*.js`)
-        .pipe(gulpEsbuild({
-            // outfile: 'test-execa.js',
-            // outdir: 'libs',
-            bundle: false,
-            format: 'cjs', // CommonJS
-            platform: 'node',
-            minify: true,
-            sourcemap: true,
-            packages: 'external',
-            target: [
-                nodeVersion,
-            ]
-        }))
-        .on('error', function(err) {
-            console.error('[buildNodeLibs] ERROR ', err)
-            cb(err)
-        })
-        .pipe(debug({title: '>>> '}))
-        .pipe(dest('nodes/libs/'))
-        .on('end', function() {
-            // in case of success
-            cb()
-        })
-}
-*/
 
 /** Watch for changes during development - remember to include any dependency import files */
 function watchme(cb) {
