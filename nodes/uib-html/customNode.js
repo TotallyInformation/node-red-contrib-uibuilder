@@ -1,8 +1,8 @@
-/* eslint-disable sonarjs/no-duplicate-string */
+/* eslint-disable jsdoc/valid-types */
 /** Send an update to a specific front-end element.
  * The FE library will update the UI accordingly.
  *
- * Copyright (c) 2023-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2025 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,13 +25,13 @@
  * @typedef {import('../../typedefs').uibHtmlNode} uibHtmlNode <= Change this to be specific to this node
  */
 
-//#region ----- Module level variables ---- //
+// #region ----- Module level variables ---- //
 
 const jsdom = require('jsdom')
-const { JSDOM } = jsdom
+const { JSDOM, } = jsdom
 
 // Ui class copied from src/front-end-module/ui.js
-const Ui = require('../libs/ui.js')
+const Ui = require('../libs/ui.js').default // Grab default otherwise this fails thanks to ESBUILD
 // uibuilder file handler
 const fs = require('../libs/fs.cjs')
 
@@ -47,9 +47,9 @@ const mod = {
     nodeName: 'uib-html', // Note that 'uib-update' will be replaced with actual node-name. Do not forget to also add to package.json
 }
 
-//#endregion ----- Module level variables ---- //
+// #endregion ----- Module level variables ---- //
 
-//#region ----- Module-level support functions ----- //
+// #region ----- Module-level support functions ----- //
 
 /** 3) Run whenever a node instance receives a new input msg
  * NOTE: `this` context is still the parent (nodeInstance).
@@ -59,8 +59,7 @@ const mod = {
  * @param {Function} done Per msg finish function, node-red v1+
  * @this {runtimeNode & uibHtmlNode}
  */
-async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
-
+async function inputMsgHandler(msg, send, done) {
     // const RED = mod.RED
 
     // TODO: Add config switch to wrap in template
@@ -68,7 +67,7 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
     // If msg has _ui property - is it from the client? If so, remove it.
     if (msg._ui && msg._ui.from && msg._ui.from === 'client') delete msg._ui
 
-    let template = /*html*/'<!DOCTYPE html>'
+    let template = /* html*/'<!DOCTYPE html>'
     if (this.useTemplate === true) {
         if (msg.template && (typeof msg.template) === 'string') template = msg.template
         else template = await fs.getTemplateFile('blank', 'src/index.html')
@@ -84,7 +83,7 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
         ui.ui(msg._ui)
 
         // Copy the input msg
-        const out = { ...msg }
+        const out = { ...msg, }
         // remove _ui
         delete out._ui
 
@@ -135,7 +134,7 @@ function nodeInstance(config) {
     this.on('input', inputMsgHandler)
 } // ---- End of nodeInstance ---- //
 
-//#endregion ----- Module-level support functions ----- //
+// #endregion ----- Module-level support functions ----- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
  * @param {runtimeRED} RED The Node-RED runtime object
