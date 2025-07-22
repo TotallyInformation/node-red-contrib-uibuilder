@@ -78,9 +78,9 @@ const stdio = 'inherit'
 // @ts-ignore Find the module version in the package.json
 const { version, } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
-const release = '7.4.2'
+const release = '7.4.3'
 // Wanted node.js version - used for ESBUILD
-const nodeVersion = 'node18.12'
+const nodeVersion = 'node18.15'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js Build Version: ${nodeVersion}`)
 
