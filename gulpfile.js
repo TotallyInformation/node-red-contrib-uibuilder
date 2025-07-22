@@ -80,7 +80,7 @@ const { version, } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
 const release = '7.5.0'
 // Wanted node.js version - used for ESBUILD
-const nodeVersion = 'node18.12'
+const nodeVersion = 'node18.15'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js Build Version: ${nodeVersion}`)
 
