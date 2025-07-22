@@ -291,6 +291,36 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 console.groupEnd()
             }, 1500)
         }
+
+        // TODO: EXPERIMENTAL - Maybe dynamically add things to the help panel?
+        // // Create a mutation observer to watch for changes to the inner text of any element with the class '.red-ui-help.title'
+        // const observer = new MutationObserver((mutations) => {
+        //     mutations.forEach((mutation) => {
+        //         if (mutation.type === 'childList') {
+        //             console.log('🌐 MutationObserver: Detected childList mutation:', mutation.target.classList, mutation)
+        //             // Check if the target element has the class 'red-ui-help title'
+        //             if (mutation.target.classList.contains('red-ui-help-title')) {
+        //                 console.log('🌐 MutationObserver: Detected change in red-ui-help title element:', mutation.target);
+        //                 // If it does, update the title text
+        //                 const txt = mutation.target.innerText
+        //                 if (txt === 'uibuilder') mutation.target.innerText = 'uibuilder - Node-RED Front-End Builder'
+        //             }
+        //         } else {
+        //             console.log('🌐 MutationObserver: Detected mutation of type:', mutation.type);
+        //         }
+        //     })
+        // })
+        // // start observing from `div.red-ui-help`
+        // const helpDiv = document.querySelector('.red-ui-panel > .red-ui-help')
+        // if (helpDiv) {
+        //     console.log('🌐 MutationObserver: Starting to observe red-ui-help element:', helpDiv);
+        //     observer.observe(helpDiv, {
+        //         childList: true, // Watch for changes to the children of the target node
+        //         subtree: true, // Watch for changes in all descendants of the target node
+        //     })
+        // } else {
+        //     console.warn('🌐 MutationObserver: No red-ui-help element found to observe.')
+        // }
     },
     // onremove: function() {},
 })
