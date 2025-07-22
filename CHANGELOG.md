@@ -24,6 +24,12 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 <!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
 
+## v7.4.3
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.2...v7.4.3).
+
+** Bug fix for [Issue #557](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/557) - Building ui.js with ESBUILD was causing the require to fail in the `uib-html` node. Needed to adjust the code from `require('./libs/ui.js')` to `require('./libs/ui.js').default`.
+
 ## v7.4.2
 
 [Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.1...v7.4.2).
