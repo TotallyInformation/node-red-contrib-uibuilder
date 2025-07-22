@@ -29,11 +29,11 @@ const express = require('express')
 const path = require('path')
 const fslib = require('./fs.cjs')
 // const uiblib = require('./uiblib')  // Utility library for uibuilder
-const web = require('./web')
-const sockets = require('./socket')
-const packageMgt = require('./package-mgt')
-const tilib = require('./tilib') // General purpose library (by Totally Information)
-const uib = require('../libs/uibGlobalConfig.cjs') // UIBUILDER's global config object
+const web = require('./web.cjs')
+const sockets = require('./socket.cjs')
+const packageMgt = require('./package-mgt.cjs')
+const tilib = require('./tilib.cjs') // General purpose library (by Totally Information)
+const uib = require('./uibGlobalConfig.cjs') // UIBUILDER's global config object
 
 const errUibRootFldr = new Error('uib.rootFolder is null')
 

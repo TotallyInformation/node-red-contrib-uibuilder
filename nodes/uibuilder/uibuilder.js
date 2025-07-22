@@ -31,9 +31,9 @@
 // #region ------ Require packages ------ //
 
 // uibuilder custom
-const uiblib = require('../libs/uiblib.js') // Utility library for uibuilder
-const tilib = require('../libs/tilib.js') // General purpose library (by Totally Information)
-const packageMgt = require('../libs/package-mgt.js')
+const uiblib = require('../libs/uiblib.cjs') // Utility library for uibuilder
+const tilib = require('../libs/tilib.cjs') // General purpose library (by Totally Information)
+const packageMgt = require('../libs/package-mgt.cjs')
 const fslib = require('../libs/fs.cjs') // File/folder handling library (by Totally Information)
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
 try { // templateConf
@@ -44,13 +44,13 @@ try { // templateConf
 }
 try { // sockets
     // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
-    var sockets = require('../libs/socket.js') // eslint-disable-line no-var
+    var sockets = require('../libs/socket.cjs') // eslint-disable-line no-var
 } catch (e) {
     console.error('[uibuilder] REQUIRE SOCKET failed::', e)
 }
 try { // web
     // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
-    var web = require('../libs/web.js') // eslint-disable-line no-var
+    var web = require('../libs/web.cjs') // eslint-disable-line no-var
 } catch (e) {
     console.error('[uibuilder] REQUIRE WEB failed::', e)
 }

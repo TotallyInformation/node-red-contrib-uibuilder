@@ -30,8 +30,8 @@
 const { join }     = require('path')
 const { existsSync, getFileMeta } = require('./fs.cjs')
 const socketio = require('socket.io')
-const { urlJoin }    = require('./tilib')    // General purpose library (by Totally Information)
-const { setNodeStatus }   = require('./uiblib')   // Utility library for uibuilder
+const { urlJoin }    = require('./tilib.cjs')    // General purpose library (by Totally Information)
+const { setNodeStatus }   = require('./uiblib.cjs')   // Utility library for uibuilder
 // const security = require('./sec-lib') // uibuilder security module
 
 /** Parse x-forwarded-for headers.

@@ -33,13 +33,13 @@
 
 const { join, parse, } = require('path')
 const express = require('express')
-const socketjs = require('./socket.js')
+const socketjs = require('./socket.cjs')
 // const { getNs } = require('./socket.js') // NO! This gives an error because of incorrect `this` binding
-const { getClientId, sortApps, } = require('./uiblib')
+const { getClientId, sortApps, } = require('./uiblib.cjs')
 const { accessSync, existsSync, mkdirSync, fgSync, } = require('./fs.cjs')
-const { mylog, urlJoin, } = require('./tilib') // dumpReq, mylog
+const { mylog, urlJoin, } = require('./tilib.cjs') // dumpReq, mylog
 // WARNING: Don't try to deconstruct this, if you do the initial uibPackageJson access fails for some reason
-const packageMgt = require('./package-mgt.js')
+const packageMgt = require('./package-mgt.cjs')
 
 // Filename for default web page
 const defaultPageName = 'index.html'
@@ -156,7 +156,7 @@ class UibWeb {
         this.adminRouter = express.Router(this.#routerOptions) // eslint-disable-line new-cap
 
         /** Serve up the v3 admin apis on /<httpAdminRoot>/uibuilder/admin/ */
-        this.adminRouterV3 = require('./admin-api-v3')(this.uib, this.log)
+        this.adminRouterV3 = require('./admin-api-v3.cjs')(this.uib, this.log)
         this.adminRouter.use('/admin', this.adminRouterV3)
         this.routers.admin.push( { name: 'Admin API v3', path: `${this.RED.settings.httpAdminRoot}uibuilder/admin`, desc: 'Consolidated admin APIs used by the uibuilder Editor panel', type: 'Router', } )
 
@@ -187,7 +187,7 @@ class UibWeb {
         } )
 
         // TODO: Move v2 API's to V3
-        this.adminRouterV2 = require('./admin-api-v2')(this.log)
+        this.adminRouterV2 = require('./admin-api-v2.cjs')(this.log)
         this.routers.admin.push( { name: 'Admin API v2', path: `${this.RED.settings.httpAdminRoot}uibuilder/*`, desc: 'Various older admin APIs used by the uibuilder Editor panel', type: 'Router', } )
 
         /** Serve up the admin root for uibuilder on /<httpAdminRoot>/uibuilder/ */
@@ -203,7 +203,7 @@ class UibWeb {
         if (!this.uibRouter) throw new Error('this.uibRouter is undefined')
 
         /** Serve up the v3 admin apis on /<httpAdminRoot>/uibuilder/admin/ */
-        this.userApiRouter = require('./user-apis')(this.uib, this.log)
+        this.userApiRouter = require('./user-apis.cjs')(this.uib, this.log)
         // @ts-ignore
         this.userApiRouter.myname = 'uibUserApiRouter'
         this.uibRouter.use('/api', this.userApiRouter)

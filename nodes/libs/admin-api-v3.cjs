@@ -28,10 +28,10 @@ const express = require('express')
 const path = require('path')
 const fg = require('fast-glob') // https://github.com/mrmlnc/fast-glob
 const fslib = require('./fs.cjs') // Utility library for uibuilder
-const web = require('./web')
-const sockets = require('./socket')
-const packageMgt = require('./package-mgt')
-const templateConf = require('../../templates/template_dependencies') // Template configuration metadata
+const web = require('./web.cjs')
+const sockets = require('./socket.cjs')
+const packageMgt = require('./package-mgt.cjs')
+const templateConf = require('../../templates/template_dependencies.js') // Template configuration metadata
 const elements = require('../elements/elements.js')
 
 const v3AdminRouter = express.Router() // eslint-disable-line new-cap

@@ -27,7 +27,7 @@
 
 const { join } = require('node:path')
 const { copy, copySync, existsSync, writeJson } = require('./fs.cjs')
-const { runOsCmd, runOsCmdSync } = require('./uiblib.js')
+const { runOsCmd, runOsCmdSync } = require('./uiblib.cjs')
 
 class UibPackages {
     //#region ---- Class Variables ----

@@ -24,8 +24,8 @@
  * @typedef {import('../../typedefs.js').MsgAuth} MsgAuth
  * @typedef {import('../../typedefs.js').uibNode} uibNode
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
- * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
- * @typedef {import('../../typedefs').runtimeNode} runtimeNode
+ * @typedef {import('../../typedefs.js').runtimeNodeConfig} runtimeNodeConfig
+ * @typedef {import('../../typedefs.js').runtimeNode} runtimeNode
  * typedef {import('../typedefs.js')}
  * typedef {import('node-red')} Red
  * typedef {import('Express')} Express
