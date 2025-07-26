@@ -40,6 +40,7 @@ const { accessSync, existsSync, mkdirSync, fgSync, } = require('./fs.cjs')
 const { mylog, urlJoin, } = require('./tilib.cjs') // dumpReq, mylog
 // WARNING: Don't try to deconstruct this, if you do the initial uibPackageJson access fails for some reason
 const packageMgt = require('./package-mgt.cjs')
+const path = require('path')
 
 // Filename for default web page
 const defaultPageName = 'index.html'
@@ -342,11 +343,23 @@ class UibWeb {
         // Serve the ping endpoint (../uibuilder/ping)
         this.servePing()
 
+        // If filing system path `<uibRoot>/.public/` exists, AND if using a custom server, then serve it at `<httpNodeRoot>/uibuilder/.public/`
+        this._servePublicRoot()
+
         // TODO: This needs some tweaking to allow the cache settings to change - currently you'd have to restart node-red.
         if (uib.commonFolder === null) throw new Error('uib.commonFolder is null')
         // Serve up the master common folder (e.g. <httpNodeRoute>/uibuilder/common/)
-        this.uibRouter.use( urlJoin(uib.commonFolderName), express.static( uib.commonFolder, uib.staticOpts ) )
-        this.routers.user.push( { name: 'Central Common Resources', path: `${this.uib.httpRoot}/uibuilder/${uib.commonFolderName}/*`, desc: 'Common resource library', type: 'Static', folder: uib.commonFolder, } )
+        this.uibRouter.use(
+            urlJoin(uib.commonFolderName),
+            express.static( uib.commonFolder, uib.staticOpts)
+        )
+        this.routers.user.push({
+            name: 'Central Common Resources',
+            path: `${this.uib.httpRoot}/uibuilder/${uib.commonFolderName}/*`,
+            desc: 'Common resource library',
+            type: 'Static',
+            folder: uib.commonFolder,
+        })
 
         // Assign the uibRouter to the ../uibuilder url path
         this.app.use( urlJoin(uib.moduleName), this.uibRouter )
@@ -434,6 +447,36 @@ class UibWeb {
             throw new Error(`setMasterStaticFolder: Cannot serve master production build folder, cannot access to read: '${uib.masterStaticFeFolder}'`)
         }
     } // --- End of setMasterStaticFolder() --- //
+
+    _servePublicRoot() {
+        const uib = this.uib
+        const log = this.log
+
+        // Only serve the public root if using a custom server
+        if ( uib.customServer.isCustom !== true ) {
+            log.trace('🌐[uibuilder:web:_servePublicRoot] Not using custom server so not serving public root')
+            return
+        }
+
+        // use fs library to check if <uibRoot>/.public/ exists
+        const publicFolder = join(uib.rootFolder, '.public')
+        if ( existsSync(publicFolder) ) {
+            this.app.get(
+                '/',
+                express.static( publicFolder, uib.staticOpts)
+            )
+            this.routers.user.push({
+                name: 'Custom Web Root',
+                path: `${this.uib.httpRoot}/*`,
+                desc: 'When using a custom server, this is the <uibRoot>/.public folder for static files',
+                type: 'Static',
+                folder: publicFolder,
+            })
+            log.info(`🌐[uibuilder:web:_servePublicRoot] Custom web server in use. Serving custom root URL from '${publicFolder}'`)
+        } else {
+            log.info(`🌐[uibuilder:web:_servePublicRoot] Public folder '${publicFolder}' does not exist, not serving custom root URL`)
+        }
+    }
 
     /** Add ExpressJS Routes for all installed packages & ensure <uibRoot>/package.json is up-to-date. */
     serveVendorPackages() {
