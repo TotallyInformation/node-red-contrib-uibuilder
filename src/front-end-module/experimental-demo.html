@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../uibuilder/images/node-blue.ico">
+    <title>UIBuilder Experimental Features Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .demo-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .auto-grid {
+            margin: 10px 0;
+        }
+        
+        .grid-item {
+            background: #f0f0f0;
+            padding: 10px;
+            text-align: center;
+            border-radius: 3px;
+        }
+        
+        .uib-experimental-dialog {
+            padding: 20px;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .uib-dialog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .uib-dialog-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .uib-dialog-footer {
+            margin-top: 15px;
+            text-align: right;
+        }
+        
+        .uib-dialog-footer button {
+            margin-left: 10px;
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .uib-primary {
+            background: #007cba;
+            color: white;
+            border-color: #007cba;
+        }
+    </style>
+</head>
+<body>
+    <h1>UIBuilder Experimental Features Demo</h1>
+    
+    <div class="demo-section"><h2>Reactive Binding Demo</h2>
+        <p>Type in the input to see reactive binding in action:</p>
+        
+        <input type="text" id="nameInput" placeholder="Enter your name">
+        <p>Hello, <span uib-bind="userName">World</span>!</p>
+        
+        <label>
+            <input type="checkbox" id="showGreeting"> Show greeting
+        </label>
+        <div uib-show="showGreeting" style="display: none;">
+            <p>Welcome to the experimental features demo!</p>
+        </div>
+    </div>
+    
+    <div class="demo-section"><h2>Template Engine Demo</h2>
+        <button onclick="updateTemplate()">Update Template</button>
+        
+        <template id="greeting-template">
+            <h3>{{title}}</h3>
+            <p>Hello {{user.name}}, you have {{user.notifications}} notifications.</p>
+            <p>Today is {{date}}.</p>
+        </template>
+        
+        <div uib-template="#greeting-template" id="template-output">
+            <!-- Template will be rendered here -->
+        </div>
+    </div>
+    
+    <div class="demo-section"><h2>Auto Layout Demo</h2>
+        <button onclick="applyGridLayout()">Apply Grid Layout</button>
+        <button onclick="applyFlexLayout()">Apply Flex Layout</button>
+        
+        <div class="auto-grid">
+            <div class="grid-item">Item 1</div>
+            <div class="grid-item">Item 2</div>
+            <div class="grid-item">Item 3</div>
+            <div class="grid-item">Item 4</div>
+            <div class="grid-item">Item 5</div>
+            <div class="grid-item">Item 6</div>
+        </div>
+    </div>
+    
+    <div class="demo-section"><h2>Enhanced Dialog Demo</h2>
+        <button onclick="showConfirmDialog()">Show Confirmation Dialog</button>
+        <button onclick="showCustomDialog()">Show Custom Dialog</button>
+        
+        <p id="dialog-result">Dialog result will appear here</p>
+    </div>
+
+    <!-- Include the uibuilder library first -->
+    <script type="module">
+        // This would normally import the actual uibuilder module
+        // For demo purposes, we'll create a minimal mock
+        window.mockUib = {
+            set: function(prop, val) {
+                this[prop] = val;
+                // Trigger any change listeners
+                if (this._changeListeners && this._changeListeners[prop]) {
+                    this._changeListeners[prop].forEach(cb => cb(val));
+                }
+            },
+            get: function(prop) {
+                return this[prop];
+            },
+            onChange: function(prop, callback) {
+                if (!this._changeListeners) this._changeListeners = {};
+                if (!this._changeListeners[prop]) this._changeListeners[prop] = [];
+                this._changeListeners[prop].push(callback);
+            },
+            _dispatchCustomEvent: function(name, data) {
+                window.dispatchEvent(new CustomEvent(name, { detail: data }));
+            }
+        };
+        
+        // Mock the Uib class for the experimental module to extend
+        window.Uib = class {
+            constructor() {
+                Object.assign(this, window.mockUib);
+            }
+            
+            set(prop, val) { return window.mockUib.set.call(this, prop, val); }
+            get(prop) { return window.mockUib.get.call(this, prop); }
+            onChange(prop, cb) { return window.mockUib.onChange.call(this, prop, cb); }
+            _dispatchCustomEvent(name, data) { return window.mockUib._dispatchCustomEvent(name, data); }
+        };
+        
+        // Import the experimental module
+        import('../uibuilder/experimental.mjs').then(module => {
+            const uibExperimental = module.default;
+            window.uibExp = uibExperimental;
+            
+            console.log('Experimental features loaded:', uibExperimental.getExperimentalMeta());
+            
+            // Set up reactive bindings
+            setupReactiveDemo(uibExperimental);
+            
+            // Make functions available globally for button clicks
+            window.updateTemplate = () => updateTemplate(uibExperimental);
+            window.applyGridLayout = () => applyGridLayout(uibExperimental);
+            window.applyFlexLayout = () => applyFlexLayout(uibExperimental);
+            window.showConfirmDialog = () => showConfirmDialog(uibExperimental);
+            window.showCustomDialog = () => showCustomDialog(uibExperimental);
+        }).catch(error => {
+            console.error('Failed to load experimental module:', error);
+        });
+        
+        function setupReactiveDemo(uibExp) {
+            // Set up reactive binding for name input
+            const nameInput = document.getElementById('nameInput');
+            nameInput.addEventListener('input', (e) => {
+                uibExp.set('userName', e.target.value);
+            });
+            
+            // Set up reactive binding for checkbox
+            const showCheckbox = document.getElementById('showGreeting');
+            showCheckbox.addEventListener('change', (e) => {
+                uibExp.set('showGreeting', e.target.checked);
+            });
+            
+            // Initialize values
+            uibExp.set('userName', 'World');
+            uibExp.set('showGreeting', false);
+        }
+        
+        function updateTemplate(uibExp) {
+            const templateData = {
+                title: 'Welcome Dashboard',
+                user: {
+                    name: 'John Doe',
+                    notifications: Math.floor(Math.random() * 10)
+                },
+                date: new Date().toLocaleDateString()
+            };
+            
+            uibExp.applyTemplates(templateData);
+        }
+        
+        function applyGridLayout(uibExp) {
+            uibExp.applyAutoLayout('.auto-grid', {
+                type: 'grid',
+                columns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                gap: '10px'
+            });
+        }
+        
+        function applyFlexLayout(uibExp) {
+            uibExp.applyAutoLayout('.auto-grid', {
+                type: 'flex',
+                wrap: 'wrap',
+                gap: '10px',
+                justify: 'space-around'
+            });
+        }
+        
+        async function showConfirmDialog(uibExp) {
+            const result = await uibExp.showExperimentalDialog({
+                title: 'Confirm Action',
+                template: '<p>Are you sure you want to proceed?</p>',
+                modal: true
+            });
+            
+            document.getElementById('dialog-result').textContent = `Confirmation result: ${result}`;
+        }
+        
+        async function showCustomDialog(uibExp) {
+            const result = await uibExp.showExperimentalDialog({
+                title: 'Custom Dialog',
+                template: `
+                    <div style="text-align: center;">
+                        <p>🎉 This is a custom dialog with experimental features!</p>
+                        <p>It supports HTML templating and custom styling.</p>
+                        <input type="text" placeholder="Enter something..." style="margin: 10px; padding: 5px;">
+                    </div>
+                `,
+                modal: true
+            });
+            
+            document.getElementById('dialog-result').textContent = `Custom dialog result: ${result}`;
+        }
+    </script>
+</body>
+</html>

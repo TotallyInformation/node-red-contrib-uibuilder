@@ -485,6 +485,58 @@ async function buildModule(config) {
         throw new Error(`[${config.name} Library] ESM (unminified) Build failed. ${e.message}`)
     }
 }
+
+/** Build the EXPERIMENTAL front-end module only as an ESM using esbuild
+ * @throws {Error} If build fails
+ */
+async function buildExperimentalModule() {
+    /** Configuration object for the experimental module build
+     * @param {object} config Configuration object for the module build
+     * @param {string} config.name Name of the module
+     * @param {string} config.entryPoint Path to the entry point file of the module
+     * @param {string} config.outPoint Base path for the output files of the module
+     * @param {RegExp} config.versionSource Regular expression to match the version string in the entry point file
+     */
+    const config = {
+        name: 'experimental',
+        entryPoint: `${feModuleSrc}/experimental.mjs`,
+        outPoint: `${feDest}/experimental`,
+        versionSource: /version\: \'(.*)-experimental\'/,
+        versionTarget: 'version: "$1-experimental"',
+    }
+    const entryPoint = config.entryPoint
+    const outPoint = config.outPoint
+
+    const fileContent = await fs.readFile(entryPoint, 'utf8')
+    const v = fileContent.match(config.versionSource)
+    if (v[1] !== release) {
+        console.warn(`[${config.name} Library] WARNING: Version in ${entryPoint} does not match requested release version. Expected '${release}-src' but found '${v[1]}-src'.`)
+        // await fs.writeFile(entryPoint, fileContent.replace(/static version = '(.*)-src'/, `static version = '${release}-src'`), 'utf8')
+    }
+
+    try { // ESM not-minified
+        const outFilePath = `${outPoint}.mjs`
+        await esbuild.build({
+            entryPoints: [entryPoint],
+            outfile: outFilePath,
+            bundle: true,
+            format: 'esm',
+            platform: 'browser',
+            minify: true,
+            sourcemap: true,
+            loader: {
+                '.mjs': 'js',
+            },
+            target: esbTarget,
+        })
+        // Update the output version string if build was successful
+        const fileContent = await fs.readFile(outFilePath, 'utf8')
+        await fs.writeFile(outFilePath, fileContent.replace(config.versionSource, config.versionTarget), 'utf8')
+    } catch (e) {
+        throw new Error(`[${config.name} Library] ESM (unminified) Build failed. ${e.message}`)
+    }
+}
+
 // #endregion ---- ---- ----
 
 // Allows iOS Safari back to v12, excludes IE
@@ -640,6 +692,9 @@ function watchme(cb) {
     })
     watch(['src/front-end-module/uibrouter.mjs'], buildRouterModule).on('change', (path) => {
         console.log(`uibrouter File changed: ${path}`)
+    })
+    watch(['src/front-end-module/experimental.mjs'], buildExperimentalModule).on('change', (path) => {
+        console.log(`experimental File changed: ${path}`)
     })
     // watch('src/front-end-module/tinyDom.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     // watch('src/front-end-module/logger.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
