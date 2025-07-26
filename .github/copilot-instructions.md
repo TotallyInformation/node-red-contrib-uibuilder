@@ -28,6 +28,7 @@
 ### Documentation
 
 - Include JSDoc for functions and classes
+- Place the first line of JSDoc description on the same line as the /**
 - Add @param and @returns tags
 - Document thrown errors
 - Include usage examples for complex functions

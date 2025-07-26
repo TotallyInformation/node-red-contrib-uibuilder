@@ -37,7 +37,8 @@
  * @property {object} FunctionGlobalContext Add values, Functions, packages to the Global context variable store.
  * @property {Function} mqttReconnectTime : [Getter/Setter],
  * @property {Function} serialReconnectTime : [Getter/Setter],
- * @property {Function} debugMaxLength : [Getter/Setter],
+ * @property {number} debugMaxLength : [Getter/Setter],
+ * @property {number} debugStatusLength : [Getter/Setter],
  * @property {Function} debugUseColors : [Getter/Setter],
  * @property {string} flowFile : [Getter/Setter],
  * @property {Function} flowFilePretty : [Getter/Setter],
@@ -139,6 +140,7 @@
  * @property {Function} version Get the Node-RED version [Function: getVersion],
  * @property {Function} require : [Function: requireModule],
  * @property {Function} import : [Function: importModule],
+ * @property {Function} _ Locale translation function. Use with `RED._('key')`
  *
  * @property {object} auth :
  * @property {Function} auth.needsPermission : [Function: needsPermission]
@@ -208,6 +210,7 @@
  * @property {Function} trace Trace level log output
  * @property {Function} debug Debug level log output
  * @property {Function} status Show a status message under the node in the Editor
+ * @property {Function} _ Locale translation function. Use with `node._('key')`
  *
  * @property {object=} credentials Optional secured credentials
  * @property {string=} name name of the node

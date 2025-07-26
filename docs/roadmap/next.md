@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-07-16 21:29:42
+updated: 2025-07-26 14:40:07
 author: Julian Knight (Totally Information)
 ---
 
@@ -11,28 +11,31 @@ author: Julian Knight (Totally Information)
 
 * Router improvements
   * [ ] Auto-menu generation for menus.
+    * [ ] Add search option. `<search>`/`<div role="search">` element that can be used to search the menu.
+    * [ ] Add nestable menu support.
+    * [ ] Add vertical menu support.
+    * [ ] ? Add tabbed menu support ?
 * Background rework (may take several releases):
   * [ ] Changing `uib-brand.css` to use more modern CSS, leaving it up to LightningCSS to build for older browsers. In particular, using nested definitions.
   * [ ] Remove remaining ~~5~~ 4 fsextra functions from fs lib. `ensureDirSync` is completed.
   * [ ] Move all nodes editor html to use modules. [Ref](https://discourse.nodered.org/t/text-javascript-vs-module-in-html/94215/4)
-  * [ ] Rename all .js node.js files to .cjs to avoid confusion with ESM modules.
+  * [ ] Rename all .js node.js files to .cjs to avoid confusion with ESM modules. (libs now all done).
   * [ ] No need to pass uib var now it is in a module, can simply require it. (Except for libs/fs which is already used by the uib module).
 
 ## To Fix
 
 * Failed rename of instance folder may get stuck.
-* Form CSS: 
-  * Input fields should not have a black background in light mode.
 
 ## To Do
 
+* [x] Add an experimental library that extends the uibuilder client library to allow playing with possible future features.
 * [ ] Dialog
   * [ ] component(?) that can consume a template and display it as a dialog. [ref](https://discourse.nodered.org/t/uibuilder-help-in-developing-a-dashboard/97478/18)
 * [ ] Reactivity - phase 1
   * [x] Create a reactive wrapper `uibuilder.reactive()`.
     * [x] Move to separate class file
     * [ ] Add `reactive` and `getReactiveClass` to function reference.
-  * [ ] Create a MutationObserver for any DOM attributes that start with `:` (`uib-bind`) or `@` (`uib-on`).
+  * [ ] Create a MutationObserver for any DOM attributes that start with `:` (`uib-bind` - binds an attribute to a variable) or `@` (`uib-on` - binds an event to a function).
     * [ ] Extend to allow `uib-show` (show/hide elements).
     * [ ] Extend to allow `uib-text` (innerText).
     * [ ] Extend to allow `uib-model` (two-way data binding for input elements).
@@ -96,6 +99,7 @@ author: Julian Knight (Totally Information)
   *  It should be created dynamically based on the instance. So that it is pre-defined with the correct Socket.IO namespace, etc.
 * A manifest file for offline use.
   *  Requires a change to the templates.
+* Mount instance dependencies (e.g. libraries listed in the instances package.json). This would allow the instance to use the libraries without having to install them in the global node_modules.
 
 
 ## Answers needed
@@ -105,21 +109,14 @@ author: Julian Knight (Totally Information)
 * Move uib-brand.css to a new sub-package. Publish separately.
 * Enhance CSS with ideas from [OpenProps](https://open-props.style).
 * Move all runtime code to ESM's and rely on ESBUILD to build the runtime. This will allow us to use the latest JS features but retain backwards compatibility.
+* Maybe think about having a control msg from NR to clients that will re-arrange elements on the page. Possibly an array (map?) of element selectors in a set order. Would probably need a "root" element that is the parent of all the elements to be re-arranged. Could also be used to show/hide elements.
 
 ## New documentation
 
-* A "Creating UI's" section - showing how to create different UI structures
-  * Grid layouts
-  * Dashboard layouts
-  * Forms
-  * Tables
-  * Charts
-  * Maps
-  * Articles
-  * Lists
-  * Cards
+* Document the `.public` folder and how to use it with the custom web server.
 
 ## Videos
 
 * uib-sidebar: How to use the new uib-sidebar node.
 * Updates on how to have data-driven updates to the UI.
+* Differences between IIFE and ESM module use.

@@ -32,6 +32,7 @@ Please see the roadmap in the docs for the backlog of future planned development
 ### 📌 Highlights
 
 * uibuilder installation will now **ERROR** and stop if the Node-RED userDir folder is not writable. This is to prevent the uibuilder node from being misconfigured and not working correctly. The error message will show the userDir folder that is not writable.
+* When using uibuilder's custom web server option, you now have the option to create a `<uibRoot>/.public` folder. It is served as the root URL. This is where you can place static files that you want to serve from the custom web server. The folder will be created automatically if it does not exist. You can also use this folder to serve static files such as images, CSS, and JavaScript files. Create an `index.html` file in the folder to serve a custom root home page. The folder is not served if you are using the default Node-RED web server (Use Node-RED's public folder for that).
 
 ### uibuilder node
 
@@ -42,7 +43,39 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### `uib-brand.css` front-end styles
 
+* Improved colour contrast for default text/background.
+* Improved background contrast for forms. Forms now stand out if emmbedded in an `<article>` element.
+* Corrected the foreground/background colour for inputs and textareas. Now works better in light mode.
+* Improved appearance of inputs and select elements outside of forms.
 * Updated the table header styles to make them sticky. This means that the table headers will remain visible when scrolling down a long table. This is particularly useful for large tables with many rows.
+* Changed `accent-color` to use the `--primary` variable rather than the `--brand` variable. `accent-color` is used by browsers to set the colour of form elements such as checkboxes and radio buttons. This means that the colour will now match the primary colour used in the rest of the uibuilder styles.
+* Added `cursor: pointer;` to the `<summary>` element. This makes it clearer that the element is clickable and can be expanded or collapsed.
+
+For forms, the following CSS variables (show with their defaults) can be used to more easily change the appearance of the forms:
+
+```css
+/* The main background color for form elements */
+--form-bg: var(--surface1);
+/* The main text color for form elements */
+--form-fg: var(--text2);
+/* The border color for form elements */
+--form-border: 1px solid var(--text3);
+```
+
+For the updated navigation menus, the following CSS variables (show with their defaults) can be used to more easily change the appearance of the menus:
+
+```css
+/* The main background color for the menu */
+--nav-bg: var(--surface3);
+/* The main text color for the menu */
+--nav-fg: var(--text2);
+/* Secondary background color - used when hovering over other menu items */
+--nav-2nd-bg: var(--primary-bg);
+/* More contrasting text color - used for selected menu items */
+--nav-2nd-fg: var(--text1);
+/* More contrasting background color - Used for menu pop-up background */
+--nav-3rd-bg: var(--surface2);
+```
 
 ### uibuilder client library
 
@@ -78,9 +111,20 @@ Please see the roadmap in the docs for the backlog of future planned development
 * Updated `uib-configuration` documentation to show the latest settings.js options including the msg, client and socket.io hooks. These allow you to enhance or override the `msg._client` data, simulate user authentication, block message send/receive, and redirect unauthenticated users.
 * Updated the `security/authenticated-client-properties` documentation. Added a tip about the hooks in the settings.js file.
 
-### Devlopment changes
+### **NEW** Experimental front-end client library
+
+* **NEW** `../uibuilder/experimental.mjs` experimental front-end library. Internally loads the live client library and extends it with experimental features. It does require some setup and its features WILL change unexpectedly.
+
+  Note that this library is only available as an ES Module.
+
+* `src/front-end-module/experimental-demo.html` - A simple demo page that shows how to use the experimental features. It is not intended for production use. You will need to copy the html file to a uibuilder instance's `src` folder and then load it in your browser. The demo page will show you how to use the experimental features. It may not always be up to date with the latest experimental features.
+
+The purpose of this is to allow greater experimentation with new features without disturbing the live client library.
+
+### Development changes
 
 * **NEW** file `src\front-end-module\reactive.mjs` - contains the new `Reactive` class that implements the reactive variable functionality. This is a new module that can be used in the front-end client library but can also be used independently. This is provided as source only for now. Though it is compiled into the client library as well and so available via the `uibuilder.getReactiveClass()` and `uibuilder.reactive()` functions.
+* uibuilder runtime library files renamed from *.js to *.cjs for clarity. Part of the long-term effort to move eventually to ES Modules.
 
 ## v7.4.3
 
