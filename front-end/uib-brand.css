@@ -128,6 +128,8 @@
     ;
 
     --shadow: var(--shadow1);
+    --btn-shadow: inset 2px 2px 3px rgba(255,255,255, .3),
+                  inset -2px -2px 3px rgba(0,0,0, .3);
   
     /*#endregion --- --- */
 
@@ -147,7 +149,6 @@
         calc(100% * var(--text-saturation))
         calc(
             100% * (var(--text-lightness)
-            + (0 * var(--text-factor) * .2)
             - (var(--text-factor) * var(--text-bias)))
         )
     );
@@ -156,7 +157,7 @@
         calc(100% * (var(--text-saturation) / 2))
         calc(
             100% * (var(--text-lightness)
-            + (1 * var(--text-factor) * .2)
+            + (1 * var(--text-factor) * .1)
             - (var(--text-factor) * var(--text-bias)))
         )
     );
@@ -351,6 +352,25 @@
     );
     --secondary: var(--secondary-bg);
     /*#endregion --- --- */
+
+    /* #region === FORMS === */
+    --form-bg: var(--surface2);
+    --form-fg: var(--text2);
+    --form-border: 1px solid var(--text3);
+    /* #endregion --- --- */
+
+    /* #region === NAVIGATION MENUS === */
+    /* The main background color for the menu */
+    --nav-bg: var(--surface3);
+    /* The main text color for the menu */
+    --nav-fg: var(--text2);
+    /* Secondary background color - used when hovering over other menu items */
+    --nav-2nd-bg: var(--primary-bg);
+    /* More contrasting text color - used for selected menu items */
+    --nav-2nd-fg: var(--text1);
+    /* More contrasting background color - Used for menu pop-up background */
+    --nav-3rd-bg: var(--surface2);
+    /* #endregion --- --- */
 }
 
 /* If the browser reports it, we can adjust for light/dark theme preferences
@@ -499,7 +519,6 @@ html {
     color: var(--text2);
     accent-color: var(--primary);
 }
-
 body {
     margin-left: var(--base-margin);
     margin-right: var(--base-margin);
@@ -552,8 +571,7 @@ button, input[type="button" i], input[type="reset" i], input[type="submit" i], :
     appearance: none;
     border-radius: var(--border-radius);
     /* box-shadow: 0 3px 5px rgb(var(--uib-color-fg), 0.5); */
-    box-shadow: inset 2px 2px 3px rgba(255,255,255, .3),
-                inset -2px -2px 3px rgba(0,0,0, .3);
+    box-shadow: var(--btn-shadow);
 }
 button:hover, input[type="button" i]:hover, input[type="reset" i]:hover, input[type="submit" i]:hover {
     background-color: hsl(var(--info-hsl) / .5);
@@ -561,13 +579,23 @@ button:hover, input[type="button" i]:hover, input[type="reset" i]:hover, input[t
 button:active, input[type="button" i]:active, input[type="reset" i]:active, input[type="submit" i]:active {
     transform: scale(0.97);
 }
-input, textarea {
-    background-color: var(--surface1);
-    color: var(--text2);
-}
 input, button, textarea, select {
+    color: var(--text2);
     font: inherit;
     min-width: 2em;
+}
+input, textarea {
+    background-color: var(--surface1);
+}
+select {
+    background-color: var(--info);
+    color: var(--text2);
+    padding: 0.3rem;
+    box-shadow: var(--btn-shadow);
+    cursor: pointer;
+    transition: background 250ms ease-in-out, transform 150ms ease;
+    border-radius: var(--border-radius);
+    border: none;
 }
 blockquote {
     border: 1px solid var(--text3);
@@ -581,8 +609,7 @@ header, footer, main, section, article {
     /* default prep for container queries */
     container-type: inline-size;
 }
-/* This lets us use an article like a card display */
-article {
+article { /* This lets us use an article like a card display */
     max-width: var(--max-width);
     border: 1px solid var(--text3);
     border-radius: var(--border-radius);
@@ -686,13 +713,17 @@ td br, th br {
 
 /*#region --- Forms --- */
 form {
-    border: 1px solid var(--text3);
-    margin: 0.5rem;
-    padding: 0.5rem;
-    border-radius: var(--border-radius);
     display: flex;
     gap: 1em;
     flex-direction: column;
+
+    background-color: var(--form-bg);
+    color: var(--form-fg);
+    border: var(--form-border);
+
+    margin: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
 }
 
 input[type="color"] {
@@ -711,21 +742,8 @@ form input, form textarea, form select, form fieldset, form output {
     /* width: 75%; */
     flex: 2;
     border-radius: var(--border-radius);
-    padding:0.2rem;
-    border: 1px solid var(--text3);
-}
-form select {
-    cursor: pointer;
-    transition: background 250ms ease-in-out, transform 150ms ease;
-    box-shadow: inset 1px 1px 2px rgba(255,255,255, .3),
-                inset -1px -1px 2px rgba(0,0,0, .3);
-    background-color: 
-        /* var(--brand); */
-        hsl(
-            var(--brand-hue)
-            calc(60% * var(--saturation))
-            calc(100% * var(--lightness))
-        );
+    padding:0.3rem;
+    border: 1px solid var(--form-border);
 }
 form button, input[type="button" i], form input[type="reset" i], form input[type="submit" i] {
     width:auto;
@@ -780,12 +798,7 @@ form > label:focus-within {
 
 /*#region --- Menus --- */
 nav {
-    --nav-bg: var(--surface3);
-    --nav-fg: var(--text2);
-    --nav-2nd-bg: var(--primary-bg); /* secondary background color */
-    --nav-2nd-fg: var(--text1); /* more contrasting text color */
-    --nav-3rd-bg: var(--surface2); /* more contrasting background color */
-
+    /* See :root for the CSS variables used */
     background-color: var(--nav-bg);
     border-radius: var(--border-radius);
     box-shadow: var(--surface-shadow);

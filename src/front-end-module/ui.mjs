@@ -1332,14 +1332,15 @@ const Ui = class Ui {
         return Ui.win['DOMPurify'].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs, })
     }
 
-    /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
+    // TODO - Allow notify to sit in corners rather than take over the screen
+    /** Show a pop-over "toast" dialog or a modal alert
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
      * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
      * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
      * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
-     * @returns {void}
+     * @returns {HTMLDivElement|null} The toast element (which may disappear after a timeout) or null if no content
      * @example
      * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
      * @example
@@ -1367,17 +1368,16 @@ const Ui = class Ui {
         // Toast wont show anyway if content is empty, may as well warn user
         if (body === '') {
             Ui.log(1, 'Ui:showDialog', 'Toast content is blank. Not shown.')()
-            return
+            return null
         }
 
-        // Use msg.topic as title if no title provided
+        // Use msg.topic as alert title if no title provided
         let title = ''
         if (ui.title) title = ui.title
         else if (msg.topic) title = msg.topic
         // if (ui.title) content = `<div class="toast-head">${ui.title}</div><div class="toast-body">${content}</div>`
 
         // Allow for variants - @since v6.1 - don't bother - since this now sets CSS class, not tied to bootstrap-vue
-        // if ( !ui.variant || !['', 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'].includes(ui.variant)) ui.variant = ''
 
         // Toasts auto-hide by default after 10s but alerts do not auto-hide
         if (ui.noAutohide) ui.noAutoHide = ui.noAutohide
@@ -1400,53 +1400,137 @@ const Ui = class Ui {
 
         // #endregion -- -- --
 
-        // Create a toaster container element if not already created - or get a ref to it
-        let toaster = Ui.doc.getElementById('toaster')
-        if (toaster === null) {
-            toaster = Ui.doc.createElement('div')
-            toaster.id = 'toaster'
-            toaster.title = 'Click to clear all notifcations'
-            toaster.setAttribute('class', 'toaster')
-            toaster.setAttribute('role', 'dialog')
-            toaster.setAttribute('arial-label', 'Toast message')
-            toaster.onclick = function () {
-                // @ts-ignore
-                toaster.remove()
-            }
-            Ui.doc.body.insertAdjacentElement('afterbegin', toaster)
+        const removeToaster = () => {
+            if (!toaster) return
+            Ui.doc.body.removeEventListener('keyup', toasterEventHandler)
+            toaster.removeEventListener('keyup', toasterEventHandler)
+            toaster.removeEventListener('touchend', toasterEventHandler)
+            toaster.removeEventListener('click', toasterEventHandler)
+            toaster.remove()
         }
 
-        // Create a toast element. Would be nice to use <dialog> but that isn't well supported yet - come on Apple!
-        const toast = Ui.doc.createElement('div')
-        toast.title = 'Click to clear this notifcation'
-        toast.setAttribute('class', `toast ${ui.variant ? ui.variant : ''} ${type}`)
-        toast.innerHTML = content
-        toast.setAttribute('role', 'alertdialog')
-        if (ui.modal) toast.setAttribute('aria-modal', ui.modal)
-        toast.onclick = function (evt) {
+        const removeToast = (localToast) => {
+            localToast.removeEventListener('keyup', toasterEventHandler)
+            localToast.removeEventListener('touchend', toasterEventHandler)
+            localToast.removeEventListener('click', toasterEventHandler)
+            localToast.remove()
+            // If no more toasts in the toaster, remove the toaster itself
+            if (toaster && toaster.childElementCount === 0) removeToaster()
+        }
+
+        // Prevent toaster events from affecting toast & remote itself
+        const toasterEventHandler = (evt) => {
             evt.stopPropagation()
-            toast.remove()
-            // @ts-ignore
-            if (toaster.childElementCount < 1) toaster.remove()
+            if (!toaster) return
+            console.log(
+                'toasterEventHandler',
+                evt,
+                toaster.contains(evt.target),
+                newToast.contains(evt.target),
+                newToast === evt.target
+            )
+            // removeToast(evt)
+            removeToaster()
         }
 
-        // TODO
-        if (type === 'alert') {
-            // newD.setAttribute('aria-labelledby', '')
-            // newD.setAttribute('aria-describedby', '')
+        const toastEventHandler = (evt) => {
+            evt.stopPropagation()
+
+            // Create a reference to the event target or the targets parent that has a class of 'toast'
+            let localToast
+            if (evt.target.classList.contains('toast')) {
+                localToast = evt.target
+            } else {
+                localToast = evt.target.closest('.toast')
+            }
+            if (!localToast) {
+                Ui.log(1, 'Ui:showDialog', 'Event target is not a (or in a) toast element, ignoring event')()
+                return
+            }
+
+            // Does the toast contain an input, textarea or button element?
+            const hasInteractiveElement = !!localToast.querySelector('input, textarea, button')
+
+            console.log(
+                'toastEventHandler',
+                hasInteractiveElement,
+                evt,
+                localToast.contains(evt.target),
+                localToast === evt.target
+            )
+
+            if (hasInteractiveElement) {
+                // Only respond to Escape key
+                if (evt.key !== 'Escape') return
+                // If hasInteractiveElement is true, then only close on Escape key
+                removeToast(localToast)
+            }
+
+            removeToast(localToast)
         }
 
-        toaster.insertAdjacentElement(ui.appendToast === true ? 'beforeend' : 'afterbegin', toast)
+        // Create a toast element (the actual dialog box). Would be nice to use <dialog> but that isn't well supported yet - come on Apple!
+        const newToast = Ui.doc.createElement('div')
+        newToast.title = 'Click or Esc to clear this notifcation'
+        newToast.setAttribute('class', `toast ${type}`)
+        newToast.setAttribute('role', type === 'alert' ? 'alertdialog' : 'dialog')
+        newToast.dataset.modal = ui.modal
+        newToast.dataset.autohide = ui.autohide
+        newToast.dataset.autoHideDelay = ui.autoHideDelay
+        // newToast.dataset.appendToast = ui.appendToast
+        newToast.innerHTML = content
 
-        // Auto-hide
+        // toaster.insertAdjacentElement(ui.appendToast === true ? 'beforeend' : 'afterbegin', newToast)
+        if (ui.appendToast === true) {
+            // Insert newToast after the last toast in Ui.doc.body
+            const lastToast = Array.from(Ui.doc.body.querySelectorAll('.toast')).pop()
+            if (lastToast) {
+                lastToast.insertAdjacentElement('afterend', newToast)
+            } else {
+                Ui.doc.body.insertBefore(newToast, Ui.doc.body.firstChild)
+            }
+        } else {
+            // Ui.doc.body.insertAdjacentElement('afterbegin', toaster)
+            Ui.doc.body.insertBefore(newToast, Ui.doc.body.firstChild)
+        }
+
+        // Add event handlers to each toast that still allow esc to close but only close on click if they do not contain an input, textarea or button element
+        newToast.addEventListener('keyup', toastEventHandler)
+        newToast.addEventListener('click', toastEventHandler)
+        newToast.addEventListener('touchend', toastEventHandler)
+
+        // Auto-hide each toast after a delay
         if (ui.autohide === true) {
             setInterval(() => {
-                toast.remove()
-                // @ts-ignore
-                if (toaster.childElementCount < 1) toaster.remove()
+                // removeToaster()
+                removeToast(newToast)
             }, ui.autoHideDelay)
         }
-    } // --- End of showDialog ---
+
+        // Only needed if using modal
+        let toaster
+        if (ui.modal === true) {
+            // Create a toaster container element if not already created - or get a ref to it
+            toaster = Ui.doc.getElementById('toaster')
+            if (toaster === null) {
+                toaster = Ui.doc.createElement('div')
+                toaster.id = 'toaster'
+                toaster.title = 'Click, touch, or ESC to clear notifcations'
+                toaster.setAttribute('class', 'toaster')
+                toaster.setAttribute('arial-label', 'Toast message')
+
+                toaster.addEventListener('click', toasterEventHandler)
+                toaster.addEventListener('touchend', toasterEventHandler)
+                // default active element is the body, attach the keyup event handler to the body to catch Escape key
+                Ui.doc.body.addEventListener('keyup', toasterEventHandler)
+
+                Ui.doc.body.insertAdjacentElement('afterbegin', toaster)
+            }
+        }
+
+        // Retursn a reference to the new toast element
+        return newToast
+    }
 
     /** Directly manage UI via JSON
      * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
@@ -1515,7 +1599,7 @@ const Ui = class Ui {
         })
 
         return out
-    } // --- end of uiGet --- //
+    }
 
     /** External alias for _uiComposeComponent
      * @param {*} el HTML Element to enhance
@@ -1942,8 +2026,6 @@ const Ui = class Ui {
     }
 
     // #endregion --- table handling ---
-
-    // #endregion ---- external methods ----
 }
 
 export default Ui

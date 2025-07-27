@@ -1070,14 +1070,15 @@ var Ui = (_a = class {
     if (!_a.win["DOMPurify"]) return html;
     return _a.win["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
   }
-  /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
+  // TODO - Allow notify to sit in corners rather than take over the screen
+  /** Show a pop-over "toast" dialog or a modal alert
    * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
    *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
    *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
    * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
    * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
    * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
-   * @returns {void}
+   * @returns {HTMLDivElement|null} The toast element (which may disappear after a timeout) or null if no content
    * @example
    * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
    * @example
@@ -1099,7 +1100,7 @@ var Ui = (_a = class {
     if (ui.content) body += "<div>".concat(ui.content, "</div>");
     if (body === "") {
       _a.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
-      return;
+      return null;
     }
     let title = "";
     if (ui.title) title = ui.title;
@@ -1119,41 +1120,102 @@ var Ui = (_a = class {
       ui.autohide = false;
     }
     content = '<div class="toast-head">'.concat(icon).concat(title, '</div><div class="toast-body">').concat(body, "</div>");
-    let toaster = _a.doc.getElementById("toaster");
-    if (toaster === null) {
-      toaster = _a.doc.createElement("div");
-      toaster.id = "toaster";
-      toaster.title = "Click to clear all notifcations";
-      toaster.setAttribute("class", "toaster");
-      toaster.setAttribute("role", "dialog");
-      toaster.setAttribute("arial-label", "Toast message");
-      toaster.onclick = function() {
-        toaster.remove();
-      };
-      _a.doc.body.insertAdjacentElement("afterbegin", toaster);
-    }
-    const toast = _a.doc.createElement("div");
-    toast.title = "Click to clear this notifcation";
-    toast.setAttribute("class", "toast ".concat(ui.variant ? ui.variant : "", " ").concat(type));
-    toast.innerHTML = content;
-    toast.setAttribute("role", "alertdialog");
-    if (ui.modal) toast.setAttribute("aria-modal", ui.modal);
-    toast.onclick = function(evt) {
-      evt.stopPropagation();
-      toast.remove();
-      if (toaster.childElementCount < 1) toaster.remove();
+    const removeToaster = () => {
+      if (!toaster) return;
+      _a.doc.body.removeEventListener("keyup", toasterEventHandler);
+      toaster.removeEventListener("keyup", toasterEventHandler);
+      toaster.removeEventListener("touchend", toasterEventHandler);
+      toaster.removeEventListener("click", toasterEventHandler);
+      toaster.remove();
     };
-    if (type === "alert") {
+    const removeToast = (localToast) => {
+      localToast.removeEventListener("keyup", toasterEventHandler);
+      localToast.removeEventListener("touchend", toasterEventHandler);
+      localToast.removeEventListener("click", toasterEventHandler);
+      localToast.remove();
+      if (toaster && toaster.childElementCount === 0) removeToaster();
+    };
+    const toasterEventHandler = (evt) => {
+      evt.stopPropagation();
+      if (!toaster) return;
+      console.log(
+        "toasterEventHandler",
+        evt,
+        toaster.contains(evt.target),
+        newToast.contains(evt.target),
+        newToast === evt.target
+      );
+      removeToaster();
+    };
+    const toastEventHandler = (evt) => {
+      evt.stopPropagation();
+      let localToast;
+      if (evt.target.classList.contains("toast")) {
+        localToast = evt.target;
+      } else {
+        localToast = evt.target.closest(".toast");
+      }
+      if (!localToast) {
+        _a.log(1, "Ui:showDialog", "Event target is not a (or in a) toast element, ignoring event")();
+        return;
+      }
+      const hasInteractiveElement = !!localToast.querySelector("input, textarea, button");
+      console.log(
+        "toastEventHandler",
+        hasInteractiveElement,
+        evt,
+        localToast.contains(evt.target),
+        localToast === evt.target
+      );
+      if (hasInteractiveElement) {
+        if (evt.key !== "Escape") return;
+        removeToast(localToast);
+      }
+      removeToast(localToast);
+    };
+    const newToast = _a.doc.createElement("div");
+    newToast.title = "Click or Esc to clear this notifcation";
+    newToast.setAttribute("class", "toast ".concat(type));
+    newToast.setAttribute("role", type === "alert" ? "alertdialog" : "dialog");
+    newToast.dataset.modal = ui.modal;
+    newToast.dataset.autohide = ui.autohide;
+    newToast.dataset.autoHideDelay = ui.autoHideDelay;
+    newToast.innerHTML = content;
+    if (ui.appendToast === true) {
+      const lastToast = Array.from(_a.doc.body.querySelectorAll(".toast")).pop();
+      if (lastToast) {
+        lastToast.insertAdjacentElement("afterend", newToast);
+      } else {
+        _a.doc.body.insertBefore(newToast, _a.doc.body.firstChild);
+      }
+    } else {
+      _a.doc.body.insertBefore(newToast, _a.doc.body.firstChild);
     }
-    toaster.insertAdjacentElement(ui.appendToast === true ? "beforeend" : "afterbegin", toast);
+    newToast.addEventListener("keyup", toastEventHandler);
+    newToast.addEventListener("click", toastEventHandler);
+    newToast.addEventListener("touchend", toastEventHandler);
     if (ui.autohide === true) {
       setInterval(() => {
-        toast.remove();
-        if (toaster.childElementCount < 1) toaster.remove();
+        removeToast(newToast);
       }, ui.autoHideDelay);
     }
+    let toaster;
+    if (ui.modal === true) {
+      toaster = _a.doc.getElementById("toaster");
+      if (toaster === null) {
+        toaster = _a.doc.createElement("div");
+        toaster.id = "toaster";
+        toaster.title = "Click, touch, or ESC to clear notifcations";
+        toaster.setAttribute("class", "toaster");
+        toaster.setAttribute("arial-label", "Toast message");
+        toaster.addEventListener("click", toasterEventHandler);
+        toaster.addEventListener("touchend", toasterEventHandler);
+        _a.doc.body.addEventListener("keyup", toasterEventHandler);
+        _a.doc.body.insertAdjacentElement("afterbegin", toaster);
+      }
+    }
+    return newToast;
   }
-  // --- End of showDialog ---
   /** Directly manage UI via JSON
    * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
    */
@@ -1211,7 +1273,6 @@ var Ui = (_a = class {
     });
     return out;
   }
-  // --- end of uiGet --- //
   /** External alias for _uiComposeComponent
    * @param {*} el HTML Element to enhance
    * @param {*} comp Individual uibuilder ui component spec
@@ -1540,7 +1601,6 @@ var Ui = (_a = class {
     tbodyEl.deleteRow(rowIndex);
   }
   // #endregion --- table handling ---
-  // #endregion ---- external methods ----
 }, /** Reference to DOM window - must be passed in the constructor
  * Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
  * @type {Window}
