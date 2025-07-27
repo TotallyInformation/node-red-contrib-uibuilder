@@ -3,12 +3,15 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-07-26 14:40:07
+updated: 2025-07-27 13:55:18
 author: Julian Knight (Totally Information)
 ---
 
 ## In Progress
 
+* Toaster improvements
+  * [x] Initial rework
+  * [ ] Test
 * Router improvements
   * [ ] Auto-menu generation for menus.
     * [ ] Add search option. `<search>`/`<div role="search">` element that can be used to search the menu.
@@ -120,3 +123,5 @@ author: Julian Knight (Totally Information)
 * uib-sidebar: How to use the new uib-sidebar node.
 * Updates on how to have data-driven updates to the UI.
 * Differences between IIFE and ESM module use.
+* UIBUILDER URL paths.
+* Custom web server and the `.public` folder.

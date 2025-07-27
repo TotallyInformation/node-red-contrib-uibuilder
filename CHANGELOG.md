@@ -100,6 +100,33 @@ For the updated navigation menus, the following CSS variables (show with their d
 
 * UI library source file renamed from `ui.js` to `ui.mjs`. This is to make it clearer that it is an ES module. The file is still compiled into the client library as before. The gulp build process has been updated to reflect this change and simplified in line with the main client module build.
 
+### uibRouter client library
+
+* Added functions to auto-generate a menu of routes. Driven by updated router configuration data. Example:
+
+  ```js
+  {
+    defaultRoute: 'route01',
+    routes: [
+        { id: 'theme', src: './fe-routes/theme-editor.html', type: 'url', 
+            title: 'Theme Editor', description: 'Theme editor.' },
+        { id: 'route01', src: './fe-routes/route01.html', type: 'url', 
+            title: 'Home Summary', description: 'A summary view of the home.' },
+        { id: 'wanted', src: './fe-routes/wanted.html', type: 'url', 
+            title: 'To Do', description: 'My to do list for this site.' },
+    ],
+    routeMenus: [
+        {
+            id: 'menu1',
+            menuType: 'horizontal',
+            label: 'Main Menu',
+        },
+    ],
+  }
+  ```
+
+  In this version, only horizontal, single-level menus are supported. In the future, expect to see multi-level and vertical menus. Possibly also tabbed menus. Search forms may also be added.
+
 ### uibuilder configuration
 
 * Updated the template middleware files that are copied to `<uibRoot>/.config/*.js-template` on each restart. Added links to uibuilder documentation and pointed out the use of the message and security hooks now available via the Node-RED settings.js file.
