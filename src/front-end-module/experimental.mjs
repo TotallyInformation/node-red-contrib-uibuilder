@@ -64,6 +64,15 @@ export class UibExperimental extends Uib {
     /** @type {number} Counter for unique dialog IDs */
     #dialogCounter = 0
 
+    /** @type {Map<string, Set<HTMLElement>>} Track elements that use specific variables in templates */
+    #templateVariableMap = new Map()
+
+    /** @type {Map<HTMLElement, object>} Track template data for each element */
+    #templateDataMap = new Map()
+
+    /** @type {Map<HTMLElement, string>} Track original template strings for each element */
+    #templateStringMap = new Map()
+
     // #endregion --- Private experimental properties --- //
 
     constructor() {
@@ -385,15 +394,145 @@ export class UibExperimental extends Uib {
     /** Process a template with data using experimental template engine
      * @param {string} template - Template string with {{variable}} syntax
      * @param {object} data - Data object to interpolate
+     * @param {HTMLElement} [targetElement] - Optional element to bind for auto-updates
      * @returns {string} Processed template
      * @example
      * const result = uibExperimental.processTemplate(
      *     '<p>Hello {{name}}!</p>',
      *     { name: 'World' }
      * )
+     *
+     * // With auto-update binding
+     * const element = document.getElementById('greeting')
+     * element.innerHTML = uibExperimental.processTemplate(
+     *     '<p>Hello {{userName}}! Today is {{date}}.</p>',
+     *     { userName: 'John', date: new Date().toLocaleDateString() },
+     *     element
+     * )
      */
-    processTemplate(template, data = {}) {
-        // Simple template engine with {{variable}} syntax
+    processTemplate(template, data = {}, targetElement = null) {
+        // Extract variable names from template
+        const variables = this._extractTemplateVariables(template)
+
+        // If we have a target element, set up auto-update
+        if (targetElement) {
+            this._setupTemplateAutoUpdate(targetElement, template, data, variables)
+        }
+
+        // Process the template
+        return this._renderTemplate(template, data)
+    }
+
+    /**
+     * Extract variable names from a template string
+     * @param {string} template - Template string with {{variable}} syntax
+     * @returns {string[]} Array of variable names found in template
+     * @private
+     */
+    _extractTemplateVariables(template) {
+        const variables = []
+        const regex = /\{\{([^}]+)\}\}/g
+        let match
+
+        while ((match = regex.exec(template)) !== null) {
+            const variable = match[1].trim()
+            if (!variables.includes(variable)) {
+                variables.push(variable)
+            }
+        }
+
+        return variables
+    }
+
+    /**
+     * Set up auto-update for a template bound to an element
+     * @param {HTMLElement} element - Target element for template
+     * @param {string} template - Template string
+     * @param {object} data - Template data
+     * @param {string[]} variables - Variable names used in template
+     * @private
+     */
+    _setupTemplateAutoUpdate(element, template, data, variables) {
+        // Store template information for this element
+        this.#templateStringMap.set(element, template)
+        this.#templateDataMap.set(element, { ...data, })
+
+        // Track which variables this element depends on
+        variables.forEach((variable) => {
+            const rootVar = variable.split('.')[0] // Get root variable name
+
+            if (!this.#templateVariableMap.has(rootVar)) {
+                this.#templateVariableMap.set(rootVar, new Set())
+            }
+            this.#templateVariableMap.get(rootVar).add(element)
+
+            // Set up change listener for this variable if not already set
+            this._ensureVariableListener(rootVar)
+        })
+    }
+
+    /**
+     * Ensure a change listener exists for a variable
+     * @param {string} variable - Variable name to watch
+     * @private
+     */
+    _ensureVariableListener(variable) {
+        // Check if we already have a listener for this variable
+        const existingListeners = this._propChangeCallbacks || {}
+        if (existingListeners[variable]) {
+            // Check if our template update listener is already registered
+            const hasTemplateListener = existingListeners[variable].some(
+                cb => cb.name === '_templateUpdateListener'
+            )
+            if (hasTemplateListener) return
+        }
+
+        // Add our template update listener
+        this.onChange(variable, this._createTemplateUpdateListener(variable))
+    }
+
+    /**
+     * Create a template update listener for a specific variable
+     * @param {string} variable - Variable name being watched
+     * @returns {Function} Update listener function
+     * @private
+     */
+    _createTemplateUpdateListener(variable) {
+        const listener = (newValue) => {
+            // Find all elements that use this variable
+            const elements = this.#templateVariableMap.get(variable)
+            if (!elements) return
+
+            elements.forEach((element) => {
+                // Update the stored data for this element
+                const storedData = this.#templateDataMap.get(element)
+                if (storedData) {
+                    storedData[variable] = newValue
+
+                    // Re-render the template
+                    const template = this.#templateStringMap.get(element)
+                    if (template) {
+                        const newContent = this._renderTemplate(template, storedData)
+                        element.innerHTML = newContent
+                    }
+                }
+            })
+        }
+
+        // Add a name property for identification
+        Object.defineProperty(listener, 'name', { value: '_templateUpdateListener', })
+
+        return listener
+    }
+
+    /**
+     * Render a template with data (core template processing)
+     * @param {string} template - Template string with {{variable}} syntax
+     * @param {object} data - Data object to interpolate
+     * @returns {string} Processed template
+     * @private
+     */
+    _renderTemplate(template, data) {
         return template.replace(/\{\{([^}]+)\}\}/g, (match, variable) => {
             const keys = variable.trim().split('.')
             let value = data
@@ -407,11 +546,59 @@ export class UibExperimental extends Uib {
         })
     }
 
-    /** Apply template to elements with uib-template attribute
-     * @param {object} data - Data object for template interpolation
+    /**
+     * Update template data for an element (triggers re-render)
+     * @param {HTMLElement} element - Element with bound template
+     * @param {object} newData - New data to merge with existing data
+     * @returns {void}
+     * @example
+     * uibExperimental.updateTemplateData(element, { userName: 'Jane' })
+     */
+    updateTemplateData(element, newData) {
+        const storedData = this.#templateDataMap.get(element)
+        if (!storedData) {
+            console.warn('[UibExperimental] No template data found for element')
+            return
+        }
+
+        // Merge new data with existing data
+        Object.assign(storedData, newData)
+
+        // Re-render the template
+        const template = this.#templateStringMap.get(element)
+        if (template) {
+            const newContent = this._renderTemplate(template, storedData)
+            element.innerHTML = newContent
+        }
+
+        // Update any uibuilder variables that changed
+        Object.entries(newData).forEach(([key, value]) => {
+            this.set(key, value)
+        })
+    }
+
+    /**
+     * Remove template binding from an element
+     * @param {HTMLElement} element - Element to unbind
      * @returns {void}
      */
-    applyTemplates(data = {}) {
+    unbindTemplate(element) {
+        // Remove from template maps
+        this.#templateStringMap.delete(element)
+        this.#templateDataMap.delete(element)
+
+        // Remove from variable tracking
+        this.#templateVariableMap.forEach((elements) => {
+            elements.delete(element)
+        })
+    }
+
+    /** Apply template to elements with uib-template attribute
+     * @param {object} data - Data object for template interpolation
+     * @param {boolean} autoUpdate - Whether to enable auto-updates when variables change (default: true)
+     * @returns {void}
+     */
+    applyTemplates(data = {}, autoUpdate = true) {
         const templateElements = document.querySelectorAll('[uib-template]')
 
         templateElements.forEach((element) => {
@@ -420,8 +607,16 @@ export class UibExperimental extends Uib {
 
             if (templateElement) {
                 const template = templateElement.innerHTML
-                const processed = this.processTemplate(template, data)
-                element.innerHTML = processed
+
+                if (autoUpdate) {
+                    // Use the new auto-update processTemplate
+                    const processed = this.processTemplate(template, data, element)
+                    element.innerHTML = processed
+                } else {
+                    // Use simple template processing without auto-update
+                    const processed = this._renderTemplate(template, data)
+                    element.innerHTML = processed
+                }
             }
         })
     }
@@ -552,6 +747,11 @@ export class UibExperimental extends Uib {
 
         // Clear bindings
         this.#reactiveBindings.clear()
+
+        // Clear template tracking
+        this.#templateVariableMap.clear()
+        this.#templateDataMap.clear()
+        this.#templateStringMap.clear()
 
         console.info('[UibExperimental] Cleanup completed')
     }

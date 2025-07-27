@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Updating Template Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .example {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .controls {
+            margin: 15px 0;
+        }
+        
+        .controls button {
+            margin: 5px;
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .auto-update {
+            background-color: #e8f5e8;
+        }
+        
+        .manual-update {
+            background-color: #f5f5e8;
+        }
+        
+        .template-output {
+            border-left: 4px solid #007cba;
+            padding-left: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Auto-Updating Template Example</h1>
+    
+    <div class="example auto-update">
+        <h2>Auto-Updating Template</h2>
+        <p>This template automatically updates when variables change:</p>
+        
+        <template id="auto-template">
+            <h3>User Profile</h3>
+            <p><strong>Name:</strong> {{userName}}</p>
+            <p><strong>Email:</strong> {{userEmail}}</p>
+            <p><strong>Messages:</strong> {{messageCount}}</p>
+            <p><strong>Last Login:</strong> {{lastLogin}}</p>
+            <p><strong>Status:</strong> {{status}}</p>
+        </template>
+        
+        <div class="template-output" id="auto-output"></div>
+        
+        <div class="controls">
+            <button onclick="changeUserName()">Change Name</button>
+            <button onclick="changeEmail()">Change Email</button>
+            <button onclick="addMessage()">Add Message</button>
+            <button onclick="updateLogin()">Update Login Time</button>
+            <button onclick="toggleStatus()">Toggle Status</button>
+        </div>
+    </div>
+    
+    <div class="example manual-update">
+        <h2>Manual Template (No Auto-Update)</h2>
+        <p>This template only updates when manually refreshed:</p>
+        
+        <div class="template-output" id="manual-output"></div>
+        
+        <div class="controls">
+            <button onclick="manualRefresh()">Manual Refresh</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Mock UIBuilder for demonstration
+        const mockData = {
+            userName: 'John Doe',
+            userEmail: 'john.doe@example.com',
+            messageCount: 5,
+            lastLogin: new Date().toLocaleString(),
+            status: 'online'
+        }
+        
+        const changeListeners = {}        
+        
+        // Import experimental module
+        import '../uibuilder/experimental.mjs'
+
+        // window.uibExp = uibExperimental
+        
+        // Set up auto-updating template
+        const autoElement = document.getElementById('auto-output')
+        const template = document.getElementById('auto-template').innerHTML
+        
+        // Initialize with auto-update
+        autoElement.innerHTML = uibExperimental.processTemplate(template, mockData, autoElement)
+        
+        // Set up manual template
+        const manualElement = document.getElementById('manual-output')
+        manualElement.innerHTML = uibExperimental.processTemplate(template, mockData)
+        
+        // Make functions global for button clicks
+        window.changeUserName = () => {
+            const names = ['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Williams', 'Charlie Brown']
+            const current = uibExperimental.get('userName')
+            const currentIndex = names.indexOf(current)
+            const newName = names[(currentIndex + 1) % names.length]
+            uibExperimental.set('userName', newName)
+        }
+        
+        window.changeEmail = () => {
+            const domains = ['@example.com', '@test.org', '@demo.net', '@sample.io']
+            const userName = uibExperimental.get('userName').toLowerCase().replace(' ', '.')
+            const domain = domains[Math.floor(Math.random() * domains.length)]
+            uibExperimental.set('userEmail', userName + domain)
+        }
+        
+        window.addMessage = () => {
+            const current = uibExperimental.get('messageCount')
+            uibExperimental.set('messageCount', current + 1)
+        }
+        
+        window.updateLogin = () => {
+            uibExperimental.set('lastLogin', new Date().toLocaleString())
+        }
+        
+        window.toggleStatus = () => {
+            const current = uibExperimental.get('status')
+            uibExperimental.set('status', current === 'online' ? 'offline' : 'online')
+        }
+        
+        window.manualRefresh = () => {
+            const manualElement = document.getElementById('manual-output')
+            const currentData = {
+                userName: uibExperimental.get('userName'),
+                userEmail: uibExperimental.get('userEmail'),
+                messageCount: uibExperimental.get('messageCount'),
+                lastLogin: uibExperimental.get('lastLogin'),
+                status: uibExperimental.get('status')
+            }
+            manualElement.innerHTML = uibExperimental.processTemplate(template, currentData)
+        }
+    </script>
+</body>
+</html>

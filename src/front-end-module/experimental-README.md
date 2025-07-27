@@ -76,35 +76,80 @@ const result = await uibExperimental.showExperimentalDialog({
 
 ### 3. Template Engine
 
-Simple template processing with `{{variable}}` syntax.
+Simple template processing with `{{variable}}` syntax that automatically re-renders when variables change.
 
-#### Example:
+#### Auto-Updating Templates
+
+Templates can automatically re-render when any of their variables change:
+
+```javascript
+// Set up auto-updating template
+const element = document.getElementById('greeting');
+element.innerHTML = uibExperimental.processTemplate(
+    '<p>Hello {{userName}}! You have {{notifications}} messages.</p>',
+    { userName: 'John', notifications: 5 },
+    element  // Pass element for auto-update binding
+);
+
+// Later, when you change a variable, the template automatically updates
+uibExperimental.set('userName', 'Jane');  // Template re-renders automatically
+uibExperimental.set('notifications', 10); // Template re-renders automatically
+```
+
+#### Manual Template Processing
+
+For one-time template processing without auto-updates:
+
+```javascript
+// Simple template processing (no auto-update)
+const result = uibExperimental.processTemplate(
+    '<p>Hello {{name}}!</p>',
+    { name: 'World' }
+);
+
+// Or disable auto-updates in applyTemplates
+uibExperimental.applyTemplates(data, false); // Second parameter disables auto-update
+```
+
+#### Template Attributes
+
+Use `uib-template` attribute for automatic template application:
+
 ```html
 <template id="greeting-template">
     <h2>{{title}}</h2>
     <p>Hello {{user.name}}, you have {{user.notifications}} notifications.</p>
+    <p>Current time: {{currentTime}}</p>
 </template>
 
 <div uib-template="#greeting-template"></div>
 ```
 
 ```javascript
-// Process templates with data
+// Apply templates with auto-updates (default)
 const templateData = {
     title: 'Dashboard',
-    user: {
-        name: 'John Doe',
-        notifications: 5
-    }
+    user: { name: 'John Doe', notifications: 5 },
+    currentTime: new Date().toLocaleTimeString()
 };
 
-uibExperimental.applyTemplates(templateData);
+uibExperimental.applyTemplates(templateData); // Auto-update enabled by default
 
-// Or process individual templates
-const html = uibExperimental.processTemplate(
-    '<p>Hello {{name}}!</p>',
-    { name: 'World' }
-);
+// Update variables and watch templates automatically re-render
+uibExperimental.set('user', { name: 'Jane Smith', notifications: 10 });
+```
+
+#### Template Management
+
+```javascript
+// Update template data for specific element
+uibExperimental.updateTemplateData(element, { 
+    userName: 'Jane',
+    notifications: 8 
+});
+
+// Remove auto-update binding from element
+uibExperimental.unbindTemplate(element);
 ```
 
 ### 4. Auto Layout
@@ -169,8 +214,13 @@ const experimental = new UibExperimental();
 - `closeAllDialogs()` - Close all active dialogs
 
 #### Templates
-- `processTemplate(template, data)` - Process template string with data
-- `applyTemplates(data)` - Apply templates to elements with `uib-template` attribute
+- `processTemplate(template, data, targetElement)` - Process template string with optional auto-update binding
+- `applyTemplates(data, autoUpdate)` - Apply templates to elements with `uib-template` attribute
+- `updateTemplateData(element, newData)` - Update template data for specific element
+- `unbindTemplate(element)` - Remove auto-update binding from element
+- `_extractTemplateVariables(template)` - Extract variable names from template (internal)
+- `_setupTemplateAutoUpdate(element, template, data, variables)` - Set up auto-update (internal)
+- `_renderTemplate(template, data)` - Core template processing (internal)
 
 #### Layout
 - `applyAutoLayout(selector, options)` - Apply automatic layout to containers

@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="../uibuilder/images/node-blue.ico">
     <title>UIBuilder Experimental Features Demo</title>
+    <link type="text/css" rel="stylesheet" href="./index.css" media="all">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -73,153 +75,108 @@
             border-color: #007cba;
         }
     </style>
-</head>
-<body>
-    <h1>UIBuilder Experimental Features Demo</h1>
-    
-    <div class="demo-section"><h2>Reactive Binding Demo</h2>
-        <p>Type in the input to see reactive binding in action:</p>
-        
-        <input type="text" id="nameInput" placeholder="Enter your name">
-        <p>Hello, <span uib-bind="userName">World</span>!</p>
-        
-        <label>
-            <input type="checkbox" id="showGreeting"> Show greeting
-        </label>
-        <div uib-show="showGreeting" style="display: none;">
-            <p>Welcome to the experimental features demo!</p>
-        </div>
-    </div>
-    
-    <div class="demo-section"><h2>Template Engine Demo</h2>
-        <button onclick="updateTemplate()">Update Template</button>
-        
-        <template id="greeting-template">
-            <h3>{{title}}</h3>
-            <p>Hello {{user.name}}, you have {{user.notifications}} notifications.</p>
-            <p>Today is {{date}}.</p>
-        </template>
-        
-        <div uib-template="#greeting-template" id="template-output">
-            <!-- Template will be rendered here -->
-        </div>
-    </div>
-    
-    <div class="demo-section"><h2>Auto Layout Demo</h2>
-        <button onclick="applyGridLayout()">Apply Grid Layout</button>
-        <button onclick="applyFlexLayout()">Apply Flex Layout</button>
-        
-        <div class="auto-grid">
-            <div class="grid-item">Item 1</div>
-            <div class="grid-item">Item 2</div>
-            <div class="grid-item">Item 3</div>
-            <div class="grid-item">Item 4</div>
-            <div class="grid-item">Item 5</div>
-            <div class="grid-item">Item 6</div>
-        </div>
-    </div>
-    
-    <div class="demo-section"><h2>Enhanced Dialog Demo</h2>
-        <button onclick="showConfirmDialog()">Show Confirmation Dialog</button>
-        <button onclick="showCustomDialog()">Show Custom Dialog</button>
-        
-        <p id="dialog-result">Dialog result will appear here</p>
-    </div>
 
-    <!-- Include the uibuilder library first -->
-    <script type="module">
-        // This would normally import the actual uibuilder module
-        // For demo purposes, we'll create a minimal mock
-        window.mockUib = {
-            set: function(prop, val) {
-                this[prop] = val;
-                // Trigger any change listeners
-                if (this._changeListeners && this._changeListeners[prop]) {
-                    this._changeListeners[prop].forEach(cb => cb(val));
-                }
-            },
-            get: function(prop) {
-                return this[prop];
-            },
-            onChange: function(prop, callback) {
-                if (!this._changeListeners) this._changeListeners = {};
-                if (!this._changeListeners[prop]) this._changeListeners[prop] = [];
-                this._changeListeners[prop].push(callback);
-            },
-            _dispatchCustomEvent: function(name, data) {
-                window.dispatchEvent(new CustomEvent(name, { detail: data }));
-            }
-        };
-        
-        // Mock the Uib class for the experimental module to extend
-        window.Uib = class {
-            constructor() {
-                Object.assign(this, window.mockUib);
-            }
+</head><body>
+    <header>
+        <h1 class="with-subtitle">UIBuilder Experimental Features Demo</h1>
+        <div role="doc-subtitle">Using UIBUILDER-EXPERIMENTAL for Node-RED</div>
+    </header>
+
+    <main>
+        <article class="demo-section"><h2>Reactive Binding Demo</h2>
+            <p>Type in the input to see reactive binding in action:</p>
             
-            set(prop, val) { return window.mockUib.set.call(this, prop, val); }
-            get(prop) { return window.mockUib.get.call(this, prop); }
-            onChange(prop, cb) { return window.mockUib.onChange.call(this, prop, cb); }
-            _dispatchCustomEvent(name, data) { return window.mockUib._dispatchCustomEvent(name, data); }
-        };
+            <input type="text" id="nameInput" placeholder="Enter your name">
+            <p>Hello, <span uib-bind="userName">World</span>!</p>
+            <p>
+                How can we make this code-free? Perhaps using `uib-bind` on the input as well?
+            </p>
+            
+            <label>
+                <input type="checkbox" id="showGreeting"> Show greeting
+            </label>
+            <div uib-show="showGreeting" style="display: none;">
+                <p>Welcome to the experimental features demo!</p>
+            </div>
+        </article>
         
+        <article class="demo-section"><h2>Template Engine Demo</h2>
+            <p>Templates automatically update when variables change:</p>
+            
+            <button onclick="updateTemplate()">Update Template Data</button>
+            <button onclick="updateUserName()">Change User Name</button>
+            <button onclick="updateNotifications()">Add Notification</button>
+            <button onclick="toggleAutoUpdate()">Toggle Auto-Update</button>
+            
+            <template id="greeting-template">
+                <h3>{{title}}</h3>
+                <p>Hello {{userName}}, you have {{notifications}} notifications.</p>
+                <p>Today is {{date}}.</p>
+                <p>Current time: {{currentTime}}</p>
+            </template>
+            
+            <div uib-template="#greeting-template" id="template-output">
+                <!-- Template will be rendered here -->
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <h4>Manual Template Processing (no auto-update):</h4>
+                <div id="manual-template-output">
+                    <!-- Manual template will be rendered here -->
+                </div>
+            </div>
+        </article>
+        
+        <article class="demo-section"><h2>Auto Layout Demo</h2>
+            <button onclick="applyGridLayout()">Apply Grid Layout</button>
+            <button onclick="applyFlexLayout()">Apply Flex Layout</button>
+            
+            <div class="auto-grid">
+                <div class="grid-item">Item 1</div>
+                <div class="grid-item">Item 2</div>
+                <div class="grid-item">Item 3</div>
+                <div class="grid-item">Item 4</div>
+                <div class="grid-item">Item 5</div>
+                <div class="grid-item">Item 6</div>
+            </div>
+        </article>
+        
+        <article class="demo-section"><h2>Enhanced Dialog Demo</h2>
+            <button onclick="showConfirmDialog()">Show Confirmation Dialog</button>
+            <button onclick="showCustomDialog()">Show Custom Dialog</button>
+            
+            <p id="dialog-result">Dialog result will appear here</p>
+        </article>
+    </main>
+
+    <script type="module">        
         // Import the experimental module
-        import('../uibuilder/experimental.mjs').then(module => {
-            const uibExperimental = module.default;
-            window.uibExp = uibExperimental;
-            
-            console.log('Experimental features loaded:', uibExperimental.getExperimentalMeta());
-            
-            // Set up reactive bindings
-            setupReactiveDemo(uibExperimental);
-            
-            // Make functions available globally for button clicks
-            window.updateTemplate = () => updateTemplate(uibExperimental);
-            window.applyGridLayout = () => applyGridLayout(uibExperimental);
-            window.applyFlexLayout = () => applyFlexLayout(uibExperimental);
-            window.showConfirmDialog = () => showConfirmDialog(uibExperimental);
-            window.showCustomDialog = () => showCustomDialog(uibExperimental);
-        }).catch(error => {
-            console.error('Failed to load experimental module:', error);
-        });
+        import '../uibuilder/experimental.mjs'
+
+        console.log('Experimental features loaded:', uibExperimental.getExperimentalMeta())
         
-        function setupReactiveDemo(uibExp) {
-            // Set up reactive binding for name input
-            const nameInput = document.getElementById('nameInput');
-            nameInput.addEventListener('input', (e) => {
-                uibExp.set('userName', e.target.value);
-            });
-            
-            // Set up reactive binding for checkbox
-            const showCheckbox = document.getElementById('showGreeting');
-            showCheckbox.addEventListener('change', (e) => {
-                uibExp.set('showGreeting', e.target.checked);
-            });
-            
-            // Initialize values
-            uibExp.set('userName', 'World');
-            uibExp.set('showGreeting', false);
-        }
+        // Set up reactive bindings
+        setupReactiveDemo(uibExperimental)
         
-        function updateTemplate(uibExp) {
-            const templateData = {
-                title: 'Welcome Dashboard',
-                user: {
-                    name: 'John Doe',
-                    notifications: Math.floor(Math.random() * 10)
-                },
-                date: new Date().toLocaleDateString()
-            };
-            
-            uibExp.applyTemplates(templateData);
-        }
+        // Initialize template demo
+        initializeTemplateDemo(uibExperimental)
+
+        // Make functions available globally for button clicks
+        window.updateTemplate = () => updateTemplate(uibExperimental)
+        window.updateUserName = () => updateUserName(uibExperimental)
+        window.updateNotifications = () => updateNotifications(uibExperimental)
+        window.toggleAutoUpdate = () => toggleAutoUpdate(uibExperimental)
+        window.applyGridLayout = () => applyGridLayout(uibExperimental)
+        window.applyFlexLayout = () => applyFlexLayout(uibExperimental)
+        window.showConfirmDialog = () => showConfirmDialog(uibExperimental)
+        window.showCustomDialog = () => showCustomDialog(uibExperimental)
         
         function applyGridLayout(uibExp) {
             uibExp.applyAutoLayout('.auto-grid', {
                 type: 'grid',
                 columns: 'repeat(auto-fit, minmax(150px, 1fr))',
                 gap: '10px'
-            });
+            })
         }
         
         function applyFlexLayout(uibExp) {
@@ -228,7 +185,7 @@
                 wrap: 'wrap',
                 gap: '10px',
                 justify: 'space-around'
-            });
+            })
         }
         
         async function showConfirmDialog(uibExp) {
@@ -236,9 +193,9 @@
                 title: 'Confirm Action',
                 template: '<p>Are you sure you want to proceed?</p>',
                 modal: true
-            });
+            })
             
-            document.getElementById('dialog-result').textContent = `Confirmation result: ${result}`;
+            document.getElementById('dialog-result').textContent = `Confirmation result: ${result}`
         }
         
         async function showCustomDialog(uibExp) {
@@ -252,10 +209,120 @@
                     </div>
                 `,
                 modal: true
-            });
+            })
             
-            document.getElementById('dialog-result').textContent = `Custom dialog result: ${result}`;
+            document.getElementById('dialog-result').textContent = `Custom dialog result: ${result}`
+        }
+
+        function setupReactiveDemo(uibExp) {
+            // Set up reactive binding for name input
+            const nameInput = document.getElementById('nameInput')
+            nameInput.addEventListener('input', (e) => {
+                uibExp.set('userName', e.target.value)
+            })
+            
+            // Set up reactive binding for checkbox
+            const showCheckbox = document.getElementById('showGreeting')
+            showCheckbox.addEventListener('change', (e) => {
+                uibExp.set('showGreeting', e.target.checked)
+            })
+            
+            // Initialize values
+            uibExp.set('userName', 'World')
+            uibExp.set('showGreeting', false)
+        }
+                        
+        // Template demo variables
+        let autoUpdateEnabled = true
+        
+        function initializeTemplateDemo(uibExp) {
+            // Set initial template data
+            const initialData = {
+                title: 'Welcome Dashboard',
+                userName: 'John Doe',
+                notifications: 3,
+                date: new Date().toLocaleDateString(),
+                currentTime: new Date().toLocaleTimeString()
+            }
+            
+            // Apply templates with auto-update
+            uibExp.applyTemplates(initialData, true)
+            
+            // Also render manual template (no auto-update)
+            const manualElement = document.getElementById('manual-template-output')
+            const template = document.getElementById('greeting-template').innerHTML
+            manualElement.innerHTML = uibExp.processTemplate(template, initialData)
+            
+            // Update time every second to demonstrate auto-updates
+            setInterval(() => {
+                uibExp.set('currentTime', new Date().toLocaleTimeString())
+            }, 1000)
+        }
+        
+        function updateTemplate(uibExp) {
+            // Update multiple template variables at once
+            const newData = {
+                title: `Dashboard - ${Math.random().toString(36).substr(2, 5)}`,
+                date: new Date().toLocaleDateString(),
+                notifications: Math.floor(Math.random() * 10)
+            }
+            
+            // This will automatically trigger re-render of auto-update templates
+            Object.entries(newData).forEach(([key, value]) => {
+                uibExp.set(key, value)
+            })
+            
+            // Manually update the non-auto-update template
+            const manualElement = document.getElementById('manual-template-output')
+            const template = document.getElementById('greeting-template').innerHTML
+            const currentData = {
+                title: uibExp.get('title'),
+                userName: uibExp.get('userName'),
+                notifications: uibExp.get('notifications'),
+                date: uibExp.get('date'),
+                currentTime: uibExp.get('currentTime')
+            }
+            manualElement.innerHTML = uibExp.processTemplate(template, currentData)
+        }
+        
+        function updateUserName(uibExp) {
+            const names = ['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Williams', 'Charlie Brown']
+            const currentName = uibExp.get('userName') || 'John Doe'
+            const currentIndex = names.indexOf(currentName)
+            const newName = names[(currentIndex + 1) % names.length]
+            
+            // This will automatically update all templates using {{userName}}
+            uibExp.set('userName', newName)
+        }
+        
+        function updateNotifications(uibExp) {
+            const current = uibExp.get('notifications') || 0
+            // This will automatically update all templates using {{notifications}}
+            uibExp.set('notifications', current + 1)
+        }
+        
+        function toggleAutoUpdate(uibExp) {
+            autoUpdateEnabled = !autoUpdateEnabled
+            const button = event.target
+            button.textContent = autoUpdateEnabled ? 'Disable Auto-Update' : 'Enable Auto-Update'
+            
+            if (autoUpdateEnabled) {
+                // Re-enable auto-updates by re-applying templates
+                const currentData = {
+                    title: uibExp.get('title') || 'Welcome Dashboard',
+                    userName: uibExp.get('userName') || 'John Doe',
+                    notifications: uibExp.get('notifications') || 3,
+                    date: uibExp.get('date') || new Date().toLocaleDateString(),
+                    currentTime: uibExp.get('currentTime') || new Date().toLocaleTimeString()
+                }
+                uibExp.applyTemplates(currentData, true)
+            } else {
+                // Disable auto-updates by unbinding templates
+                const templateElement = document.querySelector('[uib-template]')
+                if (templateElement) {
+                    uibExp.unbindTemplate(templateElement)
+                }
+            }
         }
     </script>
-</body>
-</html>
+</body></html>
