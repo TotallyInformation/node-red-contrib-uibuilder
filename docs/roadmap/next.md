@@ -3,9 +3,24 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-07-27 13:55:18
+updated: 2025-07-31 15:23:39
 author: Julian Knight (Totally Information)
 ---
+
+## Thoughts
+
+Do we actually NEED the `uib-*` dynamic attributes? With `uib-topic`, we can already control any content/attributes/properties simply by sending a msg. We can also use `uibuilder.set('msg', ....)` from front-end code so really we don't need anything else? `uib-show` could simply be adding/removing a class. Inputs might be dealt with by simply using the `set` method. Not true 2-way binding but is that really needed?
+
+Even `uib-on` isn't really needed since we can just use the HTML `onchange`, `onclick`, etc. attributes.
+
+_Low priority_: What might be nice though, would be to have a `uib-var` attribute to bind to a variable other than `msg`.
+
+**Need some documentation** to explain the above and how to replicate framework-like features using the existing uibuilder features. And a video.
+Create a comparison table of how to do things with VueJS vs Node-RED/uibuilder.
+
+**Consider** creating a `topicMsg` or similar uibuilder function that makes data-binding easy. Use data-topic/name/id (in that order) on the input to define the topic.
+
+Still need more thought on this because it does not quite allow for the simple linking of an input to an output. How, for example, could we link the value of an input to the value of an attribute without any need for code? This is probably less important when working with Node-RED however, since round-tripping the data generally has minimal overhead and has the advantage of being able to share one users inputs with some/all users outputs.
 
 ## In Progress
 
@@ -31,7 +46,11 @@ author: Julian Knight (Totally Information)
 
 ## To Do
 
+* [ ] Check that FE updates allow attributes to be set to `null` to unset them.
+* [ ] Also check that FE JS use of `uib.set('msg', ...)` works as expected.
 * [x] Add an experimental library that extends the uibuilder client library to allow playing with possible future features.
+* [ ] Router
+  * [ ] Add route description to automenu. Either as title or as an aria-label attribute.
 * [ ] Dialog
   * [ ] component(?) that can consume a template and display it as a dialog. [ref](https://discourse.nodered.org/t/uibuilder-help-in-developing-a-dashboard/97478/18)
 * [ ] Reactivity - phase 1
@@ -125,3 +144,8 @@ author: Julian Knight (Totally Information)
 * Differences between IIFE and ESM module use.
 * UIBUILDER URL paths.
 * Custom web server and the `.public` folder.
+* Router
+* SSR (Server-Side Rendering)
+* Middleware & Hooks
+* New uibuilder experimental library.
+* Instance API's.

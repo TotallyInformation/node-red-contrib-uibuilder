@@ -348,7 +348,7 @@
  *
  *  Schema: `{<node.id>: <url>}`
  * @property {object} apps Instance details
- *  Schema: `{url: {node.id, node.title, node.desc}}
+ *  Schema: `{url: {node.id, node.url, node.title, node.desc}}
  * @property {string} masterTemplateFolder Location of master template folders (containing default front-end code).
  *
  *  Default `../template`

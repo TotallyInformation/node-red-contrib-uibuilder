@@ -152,6 +152,7 @@ The purpose of this is to allow greater experimentation with new features withou
 
 * **NEW** file `src\front-end-module\reactive.mjs` - contains the new `Reactive` class that implements the reactive variable functionality. This is a new module that can be used in the front-end client library but can also be used independently. This is provided as source only for now. Though it is compiled into the client library as well and so available via the `uibuilder.getReactiveClass()` and `uibuilder.reactive()` functions.
 * uibuilder runtime library files renamed from *.js to *.cjs for clarity. Part of the long-term effort to move eventually to ES Modules.
+* More code cleanup using latest ESLINT rules.
 
 ## v7.4.3
 
