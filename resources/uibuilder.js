@@ -19,6 +19,9 @@ const defaultTemplate = 'blank'
 /** List of installed packages - rebuilt when editor is opened, updates by library mgr */
 let packages = uibuilder.packages
 
+/** List of npm script names for the current instance */
+let npmScriptNames = []
+
 /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
  * @typedef {object} uiace Options for the ACE/Monaco code editor
  * @property {string} format What format to use for the code editor (html)
@@ -344,6 +347,35 @@ function removePackageRow(packageName) {
 
     return null
 } // ---- End of removePackageRow ---- //
+
+/** Get the list of npm script names for the uibuilder instance, updates `npmScriptNames` var
+ * @param {string} url The instance url
+ */
+function getInstanceNpmScriptNames(url) {
+    // Call to admin-api-v3 to get the list of npm script names
+    $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: './uibuilder/admin/' + url,
+        data: {
+            cmd: 'getNpmScriptNames',
+        },
+        beforeSend: function(jqXHR) {
+            const authTokens = RED.settings.get('auth-tokens')
+            if (authTokens) {
+                jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+            }
+        },
+    })
+        .done(function(data, _textStatus, jqXHR) {
+            npmScriptNames = data || []
+            console.log(`🌐[uibuilder:getInstanceNpmScriptNames:getJSON] npm script names for '${url}':`, npmScriptNames, data)
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            console.error( `🌐🛑[uibuilder:getInstanceNpmScriptNames:getJSON] '${url}' Error: ${textStatus}`, errorThrown )
+            RED.notify(`uibuilder: Could not get the npm script names for '${url}'.<br>${errorThrown}`, { type: 'error', })
+        })
+}
 
 // #endregion ==== Package Management Functions ==== //
 
@@ -1944,6 +1976,8 @@ function onEditPrepare(node) {
 
     // Set the checkbox initial states
     setInitialStates(node)
+
+    getInstanceNpmScriptNames(node.url)
 
     prepTabs(node)
 
