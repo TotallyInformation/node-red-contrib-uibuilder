@@ -340,7 +340,7 @@ function runtimeSetup() {
     // #endregion ----- root folder ----- //
 
     /** (b) Do this before doing the web setup so that the packages can be served but after the folder/file setup */
-    packageMgt.setup(uib)
+    packageMgt.setup()
 
     /** (c) We need an ExpressJS web server to serve the page and vendor packages.
      * since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
