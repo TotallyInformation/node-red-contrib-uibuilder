@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-07-31 15:23:39
+updated: 2025-08-03 17:54:01
 author: Julian Knight (Totally Information)
 ---
 
@@ -24,6 +24,10 @@ Still need more thought on this because it does not quite allow for the simple l
 
 ## In Progress
 
+* Expose an instances npm scripts to the Editor config panel
+  * [x] Get npm script names for the instance using api v3 call & fns in the package-mgt library.
+  * [ ] Implement UI for displaying npm scripts. New tab.
+  * [ ] Implement functionality for running npm scripts. Another api v3 call to the package-mgt library.
 * Toaster improvements
   * [x] Initial rework
   * [ ] Test
