@@ -316,6 +316,14 @@ function adminRouterV3(uib, log) {
                     break
                 }
 
+                // Get the list of npm script names for a uibuilder instance
+                case 'getNpmScriptNames': {
+                    const npmScriptNames = packageMgt.getInstanceNpmScriptNames(params.url)
+                    res.statusMessage = 'NPM script names list returned'
+                    res.status(200).json( npmScriptNames )
+                    break
+                }
+
                 // List all folders and files for this uibuilder instance
                 case 'listall': {
                     log.trace(`🌐[uibuilder[:adminRouterV3:GET] Admin API. List all folders and files. url=${params.url}, root fldr=${uib.rootFolder}`)
