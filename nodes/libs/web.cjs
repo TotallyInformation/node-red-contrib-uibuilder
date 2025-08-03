@@ -448,6 +448,7 @@ class UibWeb {
         }
     } // --- End of setMasterStaticFolder() --- //
 
+    /** If using a custom server, serve the public root folder if it exists.*/
     _servePublicRoot() {
         const uib = this.uib
         const log = this.log
