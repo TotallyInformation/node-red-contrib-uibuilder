@@ -99,7 +99,7 @@ export class UibExperimental extends Uib {
         this._initDialogSupport()
 
         // Log experimental mode activation
-        console.warn('[UibExperimental] Experimental mode activated. Features may change or be removed.')
+        console.warn('[UibExperimental] Experimental mode activated. Features may change or be removed.', UibExperimental._experimentalMeta)
         console.info('[UibExperimental] Available features:', UibExperimental._experimentalMeta.features.split(','))
     }
 
@@ -423,8 +423,7 @@ export class UibExperimental extends Uib {
         return this._renderTemplate(template, data)
     }
 
-    /**
-     * Extract variable names from a template string
+    /** Extract variable names from a template string
      * @param {string} template - Template string with {{variable}} syntax
      * @returns {string[]} Array of variable names found in template
      * @private
@@ -444,8 +443,7 @@ export class UibExperimental extends Uib {
         return variables
     }
 
-    /**
-     * Set up auto-update for a template bound to an element
+    /** Set up auto-update for a template bound to an element
      * @param {HTMLElement} element - Target element for template
      * @param {string} template - Template string
      * @param {object} data - Template data
@@ -471,8 +469,7 @@ export class UibExperimental extends Uib {
         })
     }
 
-    /**
-     * Ensure a change listener exists for a variable
+    /** Ensure a change listener exists for a variable
      * @param {string} variable - Variable name to watch
      * @private
      */
@@ -617,6 +614,8 @@ export class UibExperimental extends Uib {
                     const processed = this._renderTemplate(template, data)
                     element.innerHTML = processed
                 }
+            } else {
+                console.warn(`[UibExperimental] Template element not found for selector: "${templateSelector}"`)
             }
         })
     }
