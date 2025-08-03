@@ -3,10 +3,15 @@ title: Documentation for the uibuilder standard CSS file
 description: |
   Details of the different styles and their usage.
 created: 2023-02-25 13:54:50
-updated: 2024-09-11 17:16:08
+updated: 2025-08-03 18:13:19
 ---
 
+The default front-end source templates for uibuilder all have an `index.css` file that is loaded in the `index.html` file. That `index.css` imports uibuilder's `uib-styles.css` file which is the standard CSS file for uibuilder. You don't have to use uibuilder's default, it is there to help you get started quickly and easily. You can use your own CSS file instead or in addition to the uibuilder standard CSS file.
+
 This style sheet is light/dark adaptive and has a basic style reset for the most commonly used HTML tags.
+
+> [!TIP]
+> You can browse the source for the CSS online at https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/front-end/uib-styles.css (this may sometimes be slightly different to your installed version, it should match the last published version of UIBUILDER).
 
 To force light/dark (ignoring browser prefs), simply change `<html lang="en">` to `<html lang="en" class="light">` or `<html lang="en" class="dark">` in your html file. Note, however, that while this works with this css file, it may not work with other ones. If you want to have the same effect in another css file, use `:root, :root.light {}` and `:root.dark` specifications.
 
