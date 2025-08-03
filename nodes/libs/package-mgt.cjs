@@ -26,8 +26,9 @@
  */
 
 const { join, } = require('node:path')
-const { copy, copySync, existsSync, writeJson, } = require('./fs.cjs')
+const { copy, copySync, existsSync, readJSONSync, writeJson, } = require('./fs.cjs')
 const { runOsCmd, runOsCmdSync, } = require('./uiblib.cjs')
+const uibGlobalConfig = require('./uibGlobalConfig.cjs')
 
 class UibPackages {
     // #region ---- Class Variables ----
@@ -109,9 +110,10 @@ class UibPackages {
     } // ---- End of npmGetGlobalPrefix ---- //
 
     /** Configure this class with uibuilder module specifics
-     * @param {uibConfig} uib uibuilder module-level configuration
+     * param {uibConfig} uib uibuilder module-level configuration
      */
-    setup( uib ) {
+    setup() {
+        const uib = uibGlobalConfig
         if ( !uib ) throw new Error('[uibuilder:UibPackages.js:setup] Called without required uib parameter or uib is undefined.')
         if ( uib.RED === null ) throw new Error('[uibuilder:UibPackages.js:setup] uib.RED is null')
         if ( uib.rootFolder === null ) throw this.#rootFldrNullError
@@ -151,7 +153,7 @@ class UibPackages {
             }, 3000)
         }
 
-        // SYNC - minimum update of the in-memory pj.uibuilder.packages with enough info to be able to serve the folders
+        // SYNC - minimum update of the in-memory this.uibPackageJson.uibuilder.packages with enough info to be able to serve the folders
         this.pkgsQuickUpd()
 
         // At this point we have the refs to uib and RED & enough to be able to serve the libraries
@@ -392,6 +394,79 @@ class UibPackages {
 
         // (re)Write package.json
         this.writePackageJson(rootFolder, pj)
+    }
+
+    /** Get the instance node for a uibuilder instance
+     * @param {string} url The URL of the uibuilder instance
+     * @returns {uibNode|null} The instance node or null if not found
+     */
+    getInstanceNode(url) {
+        const RED = this.uib.RED
+
+        // Get the node id of the instance
+        let node
+        for (const [key, value] of Object.entries(this.uib.instances)) {
+            if (value === url) node = RED.nodes.getNode(key)
+        }
+
+        // // Make sure we got a node
+        // if (!node) {
+        //     RED.log.error(`🌐🛑[UibFs:getInstanceLiveHtmlFiles] No node found for url="${url}" - called before all nodes loaded in Node-RED?`)
+        // }
+
+        return node || null
+    }
+
+    /** Get the root folder for a uibuilder instance
+     * @throws Error if no node found for the URL
+     * @param {string} url The URL of the uibuilder instance
+     * @returns {string|null} The root folder path or null if not found
+     */
+    getInstanceRootFolder(url) {
+        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:getInstanceRootFolder]')
+        if ( this.uib.RED === null ) throw new Error('uib.RED is null. Check setup order [UibFs:getInstanceRootFolder]')
+
+        // Get the node instance
+        const node = this.getInstanceNode(url)
+        // If no node found, throw error
+        if (!node) {
+            throw new Error(`🌐🛑[UibFs:getInstanceRootFolder] No node found for url="${url}" - called before all nodes loaded in Node-RED?`)
+        }
+
+        // Get the root folder for the uibuilder instance
+        const rootFolder = node?.instanceFolder
+        return rootFolder || null
+    }
+
+    /** Get the list of npm script names for a uibuilder instance
+     * @param {string} url The URL of the uibuilder instance
+     * @returns {Array<string>|null} Array of npm script names or null if not found
+     */
+    getInstanceNpmScriptNames( url ) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+        if ( this.#isConfigured !== true ) {
+            this.log.warn('🌐⚠️[uibuilder:UibPackages:getInstanceNpmScriptNames] Cannot run. Setup has not been called.'
+            )
+            return null
+        }
+
+        // Get the instance root folder
+        // const rootFolder = getInstanceRootFolder(url)
+        const rootFolder = this.getInstanceRootFolder(url)
+
+        // Read the package.json file for the uibuilder instance
+        let pj
+        try {
+            pj = readJSONSync(join(rootFolder, this.packageJson))
+        } catch (e) {
+            this.log.error(`🌐🛑[uibuilder:UibPackages:getInstanceNpmScriptNames] Error reading package.json for url="${url}": ${e.message}`)
+            return null
+        }
+
+        // Get the list of npm script names for a uibuilder instance
+        const npmScriptNames = Object.keys(pj?.scripts || {})
+
+        return npmScriptNames
     }
 
     /** Find install folder for a package - allows an array of locations to be given
