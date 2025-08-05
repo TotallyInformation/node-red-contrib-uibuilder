@@ -800,6 +800,7 @@ class UibPackages {
         const args = [
             !['outdated', 'update', 'install'].includes(scriptName) ? 'run' : '',
             scriptName,
+            '--long',
             '--no-fund',
             '--no-audit',
             '--no-update-notifier',
