@@ -117,6 +117,10 @@
     background-color: hsl(204 89% 40%);
     color: var(--red-ui-popover-color);
 }
+#ti-edit-panel #npm-script-output {
+    overflow-x: scroll;
+    white-space: pre;
+}
 
 /* uib-element heading typedInput override */
 #node-input-heading ~ .red-ui-typedInput-container {
