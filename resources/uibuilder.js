@@ -352,6 +352,7 @@ function removePackageRow(packageName) {
  * @param {string} url The instance url
  */
 function getInstanceNpmScriptNames(url) {
+    const stdScripts = ['outdated', 'update', 'install']
     // Call to admin-api-v3 to get the list of npm script names
     $.ajax({
         type: 'GET',
@@ -368,8 +369,8 @@ function getInstanceNpmScriptNames(url) {
         },
     })
         .done(function(data, _textStatus, jqXHR) {
-            npmScriptNames = data || []
-            console.log(`🌐[uibuilder:getInstanceNpmScriptNames:getJSON] npm script names for '${url}':`, npmScriptNames, data)
+            npmScriptNames = [...data, ...stdScripts]
+            // console.log(`🌐[uibuilder:getInstanceNpmScriptNames:getJSON] npm script names for '${url}':`, npmScriptNames, data)
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
             console.error( `🌐🛑[uibuilder:getInstanceNpmScriptNames:getJSON] '${url}' Error: ${textStatus}`, errorThrown )
@@ -493,7 +494,9 @@ function getFileContents() {
                 jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
             }
         },
-        success: function(data) {
+    })
+        .done(function(data, textStatus, jqXHR) {
+            // console.log( '🌐[uibuilder:getFileContents:get] File fetched successfully', textStatus, data, jqXHR)
             $('#node-input-template-editor').show()
             $('#node-input-template-editor-no-file').hide()
             // Add the fetched data to the editor
@@ -506,8 +509,7 @@ function getFileContents() {
             uiace.editorSession.getUndoManager().isClean()
             // Position the cursor in the edit area
             uiace.editor.focus()
-        },
-    })
+        })
         .fail(function(_jqXHR, textStatus, errorThrown) {
             console.error( '🌐🛑[uibuilder:getFileContents:get] Error ' + textStatus, errorThrown )
             uiace.editorSession.setValue('')
@@ -519,7 +521,7 @@ function getFileContents() {
             // Default the language selector in case it wasn't recognised
             if (!$('#node-input-format option:selected').length) $('#node-input-format').val('text')
         })
-} // --- End of getFileContents --- //
+}
 
 /** Get the list of files for the chosen url & folder
  * @param {string} [selectedFile] Optional. If present will select this filename after refresh, otherwise 1st file is selected.
@@ -1505,7 +1507,7 @@ function showServerInUse(node) {
             `Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post}`
         )
     }
-} // ---- end of showServerInUse ---- //
+}
 
 /** Handle URL changes
  * See also validateUrl.
@@ -1533,7 +1535,7 @@ function urlChange(node) {
 
     // Update the IDE edit link (editurl)
     vscodeLink(node)
-} // ---- end of urlChange ---- //
+}
 
 /** Run when switching to the Files tab
  * @param {object} node A reference to the panel's `this` object
@@ -1586,14 +1588,14 @@ function tabFiles(node) {
         getFileContents()
         fileIsClean(true)
     }
-} // ---- End of tabFiles() ---- //
+}
 
 /** Return the correct height of the libraries list
  * @returns {number} Calculated height of the libraries list
  */
 function getLibrariesListHeight() {
     return ($('.red-ui-tray-footer').position()).top - ($('#package-list-container').offset()).top + 25
-} // ---- End of getLibrariesListHeight() ---- //
+}
 
 /** Run when switching to the Libraries tab
  * @param {object} node A reference to the panel's `this` object
@@ -1623,7 +1625,63 @@ function tabLibraries(node) {
     // spinner
     $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
     $('i.spinner').hide()
-} // ---- End of tabLibraries() ---- //
+}
+
+/** Run when switching to the Run NPM Scripts tab
+ * @param {object} node A reference to the panel's `this` object
+ */
+function tabRunNpmScripts(node) {
+    const scriptList = $('#npm-script-list')
+
+    // Clear the list
+    scriptList.empty()
+
+    npmScriptNames.forEach( (scriptName) => {
+        // Add a button for each script
+        scriptList.append(
+            `<li><button id="btn-${scriptName}">${scriptName}</button></li>`
+        )
+        // Add the click handler for each button
+        $(`#btn-${scriptName}`).on('click', function() { // (e) {
+            runNpmScript(node, scriptName)
+        })
+    })
+}
+
+/** Run an npm script for this uibuilder instance
+ * Uses the admin-api-v3 to run the script.
+ * The script must be defined in the package.json file for the uibuilder instance.
+ * @param {object} node A reference to the panel's `this` object
+ * @param {string} scriptName Name of the npm script to run
+ */
+function runNpmScript(node, scriptName) {
+    // Call to admin-api-v3 to get the list of npm script names
+    $.ajax({
+        type: 'PUT',
+        dataType: 'json',
+        url: './uibuilder/admin/' + node.url,
+        data: {
+            cmd: 'runInstanceNpmScript',
+            scriptName: scriptName,
+        },
+        beforeSend: function(jqXHR) {
+            const authTokens = RED.settings.get('auth-tokens')
+            if (authTokens) {
+                jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+            }
+        },
+    })
+        .done(function(data, textStatus, jqXHR) {
+            // data type {{all:string, code:number, command:string}}
+            // update inner text of npm-script-output with the all output
+            $('#npm-script-output').text(data.all)
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            console.error( `🌐🛑[uibuilder:runNpmScript:put] npm script '${scriptName}' for '${node.url}' Failed. Error: ${textStatus}`, errorThrown, textStatus, jqXHR )
+            RED.notify(`uibuilder: running npm script '${scriptName}' for '${node.url}' Failed.<br>${errorThrown}`, { type: 'error', })
+            $('#npm-script-output').text(`${errorThrown}\n\n${jqXHR.responseJSON.all}`)
+        })
+}
 
 /** Prep tabs
  * @param {object} node A reference to the panel's `this` object
@@ -1648,6 +1706,11 @@ function prepTabs(node) {
                     break
                 }
 
+                case 'tab-runnpmscripts': {
+                    tabRunNpmScripts(node)
+                    break
+                }
+
                 case 'tab-libraries': {
                     tabLibraries(node)
                     break
@@ -1662,6 +1725,7 @@ function prepTabs(node) {
 
     tabs.addTab({ id: 'tab-core', label: 'Core', })
     tabs.addTab({ id: 'tab-files', label: 'Files', })
+    tabs.addTab({ id: 'tab-runnpmscripts', label: 'Scripts', })
     tabs.addTab({ id: 'tab-libraries', label: 'Libraries', })
     // tabs.addTab({ id: 'tab-security',  label: 'Security'  })
     tabs.addTab({ id: 'tab-advanced', label: 'Advanced', })
