@@ -96,6 +96,28 @@
     width: var(--min-editor-panel-width);
 } */
 
+/* uibuilder node script list */
+#ti-edit-panel #npm-script-list {
+    list-style-type:none;
+    margin-left: 0;
+}
+#ti-edit-panel #npm-script-list button {
+    text-transform: capitalize;
+    margin-top: 1em;
+    width: 100%;
+    text-align: left;
+    padding: 0.5em;
+    border-radius: 0.3em;
+}
+#ti-edit-panel #npm-script-list button:hover {
+    background-color: hsl(204 89% 40%);
+    color: var(--red-ui-popover-color);
+}
+#ti-edit-panel #npm-script-list button:active {
+    background-color: hsl(204 89% 40%);
+    color: var(--red-ui-popover-color);
+}
+
 /* uib-element heading typedInput override */
 #node-input-heading ~ .red-ui-typedInput-container {
     --typedInput-width-adjust: 160px;
