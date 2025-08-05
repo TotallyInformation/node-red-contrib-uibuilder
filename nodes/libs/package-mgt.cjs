@@ -66,6 +66,7 @@ class UibPackages {
         windowsHide: true,
         timeout: 300000, // 5min
         out: '', // uib addition - set to 'bare' when requesting JSON output
+        verbose: true, // @since 7.5.0 - default to verbose output
     }
 
     // #endregion ---- ---- ----
@@ -418,11 +419,12 @@ class UibPackages {
     }
 
     /** Get the root folder for a uibuilder instance
-     * @throws Error if no node found for the URL
+     * @throws Error if setup has not been called
      * @param {string} url The URL of the uibuilder instance
      * @returns {string|null} The root folder path or null if not found
      */
     getInstanceRootFolder(url) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
         if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:getInstanceRootFolder]')
         if ( this.uib.RED === null ) throw new Error('uib.RED is null. Check setup order [UibFs:getInstanceRootFolder]')
 
@@ -430,7 +432,8 @@ class UibPackages {
         const node = this.getInstanceNode(url)
         // If no node found, throw error
         if (!node) {
-            throw new Error(`🌐🛑[UibFs:getInstanceRootFolder] No node found for url="${url}" - called before all nodes loaded in Node-RED?`)
+            this.log.warn(`🌐⚠️[UibFs:getInstanceRootFolder] No node found for url="${url}" - called before all nodes loaded in Node-RED?`)
+            return null
         }
 
         // Get the root folder for the uibuilder instance
@@ -440,19 +443,23 @@ class UibPackages {
 
     /** Get the list of npm script names for a uibuilder instance
      * @param {string} url The URL of the uibuilder instance
-     * @returns {Array<string>|null} Array of npm script names or null if not found
+     * @returns {Array<string>} Array of npm script names or empty list if not found
      */
     getInstanceNpmScriptNames( url ) {
         if ( this.log === undefined ) throw this.#logUndefinedError
         if ( this.#isConfigured !== true ) {
             this.log.warn('🌐⚠️[uibuilder:UibPackages:getInstanceNpmScriptNames] Cannot run. Setup has not been called.'
             )
-            return null
+            return []
         }
 
         // Get the instance root folder
         // const rootFolder = getInstanceRootFolder(url)
         const rootFolder = this.getInstanceRootFolder(url)
+        if (!rootFolder) {
+            // getInstanceRootFolder will have already logged a warning
+            return []
+        }
 
         // Read the package.json file for the uibuilder instance
         let pj
@@ -460,7 +467,7 @@ class UibPackages {
             pj = readJSONSync(join(rootFolder, this.packageJson))
         } catch (e) {
             this.log.error(`🌐🛑[uibuilder:UibPackages:getInstanceNpmScriptNames] Error reading package.json for url="${url}": ${e.message}`)
-            return null
+            return []
         }
 
         // Get the list of npm script names for a uibuilder instance
@@ -758,7 +765,75 @@ class UibPackages {
     }
 
     // #endregion -- ---- --
-} // ----- End of UibPackages ----- //
+
+    /** Run an npm script in the context of a specific URL (uibuilder instance)
+     * @param {string} scriptName The name of the npm script to run
+     * @param {string} url The URL (name) of the uibuilder instance
+     * @returns {Promise<{all:string, code:number, command:string}|string>} Combined stdout/stderr, return code of the executed command
+     * @throws {Error} If this.log is undefined (setup not called)
+     */
+    async npmRunScript(scriptName, url) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+
+        /** @type {{all:string, code:number, command:string}} */
+        let out = { all: 'No output', code: -1, command: '', }
+
+        if ( this.#isConfigured !== true ) {
+            throw new Error(`runOsCmd/npmRunScript failed for url="${url}". Cannot run. Setup has not been called`)
+        }
+
+        if ( !scriptName || scriptName === '' ) {
+            throw new Error(`runOsCmd/npmRunScript failed for url="${url}". No script name provided.`)
+        }
+
+        // Get the instance root folder
+        const rootFolder = this.getInstanceRootFolder(url)
+        if (!rootFolder) {
+            throw new Error(`runOsCmd/npmRunScript failed for url="${url}". No root folder`)
+        }
+
+        const opts = { ...this.npmCmdOpts, }
+        opts.cwd = rootFolder
+        opts.out = ''
+        opts.verbose = false
+
+        const args = [
+            !['outdated', 'update', 'install'].includes(scriptName) ? 'run' : '',
+            scriptName,
+            '--no-fund',
+            '--no-audit',
+            '--no-update-notifier',
+            '--no-progress',
+            '--color=false',
+        ]
+
+        let myerr
+        try {
+            out = await runOsCmd('npm', args, opts)
+        } catch (e) {
+            myerr = new Error(`runOsCmd/npmRunScript failed for url="${url}". ${e.message}`)
+            // @ts-ignore
+            myerr.all = ''
+            // @ts-ignore
+            myerr.code = 3
+            // @ts-ignore
+            myerr.command = `npm ${args.join(' ')}`
+            throw myerr
+        }
+        if (out.code > 1) {
+            myerr = new Error(`Run script failed for url="${url}". Code: ${out.code}`)
+            // @ts-ignore
+            myerr.all = out.all
+            // @ts-ignore
+            myerr.code = out.code
+            // @ts-ignore
+            myerr.command = out.command
+            throw myerr
+        }
+
+        return out
+    } // ---- End of npmRunScript ---- //
+}
 
 /** Singleton model. Only 1 instance of UibWeb should ever exist.
  * Use as: `const packageMgt = require('./package-mgt.js')`
