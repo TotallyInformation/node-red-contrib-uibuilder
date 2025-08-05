@@ -24,17 +24,22 @@
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
  */
 
+const path = require('node:path')
+const { AsyncLocalStorage, } = require('node:async_hooks') // https://nodejs.org/docs/latest-v18.x/api/async_context.html#class-asynclocalstorage
+
 const express = require('express')
-const path = require('path')
 const fg = require('fast-glob') // https://github.com/mrmlnc/fast-glob
+
 const fslib = require('./fs.cjs') // Utility library for uibuilder
 const web = require('./web.cjs')
 const sockets = require('./socket.cjs')
 const packageMgt = require('./package-mgt.cjs')
+
 const templateConf = require('../../templates/template_dependencies.js') // Template configuration metadata
 const elements = require('../elements/elements.js')
 
 const v3AdminRouter = express.Router() // eslint-disable-line new-cap
+const asyncLocalStorage = new AsyncLocalStorage()
 
 const errUibRootFldr = new Error('uib.rootFolder is null [uibuilder:admin-api-v3]')
 
@@ -318,6 +323,7 @@ function adminRouterV3(uib, log) {
 
                 // Get the list of npm script names for a uibuilder instance
                 case 'getNpmScriptNames': {
+                    // Could be an empty list if errors
                     const npmScriptNames = packageMgt.getInstanceNpmScriptNames(params.url)
                     res.statusMessage = 'NPM script names list returned'
                     res.status(200).json( npmScriptNames )
@@ -477,7 +483,7 @@ function adminRouterV3(uib, log) {
             }
         })
 
-        // TODO Write file contents
+        // Do something that has side-effects, e.g. update a file or run an npm script
         .put(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
             if (uib.rootFolder === null) throw errUibRootFldr
 
@@ -498,6 +504,7 @@ function adminRouterV3(uib, log) {
                     return
                 }
 
+                // TODO: This is just a dummy placeholder for now
                 case 'updatepackage': {
                     log.trace(`🌐[uibuilder[:adminRouterV3:PUT:updatepackage] url=${params.url}`)
 
@@ -505,6 +512,31 @@ function adminRouterV3(uib, log) {
                     res.status(200).json({
                         newVersion: '',
                     })
+                    return
+                }
+
+                // Run an instance npm script, returning the output
+                case 'runInstanceNpmScript': {
+                    log.trace(`🌐[uibuilder[:adminRouterV3:PUT:runInstanceNpmScript] url="${params.url}", script="${params.scriptName}"`)
+
+                    // asyncLocalStorage caputures the context for asynch functions so we can handle async outputs in a synchronous way
+                    const context = { requestId: `uibApiV3Put_runInstanceNpmScript:${Date.now().toString()}`, }
+                    asyncLocalStorage.run(context, async () => {
+                        try {
+                            const result = await packageMgt.npmRunScript(params.scriptName, params.url)
+                            res.statusMessage = 'PUT successful'
+                            res.status(200).json(result)
+                        } catch (err) {
+                            log.error(`🌐🛑[uibuilder:adminRouterV3:PUT:runInstanceNpmScript] Error running script "${params.scriptName}" for URL "${params.url}". Error: ${err.message}`, err)
+                            res.statusMessage = `PUT unsuccessful. Error running script "${params.scriptName}" for URL "${params.url}". Error: ${err.message}`
+                            res.status(500).json({
+                                all: err?.all || 'No output',
+                                params: params,
+                                message: res.statusMessage,
+                            })
+                        }
+                    })
+
                     return
                 }
             }
