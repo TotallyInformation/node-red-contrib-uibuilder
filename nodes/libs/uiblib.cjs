@@ -305,8 +305,12 @@ const UibLib = {
                 if (opts.out === 'bare') {
                     resolve(out)
                 } else {
+                    let all = out
+                    if (opts.verbose === true) {
+                        all = `\n------------------------------------------------------\n[uibuilder:uiblib:runOsCmd]\nCommand:\n  "${cmdOut}"\n  Completed with code ${code}\n  \n${out}\n------------------------------------------------------\n`
+                    }
                     resolve({
-                        all: `\n------------------------------------------------------\n[uibuilder:uiblib:runOsCmd]\nCommand:\n  "${cmdOut}"\n  Completed with code ${code}\n  \n${out}\n------------------------------------------------------\n`,
+                        all: all,
                         code: code,
                         command: cmdOut,
                     })
@@ -317,6 +321,7 @@ const UibLib = {
 
     /** Run an OS Command synchronously - uses the default OS Shell unless overridden
      * WARNING: This fn will THROW if the command fails - make sure you trap it.
+     * @throws {Error} If the command fails
      * @fires uibuilder/runOsCmd/log
      * @param {string} cmd The OS command to run
      * @param {Array<string>} args Array of argument strings to be passed to the command
