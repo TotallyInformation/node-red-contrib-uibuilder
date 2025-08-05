@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-08-03 17:54:01
+updated: 2025-08-05 20:29:44
 author: Julian Knight (Totally Information)
 ---
 
@@ -26,8 +26,11 @@ Still need more thought on this because it does not quite allow for the simple l
 
 * Expose an instances npm scripts to the Editor config panel
   * [x] Get npm script names for the instance using api v3 call & fns in the package-mgt library.
-  * [ ] Implement UI for displaying npm scripts. New tab.
-  * [ ] Implement functionality for running npm scripts. Another api v3 call to the package-mgt library.
+  * [x] Implement functionality for running npm scripts. Another api v3 call to the package-mgt library.
+  * [x] Implement UI for displaying npm scripts. New tab.
+* Update admin-api-v3:
+  * [ ] Remove dependencies on fg (use fs.cjs instead).
+  * [ ] Make more use of AsyncLocalStorage to allow async functions to be wrapped in sync callers.
 * Toaster improvements
   * [x] Initial rework
   * [ ] Test
@@ -37,6 +40,7 @@ Still need more thought on this because it does not quite allow for the simple l
     * [ ] Add nestable menu support.
     * [ ] Add vertical menu support.
     * [ ] ? Add tabbed menu support ?
+    * [ ] SPA documentation.
 * Background rework (may take several releases):
   * [ ] Changing `uib-brand.css` to use more modern CSS, leaving it up to LightningCSS to build for older browsers. In particular, using nested definitions.
   * [ ] Remove remaining ~~5~~ 4 fsextra functions from fs lib. `ensureDirSync` is completed.
@@ -143,6 +147,8 @@ Still need more thought on this because it does not quite allow for the simple l
 
 ## Videos
 
+* uibuilder's folders.
+* SPA (Single Page Application) vs MPA (Multi Page Application) and how to use uibuilder with both.
 * uib-sidebar: How to use the new uib-sidebar node.
 * Updates on how to have data-driven updates to the UI.
 * Differences between IIFE and ESM module use.
@@ -153,3 +159,6 @@ Still need more thought on this because it does not quite allow for the simple l
 * Middleware & Hooks
 * New uibuilder experimental library.
 * Instance API's.
+* Using a separate user-facing web server (separate from Node-RED's defaults that server up the Dashboards and http-in/-response nodes)
+* HTML structure/hierarchy.
+* The DOM.
