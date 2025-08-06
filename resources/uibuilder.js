@@ -357,6 +357,7 @@ function getInstanceNpmScriptNames(url) {
     $.ajax({
         type: 'GET',
         dataType: 'json',
+        async: false,
         url: './uibuilder/admin/' + url,
         data: {
             cmd: 'getNpmScriptNames',
@@ -1631,6 +1632,8 @@ function tabLibraries(node) {
  * @param {object} node A reference to the panel's `this` object
  */
 function tabRunNpmScripts(node) {
+    getInstanceNpmScriptNames(node.url) // Sets npmScriptNames
+
     const scriptList = $('#npm-script-list')
 
     // Clear the list
@@ -1655,6 +1658,7 @@ function tabRunNpmScripts(node) {
  * @param {string} scriptName Name of the npm script to run
  */
 function runNpmScript(node, scriptName) {
+    $('#npm-script-output').text(`Running ${scriptName}...`)
     // Call to admin-api-v3 to get the list of npm script names
     $.ajax({
         type: 'PUT',
@@ -2040,8 +2044,6 @@ function onEditPrepare(node) {
 
     // Set the checkbox initial states
     setInitialStates(node)
-
-    getInstanceNpmScriptNames(node.url)
 
     prepTabs(node)
 
