@@ -66,6 +66,7 @@
   * [CSS Selectors](how-to/css-selectors.md)
   * [How & why to use the sender node](how-to/sender-node.md)
   * [How to use low-code in the browser](how-to/use-low-code-in-fe.md "Define and update elements in the browser using low-code")
+  * [Live development server](how-to/dev-server.md "How to use Node-RED as a live web development server")
   * [Loading external files](how-to/load-external-files.md "Including HTML, styles, scripts, and web components")
   * [Send code to the browser](how-to/send-code-to-fe.md "Dynamically send JavaScript code from Node-RED to browser clients")
   * [Uploading files](how-to/send-file-to-server.md "How to send files from the browser to Node-RED")
