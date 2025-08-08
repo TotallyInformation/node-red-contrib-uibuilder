@@ -12,8 +12,9 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
         /** Add a "uibuilder" object to the Node-RED Editor
          * To contain common functions, variables and constants for UIBUILDER nodes
          */
+        // @ts-ignore
         const uibuilder = window['uibuilder'] = {
-            // Standard palette category for all uibuilder nodes
+            // @ts-ignore Standard palette category for all uibuilder nodes
             paletteCategory: 'uibuilder',
             // Standard width for typed input fields
             typedInputWidth: '68.5%',
@@ -95,7 +96,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                         // Also pre-populate the editorUibInstances to avoid the problem that
                         // that list is built too late during Editor load
                         if (Object.keys(this.editorUibInstances).length === 0) this.editorUibInstances = this.deployedUibInstances
-                        // uibuilder.log('[uibuilder] Deployed Instances >>', instances, this )
+                        // uibuilder.log('🌐[uibuilder] Deployed Instances >>', instances, this )
                     },
                 })
                 return this.deployedUibInstances
@@ -189,10 +190,10 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 // Keep a list of ALL uibuilder nodes in the editor incl disabled, undeployed, etc. Different to the deployed list
                 if (node.url) uibuilder.editorUibInstances[node.id] = node.url
                 // Inform interested functions that something was added (and why)
-                RED.events.emit('uibuilder/node-added', node)
+                RED.events.emit('UIBUILDER/node-added', node)
                 // -- IF uibuilderInstances <> editorInstances THEN there are undeployed instances. OR Disabled nodes/flows --
 
-                // uibuilder.log('[uibuilder] node added:', node)
+                // uibuilder.log('🌐[uibuilder] node added:', node)
             }
         })
         RED.events.on('nodes:change', function(node) {
@@ -201,9 +202,9 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 if (node.url) uibuilder.editorUibInstances[node.id] = node.url
                 else delete uibuilder.editorUibInstances[node.id]
                 // Inform interested functions that something was changed
-                RED.events.emit('uibuilder/node-changed', node)
+                RED.events.emit('UIBUILDER/node-changed', node)
 
-                uibuilder.log('[uibuilder] node changed:', node)
+                uibuilder.log('🌐[uibuilder] node changed:', node)
             }
         })
         RED.events.on('nodes:remove', function(node) {
@@ -211,19 +212,19 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 // update list
                 delete uibuilder.editorUibInstances[node.id]
                 // Inform interested functions that something was deleted
-                RED.events.emit('uibuilder/node-deleted', node)
+                RED.events.emit('UIBUILDER/node-deleted', node)
 
-                uibuilder.log('[uibuilder] node removed: ', node)
+                uibuilder.log('🌐[uibuilder] node removed: ', node)
             }
         })
         // RED.events.on('deploy', function() {
-        //     console.log('[uibuilder] Deployed')
+        //     console.log('🌐[uibuilder] Deployed')
         // })
         // RED.events.on('workspace:dirty', function(data) {
-        //     console.log('[uibuilder] Workspace dirty:', data)
+        //     console.log('🌐[uibuilder] Workspace dirty:', data)
         // })
         // RED.events.on('runtime-state', function(event) {
-        //     console.log('[uibuilder] Runtime State:', event)
+        //     console.log('🌐[uibuilder] Runtime State:', event)
         // })
 
         // #region --- Add uibuilder-specific actions to the RED editor ---
@@ -250,7 +251,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 if (url) {
                     window.open(url, '_blank')
                 } else {
-                    RED.notify('No IDE URL set for this uibuilder node', 'error')
+                    RED.notify('🌐 No IDE URL set for this uibuilder node', 'error')
                 }
             } else {
                 RED.notify('🌐 Please select a single uibuilder node to open its front-end code in your IDE', 'error')
