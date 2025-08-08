@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-08-05 20:29:44
+updated: 2025-08-08 17:39:44
 author: Julian Knight (Totally Information)
 ---
 
@@ -28,6 +28,9 @@ Still need more thought on this because it does not quite allow for the simple l
   * [x] Get npm script names for the instance using api v3 call & fns in the package-mgt library.
   * [x] Implement functionality for running npm scripts. Another api v3 call to the package-mgt library.
   * [x] Implement UI for displaying npm scripts. New tab.
+  * [x] Find a way to be able to stream npm script output to Node-RED.
+  * [ ] Make sure that scripts without response text still cancel the "Running xxxxxx..." text when they complete.
+  * [ ] Add a method to cancel a long-running npm script. NEEDS TESTING.
 * Update admin-api-v3:
   * [ ] Remove dependencies on fg (use fs.cjs instead).
   * [ ] Make more use of AsyncLocalStorage to allow async functions to be wrapped in sync callers.
@@ -54,6 +57,11 @@ Still need more thought on this because it does not quite allow for the simple l
 
 ## To Do
 
+* [ ] Adjust gulp tasks to copy changed fe types (nb: src\front-end-module\tsconfig.json is different to templates\blank\tsconfig.json, don't copy it)
+  * [ ] to `templates\blank\types`
+  * [ ] to external template repo's
+  * [ ] Find out how to create a uib fe @types package (and add to template devDependencies)
+  * [ ] Find out how to automate updates to types when the fe module changes
 * [ ] Check that FE updates allow attributes to be set to `null` to unset them.
 * [ ] Also check that FE JS use of `uib.set('msg', ...)` works as expected.
 * [x] Add an experimental library that extends the uibuilder client library to allow playing with possible future features.
@@ -84,6 +92,11 @@ Still need more thought on this because it does not quite allow for the simple l
   * [ ] Add content to Lists, Maps, Tables, Dashboard Layouts, Cards, Articles.
   * [ ] Properly document file uploads and how to handle them. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
   * [ ] Add thanks to the contributors in the readme.
+  * [ ] Setting up and using VS Code for front-end development with uibuilder
+    * [ ] Link in uibuilder nodes
+    * [ ] Setting up remote VS Code
+    * [ ] Useful extensions for front-end development
+    * [ ] Configure browser dev tools (e.g. round-trip edits)
 
 #### Consider
 
@@ -162,3 +175,4 @@ Still need more thought on this because it does not quite allow for the simple l
 * Using a separate user-facing web server (separate from Node-RED's defaults that server up the Dashboards and http-in/-response nodes)
 * HTML structure/hierarchy.
 * The DOM.
+* Setting up and using VS Code for front-end development with uibuilder

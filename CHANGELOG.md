@@ -31,7 +31,10 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### 📌 Highlights
 
+* The 🌐 emoji is now in use consistently across UIBUILDER. You will find it in announcements on the forum, log messages, on the web page open buttons in the Editor and elsewhere. I am using this because emoji's are single-characters and usable anywhere that UTF-8 text is usable.
+
 * uibuilder installation will now **ERROR** and stop if the Node-RED userDir folder is not writable. This is to prevent the uibuilder node from being misconfigured and not working correctly. The error message will show the userDir folder that is not writable.
+
 * When using uibuilder's custom web server option, you now have the option to create a `<uibRoot>/.public` folder. It is served as the root URL. This is where you can place static files that you want to serve from the custom web server. The folder will be created automatically if it does not exist. You can also use this folder to serve static files such as images, CSS, and JavaScript files. Create an `index.html` file in the folder to serve a custom root home page. The folder is not served if you are using the default Node-RED web server (Use Node-RED's public folder for that).
 
 ### uibuilder node
@@ -40,6 +43,8 @@ Please see the roadmap in the docs for the backlog of future planned development
 
   * `open-uibuilder-site` - opens the selected uibuilder instances web site in a new browser tab.
   * `edit-uibuilder-site` - opens the selected uibuilder instances source folder in your full IDE. THe configuration for this comes from the "Code Editor URL" in the node's advanced properties tab (defaulting to VS Code).
+
+* Updated the buttons on the Editor config panel's top button bar to use icons instead of text. Note that the wireframe globe is now used consistently across uibuilder.
 
 ### `uib-brand.css` front-end styles
 
@@ -100,6 +105,8 @@ For the updated navigation menus, the following CSS variables (show with their d
 
 * UI library source file renamed from `ui.js` to `ui.mjs`. This is to make it clearer that it is an ES module. The file is still compiled into the client library as before. The gulp build process has been updated to reflect this change and simplified in line with the main client module build.
 
+* **UPDATED** Full uibuilder intellisense is now available for VS Code users when editing front-end JavaScript. Update your JS files to include `/// <reference path="../types/uibuilder.d.ts" />` at the start of your code. Don't forget to update the `types` folder with updated type definitions after upgrading uibuilder. You may need to manually create the `types` folder if using templates from previous versions.
+
 ### uibRouter client library
 
 * Added functions to auto-generate a menu of routes. Driven by updated router configuration data. Example:
@@ -137,6 +144,7 @@ For the updated navigation menus, the following CSS variables (show with their d
 * **NEW** "Reactive UI's" in the client section. This is a new section that describes how to use the reactive attributes in UIBUILDER to create dynamic web pages with minimal code. It includes a summary of the available attributes and how to use them.
 * Updated `uib-configuration` documentation to show the latest settings.js options including the msg, client and socket.io hooks. These allow you to enhance or override the `msg._client` data, simulate user authentication, block message send/receive, and redirect unauthenticated users.
 * Updated the `security/authenticated-client-properties` documentation. Added a tip about the hooks in the settings.js file.
+* **NEW** Added a new "how-to" article describing how to use Node-RED and uibuilder as a live web development server. This is a simple way to get a live reload server without needing to use complex build tools.
 
 ### **NEW** Experimental front-end client library
 
