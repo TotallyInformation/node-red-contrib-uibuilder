@@ -2,14 +2,18 @@
     "compilerOptions": {
         "allowJs": true,
         "checkJs": true,
-        "strictNullChecks": false,
-        "strict": false,
-        "lib": ["ES2022",  "DOM"],
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "target": "es2022",
         "noEmit": true,
-        "typeRoots": [".", "./types"]
-      },
-      "include": ["./types", "./**/*.js", "uibuilder.module.mjs", "ui.mjs", "uibrouter.mjs"]
+        "strict": true,
+        "strictNullChecks": false,
+        "target": "ESNext",
+        "module": "ESNext",
+        "typeRoots": [
+            ".",
+            "./types"
+        ]
+    },
+    "include": [
+        "types/**/*.d.ts",
+        "**/*.mjs"
+    ]
 }
