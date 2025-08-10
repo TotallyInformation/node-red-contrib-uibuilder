@@ -60,6 +60,17 @@ class UibPackages {
     dependencyProblems
 
     // OS Command options for running npm commands - https://nodejs.org/docs/latest-v18.x/api/child_process.html#child_processspawncommand-args-options
+    /**
+     * @type {{
+     *   cwd: string,
+     *   shell: boolean,
+     *   windowsHide: boolean,
+     *   timeout: number,
+     *   out: string,
+     *   verbose: boolean,
+     *   stream?: (...args: any[]) => void,
+     * }}
+     */
     npmCmdOpts = {
         cwd: '',
         shell: true,
@@ -67,6 +78,7 @@ class UibPackages {
         timeout: 300000, // 5min
         out: '', // uib addition - set to 'bare' when requesting JSON output
         verbose: true, // @since 7.5.0 - default to verbose output
+        // stream: undefined, // Optional callback for streaming output
     }
 
     // #endregion ---- ---- ----
@@ -95,7 +107,8 @@ class UibPackages {
         /** @type {string} */
         let out
         try {
-            out = await runOsCmd('npm', args, opts)
+            const result = await runOsCmd('npm', args, opts)
+            out = result.all
         } catch (e) {
             const myerr = new Error(`runOsCmd/npmGetGlobalPrefix failed. ${e.message}`)
             // @ts-ignore
@@ -356,10 +369,13 @@ class UibPackages {
             pkg.installedFrom = 'npm'
 
             // Add current version details
-            let res = await this.npmOutdated(pkgName)
+            let res = await this.npmOutdated(pkgName) ?? '{}'
             try {
                 res = JSON.parse(res)
-            } catch (e) { /* */ }
+            } catch (e) {
+                this.log.warn(`🌐⚠️[UibPackages:updIndividualPkgDetails] cannot parse npmOutdated output for ${pkgName}. ${e.message}`)
+                console.log(res)
+            }
             if ( res[pkgName] ) {
                 res = {
                     current: res[pkgName].current,
@@ -683,7 +699,8 @@ class UibPackages {
         /** @type {string} */
         let out
         try {
-            out = await runOsCmd('npm', args, opts)
+            const result = await runOsCmd('npm', args, opts)
+            out = result.all
         } catch (e) {
             const myerr = new Error(`runOsCmd/npmOutdated failed. ${e.message}`)
             // @ts-ignore
@@ -769,14 +786,16 @@ class UibPackages {
     /** Run an npm script in the context of a specific URL (uibuilder instance)
      * @param {string} scriptName The name of the npm script to run
      * @param {string} url The URL (name) of the uibuilder instance
-     * @returns {Promise<{all:string, code:number, command:string}|string>} Combined stdout/stderr, return code of the executed command
+     * @param {Function} [streamOutput] Optional. If provided, will be called with each chunk of output as soon as it arrives
+     * @returns {Promise<{all:string, code:number, command:string}> & {kill: () => void}} Combined stdout/stderr, return code of the executed command, with .kill() method
      * @throws {Error} If this.log is undefined (setup not called)
+     * @example
+     * const promise = npmRunScript('build', 'myurl', chunk => console.log(chunk))
+     * // To kill:
+     * promise.kill()
      */
-    async npmRunScript(scriptName, url) {
+    npmRunScript(scriptName, url, streamOutput) {
         if ( this.log === undefined ) throw this.#logUndefinedError
-
-        /** @type {{all:string, code:number, command:string}} */
-        let out = { all: 'No output', code: -1, command: '', }
 
         if ( this.#isConfigured !== true ) {
             throw new Error(`runOsCmd/npmRunScript failed for url="${url}". Cannot run. Setup has not been called`)
@@ -796,6 +815,10 @@ class UibPackages {
         opts.cwd = rootFolder
         opts.out = ''
         opts.verbose = false
+        if (typeof streamOutput === 'function') {
+            // @ts-ignore
+            opts.stream = streamOutput
+        }
 
         const args = [
             !['outdated', 'update', 'install'].includes(scriptName) ? 'run' : '',
@@ -808,31 +831,53 @@ class UibPackages {
             '--color=false',
         ]
 
-        let myerr
-        try {
-            out = await runOsCmd('npm', args, opts)
-        } catch (e) {
-            myerr = new Error(`runOsCmd/npmRunScript failed for url="${url}". ${e.message}`)
-            // @ts-ignore
-            myerr.all = ''
-            // @ts-ignore
-            myerr.code = 3
-            // @ts-ignore
-            myerr.command = `npm ${args.join(' ')}`
-            throw myerr
+        // Use runOsCmd directly to get the child process and allow kill
+        let childProcessRef = null
+        /**
+         * @type {Promise<{all:string, code:number, command:string}>}
+         */
+        const promiseBase = new Promise((resolve, reject) => {
+            // Use then/catch for async
+            runOsCmd('npm', args, {
+                ...opts,
+                childProcess: (cp) => { childProcessRef = cp },
+            })
+                .then((result) => {
+                    if (result.code > 1) {
+                        const myerr = new Error(`Run script failed for url="${url}". Code: ${result.code}`)
+                        // @ts-ignore
+                        myerr.all = result.all
+                        // @ts-ignore
+                        myerr.code = result.code
+                        // @ts-ignore
+                        myerr.command = result.command
+                        reject(myerr)
+                        return
+                    }
+                    resolve(result)
+                    return
+                })
+                .catch((e) => {
+                    const myerr = new Error(`runOsCmd/npmRunScript failed for url="${url}". ${e.message}`)
+                    // @ts-ignore
+                    myerr.all = ''
+                    // @ts-ignore
+                    myerr.code = 3
+                    // @ts-ignore
+                    myerr.command = `npm ${args.join(' ')}`
+                    reject(myerr)
+                })
+        })
+        // Attach kill method
+        const promise = promiseBase
+        // @ts-ignore
+        promise.kill = () => {
+            if (childProcessRef && typeof childProcessRef.kill === 'function') {
+                childProcessRef.kill('SIGTERM')
+            }
         }
-        if (out.code > 1) {
-            myerr = new Error(`Run script failed for url="${url}". Code: ${out.code}`)
-            // @ts-ignore
-            myerr.all = out.all
-            // @ts-ignore
-            myerr.code = out.code
-            // @ts-ignore
-            myerr.command = out.command
-            throw myerr
-        }
-
-        return out
+        // @ts-ignore
+        return promise
     } // ---- End of npmRunScript ---- //
 }
 
