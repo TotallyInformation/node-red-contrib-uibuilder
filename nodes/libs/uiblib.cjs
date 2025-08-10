@@ -1,5 +1,4 @@
 /* eslint-disable jsdoc/valid-types */
-/* eslint-env node es2017 */
 /**
  * Utility library for uibuilder
  *
@@ -253,61 +252,131 @@ const UibLib = {
     },
 
     /** uibuilder/runOsCmd/log event definition
-     * @event uibuilder/runOsCmd/log
-     * @type {string} A line of log output from the running OS Command
+     * event uibuilder/runOsCmd/log
+     * type {string} A line of log output from the running OS Command
      */
 
     /** Run an OS Command asynchronously - uses the default OS Shell unless overridden - returns a promise
      * @fires uibuilder/runOsCmd/log
      * @param {string} cmd The OS command to run
      * @param {Array<string>} args Array of argument strings to be passed to the command
-     * @param {object} [opts] Optional. Array of argument strings to be passed to the command. If not present, defaults to running via an OS shell
-     * @returns {Promise} The stdout/stderr output (interleaved) or the commands error reason
+     * @param {object} [opts] Optional. Options object. If not present, defaults to running via an OS shell
+     * @param {boolean} [opts.shell] Optional. If provided, the spawn command will be run in a shell (default=true)
+     * @param {boolean} [opts.windowsHide] Optional. If provided, will hide the spawned process window on Windows (default=true)
+     * @param {string} [opts.out] Optional. If set to 'bare', will return just the output string, otherwise returns an object
+     * @param {boolean} [opts.verbose] Optional. If true, will add extra information to the output object
+     * @param {import('node:child_process').StdioOptions} [opts.stdio] Optional. If set to 'pipe', will capture stdout and stderr output (default='pipe')
+     * @param {string|Buffer|null} [opts.stdout] Optional. Will be updated with the stdout output if stdio is set to 'pipe'
+     * @param {string|Buffer|null} [opts.stderr] Optional. Will be updated with the stderr output if stdio is set to 'pipe'
+     * @param {string} [opts.cwd] Optional. If provided, will set the current working directory for the command
+     * @param {object} [opts.env] Optional. If provided, will set the environment variables for the command
+     * @param {Function} [opts.stream] Optional. If provided, will be called with each chunk of output as soon as it arrives
+     * @returns {Promise & {kill: Function}} The stdout/stderr output (interleaved) or the command's error reason. The returned promise has a .kill([signal]) method to terminate the process.
+     * @example
+     * // Kill a long-running process
+     * const proc = runOsCmd('ping', ['localhost'], { stream: chunk => console.log(chunk) })
+     * setTimeout(() => proc.kill(), 5000) // kill after 5 seconds
+     * @example
+     * // Stream output example
+     * runOsCmd('ping', ['localhost'], { stream: chunk => console.log(chunk) })
+     */
+    /**
+     * Run an OS command asynchronously, with streaming and process control support.
+     * @param {string} cmd The OS command to run
+     * @param {Array<string>} args Array of argument strings to be passed to the command
+     * @param {object} opts Options for child_process.spawn and uiblib features
+     * @param {Function} [opts.stream] Optional. Callback for streaming output chunks
+     * @param {Function} [opts.childProcess] Optional. Callback to receive the spawned child process for process control
+     * @param {string} [opts.out] Optional. Set to 'bare' to return just the output string
+     * @param {boolean} [opts.verbose] Optional. Whether to include verbose output formatting
+     * @returns {Promise<{all:string, code:number, command:string}> & {kill: (signal?: string) => void}} Promise with kill method for process control
      */
     runOsCmd: function runOsCmd(cmd, args, opts) {
-        if (!opts) opts = { shell: true, windowsHide: true, }
-        opts.stdio = 'pipe' // force this option
+        if (!opts) opts = {}
+
+        // Extract custom properties
+        const stream = opts.stream
+        const childProcess = opts.childProcess
+        const out = opts.out
+        const verbose = opts.verbose
+
+        // Create spawn options by copying opts and removing custom properties
+        const spawnOpts = { shell: true, windowsHide: true, ...opts, }
+        delete spawnOpts.stream
+        delete spawnOpts.childProcess
+        delete spawnOpts.out
+        delete spawnOpts.verbose
+
+        // Ensure stdio is set to 'pipe' so shell.stdout and shell.stderr are streams
+        // @ts-ignore
+        spawnOpts.stdio = 'pipe'
+        // Ensure spawnOpts.env is an object if provided
+        // @ts-ignore
+        if (spawnOpts.env && typeof spawnOpts.env === 'string') {
+            // @ts-ignore
+            spawnOpts.env = process.env
+        }
         const cmdOut = `${cmd} ${args.join(' ')}`
 
-        return new Promise((resolve, reject) => {
+        /**
+         * If opts.stream is provided, it should be a callback function that receives each chunk of output as soon as it arrives.
+         * @callback streamCallback
+         * @param {string} chunk - A chunk of output from stdout or stderr
+         */
+
+        let shellRef
+        const promise = new Promise((resolve, reject) => {
             // Run the command
-            const shell = spawn(cmd, args, opts)
+            // @ts-ignore
+            const shell = spawn(cmd, args, spawnOpts)
+            shellRef = shell
+            // If opts.childProcess is a function, provide the child process reference
+            if (typeof childProcess === 'function') {
+                childProcess(shell)
+            }
 
             // Capture all output in 1 place + emit log events
-            let out = ''
-            shell.stdout.on('data', (data) => {
-                const d = data.toString()
-                // Emit log event with data
-                // RED.events.emit('uibuilder/runOsCmd/log', d )
-                out += d
-                // Don't emit chunks of output as this stops the final output from resolving
-            })
-            shell.stderr.on('data', (data) => {
-                const d = data.toString()
-                // Emit log event with data
-                // RED.events.emit('uibuilder/runOsCmd/log', d )
-                out += d
-            })
+            let output = ''
+            if (shell.stdout) {
+                // @ts-ignore
+                shell.stdout.on('data', (data) => {
+                    const d = data.toString()
+                    if (typeof stream === 'function') {
+                        stream(d)
+                    }
+                    output += d
+                })
+            }
+            if (shell.stderr) {
+                // @ts-ignore
+                shell.stderr.on('data', (data) => {
+                    const d = data.toString()
+                    if (typeof stream === 'function') {
+                        stream(d)
+                    }
+                    output += d
+                })
+            }
 
             shell.on('error', (err) => {
-                // @ts-ignore
-                err.all = out
-                // @ts-ignore
-                err.command = cmdOut
-                // @ts-ignore
-                err.code = 2
-                reject(err)
+                // Create a custom error object to avoid TypeScript lint errors
+                const customErr = {
+                    message: err.message,
+                    all: output,
+                    command: cmdOut,
+                    code: 2,
+                    original: err,
+                }
+                reject(customErr)
             })
 
             shell.on('close', (code) => {
-                // RED.events.emit('uibuilder/runOsCmd/end', { 'code': code } )
-                // Return complete output
-                if (opts.out === 'bare') {
-                    resolve(out)
+                if (out === 'bare') {
+                    resolve(output)
                 } else {
-                    let all = out
-                    if (opts.verbose === true) {
-                        all = `\n------------------------------------------------------\n[uibuilder:uiblib:runOsCmd]\nCommand:\n  "${cmdOut}"\n  Completed with code ${code}\n  \n${out}\n------------------------------------------------------\n`
+                    let all = output
+                    if (verbose === true) {
+                        all = `\n------------------------------------------------------\n[uibuilder:uiblib:runOsCmd]\nCommand:\n  "${cmdOut}"\n  Completed with code ${code}\n  \n${output}\n------------------------------------------------------\n`
                     }
                     resolve({
                         all: all,
@@ -317,6 +386,16 @@ const UibLib = {
                 }
             })
         })
+        // Attach a kill method to the promise for long-running processes
+        const typedPromise = promise
+        // @ts-ignore
+        typedPromise.kill = (signal = 'SIGTERM') => {
+            if (shellRef && typeof shellRef.kill === 'function') {
+                shellRef.kill(signal)
+            }
+        }
+        // @ts-ignore
+        return typedPromise
     },
 
     /** Run an OS Command synchronously - uses the default OS Shell unless overridden
