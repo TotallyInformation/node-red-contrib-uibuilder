@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable jsdoc/valid-types */
 /** Manage npm packages
  *
@@ -68,7 +69,8 @@ class UibPackages {
      *   timeout: number,
      *   out: string,
      *   verbose: boolean,
-     *   stream?: (...args: any[]) => void,
+     *   stream?: (...args: any[]) => void, // output stream
+     *   childProcess?: (...args: any[]) => void, // ref to child process
      * }}
      */
     npmCmdOpts = {
@@ -787,7 +789,7 @@ class UibPackages {
      * @param {string} scriptName The name of the npm script to run
      * @param {string} url The URL (name) of the uibuilder instance
      * @param {Function} [streamOutput] Optional. If provided, will be called with each chunk of output as soon as it arrives
-     * @returns {Promise<{all:string, code:number, command:string}> & {kill: () => void}} Combined stdout/stderr, return code of the executed command, with .kill() method
+     * @returns {Promise<{all:string, code:number, command:string, pid?: number}>} Combined stdout/stderr, return code of the executed command, with .kill() method
      * @throws {Error} If this.log is undefined (setup not called)
      * @example
      * const promise = npmRunScript('build', 'myurl', chunk => console.log(chunk))
@@ -819,6 +821,10 @@ class UibPackages {
             // @ts-ignore
             opts.stream = streamOutput
         }
+        let childProcessRef = null
+        opts.childProcess = (cp) => {
+            childProcessRef = cp
+        }
 
         const args = [
             !['outdated', 'update', 'install'].includes(scriptName) ? 'run' : '',
@@ -831,17 +837,12 @@ class UibPackages {
             '--color=false',
         ]
 
-        // Use runOsCmd directly to get the child process and allow kill
-        let childProcessRef = null
-        /**
-         * @type {Promise<{all:string, code:number, command:string}>}
+        /** Use runOsCmd directly to get the child process and allow kill
+         * @type {Promise<{all:string, code:number, command:string, pid?: number}>}
          */
         const promiseBase = new Promise((resolve, reject) => {
             // Use then/catch for async
-            runOsCmd('npm', args, {
-                ...opts,
-                childProcess: (cp) => { childProcessRef = cp },
-            })
+            runOsCmd('npm', args, opts)
                 .then((result) => {
                     if (result.code > 1) {
                         const myerr = new Error(`Run script failed for url="${url}". Code: ${result.code}`)
@@ -871,12 +872,7 @@ class UibPackages {
         // Attach kill method
         const promise = promiseBase
         // @ts-ignore
-        promise.kill = () => {
-            if (childProcessRef && typeof childProcessRef.kill === 'function') {
-                childProcessRef.kill('SIGTERM')
-            }
-        }
-        // @ts-ignore
+        promise.pid = childProcessRef ? childProcessRef.pid : null
         return promise
     } // ---- End of npmRunScript ---- //
 }

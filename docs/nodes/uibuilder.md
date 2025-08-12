@@ -3,7 +3,7 @@ title: The main uibuilder node
 description: |
   Usage and configuration.
 created: 2023-02-05 16:31:39
-updated: 2025-01-02 17:00:15
+updated: 2025-08-12 18:14:50
 ---
 
 > [!note]
@@ -83,6 +83,20 @@ You can create, delete and edit files here.
 > If you want to do any amount of file/folder editing, it is recommended to use a full code editor such as Visual Studio Code or similar. The built-in editor is very basic and does not have many of the features you might expect from a full editor. VS Code has a well supported remote editing feature that allows you to edit files on a remote server directly from your local machine.
 >
 > The Advanced tab has a setting that enables a direct link to your chosen editor assuming that it allows custom URL schemes. By default, this is set to Visual Studio Code but you can change it to any editor that supports custom URL schemes.
+
+### Scripts Tab (Since v7.5.0)
+
+This tab allows you to manage and run npm scripts defined in your instance root's package.json file as well as the default npm scripts `outdated`, `update`, and `install`.
+
+These can be any script that can be run on the host OS. They run in the OS's default shell. Output from the script is captured and returned to Node-RED in the panel beneath the list of scripts. When a script is running, a "Kill Script" button is visible, clicking this will abort the script immediately.
+
+If you add/amend scripts using the Files tab, switching back to this tab will update the list.
+
+> [!TIP]
+> If using the Svelte framework, which uses Rollup for its build process, if you want dynamic updates as you edit the front-end code, run the `dev` script `rollup -c rollup.config.js --bundleConfigAsCjs -w --environment NODE_ENV:development` _before_ opening the web page (or reload after running the script).
+
+> [!WARNING]
+> If you are running a long-running script, you may move to other tabs. However, if you exit the node's config panel while the script is running, you will not see all of the output and you will not be able to cancel the script using the kill button. It will continue to run in a background process. This may be improved in a future release.
 
 ### Libraries Tab
 

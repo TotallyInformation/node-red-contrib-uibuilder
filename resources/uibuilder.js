@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable @stylistic/newline-per-chained-call */
 // @ts-nocheck
 
@@ -1651,40 +1652,188 @@ function tabRunNpmScripts(node) {
     })
 }
 
+/** Kill a running npm script for this uibuilder instance
+ * @param {object} node A reference to the panel's `this` object
+ * @param {string} processId The process ID of the npm script to kill
+ */
+function killNpmScript(node, processId) {
+    if (!processId) return
+
+    const xhr = new XMLHttpRequest()
+    const params = {
+        cmd: 'killInstanceNpmScript',
+        processId: processId,
+    }
+
+    xhr.open('PUT', `uibuilder/admin/${node.url}`, true)
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText)
+            if (response.killed) {
+                RED.notify(`🌐 Process killed successfully`, { type: 'success', })
+            } else {
+                RED.notify(`🌐 Failed to kill process: ${response.error}`, { type: 'error', })
+            }
+        } else {
+            RED.notify(`🌐 Failed to kill process`, { type: 'error', })
+        }
+    }
+
+    const formData = Object.keys(params)
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+        .join('&')
+
+    xhr.send(formData)
+}
+
 /** Run an npm script for this uibuilder instance
- * Uses the admin-api-v3 to run the script.
+ * Uses the admin-api-v3 to run the script. Output from running the script is streamed back to the panel.
  * The script must be defined in the package.json file for the uibuilder instance.
  * @param {object} node A reference to the panel's `this` object
  * @param {string} scriptName Name of the npm script to run
  */
 function runNpmScript(node, scriptName) {
-    $('#npm-script-output').text(`Running ${scriptName}...`)
-    // Call to admin-api-v3 to get the list of npm script names
-    $.ajax({
-        type: 'PUT',
-        dataType: 'json',
-        url: './uibuilder/admin/' + node.url,
-        data: {
-            cmd: 'runInstanceNpmScript',
-            scriptName: scriptName,
-        },
-        beforeSend: function(jqXHR) {
-            const authTokens = RED.settings.get('auth-tokens')
-            if (authTokens) {
-                jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-            }
-        },
+    const elScriptOutput = $('#npm-script-output')
+    const elKillContainer = $('#kill-button-container')
+
+    let currentProcessId = null
+    let output = `Running ${scriptName}...\n\n`
+    let xhr = null // Move xhr to function scope so kill button can access it
+
+    const elKillButton = $('#npm-script-kill')
+    elKillButton.on('click', () => {
+        if (currentProcessId) killNpmScript(node, currentProcessId)
+        // Abort the active request once we've issued a script kill
+        if (xhr) xhr.abort()
     })
-        .done(function(data, textStatus, jqXHR) {
-            // data type {{all:string, code:number, command:string}}
-            // update inner text of npm-script-output with the all output
-            $('#npm-script-output').text(data.all)
-        })
-        .fail(function(jqXHR, textStatus, errorThrown) {
-            console.error( `🌐🛑[uibuilder:runNpmScript:put] npm script '${scriptName}' for '${node.url}' Failed. Error: ${textStatus}`, errorThrown, textStatus, jqXHR )
-            RED.notify(`uibuilder: running npm script '${scriptName}' for '${node.url}' Failed.<br>${errorThrown}`, { type: 'error', })
-            $('#npm-script-output').text(`${errorThrown}\n\n${jqXHR.responseJSON.all}`)
-        })
+
+    elScriptOutput.text(output)
+
+    // Use XMLHttpRequest for streaming chunked output
+    xhr = new XMLHttpRequest()
+    xhr.open('PUT', './uibuilder/admin/' + node.url, true)
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+    const authTokens = RED.settings.get('auth-tokens')
+    if (authTokens) {
+        xhr.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+    }
+    // Send data as url-encoded
+    xhr.send('cmd=runInstanceNpmScript&scriptName=' + encodeURIComponent(scriptName))
+
+    let lastProcessedLength = 0
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.LOADING || xhr.readyState === XMLHttpRequest.DONE) {
+            const newData = xhr.responseText.substring(lastProcessedLength)
+            lastProcessedLength = xhr.responseText.length
+
+            // Split by newline for chunked JSON
+            const lines = newData.split('\n')
+
+            lines.forEach(function(line) {
+                if (!line.trim()) return
+                try {
+                    const msg = JSON.parse(line)
+                    switch (msg.type) {
+                        // At request start
+                        case 'processId': {
+                            currentProcessId = msg.processId
+                            elKillButton.show()
+                            break
+                        }
+                        // As the request progresses
+                        case 'stream': {
+                            output += msg.data
+                            updateOutput()
+                            break
+                        }
+                        // At request end
+                        case 'end': {
+                            if (msg.result && msg.result.all) {
+                                output += `\n${msg.result.all}`
+                                updateOutput()
+                            }
+                            currentProcessId = null
+                            elKillButton.hide()
+                            RED.notify(`🌐 uibuilder: npm script '${scriptName}' for '${node.url}' completed.`, { type: 'success', })
+                            break
+                        }
+                        // If the request errors
+                        case 'error': {
+                            output += `${msg.message}\n${msg.all || ''}\n... Script ended`
+                            updateOutput()
+                            currentProcessId = null
+                            elKillButton.hide()
+                            RED.notify(`🌐 uibuilder: running npm script '${scriptName}' for '${node.url}' Failed.<br>${msg.message}`, { type: 'error', })
+                            break
+                        }
+                    }
+                } catch (e) {
+                    // Just in case
+                    console.warn(`🌐[uibuilder:runNpmScript] JSON parse error for line: ${line}`, e)
+                }
+            })
+        }
+    }
+
+    xhr.onerror = function() {
+        $('#npm-script-output').text('Error running script')
+        RED.notify(`uibuilder: running npm script '${scriptName}' for '${node.url}' Failed.`, { type: 'error', })
+        currentProcessId = null
+        elKillButton.hide()
+    }
+
+    xhr.onabort = function() {
+        output += '\n... Script aborted by user'
+        updateOutput()
+        RED.notify(`🌐 uibuilder: npm script '${scriptName}' for '${node.url}' was aborted.`, { type: 'warning', })
+        currentProcessId = null
+        elKillButton.hide()
+    }
+
+    /** Update the output display, restricting to last 10000 lines
+     * @param {boolean} [forceUpdate] Force update even if throttled (default=false)
+     */
+    function updateOutput(forceUpdate = false) {
+        // Throttle updates to improve performance
+        if (!forceUpdate && updateOutput.lastUpdate && (Date.now() - updateOutput.lastUpdate) < 100) {
+            // Schedule delayed update if not already scheduled
+            if (!updateOutput.pending) {
+                updateOutput.pending = setTimeout(() => {
+                    updateOutput.pending = null
+                    updateOutput(true)
+                }, 100)
+            }
+            return
+        }
+        updateOutput.lastUpdate = Date.now()
+
+        // Trim to last 10000 lines efficiently
+        const maxLines = 10000
+        if (output.includes('\n')) {
+            const lines = output.split('\n')
+            if (lines.length > maxLines) {
+                const trimmed = lines.slice(-maxLines)
+                output = trimmed.join('\n')
+
+                // Add indicator that content was trimmed
+                if (!output.startsWith('... [Output truncated]')) {
+                    output = `... [Output truncated]\n${output}`
+                }
+            }
+        }
+
+        if (elScriptOutput.length) {
+            elScriptOutput.text(output)
+
+            // Auto-scroll to bottom
+            const scrollContainer = elScriptOutput.parent()
+            if (scrollContainer.length) {
+                scrollContainer.scrollTop(scrollContainer[0].scrollHeight)
+            }
+        }
+    }
 }
 
 /** Prep tabs
@@ -2003,18 +2152,19 @@ function fileEditor() {
     })
 } // ---- End of fileEditor ----
 
-/** Prep for edit
- * @param {*} node -
+/** Add uibuilder's custom buttons to the node-red editor node config panel's top button bar
+ * Currently, open, docs and vscode buttons are added after the Delete button.
+ * @param {object} node A reference to the panel's `this` object
  */
-function onEditPrepare(node) {
+function customButtonBar(node) {
     // Add open and docs buttons to top button bar, next to Delete button
-    $('<button type="button" title="Open the uibuilder web page" id="btntopopen" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-globe" aria-hidden="true"></i> Open</button>')
+    $('<button type="button" title="Open the uibuilder web page" id="btntopopen" class="ui-button ui-corner-all ui-widget leftButton">🌐</button>')
         .on('click', (evt) => {
             evt.preventDefault()
             window.open(`${uibuilder.urlPrefix}${$('#node-input-url').val()}`, '_blank')
         })
         .appendTo($('div.red-ui-tray-toolbar'))
-    $('<button type="button" title="Open uibuilder Documentation" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-book" aria-hidden="true"></i> Docs</button>')
+    $('<button type="button" title="Open uibuilder Documentation" class="ui-button ui-corner-all ui-widget leftButton">📘</button>')
         .on('click', (evt) => {
             evt.preventDefault()
             RED.sidebar.help.show('uibuilder')
@@ -2029,6 +2179,13 @@ function onEditPrepare(node) {
             window.open(vsc.url)
         })
         .appendTo($('div.red-ui-tray-toolbar'))
+}
+
+/** Prep for edit
+ * @param {object} node A reference to the panel's `this` object
+ */
+function onEditPrepare(node) {
+    customButtonBar(node)
 
     // Update the open and node details buttons below the url
     $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${node.url}`)

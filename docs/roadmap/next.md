@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-08-08 17:39:44
+updated: 2025-08-12 18:12:08
 author: Julian Knight (Totally Information)
 ---
 
@@ -24,13 +24,6 @@ Still need more thought on this because it does not quite allow for the simple l
 
 ## In Progress
 
-* Expose an instances npm scripts to the Editor config panel
-  * [x] Get npm script names for the instance using api v3 call & fns in the package-mgt library.
-  * [x] Implement functionality for running npm scripts. Another api v3 call to the package-mgt library.
-  * [x] Implement UI for displaying npm scripts. New tab.
-  * [x] Find a way to be able to stream npm script output to Node-RED.
-  * [ ] Make sure that scripts without response text still cancel the "Running xxxxxx..." text when they complete.
-  * [ ] Add a method to cancel a long-running npm script. NEEDS TESTING.
 * Update admin-api-v3:
   * [ ] Remove dependencies on fg (use fs.cjs instead).
   * [ ] Make more use of AsyncLocalStorage to allow async functions to be wrapped in sync callers.
@@ -143,6 +136,7 @@ Still need more thought on this because it does not quite allow for the simple l
 * A manifest file for offline use.
   *  Requires a change to the templates.
 * Mount instance dependencies (e.g. libraries listed in the instances package.json). This would allow the instance to use the libraries without having to install them in the global node_modules.
+* uibuilder node scripts feature - capture running script output even if the config panel has been closed. Restore on re-open.
 
 
 ## Answers needed

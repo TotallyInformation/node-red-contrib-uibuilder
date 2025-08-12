@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2025-07-10 11:20:28
+updated: 2025-08-12 18:02:06
 ---
 
 # Changelog
@@ -31,6 +31,10 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### 📌 Highlights
 
+* The `uibuilder` node now has an extra tab "scripts" which lets you run npm scripts defined in your instance root's package.json file.
+  
+  These can be any script that can be run on the host OS. They run in the OS's default shell. Output from the script is captured and returned to Node-RED in the panel beneath the list of scripts. When a script is running, a "Kill Script" button is visible, clicking this wil abort the script immediately.
+
 * The 🌐 emoji is now in use consistently across UIBUILDER. You will find it in announcements on the forum, log messages, on the web page open buttons in the Editor and elsewhere. I am using this because emoji's are single-characters and usable anywhere that UTF-8 text is usable.
 
 * uibuilder installation will now **ERROR** and stop if the Node-RED userDir folder is not writable. This is to prevent the uibuilder node from being misconfigured and not working correctly. The error message will show the userDir folder that is not writable.
@@ -45,6 +49,16 @@ Please see the roadmap in the docs for the backlog of future planned development
   * `edit-uibuilder-site` - opens the selected uibuilder instances source folder in your full IDE. THe configuration for this comes from the "Code Editor URL" in the node's advanced properties tab (defaulting to VS Code).
 
 * Updated the buttons on the Editor config panel's top button bar to use icons instead of text. Note that the wireframe globe is now used consistently across uibuilder.
+
+* **NEW** An extra tab "scripts" has been added. This lets you run npm scripts defined in your instance root's package.json file.
+  
+  These can be any script that can be run on the host OS. They run in the OS's default shell. Output from the script is captured and returned to Node-RED in the panel beneath the list of scripts. When a script is running, a "Kill Script" button is visible, clicking this wil abort the script immediately.
+
+  In addition to scripts that you define, the default npm `outdated`, `update`, and `install` scripts are also available to run.
+
+### uib-sender node
+
+* **BUG FIX** It was not returning messages from the front-end. This was a regression bug from a previous update. Many thanks to [@Robert0](https://discourse.nodered.org/t/uibuilder-sender-node-no-response/98553) for reporting.
 
 ### `uib-brand.css` front-end styles
 
