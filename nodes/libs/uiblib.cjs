@@ -35,7 +35,7 @@
 const path = require('node:path')
 const { promisify, } = require('node:util')
 const crypto = require('node:crypto')
-const { spawn, spawnSync, } = require('node:child_process')
+const { exec, spawn, spawnSync, } = require('node:child_process')
 const fslib = require('./fs.cjs')
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
 
@@ -251,27 +251,18 @@ const UibLib = {
         }
     },
 
-    /** uibuilder/runOsCmd/log event definition
-     * event uibuilder/runOsCmd/log
-     * type {string} A line of log output from the running OS Command
-     */
-
-    /** Run an OS Command asynchronously - uses the default OS Shell unless overridden - returns a promise
-     * @fires uibuilder/runOsCmd/log
+    /** Run an OS command asynchronously, with streaming and process control support.
+     * Uses the default OS Shell unless overridden - returns a promise
      * @param {string} cmd The OS command to run
      * @param {Array<string>} args Array of argument strings to be passed to the command
-     * @param {object} [opts] Optional. Options object. If not present, defaults to running via an OS shell
-     * @param {boolean} [opts.shell] Optional. If provided, the spawn command will be run in a shell (default=true)
-     * @param {boolean} [opts.windowsHide] Optional. If provided, will hide the spawned process window on Windows (default=true)
-     * @param {string} [opts.out] Optional. If set to 'bare', will return just the output string, otherwise returns an object
-     * @param {boolean} [opts.verbose] Optional. If true, will add extra information to the output object
-     * @param {import('node:child_process').StdioOptions} [opts.stdio] Optional. If set to 'pipe', will capture stdout and stderr output (default='pipe')
-     * @param {string|Buffer|null} [opts.stdout] Optional. Will be updated with the stdout output if stdio is set to 'pipe'
-     * @param {string|Buffer|null} [opts.stderr] Optional. Will be updated with the stderr output if stdio is set to 'pipe'
-     * @param {string} [opts.cwd] Optional. If provided, will set the current working directory for the command
-     * @param {object} [opts.env] Optional. If provided, will set the environment variables for the command
-     * @param {Function} [opts.stream] Optional. If provided, will be called with each chunk of output as soon as it arrives
-     * @returns {Promise & {kill: Function}} The stdout/stderr output (interleaved) or the command's error reason. The returned promise has a .kill([signal]) method to terminate the process.
+     * @param {object} opts Options for child_process.spawn and uiblib features. Takes standard spawn opts + the following:
+     *   @param {(chunk: string) => void} [opts.stream] Optional. Callback for streaming output chunks
+     *   @param {(shell: import('node:child_process').ChildProcessWithoutNullStreams) => void} [opts.childProcess] Optional. Callback to receive the spawned child process for process control (e.g. killing the process)
+     *   @param {string} [opts.out] Optional. Set to 'bare' to return just the output string
+     *   @param {boolean} [opts.verbose] Optional. Whether to include verbose output formatting
+     *   @param {object|string} [opts.env] Optional. Whether to include environment variables object for the command, if a string, will use process.env
+     * @returns {Promise<{all:string, code:number, command:string, pid?: number}>} Promise with kill method for process control
+     *
      * @example
      * // Kill a long-running process
      * const proc = runOsCmd('ping', ['localhost'], { stream: chunk => console.log(chunk) })
@@ -280,21 +271,10 @@ const UibLib = {
      * // Stream output example
      * runOsCmd('ping', ['localhost'], { stream: chunk => console.log(chunk) })
      */
-    /**
-     * Run an OS command asynchronously, with streaming and process control support.
-     * @param {string} cmd The OS command to run
-     * @param {Array<string>} args Array of argument strings to be passed to the command
-     * @param {object} opts Options for child_process.spawn and uiblib features
-     * @param {Function} [opts.stream] Optional. Callback for streaming output chunks
-     * @param {Function} [opts.childProcess] Optional. Callback to receive the spawned child process for process control
-     * @param {string} [opts.out] Optional. Set to 'bare' to return just the output string
-     * @param {boolean} [opts.verbose] Optional. Whether to include verbose output formatting
-     * @returns {Promise<{all:string, code:number, command:string}> & {kill: (signal?: string) => void}} Promise with kill method for process control
-     */
     runOsCmd: function runOsCmd(cmd, args, opts) {
         if (!opts) opts = {}
 
-        // Extract custom properties
+        // Extract custom properties from opts
         const stream = opts.stream
         const childProcess = opts.childProcess
         const out = opts.out
@@ -307,30 +287,21 @@ const UibLib = {
         delete spawnOpts.out
         delete spawnOpts.verbose
 
-        // Ensure stdio is set to 'pipe' so shell.stdout and shell.stderr are streams
-        // @ts-ignore
+        // @ts-ignore Ensure stdio is set to 'pipe' so shell.stdout and shell.stderr are streams
         spawnOpts.stdio = 'pipe'
-        // Ensure spawnOpts.env is an object if provided
-        // @ts-ignore
+        // @ts-ignore Ensure spawnOpts.env is an object if provided
         if (spawnOpts.env && typeof spawnOpts.env === 'string') {
             // @ts-ignore
             spawnOpts.env = process.env
         }
         const cmdOut = `${cmd} ${args.join(' ')}`
 
-        /**
-         * If opts.stream is provided, it should be a callback function that receives each chunk of output as soon as it arrives.
-         * @callback streamCallback
-         * @param {string} chunk - A chunk of output from stdout or stderr
-         */
-
         let shellRef
         const promise = new Promise((resolve, reject) => {
-            // Run the command
-            // @ts-ignore
+            // @ts-ignore Run the command. NB: shell contains shell.pid
             const shell = spawn(cmd, args, spawnOpts)
             shellRef = shell
-            // If opts.childProcess is a function, provide the child process reference
+            // If opts.childProcess is a function, provide the child process reference to it
             if (typeof childProcess === 'function') {
                 childProcess(shell)
             }
@@ -386,15 +357,12 @@ const UibLib = {
                 }
             })
         })
-        // Attach a kill method to the promise for long-running processes
+        /** Attach a kill method to the promise for long-running processes
+         * @type {Promise<{all:string, code:number, command:string, pid?: number}>}
+         */
         const typedPromise = promise
         // @ts-ignore
-        typedPromise.kill = (signal = 'SIGTERM') => {
-            if (shellRef && typeof shellRef.kill === 'function') {
-                shellRef.kill(signal)
-            }
-        }
-        // @ts-ignore
+        typedPromise.pid = shellRef.pid
         return typedPromise
     },
 
@@ -419,6 +387,141 @@ const UibLib = {
         }
         out.command = `${cmd} ${args.join(' ')}`
         return out
+    },
+
+    /** Kill a process tree
+     * Inspired by https://github.com/pkrumins/node-tree-kill
+     * @param {number|string} rootPid OS pid that will be killed along with its children
+     * @param {"SIGTERM"|"SIGKILL"} [signal] Optional. The signal to send (default=SIGTERM)
+     */
+    killTree: function killTree(rootPid, signal = 'SIGTERM') {
+        // @ts-ignore In case a string number is passed
+        rootPid = parseInt(rootPid, 10)
+        if (Number.isNaN(rootPid)) {
+            throw new Error(`Invalid root PID, must be a number: ${rootPid}`)
+        }
+
+        const tree = {}
+        const pidsToProcess = {}
+        tree[rootPid] = []
+        pidsToProcess[rootPid] = 1
+        // TODO PROBABLY REMOVE
+        const callback = () => {}
+
+        switch (process.platform) {
+            case 'win32': {
+                exec('taskkill /pid ' + rootPid + ' /T /F', callback)
+                break
+            }
+
+            case 'darwin': {
+                buildProcessTree(rootPid, tree, pidsToProcess,
+                    function (parentPid) {
+                        return spawn('pgrep', ['-P', parentPid])
+                    },
+                    function () {
+                        killAll(tree, signal, callback)
+                    }
+                )
+                break
+            }
+
+            default: { // Linux
+                buildProcessTree(rootPid, tree, pidsToProcess,
+                    function (parentPid) {
+                        return spawn('ps', ['-o', 'pid', '--no-headers', '--ppid', parentPid])
+                    },
+                    function () {
+                        killAll(tree, signal, callback)
+                    }
+                )
+                break
+            }
+        }
+
+        /** Build a process tree for the given parent PID
+         * @param {number} parentPid Parent PID to process
+         * @param {object} tree Object to hold the tree
+         * @param {object} pidsToProcess Object to hold the list of PIDs to process
+         * @param {Function} spawnChildProcessesList Function to spawn child processes
+         * @param {Function} cb Callback function
+         */
+        function buildProcessTree(parentPid, tree, pidsToProcess, spawnChildProcessesList, cb) {
+            const ps = spawnChildProcessesList(parentPid)
+            let allData = ''
+            ps.stdout.on('data', function (data) {
+                allData += data.toString('ascii')
+            })
+
+            const onClose = function (code) {
+                delete pidsToProcess[parentPid]
+
+                if (code != 0) {
+                    // no more parent processes
+                    if (Object.keys(pidsToProcess).length == 0) {
+                        cb()
+                    }
+                    return
+                }
+
+                allData.match(/\d+/g).forEach(function (spid) {
+                    // ts-ignore
+                    rootPid = parseInt(spid, 10)
+                    tree[parentPid].push(rootPid)
+                    tree[rootPid] = []
+                    pidsToProcess[rootPid] = 1
+                    buildProcessTree(rootPid, tree, pidsToProcess, spawnChildProcessesList, cb)
+                })
+            }
+
+            ps.on('close', onClose)
+        }
+
+        /** Kill a complete process tree (for MacOS and Linux)
+         * @param {object} tree tree of pids to process
+         * @param {string} signal Signal to send
+         * @param {Function} [callback] Optional callback fn
+         * @returns {void|Function} Nothing unless a callback is provided
+         * @throws {Error} If an error occurs during the kill process
+         */
+        function killAll(tree, signal, callback) {
+            const killed = {}
+            try {
+                Object.keys(tree).forEach(function (pid) {
+                    tree[pid].forEach(function (pidpid) {
+                        if (!killed[pidpid]) {
+                            killPid(pidpid, signal)
+                            killed[pidpid] = 1
+                        }
+                    })
+                    if (!killed[pid]) {
+                        // @ts-ignore
+                        killPid(pid, signal)
+                        killed[pid] = 1
+                    }
+                })
+            } catch (err) {
+                if (callback) {
+                    return callback(err)
+                }
+                throw err
+            }
+            if (callback) {
+                return callback()
+            }
+        }
+
+        /** Kill a single pid using process.kill
+         * @param {number} pid OS pid
+         * @param {string} signal Signal to send
+         */
+        function killPid(pid, signal) {
+            try {
+                process.kill(pid, signal)
+            } catch (err) {
+                if (err.code !== 'ESRCH') throw err
+            }
+        }
     },
 
     /** Sort a uibuilder instances object by url instead of the natural order added
