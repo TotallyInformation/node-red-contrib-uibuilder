@@ -1,3 +1,4 @@
+"use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1025,6 +1026,10 @@ const Ui = (_a = class {
     if (!el) return;
     if (!slot) slot = "";
     slot = this.sanitiseHTML(slot);
+    if (el.nodeName === "TEMPLATE") {
+      el.innerHTML = slot;
+      return;
+    }
     const tempFrag = _a.doc.createRange().createContextualFragment(slot);
     const elRange = _a.doc.createRange();
     elRange.selectNodeContents(el);

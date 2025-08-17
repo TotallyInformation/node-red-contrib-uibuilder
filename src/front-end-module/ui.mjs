@@ -1294,6 +1294,16 @@ const Ui = class Ui {
         // If DOMPurify is loaded, apply it now
         slot = this.sanitiseHTML(slot)
 
+        // Override for where the el is a template, the normal handler does now work correctly
+        if (el.nodeName === 'TEMPLATE') {
+            el.innerHTML = slot
+            return
+        }
+
+        // Only use innerHTML for templates as the following does not work for them
+        // For everything else use a DocumentFragment for both security and performance.
+        //   It also preserves DOM state and does not destroy event handlers.
+
         // Create doc frag and apply html string (msg.payload or the slot property)
         const tempFrag = Ui.doc.createRange().createContextualFragment(slot)
 
