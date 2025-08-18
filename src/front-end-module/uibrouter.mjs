@@ -30,8 +30,19 @@
  * @property {string} [description] OPTIONAL, default=route id. Text to use as a long description for the route
  * @property {"html"|"md"|"markdown"} [format] OPTIONAL, default=html. Route content format, HTML or Markdown (md). Markdown requires the Markdown-IT library to have been loaded.
  *
+ * otherLoadDefinition
+ * @typedef {object} otherLoadDefinition Single external load configuration
+ * @property {string} id REQUIRED. Unique (to page) ID. Will be applied to loaded content.
+ * @property {string} src REQUIRED. url of external template to load
+ * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
+ *
+ * @typedef {object} routeMenu Single navigation menu configuration
+ * @property {string} id REQUIRED. Unique (to page) ID. Used as the menu container
+ * @property {"horizontal"|"vertical"} [menuType] OPTIONAL. Type of menu to create. Default is "horizontal", "vertical" is not yet supported
+ * @property {string} [label] OPTIONAL. Text to use as an accessible label for the nav element
+ *
  * UibRouterConfig
- * @typedef {object} UibRouterConfig Configuration for the UiBRouter class instances
+ * @typedef {object} UibRouterConfig UiBRouter router configuration
  * @property {routeDefinition[]} routes REQUIRED. Array of route definitions
  * @property {Array<string|object>} [mdPlugins] OPTIONAL. Array of Markdown-IT plugins
  * @property {string} [defaultRoute] OPTIONAL, default=1st route. If set to a route id, that route will be automatically shown on load
@@ -40,21 +51,8 @@
  * @property {boolean} [templateLoadAll] OPTIONAL, default=false. If TRUE, all external route templates will be loaded when the router is instanciated. Default is to lazy-load external templates
  * @property {boolean} [templateUnload] OPTIONAL, default=true. If TRUE, route templates will be unloaded from DOM after access.
  * @property {otherLoadDefinition[]} [otherLoad] OPTIONAL, default=none. If present, router start will pre-load other external templates direct to the DOM. Use for menu's, etc.
+ * @property {routeMenu[]} [routeMenus] OPTIONAL, default=none. If present, router will create navigation menus for each entry defined in this array.
  *
- * otherLoadDefinition
- * @typedef {object} otherLoadDefinition Single external load configuration
- * @property {string} id REQUIRED. Unique (to page) ID. Will be applied to loaded content.
- * @property {string} src REQUIRED. url of external template to load
- * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
- *
- * @typedef {object} routeMenu
- * @property {string} id REQUIRED. Unique (to page) ID. Used as the menu container
- * @property {"horizontal"|"vertical"} [menuType] OPTIONAL. Type of menu to create. Default is "horizontal"
- * @property {string} [label] OPTIONAL. Text to use as an accessible label for the nav element
- *
- * @property {string} src REQUIRED. url of external template to load
- * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
- * @property {string} [title] OPTIONAL. Text to use as a short title for the route
 */
 
 class UibRouter {
@@ -104,8 +102,6 @@ class UibRouter {
         // Save the config
         this.config = routerConfig
 
-        // Add a default route container uf needed
-        if (!this.config.routeContainer) this.config.routeContainer = '#uibroutecontainer'
         // If no default set in config, set to the first entry
         if (!this.config.defaultRoute && this.config.routes[0] && this.config.routes[0].id) this.config.defaultRoute = this.config.routes[0].id
         // Other defaults
@@ -164,18 +160,30 @@ class UibRouter {
         UibRouter.#instanceExists = true
     }
 
-    /** Save a reference to, and create if necessary, the HTML element to hold routes */
+    /** Save a reference to, and create if necessary, the HTML element to hold routes
+     * @throws if the route container could not be set
+     */
     _setRouteContainer() {
-        const body = document.getElementsByTagName('body')[0]
-        // Get reference to route container or create it
-        let routeContainerEl = this.routeContainerEl = document.querySelector(this.config.routeContainer)
-        if (!routeContainerEl) {
-            // throw new Error(`Route container element with CSS selector '${routerConfig.routeContainer}' not found in HTML`)
-            const tempContainer = document.createElement('div')
-            tempContainer.setAttribute('id', this.config.routeContainer.replace('#', ''))
-            body.append(tempContainer)
-            routeContainerEl = this.routeContainerEl = document.querySelector(this.config.routeContainer)
+        // Add a default route container if needed
+        if (!this.config.routeContainer) {
+            this.config.routeContainer = '#uibdefaultroutecontainer'
+            console.warn('[uibrouter:constructor] No route container defined in config, using default: `#uibdefaultroutecontainer`')
         }
+
+        // Get reference to route container or create it
+        const routeContainerEl = this.routeContainerEl = document.querySelector(this.config.routeContainer)
+        if (!routeContainerEl) {
+            // If using the default container, create and attach to the body
+            if (this.config.routeContainer === '#uibdefaultroutecontainer') {
+                const tempContainer = document.createElement('div')
+                tempContainer.setAttribute('id', this.config.routeContainer.replace('#', ''))
+                document.body.append(tempContainer)
+                console.warn(`[uibrouter:_setRouteContainer] Route container element with CSS selector '${this.config.routeContainer}' not found in HTML. Created a new element attached to body.`)
+            } else {
+                throw new Error(`[uibrouter] Route container element with CSS selector '${this.config.routeContainer}' not found in HTML. Cannot proceed.`)
+            }
+        }
+        this.routeContainerEl = document.querySelector(this.config.routeContainer)
     }
 
     /** Apply fetched external elements to templates tags under the head tag
@@ -391,6 +399,9 @@ class UibRouter {
             }
             menuContainer.style.position = 'relative'
 
+            // Clear out the content of the menuContainer
+            menuContainer.innerHTML = ''
+
             // TODO:
             // - Set aria references using reflection. https://developer.mozilla.org/en-US/docs/Web/API/Element#instance_properties_reflected_from_aria_element_references
             // - Vertical menus
@@ -437,6 +448,9 @@ class UibRouter {
 
             menuContainer.appendChild(navEl)
 
+            // Update the currently selected menu item
+            this.setCurrentMenuItems()
+
             // Open menu on nav click if hamburger is visible and menu is closed
             navEl.addEventListener('mouseup', (e) => {
                 if (window.innerWidth > 600) return
@@ -473,6 +487,7 @@ class UibRouter {
     /** Process a routing request
      * All errors throw so make sure to try/catch calls to this method.
      * @param {PointerEvent|MouseEvent|HashChangeEvent|TouchEvent|string} routeSource Either string containing route id or DOM Event object either click/touch on element containing `href="#routeid"` or Hash URL change event
+     * @throws {Error} If the safety protocol is triggered (too many route bounces) or if no valid route found
      */
     async doRoute(routeSource) {
         if (this.safety > 10) throw new Error('🚫 [uibrouter:doRoute] Safety protocol triggered, too many route bounces')
@@ -618,6 +633,7 @@ class UibRouter {
 
     /** Load other external files and apply to specific parents (mostly used for externally defined menus)
      * @param {otherLoadDefinition|Array<otherLoadDefinition>} extOther Required. Array of objects defining what to load and where
+     * @throws {Error} If no extOther provided or if fetch fails
      */
     loadOther(extOther) {
         if (!extOther) throw new Error('[uibrouter:loadOther] At least 1 load definition must be provided')
@@ -625,7 +641,10 @@ class UibRouter {
 
         extOther.forEach( async (f) => {
             const parent = document.querySelector(f.container)
-            if (!parent) return // Nothing to do if parent does not exist on page
+            if (!parent) {
+                console.warn(`[uibrouter:loadOther] Parent container '${f.container}' not found for '${f.id}'`)
+                return // Nothing to do if parent does not exist on page
+            }
 
             let response
             try {
@@ -670,9 +689,11 @@ class UibRouter {
 
         // Clone the template
         const docFrag = rContent.content.cloneNode(true)
+        // debugger
 
         // Have to re-apply the scripts to make them run - only for external templates
-        if (this.isRouteExternal(routeId)) this._applyScripts(docFrag)
+        // if (this.isRouteExternal(routeId)) this._applyScripts(docFrag)
+        this._applyScripts(docFrag)
 
         // Create the route wrapper div with data-route attrib
         const tempContainer = document.createElement('div')
@@ -800,10 +821,14 @@ class UibRouter {
         this.config.routes.push(...routeDefn)
         // and update the routeIds list
         this._updateRouteIds()
+        // re-create the auto-menus
+        if (this.config.routeMenus) this.createMenus(this.config.routeMenus)
+
         // Let everyone know it all finished
         document.dispatchEvent(new CustomEvent('uibrouter:routes-added', { detail: routeDefn, }))
         if (this.uibuilder) uibuilder.set('uibrouter', 'routes added')
 
+        // If asked to, load all the new external templates now - otherwise loaded on route change
         if (this.config.templateLoadAll) {
             // Load all external route templates async in parallel - NB: Object.values works on both arrays and objects
             Promise.allSettled(
@@ -864,8 +889,9 @@ class UibRouter {
     }
 
     // #region --- utils for page display & processing ---
+
+    /** Mark/unmark menu items to highlight the currently shown route */
     setCurrentMenuItems() {
-        // const items = document.querySelectorAll(`li[data-route="${this.currentRouteId}"]`)
         const items = document.querySelectorAll('li[data-route], a[data-route]')
         items.forEach( (item) => {
             if (item.dataset.route === this.currentRouteId) {
@@ -878,16 +904,25 @@ class UibRouter {
         })
     }
 
+    /** Return the title of the current route
+     * @returns {string} Current route title
+     */
     routeTitle() {
         const thisRoute = this.currentRoute() || {}
         return thisRoute.title || thisRoute.id || '[ROUTE NOT FOUND]'
     }
 
+    /** Return the description of the current route
+     * @returns {string} Current route description
+     */
     routeDescription() {
         const thisRoute = this.currentRoute() || {}
         return thisRoute.description || thisRoute.id || '[ROUTE NOT FOUND]'
     }
 
+    /** Return the current route configuration
+     * @returns {object} Current route configuration
+     */
     currentRoute() {
         return this.getRouteConfigById(this.currentRouteId)
     }
@@ -907,9 +942,10 @@ class UibRouter {
             return '<p class="border error">Could not render Markdown<p>'
         }
     }
+
     // #endregion ---- ----- ----
 
-    // TODO
+    // TODO:
     // deleteRoutes(aRoutes) {
     //     // Delete all if no list provided
     //     if (!aRoutes) aRoutes = this.config.routes

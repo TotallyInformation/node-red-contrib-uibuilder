@@ -1,3 +1,4 @@
+"use strict";
 (() => {
   var __defProp = Object.defineProperty;
   var __typeError = (msg) => {
@@ -38,7 +39,6 @@
       if (!routerConfig) throw new Error("[uibrouter:constructor] No config provided");
       if (!routerConfig.routes) throw new Error("[uibrouter:constructor] No routes provided in routerConfig");
       this.config = routerConfig;
-      if (!this.config.routeContainer) this.config.routeContainer = "#uibroutecontainer";
       if (!this.config.defaultRoute && this.config.routes[0] && this.config.routes[0].id) this.config.defaultRoute = this.config.routes[0].id;
       if (!this.config.hide) this.config.hide = false;
       if (!this.config.templateLoadAll) this.config.templateLoadAll = false;
@@ -75,16 +75,26 @@
       }
       __privateSet(_UibRouter, _instanceExists, true);
     }
-    /** Save a reference to, and create if necessary, the HTML element to hold routes */
+    /** Save a reference to, and create if necessary, the HTML element to hold routes
+     * @throws if the route container could not be set
+     */
     _setRouteContainer() {
-      const body = document.getElementsByTagName("body")[0];
-      let routeContainerEl = this.routeContainerEl = document.querySelector(this.config.routeContainer);
-      if (!routeContainerEl) {
-        const tempContainer = document.createElement("div");
-        tempContainer.setAttribute("id", this.config.routeContainer.replace("#", ""));
-        body.append(tempContainer);
-        routeContainerEl = this.routeContainerEl = document.querySelector(this.config.routeContainer);
+      if (!this.config.routeContainer) {
+        this.config.routeContainer = "#uibdefaultroutecontainer";
+        console.warn("[uibrouter:constructor] No route container defined in config, using default: `#uibdefaultroutecontainer`");
       }
+      const routeContainerEl = this.routeContainerEl = document.querySelector(this.config.routeContainer);
+      if (!routeContainerEl) {
+        if (this.config.routeContainer === "#uibdefaultroutecontainer") {
+          const tempContainer = document.createElement("div");
+          tempContainer.setAttribute("id", this.config.routeContainer.replace("#", ""));
+          document.body.append(tempContainer);
+          console.warn("[uibrouter:_setRouteContainer] Route container element with CSS selector '".concat(this.config.routeContainer, "' not found in HTML. Created a new element attached to body."));
+        } else {
+          throw new Error("[uibrouter] Route container element with CSS selector '".concat(this.config.routeContainer, "' not found in HTML. Cannot proceed."));
+        }
+      }
+      this.routeContainerEl = document.querySelector(this.config.routeContainer);
     }
     /** Apply fetched external elements to templates tags under the head tag
      * @param {HTMLElement[]} loadedElements Array of loaded external elements to add as templates to the head tag
@@ -264,6 +274,7 @@
           return;
         }
         menuContainer.style.position = "relative";
+        menuContainer.innerHTML = "";
         const navEl = document.createElement("nav");
         if (menu == null ? void 0 : menu.label) navEl.setAttribute("aria-label", menu.label);
         if ((menu == null ? void 0 : menu.menuType) !== "vertical") navEl.classList.add("horizontal");
@@ -289,6 +300,7 @@
         });
         navEl.appendChild(ulEl);
         menuContainer.appendChild(navEl);
+        this.setCurrentMenuItems();
         navEl.addEventListener("mouseup", (e) => {
           if (window.innerWidth > 600) return;
           if (ulEl.contains(e.target)) return;
@@ -320,6 +332,7 @@
     /** Process a routing request
      * All errors throw so make sure to try/catch calls to this method.
      * @param {PointerEvent|MouseEvent|HashChangeEvent|TouchEvent|string} routeSource Either string containing route id or DOM Event object either click/touch on element containing `href="#routeid"` or Hash URL change event
+     * @throws {Error} If the safety protocol is triggered (too many route bounces) or if no valid route found
      */
     async doRoute(routeSource) {
       if (this.safety > 10) throw new Error("\u{1F6AB} [uibrouter:doRoute] Safety protocol triggered, too many route bounces");
@@ -408,13 +421,17 @@
     }
     /** Load other external files and apply to specific parents (mostly used for externally defined menus)
      * @param {otherLoadDefinition|Array<otherLoadDefinition>} extOther Required. Array of objects defining what to load and where
+     * @throws {Error} If no extOther provided or if fetch fails
      */
     loadOther(extOther) {
       if (!extOther) throw new Error("[uibrouter:loadOther] At least 1 load definition must be provided");
       if (!Array.isArray(extOther)) extOther = [extOther];
       extOther.forEach(async (f) => {
         const parent = document.querySelector(f.container);
-        if (!parent) return;
+        if (!parent) {
+          console.warn("[uibrouter:loadOther] Parent container '".concat(f.container, "' not found for '").concat(f.id, "'"));
+          return;
+        }
         let response;
         try {
           response = await fetch(f.src);
@@ -447,7 +464,7 @@
         throw new Error("[uibrouter:loadRoute] No template for route id '".concat(routeId, "'. \n ").concat(e.message));
       }
       const docFrag = rContent.content.cloneNode(true);
-      if (this.isRouteExternal(routeId)) this._applyScripts(docFrag);
+      this._applyScripts(docFrag);
       const tempContainer = document.createElement("div");
       tempContainer.dataset.route = routeId;
       tempContainer.append(docFrag);
@@ -545,6 +562,7 @@
       this._normaliseRouteDefns(routeDefn);
       this.config.routes.push(...routeDefn);
       this._updateRouteIds();
+      if (this.config.routeMenus) this.createMenus(this.config.routeMenus);
       document.dispatchEvent(new CustomEvent("uibrouter:routes-added", { detail: routeDefn }));
       if (this.uibuilder) uibuilder.set("uibrouter", "routes added");
       if (this.config.templateLoadAll) {
@@ -589,6 +607,7 @@
       });
     }
     // #region --- utils for page display & processing ---
+    /** Mark/unmark menu items to highlight the currently shown route */
     setCurrentMenuItems() {
       const items = document.querySelectorAll("li[data-route], a[data-route]");
       items.forEach((item) => {
@@ -601,14 +620,23 @@
         }
       });
     }
+    /** Return the title of the current route
+     * @returns {string} Current route title
+     */
     routeTitle() {
       const thisRoute = this.currentRoute() || {};
       return thisRoute.title || thisRoute.id || "[ROUTE NOT FOUND]";
     }
+    /** Return the description of the current route
+     * @returns {string} Current route description
+     */
     routeDescription() {
       const thisRoute = this.currentRoute() || {};
       return thisRoute.description || thisRoute.id || "[ROUTE NOT FOUND]";
     }
+    /** Return the current route configuration
+     * @returns {object} Current route configuration
+     */
     currentRoute() {
       return this.getRouteConfigById(this.currentRouteId);
     }
@@ -628,7 +656,7 @@
       }
     }
     // #endregion ---- ----- ----
-    // TODO
+    // TODO:
     // deleteRoutes(aRoutes) {
     //     // Delete all if no list provided
     //     if (!aRoutes) aRoutes = this.config.routes
