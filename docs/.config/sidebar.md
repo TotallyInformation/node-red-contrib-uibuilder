@@ -45,7 +45,7 @@
   * [Functions](client-docs/functions.md)
   * [Low-code, data-driven UI's](client-docs/config-driven-ui.md)
   * [Reactive UI's](client-docs/reactive.md)
-  * [Routing Library](client-docs/fe-router.md "A full-featured front-end router for Single Page Apps and other use")
+  * [SPA/Routing Library](client-docs/fe-router.md "A full-featured front-end router for Single Page Apps and other use")
   * [Troubleshooting](client-docs/troubleshooting.md)
   * [uib-brand Style Sheet](client-docs/uib-brand-css.md "How to use the UIBUILDER standard style sheet uib-brand.css")
   * [Using Markdown](client-docs/markdown.md "How to render Markdown in UIBUILDER pages")
