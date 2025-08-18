@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-08-12 18:12:08
+updated: 2025-08-17 18:22:32
 author: Julian Knight (Totally Information)
 ---
 
@@ -24,6 +24,7 @@ Still need more thought on this because it does not quite allow for the simple l
 
 ## In Progress
 
+* Script run - retain at least the link to the run id so that the panel can be exited and returned to and still allow cancelling the script. Consider also retaining the complete xhr request and streamed output.
 * Update admin-api-v3:
   * [ ] Remove dependencies on fg (use fs.cjs instead).
   * [ ] Make more use of AsyncLocalStorage to allow async functions to be wrapped in sync callers.
@@ -50,6 +51,16 @@ Still need more thought on this because it does not quite allow for the simple l
 
 ## To Do
 
+(See the roadmap for lots more, these are just the current thoughts)
+
+* [ ] Library manager updates
+  * [ ] Capture streamed command output as per the scripts tab.
+  * [ ] Check where an "error" property in package.json might come from [ref](https://discourse.nodered.org/t/uibuilder-package-json-error/98691).
+* [ ] Router library
+  * [ ] Content wrongly removed from route if an element has an id matching the route id. [ref](https://discourse.nodered.org/t/uibuilder-novice-coding/98693/5).
+  * [ ] Rename the example to include "SPA" for clarity.
+  * [ ] Make sure new routes added from node-red (or addRoutes) only appear once.
+  * [ ] Add position option to auto-menu (add numeric `position` prop, cope with multiple of the same number, allow 'first', 'last' options).
 * [ ] Adjust gulp tasks to copy changed fe types (nb: src\front-end-module\tsconfig.json is different to templates\blank\tsconfig.json, don't copy it)
   * [ ] to `templates\blank\types`
   * [ ] to external template repo's
@@ -77,6 +88,8 @@ Still need more thought on this because it does not quite allow for the simple l
   * `uib-fmt="table"` - output as an HTML table.
 
 * [ ] Allow overriding of the JSON max upload size for the custom Express server. [Ref](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988)
+
+* [ ] Add new example showing use of the TI Web Component library.
 
 * CSS
   * [ ] Make `form > label` use a variable for `align-self`. 

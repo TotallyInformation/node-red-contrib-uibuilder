@@ -29,6 +29,8 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 [Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.0...v7.5.0).
 
+NOTE: If using the `uibRouter` SPA client library, please note that the startup processing has changed slightly. You may now get an error if you have specified a route container element but it doesn't exist. Unfortunately, some of the examples shared have this error and so will now break unless that container element id is changed. Sorry about that. The built-in router/SPA example has been updated to reflect this change.
+
 ### 📌 Highlights
 
 * The `uibuilder` node now has an extra tab "scripts" which lets you run npm scripts defined in your instance root's package.json file.
@@ -40,6 +42,11 @@ Please see the roadmap in the docs for the backlog of future planned development
 * uibuilder installation will now **ERROR** and stop if the Node-RED userDir folder is not writable. This is to prevent the uibuilder node from being misconfigured and not working correctly. The error message will show the userDir folder that is not writable.
 
 * When using uibuilder's custom web server option, you now have the option to create a `<uibRoot>/.public` folder. It is served as the root URL. This is where you can place static files that you want to serve from the custom web server. The folder will be created automatically if it does not exist. You can also use this folder to serve static files such as images, CSS, and JavaScript files. Create an `index.html` file in the folder to serve a custom root home page. The folder is not served if you are using the default Node-RED web server (Use Node-RED's public folder for that).
+
+### Example flows
+
+* **NEW** `uib-basic` An inject node to a uibuilder node with debug nodes on each output. Inputs and outputs minimised. Outputs show full msg and show msg count.
+* **UPDATED** Client-side code > FE Router Test. A complete front-end router example flow including html, js and route partials.
 
 ### uibuilder node
 
@@ -55,6 +62,10 @@ Please see the roadmap in the docs for the backlog of future planned development
   These can be any script that can be run on the host OS. They run in the OS's default shell. Output from the script is captured and returned to Node-RED in the panel beneath the list of scripts. When a script is running, a "Kill Script" button is visible, clicking this wil abort the script immediately.
 
   In addition to scripts that you define, the default npm `outdated`, `update`, and `install` scripts are also available to run.
+
+#### Ui class
+
+* Fixed a hidden issue with `replaceSlot()`. The safe method of creating a DocumentFragment does not work if the parent element is a `<template>`. For that, you can only use `innerHTML`.
 
 ### uib-sender node
 
@@ -121,7 +132,7 @@ For the updated navigation menus, the following CSS variables (show with their d
 
 * **UPDATED** Full uibuilder intellisense is now available for VS Code users when editing front-end JavaScript. Update your JS files to include `/// <reference path="../types/uibuilder.d.ts" />` at the start of your code. Don't forget to update the `types` folder with updated type definitions after upgrading uibuilder. You may need to manually create the `types` folder if using templates from previous versions.
 
-### uibRouter client library
+### uibRouter SPA client library
 
 * Added functions to auto-generate a menu of routes. Driven by updated router configuration data. Example:
 
@@ -148,6 +159,10 @@ For the updated navigation menus, the following CSS variables (show with their d
 
   In this version, only horizontal, single-level menus are supported. In the future, expect to see multi-level and vertical menus. Possibly also tabbed menus. Search forms may also be added.
 
+* **BUG FIX** If you define the route container in the config but it does not exist, we now throw and error and stop. If you haven't defined a container at all, it is auto-created and attached to the body element and a warning issued.
+
+* Significantly improved documentation.
+
 ### uibuilder configuration
 
 * Updated the template middleware files that are copied to `<uibRoot>/.config/*.js-template` on each restart. Added links to uibuilder documentation and pointed out the use of the message and security hooks now available via the Node-RED settings.js file.
@@ -159,6 +174,8 @@ For the updated navigation menus, the following CSS variables (show with their d
 * Updated `uib-configuration` documentation to show the latest settings.js options including the msg, client and socket.io hooks. These allow you to enhance or override the `msg._client` data, simulate user authentication, block message send/receive, and redirect unauthenticated users.
 * Updated the `security/authenticated-client-properties` documentation. Added a tip about the hooks in the settings.js file.
 * **NEW** Added a new "how-to" article describing how to use Node-RED and uibuilder as a live web development server. This is a simple way to get a live reload server without needing to use complex build tools.
+* Updated the comparison between uibuilder and Dashboard 2. Emphasising uibuilder's multi-app capabilities and dark mode.
+* Significantly improved uibRouter SPA documentation.
 
 ### **NEW** Experimental front-end client library
 
