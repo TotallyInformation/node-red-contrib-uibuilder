@@ -104,7 +104,7 @@ export default defineConfig([
     // Browser (ES2019) script, no-build
     {
         files: ['**/*.{js,cjs}'],
-        ignores: ['nodes/**/*.{js,cjs}'],
+        ignores: ['nodes/**/*.*', 'gulpfile.js'],
         languageOptions: {
             sourceType: 'script',
             ecmaVersion: 2019,
@@ -148,7 +148,7 @@ export default defineConfig([
     // Browser (Latest) ESM, ESBUILD
     {
         files: ['**/*.mjs'],
-        ignores: ['nodes/**/*.{js,cjs,mjs}', 'stylelint.config.mjs'],
+        ignores: ['nodes/**/*.*', 'stylelint.config.mjs'],
         // ...pluginImport.flatConfigs.recommended,
         languageOptions: {
             sourceType: 'module',
@@ -197,7 +197,7 @@ export default defineConfig([
     {
         // files: nodeCJS,
         files: ['**/*.{js,cjs}'],
-        ignores: ['resources/*.{js,cjs}', 'src/front-end-modules/**/*.*'],
+        ignores: ['resources/*.*', 'src/front-end-modules/**/*.*', 'src/components/**/*.*'],
         languageOptions: {
             sourceType: 'commonjs',
             // Will be overridden by the n plugin which detects the correct node.js version from package.json
@@ -240,7 +240,7 @@ export default defineConfig([
     {
         // files: nodeMJS,
         files: ['**/*.mjs'],
-        ignores: ['resources/*.{js,cjs,mjs}', 'src/front-end-module/**/*.*'],
+        ignores: ['resources/*.{js,cjs,mjs}', 'src/front-end-module/**/*.*', 'src/components/**/*.*'],
         languageOptions: {
             sourceType: 'module',
             // Will be overridden by the n plugin which detects the correct node.js version from package.json
