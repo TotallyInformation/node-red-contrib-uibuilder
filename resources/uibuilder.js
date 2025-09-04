@@ -40,6 +40,12 @@ const uiace = {
     @type {Array<string>}
 */
 let folders = []
+/** Placeholder for long-running npm scripts
+ * Allows tracking and returning to them even if the Edit panel is closed
+ * and later re-opened.
+ */
+if (!window['uibuilder'].runningScripts) window['uibuilder'].runningScripts = {}
+const runningScripts = window['uibuilder'].runningScripts
 
 // #endregion ------------------------------------------------- //
 
@@ -1539,350 +1545,12 @@ function urlChange(node) {
     vscodeLink(node)
 }
 
-/** Run when switching to the Files tab
- * @param {object} node A reference to the panel's `this` object
- */
-function tabFiles(node) {
-    // Build the file list
-    getFileList()
-
-    // We only need to do all of this once
-    if ( uiace.editorLoaded !== true ) {
-        // @ts-expect-error ts(2352) Clear out the editor
-        if ( /** @type {string} */ ($('#node-input-template').val('')) !== '') $('#node-input-template').val('')
-
-        // Create the ACE editor component
-        uiace.editor = RED.editor.createEditor({
-            id: 'node-input-template-editor',
-            mode: 'ace/mode/' + uiace.format,
-            value: node.template,
-        })
-        // Keep a reference to the current editor session
-        uiace.editorSession = uiace.editor.getSession()
-        /** If the editor has changes, enable the save & reset buttons
-         * using input event instead of change since it's called with some timeout
-         * which is needed by the undo (which takes some time to update)
-         */
-        uiace.editor.on('input', function() {
-            // Is the editor clean?
-            fileIsClean(uiace.editorSession.getUndoManager().isClean())
-        })
-        /* uiace.editorSession.on('change', function(delta) {
-            // delta.start, delta.end, delta.lines, delta.action
-            console.log('🌐ACE Editor CHANGE Event', delta)
-        }) */
-        uiace.editorLoaded = true
-
-        // When inside the editor, allow ctrl-s to save the file rather than the default of saving the web page
-        const aceDiv = document.getElementsByClassName('red-ui-editor-text-container')
-        aceDiv.item(0).addEventListener('keydown', (evt) => {
-            // @ts-ignore
-            if ( evt.ctrlKey === true && evt.key === 's' ) {
-                evt.preventDefault()
-                saveFile()
-            }
-        })
-
-        // Resize to max available height
-        setACEheight()
-
-        // Be friendly and auto-load the initial file via the admin API
-        getFileContents()
-        fileIsClean(true)
-    }
-}
-
 /** Return the correct height of the libraries list
  * @returns {number} Calculated height of the libraries list
  */
 function getLibrariesListHeight() {
     return ($('.red-ui-tray-footer').position()).top - ($('#package-list-container').offset()).top + 25
 }
-
-/** Run when switching to the Libraries tab
- * @param {object} node A reference to the panel's `this` object
- */
-function tabLibraries(node) {
-    // ! TODO Improve feedback
-
-    // Setup the package list https://nodered.org/docs/api/ui/editableList/
-    $('#node-input-packageList').editableList({
-        addItem: function addItem(element, index, data) {
-            addPackageRow(node, element, index, data)
-        },
-        removeItem: removePackageRow, // function(data){},
-        // resizeItem: function() {}, // function(_row,_index) {},
-        header: $('<div>').append('<b>Installed Packages (Install again to update)</b>'),
-        height: getLibrariesListHeight(),
-        addButton: true,
-        removable: true,
-        scrollOnAdd: true,
-        sortable: false,
-    })
-
-    // reset and populate the list
-    $('#node-input-packageList').editableList('empty')
-    $('#node-input-packageList').editableList('addItems', Object.keys(packages))
-
-    // spinner
-    $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
-    $('i.spinner').hide()
-}
-
-/** Run when switching to the Run NPM Scripts tab
- * @param {object} node A reference to the panel's `this` object
- */
-function tabRunNpmScripts(node) {
-    getInstanceNpmScriptNames(node.url) // Sets npmScriptNames
-
-    const scriptList = $('#npm-script-list')
-
-    // Clear the list
-    scriptList.empty()
-
-    npmScriptNames.forEach( (scriptName) => {
-        // Add a button for each script
-        scriptList.append(
-            `<li><button id="btn-${scriptName}">${scriptName}</button></li>`
-        )
-        // Add the click handler for each button
-        $(`#btn-${scriptName}`).on('click', function() { // (e) {
-            runNpmScript(node, scriptName)
-        })
-    })
-}
-
-/** Kill a running npm script for this uibuilder instance
- * @param {object} node A reference to the panel's `this` object
- * @param {string} processId The process ID of the npm script to kill
- */
-function killNpmScript(node, processId) {
-    if (!processId) return
-
-    const xhr = new XMLHttpRequest()
-    const params = {
-        cmd: 'killInstanceNpmScript',
-        processId: processId,
-    }
-
-    xhr.open('PUT', `uibuilder/admin/${node.url}`, true)
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            const response = JSON.parse(xhr.responseText)
-            if (response.killed) {
-                RED.notify(`🌐 Process killed successfully`, { type: 'success', })
-            } else {
-                RED.notify(`🌐 Failed to kill process: ${response.error}`, { type: 'error', })
-            }
-        } else {
-            RED.notify(`🌐 Failed to kill process`, { type: 'error', })
-        }
-    }
-
-    const formData = Object.keys(params)
-        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
-        .join('&')
-
-    xhr.send(formData)
-}
-
-/** Run an npm script for this uibuilder instance
- * Uses the admin-api-v3 to run the script. Output from running the script is streamed back to the panel.
- * The script must be defined in the package.json file for the uibuilder instance.
- * @param {object} node A reference to the panel's `this` object
- * @param {string} scriptName Name of the npm script to run
- */
-function runNpmScript(node, scriptName) {
-    const elScriptOutput = $('#npm-script-output')
-    const elKillContainer = $('#kill-button-container')
-
-    let currentProcessId = null
-    let output = `Running ${scriptName}...\n\n`
-    let xhr = null // Move xhr to function scope so kill button can access it
-
-    const elKillButton = $('#npm-script-kill')
-    elKillButton.on('click', () => {
-        if (currentProcessId) killNpmScript(node, currentProcessId)
-        // Abort the active request once we've issued a script kill
-        if (xhr) xhr.abort()
-    })
-
-    elScriptOutput.text(output)
-
-    // Use XMLHttpRequest for streaming chunked output
-    xhr = new XMLHttpRequest()
-    xhr.open('PUT', './uibuilder/admin/' + node.url, true)
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-    const authTokens = RED.settings.get('auth-tokens')
-    if (authTokens) {
-        xhr.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-    }
-    // Send data as url-encoded
-    xhr.send('cmd=runInstanceNpmScript&scriptName=' + encodeURIComponent(scriptName))
-
-    let lastProcessedLength = 0
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === XMLHttpRequest.LOADING || xhr.readyState === XMLHttpRequest.DONE) {
-            const newData = xhr.responseText.substring(lastProcessedLength)
-            lastProcessedLength = xhr.responseText.length
-
-            // Split by newline for chunked JSON
-            const lines = newData.split('\n')
-
-            lines.forEach(function(line) {
-                if (!line.trim()) return
-                try {
-                    const msg = JSON.parse(line)
-                    switch (msg.type) {
-                        // At request start
-                        case 'processId': {
-                            currentProcessId = msg.processId
-                            elKillButton.show()
-                            break
-                        }
-                        // As the request progresses
-                        case 'stream': {
-                            output += msg.data
-                            updateOutput()
-                            break
-                        }
-                        // At request end
-                        case 'end': {
-                            if (msg.result && msg.result.all) {
-                                output += `\n${msg.result.all}`
-                                updateOutput()
-                            }
-                            currentProcessId = null
-                            elKillButton.hide()
-                            RED.notify(`🌐 uibuilder: npm script '${scriptName}' for '${node.url}' completed.`, { type: 'success', })
-                            break
-                        }
-                        // If the request errors
-                        case 'error': {
-                            output += `${msg.message}\n${msg.all || ''}\n... Script ended`
-                            updateOutput()
-                            currentProcessId = null
-                            elKillButton.hide()
-                            RED.notify(`🌐 uibuilder: running npm script '${scriptName}' for '${node.url}' Failed.<br>${msg.message}`, { type: 'error', })
-                            break
-                        }
-                    }
-                } catch (e) {
-                    // Just in case
-                    console.warn(`🌐[uibuilder:runNpmScript] JSON parse error for line: ${line}`, e)
-                }
-            })
-        }
-    }
-
-    xhr.onerror = function() {
-        $('#npm-script-output').text('Error running script')
-        RED.notify(`uibuilder: running npm script '${scriptName}' for '${node.url}' Failed.`, { type: 'error', })
-        currentProcessId = null
-        elKillButton.hide()
-    }
-
-    xhr.onabort = function() {
-        output += '\n... Script aborted by user'
-        updateOutput()
-        RED.notify(`🌐 uibuilder: npm script '${scriptName}' for '${node.url}' was aborted.`, { type: 'warning', })
-        currentProcessId = null
-        elKillButton.hide()
-    }
-
-    /** Update the output display, restricting to last 10000 lines
-     * @param {boolean} [forceUpdate] Force update even if throttled (default=false)
-     */
-    function updateOutput(forceUpdate = false) {
-        // Throttle updates to improve performance
-        if (!forceUpdate && updateOutput.lastUpdate && (Date.now() - updateOutput.lastUpdate) < 100) {
-            // Schedule delayed update if not already scheduled
-            if (!updateOutput.pending) {
-                updateOutput.pending = setTimeout(() => {
-                    updateOutput.pending = null
-                    updateOutput(true)
-                }, 100)
-            }
-            return
-        }
-        updateOutput.lastUpdate = Date.now()
-
-        // Trim to last 10000 lines efficiently
-        const maxLines = 10000
-        if (output.includes('\n')) {
-            const lines = output.split('\n')
-            if (lines.length > maxLines) {
-                const trimmed = lines.slice(-maxLines)
-                output = trimmed.join('\n')
-
-                // Add indicator that content was trimmed
-                if (!output.startsWith('... [Output truncated]')) {
-                    output = `... [Output truncated]\n${output}`
-                }
-            }
-        }
-
-        if (elScriptOutput.length) {
-            elScriptOutput.text(output)
-
-            // Auto-scroll to bottom
-            const scrollContainer = elScriptOutput.parent()
-            if (scrollContainer.length) {
-                scrollContainer.scrollTop(scrollContainer[0].scrollHeight)
-            }
-        }
-    }
-}
-
-/** Prep tabs
- * @param {object} node A reference to the panel's `this` object
- */
-function prepTabs(node) {
-    const tabs = RED.tabs.create({
-        id: 'tabs',
-        scrollable: false,
-        collapsible: false,
-        onchange: function(tab) {
-            // Show only the content (i.e. the children) of the selected tabsheet, and hide the others
-            $('#tabs-content')
-                .children()
-                .hide()
-            $('#' + tab.id).show()
-
-            // ? Could move these to their own show event. Might even unload some stuff on hide?
-
-            switch (tab.id) {
-                case 'tab-files': {
-                    tabFiles(node)
-                    break
-                }
-
-                case 'tab-runnpmscripts': {
-                    tabRunNpmScripts(node)
-                    break
-                }
-
-                case 'tab-libraries': {
-                    tabLibraries(node)
-                    break
-                }
-
-                default: {
-                    break
-                }
-            }
-        },
-    })
-
-    tabs.addTab({ id: 'tab-core', label: 'Core', })
-    tabs.addTab({ id: 'tab-files', label: 'Files', })
-    tabs.addTab({ id: 'tab-runnpmscripts', label: 'Scripts', })
-    tabs.addTab({ id: 'tab-libraries', label: 'Libraries', })
-    // tabs.addTab({ id: 'tab-security',  label: 'Security'  })
-    tabs.addTab({ id: 'tab-advanced', label: 'Advanced', })
-} // ---- End of preTabs ---- //
 
 /** File Editor */
 function fileEditor() {
@@ -2180,6 +1848,379 @@ function customButtonBar(node) {
         })
         .appendTo($('div.red-ui-tray-toolbar'))
 }
+
+/** Kill a running npm script for this uibuilder instance
+ * @param {object} node A reference to the panel's `this` object
+ * @param {string} processId The process ID of the npm script to kill
+ */
+function killNpmScript(node, processId) {
+    if (!processId) return
+    if (!runningScripts[node.url]) return
+
+    const xhr = new XMLHttpRequest()
+    const params = {
+        cmd: 'killInstanceNpmScript',
+        processId: processId,
+    }
+
+    xhr.open('PUT', `uibuilder/admin/${node.url}`, true)
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText)
+            if (response.killed) {
+                RED.notify(`🌐 Process ${runningScripts[node.url].scriptName} for ${node.url} killed successfully`, { type: 'success', })
+                runningScripts[node.url].xhr.abort()
+            } else {
+                RED.notify(`🌐 Failed to kill process ${runningScripts[node.url].scriptName} for ${node.url}. ${response.error}`, { type: 'error', })
+            }
+        } else {
+            RED.notify(`🌐 Failed to kill process ${runningScripts[node.url].scriptName} for ${node.url}. XHR Status: ${xhr.status}`, { type: 'error', })
+        }
+    }
+
+    const formData = Object.keys(params)
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+        .join('&')
+
+    xhr.send(formData)
+}
+
+/** Run an npm script for this uibuilder instance
+ * Uses the admin-api-v3 to run the script. Output from running the script is streamed back to the panel.
+ * The script must be defined in the package.json file for the uibuilder instance.
+ * @param {object} node A reference to the panel's `this` object
+ * @param {string} scriptName Name of the npm script to run
+ */
+function runNpmScript(node, scriptName) {
+    const elScriptOutput = $('#npm-script-output')
+    const elKillContainer = $('#kill-button-container')
+    const elKillButton = $('#npm-script-kill')
+
+    // Only allow 1 script to be run at any time for a single url
+    if (runningScripts[node.url]) {
+        elKillButton.show()
+        RED.notify(`🌐 uibuilder: npm script '${scriptName}' for '${node.url}' is already running.\nOnly 1 script can be run at a time.`, { type: 'error', })
+        return
+    }
+    // Record the running script
+    const runningScript = runningScripts[node.url] = {
+        scriptName,
+    }
+
+    let currentProcessId = null
+    let output = `Running ${scriptName}...\n\n`
+    let xhr = runningScript.xhr = null // Keep track of xhr to allow later cancellation
+
+    elKillButton.on('click', () => {
+        console.log(`🌐[uibuilder:runNpmScript] Kill button clicked for '${scriptName}' for '${node.url}'`)
+        if (currentProcessId) {
+            killNpmScript(node, currentProcessId)
+            // Abort the active request once we've issued a script kill
+            // if (xhr) xhr.abort()
+        }
+        // Remove this click event handler
+        elKillButton.off('click')
+    })
+
+    elScriptOutput.text(output)
+
+    // Use XMLHttpRequest for streaming chunked output
+    xhr = new XMLHttpRequest()
+    xhr.open('PUT', './uibuilder/admin/' + node.url, true)
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+    const authTokens = RED.settings.get('auth-tokens')
+    if (authTokens) {
+        xhr.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+    }
+    // Send data as url-encoded
+    xhr.send('cmd=runInstanceNpmScript&scriptName=' + encodeURIComponent(scriptName))
+
+    let lastProcessedLength = 0
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.LOADING || xhr.readyState === XMLHttpRequest.DONE) {
+            const newData = xhr.responseText.substring(lastProcessedLength)
+            lastProcessedLength = xhr.responseText.length
+
+            // Split by newline for chunked JSON
+            const lines = newData.split('\n')
+
+            lines.forEach(function(line) {
+                if (!line.trim()) return
+                try {
+                    const msg = JSON.parse(line)
+                    switch (msg.type) {
+                        // At request start
+                        case 'processId': {
+                            runningScripts[node.url].processId = currentProcessId = msg.processId
+                            elKillButton.show()
+                            break
+                        }
+                        // As the request progresses
+                        case 'stream': {
+                            output += msg.data
+                            updateOutput()
+                            break
+                        }
+                        // At request end
+                        case 'end': {
+                            if (msg.result && msg.result.all) {
+                                output += `\n${msg.result.all}`
+                                updateOutput()
+                            }
+                            currentProcessId = null
+                            elKillButton.hide()
+                            runningScripts[node.url] = undefined
+                            RED.notify(`🌐 uibuilder: npm script '${scriptName}' for '${node.url}' completed.`, { type: 'success', })
+                            break
+                        }
+                        // If the request errors
+                        case 'error': {
+                            output += `${msg.message}\n${msg.all || ''}\n... Script ended`
+                            updateOutput()
+                            currentProcessId = null
+                            elKillButton.hide()
+                            runningScripts[node.url] = undefined
+                            RED.notify(`🌐 uibuilder: running npm script '${scriptName}' for '${node.url}' Failed.<br>${msg.message}`, { type: 'error', })
+                            break
+                        }
+                    }
+                } catch (e) {
+                    // Just in case
+                    console.warn(`🌐[uibuilder:runNpmScript] JSON parse error for line: ${line}`, e)
+                }
+            })
+        }
+    }
+
+    xhr.onerror = function() {
+        $('#npm-script-output').text('Error running script')
+        RED.notify(`uibuilder: running npm script '${scriptName}' for '${node.url}' Failed.`, { type: 'error', })
+        currentProcessId = null
+        elKillButton.hide()
+        runningScripts[node.url] = undefined
+    }
+
+    xhr.onabort = function() {
+        output += '\n... Script aborted by user'
+        updateOutput()
+        RED.notify(`🌐 uibuilder: npm script '${scriptName}' for '${node.url}' was aborted.`, { type: 'warning', })
+        currentProcessId = null
+        elKillButton.hide()
+        runningScripts[node.url] = undefined
+    }
+
+    /** Update the output display, restricting to last 10000 lines
+     * @param {boolean} [forceUpdate] Force update even if throttled (default=false)
+     */
+    function updateOutput(forceUpdate = false) {
+        // Throttle updates to improve performance
+        if (!forceUpdate && updateOutput.lastUpdate && (Date.now() - updateOutput.lastUpdate) < 100) {
+            // Schedule delayed update if not already scheduled
+            if (!updateOutput.pending) {
+                updateOutput.pending = setTimeout(() => {
+                    updateOutput.pending = null
+                    updateOutput(true)
+                }, 100)
+            }
+            return
+        }
+        updateOutput.lastUpdate = Date.now()
+
+        // Trim to last 10000 lines efficiently
+        const maxLines = 10000
+        if (output.includes('\n')) {
+            const lines = output.split('\n')
+            if (lines.length > maxLines) {
+                const trimmed = lines.slice(-maxLines)
+                output = trimmed.join('\n')
+
+                // Add indicator that content was trimmed
+                if (!output.startsWith('... [Output truncated]')) {
+                    output = `... [Output truncated]\n${output}`
+                }
+            }
+        }
+
+        if (elScriptOutput.length) {
+            elScriptOutput.text(output)
+
+            // Auto-scroll to bottom
+            const scrollContainer = elScriptOutput.parent()
+            if (scrollContainer.length) {
+                scrollContainer.scrollTop(scrollContainer[0].scrollHeight)
+            }
+        }
+    }
+}
+
+// #region --- Tab display functions ---
+
+/** Run when switching to the Files tab
+ * @param {object} node A reference to the panel's `this` object
+ */
+function tabFiles(node) {
+    // Build the file list
+    getFileList()
+
+    // We only need to do all of this once
+    if ( uiace.editorLoaded !== true ) {
+        // @ts-expect-error ts(2352) Clear out the editor
+        if ( /** @type {string} */ ($('#node-input-template').val('')) !== '') $('#node-input-template').val('')
+
+        // Create the ACE editor component
+        uiace.editor = RED.editor.createEditor({
+            id: 'node-input-template-editor',
+            mode: 'ace/mode/' + uiace.format,
+            value: node.template,
+        })
+        // Keep a reference to the current editor session
+        uiace.editorSession = uiace.editor.getSession()
+        /** If the editor has changes, enable the save & reset buttons
+         * using input event instead of change since it's called with some timeout
+         * which is needed by the undo (which takes some time to update)
+         */
+        uiace.editor.on('input', function() {
+            // Is the editor clean?
+            fileIsClean(uiace.editorSession.getUndoManager().isClean())
+        })
+        /* uiace.editorSession.on('change', function(delta) {
+            // delta.start, delta.end, delta.lines, delta.action
+            console.log('🌐ACE Editor CHANGE Event', delta)
+        }) */
+        uiace.editorLoaded = true
+
+        // When inside the editor, allow ctrl-s to save the file rather than the default of saving the web page
+        const aceDiv = document.getElementsByClassName('red-ui-editor-text-container')
+        aceDiv.item(0).addEventListener('keydown', (evt) => {
+            // @ts-ignore
+            if ( evt.ctrlKey === true && evt.key === 's' ) {
+                evt.preventDefault()
+                saveFile()
+            }
+        })
+
+        // Resize to max available height
+        setACEheight()
+
+        // Be friendly and auto-load the initial file via the admin API
+        getFileContents()
+        fileIsClean(true)
+    }
+}
+
+/** Run when switching to the Libraries tab
+ * @param {object} node A reference to the panel's `this` object
+ */
+function tabLibraries(node) {
+    // ! TODO Improve feedback
+
+    // Setup the package list https://nodered.org/docs/api/ui/editableList/
+    $('#node-input-packageList').editableList({
+        addItem: function addItem(element, index, data) {
+            addPackageRow(node, element, index, data)
+        },
+        removeItem: removePackageRow, // function(data){},
+        // resizeItem: function() {}, // function(_row,_index) {},
+        header: $('<div>').append('<b>Installed Packages (Install again to update)</b>'),
+        height: getLibrariesListHeight(),
+        addButton: true,
+        removable: true,
+        scrollOnAdd: true,
+        sortable: false,
+    })
+
+    // reset and populate the list
+    $('#node-input-packageList').editableList('empty')
+    $('#node-input-packageList').editableList('addItems', Object.keys(packages))
+
+    // spinner
+    $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
+    $('i.spinner').hide()
+}
+
+/** Run when switching to the Run NPM Scripts tab
+ * @param {object} node A reference to the panel's `this` object
+ */
+function tabRunNpmScripts(node) {
+    getInstanceNpmScriptNames(node.url) // Sets npmScriptNames
+
+    const scriptList = $('#npm-script-list')
+    const elKillButton = $('#npm-script-kill')
+
+    // Clear the list
+    scriptList.empty()
+
+    npmScriptNames.forEach( (scriptName) => {
+        // Add a button for each script
+        scriptList.append(
+            `<li><button id="btn-${scriptName}">${scriptName}</button></li>`
+        )
+        // Add the click handler for each button
+        $(`#btn-${scriptName}`).on('click', function() { // (e) {
+            runNpmScript(node, scriptName)
+        })
+    })
+
+    // If a script is still running, display the kill button
+    console.log(`[uibuilder:tabRunNpmScripts] Running scripts for ${node.url}:`, runningScripts[node.url])
+    if (runningScripts[node.url]) {
+        elKillButton.show()
+    } else {
+        elKillButton.hide()
+    }
+}
+
+/** Prep tabs
+ * @param {object} node A reference to the panel's `this` object
+ */
+function prepTabs(node) {
+    const tabs = RED.tabs.create({
+        id: 'tabs',
+        scrollable: false,
+        collapsible: false,
+        onchange: function(tab) {
+            // Show only the content (i.e. the children) of the selected tabsheet, and hide the others
+            $('#tabs-content')
+                .children()
+                .hide()
+            $('#' + tab.id).show()
+
+            // ? Could move these to their own show event. Might even unload some stuff on hide?
+
+            switch (tab.id) {
+                case 'tab-files': {
+                    tabFiles(node)
+                    break
+                }
+
+                case 'tab-runnpmscripts': {
+                    tabRunNpmScripts(node)
+                    break
+                }
+
+                case 'tab-libraries': {
+                    tabLibraries(node)
+                    break
+                }
+
+                default: {
+                    break
+                }
+            }
+        },
+    })
+
+    tabs.addTab({ id: 'tab-core', label: 'Core', })
+    tabs.addTab({ id: 'tab-files', label: 'Files', })
+    tabs.addTab({ id: 'tab-runnpmscripts', label: 'Scripts', })
+    tabs.addTab({ id: 'tab-libraries', label: 'Libraries', })
+    // tabs.addTab({ id: 'tab-security',  label: 'Security'  })
+    tabs.addTab({ id: 'tab-advanced', label: 'Advanced', })
+} // ---- End of preTabs ---- //
+
+// #endregion --- Tab display functions ---
 
 /** Prep for edit
  * @param {object} node A reference to the panel's `this` object
