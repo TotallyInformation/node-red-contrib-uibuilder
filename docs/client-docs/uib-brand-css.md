@@ -3,7 +3,7 @@ title: Documentation for the uibuilder standard CSS file
 description: |
   Details of the different styles and their usage.
 created: 2023-02-25 13:54:50
-updated: 2025-08-03 18:13:19
+updated: 2025-08-28 12:25:14
 ---
 
 The default front-end source templates for uibuilder all have an `index.css` file that is loaded in the `index.html` file. That `index.css` imports uibuilder's `uib-styles.css` file which is the standard CSS file for uibuilder. You don't have to use uibuilder's default, it is there to help you get started quickly and easily. You can use your own CSS file instead or in addition to the uibuilder standard CSS file.
@@ -151,9 +151,10 @@ Designed to be small rounded boxes with a left-hand coloured panel (no text) sho
 * `.compact`, `button.compact` - Reduces margin and padding.
 * `.emoji` - Apply to a `<span>` containing an emoji to make it look a lot nicer on most platforms.
 * `.noborder` - Turn off a border
-* `round`§ - Make something circular, oval or pill-shaped
+* `.round`§ - Make something circular, oval or pill-shaped
 * `.status-side-panel` - A narrow, full-height block designed to show a vertical coloured status bar (no text). Apply one of the standard colour classes as well. Use with `.animate-pulse` to get an eye-catching effect.
-* `square`§ - Make something square or rectangular.
+* `.show-in-pwa`/`.hide-in-pwa` - Control the visibility of elements in PWA mode.
+* `.square`§ - Make something square or rectangular.
 * `.text-larger`, `.text-smaller` - Hopefully obvious.
 * `.withsubtitle` - Use on a page heading tag (usually `<h1>`) where you want to follow it with a subtitle.
 * `[role="doc-subtitle"]` - Add this role attribute to a `<div role="doc-subtitle">` immediately following a page heading to get smaller text with no gap.
@@ -296,6 +297,7 @@ Note that shadows are notoriously difficult to get right in dark modes. The defa
 * `--grid-fit-min` (`15rem`) - Used by the `.grid-fit` class to specify the minimum child component size. That defines when contents will wrap.
 * `--max-width` (`64rem`) - Used by `article`, `body > main`, `body > header`, `body > footer`, `body > section` to keep the maximum width to a sensible size for easy reading.
 * `--mode` - `light` or `dark` according to the current browser preference or html class override.
+* `--pwa-display-mode` - Controls the display mode for elements in PWA mode. Defaults to `block`.
 * `--uib-css` - Can be used in JavaScript to know if this style sheet is loaded. See the definition for details on use.
 
 Many other variables are defined that control levels of saturation, light/dark, border radii, shadows, colours, etc.

@@ -20,7 +20,7 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 2025-06-09
+ * @version: 2025-08-28
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -91,7 +91,10 @@
     /* For the .grid-fit class, the minimum child element size */
     --grid-fit-min: 15rem;
 
-    /*#region --- Brand --- */
+    /* For the show/hide elements in PWA mode */
+    --pwa-display-mode: block;
+
+    /* #region --- Brand --- */
     --brand: hsl(
         var(--brand-hue)
         calc(100% * var(--saturation))
@@ -99,7 +102,7 @@
     );
     /*#endregion --- --- */
 
-    /*#region --- Shadows https://shadows.brumm.af/ --- */
+    /* #region --- Shadows https://shadows.brumm.af/ --- */
     --surface-shadow-light: var(--brand-hue) 10% 20%;
     --shadow-strength-light: .02;
 
@@ -133,7 +136,7 @@
   
     /*#endregion --- --- */
 
-    /*#region --- Text --- */
+    /* #region --- Text --- */
     --text-saturation: .2;
     --text-bias: 0;
     --light-text-lightness: .1;
@@ -180,7 +183,7 @@
     );
     /*#endregion --- --- */
 
-    /*#region --- Surfaces --- */
+    /* #region --- Surfaces --- */
     --surfaces-saturation: .1;
     --surfaces-bias: 0;
     --light-surfaces-lightness: .95;
@@ -238,7 +241,7 @@
     );
     /*#endregion --- --- */
 
-    /*#region === INFO === */
+    /* #region === INFO === */
     --info-hue: 203;
     --info-saturation-bias: 0;
     --info-lightness-bias: 0;
@@ -253,7 +256,7 @@
     );
     /*#endregion --- --- */
     
-    /*#region === SUCCESS === */
+    /* #region === SUCCESS === */
     --success-hue: 120;
     --success-saturation-bias: 0;
     --success-lightness-bias: 0;
@@ -268,7 +271,7 @@
     );
     /*#endregion --- --- */
     
-    /*#region === WARNING === */
+    /* #region === WARNING === */
     --warning-hue: 40;
     --warning-saturation-bias: 0;
     --warning-lightness-bias: 0;
@@ -284,7 +287,7 @@
     --warn: var(--warning);
     /*#endregion --- --- */
     
-    /*#region === FAILURE === */
+    /* #region === FAILURE === */
     --failure-hue: 2;
     --failure-saturation-bias: 0;
     --failure-lightness-bias: 0;
@@ -301,7 +304,7 @@
     --danger: var(--failure);
     /*#endregion --- --- */
     
-    /*#region === Complementary ACCENT === */
+    /* #region === Complementary ACCENT === */
     --complementary-hue: calc(var(--brand-hue) + var(--complementary-offset));
 
     --complementary-fg: hsl(
@@ -321,7 +324,7 @@
     );
     /*#endregion --- --- */
     
-    /*#region === PRIMARY ACCENT === */
+    /* #region === PRIMARY ACCENT === */
     --primary-hue: calc(var(--brand-hue) + var(--complementary-offset) + var(--accent-offset));
 
     --primary-fg: hsl(
@@ -337,7 +340,7 @@
     --primary: var(--primary-bg);
     /*#endregion --- --- */
     
-    /*#region === SECONDARY ACCENT === */
+    /* #region === SECONDARY ACCENT === */
     --secondary-hue: calc(var(--brand-hue) + var(--complementary-offset) - var(--accent-offset));
     
     --secondary-fg: hsl(
@@ -1014,6 +1017,23 @@ button.compact {
     font-size: smaller;
 }
 
+/* Utility class to show/hide elements in PWA mode */
+.show-in-pwa {
+    display: none !important;
+}
+.hide-in-pwa {
+    display: var(--pwa-display-mode, block);
+}
+@media (display-mode: standalone), (display-mode: minimal-ui) {
+    .show-in-pwa {
+    display: var(--pwa-display-mode, block);
+    }
+    .hide-in-pwa {
+        display: none !important;
+    }
+}
+
+
 /** These are useful for things like buttons.
  * Default to 5em in size but are easily customised
  * using CSS variables.
@@ -1103,6 +1123,37 @@ button.compact {
 .toast-body {
     clear: both;
 }
+
+/* Old settings
+.toaster {
+    position:absolute; 
+    top:0; left:0; min-width:100vw; min-height:100vh; 
+    -webkit-backdrop-filter: grayscale(60%) blur(10px);
+    backdrop-filter: grayscale(60%) blur(10px);
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    z-index:998;
+}
+.toast {
+    border: 4px solid var(--text3);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow2);
+    background-clip: border-box;
+    box-sizing: border-box;
+    min-width:50vw; max-width:50vw; max-height:50vh; overflow-y:auto;
+    padding:1em; margin-bottom:.5em; margin-top:.5em;
+    z-index:999;
+}
+.toast.alert {
+    border: 4px solid var(--text3);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow2);
+    background-clip: border-box;
+    box-sizing: border-box;
+    min-width:50vw; max-width:50vw; max-height:50vh; overflow-y:auto; 
+    padding:1em; margin-bottom:.5em; margin-top:.5em;
+    z-index:999;
+}
+.toast-head {font-weight:bold} */
 
 /*#endregion -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
 
