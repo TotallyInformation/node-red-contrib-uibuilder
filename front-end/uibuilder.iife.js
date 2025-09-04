@@ -655,8 +655,8 @@
       if (!config) config = {};
       if (!config.onceOnly) config.onceOnly = false;
       if (!config.mode) config.mode = "insert";
-      const template = _a.doc.getElementById(sourceId);
-      if (!template || template.tagName !== "TEMPLATE") {
+      const template2 = _a.doc.getElementById(sourceId);
+      if (!template2 || template2.tagName !== "TEMPLATE") {
         _a.log("error", "Ui:applyTemplate", "Source must be a <template>. id='".concat(sourceId, "'"))();
         return;
       }
@@ -670,8 +670,8 @@
         _a.log("warn", "Ui:applyTemplate", "Target element is not empty, content is replaced. id='".concat(targetId, "'"))();
       }
       let templateContent;
-      if (config.onceOnly === true) templateContent = _a.doc.adoptNode(template.content);
-      else templateContent = _a.doc.importNode(template.content, true);
+      if (config.onceOnly === true) templateContent = _a.doc.adoptNode(template2.content);
+      else templateContent = _a.doc.importNode(template2.content, true);
       if (templateContent) {
         if (config.attributes) {
           const el = templateContent.firstElementChild;
@@ -2554,12 +2554,12 @@
       }
     }
   }
-  var hasXHR2 = function() {
+  var hasXHR2 = (function() {
     const xhr = newRequest({
       xdomain: false
     });
     return xhr && xhr.responseType !== null;
-  }();
+  })();
   var XHR = class extends BaseXHR {
     constructor(opts) {
       super(opts);
@@ -4981,7 +4981,7 @@
     connect: lookup2
   });
 
-  // src/components/ti-base-component.js
+  // src/components/ti-base-component.old.js
   var _TiBaseComponent = class _TiBaseComponent extends HTMLElement {
     /** NB: Attributes not available here - use connectedCallback to reference */
     constructor() {
@@ -5097,9 +5097,9 @@
      * @param {Node|string} template Nodes/string content that will be cloned into the shadow dom
      * @param {{mode:'open'|'closed',delegatesFocus:boolean}=} shadowOpts Options passed to attachShadow
      */
-    _construct(template, shadowOpts) {
+    _construct(template2, shadowOpts) {
       if (!shadowOpts) shadowOpts = { mode: "open", delegatesFocus: true };
-      this.attachShadow(shadowOpts).append(template);
+      this.attachShadow(shadowOpts).append(template2);
       this.createShadowSelectors();
     }
     /** Standardised connection. Call from the start of connectedCallback fn */
@@ -5126,11 +5126,11 @@
    */
   __publicField(_TiBaseComponent, "_iCount", 0);
   var TiBaseComponent = _TiBaseComponent;
-  var ti_base_component_default = TiBaseComponent;
+  var ti_base_component_old_default = TiBaseComponent;
 
-  // src/components/uib-var.js
+  // src/components/uib-var.mjs
   var _variable, _varCb, _topic, _topicCb;
-  var UibVar = class extends ti_base_component_default {
+  var UibVar = class extends ti_base_component_old_default {
     //#endregion --- Class Properties ---
     constructor() {
       super();
@@ -5409,8 +5409,8 @@
   var uib_var_default = UibVar;
   window["UibVar"] = UibVar;
 
-  // src/components/uib-meta.js
-  var UibMeta = class extends ti_base_component_default {
+  // src/components/uib-meta.mjs
+  var UibMeta = class extends ti_base_component_old_default {
     //#endregion --- Class Properties ---
     constructor() {
       super();
@@ -5607,26 +5607,316 @@
   var uib_meta_default = UibMeta;
   window["UibMeta"] = UibMeta;
 
-  // src/components/apply-template.js
+  // src/components/ti-base-component.mjs
+  var _TiBaseComponent2 = class _TiBaseComponent2 extends HTMLElement {
+    // get id() {
+    //     return this.id
+    // }
+    // set id(value) {
+    //     // this.id = value
+    //     console.log('>> SETTING ID:', value, this.id, this.getAttribute('id'))
+    // }
+    /** NB: Attributes not available here - use connectedCallback to reference */
+    constructor() {
+      super();
+      /** Is UIBUILDER for Node-RED loaded? */
+      __publicField(this, "uib", !!window["uibuilder"]);
+      __publicField(this, "uibuilder", window["uibuilder"]);
+      /** Mini jQuery-like shadow dom selector (see constructor)
+       * @type {function(string): Element}
+       * @param {string} selector - A CSS selector to match the element within the shadow DOM.
+       * @returns {Element} The first element that matches the specified selector.
+       */
+      __publicField(this, "$");
+      /** Mini jQuery-like shadow dom multi-selector (see constructor)
+       * @type {function(string): NodeList}
+       * @param {string} selector - A CSS selector to match the element within the shadow DOM.
+       * @returns {NodeList} A STATIC list of all shadow dom elements that match the selector.
+       */
+      __publicField(this, "$$");
+      /** True when instance finishes connecting.
+       * Allows initial calls of attributeChangedCallback to be
+       * ignored if needed.
+       */
+      __publicField(this, "connected", false);
+      /** Placeholder for the optional name attribute @type {string} */
+      __publicField(this, "name");
+      /** Runtime configuration settings @type {object} */
+      __publicField(this, "opts", {});
+    }
+    /** Report the current component version string
+     * @returns {string} The component version & base version as a string
+     */
+    static get version() {
+      return "".concat(this.componentVersion, " (Base: ").concat(this.baseVersion, ")");
+    }
+    /** OPTIONAL. Update runtime configuration, return complete config
+     * @param {object|undefined} config If present, partial or full set of options. If undefined, fn returns the current full option settings
+     * @returns {object} The full set of options
+     */
+    config(config) {
+      if (config) this.opts = _TiBaseComponent2.deepAssign(this.opts, config);
+      return this.opts;
+    }
+    /** Creates the $ and $$ fns that do css selections against the shadow dom */
+    createShadowSelectors() {
+      var _a3, _b;
+      this.$ = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector.bind(this.shadowRoot);
+      this.$$ = (_b = this.shadowRoot) == null ? void 0 : _b.querySelectorAll.bind(this.shadowRoot);
+    }
+    /** Utility object deep merge fn
+     * @param {object} target Merge target object
+     * @param  {...object} sources 1 or more source objects to merge
+     * @returns {object} Deep merged object
+     */
+    static deepAssign(target, ...sources) {
+      for (let source of sources) {
+        for (let k in source) {
+          const vs = source[k];
+          const vt = target[k];
+          if (Object(vs) == vs && Object(vt) === vt) {
+            target[k] = _TiBaseComponent2.deepAssign(vt, vs);
+            continue;
+          }
+          target[k] = source[k];
+        }
+      }
+      return target;
+    }
+    /** Optionally apply an external linked style sheet for Shadow DOM (called from connectedCallback)
+     * param {*} url The URL for the linked style sheet
+     */
+    async doInheritStyles() {
+      if (!this.shadowRoot) return;
+      if (!this.hasAttribute("inherit-style")) return;
+      let url2 = this.getAttribute("inherit-style");
+      if (!url2) url2 = "./index.css";
+      const linkEl = document.createElement("link");
+      linkEl.setAttribute("type", "text/css");
+      linkEl.setAttribute("rel", "stylesheet");
+      linkEl.setAttribute("href", url2);
+      this.shadowRoot.appendChild(linkEl);
+      console.info("[".concat(this.localName, '] Inherit-style requested. Loading: "').concat(url2, '"'));
+    }
+    /** Ensure that the component instance has a unique ID & check again if uib loaded */
+    ensureId() {
+      this.uib = !!window["uibuilder"];
+      if (!this.id) {
+        this.id = "".concat(this.localName, "-").concat(++this.constructor._iCount);
+      }
+    }
+    /** Check if slot has meaningful content (not just whitespace)
+     * @returns {boolean} True if slot has non-empty content
+     */
+    hasSlotContent() {
+      const slot = this.shadowRoot.querySelector("slot");
+      const assignedNodes = slot.assignedNodes();
+      return assignedNodes.some((node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          return true;
+        }
+        if (node.nodeType === Node.TEXT_NODE) {
+          return node.textContent.trim().length > 0;
+        }
+        return false;
+      });
+    }
+    /** Attaches a new stylesheet before all other stylesheets in the light DOM
+     * @param {string} cssText - CSS text to inject directly
+     * @param {number} order - Optional order/priority for stylesheet placement. Lower numbers = higher priority (inserted first). Defaults to 0.
+     * @returns {Element} The created or existing style element
+     * @throws {Error} If cssText is not provided
+     * @example
+     * // Inject CSS text directly with default order
+     * dataList.prependStylesheet('.custom { color: hsl(0, 100%, 50%); }')
+     *
+     * // Inject CSS with specific order (lower number = higher priority)
+     * dataList.prependStylesheet('.base { font-size: 1rem; }', 1)
+     * dataList.prependStylesheet('.critical { color: hsl(0, 100%, 50%); }', 0)
+     */
+    prependStylesheet(cssText, order = 0) {
+      if (!cssText) {
+        throw new Error("[".concat(this.localName, "] cssText must be provided"));
+      }
+      const existingStylesheet = this._findExistingStylesheet();
+      if (existingStylesheet) return existingStylesheet;
+      const styleElement = document.createElement("style");
+      styleElement.textContent = cssText;
+      styleElement.setAttribute("data-component", this.localName);
+      styleElement.setAttribute("data-order", order.toString());
+      this._prependToDocumentHead(styleElement, order);
+      return styleElement;
+    }
+    /** Send a message to the Node-RED server via uibuilder if available
+     * NB: These web components are NEVER dependent on Node-RED or uibuilder.
+     * @param {string} evtName The event name to send
+     * @param {*} data The data to send
+     */
+    uibSend(evtName, data) {
+      if (this.uib) {
+        if (this.uibuilder.ioConnected) {
+          this.uibuilder.send({
+            topic: "".concat(this.localName, ":").concat(evtName),
+            payload: data,
+            id: this.id,
+            name: this.name
+          });
+        } else {
+          console.warn("[".concat(this.localName, "] uibuilder not connected to server, cannot send:"), evtName, data);
+        }
+      }
+    }
+    // #region ---- Methods private to extended classes ----
+    // These are called from a class that extends this base class but should not be called directly by the user.
+    /** Standardised connection. Call from the start of connectedCallback fn */
+    _connect() {
+      this.ensureId();
+      this.doInheritStyles();
+      if (this.uib) this.uibuilder.onTopic("".concat(this.localName, "::").concat(this.id), this._uibMsgHandler.bind(this));
+    }
+    /** Standardised constructor. Keep after call to super()
+     * @param {Node|string} template Nodes/string content that will be cloned into the shadow dom
+     * @param {{mode:'open'|'closed',delegatesFocus:boolean}=} shadowOpts Options passed to attachShadow
+     */
+    _construct(template2, shadowOpts) {
+      if (!template2) return;
+      if (!shadowOpts) shadowOpts = { mode: "open", delegatesFocus: true };
+      this.attachShadow(shadowOpts).append(template2);
+      this.createShadowSelectors();
+    }
+    /** Standardised disconnection. Call from the END of disconnectedCallback fn */
+    _disconnect() {
+      document.removeEventListener("uibuilder:msg:_ui:update:".concat(this.id), this._uibMsgHandler);
+      this._event("disconnected");
+    }
+    /** Custom event dispacher `component-name:name` with detail data
+     * @example
+     *   this._event('ready')
+     * @example
+     *   this._event('ready', {age: 42, type: 'android'})
+     *
+     * @param {string} evtName A name to give the event, added to the component-name separated with a :
+     * @param {*=} data Optional data object to pass to event listeners via the evt.detail property
+     */
+    _event(evtName, data) {
+      this.dispatchEvent(new CustomEvent("".concat(this.localName, ":").concat(evtName), {
+        bubbles: true,
+        composed: true,
+        detail: {
+          id: this.id,
+          name: this.name,
+          data
+        }
+      }));
+    }
+    /** Call from end of connectedCallback */
+    _ready() {
+      this.connected = true;
+      this._event("connected");
+      this._event("ready");
+    }
+    /** Handle a `${this.localName}::${this.id}` custom event
+     * Each prop in the msg.payload is set as a prop on the component instance.
+     * @param {object} msg A uibuilder message object
+     */
+    _uibMsgHandler(msg) {
+      if (typeof msg.payload !== "object") {
+        console.warn("[".concat(this.localName, "] Ignoring msg, payload is not an object:"), msg);
+        return;
+      }
+      Object.keys(msg.payload).forEach((key) => {
+        if (key.startsWith("_")) return;
+        this[key] = msg.payload[key];
+      });
+    }
+    // #endregion ---- Methods private to the extended classes ----
+    // #region ---- Methods private to the base class only ----
+    /** Find existing component stylesheet with the same data-component attribute value
+     * Assumes that the style element has a `data-component` attribute set to the component's local name
+     * @returns {Element|null} Existing element or null if not found
+     * @private
+     */
+    _findExistingStylesheet() {
+      const existing = document.head.querySelector(
+        'style[data-component="'.concat(this.localName, '"]')
+      );
+      return existing;
+    }
+    /** Helper method to prepend a style element to the document head with order consideration
+     * @param {HTMLElement} styleElement - The style element to prepend
+     * @param {number} order - The order/priority for placement (lower numbers = higher priority)
+     * @private
+     */
+    _prependToDocumentHead(styleElement, order) {
+      var _a3;
+      const head = document.head;
+      const existingComponentStyles = Array.from(head.querySelectorAll("style[data-component]"));
+      if (existingComponentStyles.length === 0) {
+        const firstChild = head.firstChild;
+        if (firstChild) {
+          head.insertBefore(styleElement, firstChild);
+        } else {
+          head.appendChild(styleElement);
+        }
+        return;
+      }
+      let insertBefore = null;
+      for (const existing of existingComponentStyles) {
+        const existingOrder = parseInt((_a3 = existing.getAttribute("data-order")) != null ? _a3 : "0", 10);
+        if (order < existingOrder) {
+          insertBefore = existing;
+          break;
+        }
+      }
+      if (insertBefore) {
+        head.insertBefore(styleElement, insertBefore);
+      } else {
+        const lastInjected = existingComponentStyles[existingComponentStyles.length - 1];
+        const nextSibling = lastInjected.nextSibling;
+        if (nextSibling) {
+          head.insertBefore(styleElement, nextSibling);
+        } else {
+          head.appendChild(styleElement);
+        }
+      }
+    }
+    // #endregion ---- Methods private to the base class only ----
+  };
+  /** Component version */
+  __publicField(_TiBaseComponent2, "baseVersion", "2025-06-09");
+  /** Holds a count of how many instances of this component are on the page that don't have their own id
+   * Used to ensure a unique id if needing to add one dynamically
+   */
+  __publicField(_TiBaseComponent2, "_iCount", 0);
+  var TiBaseComponent2 = _TiBaseComponent2;
+  var ti_base_component_default = TiBaseComponent2;
+
+  // src/components/apply-template.mjs
   var ApplyTemplate = class extends ti_base_component_default {
+    /** NB: Attributes not available here - use connectedCallback to reference */
     constructor() {
       super();
       // Holder for once attribute
       __publicField(this, "once", false);
       if (!this.uibuilder) throw new Error("[apply-template] uibuilder client library not available");
     }
-    // Makes HTML attribute change watched
+    /** Makes HTML attribute change watched
+     * @returns {Array<string>} List of all of the html attribs (props) listened to
+     */
     static get observedAttributes() {
       return [
         // Standard watched attributes:
-        /*'inherit-style',*/
+        /* 'inherit-style', */
         "name",
         // Other watched attributes:
         "template-id",
         "once"
       ];
     }
-    // Runs when an instance is added to the DOM
+    /** Runs when an instance is added to the DOM
+     * Runs AFTER the initial attributeChangedCallback's
+     * @private
+     */
     connectedCallback() {
       this._connect();
       const templateId = this["template-id"];
@@ -5634,17 +5924,17 @@
       if (!templateId) {
         throw new Error("[ApplyTemplate] Template id attribute not provided. Template must be identified by an id attribute");
       }
-      const template = document.getElementById(templateId);
-      if (!template || template.tagName !== "TEMPLATE") {
+      const template2 = document.getElementById(templateId);
+      if (!template2 || template2.tagName !== "TEMPLATE") {
         throw new Error("[ApplyTemplate] Source must be a <template>. id='".concat(templateId, "'"));
       }
       const existContent = this.innerHTML;
       this.innerHTML = "";
       let templateContent;
       if (onceOnly === false) {
-        templateContent = document.importNode(template.content, true);
+        templateContent = document.importNode(template2.content, true);
       } else {
-        templateContent = document.adoptNode(template.content);
+        templateContent = document.adoptNode(template2.content);
       }
       this.appendChild(templateContent);
       if (existContent) {
@@ -5655,16 +5945,19 @@
       }
       this._ready();
     }
-    /** Runs when an instance is removed from the DOM */
+    /** Runs when an instance is removed from the DOM
+     * @private
+     */
     disconnectedCallback() {
       this._disconnect();
     }
-    /** Handle watched attributes
-     * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
-     * Attribute values can only ever be strings
-     * @param {string} attrib The name of the attribute that is changing
-     * @param {string} newVal The new value of the attribute
-     * @param {string} oldVal The old value of the attribute
+    /** Runs when an observed attribute changes - Note: values are always strings
+     * NOTE: On initial startup, this is called for each watched attrib set in HTML.
+     *       and BEFORE connectedCallback is called.
+     * @param {string} attrib Name of watched attribute that has changed
+     * @param {string} oldVal The previous attribute value
+     * @param {string} newVal The new attribute value
+     * @private
      */
     attributeChangedCallback(attrib, oldVal, newVal) {
       if (oldVal === newVal) return;
@@ -5673,9 +5966,597 @@
     }
   };
   /** Component version */
-  __publicField(ApplyTemplate, "componentVersion", "2025-01-05");
+  __publicField(ApplyTemplate, "componentVersion", "2025-08-28");
   var apply_template_default = ApplyTemplate;
   window["ApplyTemplate"] = ApplyTemplate;
+
+  // src/components/uib-control.mjs
+  var template = document.createElement("template");
+  template.innerHTML = /* html */
+  '\n    <style>\n        :host {\n            display: block;   /* default is inline */\n            contain: content; /* performance boost */\n            position: fixed;  /* Float over all content */\n            top: var(--uib-control-top, 1.25rem);\n            right: var(--uib-control-right, 1.25rem);\n            z-index: var(--uib-control-z-index, 9999); /* Ensure it floats above other content */\n            max-width: var(--uib-control-max-width, 18.75rem);\n        }\n        \n        .control-container {\n            background: var(--uib-control-bg, hsl(0, 0%, 98%));\n            border: var(--uib-control-border, 1px solid hsl(0, 0%, 85%));\n            border-radius: var(--uib-control-border-radius, 0.5rem);\n            box-shadow: var(--uib-control-shadow, 0 0.25rem 0.75rem hsla(0, 0%, 0%, 0.15));\n            transition: var(--uib-control-transition, all 0.3s ease);\n            position: relative;\n        }\n        \n        .control-container.dragging {\n            transition: none;\n            user-select: none;\n            z-index: 10000;\n        }\n        \n        .emoji-toggle {\n            cursor: pointer;\n            padding: var(--uib-control-emoji-padding, 0.5rem 0.75rem);\n            font-size: var(--uib-control-emoji-size, 1.5rem);\n            background: transparent;\n            border: none;\n            display: block;\n            width: 100%;\n            text-align: center;\n            user-select: none;\n            transition: transform 0.2s ease;\n            position: relative;\n        }\n        \n        .emoji-toggle.dragging {\n            cursor: grabbing;\n        }\n        \n        .emoji-toggle:hover {\n            transform: scale(1.1);\n        }\n        \n        .emoji-toggle:focus {\n            outline: 0.125rem solid var(--uib-control-focus-color, hsl(220, 90%, 50%));\n            outline-offset: 0.125rem;\n        }\n        \n        .content-box {\n            padding: 0;\n            border-top: var(--uib-control-content-border, 1px solid hsl(0, 0%, 90%));\n            background: var(--uib-control-content-bg, hsl(0, 0%, 100%));\n            display: none;\n            min-width: var(--uib-control-content-min-width, 15.625rem);\n        }\n        \n        .content-box.show {\n            display: block;\n            animation: fadeIn 0.2s ease-out;\n        }\n        \n        /* Tab navigation styles */\n        .tab-navigation {\n            display: flex;\n            border-bottom: 1px solid var(--uib-control-content-border, hsl(0, 0%, 90%));\n            background: var(--uib-control-bg, hsl(0, 0%, 98%));\n        }\n        \n        .tab-button {\n            flex: 1;\n            padding: 0.75rem 1rem;\n            border: none;\n            background: transparent;\n            color: var(--uib-control-text-color, hsl(0, 0%, 20%));\n            font-size: var(--uib-control-font-size, 0.9rem);\n            font-weight: 500;\n            cursor: pointer;\n            transition: all 0.2s ease;\n            border-bottom: 2px solid transparent;\n        }\n        \n        .tab-button:hover {\n            background: var(--uib-control-content-bg, hsl(0, 0%, 100%));\n        }\n        \n        .tab-button:focus {\n            outline: 0.125rem solid var(--uib-control-focus-color, hsl(220, 90%, 50%));\n            outline-offset: -0.125rem;\n            z-index: 1;\n            position: relative;\n        }\n        \n        .tab-button.active {\n            background: var(--uib-control-content-bg, hsl(0, 0%, 100%));\n            border-bottom-color: var(--uib-control-focus-color, hsl(220, 90%, 50%));\n            color: var(--uib-control-focus-color, hsl(220, 90%, 50%));\n        }\n        \n        /* Tab content styles */\n        .tab-content {\n            position: relative;\n        }\n        \n        .tab-panel {\n            padding: var(--uib-control-content-padding, 1rem);\n            display: none;\n        }\n        \n        .tab-panel.active {\n            display: block;\n        }\n        \n        .tab-panel:focus {\n            outline: none;\n        }\n        \n        @keyframes fadeIn {\n            from { opacity: 0; transform: translateY(-0.625rem); }\n            to { opacity: 1; transform: translateY(0); }\n        }\n        \n        /* Default content styling */\n        .theme-toggle-section {\n            margin-bottom: 1rem;\n            padding-bottom: 0.75rem;\n            border-bottom: 1px solid var(--uib-control-content-border, hsl(0, 0%, 90%));\n        }\n        \n        .theme-label {\n            display: inline-block;\n            font-size: var(--uib-control-font-size, 0.9rem);\n            font-weight: 500;\n            color: var(--uib-control-text-color, hsl(0, 0%, 20%));\n            margin-right: 0.5rem;\n        }\n        \n        .theme-buttons-container {\n            display: inline-flex;\n            border: 1px solid var(--uib-control-border, hsl(0, 0%, 85%));\n            border-radius: 0.375rem;\n            overflow: hidden;\n            background: var(--uib-control-content-bg, hsl(0, 0%, 100%));\n        }\n        \n        .theme-button {\n            padding: 0.375rem 0.75rem;\n            border: none;\n            background: var(--uib-control-content-bg, hsl(0, 0%, 100%));\n            color: var(--uib-control-text-color, hsl(0, 0%, 20%));\n            font-size: var(--uib-control-font-size, 0.9rem);\n            font-weight: 500;\n            cursor: pointer;\n            transition: all 0.2s ease;\n            border-right: 1px solid var(--uib-control-border, hsl(0, 0%, 85%));\n            min-width: 2.5rem;\n            text-align: center;\n        }\n        \n        .theme-button:last-child {\n            border-right: none;\n        }\n        \n        .theme-button:hover {\n            background: var(--uib-control-bg, hsl(0, 0%, 98%));\n        }\n        \n        .theme-button:focus {\n            outline: 0.125rem solid var(--uib-control-focus-color, hsl(220, 90%, 50%));\n            outline-offset: -0.125rem;\n            z-index: 1;\n            position: relative;\n        }\n        \n        .theme-button.active {\n            background: var(--uib-control-focus-color, hsl(220, 90%, 50%));\n            color: hsl(0, 0%, 100%);\n        }\n        \n        .theme-button.active:hover {\n            background: hsl(220, 90%, 45%);\n        }\n        \n        .content-box p {\n            margin: 0 0 0.5rem 0;\n            color: var(--uib-control-text-color, hsl(0, 0%, 20%));\n            font-size: var(--uib-control-font-size, 0.9rem);\n            line-height: 1.4;\n        }\n        \n        .content-box p:last-child {\n            margin-bottom: 0;\n        }\n    </style>\n    <div class="control-container">\n        <button class="emoji-toggle" type="button" aria-expanded="false" aria-label="Toggle control panel (click) or drag to move">\n            \u{1F39B}\uFE0F\n        </button>\n        <div class="content-box" role="region" aria-label="Control panel content">\n            <div class="tab-navigation" role="tablist" aria-label="Content tabs">\n                <button id="tab-btn-1" class="tab-button active" type="button" role="tab" aria-selected="true" aria-controls="tab1">\n                    Settings\n                </button>\n                <button id="tab-btn-2" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="tab2">\n                    Page Info\n                </button>\n            </div>\n            <div class="tab-content">\n                <div id="tab1" class="tab-panel active" role="tabpanel" aria-labelledby="tab-btn-1" tabindex="0">\n                    <div class="theme-toggle-section">\n                        <label class="theme-label">Theme:</label>\n                        <div class="theme-buttons-container" role="radiogroup" aria-label="Theme selection">\n                            <button id="theme-auto" class="theme-button active" type="button" data-theme="auto" aria-pressed="true">\n                                Auto\n                            </button>\n                            <button id="theme-light" class="theme-button" type="button" data-theme="light" aria-pressed="false">\n                                Light\n                            </button>\n                            <button id="theme-dark" class="theme-button" type="button" data-theme="dark" aria-pressed="false">\n                                Dark\n                            </button>\n                        </div>\n                    </div>\n                    <slot></slot>\n                </div>\n                <div id="tab2" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-2" tabindex="0">\n                    <div id="viewportSize">Window Width: -- px, Height: -- px</div>\n                    <div id="clientSize">Client Width: -- px, Height: -- px</div>\n                </div>\n            </div>\n        </div>\n    </div>\n';
+  var _uniqueKey, _toggleButton, _dragHandlers, _toggleHandlers, _resizeHandler;
+  var UibControl = class extends ti_base_component_default {
+    /** NB: Attributes not available here - use connectedCallback to reference */
+    constructor() {
+      super();
+      // Unique key for local storage
+      __privateAdd(this, _uniqueKey);
+      __privateAdd(this, _toggleButton);
+      __privateAdd(this, _dragHandlers, {
+        mouseMove: null,
+        mouseUp: null,
+        touchMove: null,
+        touchEnd: null
+      });
+      __privateAdd(this, _toggleHandlers, {
+        click: null,
+        keydown: null,
+        outsideClick: null,
+        touchStart: null,
+        touchEnd: null,
+        themeChange: null,
+        tabClick: null,
+        tabKey: null
+      });
+      __privateAdd(this, _resizeHandler, null);
+      if (template && template.content) this._construct(template.content.cloneNode(true));
+    }
+    /** Makes HTML attribute change watched
+     * @returns {Array<string>} List of all of the html attribs (props) listened to
+     */
+    static get observedAttributes() {
+      return [
+        // Standard watched attributes:
+        "inherit-style",
+        "name",
+        // Other watched attributes:
+        "close-on-outside-click",
+        "save-position"
+      ];
+    }
+    // #region ---- Internal methods ----
+    /** Setup the toggle functionality for the emoji button
+     * @private
+     */
+    _setupToggle() {
+      var _a3, _b;
+      const toggleButton = __privateSet(this, _toggleButton, (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector(".emoji-toggle"));
+      const contentBox = (_b = this.shadowRoot) == null ? void 0 : _b.querySelector(".content-box");
+      if (!toggleButton || !contentBox) return;
+      let isExpanded = false;
+      const clickHandler = () => {
+        isExpanded = !isExpanded;
+        if (isExpanded) {
+          contentBox.classList.add("show");
+          toggleButton.setAttribute("aria-expanded", "true");
+        } else {
+          contentBox.classList.remove("show");
+          toggleButton.setAttribute("aria-expanded", "false");
+        }
+        this._event("toggle", { expanded: isExpanded });
+      };
+      const keydownHandler = (evt) => {
+        if (evt instanceof KeyboardEvent && evt.key === "Escape" && isExpanded) {
+          isExpanded = false;
+          contentBox.classList.remove("show");
+          toggleButton.setAttribute("aria-expanded", "false");
+          this._event("toggle", { expanded: false });
+        }
+      };
+      toggleButton.addEventListener("click", clickHandler);
+      toggleButton.addEventListener("keydown", keydownHandler);
+      let touchStartTime = 0;
+      let touchStartX = 0;
+      let touchStartY = 0;
+      const touchStartHandler = (evt) => {
+        if (evt.touches.length === 1) {
+          touchStartTime = Date.now();
+          touchStartX = evt.touches[0].clientX;
+          touchStartY = evt.touches[0].clientY;
+        }
+      };
+      const touchEndHandler = (evt) => {
+        if (evt.changedTouches.length === 1) {
+          const touchEndTime = Date.now();
+          const touchEndX = evt.changedTouches[0].clientX;
+          const touchEndY = evt.changedTouches[0].clientY;
+          const duration = touchEndTime - touchStartTime;
+          const distance = Math.sqrt(
+            Math.pow(touchEndX - touchStartX, 2) + Math.pow(touchEndY - touchStartY, 2)
+          );
+          if (duration < 300 && distance < 10) {
+            clickHandler();
+            evt.preventDefault();
+          }
+        }
+      };
+      toggleButton.addEventListener("touchstart", touchStartHandler, { passive: true });
+      toggleButton.addEventListener("touchend", touchEndHandler, { passive: false });
+      __privateGet(this, _toggleHandlers).click = clickHandler;
+      __privateGet(this, _toggleHandlers).keydown = keydownHandler;
+      __privateGet(this, _toggleHandlers).touchStart = touchStartHandler;
+      __privateGet(this, _toggleHandlers).touchEnd = touchEndHandler;
+      if (this.hasAttribute("close-on-outside-click")) {
+        const outsideClickHandler = (evt) => {
+          if (isExpanded && evt.target instanceof Node && !this.contains(evt.target)) {
+            isExpanded = false;
+            contentBox.classList.remove("show");
+            toggleButton.setAttribute("aria-expanded", "false");
+            this._event("toggle", { expanded: false });
+          }
+        };
+        document.addEventListener("click", outsideClickHandler);
+        __privateGet(this, _toggleHandlers).outsideClick = outsideClickHandler;
+      }
+      this._setupThemeToggle();
+      this._setupTabs();
+    }
+    /** Setup theme toggle functionality
+     * @private
+     */
+    _setupThemeToggle() {
+      var _a3, _b;
+      const themeButtonsContainer = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector(".theme-buttons-container");
+      const themeButtons = (_b = this.shadowRoot) == null ? void 0 : _b.querySelectorAll(".theme-button");
+      if (!themeButtonsContainer || !(themeButtons == null ? void 0 : themeButtons.length)) return;
+      const currentTheme = this._getCurrentTheme();
+      this._updateButtonStates(themeButtons, currentTheme);
+      const themeChangeHandler = (evt) => {
+        if (!(evt.target instanceof HTMLButtonElement) || !evt.target.classList.contains("theme-button")) return;
+        evt.preventDefault();
+        const selectedTheme = evt.target.getAttribute("data-theme");
+        if (!selectedTheme) return;
+        this._updateButtonStates(themeButtons, selectedTheme);
+        this._setTheme(selectedTheme);
+        this._event("theme-changed", { theme: selectedTheme });
+      };
+      themeButtonsContainer.addEventListener("click", themeChangeHandler);
+      __privateGet(this, _toggleHandlers).themeChange = themeChangeHandler;
+    }
+    /** Update the theme button states
+     * @private
+     * @param {NodeList} buttons - The theme button elements
+     * @param {string} activeTheme - The theme to set as active
+     */
+    _updateButtonStates(buttons, activeTheme) {
+      buttons.forEach((button) => {
+        if (!(button instanceof HTMLButtonElement)) return;
+        const buttonTheme = button.getAttribute("data-theme");
+        const isActive = buttonTheme === activeTheme;
+        if (isActive) {
+          button.classList.add("active");
+          button.setAttribute("aria-pressed", "true");
+        } else {
+          button.classList.remove("active");
+          button.setAttribute("aria-pressed", "false");
+        }
+      });
+    }
+    /** Setup tab functionality
+     * @private
+     */
+    _setupTabs() {
+      var _a3, _b, _c;
+      const tabNavigation = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector(".tab-navigation");
+      const tabButtons = (_b = this.shadowRoot) == null ? void 0 : _b.querySelectorAll(".tab-button");
+      const tabPanels = (_c = this.shadowRoot) == null ? void 0 : _c.querySelectorAll(".tab-panel");
+      if (!tabNavigation || !(tabButtons == null ? void 0 : tabButtons.length) || !(tabPanels == null ? void 0 : tabPanels.length)) return;
+      const tabClickHandler = (evt) => {
+        if (!(evt.target instanceof HTMLButtonElement) || !evt.target.classList.contains("tab-button")) return;
+        evt.preventDefault();
+        const clickedButton = evt.target;
+        const targetPanelId = clickedButton.getAttribute("aria-controls");
+        if (!targetPanelId) return;
+        tabButtons.forEach((button) => {
+          if (!(button instanceof HTMLButtonElement)) return;
+          const isActive = button === clickedButton;
+          if (isActive) {
+            button.classList.add("active");
+            button.setAttribute("aria-selected", "true");
+          } else {
+            button.classList.remove("active");
+            button.setAttribute("aria-selected", "false");
+          }
+        });
+        tabPanels.forEach((panel) => {
+          if (!(panel instanceof HTMLElement)) return;
+          const isActive = panel.id === targetPanelId;
+          if (isActive) {
+            panel.classList.add("active");
+          } else {
+            panel.classList.remove("active");
+          }
+        });
+        this._event("tab-changed", { activeTab: targetPanelId });
+      };
+      const tabKeyHandler = (evt) => {
+        if (!(evt.target instanceof HTMLButtonElement) || !evt.target.classList.contains("tab-button")) return;
+        const currentIndex = Array.from(tabButtons).indexOf(evt.target);
+        let targetIndex = currentIndex;
+        switch (evt.key) {
+          case "ArrowLeft":
+            targetIndex = currentIndex > 0 ? currentIndex - 1 : tabButtons.length - 1;
+            evt.preventDefault();
+            break;
+          case "ArrowRight":
+            targetIndex = currentIndex < tabButtons.length - 1 ? currentIndex + 1 : 0;
+            evt.preventDefault();
+            break;
+          case "Home":
+            targetIndex = 0;
+            evt.preventDefault();
+            break;
+          case "End":
+            targetIndex = tabButtons.length - 1;
+            evt.preventDefault();
+            break;
+          default:
+            return;
+        }
+        const targetButton = tabButtons[targetIndex];
+        if (targetButton instanceof HTMLButtonElement) {
+          targetButton.focus();
+          targetButton.click();
+        }
+      };
+      tabNavigation.addEventListener("click", tabClickHandler);
+      tabNavigation.addEventListener("keydown", tabKeyHandler);
+      __privateGet(this, _toggleHandlers).tabClick = tabClickHandler;
+      __privateGet(this, _toggleHandlers).tabKey = tabKeyHandler;
+    }
+    /** Get the current theme setting
+     * @private
+     * @returns {string} Current theme ('light', 'dark', or 'auto')
+     */
+    _getCurrentTheme() {
+      const htmlElement = document.documentElement;
+      if (htmlElement.classList.contains("light")) {
+        return "light";
+      } else if (htmlElement.classList.contains("dark")) {
+        return "dark";
+      }
+      try {
+        const savedTheme = localStorage.getItem("uib-control-theme");
+        if (savedTheme && ["light", "dark", "auto"].includes(savedTheme)) {
+          return savedTheme;
+        }
+      } catch (error) {
+        console.warn("Failed to read theme preference:", error);
+      }
+      return "auto";
+    }
+    /** Set the theme mode
+     * @private
+     * @param {string} theme - Theme mode ('light', 'dark', or 'auto')
+     */
+    _setTheme(theme) {
+      const htmlElement = document.documentElement;
+      htmlElement.classList.remove("light", "dark");
+      switch (theme) {
+        case "light":
+          htmlElement.classList.add("light");
+          break;
+        case "dark":
+          htmlElement.classList.add("dark");
+          break;
+        case "auto":
+          break;
+        default:
+          console.warn("Invalid theme mode:", theme);
+          return;
+      }
+      try {
+        localStorage.setItem("uib-control-theme", theme);
+      } catch (error) {
+        console.warn("Failed to save theme preference:", error);
+      }
+    }
+    /** Setup drag functionality for moving the control panel
+     * @private
+     */
+    _setupDrag() {
+      var _a3, _b;
+      const toggleButton = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector(".emoji-toggle");
+      const container = (_b = this.shadowRoot) == null ? void 0 : _b.querySelector(".control-container");
+      if (!toggleButton || !container) return;
+      let isDragging = false;
+      let dragStarted = false;
+      let startX = 0;
+      let startY = 0;
+      let initialX = 0;
+      let initialY = 0;
+      const dragThreshold = 5;
+      const startDrag = (evt) => {
+        const clientX = evt instanceof MouseEvent ? evt.clientX : evt.touches[0].clientX;
+        const clientY = evt instanceof MouseEvent ? evt.clientY : evt.touches[0].clientY;
+        startX = clientX;
+        startY = clientY;
+        const rect = this.getBoundingClientRect();
+        initialX = rect.left;
+        initialY = rect.top;
+        isDragging = true;
+        dragStarted = false;
+        evt.preventDefault();
+      };
+      toggleButton.addEventListener("mousedown", startDrag);
+      const mouseMove = (evt) => {
+        if (!isDragging || !(evt instanceof MouseEvent)) return;
+        const deltaX = evt.clientX - startX;
+        const deltaY = evt.clientY - startY;
+        if (!dragStarted && (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold)) {
+          dragStarted = true;
+          container.classList.add("dragging");
+          toggleButton.classList.add("dragging");
+        }
+        if (dragStarted) {
+          const newX = initialX + deltaX;
+          const newY = initialY + deltaY;
+          const maxX = window.innerWidth - this.offsetWidth;
+          const maxY = window.innerHeight - this.offsetHeight;
+          const constrainedX = Math.max(0, Math.min(newX, maxX));
+          const constrainedY = Math.max(0, Math.min(newY, maxY));
+          this.style.left = "".concat(constrainedX, "px");
+          this.style.top = "".concat(constrainedY, "px");
+          this.style.right = "auto";
+          this.style.bottom = "auto";
+          evt.preventDefault();
+        }
+      };
+      const mouseUp = (evt) => {
+        if (!isDragging) return;
+        const wasDragStarted = dragStarted;
+        isDragging = false;
+        if (dragStarted) {
+          dragStarted = false;
+          container.classList.remove("dragging");
+          toggleButton.classList.remove("dragging");
+          if (this.hasAttribute("save-position")) {
+            this._savePosition();
+          }
+          this._event("drag-end", {
+            x: parseInt(this.style.left, 10) || 0,
+            y: parseInt(this.style.top, 10) || 0
+          });
+        }
+        if (wasDragStarted) {
+          evt.preventDefault();
+          evt.stopPropagation();
+        }
+      };
+      toggleButton.addEventListener("touchstart", startDrag);
+      const touchMove = (evt) => {
+        if (!isDragging || !(evt instanceof TouchEvent) || evt.touches.length !== 1) return;
+        const touch = evt.touches[0];
+        const deltaX = touch.clientX - startX;
+        const deltaY = touch.clientY - startY;
+        if (!dragStarted && (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold)) {
+          dragStarted = true;
+          container.classList.add("dragging");
+          toggleButton.classList.add("dragging");
+        }
+        if (dragStarted) {
+          const newX = initialX + deltaX;
+          const newY = initialY + deltaY;
+          const maxX = window.innerWidth - this.offsetWidth;
+          const maxY = window.innerHeight - this.offsetHeight;
+          const constrainedX = Math.max(0, Math.min(newX, maxX));
+          const constrainedY = Math.max(0, Math.min(newY, maxY));
+          this.style.left = "".concat(constrainedX, "px");
+          this.style.top = "".concat(constrainedY, "px");
+          this.style.right = "auto";
+          this.style.bottom = "auto";
+          evt.preventDefault();
+        }
+      };
+      const touchEnd = (evt) => {
+        if (!isDragging) return;
+        const wasDragStarted = dragStarted;
+        isDragging = false;
+        if (dragStarted) {
+          dragStarted = false;
+          container.classList.remove("dragging");
+          toggleButton.classList.remove("dragging");
+          if (this.hasAttribute("save-position")) {
+            this._savePosition();
+          }
+          this._event("drag-end", {
+            x: parseInt(this.style.left, 10) || 0,
+            y: parseInt(this.style.top, 10) || 0
+          });
+        }
+        if (wasDragStarted) {
+          evt.preventDefault();
+          evt.stopPropagation();
+        }
+      };
+      document.addEventListener("mousemove", mouseMove);
+      document.addEventListener("mouseup", mouseUp);
+      document.addEventListener("touchmove", touchMove);
+      document.addEventListener("touchend", touchEnd);
+      document.addEventListener("touchcancel", touchEnd);
+      __privateSet(this, _dragHandlers, {
+        mouseMove,
+        mouseUp,
+        touchMove,
+        touchEnd
+      });
+    }
+    /** Save the current position to localStorage
+     * @private
+     */
+    _savePosition() {
+      const saveKey = this.getAttribute("save-position") || "uib-control-position";
+      const position = {
+        left: this.style.left,
+        top: this.style.top,
+        timestamp: Date.now()
+      };
+      __privateSet(this, _uniqueKey, this.id ? "".concat(this.id, "-").concat(saveKey) : saveKey);
+      try {
+        localStorage.setItem(__privateGet(this, _uniqueKey), JSON.stringify(position));
+      } catch (error) {
+        console.warn("Failed to save uib-control position:", error);
+      }
+    }
+    /** Restore saved position from localStorage
+     * @private
+     */
+    _restorePosition() {
+      if (!this.hasAttribute("save-position")) return;
+      const saveKey = this.getAttribute("save-position") || "uib-control-position";
+      try {
+        const savedData = localStorage.getItem(__privateGet(this, _uniqueKey));
+        if (savedData) {
+          const position = JSON.parse(savedData);
+          if (position.left && position.top) {
+            this.style.left = position.left;
+            this.style.top = position.top;
+            this.style.right = "auto";
+            this.style.bottom = "auto";
+            this._event("position-restored", {
+              x: parseInt(position.left, 10) || 0,
+              y: parseInt(position.top, 10) || 0,
+              timestamp: position.timestamp
+            });
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to restore uib-control position:", error);
+      }
+    }
+    /** Function to update the viewport size display
+     * @private
+     */
+    _updateViewportSize() {
+      var _a3, _b;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const viewportEl = (_a3 = this.shadowRoot) == null ? void 0 : _a3.getElementById("viewportSize");
+      if (viewportEl) {
+        viewportEl.textContent = "Window Width: ".concat(width, "px, Height: ").concat(height, "px");
+      }
+      const clientEl = (_b = this.shadowRoot) == null ? void 0 : _b.getElementById("clientSize");
+      if (clientEl) {
+        clientEl.textContent = "Client Width: ".concat(document.documentElement.clientWidth, "px, Height: ").concat(document.documentElement.clientHeight, "px");
+      }
+    }
+    // #endregion ---- Internal methods ----
+    /** Runs when an instance is added to the DOM
+     * Runs AFTER the initial attributeChangedCallback's
+     * @private
+     */
+    connectedCallback() {
+      this._connect();
+      this._setupToggle();
+      this._setupDrag();
+      this._restorePosition();
+      const savedTheme = this._getCurrentTheme();
+      if (savedTheme !== "auto") {
+        this._setTheme(savedTheme);
+      }
+      this._updateViewportSize();
+      __privateSet(this, _resizeHandler, this._updateViewportSize.bind(this));
+      window.addEventListener("resize", __privateGet(this, _resizeHandler));
+      this._ready();
+    }
+    /** Runs when an instance is removed from the DOM
+     * @private
+     */
+    disconnectedCallback() {
+      var _a3, _b;
+      if (__privateGet(this, _toggleButton) && __privateGet(this, _toggleHandlers)) {
+        if (__privateGet(this, _toggleHandlers).click) {
+          __privateGet(this, _toggleButton).removeEventListener("click", __privateGet(this, _toggleHandlers).click);
+        }
+        if (__privateGet(this, _toggleHandlers).keydown) {
+          __privateGet(this, _toggleButton).removeEventListener("keydown", __privateGet(this, _toggleHandlers).keydown);
+        }
+        if (__privateGet(this, _toggleHandlers).touchStart) {
+          __privateGet(this, _toggleButton).removeEventListener("touchstart", __privateGet(this, _toggleHandlers).touchStart);
+        }
+        if (__privateGet(this, _toggleHandlers).touchEnd) {
+          __privateGet(this, _toggleButton).removeEventListener("touchend", __privateGet(this, _toggleHandlers).touchEnd);
+        }
+        if (__privateGet(this, _toggleHandlers).themeChange) {
+          const themeButtonsContainer = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector(".theme-buttons-container");
+          if (themeButtonsContainer) {
+            themeButtonsContainer.removeEventListener("click", __privateGet(this, _toggleHandlers).themeChange);
+          }
+        }
+        if (__privateGet(this, _toggleHandlers).tabClick || __privateGet(this, _toggleHandlers).tabKey) {
+          const tabNavigation = (_b = this.shadowRoot) == null ? void 0 : _b.querySelector(".tab-navigation");
+          if (tabNavigation) {
+            if (__privateGet(this, _toggleHandlers).tabClick) {
+              tabNavigation.removeEventListener("click", __privateGet(this, _toggleHandlers).tabClick);
+            }
+            if (__privateGet(this, _toggleHandlers).tabKey) {
+              tabNavigation.removeEventListener("keydown", __privateGet(this, _toggleHandlers).tabKey);
+            }
+          }
+        }
+        if (__privateGet(this, _toggleHandlers).outsideClick) {
+          document.removeEventListener("click", __privateGet(this, _toggleHandlers).outsideClick);
+        }
+      }
+      if (__privateGet(this, _resizeHandler)) {
+        window.removeEventListener("resize", __privateGet(this, _resizeHandler));
+        __privateSet(this, _resizeHandler, null);
+      }
+      if (__privateGet(this, _dragHandlers).mouseMove) {
+        document.removeEventListener("mousemove", __privateGet(this, _dragHandlers).mouseMove);
+      }
+      if (__privateGet(this, _dragHandlers).mouseUp) {
+        document.removeEventListener("mouseup", __privateGet(this, _dragHandlers).mouseUp);
+      }
+      if (__privateGet(this, _dragHandlers).touchMove) {
+        document.removeEventListener("touchmove", __privateGet(this, _dragHandlers).touchMove);
+      }
+      if (__privateGet(this, _dragHandlers).touchEnd) {
+        document.removeEventListener("touchend", __privateGet(this, _dragHandlers).touchEnd);
+        document.removeEventListener("touchcancel", __privateGet(this, _dragHandlers).touchEnd);
+      }
+      __privateSet(this, _dragHandlers, {
+        mouseMove: null,
+        mouseUp: null,
+        touchMove: null,
+        touchEnd: null
+      });
+      __privateSet(this, _toggleHandlers, {
+        click: null,
+        keydown: null,
+        outsideClick: null,
+        touchStart: null,
+        touchEnd: null,
+        themeChange: null,
+        tabClick: null,
+        tabKey: null
+      });
+      __privateSet(this, _toggleButton, null);
+      this._disconnect();
+    }
+    /** Runs when an observed attribute changes - Note: values are always strings
+     * NOTE: On initial startup, this is called for each watched attrib set in HTML.
+     *       and BEFORE connectedCallback is called.
+     * @param {string} attrib Name of watched attribute that has changed
+     * @param {string} oldVal The previous attribute value
+     * @param {string} newVal The new attribute value
+     * @private
+     */
+    attributeChangedCallback(attrib, oldVal, newVal) {
+      if (oldVal === newVal) return;
+      this[attrib] = newVal;
+      this._event("attribChanged", { attribute: attrib, newVal, oldVal });
+    }
+  };
+  _uniqueKey = new WeakMap();
+  _toggleButton = new WeakMap();
+  _dragHandlers = new WeakMap();
+  _toggleHandlers = new WeakMap();
+  _resizeHandler = new WeakMap();
+  /** Component version */
+  __publicField(UibControl, "componentVersion", "2025-08-28");
+  var uib_control_default = UibControl;
+  window["UibControl"] = UibControl;
 
   // src/front-end-module/reactive.mjs
   var Reactive = class {
@@ -8578,7 +9459,100 @@
   customElements.define("uib-var", uib_var_default);
   customElements.define("uib-meta", uib_meta_default);
   customElements.define("apply-template", apply_template_default);
+  customElements.define("uib-control", uib_control_default);
 })();
+/**
+ * @class
+ * @augments TiBaseComponent
+ * @description Define a new zero dependency custom web component that displays as a floating control panel.
+ * By default shows just an emoji toggle button that floats over all page content. When clicked,
+ * toggles between showing just the emoji and displaying a content box with additional content.
+ *
+ * @element uib-control
+ * @license Apache-2.0
+
+ * METHODS FROM BASE: (see TiBaseComponent)
+ * STANDARD METHODS:
+  * @function attributeChangedCallback Called when an attribute is added, removed, updated or replaced
+  * @function connectedCallback Called when the element is added to a document
+  * @function constructor Construct the component
+  * @function disconnectedCallback Called when the element is removed from a document
+
+ * OTHER METHODS:
+  * @function _setupToggle Private method to setup toggle functionality
+  * @function _setupThemeToggle Private method to setup theme toggle functionality
+  * @function _setupTabs Private method to setup tab functionality
+  * @function _setupDrag Private method to setup drag functionality
+  * @function _savePosition Private method to save position to localStorage
+  * @function _restorePosition Private method to restore position from localStorage
+  * @function _getCurrentTheme Private method to get current theme setting
+  * @function _setTheme Private method to set theme mode
+
+ * CUSTOM EVENTS:
+  * "uib-control:connected" - When an instance of the component is attached to the DOM. `evt.details` contains the details of the element.
+  * "uib-control:ready" - Alias for connected. The instance can handle property & attribute changes
+  * "uib-control:disconnected" - When an instance of the component is removed from the DOM. `evt.details` contains the details of the element.
+  * "uib-control:attribChanged" - When a watched attribute changes. `evt.details.data` contains the details of the change.
+  * "uib-control:toggle" - When the control panel is toggled. `evt.details.data.expanded` indicates whether panel is expanded.
+  * "uib-control:drag-end" - When dragging ends. `evt.details.data` contains x and y coordinates.
+  * "uib-control:position-restored" - When saved position is restored. `evt.details.data` contains position and timestamp.
+  * "uib-control:theme-changed" - When theme is changed. `evt.details.data.theme` contains the selected theme.
+  * "uib-control:tab-changed" - When tab is changed. `evt.details.data.activeTab` contains the active tab ID.
+  * NOTE that listeners can be attached either to the `document` or to the specific element instance.
+
+ * Standard watched attributes (common across all my components):
+  * @property {string|boolean} inherit-style - Optional. Load external styles into component (only useful if using template). If present but empty, will default to './index.css'. Optionally give a URL to load.
+  * @property {string} name - Optional. HTML name attribute. Included in output _meta prop.
+
+ * Other watched attributes:
+  * @property {boolean} close-on-outside-click - Optional. If present, clicking outside the component will close the panel.
+  * @property {string} save-position - Optional. If present, saves the dragged position to localStorage. Value is used as storage key (defaults to 'uib-control-position').
+
+ * PROPS FROM BASE: (see TiBaseComponent)
+ * OTHER STANDARD PROPS:
+  * @property {string} componentVersion Static. The component version string (date updated). Also has a getter that returns component and base version strings.
+
+ * Other props:
+  * By default, all attributes are also created as properties
+
+ NB: properties marked with 💫 are dynamic and have getters/setters.
+
+ * CSS Custom Properties (for theming):
+  * --uib-control-top: Top position (default: 1.25rem)
+  * --uib-control-right: Right position (default: 1.25rem)
+  * --uib-control-z-index: Z-index for layering (default: 9999)
+  * --uib-control-max-width: Maximum width of component (default: 18.75rem)
+  * --uib-control-bg: Background color (default: hsl(0, 0%, 98%))
+  * --uib-control-border: Border style (default: 1px solid hsl(0, 0%, 85%))
+  * --uib-control-border-radius: Border radius (default: 0.5rem)
+  * --uib-control-shadow: Box shadow (default: 0 0.25rem 0.75rem hsla(0, 0%, 0%, 0.15))
+  * --uib-control-emoji-size: Size of emoji toggle (default: 1.5rem)
+  * --uib-control-content-padding: Content padding (default: 1rem)
+
+ * @slot Container contents - Content displayed in the expandable panel
+
+ * @example
+  * <uib-control name="myControl">
+  *   <p>Your control panel content here</p>
+  * </uib-control>
+
+ * @example
+  * <uib-control close-on-outside-click save-position="my-panel-pos">
+  *   <div>
+  *     <h3>Draggable Control Panel</h3>
+  *     <button>Action 1</button>
+  *     <button>Action 2</button>
+  *   </div>
+  * </uib-control>
+
+ * @example
+  * <!-- Save position with default key -->
+  * <uib-control save-position>
+  *   <p>This panel remembers its position</p>
+  * </uib-control>
+
+ * See https://github.com/runem/web-component-analyzer?tab=readme-ov-file#-how-to-document-your-components-using-jsdoc
+ */
 /**
  * @kind module
  * @module reactive

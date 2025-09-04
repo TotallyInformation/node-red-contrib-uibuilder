@@ -26,9 +26,10 @@
 // @ts-ignore - Note: Only works when using esbuild to bundle
 import Ui from './ui.mjs'
 import io from 'socket.io-client' // eslint-disable-line import/no-named-as-default
-import UibVar from '../components/uib-var'
-import UibMeta from '../components/uib-meta'
-import ApplyTemplate from '../components/apply-template'
+import UibVar from '../components/uib-var.mjs'
+import UibMeta from '../components/uib-meta.mjs'
+import ApplyTemplate from '../components/apply-template.mjs'
+import UibControl from '../components/uib-control.mjs'
 import { reactive as createReactive, Reactive } from './reactive.mjs'
 // import { dom } from './tinyDom'
 
@@ -3530,5 +3531,6 @@ uibuilder.start()
 customElements.define('uib-var', UibVar)
 customElements.define('uib-meta', UibMeta)
 customElements.define('apply-template', ApplyTemplate)
+customElements.define('uib-control', UibControl)
 
 // #endregion --- Wrap up ---
