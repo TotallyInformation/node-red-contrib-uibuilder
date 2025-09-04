@@ -3,8 +3,13 @@ title: About UIBUILDER for Node-RED
 description: |
   UIBUILDER provides tools for easily creating data-driven web applications using the Node-RED low-code programming platform.
 created: 2024-05-02 11:17:20
-updated: 2024-08-28 18:17:15
+updated: 2025-09-04 11:13:32
 ---
+
+> [!NOTE]
+> You can learn more about how UIBUILDER for Node-RED works by visiting the [DeepWiki](https://deepwiki.com/TotallyInformation/node-red-contrib-uibuilder) entry.
+>
+> DeepWiki is an AI-powered knowledge base that can help you find answers to your questions about UIBUILDER.
 
 ## What is it?
 
