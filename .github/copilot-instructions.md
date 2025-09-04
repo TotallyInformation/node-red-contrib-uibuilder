@@ -39,6 +39,8 @@
 - Only use features available to 90%+ browsers/users
 - Include ARIA attributes where needed
 - Mobile-first responsive design
+- Prefer relative sizing such as %, em or rem units
+- Avoid the use of px sizing whenever possible
 - Use CSS custom properties
 - Follow BEM naming convention
 - Include print styles
