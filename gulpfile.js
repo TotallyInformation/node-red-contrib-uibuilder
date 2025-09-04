@@ -680,9 +680,11 @@ function watchme(cb) {
         'src/front-end-module/reactive.mjs',
         'src/front-end-module/tinyDom.js',
         'src/front-end-module/logger.js',
-        'src/components/uib-var.js',
-        'src/components/apply-template.js',
-        'src/components/uib-meta.js',
+        'src/components/ti-base-component.mjs',
+        'src/components/uib-var.mjs',
+        'src/components/apply-template.mjs',
+        'src/components/uib-meta.mjs',
+        'src/components/uib-control.mjs',
     ]
     watch(feSrcFiles, buildFeModule).on('change', (path) => {
         console.log(`feSrc File changed: ${path}`)
