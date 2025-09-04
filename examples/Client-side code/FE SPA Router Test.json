@@ -1,0 +1,1435 @@
+[
+    {
+        "id": "7a8938150991c681",
+        "type": "tab",
+        "label": "FE SPA/Router Test",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "640ceb641391f9cc",
+        "type": "group",
+        "z": "7a8938150991c681",
+        "name": "Base setup",
+        "style": {
+            "fill": "#ffffbf",
+            "fill-opacity": "0.12",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "e4cdac0e218a5e1e",
+            "3e65e04e8f3565e3",
+            "8bc0962b2dba2520",
+            "3546ce64892a333a",
+            "0e11e8e769a9219a",
+            "8e2f1374a9a76d76",
+            "bbb0e25cef901c1c",
+            "22ccc24e5166142a",
+            "63da533e2908bf83",
+            "98e4278794cb35ef",
+            "5c473c47668f0ce0"
+        ],
+        "x": 34,
+        "y": 119,
+        "w": 922,
+        "h": 182
+    },
+    {
+        "id": "c3a232d06aa06594",
+        "type": "group",
+        "z": "7a8938150991c681",
+        "name": "Front-end Code - Run after the base node has been deployed. Sets up FE code and routes. \\n See index.js for more example code and why one route deliberately errors.",
+        "style": {
+            "label": true,
+            "stroke": "#a4a4a4",
+            "fill-opacity": "0.33",
+            "color": "#000000",
+            "fill": "#ffffff"
+        },
+        "nodes": [
+            "5869b4d24b2c0911",
+            "90b798197324da6a",
+            "46417436f605c0c1",
+            "c1b0b0183d20aaf9",
+            "927ba7dbd20d5964",
+            "2199d9454364159f",
+            "a56111d557982b5b",
+            "85854171f0f3dcbf",
+            "577186271aeb2259",
+            "3e135abd73d70a3f",
+            "d9ed791379c57b6e",
+            "6e38486309e2b5f9",
+            "2eab563ede910399",
+            "50479c9c9196e354",
+            "f641946a7fadb7ec",
+            "f4d6aa5a43904b61",
+            "cd7e2260acfb2837",
+            "b69447560b4922e3",
+            "befedea2cb12ae53",
+            "daa0f17f58f3ff3b",
+            "9569263e1438c8a3",
+            "6b763b023881184b",
+            "6d37f292df6114b7"
+        ],
+        "x": 34,
+        "y": 323,
+        "w": 802,
+        "h": 538
+    },
+    {
+        "id": "9a2093133d807e0e",
+        "type": "group",
+        "z": "7a8938150991c681",
+        "name": "Dynamically add a new route template & route config (NB: Config update currently only possible in front-end code, see index.js) \\n Note 2 separate msgs because 2nd needs to use the msg.payload. Each must have a separate topic and the msg._ui must be deleted for the 2nd msg.",
+        "style": {
+            "fill": "#e3f3d3",
+            "fill-opacity": "0.21",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "8864796a3917418e",
+            "5f3d38f35edbf22f",
+            "222db5ecca3f3715",
+            "b308646d2c1a0c5c",
+            "f72f5d130732030e"
+        ],
+        "x": 34,
+        "y": 943,
+        "w": 952,
+        "h": 138
+    },
+    {
+        "id": "e86a98882ea76964",
+        "type": "group",
+        "z": "7a8938150991c681",
+        "name": "Example of changing route from Node-RED using UIBUILDER remote navigation command",
+        "style": {
+            "fill": "#ffffff",
+            "fill-opacity": "0.23",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "3b39bf87cb0e7184",
+            "cc4dd43f7629a00f"
+        ],
+        "x": 34,
+        "y": 1119,
+        "w": 652,
+        "h": 82
+    },
+    {
+        "id": "6e612779617645b9",
+        "type": "group",
+        "z": "7a8938150991c681",
+        "name": "Example of using a `uib-topic` attribute in HTML and sending dynamic changes from Node-RED",
+        "style": {
+            "fill": "#ffefbf",
+            "fill-opacity": "0.21",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "cc214421ca8412c3",
+            "1fa0ac9f91b8c662"
+        ],
+        "x": 34,
+        "y": 1219,
+        "w": 652,
+        "h": 82
+    },
+    {
+        "id": "a2da759a22a95865",
+        "type": "group",
+        "z": "7a8938150991c681",
+        "name": "While you CAN load libraries from Node-RED, it isn't recommended as it may not be loaded soon enough",
+        "style": {
+            "fill": "#ff0000",
+            "fill-opacity": "0.17",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "2bfaf3b2a46e3887",
+            "8860abb566c62ba7",
+            "2053864ec810956e"
+        ],
+        "x": 34,
+        "y": 1359,
+        "w": 660,
+        "h": 122
+    },
+    {
+        "id": "8cac0890a5253216",
+        "type": "group",
+        "z": "7a8938150991c681",
+        "name": "Page controls",
+        "style": {
+            "fill": "#d1d1d1",
+            "fill-opacity": "0.4",
+            "label": true
+        },
+        "nodes": [
+            "4729218738877835",
+            "f3e097ba5e4f1ef8",
+            "2088df1aa0646328",
+            "e98b72181d4d4dd2",
+            "1514154742f4d159",
+            "894d5cb803a3d468",
+            "34cf6a2788658ef9"
+        ],
+        "x": 874,
+        "y": 319,
+        "w": 432,
+        "h": 262
+    },
+    {
+        "id": "22ccc24e5166142a",
+        "type": "junction",
+        "z": "7a8938150991c681",
+        "g": "640ceb641391f9cc",
+        "x": 420,
+        "y": 160,
+        "wires": [
+            [
+                "3e65e04e8f3565e3"
+            ]
+        ]
+    },
+    {
+        "id": "f4d6aa5a43904b61",
+        "type": "junction",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "x": 680,
+        "y": 820,
+        "wires": [
+            [
+                "3e135abd73d70a3f"
+            ]
+        ]
+    },
+    {
+        "id": "cd7e2260acfb2837",
+        "type": "junction",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "x": 640,
+        "y": 500,
+        "wires": [
+            [
+                "3e135abd73d70a3f"
+            ]
+        ]
+    },
+    {
+        "id": "b69447560b4922e3",
+        "type": "junction",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "x": 640,
+        "y": 380,
+        "wires": [
+            [
+                "3e135abd73d70a3f"
+            ]
+        ]
+    },
+    {
+        "id": "9569263e1438c8a3",
+        "type": "junction",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "x": 660,
+        "y": 680,
+        "wires": [
+            [
+                "3e135abd73d70a3f"
+            ]
+        ]
+    },
+    {
+        "id": "e4cdac0e218a5e1e",
+        "type": "debug",
+        "z": "7a8938150991c681",
+        "g": "640ceb641391f9cc",
+        "name": "standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 800,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "3e65e04e8f3565e3",
+        "type": "uibuilder",
+        "z": "7a8938150991c681",
+        "g": "640ceb641391f9cc",
+        "name": "",
+        "topic": "",
+        "url": "spa",
+        "okToGo": true,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "7.5.0",
+        "showMsgUib": false,
+        "title": "",
+        "descr": "",
+        "editurl": "vscode://file/src/uibRoot/spa/?windowId=_blank",
+        "x": 570,
+        "y": 200,
+        "wires": [
+            [
+                "e4cdac0e218a5e1e"
+            ],
+            [
+                "63da533e2908bf83"
+            ]
+        ]
+    },
+    {
+        "id": "8bc0962b2dba2520",
+        "type": "link in",
+        "z": "7a8938150991c681",
+        "g": "640ceb641391f9cc",
+        "name": "uib-upd-egs - no cache",
+        "links": [
+            "cc4dd43f7629a00f",
+            "cc214421ca8412c3"
+        ],
+        "x": 295,
+        "y": 160,
+        "wires": [
+            [
+                "22ccc24e5166142a"
+            ]
+        ]
+    },
+    {
+        "id": "3546ce64892a333a",
+        "type": "link in",
+        "z": "7a8938150991c681",
+        "g": "640ceb641391f9cc",
+        "name": "uib-upd-egs - cached",
+        "links": [
+            "8e2f1374a9a76d76",
+            "e98b72181d4d4dd2",
+            "2bfaf3b2a46e3887",
+            "b308646d2c1a0c5c"
+        ],
+        "x": 205,
+        "y": 240,
+        "wires": [
+            [
+                "0e11e8e769a9219a"
+            ]
+        ]
+    },
+    {
+        "id": "0e11e8e769a9219a",
+        "type": "uib-cache",
+        "z": "7a8938150991c681",
+        "g": "640ceb641391f9cc",
+        "cacheall": false,
+        "cacheKey": "topic",
+        "newcache": true,
+        "num": 1,
+        "storeName": "default",
+        "name": "Cache (by topic)",
+        "storeContext": "context",
+        "varName": "uib_cache",
+        "x": 340,
+        "y": 200,
+        "wires": [
+            [
+                "3e65e04e8f3565e3"
+            ]
+        ]
+    },
+    {
+        "id": "8e2f1374a9a76d76",
+        "type": "link out",
+        "z": "7a8938150991c681",
+        "g": "640ceb641391f9cc",
+        "name": "link out 68",
+        "mode": "link",
+        "links": [
+            "3546ce64892a333a"
+        ],
+        "x": 765,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "bbb0e25cef901c1c",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "640ceb641391f9cc",
+        "name": "Clear Cache",
+        "props": [
+            {
+                "p": "uibuilderCtrl",
+                "v": "clear cache",
+                "vt": "str"
+            },
+            {
+                "p": "cacheControl",
+                "v": "CLEAR",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 200,
+        "wires": [
+            [
+                "0e11e8e769a9219a"
+            ]
+        ]
+    },
+    {
+        "id": "5869b4d24b2c0911",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "setup all FE files",
+        "x": 95,
+        "y": 380,
+        "wires": [
+            [
+                "2199d9454364159f",
+                "a56111d557982b5b",
+                "85854171f0f3dcbf",
+                "577186271aeb2259",
+                "d9ed791379c57b6e",
+                "befedea2cb12ae53",
+                "6b763b023881184b"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "90b798197324da6a",
+        "type": "template",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "index.html",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "plain",
+        "template": "<!doctype html>\n<html lang=\"en\"><head>\n\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <link rel=\"icon\" href=\"../uibuilder/images/node-blue.ico\">\n\n    <title>FE Router - Node-RED uibuilder</title>\n    <meta name=\"description\" content=\"Node-RED uibuilder - FE Router\">\n\n    <!-- Your own CSS (defaults to loading uibuilders css)-->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n    <!-- Optional CSS for Markdown code highlighting -->\n    <link type=\"text/css\" rel=\"stylesheet\"\n        href=\"https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@latest/build/styles/hybrid.min.css\">\n    \n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->\n    <!-- Optional library for highlighting Markdown code blocks -->\n    <script defer src=\"https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@latest/build/highlight.min.js\"></script>\n    <!-- Optional Markdown-IT library - needed for Markdown content routes -->\n    <script defer src=\"https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js\"></script>\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\"></script>\n    <script defer src=\"../uibuilder/utils/uibrouter.iife.min.js\"></script>\n    <script defer src=\"./index.js\"></script>\n    <!-- #endregion -->\n\n    <template id=\"route01\">\n        <h2>This comes from an internal <code class=\"r01style\">&lt;template></code> tag</h2>\n        <div>\n            Route 1\n        </div>\n        <script>\n            console.info('I was produced by a script in Route 1')\n        </script>\n        <style>\n            .r01style {\n                background-color: yellow;\n                color: blue;\n                font-weight: 900;\n            }\n        </style>\n    </template>\n    <template id=\"route02\">\n        <h2>This also comes from an internal <code>&lt;template></code> tag</h2>\n        <div class=\"extraclass\">\n            Route 2\n        </div>\n    </template>\n    <template id=\"route06\">\n        <h2>This also comes from an internal <code>&lt;template></code> tag</h2>\n        <div class=\"extraclass\">\n            Route 6\n        </div>\n    </template>\n    <!-- NB: Markdown cannot be defined in a template, must be external -->\n\n</head><body>\n    <script>\n        console.info('This log is produced by script at the start of body, just an example to show the order of things.')\n    </script>\n\n    <header>\n        <h1 class=\"with-subtitle\">An example of a framework-less front-end router</h1>\n        <div role=\"doc-subtitle\">Using the UIBUILDER IIFE library for Node-RED.</div>\n\n        <div id=\"menu1\"><!-- Used by the router's auto-menu --></div>\n\n        <!-- Using internal router variables to show the current route's title and id -->\n        <div style=\"background-color: dimgrey;\">\n            <h2 class=\"with-subtitle\">Current Route Title: <uib-var variable=\"uibrouter_CurrentTitle\"></uib-var></h2>\n            <div role=\"doc-subtitle\"><uib-var variable=\"uibrouter_CurrentDescription\"></uib-var></div>\n        </div>\n    </header>\n\n    <main>\n        <!-- We can manually load a route using this if you want to\n             But you may prefer a menu (see config and menu1 id in header) -->\n        <!-- <div href=\"#route01\" onclick=\"router.doRoute(event)\" class=\"border\" style=\"cursor: pointer;\">Goto route #1 via click event handler</div> -->\n\n        <div id=\"more\"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>\n    \n        <div id=\"uibroutecontainer\"><!-- router content will appear here --></div>\n    </main>\n\n    <section id=\"common-content\"><!-- from external content --></section>\n\n    <footer uib-topic=\"footer\" style=\"border: 1px dashed silver;\">\n        <!-- Set dynamically from Node-RED -->\n        Pre-defined footer\n    </footer>\n\n</body></html>",
+        "output": "str",
+        "x": 530,
+        "y": 380,
+        "wires": [
+            [
+                "b69447560b4922e3"
+            ]
+        ]
+    },
+    {
+        "id": "46417436f605c0c1",
+        "type": "template",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "index.js",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "javascript",
+        "syntax": "plain",
+        "template": "// @ts-nocheck\n/*globals UibRouter, uibuilder */\n\nconst routerConfig = {\n    // Router templates created inside the routeContainer, specify an CSS selector\n    // If not provided, defaults to '#uibdefaultroutecontainer' which is added as the last element of the body.\n    // If provided but does not exist, will error and the router won't work\n    routeContainer: '#uibroutecontainer',\n\n    // Optionally, chose a default route id to be displayed on load\n    // If not given, the first defined route is used.\n    defaultRoute: 'route03',\n\n    // Optional, default=false. False unloads route content when going to a new route.\n    // Set to true to hide/unhide rather than unload/load the actual route elements.\n    // When false:\n    //  - Scripts in the templates execute every visit to the route.\n    //  - Template content completely removed from browser when leaving the route.\n    //  - Ensures latest template content is loaded on each visit.\n    // When true, scripts only run the first time. Content is retained & template not updated\n    hide: false,\n\n    // Optional, default=false. False loads external templates on first use.\n    // Set to `true` to pre-load all external templates\n    // templateLoadAll: true,\n\n    // Optional, default=true. If true, templates are unloaded after use.\n    // Only set to false if your network is slow to load the templates.\n    // templateUnload: true,\n\n    // Define the possible routes type=url for externals\n    // Can be an object or an array but each entry must be an object containing {id,src,type}\n    //   type can be anything but only `url` will be treated as an external template file.\n    //   src is either a CSS selector for a <template> or a URL of an HTML file.\n    //   id must match the href=\"#routeid\" in any menu/link. and `<template id=\"routeid\">` on any loaded template\n    //      must be unique on the page\n    routes: [\n        {\n            id: 'route01', src: '#route01',\n            title: 'Route 1', description: 'My first route',\n        }, {\n            id: 'route02', src: '#route02',\n            title: 'Route 2', description: 'My second route',\n        }, {\n            id: 'route03', src: './fe-routes/route03.html', type: 'url',\n            title: 'Route 3', description: 'My third route',\n        },\n        // Doesn't exist. Tests load error\n        {id: 'route04', src: './fe-routes/dummy.html', type: 'url'},\n        // Testing Markdown templates - Markdown-IT Library must be loaded\n        {\n            id: 'route-md-01', src: './fe-routes/route-md-01.md', type: 'url',\n            title: 'Markdown Route 1', format: 'markdown',\n            description: 'A route defined using markdown #1',\n        }, {\n            id: 'route-md-02', src: './fe-routes/route-md-02.md', type: 'url',\n            title: 'Markdown Route 2', format: 'markdown',\n            description: 'A route defined using markdown #2',\n        },\n    ],\n\n    // Auto-navigation menu - create an element menu1 to act as parent\n    routeMenus: [\n        {\n            id: 'menu1',\n            menuType: 'horizontal',\n            label: 'Main Menu',\n        },\n    ],\n\n    // OPTIONAL. If present, external html is loaded direct to DOM\n    // Templates that fail to load are ignored\n    otherLoad: [\n        {\n            id: 'external-content',\n            src: './fe-routes/other-content.html',\n            container: '#common-content', // CSS Selector for parent\n        }\n    ],\n}\nconst router = new UibRouter(routerConfig)\n\nconsole.info('Expect to see errors in the console if trying to access \"route04\" and \"dead-duck2\" as they deliberately do not exist so you can see what happens.')\n\n// Example of dynamically adding additional routes -> must be external or have existing templates\n// Note that this isn't a particularly good idea since an externally loaded route, if pre-selected\n// on page load will not be able to find the route. The default route will be used instead and an\n// error is printed to the console.\n// So if wanting to dynamically add routes, it is best to also use the `defaultRouteOnLoad` option.\nsetTimeout(() => { // run after 2 secs so we can see it happen, you probably wouldn't bother normally\n    const extraRoutes = [\n        { id: 'route05', src: './fe-routes/route05.html', type: 'url', title: 'Route 5' },\n        // Test late loading a non-existant external template\n        { id: 'dead-duck2', src: './fe-routes/dummy.html', type: 'url' },\n        { id: 'route06', src: '#route06' /* NB: No title specified */ },\n    ]\n    // note that this also updates the menu\n    router.addRoutes(extraRoutes)\n}, 2000)\n\n// Currently no way to dynamically add new routes from Node-RED\n// So we need to do it using a normal uibuilder msg handler\nuibuilder.onTopic('addRoute', (msg) => {\n    console.log(`Adding new route from Node-RED. Route id: \"${msg.payload.id}\"`)\n    // note that this also updates the menu\n    router.addRoutes(msg.payload)\n})\n\n// Load something other than a route - maybe a side menu, ToC or something else\n// router.loadOther({\n//     id: 'fred',\n//     src: './fe-routes/xxxxx.html',\n//     container: '#more',\n// })\n\n// Example of changing route from code (after 5 seconds):\n// setTimeout(() => {\n//     router.doRoute('route01')\n// }, 5000)\n\n/** If you need to be certain that all external route templates\n *  have loaded before doing something, this is how. */\n// uibuilder.onChange('uibrouter', uibrouter => {\n//     if (uibrouter === 'loaded') {\n//         // Do stuff\n//     }\n// })\n\n// note that, unlike uibuilder.watchUrlHash(), these also report the initial load route as well.\n/** Monitor route changes in code */\n// uibuilder.onChange('uibrouter_CurrentRoute', (routeId) => {\n//     console.log(`ROUTE CHANGED. New Route: ${routeId}`)\n//     // To get the previous route, use: router.previousRouteId\n//     // To get the current route's config, use: router.currentRoute()\n//     // To manually notify Node-RED: uibuilder.send({topic: 'route-change', payload: {newRoute: routeId, oldRoute: router.previousRouteId}})\n//     uibuilder.send({topic: 'route-change', payload: { newRoute: routeId, oldRoute: router.previousRouteId }})\n// })\n/** Monitor route changes in code and get the new route config */\n// uibuilder.onChange('uibrouter_CurrentDetails', (routeConfig) => {\n//     console.log('ROUTE CHANGED. New Route Details: ', routeConfig)\n//     // To manually notify Node-RED: uibuilder.send(topic: 'route-change-details', payload: routeConfig)\n//     uibuilder.send({ topic: 'route-change', payload: routeConfig })\n// })\n",
+        "output": "str",
+        "x": 540,
+        "y": 420,
+        "wires": [
+            [
+                "b69447560b4922e3"
+            ]
+        ]
+    },
+    {
+        "id": "c1b0b0183d20aaf9",
+        "type": "template",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "route03.html",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "plain",
+        "template": "<style>\n    /* Note that these only exist when this route is showing */\n    .extraclass {\n        color: green;\n        border: 2px solid var(--warning);\n        padding: 1em;\n    }\n    .coolclass {\n        background-color: var(--surface4);\n        border: 2px solid var(--info-intense);\n        padding: 1em;\n        margin: .5em 0;\n    }\n</style>\n<script>\n    // ! WARNING: This will be re-run EVERY time the route is shown - use with caution.\n    // Here we use a simple global variable to ensure we only ever run once.\n    // Also note that deleting a route that has previously displayed will not \n    //   remove any global values set here including even handlers.\n    \n    console.log('route03 external: built-in script running ...')\n\n    if (!window['mysensor']) window['mysensor'] = {temperature: 'N/A', humdity: 'N/A' }\n    else {\n        let e =  $('#mytemp') // make sure the element exists\n        if (e) e.innerText = window['mysensor'].temperature // update if it exists\n        e =  $('#myhumid') // make sure the element exists\n        if (e) e.innerText = window['mysensor'].humidity // update if it exists\n    }\n\n    // We will wrap this in a check to make sure it only ever runs\n    // once per page load.\n    if (!window['route3Run']) { // make sure this is unique across routes\n\n        // A function to use in <a href=\"#routeid\" onclick=\"doClick1(event)\">\n        // function doClick1(event) {\n        //     console.log('You did a click1 (onclick=\"router.doRoute(event)\")', event)\n        // }\n\n        // Alternative to using onclick is to add the handler via code\n        // const r03d02 = $('#r03d02')\n        // if (r03d02) r03d02.addEventListener('click', (event) => {\n        // $('#r03d02').addEventListener('click', (event) => {\n        //     console.log('You did a different click (addEventListener)', event)\n        // })\n        // or even:\n        // r03d02.addEventListener('click', doClick1)\n\n        // Example of updating the UI direct from a Node-RED message\n        uibuilder.onChange('msg', (msg) => {\n            console.log('msg from Node-RED handled inside route03')\n            if(msg.topic === 'mysensor') {\n                let e =  $('#mytemp') // make sure the element exists\n                if (e) e.innerText = msg.payload.temperature // update if it exists\n                window['mysensor'].temperature = msg.payload.temperature\n                e =  $('#myhumid') // make sure the element exists\n                if (e) e.innerText = msg.payload.humidity // update if it exists\n                window['mysensor'].humidity = msg.payload.humidity\n            }\n        })\n        // You could instead use the `uib-update` node to avoid this code.\n    }\n    // Make sure we only run the above once.\n    route3Run = true\n</script>\n\n<h2>This comes from an external file</h2>\n<div  id=\"r03d01\" class=\"extraclass\">\n    Route 3 part 1\n</div>\n<div id=\"r03d02\" class=\"extraclass\">\n    Route 3 part 2\n    <button type=\"button\" onclick=\"uibuilder.eventSend(event)\">Msg to Node-RED</button>\n</div>\n<div class=\"coolclass\">\n    Temperature: <span id=\"mytemp\">...</span>℃<br>\n    Humidity: <span id=\"myhumid\">...</span>%\n</div>\n",
+        "output": "str",
+        "x": 530,
+        "y": 500,
+        "wires": [
+            [
+                "cd7e2260acfb2837"
+            ]
+        ]
+    },
+    {
+        "id": "927ba7dbd20d5964",
+        "type": "template",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "route05.html",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "plain",
+        "template": "<h2>This comes from an external file - <code>./fe-routes/route05.html</code></h2>\n<div  id=\"r04d01\" class=\"extraclass\">\n    Route 5 part 1\n</div>\n<div id=\"r04d02\" class=\"extraclass\">\n    Route 5 part 2\n</div>\n",
+        "output": "str",
+        "x": 530,
+        "y": 540,
+        "wires": [
+            [
+                "cd7e2260acfb2837"
+            ]
+        ]
+    },
+    {
+        "id": "2199d9454364159f",
+        "type": "change",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "index.html",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.html",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 290,
+        "y": 380,
+        "wires": [
+            [
+                "90b798197324da6a"
+            ]
+        ]
+    },
+    {
+        "id": "a56111d557982b5b",
+        "type": "change",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "index.js",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.js",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 280,
+        "y": 420,
+        "wires": [
+            [
+                "46417436f605c0c1"
+            ]
+        ]
+    },
+    {
+        "id": "85854171f0f3dcbf",
+        "type": "change",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "fe-routes/route03.html",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "fe-routes/route03.html",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 320,
+        "y": 500,
+        "wires": [
+            [
+                "c1b0b0183d20aaf9"
+            ]
+        ]
+    },
+    {
+        "id": "577186271aeb2259",
+        "type": "change",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "fe-routes/route05.html",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "fe-routes/route05.html",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 320,
+        "y": 540,
+        "wires": [
+            [
+                "927ba7dbd20d5964"
+            ]
+        ]
+    },
+    {
+        "id": "8864796a3917418e",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "9a2093133d807e0e",
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "setup all FE files",
+        "x": 95,
+        "y": 1000,
+        "wires": [
+            [
+                "5f3d38f35edbf22f"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "5f3d38f35edbf22f",
+        "type": "template",
+        "z": "7a8938150991c681",
+        "g": "9a2093133d807e0e",
+        "name": "route07 template",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "plain",
+        "template": "<div>\n    <h2>dynamically loaded from Node-RED</h2>\n    <p>\n        A template created in Node-RED and sent to\n        clients using a uib-tag node to create the template\n        via a uib-cache node. So (re)-loaded as needed.\n    </p>\n    <div  id=\"r07d01\" class=\"extraclass\">\n        Route 7 part 1\n    </div>\n    <div id=\"r07d02\" class=\"extraclass\">\n        Route 7 part 2\n    </div>\n</div>\n\n<script>\n    window.jk = () => {\n        console.log('hello')\n    }\n    console.log('This log produced from loading template route07 (which came from Node-RED)')\n</script>",
+        "output": "str",
+        "x": 220,
+        "y": 1000,
+        "wires": [
+            [
+                "222db5ecca3f3715"
+            ]
+        ]
+    },
+    {
+        "id": "222db5ecca3f3715",
+        "type": "uib-tag",
+        "z": "7a8938150991c681",
+        "g": "9a2093133d807e0e",
+        "name": "",
+        "topic": "",
+        "tag": "template",
+        "tagSource": "",
+        "tagSourceType": "str",
+        "parent": "head",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementId": "route07",
+        "elementIdSourceType": "str",
+        "position": "last",
+        "positionSourceType": "str",
+        "slotSourceProp": "payload",
+        "slotSourcePropType": "msg",
+        "attribsSource": "",
+        "attribsSourceType": "msg",
+        "slotPropMarkdown": false,
+        "x": 440,
+        "y": 1000,
+        "wires": [
+            [
+                "f72f5d130732030e",
+                "b308646d2c1a0c5c"
+            ]
+        ]
+    },
+    {
+        "id": "b308646d2c1a0c5c",
+        "type": "link out",
+        "z": "7a8938150991c681",
+        "g": "9a2093133d807e0e",
+        "name": "cache",
+        "mode": "link",
+        "links": [
+            "3546ce64892a333a"
+        ],
+        "x": 910,
+        "y": 1000,
+        "wires": [],
+        "l": true
+    },
+    {
+        "id": "f72f5d130732030e",
+        "type": "change",
+        "z": "7a8938150991c681",
+        "g": "9a2093133d807e0e",
+        "name": "Add route to route list var",
+        "rules": [
+            {
+                "t": "delete",
+                "p": "_ui",
+                "pt": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"id\":\"route07\",\"src\":\"#route07\",\"title\":\"Route #7\",\"description\":\"Yet another route, #7\"}",
+                "tot": "json"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "addRoute",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 690,
+        "y": 1040,
+        "wires": [
+            [
+                "b308646d2c1a0c5c"
+            ]
+        ]
+    },
+    {
+        "id": "3b39bf87cb0e7184",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "e86a98882ea76964",
+        "name": "Navigate to #route07 using uibuilder external command",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"navigate\",\"prop\":\"#route07\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "uib-command-route-change",
+        "x": 280,
+        "y": 1160,
+        "wires": [
+            [
+                "cc4dd43f7629a00f"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "cc4dd43f7629a00f",
+        "type": "link out",
+        "z": "7a8938150991c681",
+        "g": "e86a98882ea76964",
+        "name": "no-cache",
+        "mode": "link",
+        "links": [
+            "8bc0962b2dba2520"
+        ],
+        "x": 600,
+        "y": 1160,
+        "wires": [],
+        "l": true
+    },
+    {
+        "id": "3449ec7ba8779fd3",
+        "type": "comment",
+        "z": "7a8938150991c681",
+        "name": "Front-end router library tests and examples. \\n After import, (1) change the URL in uibuilder node then deploy, (2) change the selection in the uib-save node and deploy again, \\n (3) Run the Front-end Code flow. Example is then ready to use.",
+        "info": "",
+        "x": 460,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "4729218738877835",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "8cac0890a5253216",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\", \"pageName\": \"index.html\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1010,
+        "y": 360,
+        "wires": [
+            [
+                "e98b72181d4d4dd2"
+            ]
+        ]
+    },
+    {
+        "id": "f3e097ba5e4f1ef8",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "8cac0890a5253216",
+        "name": "Log Lvl 5",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"logLevel\",\"value\":5}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "Set-log-level",
+        "x": 1040,
+        "y": 400,
+        "wires": [
+            [
+                "e98b72181d4d4dd2"
+            ]
+        ]
+    },
+    {
+        "id": "2088df1aa0646328",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "8cac0890a5253216",
+        "name": "Log Lvl 0",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"logLevel\",\"value\":0}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "Set-log-level",
+        "x": 1040,
+        "y": 440,
+        "wires": [
+            [
+                "e98b72181d4d4dd2"
+            ]
+        ]
+    },
+    {
+        "id": "e98b72181d4d4dd2",
+        "type": "link out",
+        "z": "7a8938150991c681",
+        "g": "8cac0890a5253216",
+        "name": "cached",
+        "mode": "link",
+        "links": [
+            "3546ce64892a333a"
+        ],
+        "x": 1220,
+        "y": 400,
+        "wires": [],
+        "l": true
+    },
+    {
+        "id": "aea8f8d0d90b6b31",
+        "type": "comment",
+        "z": "7a8938150991c681",
+        "name": "Example updated: 2025-08-17 \\n (MAJOR UPDATE in v7.5.0)",
+        "info": "",
+        "x": 1020,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "3e135abd73d70a3f",
+        "type": "uib-save",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "url": "spa",
+        "uibId": "3e65e04e8f3565e3",
+        "folder": "src",
+        "fname": "",
+        "createFolder": true,
+        "reload": true,
+        "usePageName": false,
+        "encoding": "utf8",
+        "mode": 438,
+        "name": "",
+        "topic": "",
+        "x": 760,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "63da533e2908bf83",
+        "type": "switch",
+        "z": "7a8938150991c681",
+        "g": "640ceb641391f9cc",
+        "name": "Route different control msgs",
+        "property": "uibuilderCtrl",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "regex",
+                "v": "client (dis)?connect",
+                "vt": "str",
+                "case": false
+            },
+            {
+                "t": "eq",
+                "v": "route change",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "visibility",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 4,
+        "x": 705,
+        "y": 240,
+        "wires": [
+            [
+                "8e2f1374a9a76d76",
+                "98e4278794cb35ef"
+            ],
+            [
+                "5c473c47668f0ce0"
+            ],
+            [],
+            []
+        ],
+        "outputLabels": [
+            "Network (socket) client connect/disconnect",
+            "uibrouter route changes",
+            "page visibility",
+            "Anything else"
+        ],
+        "l": false
+    },
+    {
+        "id": "98e4278794cb35ef",
+        "type": "debug",
+        "z": "7a8938150991c681",
+        "d": true,
+        "g": "640ceb641391f9cc",
+        "name": "uib client connect/disconnect Output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 815,
+        "y": 220,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "5c473c47668f0ce0",
+        "type": "debug",
+        "z": "7a8938150991c681",
+        "g": "640ceb641391f9cc",
+        "name": "route changes",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 830,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "cc214421ca8412c3",
+        "type": "link out",
+        "z": "7a8938150991c681",
+        "g": "6e612779617645b9",
+        "name": "no-cache",
+        "mode": "link",
+        "links": [
+            "8bc0962b2dba2520"
+        ],
+        "x": 600,
+        "y": 1260,
+        "wires": [],
+        "l": true
+    },
+    {
+        "id": "1fa0ac9f91b8c662",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "6e612779617645b9",
+        "name": "Change Footer HTML & attributes via uib-topic attribute in html",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "attributes",
+                "v": "{\t    \"style\":\"background-color: blueviolet; border: 2px solid hsl(\" & $random()*360 & \" 100% 50%);\"\t}",
+                "vt": "jsonata"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "footer",
+        "payload": "\"<div>This is an HTML footer sent from Node-RED. Random Number: \" & \t$formatInteger($random() * 100, \"0\") &\t\"</div>\"",
+        "payloadType": "jsonata",
+        "x": 300,
+        "y": 1260,
+        "wires": [
+            [
+                "cc214421ca8412c3"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "d9ed791379c57b6e",
+        "type": "change",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "fe-routes/route-md-01.md",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "fe-routes/route-md-01.md",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 330,
+        "y": 680,
+        "wires": [
+            [
+                "6e38486309e2b5f9"
+            ]
+        ]
+    },
+    {
+        "id": "6e38486309e2b5f9",
+        "type": "template",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "route-md-01.md",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "markdown",
+        "syntax": "plain",
+        "template": "## This is Markdown Route 01\n\nIt is rendered only if the Markdown-IT library is loaded.\n\n1. Num list a\n1. Num list b\n\n> [!TIP]\n> Markdown routes have to be external files because they\n> may contain characters that HTML uses for itself.\n\n### Can we use router variables?\n\nYes, absolutely. We can use\n`<uib-var variable=\"uibrouter_CurrentTitle\"></uib-var>`\nin our Markdown just as we can in HTML.\n\n#### Current route title\n\n<uib-var variable=\"uibrouter_CurrentTitle\"></uib-var>\n\n#### Current route description\n<uib-var variable=\"uibrouter_CurrentDescription\"></uib-var>\n",
+        "output": "str",
+        "x": 540,
+        "y": 680,
+        "wires": [
+            [
+                "9569263e1438c8a3"
+            ]
+        ]
+    },
+    {
+        "id": "8860abb566c62ba7",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "a2da759a22a95865",
+        "name": "Dynamic load MarkdownIT from CDN",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"load\",\"srcScripts\":[\"https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js\"]}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "load-markdownit-cdn",
+        "x": 230,
+        "y": 1400,
+        "wires": [
+            [
+                "2bfaf3b2a46e3887"
+            ]
+        ]
+    },
+    {
+        "id": "2053864ec810956e",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "a2da759a22a95865",
+        "name": "Remove MarkdownIT",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "[{\"method\":\"removeAll\",\"components\":[\"head > script[src*='markdown-it']\"]}]",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 280,
+        "y": 1440,
+        "wires": [
+            [
+                "2bfaf3b2a46e3887"
+            ]
+        ]
+    },
+    {
+        "id": "2bfaf3b2a46e3887",
+        "type": "link out",
+        "z": "7a8938150991c681",
+        "g": "a2da759a22a95865",
+        "name": "cached",
+        "mode": "link",
+        "links": [
+            "3546ce64892a333a"
+        ],
+        "x": 600,
+        "y": 1400,
+        "wires": [],
+        "l": true
+    },
+    {
+        "id": "2eab563ede910399",
+        "type": "comment",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "Use loadOther to load common content from external files",
+        "info": "",
+        "x": 430,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "50479c9c9196e354",
+        "type": "comment",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "External Markdown Templates. Load HighlightJS \\n & Markdown-IT libraries to see them correctly rendered \\n NB: Markdown routes have to be external due to HTML limitations",
+        "info": "",
+        "x": 449.99999237060547,
+        "y": 610.0000152587891,
+        "wires": []
+    },
+    {
+        "id": "f641946a7fadb7ec",
+        "type": "comment",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "External Route Templates",
+        "info": "",
+        "x": 330,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "1514154742f4d159",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "8cac0890a5253216",
+        "name": "Light",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "mark-light",
+        "payload": "{\"class\":\"light\"}",
+        "payloadType": "json",
+        "x": 970,
+        "y": 500,
+        "wires": [
+            [
+                "894d5cb803a3d468"
+            ]
+        ]
+    },
+    {
+        "id": "894d5cb803a3d468",
+        "type": "uib-update",
+        "z": "7a8938150991c681",
+        "g": "8cac0890a5253216",
+        "name": "Set Light/Dark mode",
+        "topic": "",
+        "mode": "update",
+        "modeSourceType": "modeType",
+        "cssSelector": "html",
+        "cssSelectorType": "str",
+        "slotSourceProp": "",
+        "slotSourcePropType": "msg",
+        "attribsSource": "payload",
+        "attribsSourceType": "msg",
+        "slotPropMarkdown": false,
+        "x": 1160,
+        "y": 500,
+        "wires": [
+            [
+                "e98b72181d4d4dd2"
+            ]
+        ]
+    },
+    {
+        "id": "34cf6a2788658ef9",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "8cac0890a5253216",
+        "name": "Dark",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "mark-dark",
+        "payload": "{\"class\":\"dark\"}",
+        "payloadType": "json",
+        "x": 970,
+        "y": 540,
+        "wires": [
+            [
+                "894d5cb803a3d468"
+            ]
+        ]
+    },
+    {
+        "id": "befedea2cb12ae53",
+        "type": "change",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "fe-routes/route-md-02.md",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "fe-routes/route-md-02.md",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 330,
+        "y": 720,
+        "wires": [
+            [
+                "daa0f17f58f3ff3b"
+            ]
+        ]
+    },
+    {
+        "id": "daa0f17f58f3ff3b",
+        "type": "template",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "route-md-02.md",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "markdown",
+        "syntax": "plain",
+        "template": "## This is Markdown Route 2\n\nRendered by Markdown-IT.\n\n* List 1\n* List 2\n\n```js\n// Some example JavaScript in a code block\nconst myvar = 42\nif (myvar > 40) {\n    console.log('Phew! Old')\n}\n```\n\n```html\n<!-- Some example HTML in a code block -->\n<ol class=\"border\">\n    <li>List Item #1</li>\n    <li>List Item #2</li>\n    <li>List Item #3</li>\n</ol>\n```\n\n> Note:\n>\n> The HighlightJS library and CSS must be pre-loaded\n> for the code blocks to render nicely.\n",
+        "output": "str",
+        "x": 540,
+        "y": 720,
+        "wires": [
+            [
+                "9569263e1438c8a3"
+            ]
+        ]
+    },
+    {
+        "id": "6b763b023881184b",
+        "type": "change",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "fe-routes/other-content.html",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "fe-routes/other-content.html",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 340,
+        "y": 820,
+        "wires": [
+            [
+                "6d37f292df6114b7"
+            ]
+        ]
+    },
+    {
+        "id": "6d37f292df6114b7",
+        "type": "template",
+        "z": "7a8938150991c681",
+        "g": "c3a232d06aa06594",
+        "name": "other-content.html",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "plain",
+        "template": "<style>\n    .extraContent {\n        border: 1px solid silver;\n        background-color: darkslateblue;\n        color: lemonchiffon;\n        margin-top: 3em;\n    }\n</style>\n\n<div class=\"extraContent\">\n    <p>\n        Some <i>really simple</i> content as an example.\n    </p>\n    <p>\n        Loaded from an external template by the <code>loadOther</code> utility function.\n    </p>\n</div>",
+        "output": "str",
+        "x": 570,
+        "y": 820,
+        "wires": [
+            [
+                "f4d6aa5a43904b61"
+            ]
+        ]
+    },
+    {
+        "id": "cc354c5bcf0c63de",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-uibuilder": "7.5.0"
+        }
+    }
+]
