@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-08-17 18:22:32
+updated: 2025-09-04 14:15:34
 author: Julian Knight (Totally Information)
 ---
 
@@ -24,7 +24,9 @@ Still need more thought on this because it does not quite allow for the simple l
 
 ## In Progress
 
-* Script run - retain at least the link to the run id so that the panel can be exited and returned to and still allow cancelling the script. Consider also retaining the complete xhr request and streamed output.
+* [ ] Transfer experimental FE info overlay to core from home site.
+* [ ] Update router auto-menu with improvements from home site.
+* [ ] Script run - retain at least the link to the run id so that the panel can be exited and returned to and still allow cancelling the script. Consider also retaining the complete xhr request and streamed output.
 * Update admin-api-v3:
   * [ ] Remove dependencies on fg (use fs.cjs instead).
   * [ ] Make more use of AsyncLocalStorage to allow async functions to be wrapped in sync callers.
@@ -47,7 +49,9 @@ Still need more thought on this because it does not quite allow for the simple l
 
 ## To Fix
 
+* uibuilder node in a sub-flow [ref](https://discourse.nodered.org/t/uibuilder-url-inconsistancies-and-issues/98853/4)
 * Failed rename of instance folder may get stuck.
+* uibuilder.formatNumber(0) - doesn't work, defaults to 2dp
 
 ## To Do
 
@@ -90,6 +94,9 @@ Still need more thought on this because it does not quite allow for the simple l
 * [ ] Allow overriding of the JSON max upload size for the custom Express server. [Ref](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988)
 
 * [ ] Add new example showing use of the TI Web Component library.
+* [ ] Add new classes for LAYOUTs.
+* [ ] Add experimental rective menu updates to router library.
+* [ ] Add SVGAnimate class to web components package.
 
 * CSS
   * [ ] Make `form > label` use a variable for `align-self`. 
@@ -104,7 +111,15 @@ Still need more thought on this because it does not quite allow for the simple l
     * [ ] Useful extensions for front-end development
     * [ ] Configure browser dev tools (e.g. round-trip edits)
 
-#### Consider
+## Experiments (See experimental library)
+
+* [x] reactive-binding
+* [x] enhanced-dialogs
+* [x] auto-layout
+* [x] template-engine
+* [ ] Uibuilder visual theme config. [Inspiration](https://tweakpane.github.io/)
+
+## Consider
 
 * Auto-generate a manifest web endpoint that delivers a manifest file for the current uibuilder instance. This would allow clients to have a faster startup. [ref](https://discourse.nodered.org/t/add-pwa-feature-to-uibuilder/97807/2)
 * For onTopic and uib-topic, allow wildcards in the topic name.
@@ -150,6 +165,7 @@ Still need more thought on this because it does not quite allow for the simple l
   *  Requires a change to the templates.
 * Mount instance dependencies (e.g. libraries listed in the instances package.json). This would allow the instance to use the libraries without having to install them in the global node_modules.
 * uibuilder node scripts feature - capture running script output even if the config panel has been closed. Restore on re-open.
+* uib-watch node - with reload and notify options.
 
 
 ## Answers needed
@@ -160,6 +176,12 @@ Still need more thought on this because it does not quite allow for the simple l
 * Enhance CSS with ideas from [OpenProps](https://open-props.style).
 * Move all runtime code to ESM's and rely on ESBUILD to build the runtime. This will allow us to use the latest JS features but retain backwards compatibility.
 * Maybe think about having a control msg from NR to clients that will re-arrange elements on the page. Possibly an array (map?) of element selectors in a set order. Would probably need a "root" element that is the parent of all the elements to be re-arranged. Could also be used to show/hide elements.
+* Sending events from client to server using beacons.
+
+### Wacky?
+
+* Using [Pyodide](https://pyodide.org/en/stable/index.html) to run Python natively in Node-RED.
+* [RxDB](https://rxdb.info/) - new nodes including a db server attached to Node-RED using RxDB's http server?
 
 ## New documentation
 
@@ -169,12 +191,15 @@ Still need more thought on this because it does not quite allow for the simple l
 
 * uibuilder's folders.
 * SPA (Single Page Application) vs MPA (Multi Page Application) and how to use uibuilder with both.
+* SPA/Router details
+  * Noting timings and when to load libraries, filter fns, etc.
+  * Common elements vs route "pages".
+  * Menu's.
 * uib-sidebar: How to use the new uib-sidebar node.
 * Updates on how to have data-driven updates to the UI.
 * Differences between IIFE and ESM module use.
 * UIBUILDER URL paths.
 * Custom web server and the `.public` folder.
-* Router
 * SSR (Server-Side Rendering)
 * Middleware & Hooks
 * New uibuilder experimental library.
@@ -182,4 +207,9 @@ Still need more thought on this because it does not quite allow for the simple l
 * Using a separate user-facing web server (separate from Node-RED's defaults that server up the Dashboards and http-in/-response nodes)
 * HTML structure/hierarchy.
 * The DOM.
-* Setting up and using VS Code for front-end development with uibuilder
+* Setting up and using VS Code for front-end development with uibuilder.
+* Web component library.
+
+### Shorts
+
+* Using CSS variables with uib-brand (e.g. using --max-width)
