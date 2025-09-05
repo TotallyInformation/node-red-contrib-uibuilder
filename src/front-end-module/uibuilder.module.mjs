@@ -338,7 +338,8 @@ export const Uib = class Uib {
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
         'elementExists', 'get', 'getManagedVarList', 'getWatchedVars', 'htmlSend', 'include',
-        'navigate', 'scrollTo', 'set', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'watchUrlHash',
+        'navigate', 'scrollTo', 'set', 'showMsg', 'showStatus', 'showOverlay',
+        'uiGet', 'uiWatch', 'watchUrlHash',
     ]
 
     /** @type {Object<string, string>} Managed uibuilder variables */
@@ -1302,6 +1303,21 @@ export const Uib = class Uib {
      */
     sanitiseHTML(html) {
         return _ui.sanitiseHTML(html)
+    }
+
+    /** Creates and displays an overlay window with customizable content and behavior
+     * @param {object} options - Configuration options for the overlay
+     *   @param {string} [options.content] - Main content (text or HTML) to display
+     *   @param {string} [options.title] - Optional title above the main content
+     *   @param {string} [options.icon] - Optional icon to display left of title (HTML or text)
+     *   @param {string} [options.type] - Overlay type: 'success', 'info', 'warning', or 'error'
+     *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
+     *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
+     *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
+     * @returns {object} Object with close() method to manually close the overlay
+     */
+    showOverlay(options) {
+        return _ui.showOverlay(options)
     }
 
     /** Add table event listener that returns the text or html content of either the full row or a single cell
@@ -2417,9 +2433,11 @@ export const Uib = class Uib {
             log('error', 'Uib:_uibCommand', `Command '${cmd} is not allowed to be called externally`)()
             return
         }
-        const prop = msg._uib.prop
-        const value = msg._uib.value
-        const quiet = msg._uib.quiet ?? false
+        // @since v7.5.0 allow msg._uib.options instead of prop/value to allow more flexible commands
+        const prop = msg._uib?.prop
+        const value = msg._uib?.value
+        const quiet = msg._uib?.quiet ?? msg._uib?.options?.quietfalse ?? false
+        const options = msg._uib?.options ?? { type: prop, title: value, quiet: quiet, }
         let response, info
 
         // Don't forget to update `#extCommands`, `docs/client-docs/control-from-node-red.md` & `functions.md`
@@ -2496,6 +2514,12 @@ export const Uib = class Uib {
 
             case 'showStatus': {
                 response = this.showStatus(value, prop)
+                break
+            }
+
+            case 'showOverlay': {
+                if (msg.payload && !options?.content) options.content = msg.payload
+                response = this.showOverlay(options)
                 break
             }
 

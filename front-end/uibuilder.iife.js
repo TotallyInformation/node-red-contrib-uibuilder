@@ -50,6 +50,103 @@
     }
   });
 
+  // src/front-end-module/libs/show-overlay.mjs
+  function showOverlay(options = {}) {
+    const {
+      content = "",
+      title = "",
+      icon = "",
+      type = "info",
+      showDismiss,
+      autoClose = 5,
+      time = true
+    } = options;
+    const overlayContainerId = "uib-info-overlay";
+    let overlayContainer = document.getElementById(overlayContainerId);
+    if (!overlayContainer) {
+      overlayContainer = document.createElement("div");
+      overlayContainer.id = overlayContainerId;
+      document.body.appendChild(overlayContainer);
+      console.log(">> SHOW OVERLAY >>", options, document.getElementById(overlayContainerId));
+    }
+    const entryId = "overlay-entry-".concat(Date.now(), "-").concat(Math.random().toString(36).substr(2, 9));
+    const overlayEntry = document.createElement("div");
+    overlayEntry.id = entryId;
+    overlayEntry.style.marginBottom = "0.5rem";
+    const typeStyles = {
+      info: {
+        iconDefault: "\u2139\uFE0F",
+        titleDefault: "Information",
+        color: "hsl(188.2deg 77.78% 40.59%)"
+      },
+      success: {
+        iconDefault: "\u2705",
+        titleDefault: "Success",
+        color: "hsl(133.7deg 61.35% 40.59%)"
+      },
+      warning: {
+        iconDefault: "\u26A0\uFE0F",
+        titleDefault: "Warning",
+        color: "hsl(35.19deg 84.38% 62.35%)"
+      },
+      error: {
+        iconDefault: "\u274C",
+        titleDefault: "Error",
+        color: "hsl(2.74deg 92.59% 62.94%)"
+      }
+    };
+    const currentTypeStyle = typeStyles[type] || typeStyles.info;
+    const shouldShowDismiss = showDismiss !== void 0 ? showDismiss : autoClose === null;
+    const iconHtml = icon || currentTypeStyle.iconDefault;
+    const titleText = title || currentTypeStyle.titleDefault;
+    let timeHtml = "";
+    if (time) {
+      const now = /* @__PURE__ */ new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+      const timestamp = "".concat(year, "-").concat(month, "-").concat(day, " ").concat(hours, ":").concat(minutes, ":").concat(seconds);
+      timeHtml = '<div class="uib-overlay-time" style="font-size: 0.8em; color: var(--text3, #999); margin-left: auto; margin-right: '.concat(shouldShowDismiss ? "0.5rem" : "0", ';">').concat(timestamp, "</div>");
+    }
+    overlayEntry.innerHTML = /* html */
+    '\n        <div class="uib-overlay-entry" style="--callout-color:'.concat(currentTypeStyle.color, ';">\n            <div class="uib-overlay-header">\n                <div class="uib-overlay-icon">').concat(iconHtml, '</div>\n                <div class="uib-overlay-title">').concat(titleText, "</div>\n                ").concat(timeHtml, "\n                ").concat(shouldShowDismiss ? '<button class="uib-overlay-dismiss" data-entry-id="'.concat(entryId, '" title="Close">\xD7</button>') : "", '\n            </div>\n            <div class="uib-overlay-content">\n                ').concat(content, "\n            </div>\n        </div>\n    ");
+    if (overlayContainer.children.length > 0) {
+      overlayContainer.insertBefore(overlayEntry, overlayContainer.firstChild);
+    } else {
+      overlayContainer.appendChild(overlayEntry);
+    }
+    const closeOverlayEntry = () => {
+      const entry = document.getElementById(entryId);
+      if (!entry) return;
+      entry.style.animation = "slideOut 0.3s ease-in";
+      setTimeout(() => {
+        if (entry.parentNode) {
+          entry.remove();
+        }
+      }, 300);
+    };
+    const dismissBtn = overlayEntry.querySelector(".uib-overlay-dismiss");
+    if (dismissBtn) {
+      dismissBtn.addEventListener("click", closeOverlayEntry);
+    }
+    let autoCloseTimer = null;
+    if (autoClose !== null && autoClose > 0) {
+      autoCloseTimer = setTimeout(closeOverlayEntry, autoClose * 1e3);
+    }
+    return {
+      close: () => {
+        if (autoCloseTimer) {
+          clearTimeout(autoCloseTimer);
+        }
+        closeOverlayEntry();
+      },
+      id: entryId
+    };
+  }
+
   // src/front-end-module/ui.mjs
   var _a;
   var Ui = (_a = class {
@@ -1221,6 +1318,20 @@
         }
       }
       return newToast;
+    }
+    /** Creates and displays an overlay window with customizable content and behavior
+     * @param {object} options - Configuration options for the overlay
+     *   @param {string} [options.content] - Main content (text or HTML) to display
+     *   @param {string} [options.title] - Optional title above the main content
+     *   @param {string} [options.icon] - Optional icon to display left of title (HTML or text)
+     *   @param {string} [options.type] - Overlay type: 'success', 'info', 'warning', or 'error'
+     *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
+     *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
+     *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
+     * @returns {object} Object with close() method to manually close the overlay
+     */
+    showOverlay(options) {
+      return showOverlay(options);
     }
     /** Directly manage UI via JSON
      * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
@@ -4981,8 +5092,15 @@
     connect: lookup2
   });
 
-  // src/components/ti-base-component.old.js
+  // src/components/ti-base-component.mjs
   var _TiBaseComponent = class _TiBaseComponent extends HTMLElement {
+    // get id() {
+    //     return this.id
+    // }
+    // set id(value) {
+    //     // this.id = value
+    //     console.log('>> SETTING ID:', value, this.id, this.getAttribute('id'))
+    // }
     /** NB: Attributes not available here - use connectedCallback to reference */
     constructor() {
       super();
@@ -5003,37 +5121,33 @@
       __publicField(this, "$$");
       /** True when instance finishes connecting.
        * Allows initial calls of attributeChangedCallback to be
-       * ignored if needed. */
+       * ignored if needed.
+       */
       __publicField(this, "connected", false);
       /** Placeholder for the optional name attribute @type {string} */
       __publicField(this, "name");
       /** Runtime configuration settings @type {object} */
       __publicField(this, "opts", {});
     }
-    /** Report the current component version string */
+    /** Report the current component version string
+     * @returns {string} The component version & base version as a string
+     */
     static get version() {
       return "".concat(this.componentVersion, " (Base: ").concat(this.baseVersion, ")");
     }
-    /** Optionally apply an external linked style sheet (called from connectedCallback)
-     * @param {*} url The URL for the linked style sheet
-     */
-    async doInheritStyles() {
-      if (!this.hasAttribute("inherit-style")) return;
-      let url2 = this.getAttribute("inherit-style");
-      if (!url2) url2 = "./index.css";
-      const linkEl = document.createElement("link");
-      linkEl.setAttribute("type", "text/css");
-      linkEl.setAttribute("rel", "stylesheet");
-      linkEl.setAttribute("href", url2);
-      this.shadowRoot.appendChild(linkEl);
-      console.info("[".concat(this.localName, '] Inherit-style requested. Loading: "').concat(url2, '"'));
-    }
     /** OPTIONAL. Update runtime configuration, return complete config
      * @param {object|undefined} config If present, partial or full set of options. If undefined, fn returns the current full option settings
+     * @returns {object} The full set of options
      */
     config(config) {
       if (config) this.opts = _TiBaseComponent.deepAssign(this.opts, config);
       return this.opts;
+    }
+    /** Creates the $ and $$ fns that do css selections against the shadow dom */
+    createShadowSelectors() {
+      var _a3, _b;
+      this.$ = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector.bind(this.shadowRoot);
+      this.$$ = (_b = this.shadowRoot) == null ? void 0 : _b.querySelectorAll.bind(this.shadowRoot);
     }
     /** Utility object deep merge fn
      * @param {object} target Merge target object
@@ -5054,6 +5168,21 @@
       }
       return target;
     }
+    /** Optionally apply an external linked style sheet for Shadow DOM (called from connectedCallback)
+     * param {*} url The URL for the linked style sheet
+     */
+    async doInheritStyles() {
+      if (!this.shadowRoot) return;
+      if (!this.hasAttribute("inherit-style")) return;
+      let url2 = this.getAttribute("inherit-style");
+      if (!url2) url2 = "./index.css";
+      const linkEl = document.createElement("link");
+      linkEl.setAttribute("type", "text/css");
+      linkEl.setAttribute("rel", "stylesheet");
+      linkEl.setAttribute("href", url2);
+      this.shadowRoot.appendChild(linkEl);
+      console.info("[".concat(this.localName, '] Inherit-style requested. Loading: "').concat(url2, '"'));
+    }
     /** Ensure that the component instance has a unique ID & check again if uib loaded */
     ensureId() {
       this.uib = !!window["uibuilder"];
@@ -5061,17 +5190,89 @@
         this.id = "".concat(this.localName, "-").concat(++this.constructor._iCount);
       }
     }
-    /** Creates the $ and $$ fns that do css selections against the shadow dom */
-    createShadowSelectors() {
-      var _a3, _b;
-      this.$ = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector.bind(this.shadowRoot);
-      this.$$ = (_b = this.shadowRoot) == null ? void 0 : _b.querySelectorAll.bind(this.shadowRoot);
-    }
-    // TODO Needs enhancing - does nothing at the moment
-    /** Handle a `uibuilder:msg:_ui:update:${this.id}` custom event
-     * @param {CustomEvent} evt uibuilder `uibuilder:msg:_ui:update:${this.id}` custom event evt.details contains the data
+    /** Check if slot has meaningful content (not just whitespace)
+     * @returns {boolean} True if slot has non-empty content
      */
-    _uibMsgHandler(evt) {
+    hasSlotContent() {
+      const slot = this.shadowRoot.querySelector("slot");
+      const assignedNodes = slot.assignedNodes();
+      return assignedNodes.some((node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          return true;
+        }
+        if (node.nodeType === Node.TEXT_NODE) {
+          return node.textContent.trim().length > 0;
+        }
+        return false;
+      });
+    }
+    /** Attaches a new stylesheet before all other stylesheets in the light DOM
+     * @param {string} cssText - CSS text to inject directly
+     * @param {number} order - Optional order/priority for stylesheet placement. Lower numbers = higher priority (inserted first). Defaults to 0.
+     * @returns {Element} The created or existing style element
+     * @throws {Error} If cssText is not provided
+     * @example
+     * // Inject CSS text directly with default order
+     * dataList.prependStylesheet('.custom { color: hsl(0, 100%, 50%); }')
+     *
+     * // Inject CSS with specific order (lower number = higher priority)
+     * dataList.prependStylesheet('.base { font-size: 1rem; }', 1)
+     * dataList.prependStylesheet('.critical { color: hsl(0, 100%, 50%); }', 0)
+     */
+    prependStylesheet(cssText, order = 0) {
+      if (!cssText) {
+        throw new Error("[".concat(this.localName, "] cssText must be provided"));
+      }
+      const existingStylesheet = this._findExistingStylesheet();
+      if (existingStylesheet) return existingStylesheet;
+      const styleElement = document.createElement("style");
+      styleElement.textContent = cssText;
+      styleElement.setAttribute("data-component", this.localName);
+      styleElement.setAttribute("data-order", order.toString());
+      this._prependToDocumentHead(styleElement, order);
+      return styleElement;
+    }
+    /** Send a message to the Node-RED server via uibuilder if available
+     * NB: These web components are NEVER dependent on Node-RED or uibuilder.
+     * @param {string} evtName The event name to send
+     * @param {*} data The data to send
+     */
+    uibSend(evtName, data) {
+      if (this.uib) {
+        if (this.uibuilder.ioConnected) {
+          this.uibuilder.send({
+            topic: "".concat(this.localName, ":").concat(evtName),
+            payload: data,
+            id: this.id,
+            name: this.name
+          });
+        } else {
+          console.warn("[".concat(this.localName, "] uibuilder not connected to server, cannot send:"), evtName, data);
+        }
+      }
+    }
+    // #region ---- Methods private to extended classes ----
+    // These are called from a class that extends this base class but should not be called directly by the user.
+    /** Standardised connection. Call from the start of connectedCallback fn */
+    _connect() {
+      this.ensureId();
+      this.doInheritStyles();
+      if (this.uib) this.uibuilder.onTopic("".concat(this.localName, "::").concat(this.id), this._uibMsgHandler.bind(this));
+    }
+    /** Standardised constructor. Keep after call to super()
+     * @param {Node|string} template Nodes/string content that will be cloned into the shadow dom
+     * @param {{mode:'open'|'closed',delegatesFocus:boolean}=} shadowOpts Options passed to attachShadow
+     */
+    _construct(template2, shadowOpts) {
+      if (!template2) return;
+      if (!shadowOpts) shadowOpts = { mode: "open", delegatesFocus: true };
+      this.attachShadow(shadowOpts).append(template2);
+      this.createShadowSelectors();
+    }
+    /** Standardised disconnection. Call from the END of disconnectedCallback fn */
+    _disconnect() {
+      document.removeEventListener("uibuilder:msg:_ui:update:".concat(this.id), this._uibMsgHandler);
+      this._event("disconnected");
     }
     /** Custom event dispacher `component-name:name` with detail data
      * @example
@@ -5079,11 +5280,11 @@
      * @example
      *   this._event('ready', {age: 42, type: 'android'})
      *
-     * @param {string} name A name to give the event, added to the component-name separated with a :
+     * @param {string} evtName A name to give the event, added to the component-name separated with a :
      * @param {*=} data Optional data object to pass to event listeners via the evt.detail property
      */
-    _event(name2, data) {
-      this.dispatchEvent(new CustomEvent("".concat(this.localName, ":").concat(name2), {
+    _event(evtName, data) {
+      this.dispatchEvent(new CustomEvent("".concat(this.localName, ":").concat(evtName), {
         bubbles: true,
         composed: true,
         detail: {
@@ -5093,44 +5294,91 @@
         }
       }));
     }
-    /** Standardised constructor. Keep after call to super()
-     * @param {Node|string} template Nodes/string content that will be cloned into the shadow dom
-     * @param {{mode:'open'|'closed',delegatesFocus:boolean}=} shadowOpts Options passed to attachShadow
-     */
-    _construct(template2, shadowOpts) {
-      if (!shadowOpts) shadowOpts = { mode: "open", delegatesFocus: true };
-      this.attachShadow(shadowOpts).append(template2);
-      this.createShadowSelectors();
-    }
-    /** Standardised connection. Call from the start of connectedCallback fn */
-    _connect() {
-      this.ensureId();
-      this.doInheritStyles();
-    }
-    /** Standardised disconnection. Call from the END of disconnectedCallback fn */
-    _disconnect() {
-      document.removeEventListener("uibuilder:msg:_ui:update:".concat(this.id), this._uibMsgHandler);
-      this._event("disconnected");
-    }
     /** Call from end of connectedCallback */
     _ready() {
       this.connected = true;
       this._event("connected");
       this._event("ready");
     }
+    /** Handle a `${this.localName}::${this.id}` custom event
+     * Each prop in the msg.payload is set as a prop on the component instance.
+     * @param {object} msg A uibuilder message object
+     */
+    _uibMsgHandler(msg) {
+      if (typeof msg.payload !== "object") {
+        console.warn("[".concat(this.localName, "] Ignoring msg, payload is not an object:"), msg);
+        return;
+      }
+      Object.keys(msg.payload).forEach((key) => {
+        if (key.startsWith("_")) return;
+        this[key] = msg.payload[key];
+      });
+    }
+    // #endregion ---- Methods private to the extended classes ----
+    // #region ---- Methods private to the base class only ----
+    /** Find existing component stylesheet with the same data-component attribute value
+     * Assumes that the style element has a `data-component` attribute set to the component's local name
+     * @returns {Element|null} Existing element or null if not found
+     * @private
+     */
+    _findExistingStylesheet() {
+      const existing = document.head.querySelector(
+        'style[data-component="'.concat(this.localName, '"]')
+      );
+      return existing;
+    }
+    /** Helper method to prepend a style element to the document head with order consideration
+     * @param {HTMLElement} styleElement - The style element to prepend
+     * @param {number} order - The order/priority for placement (lower numbers = higher priority)
+     * @private
+     */
+    _prependToDocumentHead(styleElement, order) {
+      var _a3;
+      const head = document.head;
+      const existingComponentStyles = Array.from(head.querySelectorAll("style[data-component]"));
+      if (existingComponentStyles.length === 0) {
+        const firstChild = head.firstChild;
+        if (firstChild) {
+          head.insertBefore(styleElement, firstChild);
+        } else {
+          head.appendChild(styleElement);
+        }
+        return;
+      }
+      let insertBefore = null;
+      for (const existing of existingComponentStyles) {
+        const existingOrder = parseInt((_a3 = existing.getAttribute("data-order")) != null ? _a3 : "0", 10);
+        if (order < existingOrder) {
+          insertBefore = existing;
+          break;
+        }
+      }
+      if (insertBefore) {
+        head.insertBefore(styleElement, insertBefore);
+      } else {
+        const lastInjected = existingComponentStyles[existingComponentStyles.length - 1];
+        const nextSibling = lastInjected.nextSibling;
+        if (nextSibling) {
+          head.insertBefore(styleElement, nextSibling);
+        } else {
+          head.appendChild(styleElement);
+        }
+      }
+    }
+    // #endregion ---- Methods private to the base class only ----
   };
   /** Component version */
-  __publicField(_TiBaseComponent, "baseVersion", "2025-01-09");
+  __publicField(_TiBaseComponent, "baseVersion", "2025-06-09");
   /** Holds a count of how many instances of this component are on the page that don't have their own id
    * Used to ensure a unique id if needing to add one dynamically
    */
   __publicField(_TiBaseComponent, "_iCount", 0);
   var TiBaseComponent = _TiBaseComponent;
-  var ti_base_component_old_default = TiBaseComponent;
+  var ti_base_component_default = TiBaseComponent;
 
   // src/components/uib-var.mjs
   var _variable, _varCb, _topic, _topicCb;
-  var UibVar = class extends ti_base_component_old_default {
+  var UibVar = class extends ti_base_component_default {
     //#endregion --- Class Properties ---
     constructor() {
       super();
@@ -5410,7 +5658,7 @@
   window["UibVar"] = UibVar;
 
   // src/components/uib-meta.mjs
-  var UibMeta = class extends ti_base_component_old_default {
+  var UibMeta = class extends ti_base_component_default {
     //#endregion --- Class Properties ---
     constructor() {
       super();
@@ -5606,290 +5854,6 @@
   __publicField(UibMeta, "componentVersion", "2025-01-06");
   var uib_meta_default = UibMeta;
   window["UibMeta"] = UibMeta;
-
-  // src/components/ti-base-component.mjs
-  var _TiBaseComponent2 = class _TiBaseComponent2 extends HTMLElement {
-    // get id() {
-    //     return this.id
-    // }
-    // set id(value) {
-    //     // this.id = value
-    //     console.log('>> SETTING ID:', value, this.id, this.getAttribute('id'))
-    // }
-    /** NB: Attributes not available here - use connectedCallback to reference */
-    constructor() {
-      super();
-      /** Is UIBUILDER for Node-RED loaded? */
-      __publicField(this, "uib", !!window["uibuilder"]);
-      __publicField(this, "uibuilder", window["uibuilder"]);
-      /** Mini jQuery-like shadow dom selector (see constructor)
-       * @type {function(string): Element}
-       * @param {string} selector - A CSS selector to match the element within the shadow DOM.
-       * @returns {Element} The first element that matches the specified selector.
-       */
-      __publicField(this, "$");
-      /** Mini jQuery-like shadow dom multi-selector (see constructor)
-       * @type {function(string): NodeList}
-       * @param {string} selector - A CSS selector to match the element within the shadow DOM.
-       * @returns {NodeList} A STATIC list of all shadow dom elements that match the selector.
-       */
-      __publicField(this, "$$");
-      /** True when instance finishes connecting.
-       * Allows initial calls of attributeChangedCallback to be
-       * ignored if needed.
-       */
-      __publicField(this, "connected", false);
-      /** Placeholder for the optional name attribute @type {string} */
-      __publicField(this, "name");
-      /** Runtime configuration settings @type {object} */
-      __publicField(this, "opts", {});
-    }
-    /** Report the current component version string
-     * @returns {string} The component version & base version as a string
-     */
-    static get version() {
-      return "".concat(this.componentVersion, " (Base: ").concat(this.baseVersion, ")");
-    }
-    /** OPTIONAL. Update runtime configuration, return complete config
-     * @param {object|undefined} config If present, partial or full set of options. If undefined, fn returns the current full option settings
-     * @returns {object} The full set of options
-     */
-    config(config) {
-      if (config) this.opts = _TiBaseComponent2.deepAssign(this.opts, config);
-      return this.opts;
-    }
-    /** Creates the $ and $$ fns that do css selections against the shadow dom */
-    createShadowSelectors() {
-      var _a3, _b;
-      this.$ = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector.bind(this.shadowRoot);
-      this.$$ = (_b = this.shadowRoot) == null ? void 0 : _b.querySelectorAll.bind(this.shadowRoot);
-    }
-    /** Utility object deep merge fn
-     * @param {object} target Merge target object
-     * @param  {...object} sources 1 or more source objects to merge
-     * @returns {object} Deep merged object
-     */
-    static deepAssign(target, ...sources) {
-      for (let source of sources) {
-        for (let k in source) {
-          const vs = source[k];
-          const vt = target[k];
-          if (Object(vs) == vs && Object(vt) === vt) {
-            target[k] = _TiBaseComponent2.deepAssign(vt, vs);
-            continue;
-          }
-          target[k] = source[k];
-        }
-      }
-      return target;
-    }
-    /** Optionally apply an external linked style sheet for Shadow DOM (called from connectedCallback)
-     * param {*} url The URL for the linked style sheet
-     */
-    async doInheritStyles() {
-      if (!this.shadowRoot) return;
-      if (!this.hasAttribute("inherit-style")) return;
-      let url2 = this.getAttribute("inherit-style");
-      if (!url2) url2 = "./index.css";
-      const linkEl = document.createElement("link");
-      linkEl.setAttribute("type", "text/css");
-      linkEl.setAttribute("rel", "stylesheet");
-      linkEl.setAttribute("href", url2);
-      this.shadowRoot.appendChild(linkEl);
-      console.info("[".concat(this.localName, '] Inherit-style requested. Loading: "').concat(url2, '"'));
-    }
-    /** Ensure that the component instance has a unique ID & check again if uib loaded */
-    ensureId() {
-      this.uib = !!window["uibuilder"];
-      if (!this.id) {
-        this.id = "".concat(this.localName, "-").concat(++this.constructor._iCount);
-      }
-    }
-    /** Check if slot has meaningful content (not just whitespace)
-     * @returns {boolean} True if slot has non-empty content
-     */
-    hasSlotContent() {
-      const slot = this.shadowRoot.querySelector("slot");
-      const assignedNodes = slot.assignedNodes();
-      return assignedNodes.some((node) => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          return true;
-        }
-        if (node.nodeType === Node.TEXT_NODE) {
-          return node.textContent.trim().length > 0;
-        }
-        return false;
-      });
-    }
-    /** Attaches a new stylesheet before all other stylesheets in the light DOM
-     * @param {string} cssText - CSS text to inject directly
-     * @param {number} order - Optional order/priority for stylesheet placement. Lower numbers = higher priority (inserted first). Defaults to 0.
-     * @returns {Element} The created or existing style element
-     * @throws {Error} If cssText is not provided
-     * @example
-     * // Inject CSS text directly with default order
-     * dataList.prependStylesheet('.custom { color: hsl(0, 100%, 50%); }')
-     *
-     * // Inject CSS with specific order (lower number = higher priority)
-     * dataList.prependStylesheet('.base { font-size: 1rem; }', 1)
-     * dataList.prependStylesheet('.critical { color: hsl(0, 100%, 50%); }', 0)
-     */
-    prependStylesheet(cssText, order = 0) {
-      if (!cssText) {
-        throw new Error("[".concat(this.localName, "] cssText must be provided"));
-      }
-      const existingStylesheet = this._findExistingStylesheet();
-      if (existingStylesheet) return existingStylesheet;
-      const styleElement = document.createElement("style");
-      styleElement.textContent = cssText;
-      styleElement.setAttribute("data-component", this.localName);
-      styleElement.setAttribute("data-order", order.toString());
-      this._prependToDocumentHead(styleElement, order);
-      return styleElement;
-    }
-    /** Send a message to the Node-RED server via uibuilder if available
-     * NB: These web components are NEVER dependent on Node-RED or uibuilder.
-     * @param {string} evtName The event name to send
-     * @param {*} data The data to send
-     */
-    uibSend(evtName, data) {
-      if (this.uib) {
-        if (this.uibuilder.ioConnected) {
-          this.uibuilder.send({
-            topic: "".concat(this.localName, ":").concat(evtName),
-            payload: data,
-            id: this.id,
-            name: this.name
-          });
-        } else {
-          console.warn("[".concat(this.localName, "] uibuilder not connected to server, cannot send:"), evtName, data);
-        }
-      }
-    }
-    // #region ---- Methods private to extended classes ----
-    // These are called from a class that extends this base class but should not be called directly by the user.
-    /** Standardised connection. Call from the start of connectedCallback fn */
-    _connect() {
-      this.ensureId();
-      this.doInheritStyles();
-      if (this.uib) this.uibuilder.onTopic("".concat(this.localName, "::").concat(this.id), this._uibMsgHandler.bind(this));
-    }
-    /** Standardised constructor. Keep after call to super()
-     * @param {Node|string} template Nodes/string content that will be cloned into the shadow dom
-     * @param {{mode:'open'|'closed',delegatesFocus:boolean}=} shadowOpts Options passed to attachShadow
-     */
-    _construct(template2, shadowOpts) {
-      if (!template2) return;
-      if (!shadowOpts) shadowOpts = { mode: "open", delegatesFocus: true };
-      this.attachShadow(shadowOpts).append(template2);
-      this.createShadowSelectors();
-    }
-    /** Standardised disconnection. Call from the END of disconnectedCallback fn */
-    _disconnect() {
-      document.removeEventListener("uibuilder:msg:_ui:update:".concat(this.id), this._uibMsgHandler);
-      this._event("disconnected");
-    }
-    /** Custom event dispacher `component-name:name` with detail data
-     * @example
-     *   this._event('ready')
-     * @example
-     *   this._event('ready', {age: 42, type: 'android'})
-     *
-     * @param {string} evtName A name to give the event, added to the component-name separated with a :
-     * @param {*=} data Optional data object to pass to event listeners via the evt.detail property
-     */
-    _event(evtName, data) {
-      this.dispatchEvent(new CustomEvent("".concat(this.localName, ":").concat(evtName), {
-        bubbles: true,
-        composed: true,
-        detail: {
-          id: this.id,
-          name: this.name,
-          data
-        }
-      }));
-    }
-    /** Call from end of connectedCallback */
-    _ready() {
-      this.connected = true;
-      this._event("connected");
-      this._event("ready");
-    }
-    /** Handle a `${this.localName}::${this.id}` custom event
-     * Each prop in the msg.payload is set as a prop on the component instance.
-     * @param {object} msg A uibuilder message object
-     */
-    _uibMsgHandler(msg) {
-      if (typeof msg.payload !== "object") {
-        console.warn("[".concat(this.localName, "] Ignoring msg, payload is not an object:"), msg);
-        return;
-      }
-      Object.keys(msg.payload).forEach((key) => {
-        if (key.startsWith("_")) return;
-        this[key] = msg.payload[key];
-      });
-    }
-    // #endregion ---- Methods private to the extended classes ----
-    // #region ---- Methods private to the base class only ----
-    /** Find existing component stylesheet with the same data-component attribute value
-     * Assumes that the style element has a `data-component` attribute set to the component's local name
-     * @returns {Element|null} Existing element or null if not found
-     * @private
-     */
-    _findExistingStylesheet() {
-      const existing = document.head.querySelector(
-        'style[data-component="'.concat(this.localName, '"]')
-      );
-      return existing;
-    }
-    /** Helper method to prepend a style element to the document head with order consideration
-     * @param {HTMLElement} styleElement - The style element to prepend
-     * @param {number} order - The order/priority for placement (lower numbers = higher priority)
-     * @private
-     */
-    _prependToDocumentHead(styleElement, order) {
-      var _a3;
-      const head = document.head;
-      const existingComponentStyles = Array.from(head.querySelectorAll("style[data-component]"));
-      if (existingComponentStyles.length === 0) {
-        const firstChild = head.firstChild;
-        if (firstChild) {
-          head.insertBefore(styleElement, firstChild);
-        } else {
-          head.appendChild(styleElement);
-        }
-        return;
-      }
-      let insertBefore = null;
-      for (const existing of existingComponentStyles) {
-        const existingOrder = parseInt((_a3 = existing.getAttribute("data-order")) != null ? _a3 : "0", 10);
-        if (order < existingOrder) {
-          insertBefore = existing;
-          break;
-        }
-      }
-      if (insertBefore) {
-        head.insertBefore(styleElement, insertBefore);
-      } else {
-        const lastInjected = existingComponentStyles[existingComponentStyles.length - 1];
-        const nextSibling = lastInjected.nextSibling;
-        if (nextSibling) {
-          head.insertBefore(styleElement, nextSibling);
-        } else {
-          head.appendChild(styleElement);
-        }
-      }
-    }
-    // #endregion ---- Methods private to the base class only ----
-  };
-  /** Component version */
-  __publicField(_TiBaseComponent2, "baseVersion", "2025-06-09");
-  /** Holds a count of how many instances of this component are on the page that don't have their own id
-   * Used to ensure a unique id if needing to add one dynamically
-   */
-  __publicField(_TiBaseComponent2, "_iCount", 0);
-  var TiBaseComponent2 = _TiBaseComponent2;
-  var ti_base_component_default = TiBaseComponent2;
 
   // src/components/apply-template.mjs
   var ApplyTemplate = class extends ti_base_component_default {
@@ -7023,6 +6987,7 @@
         "set",
         "showMsg",
         "showStatus",
+        "showOverlay",
         "uiGet",
         "uiWatch",
         "watchUrlHash"
@@ -7937,6 +7902,20 @@
     sanitiseHTML(html) {
       return _ui.sanitiseHTML(html);
     }
+    /** Creates and displays an overlay window with customizable content and behavior
+     * @param {object} options - Configuration options for the overlay
+     *   @param {string} [options.content] - Main content (text or HTML) to display
+     *   @param {string} [options.title] - Optional title above the main content
+     *   @param {string} [options.icon] - Optional icon to display left of title (HTML or text)
+     *   @param {string} [options.type] - Overlay type: 'success', 'info', 'warning', or 'error'
+     *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
+     *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
+     *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
+     * @returns {object} Object with close() method to manually close the overlay
+     */
+    showOverlay(options) {
+      return _ui.showOverlay(options);
+    }
     /** Add table event listener that returns the text or html content of either the full row or a single cell
      * NOTE: Assumes that the table has a `tbody` element.
      * If cells have a `data-col-name` attribute, it will be used in the output as the column name.
@@ -8794,7 +8773,7 @@
      * @private
      */
     _uibCommand(msg) {
-      var _a3;
+      var _a3, _b, _c, _d, _e, _f, _g, _h, _i;
       if (!msg._uib || !msg._uib.command) {
         log("error", "uibuilder:_uibCommand", "Invalid command message received", { msg })();
         msg.payload = msg.error = "Invalid command message received";
@@ -8806,9 +8785,10 @@
         log("error", "Uib:_uibCommand", "Command '".concat(cmd, " is not allowed to be called externally"))();
         return;
       }
-      const prop = msg._uib.prop;
-      const value2 = msg._uib.value;
-      const quiet = (_a3 = msg._uib.quiet) != null ? _a3 : false;
+      const prop = (_a3 = msg._uib) == null ? void 0 : _a3.prop;
+      const value2 = (_b = msg._uib) == null ? void 0 : _b.value;
+      const quiet = (_g = (_f = (_c = msg._uib) == null ? void 0 : _c.quiet) != null ? _f : (_e = (_d = msg._uib) == null ? void 0 : _d.options) == null ? void 0 : _e.quietfalse) != null ? _g : false;
+      const options = (_i = (_h = msg._uib) == null ? void 0 : _h.options) != null ? _i : { type: prop, title: value2, quiet };
       let response, info;
       switch (cmd) {
         // case 'elementIsVisible': { // temporarily deprecated
@@ -8871,6 +8851,11 @@
         }
         case "showStatus": {
           response = this.showStatus(value2, prop);
+          break;
+        }
+        case "showOverlay": {
+          if (msg.payload && !(options == null ? void 0 : options.content)) options.content = msg.payload;
+          response = this.showOverlay(options);
           break;
         }
         case "uiGet": {
@@ -9461,6 +9446,13 @@
   customElements.define("apply-template", apply_template_default);
   customElements.define("uib-control", uib_control_default);
 })();
+/**
+ * @description Overlay window for displaying messages and notifications.
+ * Included in the UI module and from there into the main uibuilder module.
+ * @license Apache-2.0
+ * @author Julian Knight (Totally Information)
+ * @copyright (c) 2025-2025 Julian Knight (Totally Information)
+ */
 /**
  * @class
  * @augments TiBaseComponent
