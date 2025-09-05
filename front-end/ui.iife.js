@@ -31,6 +31,103 @@
   ));
   var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
+  // src/front-end-module/libs/show-overlay.mjs
+  function showOverlay(options = {}) {
+    const {
+      content = "",
+      title = "",
+      icon = "",
+      type = "info",
+      showDismiss,
+      autoClose = 5,
+      time = true
+    } = options;
+    const overlayContainerId = "uib-info-overlay";
+    let overlayContainer = document.getElementById(overlayContainerId);
+    if (!overlayContainer) {
+      overlayContainer = document.createElement("div");
+      overlayContainer.id = overlayContainerId;
+      document.body.appendChild(overlayContainer);
+      console.log(">> SHOW OVERLAY >>", options, document.getElementById(overlayContainerId));
+    }
+    const entryId = "overlay-entry-".concat(Date.now(), "-").concat(Math.random().toString(36).substr(2, 9));
+    const overlayEntry = document.createElement("div");
+    overlayEntry.id = entryId;
+    overlayEntry.style.marginBottom = "0.5rem";
+    const typeStyles = {
+      info: {
+        iconDefault: "\u2139\uFE0F",
+        titleDefault: "Information",
+        color: "hsl(188.2deg 77.78% 40.59%)"
+      },
+      success: {
+        iconDefault: "\u2705",
+        titleDefault: "Success",
+        color: "hsl(133.7deg 61.35% 40.59%)"
+      },
+      warning: {
+        iconDefault: "\u26A0\uFE0F",
+        titleDefault: "Warning",
+        color: "hsl(35.19deg 84.38% 62.35%)"
+      },
+      error: {
+        iconDefault: "\u274C",
+        titleDefault: "Error",
+        color: "hsl(2.74deg 92.59% 62.94%)"
+      }
+    };
+    const currentTypeStyle = typeStyles[type] || typeStyles.info;
+    const shouldShowDismiss = showDismiss !== void 0 ? showDismiss : autoClose === null;
+    const iconHtml = icon || currentTypeStyle.iconDefault;
+    const titleText = title || currentTypeStyle.titleDefault;
+    let timeHtml = "";
+    if (time) {
+      const now = /* @__PURE__ */ new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+      const timestamp = "".concat(year, "-").concat(month, "-").concat(day, " ").concat(hours, ":").concat(minutes, ":").concat(seconds);
+      timeHtml = '<div class="uib-overlay-time" style="font-size: 0.8em; color: var(--text3, #999); margin-left: auto; margin-right: '.concat(shouldShowDismiss ? "0.5rem" : "0", ';">').concat(timestamp, "</div>");
+    }
+    overlayEntry.innerHTML = /* html */
+    '\n        <div class="uib-overlay-entry" style="--callout-color:'.concat(currentTypeStyle.color, ';">\n            <div class="uib-overlay-header">\n                <div class="uib-overlay-icon">').concat(iconHtml, '</div>\n                <div class="uib-overlay-title">').concat(titleText, "</div>\n                ").concat(timeHtml, "\n                ").concat(shouldShowDismiss ? '<button class="uib-overlay-dismiss" data-entry-id="'.concat(entryId, '" title="Close">\xD7</button>') : "", '\n            </div>\n            <div class="uib-overlay-content">\n                ').concat(content, "\n            </div>\n        </div>\n    ");
+    if (overlayContainer.children.length > 0) {
+      overlayContainer.insertBefore(overlayEntry, overlayContainer.firstChild);
+    } else {
+      overlayContainer.appendChild(overlayEntry);
+    }
+    const closeOverlayEntry = () => {
+      const entry = document.getElementById(entryId);
+      if (!entry) return;
+      entry.style.animation = "slideOut 0.3s ease-in";
+      setTimeout(() => {
+        if (entry.parentNode) {
+          entry.remove();
+        }
+      }, 300);
+    };
+    const dismissBtn = overlayEntry.querySelector(".uib-overlay-dismiss");
+    if (dismissBtn) {
+      dismissBtn.addEventListener("click", closeOverlayEntry);
+    }
+    let autoCloseTimer = null;
+    if (autoClose !== null && autoClose > 0) {
+      autoCloseTimer = setTimeout(closeOverlayEntry, autoClose * 1e3);
+    }
+    return {
+      close: () => {
+        if (autoCloseTimer) {
+          clearTimeout(autoCloseTimer);
+        }
+        closeOverlayEntry();
+      },
+      id: entryId
+    };
+  }
+
   // src/front-end-module/ui.mjs
   var _a;
   var Ui = (_a = class {
@@ -1203,6 +1300,20 @@
       }
       return newToast;
     }
+    /** Creates and displays an overlay window with customizable content and behavior
+     * @param {object} options - Configuration options for the overlay
+     *   @param {string} [options.content] - Main content (text or HTML) to display
+     *   @param {string} [options.title] - Optional title above the main content
+     *   @param {string} [options.icon] - Optional icon to display left of title (HTML or text)
+     *   @param {string} [options.type] - Overlay type: 'success', 'info', 'warning', or 'error'
+     *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
+     *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
+     *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
+     * @returns {object} Object with close() method to manually close the overlay
+     */
+    showOverlay(options) {
+      return showOverlay(options);
+    }
     /** Directly manage UI via JSON
      * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
      */
@@ -1601,3 +1712,10 @@
   __publicField(_a, "md"), _a);
   var ui_default = Ui;
 })();
+/**
+ * @description Overlay window for displaying messages and notifications.
+ * Included in the UI module and from there into the main uibuilder module.
+ * @license Apache-2.0
+ * @author Julian Knight (Totally Information)
+ * @copyright (c) 2025-2025 Julian Knight (Totally Information)
+ */

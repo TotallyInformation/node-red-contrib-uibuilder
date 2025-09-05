@@ -33,6 +33,7 @@ __export(ui_exports, {
   default: () => ui_default
 });
 module.exports = __toCommonJS(ui_exports);
+var import_show_overlay = require("./libs/show-overlay.mjs");
 var _a;
 const Ui = (_a = class {
   // #endregion --- class variables ---
@@ -1203,6 +1204,20 @@ const Ui = (_a = class {
       }
     }
     return newToast;
+  }
+  /** Creates and displays an overlay window with customizable content and behavior
+   * @param {object} options - Configuration options for the overlay
+   *   @param {string} [options.content] - Main content (text or HTML) to display
+   *   @param {string} [options.title] - Optional title above the main content
+   *   @param {string} [options.icon] - Optional icon to display left of title (HTML or text)
+   *   @param {string} [options.type] - Overlay type: 'success', 'info', 'warning', or 'error'
+   *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
+   *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
+   *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
+   * @returns {object} Object with close() method to manually close the overlay
+   */
+  showOverlay(options) {
+    return (0, import_show_overlay.showOverlay)(options);
   }
   /** Directly manage UI via JSON
    * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions

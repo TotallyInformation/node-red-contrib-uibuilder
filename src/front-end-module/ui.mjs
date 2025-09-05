@@ -30,6 +30,8 @@
 //     xmlns: 'http://www.w3.org/2000/xmlns/' // sic for the final slash...
 // }
 
+import { showOverlay } from './libs/show-overlay.mjs'
+
 const Ui = class Ui {
     // #region --- Class variables ---
     version = '7.5.0-src'
@@ -1540,6 +1542,21 @@ const Ui = class Ui {
 
         // Retursn a reference to the new toast element
         return newToast
+    }
+
+    /** Creates and displays an overlay window with customizable content and behavior
+     * @param {object} options - Configuration options for the overlay
+     *   @param {string} [options.content] - Main content (text or HTML) to display
+     *   @param {string} [options.title] - Optional title above the main content
+     *   @param {string} [options.icon] - Optional icon to display left of title (HTML or text)
+     *   @param {string} [options.type] - Overlay type: 'success', 'info', 'warning', or 'error'
+     *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
+     *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
+     *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
+     * @returns {object} Object with close() method to manually close the overlay
+     */
+    showOverlay(options) {
+        return showOverlay(options)
     }
 
     /** Directly manage UI via JSON
