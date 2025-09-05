@@ -16,7 +16,7 @@
   limitations under the License.
 */
 
-import TiBaseComponent from './ti-base-component.old'
+import TiBaseComponent from './ti-base-component.mjs'
 
 // const template = document.createElement('template')
 // template.innerHTML = /** @type {HTMLTemplateElement} */ /*html*/`<span></span>`
