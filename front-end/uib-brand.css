@@ -1253,3 +1253,62 @@ button.compact {
 .syntax-highlight > .null {color:#93ffe4;}
 .syntax-highlight > .undefined {color:#ff93c9;}
 /*#endregion */
+
+/* #region ---- Information Overlay Panel ---- */
+
+#uib-info-overlay {
+    --callout-color: var(--text2);
+    --callout-bgcolor: var(--surface3);
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    max-width: 90vw;
+    width: auto;
+    min-width: 21em;
+    padding: 0.5em;
+    background-color: var(--surface5);
+    border: 2px solid var(--surface5);
+}
+
+.uib-overlay-entry {
+    background-color: var(--callout-bgcolor);
+    border: 2px solid var(--callout-color);
+    border-radius: var(--border-radius, 0.5em);
+    box-shadow: 0 0 2px 2px var(--callout-color);
+    padding: 1em;
+    margin-bottom: 0.5rem;
+}
+
+.uib-overlay-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.uib-overlay-icon {
+    font-size: 1.2em;
+}
+
+.uib-overlay-title {
+    margin: 0;
+    color: var(--callout-color);
+}
+
+.uib-overlay-dismiss {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0;
+    box-shadow: none;
+    transition: background-color 0.2s;
+}
+.uib-overlay-dismiss:hover {
+    background-color: var(--surface2) !important;
+}
+
+/* #endregion ---- Information Overlay Panel ---- */
