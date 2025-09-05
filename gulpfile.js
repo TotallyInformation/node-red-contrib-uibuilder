@@ -680,6 +680,7 @@ function watchme(cb) {
         'src/front-end-module/reactive.mjs',
         'src/front-end-module/tinyDom.js',
         'src/front-end-module/logger.js',
+        'src/front-end-module/libs/*.mjs',
         'src/components/ti-base-component.mjs',
         'src/components/uib-var.mjs',
         'src/components/apply-template.mjs',
@@ -689,7 +690,7 @@ function watchme(cb) {
     watch(feSrcFiles, buildFeModule).on('change', (path) => {
         console.log(`feSrc File changed: ${path}`)
     })
-    watch(['src/front-end-module/ui.mjs'], buildUiModule).on('change', (path) => {
+    watch(['src/front-end-module/ui.mjs', 'src/front-end-module/libs/show-overlay.mjs'], buildUiModule).on('change', (path) => {
         console.log(`ui File changed: ${path}`)
     })
     watch(['src/front-end-module/uibrouter.mjs'], buildRouterModule).on('change', (path) => {
