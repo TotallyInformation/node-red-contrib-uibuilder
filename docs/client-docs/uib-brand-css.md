@@ -3,7 +3,7 @@ title: Documentation for the uibuilder standard CSS file
 description: |
   Details of the different styles and their usage.
 created: 2023-02-25 13:54:50
-updated: 2025-08-28 12:25:14
+updated: 2025-09-06 15:52:05
 ---
 
 The default front-end source templates for uibuilder all have an `index.css` file that is loaded in the `index.html` file. That `index.css` imports uibuilder's `uib-styles.css` file which is the standard CSS file for uibuilder. You don't have to use uibuilder's default, it is there to help you get started quickly and easily. You can use your own CSS file instead or in addition to the uibuilder standard CSS file.
@@ -107,6 +107,16 @@ The router example flow contains nav menu examples.
 Remember to use accessible table structures for the best effects. If you want a table heading row(s), put them inside a `<thead>` and put the main body of the table in a `<tbody>` container.
 
 ## Notifications and Alerts
+
+* `--callout-color: var(--text2)` - allows override of the callout text color
+* `--callout-bgcolor: var(--surface3)` - allows override of the callout background color
+* `#uib-info-overlay`
+* `.uib-overlay-entry`
+* `.uib-overlay-header`
+* `.uib-overlay-icon`
+* `.uib-overlay-title`
+* `.uib-overlay-dismiss`
+* `.uib-overlay-dismiss:hover`
 
 TBC
 
