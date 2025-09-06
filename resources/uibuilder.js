@@ -914,12 +914,13 @@ function saveFile() {
  * @returns {{pre,post,url,icon}} Prefix and postfix for link + vscode url scheme & icon
  */
 function vscodeLink(node) {
-    let root = RED.settings.uibuilderRootFolder
-    if ( !root.startsWith('/') ) root = '/' + root
-    if (node.url) {
-        if (uibuilder.localHost) node.editurl = `vscode://file${root}/${node.url}/?windowId=_blank`
-        else node.editurl = `vscode://vscode-remote/ssh-remote+${uibuilder.nrServer}${root}/${node.url}/?windowId=_blank`
-        $('#node-input-editurl').val(node.editurl)
+    if (!node.editurl) {
+        let root = RED.settings.uibuilderRootFolder
+        if ( !root.startsWith('/') ) root = '/' + root
+        if (node.url) {
+            if (uibuilder.localHost) node.editurl = `vscode://file${root}/${node.url}/?windowId=_blank`
+            else node.editurl = `vscode://vscode-remote/ssh-remote+${uibuilder.nrServer}${root}/${node.url}/?windowId=_blank`
+        }
     }
 
     let pre, post
