@@ -3,7 +3,7 @@ title: A first-timers walkthrough
 description: |
   If you haven't used UIBUILDER before, it can be a little confusing as it brings together concepts from several different worlds. This walkthrough takes you from nothing to a basic data-driven web page.
 created: 2021-09-24 11:02:56
-updated: 2024-06-30 12:33:30
+updated: 2025-09-06 15:21:44
 ---
 
 Like UIBUILDER itself, this walkthrough may look complex. But you should bear in mind that if you follow the few steps in the [next](#how-to-get-started-4-steps-to-a-data-driven-web-app) section, that is basically it.
@@ -34,16 +34,18 @@ It may look complex, but really it isn't. 😊
 
 However, the page doesn't really show or do anything useful yet.
 
-![blank-uibuilder-page](images/blank-uibuilder-page.png)
+![blank-uibuilder-page](images/blank-uibuilder-page-v7.png)
 
-To improve this mostly blank page, re-open the node's settings again and change the _Template_ drop-down to "*No framework, IIFE client*". Then click the "Load & Overwrite Files" button.
+To improve this mostly blank page, re-open the node's settings again and change the _Template_ drop-down to "_Extended example using the IIFE client (external)_". Then click the "Load & Overwrite Files" button.
 You will get a warning that you should carefully read and if OK, click on the "OK, overwrite" button. Of course, if you don't want to overwrite things, click on the cancel button (which is the default).
 
 The rest is really now just testing and getting familiar with the details of how things work.
 
 1. Either reload the page or re-open the `uibuilder` node and click on the "Open" button. This shows the updated page (the template contains all the code).
 
-  ![no framework template](images/no-framework-template.png)
+  ![no framework template](images/no-framework-template-v7.png)
+  
+  Click on the "Click to toggle visible messages from Node-RED" button.
 
 2. In the Editor, cancel the `uibuilder` node's configuration panel and click on the inject node's input button.
    Then check your web page again.
@@ -70,7 +72,7 @@ The rest is really now just testing and getting familiar with the details of how
 
 4. Send information back to Node-RED from the browser
 
-   The loaded template has a web FORM pre-defined. You can enter data into the form and press the "eventSend" button. Check out the debug panel in the Node-RED editor and you will see a new message there. Hover over it to see that it came out of the top port of the `uibuilder` node. This is the standard message port. Messages you send from the browser appear here.
+   The loaded template has a web FORM pre-defined. You can enter data into the form and press the "_Send to Node-RED_" button. Check out the debug panel in the Node-RED editor and you will see a new message there. Hover over it to see that it came out of the top port of the `uibuilder` node. This is the standard message port. Messages you send from the browser appear here.
 
    Check the content of the message and you will see that it contains a msg._ui property with lots of pre-defined data. That includes the input from the form. This uses the [helper function](client-docs/functions?id=eventsenddomevent-originator-3939-send-a-standard-message-back-to-node-red-in-response-to-a-dom-event) `uibuilder.eventSend(event)`. This function makes it extremely easy to send useful information back to Node-RED simply by attaching it to an HTML event such as a button click or input field change.
 
