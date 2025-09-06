@@ -442,6 +442,8 @@ function nodeInstance(config) {
 
     // #region ====== Local folder structure ====== //
 
+    // NB: uibRoot folder checks done in runtimeSetup()
+
     /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
      *   Files in this folder are also served to URL but take preference
      *   over those in the nodes folders (which act as defaults) @type {string}
@@ -483,7 +485,7 @@ function nodeInstance(config) {
             instanceFoldersOK = false
         }
 
-        // Copy the template files to the instance folder (replaceTemplate is actually async but we don't care about the result)
+        // Copy the template files to the instance folder (replaceTemplate is async, we don't care about result) - only if create succeded
         if (instanceFoldersOK === true) {
             (async () => {
                 try {
