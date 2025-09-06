@@ -884,7 +884,7 @@ export const Uib = class Uib {
         }
         if (!opts) opts = {}
         if (!intl) intl = navigator.language ? navigator.language : 'en-GB'
-        if (decimalPlaces) {
+        if (typeof decimalPlaces === 'number') {
             opts.minimumFractionDigits = decimalPlaces
             opts.maximumFractionDigits = decimalPlaces
         }
