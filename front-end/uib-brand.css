@@ -20,7 +20,7 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 2025-08-28
+ * @version: 2025-09-07
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -1003,13 +1003,6 @@ button.compact {
     border: none;
 }
 
-.status-side-panel {
-    border-radius: 9999px;
-    width: .5rem;
-    height: 100%;
-    background-color: var(--surface1);
-}
-
 .text-larger {
     font-size: larger;
 }
@@ -1174,6 +1167,12 @@ button.compact {
   display:contents;
   color:inherit;
   text-decoration:none;
+}
+.status-side-panel {
+    border-radius: 9999px;
+    width: .5rem;
+    height: 100%;
+    background-color: var(--status-color, var(--surface1));
 }
 /*#endregion ---- ---- ---- */
 
