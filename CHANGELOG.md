@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2025-08-12 18:02:06
+updated: 2025-09-07 21:24:01
 ---
 
 # Changelog
@@ -70,7 +70,7 @@ NOTE: If using the `uibRouter` SPA client library, please note that the startup 
 
 #### Ui class
 
-* Fixed a hidden issue with `replaceSlot()`. The safe method of creating a DocumentFragment does not work if the parent element is a `<template>`. For that, you can only use `innerHTML`.
+* **Fixed** a hidden issue with `replaceSlot()`. The safe method of creating a DocumentFragment does not work if the parent element is a `<template>`. For that, you can only use `innerHTML`.
 
 * **NEW** showOverlay function. This function creates and displays an overlay window with customizable content and behavior. See the uibuilder client documentation for more details.
 
@@ -87,6 +87,7 @@ NOTE: If using the `uibRouter` SPA client library, please note that the startup 
 * Updated the table header styles to make them sticky. This means that the table headers will remain visible when scrolling down a long table. This is particularly useful for large tables with many rows.
 * Changed `accent-color` to use the `--primary` variable rather than the `--brand` variable. `accent-color` is used by browsers to set the colour of form elements such as checkboxes and radio buttons. This means that the colour will now match the primary colour used in the rest of the uibuilder styles.
 * Added `cursor: pointer;` to the `<summary>` element. This makes it clearer that the element is clickable and can be expanded or collapsed.
+* Improved `.status-side-panel` styles. Allowing background color to be overridden with `--status-color`.
 
 For forms, the following CSS variables (show with their defaults) can be used to more easily change the appearance of the forms:
 

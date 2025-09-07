@@ -3,20 +3,17 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-09-06 16:42:03
+updated: 2025-09-07 21:25:23
 author: Julian Knight (Totally Information)
 ---
 
+## To Fix
+
+* uibuilder node in a sub-flow [ref](https://discourse.nodered.org/t/uibuilder-url-inconsistancies-and-issues/98853/4)
+
 ## In Progress
 
-* Router improvements
-  * [ ] Auto-menu generation for menus.
-    * [ ] Update router auto-menu with improvements from home site.
-    * [ ] Add search option. `<search>`/`<div role="search">` element that can be used to search the menu.
-    * [ ] Add nestable menu support.
-    * [ ] Add vertical menu support.
-    * [ ] ? Add tabbed menu support ?
-    * [ ] SPA documentation.
+None
 
 ### Ongoing work
 
@@ -35,14 +32,20 @@ author: Julian Knight (Totally Information)
   * [x]  Retain at least the link to the run id so that the panel can be exited and returned to and still allow cancelling the script. 
   * [ ]  Consider also retaining the complete xhr request and streamed output.
 
-## To Fix
-
-* uibuilder node in a sub-flow [ref](https://discourse.nodered.org/t/uibuilder-url-inconsistancies-and-issues/98853/4)
-* Failed rename of instance folder may get stuck.
-
 ## To Do
 
 (See the roadmap for lots more, these are just the current thoughts)
+
+* Router improvements
+  * [ ] Auto-menu generation for menus.
+    * [ ] Update router auto-menu with improvements from home site.
+    * [ ] Add search option. `<search>`/`<div role="search">` element that can be used to search the menu.
+    * [ ] Add nestable menu support.
+    * [ ] Add vertical menu support.
+    * [ ] ? Add tabbed menu support ?
+    * [ ] SPA documentation.
+
+* [ ] Failed rename of instance folder may get stuck.
 
 * [ ] Library manager updates
   * [ ] Capture streamed command output as per the scripts tab.
@@ -65,9 +68,7 @@ author: Julian Knight (Totally Information)
 * [ ] Also check that FE JS use of `uib.set('msg', ...)` works as expected.
 * [x] Add an experimental library that extends the uibuilder client library to allow playing with possible future features.
 
-* [ ] Router
-
-* [ ] Dialog
+* [ ] Dialog (modal/non-modal overlay)
   * [ ] component(?) that can consume a template and display it as a dialog. [ref](https://discourse.nodered.org/t/uibuilder-help-in-developing-a-dashboard/97478/18)
 
 * [ ] Reactivity - phase 1
@@ -106,6 +107,7 @@ author: Julian Knight (Totally Information)
 
 * Toaster improvements
   * [x] Initial rework
+  * [ ] More work needed - probably delayed now that new showOverlay is available.
   * [ ] Test
 
 ## Experiments (See experimental library)
@@ -164,8 +166,6 @@ author: Julian Knight (Totally Information)
 * uibuilder node scripts feature - capture running script output even if the config panel has been closed. Restore on re-open.
 * uib-watch node - with reload and notify options.
 
-
-## Answers needed
 
 ## Ideas
 
