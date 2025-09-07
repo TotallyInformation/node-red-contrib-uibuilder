@@ -56,6 +56,248 @@ window.$docsify = {
     },
 
     plugins: [
+        // Tips plugin - displays random or specific tips from tips folder
+        function tipsPlugin(hook, vm) {
+            const tipsCache = new Map()
+            const tipsList = []
+            const rotatingTips = new Set()
+            let rotateInterval = null
+            const tipsFiles = [
+        'Browser and Node-RED are different contexts.md',
+        'Compare uibuilder with Dashboard 2.md',
+        'Creating a Single Page App.md',
+        'Front-end templates.md',
+        'Messages to the UI are automatically filtered.md',
+        'No-code output is low-code.md',
+        'Send messages to Node-RED from the browser.md',
+        'Send to UI from a function node.md',
+        'uibuilder node outputs.md',
+        'Where are my files.md'
+    ]
+            // get current page url
+            const currentPage = `${window.location.origin}${window.location.pathname}`
+            // get current hash
+            const currentHash = window.location.hash.replace('#/', '').split('/')
+            currentHash.pop() // remove last element (the page)
+            let prefix = '/'
+            if (currentHash.length > 0) {
+                prefix = '../'.repeat(currentHash.length)
+            }
+            const tipsFolder = `${prefix}tips/`
+
+            /** Safely get a single tip file
+             * @param {string} filename - The tip filename to load
+             * @returns {string} The markdown content or error message
+             */
+            const getSingleTipFile = (filename) => {
+                try {
+                    const url = `${currentPage}/${tipsFolder}${encodeURIComponent(filename)}`
+                    // Use XMLHttpRequest for better browser compatibility
+                    const xhr = new XMLHttpRequest()
+                    xhr.open('GET', url, false)
+                    xhr.send()
+
+                    if (xhr.status === 200) {
+                        const content = xhr.responseText
+                        // console.log('Tips plugin: Loaded tip file', url, content)
+                        // Remove front matter and extract tip content
+                        return content.replace(/^---[\s\S]*?---\n/, '').trim()
+                        // console.log('Tips plugin: frontMatter?', window.$docsify.frontMatter.parseMarkdown(content))
+                        // return content
+                    }
+                    return `**Tip Not Found**: Could not load tip file: "tips/${filename}"`
+                } catch (error) {
+                    console.warn(`Failed to load tip file: "tips/${filename}"`, error)
+                    return `**Tip Not Found**: Could not load tip file: "tips/${filename}" (${error.message || 'Unknown error'})`
+                }
+            }
+
+            // Load all tips from the tips folder
+            const loadTips = async () => {
+                if (tipsList.length > 0) return tipsList
+
+                try {
+                    for (const file of tipsFiles) {
+                        if (!tipsCache.has(file)) {
+                            try {
+                                // Use XMLHttpRequest for better browser compatibility
+                                const xhr = new XMLHttpRequest()
+                                xhr.open('GET', `${tipsFolder}${encodeURIComponent(file)}`, false)
+                                xhr.send()
+
+                                if (xhr.status === 200) {
+                                    const content = xhr.responseText
+                                    // Remove front matter and extract tip content
+                                    const tipContent = content.replace(/^---[\s\S]*?---\n/, '').trim()
+                                    const tipTitle = file.replace('.md', '')
+                                    tipsCache.set(file, { title: tipTitle, content: tipContent, })
+                                    tipsList.push({ file, title: tipTitle, content: tipContent, })
+                                }
+                            } catch (error) {
+                                console.warn(`Failed to load tip: ${file}`, error)
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Failed to load tips:', error)
+                }
+
+                return tipsList
+            }
+
+            /** Get a random tip from the available tips
+             * @returns {object|null} Random tip object or null if no tips available
+             */
+            const getRandomTip = () => {
+                if (tipsFiles.length === 0) return null
+                return tipsFiles[Math.floor(Math.random() * tipsFiles.length)]
+            }
+
+            /** Start the rotation timer for rotating tips */
+            const startRotationTimer = () => {
+                if (rotateInterval) return // Already running
+
+                rotateInterval = setInterval(() => {
+                    rotatingTips.forEach((tipId) => {
+                        console.log('Rotating tip:', tipId)
+                        const randomTip = getRandomTip()
+                        if (randomTip) {
+                            const tipMarkdown = getSingleTipFile(randomTip)
+                            // Replace the DOM content of the div having an id of the tipId, with HTML from tipMarkdown
+                            const tipElement = document.getElementById(tipId)
+                            if (tipElement) {
+                                // Convert markdown to HTML using Docsify's internal function
+                                tipElement.innerHTML = `
+<div class="alert callout tip">
+    <p class="title"><span class="icon icon-tip"></span>Tip</p>
+    <p>
+        <em>${randomTip.replace('.md', '').replace('uibuilder','<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')}</em>
+    </p><p>
+        ${window.marked(tipMarkdown)}
+    </p>
+</div>
+                                `
+                            }
+                        }
+                    })
+                }, 60000) // 60 seconds = 1 minute
+            }
+
+            // Process tip shortcodes in markdown
+            hook.beforeEach(function (content) {
+                // Ensure content is a string
+                if (typeof content !== 'string') {
+                    console.warn('Tips plugin: content is not a string, skipping processing')
+                    return content
+                }
+
+                // Look for tip shortcodes: [tip] or [tip:filename] or [tip:random] or [tip:rotate]
+                const tipRegex = /\[tip(?::([^\]]+))?\]/g
+                let match
+                const replacements = []
+
+                while ((match = tipRegex.exec(content)) !== null) {
+                    const [fullMatch, tipParam] = match
+                    replacements.push({ match: fullMatch, param: tipParam, })
+                }
+
+                if (replacements.length > 0) {
+                    // loadTips()
+
+                    for (const { match, param, } of replacements) {
+                        let tipMarkdown = ''
+                        let tipType = 'tip'
+                        let tipTitle = ''
+                        let tipFile = ''
+                        const tipId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // eslint-disable-line @stylistic/newline-per-chained-call
+
+                        if (!param || param === 'random') {
+                            // Show random tip using Docsify include
+                            const randomTip = getRandomTip()
+                            if (randomTip) {
+                                tipType = 'random-tip'
+                                tipFile = randomTip
+                                tipTitle = randomTip.replace('.md', '')
+                                tipMarkdown = getSingleTipFile(randomTip)
+                            }
+                        } else if (param === 'rotate') {
+                            // Show rotating tip with unique ID (will be handled by afterEach for rotation)
+                            const randomTip = getRandomTip()
+                            if (randomTip) {
+                                tipType = 'rotating-tip'
+                                tipFile = randomTip
+                                tipTitle = randomTip.replace('.md', '')
+                                rotatingTips.add(`${tipType}-${tipId}`)
+                                tipMarkdown = getSingleTipFile(randomTip)
+                            }
+                        } else {
+                            // Show specific tip by filename
+                            if (param.endsWith('.md')) {
+                                tipFile = param
+                                tipTitle = param.replace('.md', '')
+                            } else {
+                                tipFile = `${param}.md`
+                                tipTitle = param
+                            }
+                            tipMarkdown = getSingleTipFile(tipFile)
+                        }
+
+                        content = content.replace(match, `
+<div id="${tipType}-${tipId}" class="doctips doc${tipType}" title="${tipTitle}">
+
+> [!TIP]
+> _${tipTitle}_
+>
+> ${tipMarkdown}
+
+</div>
+                        `)
+                    }
+                }
+
+                return content
+            })
+
+            // Convert rotating tip markers to HTML after markdown processing
+            // hook.afterEach(function (html, next) {
+            //     // Find and replace rotating tip markers with proper HTML
+            //     const rotateMarkerRegex = /<!-- TIP_ROTATE:([^:]+):([^:]+) -->/g
+            //     let match
+
+            //     while ((match = rotateMarkerRegex.exec(html)) !== null) {
+            //         const [fullMatch, tipId, filename] = match
+            //         // Wrap the included content in a rotating tip container
+            //         const replacement = `
+            //             <div class="uib-tip uib-tip-rotating" id="${tipId}">
+            //             <div class="uib-tip-header">
+            //                 <div class="uib-tip-header-left">
+            //                     <span class="uib-tip-icon">💡</span>
+            //                     <span class="uib-tip-title">Tip: ${filename.replace('.md', '')}</span>
+            //                 </div>
+            //                 <span class="uib-tip-rotate-indicator">🔄</span>
+            //             </div>
+            //             <div class="uib-tip-content">
+            //         `
+
+            //         html = html.replace(fullMatch, replacement)
+            //     }
+
+            //     // Add closing div for any rotating tips
+            //     if (rotatingTips.size > 0) {
+            //         html = html.replace(/(<div class="uib-tip-content">(?:(?!<\/div>).|\n)*)/g, '$1</div></div>')
+            //     }
+
+            //     next(html)
+            // })
+
+            // Start rotation timer after page content is loaded
+            hook.doneEach(() => {
+                if (rotatingTips.size > 0) {
+                    startRotationTimer()
+                }
+            })
+        },
+
         // My custom plugin
         function ti(hook, vm) {
             // console.log({hook,vm})
@@ -151,44 +393,6 @@ window.$docsify = {
             //     document.title = document.title.replace(/<title>(.*?)<\/title>/, '<title>UIBUILDER: $1')
             // })
         },
-
-        // function toc(hook, vm) {
-        //     hook.mounted(function () {
-        //         const content = window.Docsify.dom.find('.content')
-        //         if (content) {
-        //             const pgtoc = window.Docsify.dom.create('aside', '')
-        //             window.Docsify.dom.appendTo(content, pgtoc)
-        //             const pgtoc2 = window.Docsify.dom.find('.content > aside')
-        //             pgtoc2.innerHTML = '<div>Content</div>'
-        //             // console.log(pgtoc2)
-        //         }
-        //     })
-        // },
-
-        // lyingdragon/docsify-plugin-page-toc - amended
-        // function toc(hook, vm) {
-        //     hook.mounted(function () {
-        //         // const content = window.Docsify.dom.find('main')
-        //         const content = window.Docsify.dom.find('.content')
-        //         if (content) {
-        //             const nav = window.Docsify.dom.create('aside', '')
-        //             window.Docsify.dom.toggleClass(nav, 'add', 'pgnav')
-        //             window.Docsify.dom.appendTo(window.Docsify.dom.find('main'), nav)
-        //             // window.Docsify.dom.before(content, nav)
-        //         }
-        //     })
-        //     hook.doneEach(function () {
-        //         const nav = window.Docsify.dom.find('.pgnav')
-        //         if (nav) {
-        //             nav.innerHTML = pageToC().trim()
-        //             if (nav.innerHTML === '') {
-        //                 window.Docsify.dom.toggleClass(nav, 'add', 'nothing')
-        //             } else {
-        //                 window.Docsify.dom.toggleClass(nav, 'remove', 'nothing')
-        //             }
-        //         }
-        //     })
-        // },
     ],
 }
 

@@ -6,6 +6,7 @@
   * [Creating Templates](creating-templates "Pre-defined and reusable front-end code, dependencies, and optional build steps")
   * [Did you know?](did-you-know.md "Things you might not know about UIBUILDER")
   * [Standard messages](pre-defined-msgs.md "Catalogue of messages and properties")
+  * [Tips](using/tips.md "A rotating selection of short tips for using UIBUILDER.")
   * [Troubleshooting](using/troubleshooting.md "Dealing with things that aren't working properly")
   * [Why <span class="uib-name"><span class="uib-red">ui</span>builder</span>?](using/why-uibuilder.md "Why would I want to use UIBUILDER?")
 * Creating Web UI's
