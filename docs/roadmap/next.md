@@ -3,43 +3,23 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-09-04 14:15:34
+updated: 2025-09-06 16:42:03
 author: Julian Knight (Totally Information)
 ---
 
-## Thoughts
-
-Do we actually NEED the `uib-*` dynamic attributes? With `uib-topic`, we can already control any content/attributes/properties simply by sending a msg. We can also use `uibuilder.set('msg', ....)` from front-end code so really we don't need anything else? `uib-show` could simply be adding/removing a class. Inputs might be dealt with by simply using the `set` method. Not true 2-way binding but is that really needed?
-
-Even `uib-on` isn't really needed since we can just use the HTML `onchange`, `onclick`, etc. attributes.
-
-_Low priority_: What might be nice though, would be to have a `uib-var` attribute to bind to a variable other than `msg`.
-
-**Need some documentation** to explain the above and how to replicate framework-like features using the existing uibuilder features. And a video.
-Create a comparison table of how to do things with VueJS vs Node-RED/uibuilder.
-
-**Consider** creating a `topicMsg` or similar uibuilder function that makes data-binding easy. Use data-topic/name/id (in that order) on the input to define the topic.
-
-Still need more thought on this because it does not quite allow for the simple linking of an input to an output. How, for example, could we link the value of an input to the value of an attribute without any need for code? This is probably less important when working with Node-RED however, since round-tripping the data generally has minimal overhead and has the advantage of being able to share one users inputs with some/all users outputs.
-
 ## In Progress
 
-* [ ] Transfer experimental FE info overlay to core from home site.
-* [ ] Update router auto-menu with improvements from home site.
-* [ ] Script run - retain at least the link to the run id so that the panel can be exited and returned to and still allow cancelling the script. Consider also retaining the complete xhr request and streamed output.
-* Update admin-api-v3:
-  * [ ] Remove dependencies on fg (use fs.cjs instead).
-  * [ ] Make more use of AsyncLocalStorage to allow async functions to be wrapped in sync callers.
-* Toaster improvements
-  * [x] Initial rework
-  * [ ] Test
 * Router improvements
   * [ ] Auto-menu generation for menus.
+    * [ ] Update router auto-menu with improvements from home site.
     * [ ] Add search option. `<search>`/`<div role="search">` element that can be used to search the menu.
     * [ ] Add nestable menu support.
     * [ ] Add vertical menu support.
     * [ ] ? Add tabbed menu support ?
     * [ ] SPA documentation.
+
+### Ongoing work
+
 * Background rework (may take several releases):
   * [ ] Changing `uib-brand.css` to use more modern CSS, leaving it up to LightningCSS to build for older browsers. In particular, using nested definitions.
   * [ ] Remove remaining ~~5~~ 4 fsextra functions from fs lib. `ensureDirSync` is completed.
@@ -47,11 +27,18 @@ Still need more thought on this because it does not quite allow for the simple l
   * [ ] Rename all .js node.js files to .cjs to avoid confusion with ESM modules. (libs now all done).
   * [ ] No need to pass uib var now it is in a module, can simply require it. (Except for libs/fs which is already used by the uib module).
 
+* Update admin-api-v3:
+  * [ ] Remove dependencies on fg (use fs.cjs instead).
+  * [ ] Make more use of AsyncLocalStorage to allow async functions to be wrapped in sync callers.
+
+* [ ] Script run
+  * [x]  Retain at least the link to the run id so that the panel can be exited and returned to and still allow cancelling the script. 
+  * [ ]  Consider also retaining the complete xhr request and streamed output.
+
 ## To Fix
 
 * uibuilder node in a sub-flow [ref](https://discourse.nodered.org/t/uibuilder-url-inconsistancies-and-issues/98853/4)
 * Failed rename of instance folder may get stuck.
-* uibuilder.formatNumber(0) - doesn't work, defaults to 2dp
 
 ## To Do
 
@@ -60,12 +47,16 @@ Still need more thought on this because it does not quite allow for the simple l
 * [ ] Library manager updates
   * [ ] Capture streamed command output as per the scripts tab.
   * [ ] Check where an "error" property in package.json might come from [ref](https://discourse.nodered.org/t/uibuilder-package-json-error/98691).
+
 * [ ] Router library
+  * [ ] Add route description to automenu. Either as title or as an aria-label attribute.
   * [ ] Content wrongly removed from route if an element has an id matching the route id. [ref](https://discourse.nodered.org/t/uibuilder-novice-coding/98693/5).
-  * [ ] Rename the example to include "SPA" for clarity.
+  * [x] Rename the example to include "SPA" for clarity.
   * [ ] Make sure new routes added from node-red (or addRoutes) only appear once.
   * [ ] Add position option to auto-menu (add numeric `position` prop, cope with multiple of the same number, allow 'first', 'last' options).
-* [ ] Adjust gulp tasks to copy changed fe types (nb: src\front-end-module\tsconfig.json is different to templates\blank\tsconfig.json, don't copy it)
+  * [ ] Investigate and implement best no-code/low-code way to auto-create the SPA from Node-RED. [ref](https://discourse.nodered.org/t/uibuilder-button/98970/13?u=totallyinformation).
+
+* [ ] Adjust gulp tasks to copy changed fe types file(s) (nb: src\front-end-module\tsconfig.json is different to templates\blank\tsconfig.json, don't copy it)
   * [ ] to `templates\blank\types`
   * [ ] to external template repo's
   * [ ] Find out how to create a uib fe @types package (and add to template devDependencies)
@@ -73,10 +64,12 @@ Still need more thought on this because it does not quite allow for the simple l
 * [ ] Check that FE updates allow attributes to be set to `null` to unset them.
 * [ ] Also check that FE JS use of `uib.set('msg', ...)` works as expected.
 * [x] Add an experimental library that extends the uibuilder client library to allow playing with possible future features.
+
 * [ ] Router
-  * [ ] Add route description to automenu. Either as title or as an aria-label attribute.
+
 * [ ] Dialog
   * [ ] component(?) that can consume a template and display it as a dialog. [ref](https://discourse.nodered.org/t/uibuilder-help-in-developing-a-dashboard/97478/18)
+
 * [ ] Reactivity - phase 1
   * [x] Create a reactive wrapper `uibuilder.reactive()`.
     * [x] Move to separate class file
@@ -110,6 +103,10 @@ Still need more thought on this because it does not quite allow for the simple l
     * [ ] Setting up remote VS Code
     * [ ] Useful extensions for front-end development
     * [ ] Configure browser dev tools (e.g. round-trip edits)
+
+* Toaster improvements
+  * [x] Initial rework
+  * [ ] Test
 
 ## Experiments (See experimental library)
 
@@ -213,3 +210,19 @@ Still need more thought on this because it does not quite allow for the simple l
 ### Shorts
 
 * Using CSS variables with uib-brand (e.g. using --max-width)
+
+## Thoughts
+
+Do we actually NEED the `uib-*` dynamic attributes? With `uib-topic`, we can already control any content/attributes/properties simply by sending a msg. We can also use `uibuilder.set('msg', ....)` from front-end code so really we don't need anything else? `uib-show` could simply be adding/removing a class. Inputs might be dealt with by simply using the `set` method. Not true 2-way binding but is that really needed?
+
+Even `uib-on` isn't really needed since we can just use the HTML `onchange`, `onclick`, etc. attributes.
+
+NB: `uib-var` can already bind to a variable other than `msg`.
+
+**Need some documentation** to explain the above and how to replicate framework-like features using the existing uibuilder features. And a video.
+Create a comparison table of how to do things with VueJS vs Node-RED/uibuilder.
+
+**Consider** creating a `topicMsg` or similar uibuilder function that makes data-binding easy. Use data-topic/name/id (in that order) on the input to define the topic.
+
+Still need more thought on this because it does not quite allow for the simple linking of an input to an output. How, for example, could we link the value of an input to the value of an attribute without any need for code? This is probably less important when working with Node-RED however, since round-tripping the data generally has minimal overhead and has the advantage of being able to share one users inputs with some/all users outputs.
+

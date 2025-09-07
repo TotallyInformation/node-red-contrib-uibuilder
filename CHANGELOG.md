@@ -33,6 +33,8 @@ NOTE: If using the `uibRouter` SPA client library, please note that the startup 
 
 ### 📌 Highlights
 
+* A new browser overlay notification message feature available. Using `showOverlay` allows messages of different types (info, success, warning, and error) to be displayed in the browser. This can be triggered from Node-RED or from front-end code. Messages can be auto-dismissed after a few seconds (the default), or retained until manually dismissed.
+
 * The `uibuilder` node now has an extra tab "scripts" which lets you run npm scripts defined in your instance root's package.json file.
   
   These can be any script that can be run on the host OS. They run in the OS's default shell. Output from the script is captured and returned to Node-RED in the panel beneath the list of scripts. When a script is running, a "Kill Script" button is visible, clicking this wil abort the script immediately.
@@ -47,6 +49,7 @@ NOTE: If using the `uibRouter` SPA client library, please note that the startup 
 
 * **NEW** `uib-basic` An inject node to a uibuilder node with debug nodes on each output. Inputs and outputs minimised. Outputs show full msg and show msg count.
 * **UPDATED** Client-side code > FE Router Test. A complete front-end router example flow including html, js and route partials.
+* **UPDATE** "Remote Commands" renamed to "Control UI from Node-RED" and refreshed. New showOverlay notifications included.
 
 ### uibuilder node
 
@@ -63,9 +66,13 @@ NOTE: If using the `uibRouter` SPA client library, please note that the startup 
 
   In addition to scripts that you define, the default npm `outdated`, `update`, and `install` scripts are also available to run.
 
+* **FIX** for issue #564. VSCode edit link would not work if the uibuilder root folder did not start with a `/`. Also, the VSCode edit link could not be amended.
+
 #### Ui class
 
 * Fixed a hidden issue with `replaceSlot()`. The safe method of creating a DocumentFragment does not work if the parent element is a `<template>`. For that, you can only use `innerHTML`.
+
+* **NEW** showOverlay function. This function creates and displays an overlay window with customizable content and behavior. See the uibuilder client documentation for more details.
 
 ### uib-sender node
 
@@ -118,6 +125,10 @@ For the updated navigation menus, the following CSS variables (show with their d
   > [!WARNING]
   > If the reactive variable is a *primative* type (string, number, boolean), then the you MUST use the `myvar.value = 42` syntax to change the value. If you use `myvar = 42`, then the reactive variable will overwritten. The `value` property will also let you change a primative even if it has been created with `const`.
 
+* **NEW** showOverlay function. This function creates and displays an overlay window with customizable content and behavior. This is an easy way to display some temporary information to the user.
+
+  Also available as an external (from Node-RED) command. In that case, `msg.payload` is used as the content of the overlay unless `options.content` is specified. Controlling options can be passed in the `msg._uib.options` property
+
 * Updated the client library type description files. They are available in the `types` folder of the `blank` template. There is a `tsconfig.json` file in the root of that template that includes the type definitions. This means that you can now get better code completion, descriptions and type checking when using the client library in your own code. Feel free to copy the file and the folder to your own projects.
 
   > [!WARNING]
@@ -131,6 +142,10 @@ For the updated navigation menus, the following CSS variables (show with their d
 * UI library source file renamed from `ui.js` to `ui.mjs`. This is to make it clearer that it is an ES module. The file is still compiled into the client library as before. The gulp build process has been updated to reflect this change and simplified in line with the main client module build.
 
 * **UPDATED** Full uibuilder intellisense is now available for VS Code users when editing front-end JavaScript. Update your JS files to include `/// <reference path="../types/uibuilder.d.ts" />` at the start of your code. Don't forget to update the `types` folder with updated type definitions after upgrading uibuilder. You may need to manually create the `types` folder if using templates from previous versions.
+
+* **UPDATED** The feature that allows external commands to be sent from Node-RED has been improved. It now supports additional options for customizing the command behavior. Currently only used by the new `showOverlay` command.
+
+* **FIXED** `uibuilder.numberFormat(...)` - fixed handling of decimal places. Previously 0 dp was not working.
 
 ### uibRouter SPA client library
 
@@ -176,6 +191,8 @@ For the updated navigation menus, the following CSS variables (show with their d
 * **NEW** Added a new "how-to" article describing how to use Node-RED and uibuilder as a live web development server. This is a simple way to get a live reload server without needing to use complex build tools.
 * Updated the comparison between uibuilder and Dashboard 2. Emphasising uibuilder's multi-app capabilities and dark mode.
 * Significantly improved uibRouter SPA documentation.
+* Updated walkthrough to match current templates. (Issue #563).
+* **NEW** Rotating "Tips" page added. Updates once per minute from a random selection of tips.
 
 ### **NEW** Experimental front-end client library
 
