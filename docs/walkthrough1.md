@@ -3,7 +3,7 @@ title: A first-timers walkthrough
 description: |
   If you haven't used UIBUILDER before, it can be a little confusing as it brings together concepts from several different worlds. This walkthrough takes you from nothing to a basic data-driven web page.
 created: 2021-09-24 11:02:56
-updated: 2025-09-06 15:21:44
+updated: 2025-09-06 17:02:38
 ---
 
 Like UIBUILDER itself, this walkthrough may look complex. But you should bear in mind that if you follow the few steps in the [next](#how-to-get-started-4-steps-to-a-data-driven-web-app) section, that is basically it.
@@ -122,7 +122,7 @@ There are two ways to look at and change the content of an instance's root folde
 
    To use this approach, you need access to the folder on the server's filing system that contains the root folder for the instance. 
    
-   > [!tip]
+   > [!TIP]
    > The server location for your code is shown on the node's "Core" tab.
    >
    > There is also a link provided that may open your code editor at the right location. This is set up for VSCode by default but you may change it in the advanced settings for the uibuilder node.
