@@ -1,5 +1,5 @@
 [![Discussion](https://img.shields.io/static/v1.svg?label=Discussion&message=Node-RED%20Forum&color=green "The main place to discuss UIBUILDER")](https://discourse.nodered.org/tag/node-red-contrib-uibuilder)
-[![Static Badge](https://img.shields.io/badge/UIBUILDER_Homepage-0d85d7 "The main documentation")](https://totallyinformation.github.io/node-red-contrib-uibuilder)
+[![Documentation](https://img.shields.io/badge/UIBUILDER_Homepage-0d85d7 "The main documentation")](https://totallyinformation.github.io/node-red-contrib-uibuilder)
 [![NPM Version](https://img.shields.io/npm/v/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
 [![NPM Total Downloads](https://img.shields.io/npm/dt/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
 [![NPM Downloads per month](https://img.shields.io/npm/dm/node-red-contrib-uibuilder.svg)](https://www.npmjs.com/package/node-red-contrib-uibuilder)
@@ -14,7 +14,7 @@
 [![Open Issues](https://img.shields.io/github/issues-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues)
 [![Closed Issues](https://img.shields.io/github/issues-closed-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues?q=is%3Aissue+is%3Aclosed)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg "Learn more about UIBUILDER for Node-RED via the DeepWiki AI")](https://deepwiki.com/TotallyInformation/node-red-contrib-uibuilder)
-![Static Badge](https://img.shields.io/badge/Sponsor_Totally_Information-FFF?logo=githubsponsors&link=https%3A%2F%2Fgithub.com%2Fsponsors%2FTotallyInformation)
+![Sponsor](https://img.shields.io/badge/Totally_Information-0d85d7?logo=githubsponsors&label=Sponsor&labelColor=fff&link=https%3A%2F%2Fgithub.com%2Fsponsors%2FTotallyInformation)
 
 
 <img class="dhide" align="right"  style="width:124px;" src="front-end/images/node-blue.svg" title="uibuilder icon" />
