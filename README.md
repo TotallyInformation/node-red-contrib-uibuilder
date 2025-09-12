@@ -15,6 +15,8 @@
 [![Closed Issues](https://img.shields.io/github/issues-closed-raw/TotallyInformation/node-red-contrib-uibuilder.svg)](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues?q=is%3Aissue+is%3Aclosed)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg "Learn more about UIBUILDER for Node-RED via the DeepWiki AI")](https://deepwiki.com/TotallyInformation/node-red-contrib-uibuilder)
 
+<iframe src="https://github.com/sponsors/TotallyInformation/button" title="Sponsor TotallyInformation" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
+
 <img class="dhide" align="right"  style="width:124px;" src="front-end/images/node-blue.svg" title="uibuilder icon" />
 
 # UIBUILDER FOR Node-RED
