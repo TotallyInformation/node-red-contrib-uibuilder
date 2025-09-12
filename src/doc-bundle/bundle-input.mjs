@@ -12,7 +12,11 @@ import 'prismjs/components/prism-nginx.js'
 import 'docsify-pagination/dist/docsify-pagination.js'
 import 'docsify-plugin-flexible-alerts/dist/docsify-plugin-flexible-alerts.js'
 import 'docsify-copy-code/dist/docsify-copy-code.js'
-import 'docsify-plugin-toc/dist/docsify-plugin-toc.js'
+// import 'docsify-plugin-toc/dist/docsify-plugin-toc.js'
+import 'docsify-plugin-toc/src/index.js'
+
+const version = '2025-09-12'
+console.log(`uibuilder docsify app.js - version: ${version}`)
 
 /** Don't load CSS into an app.css bundle because, in this case
  *  we need to be able to specify alternate style sheets for light/dark modes.

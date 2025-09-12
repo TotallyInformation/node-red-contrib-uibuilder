@@ -187,7 +187,12 @@ figcaption::before {
 #docsify-darklight-theme {
     top: 1rem;
     right: 5rem;
+    position: absolute;
     z-index: 999;
+}
+
+#docsify-darklight-theme p {
+    visibility: hidden;
 }
 
 /*#region TOC */
@@ -209,6 +214,7 @@ figcaption::before {
     }
     #docsify-darklight-theme {
         right: 5rem;
+        position: absolute
     }
   }
   
@@ -218,6 +224,7 @@ figcaption::before {
     }
     #docsify-darklight-theme {
         right: -8rem;
+        position: absolute;
     }
   }
   

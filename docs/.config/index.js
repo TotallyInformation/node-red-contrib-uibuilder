@@ -63,17 +63,17 @@ window.$docsify = {
             const rotatingTips = new Set()
             let rotateInterval = null
             const tipsFiles = [
-        'Browser and Node-RED are different contexts.md',
-        'Compare uibuilder with Dashboard 2.md',
-        'Creating a Single Page App.md',
-        'Front-end templates.md',
-        'Messages to the UI are automatically filtered.md',
-        'No-code output is low-code.md',
-        'Send messages to Node-RED from the browser.md',
-        'Send to UI from a function node.md',
-        'uibuilder node outputs.md',
-        'Where are my files.md'
-    ]
+                'Browser and Node-RED are different contexts.md',
+                'Compare uibuilder with Dashboard 2.md',
+                'Creating a Single Page App.md',
+                'Front-end templates.md',
+                'Messages to the UI are automatically filtered.md',
+                'No-code output is low-code.md',
+                'Send messages to Node-RED from the browser.md',
+                'Send to UI from a function node.md',
+                'uibuilder node outputs.md',
+                'Where are my files.md'
+            ]
             // get current page url
             const currentPage = `${window.location.origin}${window.location.pathname}`
             // get current hash
@@ -168,14 +168,14 @@ window.$docsify = {
                             if (tipElement) {
                                 // Convert markdown to HTML using Docsify's internal function
                                 tipElement.innerHTML = `
-<div class="alert callout tip">
-    <p class="title"><span class="icon icon-tip"></span>Tip</p>
-    <p>
-        <em>${randomTip.replace('.md', '').replace('uibuilder','<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')}</em>
-    </p><p>
-        ${window.marked(tipMarkdown)}
-    </p>
-</div>
+                                    <div class="alert callout tip">
+                                        <p class="title"><span class="icon icon-tip"></span>Tip</p>
+                                        <p>
+                                            <em>${randomTip.replace('.md', '').replace('uibuilder','<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')}</em>
+                                        </p><p>
+                                            ${window.marked(tipMarkdown)}
+                                        </p>
+                                    </div>
                                 `
                             }
                         }
@@ -243,6 +243,7 @@ window.$docsify = {
                         }
 
                         content = content.replace(match, `
+
 <div id="${tipType}-${tipId}" class="doctips doc${tipType}" title="${tipTitle}">
 
 > [!TIP]
@@ -251,44 +252,29 @@ window.$docsify = {
 > ${tipMarkdown}
 
 </div>
-                        `)
+`
+                        )
                     }
                 }
 
                 return content
             })
 
-            // Convert rotating tip markers to HTML after markdown processing
-            // hook.afterEach(function (html, next) {
-            //     // Find and replace rotating tip markers with proper HTML
-            //     const rotateMarkerRegex = /<!-- TIP_ROTATE:([^:]+):([^:]+) -->/g
-            //     let match
-
-            //     while ((match = rotateMarkerRegex.exec(html)) !== null) {
-            //         const [fullMatch, tipId, filename] = match
-            //         // Wrap the included content in a rotating tip container
-            //         const replacement = `
-            //             <div class="uib-tip uib-tip-rotating" id="${tipId}">
-            //             <div class="uib-tip-header">
-            //                 <div class="uib-tip-header-left">
-            //                     <span class="uib-tip-icon">💡</span>
-            //                     <span class="uib-tip-title">Tip: ${filename.replace('.md', '')}</span>
-            //                 </div>
-            //                 <span class="uib-tip-rotate-indicator">🔄</span>
-            //             </div>
-            //             <div class="uib-tip-content">
-            //         `
-
-            //         html = html.replace(fullMatch, replacement)
-            //     }
-
-            //     // Add closing div for any rotating tips
-            //     if (rotatingTips.size > 0) {
-            //         html = html.replace(/(<div class="uib-tip-content">(?:(?!<\/div>).|\n)*)/g, '$1</div></div>')
-            //     }
-
-            //     next(html)
-            // })
+            /*
+                <div id="rotating-tip-1757693356981-9gqwlggao" class="doctips docrotating-tip" title="Compare uibuilder with Dashboard 2">
+                    <div class="alert callout tip">
+                        <p class="title"><span class="icon icon-tip"></span>Tip</p>
+                        <p>
+                            <em><span class="uib-name"><span class="uib-red">UI</span>BUILDER</span> node outputs</em>
+                        </p>
+                        <p></p>
+                        <p>
+                            Blah blah
+                        </p>
+                        <p></p>
+                    </div>
+                </div>
+            */
 
             // Start rotation timer after page content is loaded
             hook.doneEach(() => {
@@ -300,7 +286,7 @@ window.$docsify = {
 
         // My custom plugin
         function ti(hook, vm) {
-            // console.log({hook,vm})
+            console.log({hook,vm})
 
             const orgName = 'Julian Knight (Totally Information)'
             const orgUrl = 'https://it.knightnet.org.uk'
@@ -320,7 +306,7 @@ window.$docsify = {
 
             // Runs against the raw markdown for each page
             hook.beforeEach(function (content) {
-                content = content.replace(/-UIBUILDER-/g, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
+                // content = content.replace(/-UIBUILDER-/g, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
                 let mydate = new Date()
                 let strYr = mydate.getFullYear()
                 let yearFrom = 2017
@@ -383,7 +369,7 @@ window.$docsify = {
 
             // Runs against the rendered HTML for each page
             hook.afterEach(function (html, next) {
-                html = html.replace(/UIBUILDER/g, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
+                // html = html.replace(/UIBUILDER/g, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
                 next(html + footer.join(''))
             })
 
@@ -392,72 +378,8 @@ window.$docsify = {
             //     // replace the <title> tag
             //     document.title = document.title.replace(/<title>(.*?)<\/title>/, '<title>UIBUILDER: $1')
             // })
+
+            // Hooks: [ "init", "mounted", "beforeEach", "afterEach", "doneEach", "ready" ]
         },
     ],
 }
-
-// #region --- lyingdragon/docsify-plugin-page-toc ---
-
-// To collect headings and then add to the page ToC
-const pageToC = (headings, path) => {
-    const list = []
-    // let toc = ['<div class="page_toc">', '<p class="title">Contents</p>']
-    let toc = [
-        '<div class="page_toc">',
-        '<h2>Page Contents</h2>',
-        // '<ul class="">'
-    ]
-    headings = document.querySelectorAll(`.markdown-section ${window.$docsify['toc'].target}`)
-
-    if (headings) {
-        let prevLevel = -1
-        headings.forEach(function (heading) {
-            const level = heading.tagName.replace(/h/gi, '')
-            if (level === 0 || level > window.$docsify['toc'].tocMaxLevel) return
-
-            let newLevel = ''
-            if (level > prevLevel) newLevel = 'new'
-            else if (level < prevLevel) newLevel = 'end'
-            console.log('level: ', level, newLevel)
-            const item = generateToC(level, newLevel, heading.innerHTML)
-            if (item) list.push(item)
-            prevLevel = level
-        })
-    }
-
-    if (list.length > 0) {
-        toc = toc.concat(list)
-        toc.push('</div>')
-        // toc.push('</ul>')
-        return toc.join('')
-    }
-    return ''
-}
-
-// To generate each ToC item
-const generateToC = (level, newLevel, html) => {
-    let out = ''
-    // out = ['<div class="lv' + level + '">', html, '</div>'].join('')
-    // out = ['<li class="lv' + level + '">', html, '</li>'].join('')
-
-    if (newLevel === 'new') {
-        out = [
-            // `<li class="lv${oldLevel}">`, // ???
-            `<ul class="lv${level}"><li>${html}</li>`,
-            // ${html},
-            // `</ul>`,
-            // `</li>`,
-        ].join('')
-    } else if (newLevel === 'end') {
-        out = [
-            `<li>${html}</li>`,
-            `</ul>`,
-        ].join('')
-    } else {
-        out = `<li>${html}</li>`
-    }
-
-    return out
-}
-
-// #endregion --- lyingdragon/docsify-plugin-page-toc ---
