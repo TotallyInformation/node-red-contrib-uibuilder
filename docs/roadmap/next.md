@@ -10,6 +10,7 @@ author: Julian Knight (Totally Information)
 ## To Fix
 
 * uibuilder node in a sub-flow [ref](https://discourse.nodered.org/t/uibuilder-url-inconsistancies-and-issues/98853/4)
+* Paul's disappearing library items. [#556](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/556)
 
 ## In Progress
 

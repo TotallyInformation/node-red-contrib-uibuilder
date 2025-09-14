@@ -70,6 +70,8 @@ NOTE: If using the `uibRouter` SPA client library, please note that the startup 
 
 * **FIX** for issue #564. VSCode edit link would not work if the uibuilder root folder did not start with a `/`. Also, the VSCode edit link could not be amended.
 
+* **FIX** for duplicate url error when node is used in a subflow. [Ref](https://discourse.nodered.org/t/uibuilder-url-inconsistancies-and-issues/98853).
+
 #### Ui class
 
 * **Fixed** a hidden issue with `replaceSlot()`. The safe method of creating a DocumentFragment does not work if the parent element is a `<template>`. For that, you can only use `innerHTML`.
