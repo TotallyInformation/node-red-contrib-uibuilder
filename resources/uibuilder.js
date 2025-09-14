@@ -1,11 +1,9 @@
 /* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable @stylistic/newline-per-chained-call */
 // @ts-nocheck
-
 // Now loading as a module so no need to further Isolate this code
-// #region --------- module variables for the panel --------- //
 
-// RED._debug({topic: 'RED.settings', payload:RED.settings})
+// #region --------- module variables for the panel --------- //
 
 // NOTE: window.uibuilder is added by editor-common.js - see `resources` folder
 const uibuilder = window['uibuilder'] // eslint-disable-line no-redeclare
@@ -36,10 +34,12 @@ const uiace = {
     fname: 'index.html',
     fullscreen: false,
 }
+
 /** placeholder for instance folder list
     @type {Array<string>}
-*/
+ */
 let folders = []
+
 /** Placeholder for long-running npm scripts
  * Allows tracking and returning to them even if the Edit panel is closed
  * and later re-opened.
@@ -1117,13 +1117,22 @@ function validateUrl(value) {
             fId = fId.split('-')[1]
         }
         this.urlDeployedDup = fId !== this.id
-        console.log('>> Deployed Dup >>', Object.keys(uibuilder.deployedUibInstances)[f], fId, this.id, this.urlDeployedDup)
+        if (value.startsWith('overview')) console.log(`>> urlDeployedDup >> fId: ${fId}, this.id: ${this.id}, this.urlDeployedDup: ${this.urlDeployedDup}`)
     } else {
         this.urlDeployedDup = false
     }
 
     f = Object.values(editorInstances).indexOf(value)
-    this.urlEditorDup = ( f > -1 && Object.keys(editorInstances)[f] !== this.id )
+    if (f > -1) {
+        let fId = Object.keys(editorInstances)[f]
+        if ( fId.indexOf('-') !== -1 ) {
+            fId = fId.split('-')[1]
+        }
+        this.urlEditorDup = fId !== this.id
+        if (value.startsWith('overview')) console.log(`>> urlEditorDup >> fId: ${fId}, this.id: ${this.id}, this.urlEditorDup: ${this.urlEditorDup}`)
+    } else {
+        this.urlEditorDup = false
+    }
 
     // If value is undefined, node hasn't been configured yet - we assume empty url which is invalid
     if ( value === undefined ) {
@@ -1173,7 +1182,7 @@ function validateUrl(value) {
     // Check whether the url is already in use in another undeployed uib node
     if ( this.urlEditorDup === true ) {
         // RED.notify(`<b>ERROR</b>: <p>The chosen URL (${value}) is already in use in another undeployed uib node.<br>It must be changed before you can save/commit</p>`, {type: 'error'})
-        this.urlErrors.dup = 'Cannot be a URL already in use'
+        this.urlErrors.dup = 'Cannot be a URL already in use even if not yet deployed'
     }
 
     // Check whether the folder already exists - if it does, give a warning & adopt it
@@ -1502,6 +1511,8 @@ function templateSettings(node) {
 }
 
 // #endregion ==== Template Management Functions ==== //
+
+// #region ==== Misc Functions ==== //
 
 /** Set initial hidden & checkbox states (called from onEditPrepare)
  * @param {object} node A reference to the panel's `this` object
@@ -2075,7 +2086,9 @@ function runNpmScript(node, scriptName) {
     }
 }
 
-// #region --- Tab display functions ---
+// #endregion ==== Misc Functions ==== //
+
+// #region ==== Tab display functions ==== //
 
 /** Run when switching to the Files tab
  * @param {object} node A reference to the panel's `this` object
@@ -2135,10 +2148,12 @@ function tabFiles(node) {
  */
 function tabLibraries(node) {
     // ! TODO Improve feedback
+    // console.log('>> packages >>', packages)
 
     // Setup the package list https://nodered.org/docs/api/ui/editableList/
     $('#node-input-packageList').editableList({
         addItem: function addItem(element, index, data) {
+            // console.log('>> addItem >>', {node, element, index, data})
             addPackageRow(node, element, index, data)
         },
         removeItem: removePackageRow, // function(data){},
@@ -2240,7 +2255,7 @@ function prepTabs(node) {
     tabs.addTab({ id: 'tab-advanced', label: 'Advanced', })
 } // ---- End of preTabs ---- //
 
-// #endregion --- Tab display functions ---
+// #endregion ==== Tab display functions ==== //
 
 /** Prep for edit
  * @param {object} node A reference to the panel's `this` object
