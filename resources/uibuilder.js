@@ -1085,6 +1085,7 @@ function debugUrl(node, value) {
     log('-- this --', node)
     console.groupEnd()
 }
+
 /** Live URL Validation Function: Validate the url property
  * Max 20 chars, can't contain any of ['..', ]
  * @param {string} value The url value to validate
@@ -1103,8 +1104,24 @@ function validateUrl(value) {
     this.urlDeployedChanged = uibuilder.deployedUibInstances[this.id] !== value //  || (this.oldUrl !== undefined && this.url !== this.oldUrl)
     this.urlChanged = (this.url !== value)
 
+    /** WARNING: The instance ID for deployed instances in a subflow are NOT the same as those
+     * in the editor. This means the the instance ID is not the same as the this.id of the node
+     * Subflow id's have a `-` in them so we need to check for that too.
+     */
+
     let f = Object.values(uibuilder.deployedUibInstances).indexOf(value)
-    this.urlDeployedDup = ( f > -1 && Object.keys(uibuilder.deployedUibInstances)[f] !== this.id )
+    if (f > -1) {
+        let fId = Object.keys(uibuilder.deployedUibInstances)[f]
+        // If the deployed instance is in a subflow, actual id is after the `-`
+        if ( fId.indexOf('-') !== -1 ) {
+            fId = fId.split('-')[1]
+        }
+        this.urlDeployedDup = fId !== this.id
+        console.log('>> Deployed Dup >>', Object.keys(uibuilder.deployedUibInstances)[f], fId, this.id, this.urlDeployedDup)
+    } else {
+        this.urlDeployedDup = false
+    }
+
     f = Object.values(editorInstances).indexOf(value)
     this.urlEditorDup = ( f > -1 && Object.keys(editorInstances)[f] !== this.id )
 
