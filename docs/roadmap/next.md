@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-09-07 21:25:23
+updated: 2025-09-09 13:24:54
 author: Julian Knight (Totally Information)
 ---
 
@@ -93,9 +93,11 @@ None
 * [ ] Add SVGAnimate class to web components package.
 
 * CSS
-  * [ ] Make `form > label` use a variable for `align-self`. 
+  * [ ] Make `form > label` use a variable for `align-self`.
+  * [ ] Add more css vars for styling buttons. [Ref](https://discourse.nodered.org/t/uibuilder-button/98970/21)
 
 * Documentation
+  * [ ] Add a manual `[UIBUILDER]` Markdown extension to replace the former auto-colouring of the word "UIBUILDER".
   * [ ] Add content to Lists, Maps, Tables, Dashboard Layouts, Cards, Articles.
   * [ ] Properly document file uploads and how to handle them. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
   * [ ] Add thanks to the contributors in the readme.
@@ -174,6 +176,7 @@ None
 * Move all runtime code to ESM's and rely on ESBUILD to build the runtime. This will allow us to use the latest JS features but retain backwards compatibility.
 * Maybe think about having a control msg from NR to clients that will re-arrange elements on the page. Possibly an array (map?) of element selectors in a set order. Would probably need a "root" element that is the parent of all the elements to be re-arranged. Could also be used to show/hide elements.
 * Sending events from client to server using beacons.
+* FE: Write a template parser capable of parsing `<b>{{myvar}}</b>` into `<b><uib-var variable="myvar"></uib-var></b>`.
 
 ### Wacky?
 

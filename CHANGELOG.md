@@ -33,9 +33,9 @@ NOTE: If using the `uibRouter` SPA client library, please note that the startup 
 
 ### 📌 Highlights
 
-* A new browser overlay notification message feature available. Using `showOverlay` allows messages of different types (info, success, warning, and error) to be displayed in the browser. This can be triggered from Node-RED or from front-end code. Messages can be auto-dismissed after a few seconds (the default), or retained until manually dismissed.
+* A new browser overlay **notification message feature** available. Using `showOverlay` allows messages of different types (info, success, warning, and error) to be displayed to users in the browser. This can be triggered from Node-RED or from front-end code. Messages can be auto-dismissed after a few seconds (the default), or retained until manually dismissed.
 
-* The `uibuilder` node now has an extra tab "scripts" which lets you run npm scripts defined in your instance root's package.json file.
+* The `uibuilder` node now has an **extra tab** "scripts" which lets you *run npm scripts* defined in your instance root's package.json file.
   
   These can be any script that can be run on the host OS. They run in the OS's default shell. Output from the script is captured and returned to Node-RED in the panel beneath the list of scripts. When a script is running, a "Kill Script" button is visible, clicking this wil abort the script immediately.
 
@@ -44,6 +44,8 @@ NOTE: If using the `uibRouter` SPA client library, please note that the startup 
 * uibuilder installation will now **ERROR** and stop if the Node-RED userDir folder is not writable. This is to prevent the uibuilder node from being misconfigured and not working correctly. The error message will show the userDir folder that is not writable.
 
 * When using uibuilder's custom web server option, you now have the option to create a `<uibRoot>/.public` folder. It is served as the root URL. This is where you can place static files that you want to serve from the custom web server. The folder will be created automatically if it does not exist. You can also use this folder to serve static files such as images, CSS, and JavaScript files. Create an `index.html` file in the folder to serve a custom root home page. The folder is not served if you are using the default Node-RED web server (Use Node-RED's public folder for that).
+
+* The documentation now has a **"Tips" page** that rotates through a selection of tips. I will be adding more tips over time. If you have any tips that you think would be useful, please let me know.
 
 ### Example flows
 
@@ -126,7 +128,7 @@ For the updated navigation menus, the following CSS variables (show with their d
   > [!WARNING]
   > If the reactive variable is a *primative* type (string, number, boolean), then the you MUST use the `myvar.value = 42` syntax to change the value. If you use `myvar = 42`, then the reactive variable will overwritten. The `value` property will also let you change a primative even if it has been created with `const`.
 
-* **NEW** showOverlay function. This function creates and displays an overlay window with customizable content and behavior. This is an easy way to display some temporary information to the user.
+* **NEW** `showOverlay` function. This function creates and displays an overlay window with customizable content and behavior. This is an easy way to display some temporary information to the user.
 
   Also available as an external (from Node-RED) command. In that case, `msg.payload` is used as the content of the overlay unless `options.content` is specified. Controlling options can be passed in the `msg._uib.options` property
 
@@ -146,7 +148,7 @@ For the updated navigation menus, the following CSS variables (show with their d
 
 * **UPDATED** The feature that allows external commands to be sent from Node-RED has been improved. It now supports additional options for customizing the command behavior. Currently only used by the new `showOverlay` command.
 
-* **FIXED** `uibuilder.numberFormat(...)` - fixed handling of decimal places. Previously 0 dp was not working.
+* **FIXED** `uibuilder.formatNumber(...)` - fixed handling of decimal places. Previously 0 dp was not working.
 
 ### uibRouter SPA client library
 
@@ -194,6 +196,14 @@ For the updated navigation menus, the following CSS variables (show with their d
 * Significantly improved uibRouter SPA documentation.
 * Updated walkthrough to match current templates. (Issue #563).
 * **NEW** Rotating "Tips" page added. Updates once per minute from a random selection of tips.
+* Main README updated with improved badges. Fixed the documentation badge, added a sponsor badge. A DeepWiki badge also added.
+* Comparison with Dashboard 2 updated to reflect current capabilities of both projects.
+
+* Some rework of the Docsify configuration.
+
+  * Added a "Tips" page that rotates through a selection of tips.
+  * Added a new tips custom Docsify plugin that allows display of tips from a given source folder. Used on the tips page. Provides rotating, random and specified tips.
+  * Removed the auto-restyleing of the word "UIBUILDER" that was using HTML colours. It was causing issues with some themes and was not accessible. I will add a manual `[UIBUILDER]` Markdown extension that can be used when needed.
 
 ### **NEW** Experimental front-end client library
 
