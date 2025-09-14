@@ -347,7 +347,7 @@ async function buildUiModule() {
         await esbuild.build({
             entryPoints: [entryPoint],
             outfile: outFilePath,
-            bundle: false,
+            bundle: true,
             format: 'cjs',
             platform: 'node',
             minify: false,
@@ -356,7 +356,9 @@ async function buildUiModule() {
                 '.mjs': 'js',
                 '.cjs': 'js',
             },
-            packages: 'external',
+            resolveExtensions: ['.mjs', '.cjs', '.js', '.ts', '.json'],
+            mainFields: ['module', 'main'],
+            external: [], // Explicitly set to empty array to bundle everything
             target: esbTarget,
         })
         // Update the output version string if build was successful
@@ -790,6 +792,7 @@ exports.watch       = watchme
 // exports.buildPanelUib = series(buildPanelUib1, buildPanelUib2)
 exports.build       = buildme
 exports.buildFe     = buildNewFe
+exports.buildUiModule = buildUiModule
 // exports.buildNodeLibs = buildNodeLibs
 exports.createTag   = createTag
 // exports.setVersion  = series( setPackageVersion, setPackageLockVersion, setFeVersionDev, setFeVersion, setFeVersionMin, notifyOtherVersions )
