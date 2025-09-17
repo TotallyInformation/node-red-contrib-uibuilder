@@ -43,6 +43,17 @@ export interface NotificationConfig {
     [key: string]: any,
 }
 
+/** Options for showOverlay */
+export interface OverlayOptions {
+    content?: string,
+    title?: string,
+    icon?: string,
+    type?: 'success' | 'info' | 'warning' | 'error',
+    showDismiss?: boolean,
+    autoClose?: number | null,
+    time?: boolean,
+}
+
 /**
  * Uibuilder main class
  * @typicalname uibuilder
@@ -311,6 +322,14 @@ export class Uib {
     navigate(url: string): Location
 
     /**
+     * Scroll the page or a specific element into view
+     * @param cssSelector Optional. If not set, scrolls to top of page. Can also be 'top'|'start'|'bottom'|'end'
+     * @param opts Optional DOM scrollIntoView options
+     * @returns True if element was found (or top/bottom handled), false otherwise
+     */
+    scrollTo(cssSelector?: string, opts?: { block?: string, inline?: string, behavior?: string }): boolean
+
+    /**
      * Convert a string attribute into a variable/constant reference
      * Used to resolve data sources in attributes
      * @param path The string path to resolve, must be relative to the `window` global scope
@@ -486,6 +505,13 @@ export class Uib {
      * @returns The sanitised HTML or the original if DOMPurify not loaded
      */
     sanitiseHTML(html: string): string
+
+    /**
+     * Creates and displays an overlay window with customizable content and behavior
+     * @param options Configuration options for the overlay
+     * @returns Object with close() method to manually close the overlay
+     */
+    showOverlay(options: OverlayOptions): { close: () => void }
     /**
      * Add table event listener that returns the text or html content of either the full row or a single cell
      * @param tblSelector The table CSS Selector
