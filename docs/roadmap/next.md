@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-09-09 13:24:54
+updated: 2025-09-15 15:23:17
 author: Julian Knight (Totally Information)
 ---
 
@@ -214,6 +214,15 @@ None
 ### Shorts
 
 * Using CSS variables with uib-brand (e.g. using --max-width)
+
+## Communications
+
+* Use IFTTT to cross-post:
+  * New video - to Discord, Twitter
+  * New Release - to Discord, Twitter, (NR Forum)
+
+  Other possibles: Instagram, Blog, LinkedIn, NR Forum, BlueSky, Mastodon.
+
 
 ## Thoughts
 
