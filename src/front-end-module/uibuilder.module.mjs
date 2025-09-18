@@ -2436,7 +2436,7 @@ export const Uib = class Uib {
         // @since v7.5.0 allow msg._uib.options instead of prop/value to allow more flexible commands
         const prop = msg._uib?.prop
         const value = msg._uib?.value
-        const quiet = msg._uib?.quiet ?? msg._uib?.options?.quietfalse ?? false
+        const quiet = msg._uib?.quiet ?? msg._uib?.options?.quiet ?? false
         const options = msg._uib?.options ?? { type: prop, title: value, quiet: quiet, }
         let response, info
 
