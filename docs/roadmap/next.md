@@ -37,6 +37,8 @@ None
 
 (See the roadmap for lots more, these are just the current thoughts)
 
+* [ ] Add a node-red Tour for each release.
+
 * Router improvements
   * [ ] Auto-menu generation for menus.
     * [ ] Update router auto-menu with improvements from home site.

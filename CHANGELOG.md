@@ -72,6 +72,8 @@ NOTE: If using the `uibRouter` SPA client library, please note that the startup 
 
 * **FIX** for duplicate url error when node is used in a subflow. [Ref](https://discourse.nodered.org/t/uibuilder-url-inconsistancies-and-issues/98853).
 
+* **FIX** for issue #556. The library list in the Editor config panel would not work correctly if a library name contained special characters. Thanks to Paul Reed for reporting this issue.
+
 #### Ui class
 
 * **Fixed** a hidden issue with `replaceSlot()`. The safe method of creating a DocumentFragment does not work if the parent element is a `<template>`. For that, you can only use `innerHTML`.
