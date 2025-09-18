@@ -43,6 +43,8 @@ const jsdocRules = {
     'jsdoc/no-undefined-types': ['error', {
         definedTypes: ['JQuery', 'NodeListOf', 'ProxyHandler'],
     }],
+    'jsdoc/reject-any-type': 'off',
+    'jsdoc/reject-function-type': 'off',
     'jsdoc/tag-lines': 'off',
 }
 const stylisticRules = {
