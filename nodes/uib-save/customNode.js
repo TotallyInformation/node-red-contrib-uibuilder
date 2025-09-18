@@ -29,7 +29,7 @@
 
 const fslib  = require('../libs/fs.cjs')   // File/folder handling library (by Totally Information)
 // const uiblib = require('../libs/uiblib')  // Utility library for uibuilder
-const { setNodeStatus } = require('../libs/uiblib')  // Utility library for uibuilder
+const { setNodeStatus } = require('../libs/uiblib.cjs')  // Utility library for uibuilder
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.

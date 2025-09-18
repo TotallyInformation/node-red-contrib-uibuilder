@@ -1,0 +1,357 @@
+[
+    {
+        "id": "12846a7d903a43aa",
+        "type": "tab",
+        "label": "uib-html tests",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "abd3565abbea5ec0",
+        "type": "group",
+        "z": "12846a7d903a43aa",
+        "name": "Manually trigger creation of a list using no-code uib-element, converted to HTML using uib-html and delivered to Node-RED Dashboard via ui-template node. \\n ",
+        "style": {
+            "stroke": "#a4a4a4",
+            "stroke-opacity": "0.33",
+            "label": true,
+            "color": "#000000",
+            "fill": "#ffffbf",
+            "fill-opacity": "0.29"
+        },
+        "nodes": [
+            "e1905e47319cbaa5",
+            "c5ec4e21d7a42edc",
+            "014ebfef8273c2ec",
+            "569b0340e94c3198",
+            "cdadf998527d3d70"
+        ],
+        "x": 34,
+        "y": 283,
+        "w": 1072,
+        "h": 98
+    },
+    {
+        "id": "badd82a2641c7267",
+        "type": "group",
+        "z": "12846a7d903a43aa",
+        "name": "HTTP-in node triggers dynamic creation of HTML via no-code uib-element and uib-html. Output is directly returned to the browser via HTTP-out \\n ",
+        "style": {
+            "fill": "#ffffbf",
+            "fill-opacity": "0.3",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "404329eec50a1815",
+            "5c281ef4b7341d18",
+            "4c676e4f34a678d8",
+            "e601a6059b186274",
+            "fc0f9c435d433a04",
+            "701b364be6b873d3",
+            "8de44408094e38e9"
+        ],
+        "x": 34,
+        "y": 83,
+        "w": 1052,
+        "h": 158
+    },
+    {
+        "id": "404329eec50a1815",
+        "type": "uib-html",
+        "z": "12846a7d903a43aa",
+        "g": "badd82a2641c7267",
+        "name": "",
+        "topic": "",
+        "x": 800,
+        "y": 200,
+        "wires": [
+            [
+                "5c281ef4b7341d18",
+                "e601a6059b186274"
+            ]
+        ]
+    },
+    {
+        "id": "5c281ef4b7341d18",
+        "type": "debug",
+        "z": "12846a7d903a43aa",
+        "g": "badd82a2641c7267",
+        "name": "uib Std Output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 975,
+        "y": 140,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "4c676e4f34a678d8",
+        "type": "http in",
+        "z": "12846a7d903a43aa",
+        "g": "badd82a2641c7267",
+        "name": "",
+        "url": "uib-html",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 200,
+        "wires": [
+            [
+                "fc0f9c435d433a04"
+            ]
+        ]
+    },
+    {
+        "id": "e601a6059b186274",
+        "type": "http response",
+        "z": "12846a7d903a43aa",
+        "g": "badd82a2641c7267",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1010,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "fc0f9c435d433a04",
+        "type": "change",
+        "z": "12846a7d903a43aa",
+        "g": "badd82a2641c7267",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[\t   \"LI One\",\t   \"LI Two\",\t   [\"LI Three a\",\"LI Three b\"],\t   \"LI Four\",\t   \"Random: \" & $formatInteger($random() * 100, \"0\")\t]",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 340,
+        "y": 200,
+        "wires": [
+            [
+                "701b364be6b873d3"
+            ]
+        ]
+    },
+    {
+        "id": "701b364be6b873d3",
+        "type": "uib-element",
+        "z": "12846a7d903a43aa",
+        "g": "badd82a2641c7267",
+        "name": "",
+        "topic": "",
+        "elementtype": "ul",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "eltest-ul-ol",
+        "elementIdSourceType": "str",
+        "heading": "My Heading",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
+        "position": "last",
+        "positionSourceType": "str",
+        "passthrough": false,
+        "confData": {},
+        "x": 560,
+        "y": 200,
+        "wires": [
+            [
+                "404329eec50a1815",
+                "8de44408094e38e9"
+            ]
+        ]
+    },
+    {
+        "id": "e1905e47319cbaa5",
+        "type": "uib-html",
+        "z": "12846a7d903a43aa",
+        "g": "abd3565abbea5ec0",
+        "name": "",
+        "topic": "",
+        "x": 800,
+        "y": 340,
+        "wires": [
+            [
+                "cdadf998527d3d70"
+            ]
+        ]
+    },
+    {
+        "id": "c5ec4e21d7a42edc",
+        "type": "uib-element",
+        "z": "12846a7d903a43aa",
+        "g": "abd3565abbea5ec0",
+        "name": "",
+        "topic": "",
+        "elementtype": "ul",
+        "parent": "#more",
+        "parentSource": "#more",
+        "parentSourceType": "str",
+        "elementid": "eltest-ul-ol",
+        "elementIdSourceType": "str",
+        "heading": "My Heading",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
+        "position": "last",
+        "positionSourceType": "str",
+        "passthrough": false,
+        "confData": {},
+        "x": 560,
+        "y": 340,
+        "wires": [
+            [
+                "e1905e47319cbaa5"
+            ]
+        ]
+    },
+    {
+        "id": "014ebfef8273c2ec",
+        "type": "change",
+        "z": "12846a7d903a43aa",
+        "g": "abd3565abbea5ec0",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[\t   \"LI One X\",\t   \"LI Two X\",\t   [\"LI Three a\",\"LI Three b\"],\t   \"LI Four\",\t   \"Random: \" & $formatInteger($random() * 100, \"0\")\t]",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 340,
+        "y": 340,
+        "wires": [
+            [
+                "c5ec4e21d7a42edc"
+            ]
+        ]
+    },
+    {
+        "id": "569b0340e94c3198",
+        "type": "inject",
+        "z": "12846a7d903a43aa",
+        "g": "abd3565abbea5ec0",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 95,
+        "y": 340,
+        "wires": [
+            [
+                "014ebfef8273c2ec"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "cdadf998527d3d70",
+        "type": "ui_template",
+        "z": "12846a7d903a43aa",
+        "g": "abd3565abbea5ec0",
+        "group": "f5163715823fa46b",
+        "name": "",
+        "order": 0,
+        "width": "12",
+        "height": "12",
+        "format": "<div ng-bind-html=\"msg.payload\"></div>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 1020,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8de44408094e38e9",
+        "type": "debug",
+        "z": "12846a7d903a43aa",
+        "g": "badd82a2641c7267",
+        "name": "uib Std Output",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 755,
+        "y": 140,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "ea4ca393e7e5e78f",
+        "type": "comment",
+        "z": "12846a7d903a43aa",
+        "name": "Examples of using the uib-html node with http-out and Dashboard 1. See the uib-save examples for use with that node",
+        "info": "",
+        "x": 440,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "f5163715823fa46b",
+        "type": "ui_group",
+        "name": "Default",
+        "tab": "dffca17c21bd0853",
+        "order": 1,
+        "disp": true,
+        "width": "12",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "dffca17c21bd0853",
+        "type": "ui_tab",
+        "name": "uib-html",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "7f8ef4b7dc2ec333",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-uibuilder": "7.5.0",
+            "node-red-dashboard": "3.6.5"
+        }
+    }
+]

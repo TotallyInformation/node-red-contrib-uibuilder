@@ -24,19 +24,29 @@
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
  */
 
+const path = require('node:path')
+const { AsyncLocalStorage, } = require('node:async_hooks') // https://nodejs.org/docs/latest-v18.x/api/async_context.html#class-asynclocalstorage
+
 const express = require('express')
-const path = require('path')
 const fg = require('fast-glob') // https://github.com/mrmlnc/fast-glob
+
 const fslib = require('./fs.cjs') // Utility library for uibuilder
-const web = require('./web')
-const sockets = require('./socket')
-const packageMgt = require('./package-mgt')
-const templateConf = require('../../templates/template_dependencies') // Template configuration metadata
+const web = require('./web.cjs')
+const sockets = require('./socket.cjs')
+const packageMgt = require('./package-mgt.cjs')
+const { killTree, } = require('./uiblib.cjs')
+
+const templateConf = require('../../templates/template_dependencies.js') // Template configuration metadata
 const elements = require('../elements/elements.js')
+const { url, } = require('node:inspector')
 
 const v3AdminRouter = express.Router() // eslint-disable-line new-cap
+const asyncLocalStorage = new AsyncLocalStorage()
 
 const errUibRootFldr = new Error('uib.rootFolder is null [uibuilder:admin-api-v3]')
+
+// Add a Map to track running processes (see PUT/runInstanceNpmScript)
+const runningProcesses = new Map()
 
 // #region === REST API Validation functions === //
 
@@ -215,6 +225,28 @@ function doGetOneElement(params, rootFolder, req, res) {
  * @returns {express.Router} The v3 admin API ExpressJS router
  */
 function adminRouterV3(uib, log) {
+    /** Kill a running process (if exists in runningProcesses)
+     * @param {string} processId Process ID to kill
+     * @param {string} url The URL of the request
+     * @param {string} scriptName The name of the script to kill
+     * @returns {boolean} True if the process was killed, else false
+     */
+    function killRunningProcess(processId, url, scriptName) {
+        const process = runningProcesses.get(processId)
+        if (process && typeof process.kill === 'function') {
+            try {
+                log.info(`🌐[uibuilder:admin-api-v3:killRunningProcess] Killing process for ${url}. Process ID: "${processId}". PID: "${process.pid}"`)
+                // process.kill('SIGTERM')
+                killTree(process.pid)
+                runningProcesses.delete(processId)
+                return true
+            } catch (err) {
+                log.error(`🌐🛑[uibuilder:admin-api-v3:killRunningProcess] Error killing process for ${url}:${scriptName}. Process ID: "${processId}". Error: ${err.message}`, err)
+            }
+        }
+        return false
+    }
+
     /** uibuilder v3 unified Admin API router - new API commands should be added here
      * Typical URL is: http://127.0.0.1:1880/red/uibuilder/admin/nodeurl?cmd=listfolders
      */
@@ -313,6 +345,15 @@ function adminRouterV3(uib, log) {
                 // Get details for one specific no-code element
                 case 'getOneElement': {
                     doGetOneElement(params, uib.rootFolder, req, res)
+                    break
+                }
+
+                // Get the list of npm script names for a uibuilder instance
+                case 'getNpmScriptNames': {
+                    // Could be an empty list if errors
+                    const npmScriptNames = packageMgt.getInstanceNpmScriptNames(params.url)
+                    res.statusMessage = 'NPM script names list returned'
+                    res.status(200).json( npmScriptNames )
                     break
                 }
 
@@ -469,7 +510,7 @@ function adminRouterV3(uib, log) {
             }
         })
 
-        // TODO Write file contents
+        // Do something that has side-effects, e.g. update a file or run an npm script
         .put(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
             if (uib.rootFolder === null) throw errUibRootFldr
 
@@ -490,6 +531,7 @@ function adminRouterV3(uib, log) {
                     return
                 }
 
+                // TODO: This is just a dummy placeholder for now
                 case 'updatepackage': {
                     log.trace(`🌐[uibuilder[:adminRouterV3:PUT:updatepackage] url=${params.url}`)
 
@@ -497,6 +539,87 @@ function adminRouterV3(uib, log) {
                     res.status(200).json({
                         newVersion: '',
                     })
+                    return
+                }
+
+                // Run an instance npm script, returning the output
+                case 'runInstanceNpmScript': {
+                    log.trace(`🌐[uibuilder[:adminRouterV3:PUT:runInstanceNpmScript] Running script. url="${params.url}", script="${params.scriptName}"`)
+
+                    // Create a unique process ID for this script execution
+                    const processId = `uibApiV3Put_runInstanceNpmScript:${params.url}:${params.scriptName}:${Date.now().toString()}`
+
+                    /** asyncLocalStorage captures the context for async functions
+                     * so we can handle async outputs in a synchronous way
+                     */
+                    asyncLocalStorage.run({ requestId: processId, }, async () => {
+                        try {
+                            // Set headers for streaming output
+                            res.setHeader('Content-Type', 'application/json; charset=utf-8')
+                            res.setHeader('Transfer-Encoding', 'chunked')
+
+                            // Stream each chunk as a JSON line
+                            const streamOutput = (chunk) => {
+                                const msg = JSON.stringify({ type: 'stream', data: chunk, }) + '\n'
+                                res.write(msg)
+                            }
+
+                            // Get the promise with kill method
+                            const processPromise = packageMgt.npmRunScript(
+                                params.scriptName, params.url, streamOutput
+                            )
+                            // Store the process for potential killing
+                            runningProcesses.set(processId, processPromise)
+                            // @ts-ignore Send process ID to client for kill capability
+                            const processMsg = JSON.stringify({ type: 'processId', processId, pid: processPromise.pid, }) + '\n'
+                            res.write(processMsg)
+
+                            // Await the process completion
+                            const result = await processPromise
+                            // Clean up completed process
+                            runningProcesses.delete(processId)
+
+                            // Send final result
+                            const finalMsg = JSON.stringify({ type: 'end', result: { all: '... Script completed', code: result.code, command: result.command, }, }) + '\n'
+                            // const finalMsg = JSON.stringify({ type: 'end', result, }) + '\n'
+                            res.write(finalMsg)
+                            res.end()
+                        } catch (err) {
+                            log.error(`🌐🛑[uibuilder:adminRouterV3:PUT:runInstanceNpmScript] Error running script "${params.scriptName}" for URL "${params.url}". Error: ${err.message}`, err)
+
+                            // Kill the running process if it exists
+                            killRunningProcess(processId, params.url, params.scriptName)
+
+                            res.statusMessage = `PUT unsuccessful. Error running script "${params.scriptName}" for URL "${params.url}". Error: ${err.message}`
+                            const errorMsg = JSON.stringify({
+                                type: 'error',
+                                all: err?.all || 'No output',
+                                params: params,
+                                message: res.statusMessage,
+                            }) + '\n'
+                            res.write(errorMsg)
+                            res.end()
+                        }
+                    })
+
+                    return
+                }
+
+                // case for killing processes
+                case 'killInstanceNpmScript': {
+                    log.trace(`🌐[uibuilder[:adminRouterV3:PUT:killInstanceNpmScript] processId="${params.processId}"`)
+
+                    // Kill the running process if it exists
+                    const killed = killRunningProcess(params.processId, params.url, params.scriptName)
+
+                    if (killed) {
+                        res.statusMessage = 'Process killed successfully'
+                        res.status(200).json({ killed: true, processId: params.processId, })
+                    } else {
+                        res.statusMessage = 'Process not found or already completed'
+                        res.status(404).json({ killed: false, error: 'Process not found', })
+                    }
+
                     return
                 }
             }

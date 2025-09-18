@@ -9,20 +9,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="./images/favicon.ico">
 
-    <!-- ./resources/ points to uibuilder FE resources such as images, brand css, uib-router, etc -->
-
-    <link rel="stylesheet" type="text/css" href="./.config/docsify-darklight-theme/dist/docsify-themeable/style.min.css">
-    <link rel="stylesheet" type="text/css" href="./.config/docsify-themeable/dist/css/theme-simple.css" title="light">
-    <link rel="stylesheet alternative" type="text/css" href="./.config/docsify-themeable/dist/css/theme-simple-dark.css" title="dark">
-    <link rel="stylesheet" type="text/css" href="./.config/index.css">
-
-    <script defer src="./.config/index.js">/* JS and CSS now split into separate files */</script>
+    <!-- See src/doc-bundle/build.mjs - npm run buildDocBundle -->
+    <script defer src="./.config/index.js">/* Config & custom plugins */</script>
     <script defer src="./.config/app.js">/* Local bundle of docsify and plugins */</script>
 
 </head>
 
 <body>
     <div id="app">Loading ...</div>
+    <link rel="stylesheet" type="text/css" href="./.config/index.css">
 </body>
 
 </html>

@@ -20,7 +20,7 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 2025-06-09
+ * @version: 2025-09-07
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -91,7 +91,10 @@
     /* For the .grid-fit class, the minimum child element size */
     --grid-fit-min: 15rem;
 
-    /*#region --- Brand --- */
+    /* For the show/hide elements in PWA mode */
+    --pwa-display-mode: block;
+
+    /* #region --- Brand --- */
     --brand: hsl(
         var(--brand-hue)
         calc(100% * var(--saturation))
@@ -99,7 +102,7 @@
     );
     /*#endregion --- --- */
 
-    /*#region --- Shadows https://shadows.brumm.af/ --- */
+    /* #region --- Shadows https://shadows.brumm.af/ --- */
     --surface-shadow-light: var(--brand-hue) 10% 20%;
     --shadow-strength-light: .02;
 
@@ -128,10 +131,12 @@
     ;
 
     --shadow: var(--shadow1);
+    --btn-shadow: inset 2px 2px 3px rgba(255,255,255, .3),
+                  inset -2px -2px 3px rgba(0,0,0, .3);
   
     /*#endregion --- --- */
 
-    /*#region --- Text --- */
+    /* #region --- Text --- */
     --text-saturation: .2;
     --text-bias: 0;
     --light-text-lightness: .1;
@@ -147,7 +152,6 @@
         calc(100% * var(--text-saturation))
         calc(
             100% * (var(--text-lightness)
-            + (0 * var(--text-factor) * .2)
             - (var(--text-factor) * var(--text-bias)))
         )
     );
@@ -156,7 +160,7 @@
         calc(100% * (var(--text-saturation) / 2))
         calc(
             100% * (var(--text-lightness)
-            + (1 * var(--text-factor) * .2)
+            + (1 * var(--text-factor) * .1)
             - (var(--text-factor) * var(--text-bias)))
         )
     );
@@ -179,7 +183,7 @@
     );
     /*#endregion --- --- */
 
-    /*#region --- Surfaces --- */
+    /* #region --- Surfaces --- */
     --surfaces-saturation: .1;
     --surfaces-bias: 0;
     --light-surfaces-lightness: .95;
@@ -237,7 +241,7 @@
     );
     /*#endregion --- --- */
 
-    /*#region === INFO === */
+    /* #region === INFO === */
     --info-hue: 203;
     --info-saturation-bias: 0;
     --info-lightness-bias: 0;
@@ -252,7 +256,7 @@
     );
     /*#endregion --- --- */
     
-    /*#region === SUCCESS === */
+    /* #region === SUCCESS === */
     --success-hue: 120;
     --success-saturation-bias: 0;
     --success-lightness-bias: 0;
@@ -267,7 +271,7 @@
     );
     /*#endregion --- --- */
     
-    /*#region === WARNING === */
+    /* #region === WARNING === */
     --warning-hue: 40;
     --warning-saturation-bias: 0;
     --warning-lightness-bias: 0;
@@ -283,7 +287,7 @@
     --warn: var(--warning);
     /*#endregion --- --- */
     
-    /*#region === FAILURE === */
+    /* #region === FAILURE === */
     --failure-hue: 2;
     --failure-saturation-bias: 0;
     --failure-lightness-bias: 0;
@@ -300,7 +304,7 @@
     --danger: var(--failure);
     /*#endregion --- --- */
     
-    /*#region === Complementary ACCENT === */
+    /* #region === Complementary ACCENT === */
     --complementary-hue: calc(var(--brand-hue) + var(--complementary-offset));
 
     --complementary-fg: hsl(
@@ -320,7 +324,7 @@
     );
     /*#endregion --- --- */
     
-    /*#region === PRIMARY ACCENT === */
+    /* #region === PRIMARY ACCENT === */
     --primary-hue: calc(var(--brand-hue) + var(--complementary-offset) + var(--accent-offset));
 
     --primary-fg: hsl(
@@ -336,7 +340,7 @@
     --primary: var(--primary-bg);
     /*#endregion --- --- */
     
-    /*#region === SECONDARY ACCENT === */
+    /* #region === SECONDARY ACCENT === */
     --secondary-hue: calc(var(--brand-hue) + var(--complementary-offset) - var(--accent-offset));
     
     --secondary-fg: hsl(
@@ -351,6 +355,25 @@
     );
     --secondary: var(--secondary-bg);
     /*#endregion --- --- */
+
+    /* #region === FORMS === */
+    --form-bg: var(--surface2);
+    --form-fg: var(--text2);
+    --form-border: 1px solid var(--text3);
+    /* #endregion --- --- */
+
+    /* #region === NAVIGATION MENUS === */
+    /* The main background color for the menu */
+    --nav-bg: var(--surface3);
+    /* The main text color for the menu */
+    --nav-fg: var(--text2);
+    /* Secondary background color - used when hovering over other menu items */
+    --nav-2nd-bg: var(--primary-bg);
+    /* More contrasting text color - used for selected menu items */
+    --nav-2nd-fg: var(--text1);
+    /* More contrasting background color - Used for menu pop-up background */
+    --nav-3rd-bg: var(--surface2);
+    /* #endregion --- --- */
 }
 
 /* If the browser reports it, we can adjust for light/dark theme preferences
@@ -497,9 +520,8 @@ html {
     font-size: 100%;
     background-color: var(--surface1);
     color: var(--text2);
-    accent-color: var(--brand);
+    accent-color: var(--primary);
 }
-
 body {
     margin-left: var(--base-margin);
     margin-right: var(--base-margin);
@@ -552,8 +574,7 @@ button, input[type="button" i], input[type="reset" i], input[type="submit" i], :
     appearance: none;
     border-radius: var(--border-radius);
     /* box-shadow: 0 3px 5px rgb(var(--uib-color-fg), 0.5); */
-    box-shadow: inset 2px 2px 3px rgba(255,255,255, .3),
-                inset -2px -2px 3px rgba(0,0,0, .3);
+    box-shadow: var(--btn-shadow);
 }
 button:hover, input[type="button" i]:hover, input[type="reset" i]:hover, input[type="submit" i]:hover {
     background-color: hsl(var(--info-hsl) / .5);
@@ -562,8 +583,22 @@ button:active, input[type="button" i]:active, input[type="reset" i]:active, inpu
     transform: scale(0.97);
 }
 input, button, textarea, select {
+    color: var(--text2);
     font: inherit;
     min-width: 2em;
+}
+input, textarea {
+    background-color: var(--surface1);
+}
+select {
+    background-color: var(--info);
+    color: var(--text2);
+    padding: 0.3rem;
+    box-shadow: var(--btn-shadow);
+    cursor: pointer;
+    transition: background 250ms ease-in-out, transform 150ms ease;
+    border-radius: var(--border-radius);
+    border: none;
 }
 blockquote {
     border: 1px solid var(--text3);
@@ -577,8 +612,7 @@ header, footer, main, section, article {
     /* default prep for container queries */
     container-type: inline-size;
 }
-/* This lets us use an article like a card display */
-article {
+article { /* This lets us use an article like a card display */
     max-width: var(--max-width);
     border: 1px solid var(--text3);
     border-radius: var(--border-radius);
@@ -618,6 +652,9 @@ main > article, main .left {
 main > aside, main .right {
     grid-column: 2;
 }
+summary {
+    cursor: pointer;
+}
 /* Inline blocks in a summary tag */
 summary > h2, summary > h3, summary > h4, summary > div, summary > p {
     display: inline-block;
@@ -637,6 +674,9 @@ thead th, thead td {
     color: var(--text2);
     font-weight: bolder;
     background: var(--surface4);
+    /* Make table headers stick to page when scrolling */
+    position: -webkit-sticky;
+    position: sticky;
 }
 tfoot th, tfoot td {
     color: var(--text2);
@@ -676,13 +716,17 @@ td br, th br {
 
 /*#region --- Forms --- */
 form {
-    border: 1px solid var(--text3);
-    margin: 0.5rem;
-    padding: 0.5rem;
-    border-radius: var(--border-radius);
     display: flex;
     gap: 1em;
     flex-direction: column;
+
+    background-color: var(--form-bg);
+    color: var(--form-fg);
+    border: var(--form-border);
+
+    margin: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
 }
 
 input[type="color"] {
@@ -701,21 +745,8 @@ form input, form textarea, form select, form fieldset, form output {
     /* width: 75%; */
     flex: 2;
     border-radius: var(--border-radius);
-    padding:0.2rem;
-    border: 1px solid var(--text3);
-}
-form select {
-    cursor: pointer;
-    transition: background 250ms ease-in-out, transform 150ms ease;
-    box-shadow: inset 1px 1px 2px rgba(255,255,255, .3),
-                inset -1px -1px 2px rgba(0,0,0, .3);
-    background-color: 
-        /* var(--brand); */
-        hsl(
-            var(--brand-hue)
-            calc(60% * var(--saturation))
-            calc(100% * var(--lightness))
-        );
+    padding:0.3rem;
+    border: 1px solid var(--form-border);
 }
 form button, input[type="button" i], form input[type="reset" i], form input[type="submit" i] {
     width:auto;
@@ -769,18 +800,49 @@ form > label:focus-within {
 /*#endregion --- Forms --- */
 
 /*#region --- Menus --- */
+nav {
+    /* See :root for the CSS variables used */
+    background-color: var(--nav-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--surface-shadow);
+}
+nav ul {
+    list-style-type: none;
+}
+nav [role="menuitem"]:not([aria-current="page"]):hover {
+    text-decoration: underline;
+    color: var(--nav-2nd-fg);
+    background-color: var(--nav-2nd-bg);
+}
+nav [aria-current="page"] {
+    background-color: hsl( /* brand but a bit darker */
+        var(--brand-hue),
+        calc(100% * var(--saturation)),
+        calc(80% * var(--lightness))
+    );
+	font-weight: bolder;
+    color: var(--nav-2nd-fg);
+}
 nav a {
     text-decoration: none;
     color: inherit;
     background-color: inherit;
 }
-nav li:not([aria-current]):hover {
-    text-decoration: underline;
-    filter: brightness(120%);
+button.menu-toggle {
+    /* Hide the toggle by default */
+    display: none; 
+    /* display: block; */
+    cursor: pointer;
+    padding: 0;
 }
-nav [aria-current=page] {
-	font-weight: bolder;
-    filter: brightness(130%);
+button.menu-toggle svg {
+    width: 2em;
+    height: 2em;
+    fill: var(--nav-fg);
+    background-color: var(--nav-bg);
+    transition: transform 150ms ease-in-out;
+    margin:0;
+    padding: 0;
 }
 
 /*#region -- Horizontal menu -- */
@@ -790,16 +852,18 @@ nav [aria-current=page] {
 } */
 nav.horizontal {
     display: flex;
-    padding: 0 0.1rem;
+    padding: 0.5rem;
     align-items: center;
-    background-color: var(--surface3);
+    /* background-color: var(--nav-bg); */
+    /* border-radius: var(--border-radius); */
+    position: relative;
 }
 nav.horizontal > h2 { /* Menu heading */
     font-size: inherit;
     font-weight: inherit;
     padding-left: 0.5rem;
 }
-nav.horizontal [role="menubar"], nav.horizontal ul { /* ul */
+nav.horizontal ul { /* [role="menubar"] */
     display: flex;
     flex: 2;
     list-style-type: none;
@@ -807,8 +871,8 @@ nav.horizontal [role="menubar"], nav.horizontal ul { /* ul */
     padding: 0;
     justify-content: flex-start;
 }
-nav.horizontal li { /* [role="menuitem"], [data-route], li */
-    padding: 0.2rem 0.4rem;
+nav.horizontal [role="menuitem"] {
+    padding: .5rem .5rem;
 }
 /* Search form */
 nav.horizontal form {
@@ -833,10 +897,31 @@ nav.horizontal input[type="submit"] {
     filter: brightness(120%);
     padding: .5rem 0;
 }
-@media all and (max-width: 600px) {
-    nav.horizontal, nav.horizontal ul {
-        /* On small screens, we are no longer using row direction but column */
+@media (max-width: 600px) {
+    nav.horizontal ul {
+        display: none;
+    }
+    nav.horizontal[aria-expanded="true"] ul {
+        display: flex;
         flex-direction: column;
+        position: absolute;
+        background: var(--nav-3rd-bg);
+        box-shadow: var(--shadow);
+        padding: 0.5em 0.5em;
+        border-radius: var(--border-radius);
+        z-index: 1000;
+        left: 1.6em;
+        top: 1em;
+        width: max-content;
+        min-width: 60vw;
+        max-width: 90vw;
+    }
+    nav.horizontal[aria-expanded="true"] a {
+        display: block;
+        width: 100%;
+    }
+    nav.horizontal > .menu-toggle {
+        display: inline-block;
     }
 }
 /*#endregion -- ---- -- */
@@ -918,19 +1003,29 @@ button.compact {
     border: none;
 }
 
-.status-side-panel {
-    border-radius: 9999px;
-    width: .5rem;
-    height: 100%;
-    background-color: var(--surface1);
-}
-
 .text-larger {
     font-size: larger;
 }
 .text-smaller {
     font-size: smaller;
 }
+
+/* Utility class to show/hide elements in PWA mode */
+.show-in-pwa {
+    display: none !important;
+}
+.hide-in-pwa {
+    display: var(--pwa-display-mode, block);
+}
+@media (display-mode: standalone), (display-mode: minimal-ui) {
+    .show-in-pwa {
+    display: var(--pwa-display-mode, block);
+    }
+    .hide-in-pwa {
+        display: none !important;
+    }
+}
+
 
 /** These are useful for things like buttons.
  * Default to 5em in size but are easily customised
@@ -976,16 +1071,22 @@ button.compact {
 /*#region -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
 
 .toaster {
-    /* all: unset;  */
     position:absolute; 
-    top:0; left:0; min-width:100vw; min-height:100vh; 
+    top:0; left:0;
+    min-width:100vw; min-height:100vh; 
+    z-index:998;
     -webkit-backdrop-filter: grayscale(60%) blur(10px);
     backdrop-filter: grayscale(60%) blur(10px);
-    display:flex; flex-direction:column; justify-content:center; align-items:center;
-    z-index:998;
+    display:flex;
+    flex-direction:column;
+
+    --toast-x-position: center;
+    --toast-y-position: center;
+
+    align-items: var(--toast-x-position, center);
+    justify-content: var(--toast-y-position, center);
 }
 .toast {
-    /* all: unset;  */
     background: var(--surface1);
     color: var(--text2);
     border: 4px solid var(--text3);
@@ -996,18 +1097,12 @@ button.compact {
     min-width:50vw; max-width:50vw; max-height:50vh; overflow-y:auto;
     padding:1em; margin-bottom:.5em; margin-top:.5em;
     z-index:999;
+    /* Allow for further positioning of the toast */
+    position:relative;
+    top:auto;left:auto;
 }
-.toast.alert {
-    /* all: unset;  */
-    border: 4px solid var(--text3);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow2);
-    background-clip: border-box;
-    box-sizing: border-box;
-    min-width:50vw; max-width:50vw; max-height:50vh; overflow-y:auto; 
-    padding:1em; margin-bottom:.5em; margin-top:.5em;
-    z-index:999;
-}
+/* .toast.alert {
+} */
 .toast-head > svg {
     width: 30px;
     background-color: var(--surface1);
@@ -1021,6 +1116,37 @@ button.compact {
 .toast-body {
     clear: both;
 }
+
+/* Old settings
+.toaster {
+    position:absolute; 
+    top:0; left:0; min-width:100vw; min-height:100vh; 
+    -webkit-backdrop-filter: grayscale(60%) blur(10px);
+    backdrop-filter: grayscale(60%) blur(10px);
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    z-index:998;
+}
+.toast {
+    border: 4px solid var(--text3);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow2);
+    background-clip: border-box;
+    box-sizing: border-box;
+    min-width:50vw; max-width:50vw; max-height:50vh; overflow-y:auto;
+    padding:1em; margin-bottom:.5em; margin-top:.5em;
+    z-index:999;
+}
+.toast.alert {
+    border: 4px solid var(--text3);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow2);
+    background-clip: border-box;
+    box-sizing: border-box;
+    min-width:50vw; max-width:50vw; max-height:50vh; overflow-y:auto; 
+    padding:1em; margin-bottom:.5em; margin-top:.5em;
+    z-index:999;
+}
+.toast-head {font-weight:bold} */
 
 /*#endregion -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
 
@@ -1041,6 +1167,12 @@ button.compact {
   display:contents;
   color:inherit;
   text-decoration:none;
+}
+.status-side-panel {
+    border-radius: 9999px;
+    width: .5rem;
+    height: 100%;
+    background-color: var(--status-color, var(--surface1));
 }
 /*#endregion ---- ---- ---- */
 
@@ -1120,3 +1252,62 @@ button.compact {
 .syntax-highlight > .null {color:#93ffe4;}
 .syntax-highlight > .undefined {color:#ff93c9;}
 /*#endregion */
+
+/* #region ---- Information Overlay Panel ---- */
+
+#uib-info-overlay {
+    --callout-color: var(--text2);
+    --callout-bgcolor: var(--surface3);
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    max-width: 90vw;
+    width: auto;
+    min-width: 21em;
+    padding: 0.5em;
+    background-color: var(--surface5);
+    border: 2px solid var(--surface5);
+}
+
+.uib-overlay-entry {
+    background-color: var(--callout-bgcolor);
+    border: 2px solid var(--callout-color);
+    border-radius: var(--border-radius, 0.5em);
+    box-shadow: 0 0 2px 2px var(--callout-color);
+    padding: 1em;
+    margin-bottom: 0.5rem;
+}
+
+.uib-overlay-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.uib-overlay-icon {
+    font-size: 1.2em;
+}
+
+.uib-overlay-title {
+    margin: 0;
+    color: var(--callout-color);
+}
+
+.uib-overlay-dismiss {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0;
+    box-shadow: none;
+    transition: background-color 0.2s;
+}
+.uib-overlay-dismiss:hover {
+    background-color: var(--surface2) !important;
+}
+
+/* #endregion ---- Information Overlay Panel ---- */

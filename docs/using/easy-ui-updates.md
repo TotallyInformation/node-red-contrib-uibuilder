@@ -3,7 +3,7 @@ title: Updating web UI content and attributes dynamically from Node-RED
 description: |
   A quick FAQ explaining the different ways to include and dynamically change data on your web pages from Node-RED.
 created: 2024-06-19 10:29:37
-updated: 2025-07-09 17:54:25
+updated: 2025-06-14 13:24:44
 ---
 
 > [!TIP]
@@ -44,11 +44,14 @@ Options 1 and 2 are described here. Option 3 is described in the client document
 
 ## 1) Using the `uib-topic` _attribute_ :id=uibtopic
 
+> [!NOTE]
+> See [Reactive UI's](/client-docs/reactive.md) for additional information on this and other supported reactive attributes.
+
 UIBUILDER introduces a custom _attribute_ `uib-topic` (or `data-uib-topic` if you prefer) for any HTML element.
 
 Using this _attribute_ on *any* HTML tag, enables content and attributes to be updated automatically with a simple message from Node-RED. This is generally the easiest method for updating your web page based on data from Node-RED.
 
-For example, including `<p uib-topic="mytopic">No message</p>` in your HTML and then, in Node-RED, sending a message to the uibuilder node containing a `msg.payload` of *"Hello from Node-RED"*, will replace the *"No message"* text with the hello message.
+For example, including `<p uib-topic="mytopic">No message</p>` in your HTML and then, in Node-RED, sending a message to the uibuilder node containing a `msg.payload` of *"Hello from Node-RED"* and a topic of `mytopic`, will replace the *"No message"* text with the hello message.
 
 Include a `msg.attributes` property to automatically update the elements attributes. For example if `msg.attributes` contains `{class:"myclass", style:"color:red;"}`, the elements class and style attributes will be updated accordingly.
 

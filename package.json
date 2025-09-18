@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "7.4.3",
+  "version": "7.5.0",
   "description": "Easily create data-driven web UI's for Node-RED. Single- & Multi-page. Multiple UI's. Work with existing web development workflows or mix and match with no-code/low-code features.",
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",
@@ -40,7 +40,7 @@
     "esbuild": "^0.25.0",
     "eslint": "^9.20.1",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jsdoc": "^51.0.1",
+    "eslint-plugin-jsdoc": "^58.1.1",
     "eslint-plugin-n": "^17.15.1",
     "eslint-plugin-promise": "^7.2.1",
     "execa": "^5",
@@ -84,7 +84,7 @@
     }
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=18.5"
   },
   "directories": {
     "example": "./examples",

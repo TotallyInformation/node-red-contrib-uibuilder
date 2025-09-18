@@ -37,7 +37,8 @@
  * @property {object} FunctionGlobalContext Add values, Functions, packages to the Global context variable store.
  * @property {Function} mqttReconnectTime : [Getter/Setter],
  * @property {Function} serialReconnectTime : [Getter/Setter],
- * @property {Function} debugMaxLength : [Getter/Setter],
+ * @property {number} debugMaxLength : [Getter/Setter],
+ * @property {number} debugStatusLength : [Getter/Setter],
  * @property {Function} debugUseColors : [Getter/Setter],
  * @property {string} flowFile : [Getter/Setter],
  * @property {Function} flowFilePretty : [Getter/Setter],
@@ -139,6 +140,7 @@
  * @property {Function} version Get the Node-RED version [Function: getVersion],
  * @property {Function} require : [Function: requireModule],
  * @property {Function} import : [Function: importModule],
+ * @property {Function} _ Locale translation function. Use with `RED._('key')`
  *
  * @property {object} auth :
  * @property {Function} auth.needsPermission : [Function: needsPermission]
@@ -197,6 +199,7 @@
 /** runtimeNode
  * @typedef {object} runtimeNode Local copy of the node instance config + other info
  * @property {Function} send Send a Node-RED msg to an output port
+ * @property {Function} receive Sends the node an input message (e.g. a msg to itself)
  * @property {Function} done Dummy done Function for pre-Node-RED 1.0 servers
  * @property {Function} context get/set context data. Also .flow and .global contexts
  * @property {Function} on Event listeners for the node instance ('input', 'close')
@@ -207,13 +210,16 @@
  * @property {Function} trace Trace level log output
  * @property {Function} debug Debug level log output
  * @property {Function} status Show a status message under the node in the Editor
+ * @property {Function} _ Locale translation function. Use with `node._('key')`
+ *
  * @property {object=} credentials Optional secured credentials
- * @property {string=} name Internal.
- * @property {string=} id Internal. uid of node instance.
+ * @property {string=} name name of the node
+ * @property {string=} id id of the node
  * @property {string=} type Internal. Type of node instance.
  * @property {string=} z Internal. uid of ???
  * @property {string=} g Internal. uid of ???
  * @property {[Array<string>]=} wires Internal. Array of Array of strings. The wires attached to this node instance (uid's)
+ *
  * @property {number=} _wireCount Count of connected wires
  * @property {string=} _wire ID of connected wire
  * @property {[Array<Function>]=} _closeCallbacks ??
@@ -342,7 +348,7 @@
  *
  *  Schema: `{<node.id>: <url>}`
  * @property {object} apps Instance details
- *  Schema: `{url: {node.id, node.title, node.desc}}
+ *  Schema: `{url: {node.id, node.url, node.title, node.desc}}
  * @property {string} masterTemplateFolder Location of master template folders (containing default front-end code).
  *
  *  Default `../template`
@@ -678,6 +684,15 @@
  * @property {string} id REQUIRED. Unique (to page) ID. Will be applied to loaded content.
  * @property {string} src REQUIRED. url of external template to load
  * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
+ */
+/** routeMenu
+ * @typedef {object} routeMenu
+ * @property {string} id REQUIRED. Unique (to page) ID. Used as the menu container
+ * @property {"horizontal"|"vertical"} menuType OPTIONAL. Type of menu to create. Default is "horizontal".
+
+ * @property {string} src REQUIRED. url of external template to load
+ * @property {string} container REQUIRED. CSS Selector defining the parent element that this will become the child of. If it doesn't exist on page, content will not be loaded.
+ * @property {string} [title] OPTIONAL. Text to use as a short title for the route
  */
 
 /** Node-RED WidgetTypedInputType

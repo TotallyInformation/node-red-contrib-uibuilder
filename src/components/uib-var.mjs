@@ -22,7 +22,7 @@
  * - Move other attrib change processing to setters
  */
 
-import TiBaseComponent from './ti-base-component'
+import TiBaseComponent from './ti-base-component.mjs'
 
 // const template = document.createElement('template')
 // template.innerHTML = /** @type {HTMLTemplateElement} */ /*html*/`<span></span>`

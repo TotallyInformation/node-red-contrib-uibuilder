@@ -1,7 +1,7 @@
 /**
  * Type definitions for uibuilder.module.js
  * WCAG 2.2 AA, ESLint v9, Shift-Left security, and project conventions applied.
- * @version 7.3.0
+ * @version 7.5.0
  * @author Julian Knight (Totally Information)
  */
 
@@ -43,13 +43,24 @@ export interface NotificationConfig {
     [key: string]: any,
 }
 
+/** Options for showOverlay */
+export interface OverlayOptions {
+    content?: string,
+    title?: string,
+    icon?: string,
+    type?: 'success' | 'info' | 'warning' | 'error',
+    showDismiss?: boolean,
+    autoClose?: number | null,
+    time?: boolean,
+}
+
 /**
  * Uibuilder main class
  * @typicalname uibuilder
  * @description The client-side Front-End JavaScript for uibuilder in HTML Module form.
  * Provides a number of global objects that can be used in your own JavaScript.
  * See the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
- * @version 7.3.0
+ * @version 7.5.0
  * @author Julian Knight (Totally Information)
  */
 export class Uib {
@@ -134,6 +145,20 @@ export class Uib {
     started: boolean
     /** Socket.IO connection options */
     socketOptions: object
+    /** How many times has the loaded instance connected to Socket.IO */
+    connectedNum: number
+    /** Is Vue available? */
+    isVue: boolean
+    /** Vue version if available */
+    vueVersion?: string
+    /** Current transport being used by Socket.IO */
+    currentTransport?: string
+    /** Last msg received from global Socket.IO namespace */
+    globalMsg?: any
+    /** List of uib specific attributes that will be watched and processed dynamically */
+    uibAttribs: string[]
+    /** The URL fragment identifier for the current uib instance */
+    url?: string
 
     // --- Getters/Setters ---
     logLevel: number
@@ -295,6 +320,14 @@ export class Uib {
      * @returns The new window.location string
      */
     navigate(url: string): Location
+
+    /**
+     * Scroll the page or a specific element into view
+     * @param cssSelector Optional. If not set, scrolls to top of page. Can also be 'top'|'start'|'bottom'|'end'
+     * @param opts Optional DOM scrollIntoView options
+     * @returns True if element was found (or top/bottom handled), false otherwise
+     */
+    scrollTo(cssSelector?: string, opts?: { block?: string, inline?: string, behavior?: string }): boolean
 
     /**
      * Convert a string attribute into a variable/constant reference
@@ -472,6 +505,13 @@ export class Uib {
      * @returns The sanitised HTML or the original if DOMPurify not loaded
      */
     sanitiseHTML(html: string): string
+
+    /**
+     * Creates and displays an overlay window with customizable content and behavior
+     * @param options Configuration options for the overlay
+     * @returns Object with close() method to manually close the overlay
+     */
+    showOverlay(options: OverlayOptions): { close: () => void }
     /**
      * Add table event listener that returns the text or html content of either the full row or a single cell
      * @param tblSelector The table CSS Selector
@@ -541,6 +581,12 @@ export class Uib {
      * @param originator Optional Node-RED node ID to return the message to
      */
     send(msg: object, originator?: string): void
+    /**
+     * Easily send a msg back to Node-RED on a DOM event
+     * @param domevent DOM Event object
+     * @param originator A Node-RED node ID to return the message to
+     */
+    eventSend(domevent: Event, originator?: string): void
     /**
      * Send a message to a specific room via Socket.IO.
      * @param room The room name
@@ -631,6 +677,87 @@ export class Uib {
      * @returns A promise resolving to the notification event, or null
      */
     notify(config: NotificationConfig | string): Promise<Event> | null
+
+    /**
+     * Wrap a provided variable in a proxy object so that it can be used reactively
+     * @param srcvar The source variable to wrap
+     * @returns A proxy object that can be used reactively
+     */
+    reactive(srcvar: any): any
+
+    /**
+     * Get the Reactive class for advanced usage
+     * @returns The Reactive class constructor
+     */
+    getReactiveClass(): any
+
+    /**
+     * Send log text to uibuilder's beacon endpoint (works even if socket.io not connected)
+     * @param txtToSend Text string to send
+     * @param logLevel Log level to use. If not supplied, will default to debug
+     */
+    beaconLog(txtToSend: string, logLevel?: string): void
+
+    /**
+     * Request the current page's metadata from the server - response is handled automatically
+     */
+    getPageMeta(): void
+
+    /**
+     * Easily send the entire DOM/HTML msg back to Node-RED
+     * @param originator A Node-RED node ID to return the message to
+     * @param send If true (default) directly send response to Node-RED
+     * @returns The HTML as a string
+     */
+    htmlSend(originator?: string, send?: boolean): string
+
+    /**
+     * Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
+     * @param args All arguments passed to the function are added to the msg.payload
+     */
+    logToServer(...args: any[]): void
+
+    /**
+     * Get or create a (hopefully) unique ID
+     * @param el Source form element
+     * @returns A hopefully unique element ID
+     */
+    returnElementId(el: HTMLElement): string | null
+
+    /**
+     * Attempt to get target attributes - can fail for certain target types, if so, returns empty object
+     * @param el Target element
+     * @returns Array of key/value HTML attribute objects
+     */
+    getElementAttributes(el: HTMLElement): object
+
+    /**
+     * Check for CSS Classes and return as array if found or undefined if not
+     * @param el Target element
+     * @returns Array of class names
+     */
+    getElementClasses(el: HTMLElement): string[] | undefined
+
+    /**
+     * Get target custom properties - only shows custom props not element default ones
+     * @param el Target element
+     * @returns Object of propname/value pairs
+     */
+    getElementCustomProps(el: HTMLElement): object
+
+    /**
+     * Check for el.value and el.checked
+     * @param el HTML Element to be checked
+     * @returns Return null if properties not present, else the appropriate value
+     */
+    getFormElementValue(el: HTMLElement): { value: any, checked: boolean | null }
+
+    /**
+     * For HTML Form elements, return the details
+     * @param el Source form element
+     * @returns Form element key details
+     */
+    getFormElementDetails(el: HTMLFormElement): object | null
 
     // --- Clipboard ---
     /**

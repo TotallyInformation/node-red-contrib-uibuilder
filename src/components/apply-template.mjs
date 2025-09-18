@@ -18,7 +18,7 @@
   limitations under the License.
 */
 
-import TiBaseComponent from './ti-base-component'
+import TiBaseComponent from './ti-base-component.mjs'
 
 // const template = document.createElement('template')
 // template.innerHTML = /** @type {HTMLTemplateElement} */ /*html*/`<span></span>`
@@ -103,27 +103,38 @@ import TiBaseComponent from './ti-base-component'
  */
 class ApplyTemplate extends TiBaseComponent {
     /** Component version */
-    static componentVersion = '2025-01-05'
+    static componentVersion = '2025-08-28'
 
     // Holder for once attribute
     once = false
 
-    // Makes HTML attribute change watched
+    /** Makes HTML attribute change watched
+     * @returns {Array<string>} List of all of the html attribs (props) listened to
+     */
     static get observedAttributes() {
         return [
             // Standard watched attributes:
-            /*'inherit-style',*/ 'name',
+            /* 'inherit-style', */ 'name',
             // Other watched attributes:
             'template-id', 'once',
         ]
     }
-    
+
+    /** NB: Attributes not available here - use connectedCallback to reference */
     constructor() {
         super()
+        // Only attach the shadow dom if code and style isolation is needed - comment out if shadow dom not required
+        // if (template && template.content) this._construct(template.content.cloneNode(true))
+        // Otherwise, if component styles are needed, use the following instead:
+        // this.prependStylesheet(styles, 0)
+
         if (!this.uibuilder) throw new Error('[apply-template] uibuilder client library not available')
     }
 
-    // Runs when an instance is added to the DOM
+    /** Runs when an instance is added to the DOM
+     * Runs AFTER the initial attributeChangedCallback's
+     * @private
+     */
     connectedCallback() {
         this._connect() // Keep at start.
 
@@ -164,17 +175,20 @@ class ApplyTemplate extends TiBaseComponent {
         this._ready() // Keep at end. Let everyone know that a new instance of the component has been connected & is ready
     }
 
-    /** Runs when an instance is removed from the DOM */
+    /** Runs when an instance is removed from the DOM
+     * @private
+     */
     disconnectedCallback() {
         this._disconnect() // Keep at end.
     }
 
-    /** Handle watched attributes
-     * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
-     * Attribute values can only ever be strings
-     * @param {string} attrib The name of the attribute that is changing
-     * @param {string} newVal The new value of the attribute
-     * @param {string} oldVal The old value of the attribute
+    /** Runs when an observed attribute changes - Note: values are always strings
+     * NOTE: On initial startup, this is called for each watched attrib set in HTML.
+     *       and BEFORE connectedCallback is called.
+     * @param {string} attrib Name of watched attribute that has changed
+     * @param {string} oldVal The previous attribute value
+     * @param {string} newVal The new attribute value
+     * @private
      */
     attributeChangedCallback(attrib, oldVal, newVal) {
         /** Optionally ignore attrib changes until instance is fully connected
@@ -191,7 +205,7 @@ class ApplyTemplate extends TiBaseComponent {
         // If attribute processing doesn't need to be dynamic, process in connectedCallback as that happens earlier in the lifecycle
 
         // Keep at end. Let everyone know that an attribute has changed for this instance of the component
-        this._event('attribChanged', { attribute: attrib, newVal: newVal, oldVal: oldVal })
+        this._event('attribChanged', { attribute: attrib, newVal: newVal, oldVal: oldVal, })
     }
 }
 

@@ -27,7 +27,7 @@
 
 //#region ----- Module level variables ---- //
 
-const { getSource } = require('../libs/uiblib')
+const { getSource } = require('../libs/uiblib.cjs')
 const elBuilder = require('../elements/elementBuilder')
 
 /** Main (module) variables - acts as a configuration object

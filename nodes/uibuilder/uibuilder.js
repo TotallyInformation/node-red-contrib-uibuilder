@@ -31,9 +31,9 @@
 // #region ------ Require packages ------ //
 
 // uibuilder custom
-const uiblib = require('../libs/uiblib.js') // Utility library for uibuilder
-const tilib = require('../libs/tilib.js') // General purpose library (by Totally Information)
-const packageMgt = require('../libs/package-mgt.js')
+const uiblib = require('../libs/uiblib.cjs') // Utility library for uibuilder
+const tilib = require('../libs/tilib.cjs') // General purpose library (by Totally Information)
+const packageMgt = require('../libs/package-mgt.cjs')
 const fslib = require('../libs/fs.cjs') // File/folder handling library (by Totally Information)
 // Wrap these require's with try/catch to force better error reports - just in case any of the modules have issues
 try { // templateConf
@@ -44,13 +44,13 @@ try { // templateConf
 }
 try { // sockets
     // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
-    var sockets = require('../libs/socket.js') // eslint-disable-line no-var
+    var sockets = require('../libs/socket.cjs') // eslint-disable-line no-var
 } catch (e) {
     console.error('[uibuilder] REQUIRE SOCKET failed::', e)
 }
 try { // web
     // Singleton, only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
-    var web = require('../libs/web.js') // eslint-disable-line no-var
+    var web = require('../libs/web.cjs') // eslint-disable-line no-var
 } catch (e) {
     console.error('[uibuilder] REQUIRE WEB failed::', e)
 }
@@ -153,6 +153,14 @@ function Uib(RED) {
 function runtimeSetup() {
     if ( uib.RED === null ) return
     const RED = uib.RED
+
+    // Check that the Node-RED userDir folder is writable - completely error if not
+    try {
+        fslib.accessSync( RED.settings.userDir, 'rw' ) // try to access read/write
+        RED.log.trace(`🌐[uibuilder:runtimeSetup] uibRoot folder is read/write accessible. ${RED.settings.userDir}`)
+    } catch (e) {
+        throw new Error(`🌐🛑[uibuilder:runtimeSetup] UIBUILDER cannot be configured,\n  Node-RED userDir folder "${RED.settings.userDir}" is not writable.`, e)
+    }
 
     // Add list all uibuilder apps function to RED.util so it can be used inside function nodes
     // NOTE: Only add things here that require uibuilder configuration data or libraries which won't be available
@@ -332,7 +340,7 @@ function runtimeSetup() {
     // #endregion ----- root folder ----- //
 
     /** (b) Do this before doing the web setup so that the packages can be served but after the folder/file setup */
-    packageMgt.setup(uib)
+    packageMgt.setup()
 
     /** (c) We need an ExpressJS web server to serve the page and vendor packages.
      * since v2.0.0 2019-02-23 Moved from instance level (nodeInstance()) to module level
@@ -343,7 +351,7 @@ function runtimeSetup() {
     /** (d) Pass core objects to the Socket.IO handler module */
     sockets.setup(uib, web.server)
 
-    RED.events.emit('uibuilder/runtimeSetupComplete', uib)
+    RED.events.emit('UIBUILDER/runtimeSetupComplete', uib)
 } // --- end of runtimeSetup --- //
 
 /** 2) All of the initialisation of the Node Instance
@@ -434,6 +442,8 @@ function nodeInstance(config) {
 
     // #region ====== Local folder structure ====== //
 
+    // NB: uibRoot folder checks done in runtimeSetup()
+
     /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
      *   Files in this folder are also served to URL but take preference
      *   over those in the nodes folders (which act as defaults) @type {string}
@@ -446,10 +456,10 @@ function nodeInstance(config) {
         // rename (move) folder if possible - but don't overwrite
         try {
             fslib.moveSync(path.join(/** @type {string} */ (uib.rootFolder), this.oldUrl), this.instanceFolder, { overwrite: false, })
-            log.trace(`🌐[uibuilder[:nodeInstance:${this.url}] Folder renamed from ${this.oldUrl} to ${this.url}`)
+            log.trace(`🌐[uibuilder:nodeInstance:${this.url}] Folder renamed from ${this.oldUrl} to ${this.url}`)
             // Notify other nodes
-            RED.events.emit('uibuilder/URL-change', { oldURL: this.oldUrl, newURL: this.url, folder: this.instanceFolder, } )
-            RED.events.emit(`uibuilder/URL-change/${this.oldUrl}`, { oldURL: this.oldUrl, newURL: this.url, folder: this.instanceFolder, } )
+            RED.events.emit('UIBUILDER/URL-change', { oldURL: this.oldUrl, newURL: this.url, folder: this.instanceFolder, } )
+            RED.events.emit(`UIBUILDER/URL-change/${this.oldUrl}`, { oldURL: this.oldUrl, newURL: this.url, folder: this.instanceFolder, } )
         } catch (e) {
             log.trace(`🌐[uibuilder[:nodeInstance:${this.url}] Could not rename folder. ${e.message}`)
             // Not worried if the source doesn't exist - this will regularly happen when changing the name BEFORE first deploy.
@@ -475,7 +485,7 @@ function nodeInstance(config) {
             instanceFoldersOK = false
         }
 
-        // Copy the template files to the instance folder (replaceTemplate is actually async but we don't care about the result)
+        // Copy the template files to the instance folder (replaceTemplate is async, we don't care about result) - only if create succeded
         if (instanceFoldersOK === true) {
             (async () => {
                 try {
@@ -571,8 +581,8 @@ function nodeInstance(config) {
         res.status(200).send( web.showInstanceDetails(req, this) )
     })
 
-    RED.events.emit('uibuilder/instanceSetupComplete', this)
-    RED.events.emit(`uibuilder/instanceSetupComplete/${this.url}`, this)
+    RED.events.emit('UIBUILDER/instanceSetupComplete', this)
+    RED.events.emit(`UIBUILDER/instanceSetupComplete/${this.url}`, this)
 } // ----- end of nodeInstance ----- //
 
 /** 3) Handler function for node flow input events (when a node instance receives a msg from the flow)

@@ -12,7 +12,11 @@
  *   7) To use for authentication/authorisation with Express and sio connection middleware, create a common node.js module.
  *
  * Allows you to process incoming data from clients.
- * 
+ *
+ * See also the msgReceived and clientDetails hooks in the uibuilder section of Node-RED's settings.js
+ *   https://totallyinformation.github.io/node-red-contrib-uibuilder/#/uib-configuration?id=settingsjs
+ *   Which may be easier to use than this middleware.
+ *
  * see: https://socket.io/docs/v4/server-api/#socketusefn
  * see also: uibRoot/.config/sioMiddleware.js & sioMsgOut.js
  *           and https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html#websocket-implementation-hints

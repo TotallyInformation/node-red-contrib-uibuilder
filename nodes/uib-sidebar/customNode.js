@@ -117,7 +117,7 @@ function sendToEditor(node, msg) {
     const RED = mod.RED
     RED.log.trace(`📊 [uib-sidebar] Sending to editor for ${node.id}`, msg, )
     RED.events.emit('runtime-event', {
-        id: `uibuilder/uib-sidebar/${node.id}`,
+        id: `UIBUILDER/uib-sidebar/${node.id}`,
         retain: false,
         payload: {
             srcId: node.id,

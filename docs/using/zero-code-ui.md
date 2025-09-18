@@ -3,8 +3,7 @@ title: Zero-code UI's
 description: |
   Using uibuilder to create web pages and data-driven web apps without writing code
 created: 2023-02-22 01:06:09
-lastUpdated: 2023-02-22 01:06:15
-updated: 2023-12-30 17:01:42
+updated: 2025-09-06 18:17:15
 ---
 
 *(This document is a work-in-progress, it is not complete)*

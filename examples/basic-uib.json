@@ -1,0 +1,105 @@
+[
+    {
+        "id": "2305299d982b77b1",
+        "type": "inject",
+        "z": "b2f18a716bd20f99",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "uib",
+        "payload": "",
+        "payloadType": "date",
+        "x": 515,
+        "y": 920,
+        "wires": [
+            [
+                "8f3dd60e03fdf577"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "8f3dd60e03fdf577",
+        "type": "uibuilder",
+        "z": "b2f18a716bd20f99",
+        "name": "",
+        "topic": "",
+        "okToGo": false,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.2.0-dev",
+        "showMsgUib": true,
+        "x": 630,
+        "y": 920,
+        "wires": [
+            [
+                "b1fd8419bef3fbe5"
+            ],
+            [
+                "6e22fd946cdf8088"
+            ]
+        ]
+    },
+    {
+        "id": "b1fd8419bef3fbe5",
+        "type": "debug",
+        "z": "b2f18a716bd20f99",
+        "name": "Std output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 745,
+        "y": 880,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "6e22fd946cdf8088",
+        "type": "debug",
+        "z": "b2f18a716bd20f99",
+        "name": "Ctrl output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 745,
+        "y": 960,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "dc9ff4a730138964",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-uibuilder": "7.5.0"
+        }
+    }
+]

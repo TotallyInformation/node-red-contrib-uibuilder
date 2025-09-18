@@ -3,7 +3,7 @@ title: Using the Svelte framework with uibuilder
 description: |
   How to make good use of the Svelte front-end framework with uibuilder and Node-RED.
 created: 2022-02-26 19:40:00
-updated: 2024-06-14 20:23:29
+updated: 2025-09-06 16:56:17
 ---
 
 The Svelte framework turns out to be one of the easiest frameworks to use in conjunction with uibuilder of those that requires a build step.
@@ -65,6 +65,8 @@ Just a few lines of actual code for a simple, data-driven web page. Not too bad 
 
 > [!TIP]
 > Some features will be added to uibuilder in a future release that will make this even easier. <br><br>There will be buttons in the Editor panel for `uibuilder` nodes the will let you run any npm scripts defined in your `package.json` file. For Svelte, that will include `install`, `build` and `dev` buttons. So that most of the above steps will be reduced to a couple of clicks. <br><br>These changes will help anyone who needs a build step for their web app, not just be for Svelte users.
+>
+> This is available from v7.5.0.
 
 ## References
 

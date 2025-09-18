@@ -78,9 +78,9 @@ const stdio = 'inherit'
 // @ts-ignore Find the module version in the package.json
 const { version, } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
-const release = '7.4.3'
+const release = '7.5.0'
 // Wanted node.js version - used for ESBUILD
-const nodeVersion = 'node18.15'
+const nodeVersion = 'node18.5'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js Build Version: ${nodeVersion}`)
 
@@ -122,6 +122,29 @@ console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js
 
 // #region ---- packing FE components ----
 
+const esbTarget = [
+    // 'es2019',
+    // Start of 2019
+    'chrome72',
+    'safari12.1',
+    'firefox65',
+    'opera58',
+
+    // For private class fields:
+    // 'chrome74',   // Apr 23, 2019
+    // 'opera62',    // Jun 27, 2019
+    // 'edge79',     // Jan 15, 2020
+    // 'safari14.1', // Apr 26, 2021
+    // 'firefox90',  // Jul 13, 2021
+
+    // If we need top-level await
+    // 'chrome89',  // March 1, 2021
+    // 'edge89',
+    // 'opera75',   // Mar 24, 2021
+    // 'firefox89', // Jun 1, 2021
+    // 'safari15',  // Sep 20, 2021
+]
+
 // #region -- ESbuild client library ---
 /** Build front-end module in various output formats using esbuild
  * @throws {Error} If build fails
@@ -148,28 +171,7 @@ async function buildFeModule() {
             loader: {
                 '.mjs': 'js',
             },
-            target: [
-                // 'es2019',
-                // Start of 2019
-                'chrome72',
-                'safari12.1',
-                'firefox65',
-                'opera58',
-
-                // For private class fields:
-                // 'chrome74',   // Apr 23, 2019
-                // 'opera62',    // Jun 27, 2019
-                // 'edge79',     // Jan 15, 2020
-                // 'safari14.1', // Apr 26, 2021
-                // 'firefox90',  // Jul 13, 2021
-
-                // If we need top-level await
-                // 'chrome89',  // March 1, 2021
-                // 'edge89',
-                // 'opera75',   // Mar 24, 2021
-                // 'firefox89', // Jun 1, 2021
-                // 'safari15',  // Sep 20, 2021
-            ],
+            target: esbTarget,
         })
         // Update the output version string if build was successful
         const fileContent = await fs.readFile(outFilePath, 'utf8')
@@ -190,28 +192,7 @@ async function buildFeModule() {
             loader: {
                 '.mjs': 'js',
             },
-            target: [
-                // 'es2019',
-                // Start of 2019
-                'chrome72',
-                'safari12.1',
-                'firefox65',
-                'opera58',
-
-                // For private class fields:
-                // 'chrome74',   // Apr 23, 2019
-                // 'opera62',    // Jun 27, 2019
-                // 'edge79',     // Jan 15, 2020
-                // 'safari14.1', // Apr 26, 2021
-                // 'firefox90',  // Jul 13, 2021
-
-                // If we need top-level await
-                // 'chrome89',  // March 1, 2021
-                // 'edge89',
-                // 'opera75',   // Mar 24, 2021
-                // 'firefox89', // Jun 1, 2021
-                // 'safari15',  // Sep 20, 2021
-            ],
+            target: esbTarget,
         })
         // Update the output version string if build was successful
         const fileContent = await fs.readFile(outFilePath, 'utf8')
@@ -233,28 +214,7 @@ async function buildFeModule() {
             loader: {
                 '.mjs': 'js',
             },
-            target: [
-                // 'es2019',
-                // Start of 2019
-                'chrome72',
-                'safari12.1',
-                'firefox65',
-                'opera58',
-
-                // For private class fields:
-                // 'chrome74',   // Apr 23, 2019
-                // 'opera62',    // Jun 27, 2019
-                // 'edge79',     // Jan 15, 2020
-                // 'safari14.1', // Apr 26, 2021
-                // 'firefox90',  // Jul 13, 2021
-
-                // If we need top-level await
-                // 'chrome89',  // March 1, 2021
-                // 'edge89',
-                // 'opera75',   // Mar 24, 2021
-                // 'firefox89', // Jun 1, 2021
-                // 'safari15',  // Sep 20, 2021
-            ],
+            target: esbTarget,
         })
         // Update the output version string if build was successful
         const fileContent = await fs.readFile(outFilePath, 'utf8')
@@ -275,28 +235,7 @@ async function buildFeModule() {
             loader: {
                 '.mjs': 'js',
             },
-            target: [
-                // 'es2019',
-                // Start of 2019
-                'chrome72',
-                'safari12.1',
-                'firefox65',
-                'opera58',
-
-                // For private class fields:
-                // 'chrome74',   // Apr 23, 2019
-                // 'opera62',    // Jun 27, 2019
-                // 'edge79',     // Jan 15, 2020
-                // 'safari14.1', // Apr 26, 2021
-                // 'firefox90',  // Jul 13, 2021
-
-                // If we need top-level await
-                // 'chrome89',  // March 1, 2021
-                // 'edge89',
-                // 'opera75',   // Mar 24, 2021
-                // 'firefox89', // Jun 1, 2021
-                // 'safari15',  // Sep 20, 2021
-            ],
+            target: esbTarget,
         })
         // Update the output version string if build was successful
         const fileContent = await fs.readFile(outFilePath, 'utf8')
@@ -308,474 +247,297 @@ async function buildFeModule() {
 // #endregion -- ESbuild NEW client library ---
 
 // #region -- ESbuild UI client library ---
-/** ESBuild ui.js as ES Module minified
- * @param {Function} cb Callback
- */
-function packUiEsmMin(cb) {
-    src(`${feModuleSrc}/ui.js`)
-        .pipe(gulpEsbuild({
-            outfile: 'ui.esm.min.js',
-            bundle: true,
-            format: 'esm',
-            platform: 'browser',
-            minify: true,
-            sourcemap: true,
-            target: [
-                // 'es2019',
-                // Start of 2019
-                'chrome72',
-                'safari12.1',
-                'firefox65',
-                'opera58',
+async function buildUiModule() {
+    const entryPoint = `${feModuleSrc}/ui.mjs`
+    const fileContent = await fs.readFile(entryPoint, 'utf8')
+    const v = fileContent.match(/version = '(.*)-src'/)
+    if (v[1] !== release) {
+        console.warn(`WARNING: Version in ${entryPoint} does not match requested release version. Expected '${release}-src' but found '${v[1]}-src'.`)
+        // await fs.writeFile(entryPoint, fileContent.replace(/const version = '(.*)-src'/, `const version = '${release}-src'`), 'utf8')
+    }
 
-                // For private class fields:
-                // 'chrome74',   // Apr 23, 2019
-                // 'opera62',    // Jun 27, 2019
-                // 'edge79',     // Jan 15, 2020
-                // 'safari14.1', // Apr 26, 2021
-                // 'firefox90',  // Jul 13, 2021
-
-                // If we need top-level await
-                // 'chrome89',  // March 1, 2021
-                // 'edge89',
-                // 'opera75',   // Mar 24, 2021
-                // 'firefox89', // Jun 1, 2021
-                // 'safari15',  // Sep 20, 2021
-            ],
-        }))
-        .on('error', function(err) {
-            console.error('[packUiEsmMin] ERROR ', err)
-            cb(err)
-        })
-        .pipe(greplace(/="(.*)-src"/, '="$1-esm.min"'))
-        .pipe(dest(feDest))
-        .on('end', function() {
-            // in case of success
-            cb()
-        })
-}
-/** ESBuild ui.js as ES Module (not minified)
- * @param {Function} cb Callback
- */
-function packUiEsm(cb) {
-    src(`${feModuleSrc}/ui.js`)
-        .pipe(gulpEsbuild({
-            outfile: 'ui.esm.js',
-            bundle: true,
-            format: 'esm',
-            platform: 'browser',
-            minify: false,
-            sourcemap: false,
-            target: [
-                'es2020',
-            ],
-        }))
-        .on('error', function(err) {
-            console.error('[packUiEsm] ERROR ', err)
-            cb(err)
-        })
-        .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-esm"'))
-        .pipe(dest(feDest))
-        .on('end', function() {
-            // in case of success
-            cb()
-        })
-}
-/** ESBuild ui.js as IIFE minified
- * @param {Function} cb Callback
- */
-function packUiIIFEmin(cb) {
-    src(`${feModuleSrc}/ui.js`)
-        .pipe(gulpEsbuild({
-            outfile: 'ui.iife.min.js',
+    try { // IIFE minified
+        const outFilePath = `${feDest}/ui.iife.min.js`
+        await esbuild.build({
+            entryPoints: [entryPoint],
+            outfile: outFilePath,
             bundle: true,
             format: 'iife',
             platform: 'browser',
             minify: true,
             sourcemap: true,
-            target: [
-                // 'es2019',
-                // Start of 2019
-                'chrome72',
-                'safari12.1',
-                'firefox65',
-                'opera58',
-
-                // For private class fields:
-                // 'chrome74',   // Apr 23, 2019
-                // 'opera62',    // Jun 27, 2019
-                // 'edge79',     // Jan 15, 2020
-                // 'safari14.1', // Apr 26, 2021
-                // 'firefox90',  // Jul 13, 2021
-
-                // If we need top-level await
-                // 'chrome89',  // March 1, 2021
-                // 'edge89',
-                // 'opera75',   // Mar 24, 2021
-                // 'firefox89', // Jun 1, 2021
-                // 'safari15',  // Sep 20, 2021
-            ],
-        }))
-        .on('error', function(err) {
-            console.error('[packUiIIFEmin] ERROR ', err)
-            cb(err)
+            loader: {
+                '.mjs': 'js',
+            },
+            target: esbTarget,
         })
-        .pipe(greplace(/="(.*)-src"/, '="$1-iife.min"'))
-        .pipe(dest(feDest))
-        .on('end', function() {
-            // in case of success
-            cb()
-        })
-}
-/** ESBuild ui.js as IIFE (not minified)
- * @param {Function} cb Callback
- */
-function packUiIIFE(cb) {
-    src(`${feModuleSrc}/ui.js`)
-        .pipe(gulpEsbuild({
-            outfile: 'ui.iife.js',
+        // Update the output version string if build was successful
+        const fileContent = await fs.readFile(outFilePath, 'utf8')
+        await fs.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife.min"'), 'utf8')
+    } catch (e) {
+        throw new Error(`UI Library IIFE (minimised) Build failed. ${e.message}`)
+    }
+    try { // IIFE not-minified
+        const outFilePath = `${feDest}/ui.iife.js`
+        await esbuild.build({
+            entryPoints: [entryPoint],
+            outfile: outFilePath,
             bundle: true,
             format: 'iife',
             platform: 'browser',
             minify: false,
             sourcemap: false,
-            target: [
-                'es2020',
-            ],
-        }))
-        .on('error', function(err) {
-            console.error('[packUiIIFE] ERROR ', err)
-            cb(err)
+            loader: {
+                '.mjs': 'js',
+            },
+            target: esbTarget,
         })
-        .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-iife"'))
-        .pipe(dest('front-end/'))
-        .on('end', function() {
-            // in case of success
-            cb()
+        // Update the output version string if build was successful
+        const fileContent = await fs.readFile(outFilePath, 'utf8')
+        await fs.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife"'), 'utf8')
+    } catch (e) {
+        throw new Error(`UI Library IIFE (unminified) Build failed. ${e.message}`)
+    }
+
+    try { // ESM minified
+        const outFilePath = `${feDest}/ui.esm.min.js`
+        await esbuild.build({
+            entryPoints: [entryPoint],
+            outfile: outFilePath,
+            bundle: true,
+            format: 'esm',
+            platform: 'browser',
+            minify: true,
+            sourcemap: true,
+            loader: {
+                '.mjs': 'js',
+            },
+            target: esbTarget,
         })
-}
-/** ESBuild ui.js as a Node.js library
- * @param {Function} cb Callback
- */
-function packUiNode(cb) {
-    src(`${feModuleSrc}/ui.js`)
-        .pipe(gulpEsbuild({
-            outfile: 'ui.js',
-            bundle: false,
-            format: 'cjs', // CommonJS
+        // Update the output version string if build was successful
+        const fileContent = await fs.readFile(outFilePath, 'utf8')
+        await fs.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm.min"'), 'utf8')
+    } catch (e) {
+        throw new Error(`UI Library ESM (minified) Build failed. ${e.message}`)
+    }
+    try { // ESM not-minified
+        const outFilePath = `${feDest}/ui.esm.js`
+        await esbuild.build({
+            entryPoints: [entryPoint],
+            outfile: outFilePath,
+            bundle: true,
+            format: 'esm',
+            platform: 'browser',
+            minify: false,
+            sourcemap: false,
+            loader: {
+                '.mjs': 'js',
+            },
+            target: esbTarget,
+        })
+        // Update the output version string if build was successful
+        const fileContent = await fs.readFile(outFilePath, 'utf8')
+        await fs.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm"'), 'utf8')
+    } catch (e) {
+        throw new Error(`UI Library ESM (unminified) Build failed. ${e.message}`)
+    }
+
+    try { // ESBuild ui.mjs as a Node.js cjs library
+        const outFilePath = `nodes/libs/ui.cjs`
+        await esbuild.build({
+            entryPoints: [entryPoint],
+            outfile: outFilePath,
+            bundle: true,
+            format: 'cjs',
             platform: 'node',
             minify: false,
             sourcemap: false,
-            packages: 'external',
-            target: [
-                nodeVersion,
-            ],
-        }))
-        .on('error', function(err) {
-            console.error('[packUiNode] ERROR ', err)
-            cb(err)
+            loader: {
+                '.mjs': 'js',
+                '.cjs': 'js',
+            },
+            resolveExtensions: ['.mjs', '.cjs', '.js', '.ts', '.json'],
+            mainFields: ['module', 'main'],
+            external: [], // Explicitly set to empty array to bundle everything
+            target: esbTarget,
         })
-        .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-node"'))
-        .pipe(dest('nodes/libs/'))
-        .on('end', function() {
-            // in case of success
-            cb()
-        })
+        // Update the output version string if build was successful
+        const fileContent = await fs.readFile(outFilePath, 'utf8')
+        await fs.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-node"'), 'utf8')
+    } catch (e) {
+        throw new Error(`UI Library node version build failed. ${e.message}`)
+    }
 }
-// #endregion -- ESbuild UI client library ---
 
-// #region -- ESbuild components --
-/** ESBuild front-end as IIFE minified
- * @param {Function} cb Callback
+/** Build front-end uibrouter module in various output formats using esbuild
+ * @throws {Error} If build fails
  */
-// function buildUibVarIIFEmin(cb) {
-//     src('src/components/uib-var.js')
-//         .pipe(gulpEsbuild({
-//             outfile: 'uib-var.iife.min.js',
-//             bundle: true,
-//             format: 'iife',
-//             platform: 'browser',
-//             minify: true,
-//             sourcemap: true,
-//             target: [
-//                 // 'es2019',
-//                 // Start of 2019
-//                 'chrome72',
-//                 'safari12.1',
-//                 'firefox65',
-//                 'opera58',
-
-//                 // For private class fields:
-//                 // 'chrome74',   // Apr 23, 2019
-//                 // 'opera62',    // Jun 27, 2019
-//                 // 'edge79',     // Jan 15, 2020
-//                 // 'safari14.1', // Apr 26, 2021
-//                 // 'firefox90',  // Jul 13, 2021
-
-//                 // If we need top-level await
-//                 // 'chrome89',  // March 1, 2021
-//                 // 'edge89',
-//                 // 'opera75',   // Mar 24, 2021
-//                 // 'firefox89', // Jun 1, 2021
-//                 // 'safari15',  // Sep 20, 2021
-//             ]
-//         }))
-//         .on('error', function(err) {
-//             console.error('[buildUibVarIIFEmin] ERROR ', err)
-//             cb(err)
-//         })
-//         // .pipe(greplace(/="(.*)-src"/, '="$1-iife.min"'))
-//         .pipe(dest(feDest))
-//         .on('end', function() {
-//             // in case of success
-//             cb()
-//         })
-// }
-/** ESBuild front-end as IIFE (not minified)
- * @param {Function} cb Callback
- */
-// function buildUibVarIIFE(cb) {
-//     src('src/components/uib-var.js')
-//         .pipe(gulpEsbuild({
-//             outfile: 'uib-var.iife.js',
-//             bundle: true,
-//             format: 'iife',
-//             platform: 'browser',
-//             minify: false,
-//             sourcemap: false,
-//             target: [
-//                 'es2020',
-//             ]
-//         }))
-//         .on('error', function(err) {
-//             console.error('[buildUibVarIIFE] ERROR ', err)
-//             cb(err)
-//         })
-//         // .pipe(greplace(/version = "(.*)-src"/, 'version = "$1-iife"'))
-//         // .pipe(debug({title: '>>> '}))
-//         .pipe(dest('front-end/'))
-//         // .pipe(dest(`${feDest}/`))
-//         .on('end', function() {
-//             // in case of success
-//             cb()
-//         })
-// }
-
-// #endregion -- ---- --
-
-// #region -- ESbuild uibrouter --
-function buildUibRouterIIFE(cb) {
-    src(`${feModuleSrc}/uibrouter.js`)
-        .pipe(gulpEsbuild({
-            outfile: 'uibrouter.iife.js',
-            bundle: true,
-            format: 'iife',
-            platform: 'browser',
-            minify: false,
-            sourcemap: false,
-            target: [
-                'es2020',
-            ],
-        }))
-        .on('error', function(err) {
-            console.error('[buildUibRouterIIFE] ERROR ', err)
-            cb(err)
-        })
-        .pipe(dest('front-end/utils/'))
-        .on('end', function() {
-            cb()
-        })
+async function buildRouterModule() {
+    const routerConfig = {
+        name: 'uibrouter',
+        entryPoint: `${feModuleSrc}/uibrouter.mjs`,
+        outPoint: `${feDest}/utils/uibrouter`,
+        versionSource: /static version = \'(.*)-src\'/,
+    }
+    buildModule(routerConfig)
 }
-function buildUibRouterIIFEmin(cb) {
-    src(`${feModuleSrc}/uibrouter.js`)
-        .pipe(gulpEsbuild({
-            outfile: 'uibrouter.iife.min.js',
+
+/** Build a front-end module in various output formats using esbuild
+ * @throws {Error} If build fails
+ * @param {object} config Configuration object for the module build
+ * @param {string} config.name Name of the module
+ * @param {string} config.entryPoint Path to the entry point file of the module
+ * @param {string} config.outPoint Base path for the output files of the module
+ * @param {RegExp} config.versionSource Regular expression to match the version string in the entry point file
+ */
+async function buildModule(config) {
+    const entryPoint = config.entryPoint
+    const outPoint = config.outPoint
+
+    const fileContent = await fs.readFile(entryPoint, 'utf8')
+    const v = fileContent.match(config.versionSource)
+    if (v[1] !== release) {
+        console.warn(`[${config.name} Library] WARNING: Version in ${entryPoint} does not match requested release version. Expected '${release}-src' but found '${v[1]}-src'.`)
+        // await fs.writeFile(entryPoint, fileContent.replace(/static version = '(.*)-src'/, `static version = '${release}-src'`), 'utf8')
+    }
+
+    try { // IIFE minified
+        const outFilePath = `${outPoint}.iife.min.js`
+        await esbuild.build({
+            entryPoints: [entryPoint],
+            outfile: outFilePath,
             bundle: true,
             format: 'iife',
             platform: 'browser',
             minify: true,
             sourcemap: true,
-            target: [
-                'es2020',
-            ],
-        }))
-        .on('error', function(err) {
-            console.error('[buildUibRouterIIFE] ERROR ', err)
-            cb(err)
+            loader: {
+                '.mjs': 'js',
+            },
+            target: esbTarget,
         })
-        .pipe(dest('front-end/utils/'))
-        .on('end', function() {
-            cb()
-        })
-}
-function buildUibRouterESM(cb) {
-    src(`${feModuleSrc}/uibrouter.js`)
-        .pipe(gulpEsbuild({
-            outfile: 'uibrouter.esm.js',
+        // Update the output version string if build was successful
+        const fileContent = await fs.readFile(outFilePath, 'utf8')
+        await fs.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife.min"'), 'utf8')
+    } catch (e) {
+        throw new Error(`[${config.name} Library] IIFE (minimised) Build failed. ${e.message}`)
+    }
+    try { // IIFE not-minified
+        const outFilePath = `${outPoint}.iife.js`
+        await esbuild.build({
+            entryPoints: [entryPoint],
+            outfile: outFilePath,
             bundle: true,
-            format: 'esm',
+            format: 'iife',
             platform: 'browser',
             minify: false,
             sourcemap: false,
-            target: [
-                'es2020',
-            ],
-        }))
-        .on('error', function(err) {
-            console.error('[buildUibRouterIIFE] ERROR ', err)
-            cb(err)
+            loader: {
+                '.mjs': 'js',
+            },
+            target: esbTarget,
         })
-        .pipe(dest('front-end/utils/'))
-        .on('end', function() {
-            cb()
-        })
-}
-function buildUibRouterESMmin(cb) {
-    src(`${feModuleSrc}/uibrouter.js`)
-        .pipe(gulpEsbuild({
-            outfile: 'uibrouter.esm.min.js',
+        // Update the output version string if build was successful
+        const fileContent = await fs.readFile(outFilePath, 'utf8')
+        await fs.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife"'), 'utf8')
+    } catch (e) {
+        throw new Error(`[${config.name} Library] IIFE (unminified) Build failed. ${e.message}`)
+    }
+
+    try { // ESM minified
+        const outFilePath = `${outPoint}.esm.min.js`
+        await esbuild.build({
+            entryPoints: [entryPoint],
+            outfile: outFilePath,
             bundle: true,
             format: 'esm',
             platform: 'browser',
             minify: true,
             sourcemap: true,
-            target: [
-                'es2020',
-            ],
-        }))
-        .on('error', function(err) {
-            console.error('[buildUibRouterIIFE] ERROR ', err)
-            cb(err)
+            loader: {
+                '.mjs': 'js',
+            },
+            target: esbTarget,
         })
-        .pipe(dest('front-end/utils/'))
-        .on('end', function() {
-            cb()
+        // Update the output version string if build was successful
+        const fileContent = await fs.readFile(outFilePath, 'utf8')
+        await fs.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm.min"'), 'utf8')
+    } catch (e) {
+        throw new Error(`[${config.name} Library] ESM (minified) Build failed. ${e.message}`)
+    }
+    try { // ESM not-minified
+        const outFilePath = `${outPoint}.esm.js`
+        await esbuild.build({
+            entryPoints: [entryPoint],
+            outfile: outFilePath,
+            bundle: true,
+            format: 'esm',
+            platform: 'browser',
+            minify: false,
+            sourcemap: false,
+            loader: {
+                '.mjs': 'js',
+            },
+            target: esbTarget,
         })
-}
-// #endregion -- ---- --
-
-// #region -- tests --
-/** Pack (Uglify) front-end IIFE ES6 task
- * @param {Function} cb Callback
- */
-function packfeIIFEes6(cb) {
-    try {
-        src(`${feModuleSrc}/uibuilder.module.mjs`)
-            .pipe(gulpEsbuild({
-                outfile: 'uibuilder.es6.min.js',
-                bundle: true,
-                format: 'iife',
-                platform: 'browser',
-                minify: true,
-                sourcemap: true,
-                target: [
-                    'es2016',
-                    // Start of 2019
-                    // 'chrome72',
-                    // 'safari12.1',
-                    // 'firefox65',
-                    // 'opera58',
-
-                    // For private class fields:
-                    // 'chrome74',   // Apr 23, 2019
-                    // 'opera62',    // Jun 27, 2019
-                    // 'edge79',     // Jan 15, 2020
-                    // 'safari14.1', // Apr 26, 2021
-                    // 'firefox90',  // Jul 13, 2021
-
-                    // If we need top-level await
-                    // 'chrome89',  // March 1, 2021
-                    // 'edge89',
-                    // 'opera75',   // Mar 24, 2021
-                    // 'firefox89', // Jun 1, 2021
-                    // 'safari15',  // Sep 20, 2021
-                ],
-            }))
-            .pipe(greplace(/="(.*)-mod"/, '="$1-es6.min"'))
-            .pipe(dest(feDestAlt))
-
-        src(`${feModuleSrc}/uibuilder.module.mjs`)
-            .pipe(gulpEsbuild({
-                outfile: 'uibuilder.es6.js',
-                bundle: true,
-                format: 'iife',
-                platform: 'browser',
-                minify: false,
-                sourcemap: false,
-                target: [
-                    'es2016',
-                ],
-            }))
-            .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-es6"'))
-            .pipe(dest(feDestAlt))
-
-        // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.mjs`, `${feDest}/uibuilder.esm.js`)
+        // Update the output version string if build was successful
+        const fileContent = await fs.readFile(outFilePath, 'utf8')
+        await fs.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm"'), 'utf8')
     } catch (e) {
-        console.error('Could not pack uibuilder.module.mjs for es6', e)
+        throw new Error(`[${config.name} Library] ESM (unminified) Build failed. ${e.message}`)
     }
-    cb()
 }
-/** Pack (Uglify) front-end IIFE ES5 task - DOES NOT WORK!
- * @param {Function} cb Callback
+
+/** Build the EXPERIMENTAL front-end module only as an ESM using esbuild
+ * @throws {Error} If build fails
  */
-function packfeIIFEes5(cb) {
-    try {
-        src(`${feModuleSrc}/uibuilder.module.mjs`)
-            .pipe(gulpEsbuild({
-                outfile: 'uibuilder.es5.min.js',
-                bundle: true,
-                format: 'iife',
-                platform: 'browser',
-                minify: true,
-                sourcemap: true,
-                target: [
-                    'es5',
-                    // Start of 2019
-                    // 'chrome72',
-                    // 'safari12.1',
-                    // 'firefox65',
-                    // 'opera58',
-
-                    // For private class fields:
-                    // 'chrome74',   // Apr 23, 2019
-                    // 'opera62',    // Jun 27, 2019
-                    // 'edge79',     // Jan 15, 2020
-                    // 'safari14.1', // Apr 26, 2021
-                    // 'firefox90',  // Jul 13, 2021
-
-                    // If we need top-level await
-                    // 'chrome89',  // March 1, 2021
-                    // 'edge89',
-                    // 'opera75',   // Mar 24, 2021
-                    // 'firefox89', // Jun 1, 2021
-                    // 'safari15',  // Sep 20, 2021
-                ],
-            }))
-            .pipe(greplace(/="(.*)-mod"/, '="$1-es5.min"'))
-            .pipe(dest(feDestAlt))
-
-        src(`${feModuleSrc}/uibuilder.module.mjs`)
-            .pipe(gulpEsbuild({
-                outfile: 'uibuilder.es5.js',
-                bundle: true,
-                format: 'iife',
-                platform: 'browser',
-                minify: false,
-                sourcemap: false,
-                target: [
-                    'es5',
-                ],
-            }))
-            .pipe(greplace(/version = "(.*)-mod"/, 'version = "$1-es5"'))
-            .pipe(dest(feDestAlt))
-
-        // fs.copyFileSync(`${feModuleSrc}/uibuilder.module.mjs`, `${feDest}/uibuilder.esm.js`)
-    } catch (e) {
-        console.error('Could not pack uibuilder.module.mjs for es5', e)
+async function buildExperimentalModule() {
+    /** Configuration object for the experimental module build
+     * @param {object} config Configuration object for the module build
+     * @param {string} config.name Name of the module
+     * @param {string} config.entryPoint Path to the entry point file of the module
+     * @param {string} config.outPoint Base path for the output files of the module
+     * @param {RegExp} config.versionSource Regular expression to match the version string in the entry point file
+     */
+    const config = {
+        name: 'experimental',
+        entryPoint: `${feModuleSrc}/experimental.mjs`,
+        outPoint: `${feDest}/experimental`,
+        versionSource: /version\: \'(.*)-experimental\'/,
+        versionTarget: 'version: "$1-experimental"',
     }
-    cb()
+    const entryPoint = config.entryPoint
+    const outPoint = config.outPoint
+
+    const fileContent = await fs.readFile(entryPoint, 'utf8')
+    const v = fileContent.match(config.versionSource)
+    if (v[1] !== release) {
+        console.warn(`[${config.name} Library] WARNING: Version in ${entryPoint} does not match requested release version. Expected '${release}-src' but found '${v[1]}-src'.`)
+        // await fs.writeFile(entryPoint, fileContent.replace(/static version = '(.*)-src'/, `static version = '${release}-src'`), 'utf8')
+    }
+
+    try { // ESM not-minified
+        const outFilePath = `${outPoint}.mjs`
+        await esbuild.build({
+            entryPoints: [entryPoint],
+            outfile: outFilePath,
+            bundle: true,
+            format: 'esm',
+            platform: 'browser',
+            minify: true,
+            sourcemap: true,
+            loader: {
+                '.mjs': 'js',
+            },
+            target: esbTarget,
+        })
+        // Update the output version string if build was successful
+        const fileContent = await fs.readFile(outFilePath, 'utf8')
+        await fs.writeFile(outFilePath, fileContent.replace(config.versionSource, config.versionTarget), 'utf8')
+    } catch (e) {
+        throw new Error(`[${config.name} Library] ESM (unminified) Build failed. ${e.message}`)
+    }
 }
-//#endregion
 
 // #endregion ---- ---- ----
 
@@ -911,62 +673,46 @@ const buildme = parallel(
 
 const buildNewFe = buildFeModule
 
-/* Ignored for now
-function buildNodeLibs(cb) {
-    src(`src/libs/*.js`)
-        .pipe(gulpEsbuild({
-            // outfile: 'test-execa.js',
-            // outdir: 'libs',
-            bundle: false,
-            format: 'cjs', // CommonJS
-            platform: 'node',
-            minify: true,
-            sourcemap: true,
-            packages: 'external',
-            target: [
-                nodeVersion,
-            ]
-        }))
-        .on('error', function(err) {
-            console.error('[buildNodeLibs] ERROR ', err)
-            cb(err)
-        })
-        .pipe(debug({title: '>>> '}))
-        .pipe(dest('nodes/libs/'))
-        .on('end', function() {
-            // in case of success
-            cb()
-        })
-}
-*/
-
-/** Watch for changes during development */
+/** Watch for changes during development - remember to include any dependency import files */
 function watchme(cb) {
     // source files that require updates of the main front-end module
-    const feSrc = [
+    const feSrcFiles = [
         'src/front-end-module/uibuilder.module.mjs',
+        'src/front-end-module/ui.mjs',
+        'src/front-end-module/reactive.mjs',
         'src/front-end-module/tinyDom.js',
         'src/front-end-module/logger.js',
-        'src/components/uib-var.js',
-        'src/components/apply-template.js',
-        'src/components/uib-meta.js',
+        'src/front-end-module/libs/*.mjs',
+        'src/components/ti-base-component.mjs',
+        'src/components/uib-var.mjs',
+        'src/components/apply-template.mjs',
+        'src/components/uib-meta.mjs',
+        'src/components/uib-control.mjs',
     ]
-    watch(feSrc, buildFeModule).on('change', (path) => {
+    watch(feSrcFiles, buildFeModule).on('change', (path) => {
         console.log(`feSrc File changed: ${path}`)
+    })
+    watch(['src/front-end-module/ui.mjs', 'src/front-end-module/libs/show-overlay.mjs'], buildUiModule).on('change', (path) => {
+        console.log(`ui File changed: ${path}`)
+    })
+    watch(['src/front-end-module/uibrouter.mjs'], buildRouterModule).on('change', (path) => {
+        console.log(`uibrouter File changed: ${path}`)
+    })
+    watch(['src/front-end-module/experimental.mjs'], buildExperimentalModule).on('change', (path) => {
+        console.log(`experimental File changed: ${path}`)
     })
     // watch('src/front-end-module/tinyDom.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     // watch('src/front-end-module/logger.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
-    // watch(['src/front-end-module/ui.js'], parallel(packUiNode, packUiEsmMin, packUiEsm, packUiIIFEmin, packUiIIFE, packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
-    watch(['src/front-end-module/ui.js'], parallel(packUiNode, packUiEsmMin, packUiEsm, packUiIIFEmin, packUiIIFE, buildFeModule))
+    // watch(['src/front-end-module/ui.mjs'], parallel(packUiNode, packUiEsmMin, packUiEsm, packUiIIFEmin, packUiIIFE, packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
+    // watch(['src/front-end-module/ui.mjs'], parallel(packUiNode, packUiEsmMin, packUiEsm, packUiIIFEmin, packUiIIFE, buildFeModule))
     // Builtin components also need to update the main front-end module
     // watch('src/components/uib-var.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     // watch('src/components/apply-template.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
     // watch('src/components/uib-meta.js', parallel(packfeModuleMin, packfeModule, packfeIIFEmin, packfeIIFE))
+    // watch('src/front-end-module/uibrouter.js', parallel(buildUibRouterIIFE, buildUibRouterIIFEmin, buildUibRouterESM, buildUibRouterESMmin))
 
-    watch('src/front-end-module/uibrouter.js', parallel(buildUibRouterIIFE, buildUibRouterIIFEmin, buildUibRouterESM, buildUibRouterESMmin))
-
-    // Source files that require matching Editor update
     // watch('src/editor/uib-sender/*', buildPanelSender)
+    // Source files that require matching Editor update
     watch('src/editor/uib-element/*', buildPanelUibElement)
     watch('src/editor/uib-update/*', buildPanelUpdate)
     watch('src/editor/uib-tag/*', buildPanelTag)
@@ -1004,10 +750,10 @@ function setPackageLockVersion(cb) {
     }
     cb()
 }
-/** Set uibuilder version in src\front-end-module\ui.js */
+/** Set uibuilder version in src\front-end-module\ui.mjs */
 function notifyOtherVersions(cb) {
     if (version !== release) {
-        console.log(`Updating version to ${release}. Don't forget to run 'gulp watch' then change versions in: src/front-end-module/ui.js, src/components/uib-var.js, src/front-end-module/uibrouter.js. And template package.json files if updated.` )
+        console.log(`Updating version to ${release}. Don't forget to run 'gulp watch' then change versions in: src/front-end-module/ui.mjs, src/components/uib-var.js, src/front-end-module/uibrouter.js. And template package.json files if updated.` )
     }
     cb()
 }
@@ -1046,6 +792,7 @@ exports.watch       = watchme
 // exports.buildPanelUib = series(buildPanelUib1, buildPanelUib2)
 exports.build       = buildme
 exports.buildFe     = buildNewFe
+exports.buildUiModule = buildUiModule
 // exports.buildNodeLibs = buildNodeLibs
 exports.createTag   = createTag
 // exports.setVersion  = series( setPackageVersion, setPackageLockVersion, setFeVersionDev, setFeVersion, setFeVersionMin, notifyOtherVersions )

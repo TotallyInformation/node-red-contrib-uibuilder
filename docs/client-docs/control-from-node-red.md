@@ -3,7 +3,7 @@ title: Controlling UIBUILDER's client from Node-RED
 description: |
   How to send specially formatted messages from Node-RED to the uibuilder node that get information from the client and control how it works.
 created: 2023-02-23 11:59:44
-updated: 2025-01-03 13:10:16
+updated: 2025-09-06 15:46:34
 ---
 
 The UIBUILDER client library can be controlled in various ways from Node-RED to save you the bother of having to write front-end code.
@@ -25,7 +25,7 @@ Please load the "remote-commands" example from the library to test all of these 
 > As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance.
 
 > [!TIP]
-> As of v7.1, you can send messages to any uibuilder instance from a _function node_. Using the `RED.util.uib.send('uibname', msg)` function.
+> As of v7.1, you can send messages to any uibuilder instance from a Node-RED _function node_. Using the `RED.util.uib.send('uibname', msg)` function.
 
 ### A summary of the commands available
 
@@ -41,6 +41,7 @@ Possible `msg._uib.command` values.
 * [`scrollTo`](#scrolling) - Scroll visible page to an element based on a CSS Selector.
 * [`set`](#set-variable) - set a uibuilder client managed variable.
 * [`showMsg`](#showMsg) - Turn on/off the display of the latest msg from Node-RED.
+* [`showOverlay`](#showOverlay) - Displays an overlay window with customizable content and behavior.
 * [`showStatus`](#showStatus) - Turn on/off the display of the uibuilder client library settings.
 * [`uiGet`](#uiGet) - get detailed information about an HTML DOM element.
 * [`uiWatch`](#uiWatch) - watch for changes to the HTML DOM, return messages about changes.
@@ -65,7 +66,7 @@ A message containing a `msg._ui` property will be processed internally by the li
 
 Please see the [Dynamic, data-driven HTML content](config-driven-ui.md) content for details.
 
-### Scrolling
+### Scrolling (`scrollTo`) :id=scrollTo
 
 The page can be scrolled dynamically by Node-RED using the `scrollTo` command. Send a message like `{"_uib": {"command": "scrollTo", "prop": "cssSelector"}}` Where `cssSelector` is a selector that will select a specific element on the page (e.g. `body` or `#myid` or `.myclass`). If found, the top of that element will be scrolled to the top of the browser window.
 
@@ -97,6 +98,67 @@ The `value` object must be provided and at least contain the `id` property.
 The `parentSelector` property is optional and can be used to specify where the content should be inserted. If not provided, the content will be inserted at the end of the body. It must be a valid CSS Selector.
 
 Additional options can be provided in the `value` object. See [Client Functions (include)](client-docs/functions#include) for further details on use.
+
+### Show one or more messages to users (`showOverlay`) :id=showOverlay
+
+[Since v7.5.0] The `showOverlay` command allows you to display an overlay window containing one or more temporary messages with customizable content and behavior.
+
+The `msg.payload` will be used as the main content if you do not provide `msg._uib.options.content`.  `msg._uib.options` is optional, defaults are provided for everything.
+
+Messages will disappear after 5 seconds unless `msg._uib.options.autoClose` is set to a different value (integer seconds). If set to `null`, the message will not automatically close.
+
+The `msg._uib.options.type` property can be used to specify the type of message (info, success, warning, error). If not provided, the default is "info". The type used sets the colour, icon and default title. The icon and title can be overriden in the options.
+
+If `msg._uib.options.time` is set to `true`, the message will display the time of showing in the message. This is the default. Set to false to omit it.
+
+This example function node code illustrates the use:
+
+```javascript
+// Example to put into a Node-RED function node
+
+// set x to be a random integer between 0 and 3
+const x = Math.floor(Math.random() * 4)
+// random null or 5
+const auto = Math.random() < 0.5 ? null : 5
+const myIcon = Math.random() < 0.5 ? undefined : '👍'
+const showTime = Math.random() < 0.5 ? true : false
+
+const types = ['info', 'success', 'warning', 'error']
+
+msg._uib = {
+    // The command for the uibuilder client to execute
+    "command": "showOverlay", // Show an information overlay panel
+    // The options passed to the command (@since v7.5.0)
+    "options": {
+        // Optional. Defaults to type
+        "title": "Test from Node-RED",
+        // Optional. Sets the icon, colour (and heading if not provided)
+        //   info, success, warning, error (default: info)
+        "type": types[x],
+        // Optional. Either null for manual close or
+        //    number of seconds
+        "autoClose": auto,
+
+        // Optional. Defaults provided for each type
+        "icon": myIcon,
+        // Optional. Defaults to true
+        // "time": true,
+        // Optional. Will use msg.payload if not supplied.
+        // "content": "This is some content, <b>can be</b> <i>HTML</i>",
+    },
+    // By default, the client returns a confirmation.
+    // Set this to true to prevent that.
+    "quiet": true,
+}
+
+msg.payload = `This is some text to display. <p> It <u>can</u> contain <b style="color:purple;">HTML</b> as well</p>
+  <div>
+    Type: ${types[x]}, autoClose: ${auto}, icon override: ${myIcon}
+  </div>
+`
+
+return msg
+```
 
 ## Navigation & routing
 

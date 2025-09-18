@@ -3,8 +3,13 @@ title: Developer Documentation
 description: |
   Deep dives into the internals of UIBUILDER. This is where to go if you need to understand how things work. These documents may lag behind the actual code however, so it is always worth also referencing the current codebase.
 created: 2019-06-16 16:16:00
-updated: 2025-01-01 21:48:55
+updated: 2025-09-04 11:13:14
 ---
+
+> [!NOTE]
+> You can learn more about how UIBUILDER for Node-RED works by visiting the [DeepWiki](https://deepwiki.com/TotallyInformation/node-red-contrib-uibuilder) entry.
+>
+> DeepWiki is an AI-powered knowledge base that can help you find answers to your questions about UIBUILDER.
 
 ## Processes
 

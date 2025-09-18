@@ -13,30 +13,37 @@
  *
  * Allows custom processing for authentication, session management, connection validation, logging, rate limiting, etc.
  * 
- * see also: uibRoot/.config/sioUse.js & sioMsgOut.js
+ * Check out the "hooks" available in the uibuilder section of the Node-RED settings.js file for more options.
+ *   https://totallyinformation.github.io/node-red-contrib-uibuilder/#/uib-configuration?id=settingsjs
+ * And check the msg._client properties:
+ *   https://totallyinformation.github.io/node-red-contrib-uibuilder/#/security/authenticated-client-properties
+ * See also: uibRoot/.config/sioUse.js & sioMsgOut.js
  *           https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html#websocket-implementation-hints
  * 
  * @param {*} socket Socket.IO socket object
  * @param {function} next The callback to hand off to the next middleware
  */
 function sioMw(socket, next) {
+    const now = new Date()
     // Some SIO related info that might be useful in security checks
     console.log('== [sioMiddleware.js] ====================')
     console.log('New client connected to Namespace')
     console.log('--socket.request.connection.remoteAddress--', socket.request.connection.remoteAddress)
     console.log('--socket id--', socket.id)
-    // Added by uibuilder when Namespace is created by uibuilder node instance - Note also that socket.nsp.log can be used to output to the Node-RED log
+    // Added by uibuilder when Namespace is created by uibuilder node instance
+    // Note also that socket.nsp.log can be used to output to the Node-RED log
     console.log('--socket namespace metadata (server)--', {
         name: socket.nsp.name,
         url: socket.nsp.url,
-        nodeId: socket.nsp.nodeId,
+        uibuilderNodeId: socket.nsp.nodeId,
         useSecurity: socket.nsp.useSecurity,
     })
     //console.log('--socket handshake--', socket.handshake)
     //console.log('--socket properties--', Object.keys(socket))
-    // Show the client id (set by uibuilder ExpressJS middleware)
-    console.log('--client id handshake.auth--', socket.handshake.auth.clientId)
-    console.log('--client id in custom header (polling only)--', socket.handshake.headers['x-clientid'])
+    console.log('--Connected clients--', socket.server.engine.clientsCount)
+    console.log('--handshake.auth (from client on connection)--', socket.handshake.auth)
+    console.log('--HTTP headers (from client on connection)--', socket.handshake.headers)
+    console.log('--client to server time difference (ms)--', (new Date(socket.handshake.auth.browserConnectTimestamp)) - now, ' (< +/- 500 is fine)')
     console.log('==========================================\n ')
 
     // Simplistic auth example

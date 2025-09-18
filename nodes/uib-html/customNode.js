@@ -31,7 +31,7 @@ const jsdom = require('jsdom')
 const { JSDOM, } = jsdom
 
 // Ui class copied from src/front-end-module/ui.js
-const Ui = require('../libs/ui.js').default // Grab default otherwise this fails thanks to ESBUILD
+const Ui = require('../libs/ui.cjs').default // Grab default otherwise this fails thanks to ESBUILD
 // uibuilder file handler
 const fs = require('../libs/fs.cjs')
 

@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2025-03-29 13:31:33
+updated: 2025-09-05 16:10:59
 ---
 
 Functions accessible in client-side user code.
@@ -644,6 +644,85 @@ This function can also be called from Node-RED via `msg._uib.command` - `showMsg
 
 Adds/removes `<div id="uib_last_msg">` to/from the page.
 
+### `showOverlay(options)` - Show/hide an overlay window with customizable content and behavior :id=showOverlay
+
+> Since v7.5.0
+
+This function creates and displays an overlay window with customizable content and behavior. This is an easy way to display some temporary information to the user.
+
+Multiple information cards can be displayed in the overlay. Each card can contain its own title, content, and other options. Default title, icon and colour is set by the card `type` in the options.
+
+#### `options` schema
+```jsonc
+{
+    // Optional. Defaults to type
+    "title": "Test from Node-RED",
+    // Optional. Sets the icon, colour (and heading if not provided)
+    //   info, success, warning, error (default: info)
+    "type": "info",
+    // Optional. Either null for manual close or
+    //    number of seconds
+    "autoClose": true,
+    // Optional. Main card content.
+    // When used as an external command from Node-RED, will use msg.payload if not supplied.
+    "content": "This is some content, <b>can be</b> <i>HTML</i>",
+
+    // Optional. Defaults provided for each type
+    // "icon": "😉",
+    // Optional. Defaults to true
+    // "time": true,
+},
+```
+
+#### Node-RED external command example
+
+```js
+// Example to put into a Node-RED function node
+
+// set x to be a random integer between 0 and 3
+const x = Math.floor(Math.random() * 4)
+// random null or 5
+const auto = Math.random() < 0.5 ? null : 5
+const myIcon = Math.random() < 0.5 ? undefined : '👍'
+const showTime = Math.random() < 0.5 ? true : false
+
+const types = ['info', 'success', 'warning', 'error']
+
+msg._uib = {
+    // The command for the uibuilder client to execute
+    "command": "showOverlay", // Show an information overlay panel
+    // The options passed to the command (@since v7.5.0)
+    "options": {
+        // Optional. Defaults to type
+        "title": "Test from Node-RED",
+        // Optional. Sets the icon, colour (and heading if not provided)
+        //   info, success, warning, error (default: info)
+        "type": types[x],
+        // Optional. Either null for manual close or
+        //    number of seconds
+        "autoClose": auto,
+
+        // Optional. Defaults provided for each type
+        "icon": myIcon,
+        // Optional. Defaults to true
+        // "time": true,
+        // Optional. Will use msg.payload if not supplied.
+        // "content": "This is some content, <b>can be</b> <i>HTML</i>",
+    },
+    // By default, the client returns a confirmation.
+    // Set this to true to prevent that.
+    "quiet": true,
+}
+
+msg.payload = `This is some text to display. <p> It <u>can</u> contain <b style="color:purple;">HTML</b> as well</p>
+  <div>
+    Type: ${types[x]}, autoClose: ${auto}, icon override: ${myIcon}
+  </div>
+`
+
+return msg
+```
+
 ### `showStatus(boolean, parent=body)` - Show/hide a card shows the current status of the uibuilder client library :id=showStatus
 
 Simply add `uibuilder.showStatus(true)` early in your index.js custom code and a box will be added to the end of your page that will show all of the important settings in the UIBUILDER client. Use `uibuilder.showStatus()` to toggle the display.
@@ -1101,6 +1180,7 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`setStore`](#setStore)
 * [`showDialog`](#showDialog)
 * [`showMsg`](#showMsg)*
+* [`showOverlay`](#showOverlay)* - Displays an overlay window with customizable content and behavior.
 * [`showStatus`](#showStatus)*
 * [`start`](#start)
 * [`syntaxHighlight`](#syntaxHighlight)

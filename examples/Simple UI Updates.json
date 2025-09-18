@@ -1,0 +1,1402 @@
+[
+    {
+        "id": "36e46a8812418a38",
+        "type": "tab",
+        "label": "Simple Updates",
+        "disabled": false,
+        "info": "This tab contains an example uibuilder node\r\nalong with several example methods for\r\nshowing dynamic on-page text, HTML, JSON,\r\ntables or lists.",
+        "env": []
+    },
+    {
+        "id": "a2a4f9ce8175afa5",
+        "type": "group",
+        "z": "36e46a8812418a38",
+        "name": "Base Configuration",
+        "style": {
+            "fill": "#ffffbf",
+            "fill-opacity": "0.12",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "60a8489436d0ee43",
+            "ff050c4347776e67",
+            "86ffc76eb5838f6c",
+            "d5ffe9a264b1c424",
+            "73283e35f23ba905",
+            "e8b79e0479ad07fb",
+            "11c34f35abc00f11",
+            "475a22b945acf2c3",
+            "59e22173849a0305"
+        ],
+        "x": 54,
+        "y": 119,
+        "w": 812,
+        "h": 162
+    },
+    {
+        "id": "86fa2a8ae6f5f32e",
+        "type": "group",
+        "z": "36e46a8812418a38",
+        "name": "Front-end Code - Run after the uibuilder node has been deployed. \\n Sets up FE code, reloads connected clients.",
+        "style": {
+            "label": true,
+            "stroke": "#a4a4a4",
+            "fill-opacity": "0.33",
+            "color": "#000000",
+            "fill": "#ffffff"
+        },
+        "nodes": [
+            "36b3dea638283be6",
+            "46689bc058b9d4db",
+            "a39bd1d7474cf8ec",
+            "dc323f1cc56a3d6c",
+            "24a49e7875280cc1",
+            "d091b7d37c855385"
+        ],
+        "x": 54,
+        "y": 303,
+        "w": 582,
+        "h": 138
+    },
+    {
+        "id": "47345dbbf5ee7a85",
+        "type": "group",
+        "z": "36e46a8812418a38",
+        "name": "No-Code Examples. No JavaScript code needed, only some minimal, simple HTML. \\n ",
+        "style": {
+            "label": true,
+            "fill": "#ffffbf",
+            "fill-opacity": "0.31",
+            "color": "#000000"
+        },
+        "nodes": [
+            "f932f6aa7402f45f",
+            "d98538dd8bd00088",
+            "42c2560a89f83d7f"
+        ],
+        "x": 62,
+        "y": 481,
+        "w": 876,
+        "h": 686
+    },
+    {
+        "id": "f932f6aa7402f45f",
+        "type": "group",
+        "z": "36e46a8812418a38",
+        "g": "47345dbbf5ee7a85",
+        "name": "Example (2) using the no-code uib-update node to any identifiable HTML tag \\n ",
+        "style": {
+            "fill": "#ffffff",
+            "fill-opacity": "0.21",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "d3b66a1c8aafb1f4",
+            "a1c5793fee1d129e",
+            "230b14e3f0320ec0"
+        ],
+        "x": 94,
+        "y": 891,
+        "w": 772,
+        "h": 122
+    },
+    {
+        "id": "d98538dd8bd00088",
+        "type": "group",
+        "z": "36e46a8812418a38",
+        "g": "47345dbbf5ee7a85",
+        "name": "Example (1) Using the uib-topic attribute on ANY HTML tag. Updates automatically from the given topic. \\n ",
+        "style": {
+            "fill": "#ffffff",
+            "fill-opacity": "0.21",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "5c9697e02dccd2b3",
+            "d1d43c7a01c0bc8d",
+            "d14353b5112a3569",
+            "1baa31baa12b852d"
+        ],
+        "x": 88,
+        "y": 523,
+        "w": 824,
+        "h": 344
+    },
+    {
+        "id": "42c2560a89f83d7f",
+        "type": "group",
+        "z": "36e46a8812418a38",
+        "g": "47345dbbf5ee7a85",
+        "name": "Example (3) Using the <uib-var> custom HTML component \\n ",
+        "style": {
+            "fill": "#ffffff",
+            "fill-opacity": "0.2",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "532ec0e5a5152d88",
+            "1118681bef5c126b",
+            "b69aa587eb50ae6f",
+            "45c30769766809e0"
+        ],
+        "x": 94,
+        "y": 1043,
+        "w": 772,
+        "h": 98
+    },
+    {
+        "id": "1baa31baa12b852d",
+        "type": "group",
+        "z": "36e46a8812418a38",
+        "g": "d98538dd8bd00088",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "d9fdec7fcc85cd33",
+            "27f9456ac541a25b",
+            "5ec63813e8c5ec20",
+            "c93989c7c84fc30f",
+            "18a0973ccd8d33e6"
+        ],
+        "x": 114,
+        "y": 607,
+        "w": 772,
+        "h": 234
+    },
+    {
+        "id": "59e22173849a0305",
+        "type": "junction",
+        "z": "36e46a8812418a38",
+        "g": "a2a4f9ce8175afa5",
+        "x": 440,
+        "y": 160,
+        "wires": [
+            [
+                "ff050c4347776e67"
+            ]
+        ]
+    },
+    {
+        "id": "60a8489436d0ee43",
+        "type": "debug",
+        "z": "36e46a8812418a38",
+        "g": "a2a4f9ce8175afa5",
+        "name": "uib Std Output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 745,
+        "y": 160,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "ff050c4347776e67",
+        "type": "uibuilder",
+        "z": "36e46a8812418a38",
+        "g": "a2a4f9ce8175afa5",
+        "name": "",
+        "topic": "",
+        "url": "text-update-egs",
+        "okToGo": true,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.6.0",
+        "showMsgUib": true,
+        "title": "",
+        "descr": "",
+        "editurl": "vscode://file/src/uibRoot/text-update-egs/?windowId=_blank",
+        "x": 600,
+        "y": 200,
+        "wires": [
+            [
+                "60a8489436d0ee43"
+            ],
+            [
+                "86ffc76eb5838f6c",
+                "11c34f35abc00f11"
+            ]
+        ]
+    },
+    {
+        "id": "86ffc76eb5838f6c",
+        "type": "debug",
+        "z": "36e46a8812418a38",
+        "d": true,
+        "g": "a2a4f9ce8175afa5",
+        "name": "uib Control Output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 805,
+        "y": 220,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "e044ccbbc70ecc60",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "name": "Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1010,
+        "y": 160,
+        "wires": [
+            [
+                "6a4c985e0fc73c31"
+            ]
+        ]
+    },
+    {
+        "id": "ad3e6bf13e2c7f15",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "name": "Log Lvl 5",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"logLevel\",\"value\":5}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 1040,
+        "y": 200,
+        "wires": [
+            [
+                "6a4c985e0fc73c31"
+            ]
+        ]
+    },
+    {
+        "id": "86f9153ff0dc2d04",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 1050,
+        "y": 240,
+        "wires": [
+            [
+                "6a4c985e0fc73c31"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "6a4c985e0fc73c31",
+        "type": "link out",
+        "z": "36e46a8812418a38",
+        "name": "uib ctrls out",
+        "mode": "link",
+        "links": [
+            "d5ffe9a264b1c424"
+        ],
+        "x": 1175,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "d5ffe9a264b1c424",
+        "type": "link in",
+        "z": "36e46a8812418a38",
+        "g": "a2a4f9ce8175afa5",
+        "name": "uib-upd-egs - no cache",
+        "links": [
+            "6a4c985e0fc73c31",
+            "7cf15cdc25847e38",
+            "5c4452e742079f53",
+            "046d41ddfade6f54",
+            "f531dc510171631e",
+            "d74fc7af492d7a5c"
+        ],
+        "x": 305,
+        "y": 160,
+        "wires": [
+            [
+                "59e22173849a0305"
+            ]
+        ]
+    },
+    {
+        "id": "73283e35f23ba905",
+        "type": "link in",
+        "z": "36e46a8812418a38",
+        "g": "a2a4f9ce8175afa5",
+        "name": "uib-upd-egs - cached",
+        "links": [
+            "11c34f35abc00f11",
+            "230b14e3f0320ec0",
+            "d5772ba475aa309a",
+            "5c9697e02dccd2b3",
+            "45c30769766809e0",
+            "5ec63813e8c5ec20"
+        ],
+        "x": 225,
+        "y": 240,
+        "wires": [
+            [
+                "e8b79e0479ad07fb"
+            ]
+        ]
+    },
+    {
+        "id": "e8b79e0479ad07fb",
+        "type": "uib-cache",
+        "z": "36e46a8812418a38",
+        "g": "a2a4f9ce8175afa5",
+        "cacheall": false,
+        "cacheKey": "topic",
+        "newcache": true,
+        "num": 1,
+        "storeName": "default",
+        "name": "Cache (by topic)",
+        "storeContext": "context",
+        "varName": "uib_cache",
+        "x": 370,
+        "y": 200,
+        "wires": [
+            [
+                "ff050c4347776e67"
+            ]
+        ]
+    },
+    {
+        "id": "11c34f35abc00f11",
+        "type": "link out",
+        "z": "36e46a8812418a38",
+        "g": "a2a4f9ce8175afa5",
+        "name": "link out 64",
+        "mode": "link",
+        "links": [
+            "73283e35f23ba905"
+        ],
+        "x": 745,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "475a22b945acf2c3",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "g": "a2a4f9ce8175afa5",
+        "name": "Clear Cache",
+        "props": [
+            {
+                "p": "uibuilderCtrl",
+                "v": "clear cache",
+                "vt": "str"
+            },
+            {
+                "p": "cacheControl",
+                "v": "CLEAR",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 170,
+        "y": 200,
+        "wires": [
+            [
+                "e8b79e0479ad07fb"
+            ]
+        ]
+    },
+    {
+        "id": "d3b66a1c8aafb1f4",
+        "type": "uib-update",
+        "z": "36e46a8812418a38",
+        "g": "f932f6aa7402f45f",
+        "name": "Update myage span content \\n (#myage css selector)",
+        "topic": "",
+        "mode": "update",
+        "modeSourceType": "update",
+        "cssSelector": "#myage",
+        "cssSelectorType": "str",
+        "slotSourceProp": "payload",
+        "slotSourcePropType": "msg",
+        "attribsSource": "(\t    /* Set the class based on incoming value */\t    $lu := ($number(payload) > 60 ? \"warning\" : \"info\") & \" border\";\t\t    {\"class\": $lu}\t)",
+        "attribsSourceType": "jsonata",
+        "slotPropMarkdown": false,
+        "x": 540,
+        "y": 960,
+        "wires": [
+            [
+                "230b14e3f0320ec0"
+            ]
+        ]
+    },
+    {
+        "id": "a1c5793fee1d129e",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "g": "f932f6aa7402f45f",
+        "name": "Random myage (note need for \\n topic so that cached correctly)",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "*/1 8-23 * * *",
+        "once": false,
+        "onceDelay": "15",
+        "topic": "update-myage",
+        "payload": "$formatInteger($random() * 100, \"0\")\t",
+        "payloadType": "jsonata",
+        "x": 270,
+        "y": 960,
+        "wires": [
+            [
+                "d3b66a1c8aafb1f4"
+            ]
+        ]
+    },
+    {
+        "id": "230b14e3f0320ec0",
+        "type": "link out",
+        "z": "36e46a8812418a38",
+        "g": "f932f6aa7402f45f",
+        "name": "link out 65",
+        "mode": "link",
+        "links": [
+            "73283e35f23ba905"
+        ],
+        "x": 825,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "3aae18802d1de054",
+        "type": "comment",
+        "z": "36e46a8812418a38",
+        "name": "Example (4) Add this manually to index.js (see inside) - it does updates from the front-end instead",
+        "info": "```javascript\nuibuilder.onChange('msg', (msg) => {\n    If (msg.topic === 'todaytemp') {\n        // Use innerHTML if needed\n        $('#todaytemp').innerText = msg.payload\n    }\n})\n```",
+        "x": 390,
+        "y": 1360,
+        "wires": []
+    },
+    {
+        "id": "d5772ba475aa309a",
+        "type": "link out",
+        "z": "36e46a8812418a38",
+        "name": "link out 66",
+        "mode": "link",
+        "links": [
+            "73283e35f23ba905"
+        ],
+        "x": 745,
+        "y": 1420,
+        "wires": []
+    },
+    {
+        "id": "07cd2f6a6d08658c",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "name": "Random todaytemp (note need for \\n topic so that front-end code handles correctly)",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "*/1 8-23 * * *",
+        "once": false,
+        "onceDelay": "15",
+        "topic": "todaytemp",
+        "payload": "$formatInteger($random() * 100 - 50, \"0\")\t",
+        "payloadType": "jsonata",
+        "x": 240,
+        "y": 1420,
+        "wires": [
+            [
+                "d5772ba475aa309a"
+            ]
+        ]
+    },
+    {
+        "id": "532ec0e5a5152d88",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "g": "42c2560a89f83d7f",
+        "name": "Set command",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"myquote\",\"value\":\"\",\"quiet\":true}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "0 8-23 * * *",
+        "once": false,
+        "onceDelay": "15",
+        "topic": "",
+        "x": 220,
+        "y": 1100,
+        "wires": [
+            [
+                "1118681bef5c126b"
+            ]
+        ]
+    },
+    {
+        "id": "1118681bef5c126b",
+        "type": "http request",
+        "z": "36e46a8812418a38",
+        "g": "42c2560a89f83d7f",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://zenquotes.io/api/random",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 390,
+        "y": 1100,
+        "wires": [
+            [
+                "b69aa587eb50ae6f"
+            ]
+        ]
+    },
+    {
+        "id": "b69aa587eb50ae6f",
+        "type": "change",
+        "z": "36e46a8812418a38",
+        "g": "42c2560a89f83d7f",
+        "name": "Upd set value from web response",
+        "rules": [
+            {
+                "t": "set",
+                "p": "_uib.value",
+                "pt": "msg",
+                "to": "payload[0].h",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 620,
+        "y": 1100,
+        "wires": [
+            [
+                "45c30769766809e0"
+            ]
+        ]
+    },
+    {
+        "id": "45c30769766809e0",
+        "type": "link out",
+        "z": "36e46a8812418a38",
+        "g": "42c2560a89f83d7f",
+        "name": "link out 67",
+        "mode": "link",
+        "links": [
+            "73283e35f23ba905"
+        ],
+        "x": 825,
+        "y": 1100,
+        "wires": []
+    },
+    {
+        "id": "85b05013bc65a8ef",
+        "type": "comment",
+        "z": "36e46a8812418a38",
+        "name": "The uibuilder set command is used to change the variable in the front-end. \\n In this case, we will tell the component to use HTML - see the first comment contents above.",
+        "info": "",
+        "x": 1280,
+        "y": 1100,
+        "wires": []
+    },
+    {
+        "id": "f8bdfabd783cab21",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "name": "Set command",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\t   \"command\":\"set\",\t   \"prop\":\"egfilter\",\t   \"value\":$random()*100,\t    \"quiet\": true\t}",
+                "vt": "jsonata"
+            }
+        ],
+        "repeat": "",
+        "crontab": "*/1 8-23 * * *",
+        "once": false,
+        "onceDelay": "15",
+        "topic": "",
+        "x": 140,
+        "y": 1580,
+        "wires": [
+            [
+                "7cf15cdc25847e38"
+            ]
+        ]
+    },
+    {
+        "id": "7cf15cdc25847e38",
+        "type": "link out",
+        "z": "36e46a8812418a38",
+        "name": "link out 75",
+        "mode": "link",
+        "links": [
+            "d5ffe9a264b1c424"
+        ],
+        "x": 745,
+        "y": 1580,
+        "wires": []
+    },
+    {
+        "id": "a61cbcfc65c601b3",
+        "type": "comment",
+        "z": "36e46a8812418a38",
+        "name": "Example (5) Use the <uib-var> front-end component to apply a JavaScript `filter` function before display. (We won't cache this one) \\n The uibuilder set command is used to change the variable in the front-end. \\n Example filter sets # Decimal Places. Default is 0.",
+        "info": "",
+        "x": 490,
+        "y": 1520,
+        "wires": []
+    },
+    {
+        "id": "36b3dea638283be6",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "g": "86fa2a8ae6f5f32e",
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "setup all FE files",
+        "x": 115,
+        "y": 360,
+        "wires": [
+            [
+                "24a49e7875280cc1",
+                "d091b7d37c855385"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "46689bc058b9d4db",
+        "type": "template",
+        "z": "36e46a8812418a38",
+        "g": "86fa2a8ae6f5f32e",
+        "name": "index.html",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "plain",
+        "template": "<!doctype html>\n<html lang=\"en\"><head>\n\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <link rel=\"icon\" href=\"../uibuilder/images/node-blue.ico\">\n\n    <title>Updating text examples - Node-RED uibuilder</title>\n    <meta name=\"description\" content=\"Node-RED uibuilder - Updating text examples\">\n\n    <!-- Your own CSS (defaults to loading uibuilders css)-->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->\n    <script>\n        // Some filter functions for use with <uib-var> - these attach to the globalThis (AKA window) context\n        lang = () => navigator.language\n        yen = (v) => uibuilder.formatNumber( v, 2, 'ja-JP', { style: 'currency', currency: 'JPY' } )\n        mything = {\n            myfunc: function myfunc(x, y, z) {\n                return `\"x: ${x}, y: ${y}, z: ${z}\"`\n            }\n        }\n        const xxxx = 'xxxx'\n        globalThis.yyyy = 'yyyy'\n    </script>\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\"></script>\n    <script defer src=\"./index.js\"></script>\n    <!-- #endregion -->\n\n</head><body class=\"uib\">\n\n    <main>\n        <h1 class=\"with-subtitle\">Different ways of updating UI text</h1>\n        <div role=\"doc-subtitle\">Using the UIBUILDER IIFE library.</div>\n\n        <div id=\"more\">\n            <!-- '#more' is used as a parent for dynamic HTML content in examples -->\n        </div>\n\n        <p>\n            These are all different ways in which you can easily update on-page information from Node-RED data.\n            See the HTML code and matching commented flows on the example flow tab for more details.\n        </p>\n\n        <div>\n            <h2>No-Code</h2>\n            <p>\n                These do not require any JavaScript code. They can all be driven fully from Node-RED flows.\n            </p>\n\n            <article>\n                <h3>Example (1) via <code>uib-topic</code> attribute on <i>ANY</i> HTML tag</h3>\n                <p>\n                    Below this para is another that has a special attribute. The value of which matches a Node-RED\n                    topic.\n                    Send a msg with that topic to the uibuilder node and the <code>msg.payload</code> will be treated as\n                    HTML and applied\n                    to the para contents. Any <code>msg.attributes</code> will be applied to the attributes of the para.\n                </p>\n                <!-- uib-topic allows ANY HTML element to recieve msg content automatically -->\n                <p data-uib-topic=\"example1\"><i>[Default text - waiting for a msg.topic = \"example1\"]</i></p>\n\n                <h3>Example (1a) & (1b) Form elements using <code>uib-topic</code> attributes</h3>\n                <input type=\"text\" uib-topic=\"example1_\" value=\"hello\"> <br>\n                <input type=\"number\" uib-topic=\"example1a\" value=\"0\"> <br>\n                <input type=\"checkbox\" uib-topic=\"example1b\">\n            </article>\n\n            <article>\n                <h3>Example (2) via no-code uib-update node to any identifiable HTML tag</h3>\n                <p>\n                    The age below will be updated direct from Node-RED\n                    using a <code>uib-update</code> node.\n                </p>\n                <p id=\"div40\">\n                    This is some text and I want to tell you\n                    that my age is <b id=\"myage\">140</b>.\n                </p>\n            </article>\n\n            <article>\n                <h3>Example (3) via <code>&lt;uib-var></code> custom web component</h3>\n                <p>\n                    A remote <code>set</code> command is sent from Node-RED to update a uibuilder managed variable.\n                    Payload contains an HTML formatted a random quote from a web site.\n                </p>\n                <p id=\"div42\">\n                    <uib-var variable=\"myquote\" type=\"html\" style=\"width:100%;\">\n                        (waiting for quote)\n                    </uib-var>\n                </p>\n            </article>\n        </div>\n\n        <div>\n            <h2>Low-Code - HTML only</h2>\n            <p>\n                These use just HTML in index.html.\n                Either for the main logic (4) or for the filters.\n                The code in each case is minimal, consider these to be low-code examples.\n            </p>\n\n            <article>\n                <h3>Example (5) via <code>&lt;uib-var></code> custom web component with filter</h3>\n                <p>\n                    Each of the following is set by the same uibuilder managed variable.\n                    In this case filter formats the number with a fixed number of decimal places.\n                </p>\n                <p id=\"div43\">\n                    <uib-var variable=\"egfilter\">\n                        [waiting for egfilter value]\n                    </uib-var> (no filter, just the value)<br>\n                    <uib-var variable=\"egfilter\" filter=\"myFilter\">\n                        [waiting for egfilter value]\n                    </uib-var> (<code>myFilter</code> fn applied. 0DP)<br>\n                    <!-- NOTE: Args can only be numbers or strings -->\n                    <uib-var variable=\"egfilter\" filter=\"myFilter(2)\">\n                        [waiting for egfilter value]\n                    </uib-var>\n                    (<code>myFilter</code> fn with extra param (2) applied. 2DP)\n                </p>\n            </article>\n\n            <article>\n                <h3>Example (6) via <code>&lt;uib-var></code> custom web component using topic monitor</h3>\n                <p>\n                    Rather like example 1, this watches for a msg from Node-RED with the topic <code>mytopic/#1</code>,\n                    The msg payload replaces the slot content with TEXT (since we haven't used the optional\n                    <code>type=\"html\"</code> attribute).\n                </p>\n                <p id=\"div44\" class=\"border\">\n                    <uib-var topic=\"mytopic/#1\" id=\"uv5.1\">\n                        [waiting for egtopic/#1 value]\n                    </uib-var>\n                </p>\n            </article>\n\n            <article>\n                <h3>Example (7) <code>&lt;uib-var></code> using the attribute <code>type=\"list\"</code></h3>\n                <p>\n                    Here we listen for a msg from Node-RED with the topic 'mytopic/#7' where the payload contains an\n                    array of text entries. Each entry becomes a new list entry.\n                </p>\n                <p id=\"div7\" class=\"border\">\n                    <uib-var topic=\"mytopic/#7\" id=\"eg7\" type=\"list\">\n                        [waiting for egtopic/#7 value]\n                    </uib-var>\n                </p>\n            </article>\n\n            <article>\n                <h3>Example (8) <code>&lt;uib-var></code> using the attribute <code>type=\"table\"</code></h3>\n                <p>\n                    Here we listen for a msg from Node-RED with the topic 'mytopic/#8' where the payload contains an\n                    array of object entries. Each entry becomes a new row in a table. Each property of each entry\n                    becomes a column in the table. The first entry defines the columns.\n                </p>\n                <p id=\"div8\" class=\"border\">\n                    <uib-var topic=\"mytopic/#8\" id=\"eg8\" type=\"table\">\n                        [waiting for egtopic/#8 value]\n                    </uib-var>\n                </p>\n            </article>\n        </div>\n\n        <div>\n            <h2>Low-Code - Front-end JavaScript in index.js</h2>\n            <p>\n                These use some front-end JavaScript code in <code>index.js</code>.\n                The code in each case is minimal, consider these to be low-code examples.\n            </p>\n\n            <article>\n                <h3>Example (4) via front-end (browser) code</h3>\n                <p>\n                    The temperature below will be updated direct from Node-RED\n                    using local front-end code in <code>index.js</code>\n                </p>\n                <p id=\"div41\">\n                    The temperature today is\n                    <b id=\"todaytemp\" class=\"error border\">-20</b>℃.\n                </p>\n            </article>\n        </div>\n\n        <div>\n            <h2>Other <code>&lt;uib-var></code> tests</h2>\n            <p>\n                These are tests to make sure that the component logic is working correctly.\n                However, they also show alternative ways of working with the component.\n                See the HTML code for details of what is being displayed.\n                Only filter attributes are used to control the content in these.\n                No JavaScript is required for any of these.\n            </p>\n            <ul class=\"checklist\">\n                <li class=\"check\">\n                    [<uib-var filter=\"uibuilder.get('version')\">[...]</uib-var>]\n                    Only a filter, no var or topic. UIBUILDER version <code>uibuilder.get</code>.\n                </li>\n                <li class=\"check\">\n                    [<uib-var filter=\"get('version')\">[...]</uib-var>]\n                    Only a filter. UIBUILDER version shortcut <code>get</code>.\n                </li>\n                <li class=\"check\">\n                    Format number <code>uibuilder.formatNumber</code> and apply locale formatting<br>\n                    [<uib-var topic=\"mytopic/#1\" filter=\"uibuilder.formatNumber(2)\">...</uib-var>] Apply <code>lang</code>\n                    filter using default Locale (<uib-var filter=\"lang\">[...]</uib-var>)<br>\n                    [<uib-var topic=\"mytopic/#1\" filter=\"uibuilder.formatNumber(2, 'de-DE')\">...</uib-var>] Apply German\n                    locale to formatted number<br>\n                    <!-- This needs options in object and we can't pass that so use a custom function -->\n                    [<uib-var topic=\"mytopic/#1\" filter=\"yen\">...</uib-var>] Apply the <code>yen</code> filter to give a\n                    formatted currency.\n                </li>\n                <li class=\"check\">\n                    [<uib-var filter=\"mything.myfunc\">...</uib-var>]\n                    Fn in an object, no function arguments\n                </li>\n                <li class=\"check\">\n                    [<uib-var filter=\"mything.myfunc(1, 2, 3)\">...</uib-var>]\n                    Fn in an object, with arguments\n                </li>\n                <li class=\"check\">\n                    [<uib-var filter=\"mything.myfunc()\">...</uib-var>]\n                    Fn in an object, with empty arguments\n                </li>\n                <li class=\"check\">\n                    [<uib-var filter=\"mything.myfunc(xxxx, yyyy)\">...</uib-var>]\n                    Fn in an object, with global variables as function arguments\n                </li>\n            </ul>\n            <p>\n                These apply filter functions to a managed variable or topic\n            </p>\n            <ul class=\"checklist\">\n                <li class=\"check\">\n                    [<uib-var filter=\"myFilter(4)\" variable=\"egfilter\">...</uib-var>]\n                    Variable + filter, tag arguments in a different order\n                </li>\n                <li class=\"check\">\n                    [<uib-var filter=\"uibuilder.formatNumber(2)\" topic=\"mytopic/#1\">...</uib-var>]\n                    Topic + filter, tag arguments in a different order\n                </li>\n            </ul>\n        </div>\n\n    </main>\n\n</body></html>",
+        "output": "str",
+        "x": 320,
+        "y": 360,
+        "wires": [
+            [
+                "a39bd1d7474cf8ec"
+            ]
+        ]
+    },
+    {
+        "id": "a39bd1d7474cf8ec",
+        "type": "uib-save",
+        "z": "36e46a8812418a38",
+        "g": "86fa2a8ae6f5f32e",
+        "url": "text-update-egs",
+        "uibId": "ff050c4347776e67",
+        "folder": "src",
+        "fname": "",
+        "createFolder": true,
+        "reload": true,
+        "usePageName": false,
+        "encoding": "utf8",
+        "mode": 438,
+        "name": "",
+        "topic": "",
+        "x": 530,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "dc323f1cc56a3d6c",
+        "type": "template",
+        "z": "36e46a8812418a38",
+        "g": "86fa2a8ae6f5f32e",
+        "name": "index.js",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "javascript",
+        "syntax": "plain",
+        "template": "/* global $,uibuilder */\n\n// ! NOTE that defining this here will result in an early\n//   NOT FOUND error because it is defined too late for when the <uib-var>\n//   component is first loaded. It will work fine after that.\n//   Put in a script loaded BEFORE the uibuilder library if you want to avoid\n//   this.\n/** Custom filter function\n * Called from uib-var with the filter attribute set\n * Filter functions ALWAYS have the passed value as the first parameter\n * Other parameters are added after the value as in this case with dp\n * @param {*} val Current value of the managed variable\n * @param {number} dp # decimal places to show\n * @returns {string} Updated value trimmed to the required # of dps before display\n */\nfunction myFilter(val, dp) {\n    if (!dp) dp = 0\n    // console.log('myFilter called', arguments )\n    return (val).toFixed(dp)\n}\n\n// uibuilder.onChange('msg', (msg) => {\n//     if (msg.topic === 'todaytemp') {\n//         console.info('👁️ We got a `todaytemp` message from Node-RED')\n//         // Use innerHTML if needed\n//         $('#todaytemp').innerText = msg.payload\n//     }\n// })\n\n// uibuilder.onTopic('mytopic/#1', (msg) => {\n//     console.log( 'TOPIC \"mytopic/#1\" recieved')\n// })",
+        "output": "str",
+        "x": 330,
+        "y": 400,
+        "wires": [
+            [
+                "a39bd1d7474cf8ec"
+            ]
+        ]
+    },
+    {
+        "id": "24a49e7875280cc1",
+        "type": "change",
+        "z": "36e46a8812418a38",
+        "g": "86fa2a8ae6f5f32e",
+        "name": "index.html",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.html",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 205,
+        "y": 360,
+        "wires": [
+            [
+                "46689bc058b9d4db"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "d091b7d37c855385",
+        "type": "change",
+        "z": "36e46a8812418a38",
+        "g": "86fa2a8ae6f5f32e",
+        "name": "index.js",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.js",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 205,
+        "y": 400,
+        "wires": [
+            [
+                "dc323f1cc56a3d6c"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "0b17130da037b085",
+        "type": "comment",
+        "z": "36e46a8812418a38",
+        "name": "Examples of different ways to update text or HTML on your web page. \\n Try out the different methods and find out what works best for you.",
+        "info": "",
+        "x": 310,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "a90103b8776de604",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "name": "Send msg with given topic. Payload is value to show",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "13",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "15",
+        "topic": "mytopic/#1",
+        "payload": "$random() * 10000",
+        "payloadType": "jsonata",
+        "x": 260,
+        "y": 1740,
+        "wires": [
+            [
+                "5c4452e742079f53"
+            ]
+        ]
+    },
+    {
+        "id": "5c4452e742079f53",
+        "type": "link out",
+        "z": "36e46a8812418a38",
+        "name": "link out 76",
+        "mode": "link",
+        "links": [
+            "d5ffe9a264b1c424"
+        ],
+        "x": 745,
+        "y": 1740,
+        "wires": []
+    },
+    {
+        "id": "1d7eada0bf4714e4",
+        "type": "comment",
+        "z": "36e46a8812418a38",
+        "name": "Example (6) Use the <uib-var> front-end component to to monitor recieved messages with a given topic. (We won't cache this one) \\n Just send the message.",
+        "info": "",
+        "x": 490,
+        "y": 1680,
+        "wires": []
+    },
+    {
+        "id": "4713e2116ddc6c5f",
+        "type": "uib-tag",
+        "z": "36e46a8812418a38",
+        "name": "",
+        "topic": "",
+        "tag": "uib-var",
+        "tagSource": "",
+        "tagSourceType": "str",
+        "parent": "#more",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementId": "var05",
+        "elementIdSourceType": "str",
+        "position": "last",
+        "positionSourceType": "str",
+        "slotSourceProp": "[waiting for data]",
+        "slotSourcePropType": "str",
+        "attribsSource": "{\"topic\": \"mytopic/#1\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 320,
+        "y": 1840,
+        "wires": [
+            [
+                "046d41ddfade6f54"
+            ]
+        ]
+    },
+    {
+        "id": "91baa1ad1ffb54b0",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 75,
+        "y": 1840,
+        "wires": [
+            [
+                "4713e2116ddc6c5f",
+                "e7ba80c9d474c240"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "046d41ddfade6f54",
+        "type": "link out",
+        "z": "36e46a8812418a38",
+        "name": "link out 77",
+        "mode": "link",
+        "links": [
+            "d5ffe9a264b1c424"
+        ],
+        "x": 745,
+        "y": 1840,
+        "wires": []
+    },
+    {
+        "id": "d70baee6d9a7a852",
+        "type": "comment",
+        "z": "36e46a8812418a38",
+        "name": "Example of no-code addition of a <uib-var> tag to the web page, updates automatically using the same flow as #6 above - see top of output web page",
+        "info": "",
+        "x": 550,
+        "y": 1800,
+        "wires": []
+    },
+    {
+        "id": "e7ba80c9d474c240",
+        "type": "uib-tag",
+        "z": "36e46a8812418a38",
+        "name": "",
+        "topic": "",
+        "tag": "uib-var",
+        "tagSource": "",
+        "tagSourceType": "str",
+        "parent": "#more",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementId": "var06",
+        "elementIdSourceType": "str",
+        "position": "last",
+        "positionSourceType": "str",
+        "slotSourceProp": "[...]",
+        "slotSourcePropType": "str",
+        "attribsSource": "{\"filter\": \"lang\"}",
+        "attribsSourceType": "json",
+        "slotPropMarkdown": false,
+        "x": 320,
+        "y": 1880,
+        "wires": [
+            [
+                "046d41ddfade6f54"
+            ]
+        ]
+    },
+    {
+        "id": "eb8221235230f0a2",
+        "type": "comment",
+        "z": "36e46a8812418a38",
+        "name": "Example updated: 2024-07-16 \\n Requires UIBUILDER v7.0+",
+        "info": "",
+        "x": 720,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "5c9697e02dccd2b3",
+        "type": "link out",
+        "z": "36e46a8812418a38",
+        "g": "d98538dd8bd00088",
+        "name": "link out 93",
+        "mode": "link",
+        "links": [
+            "73283e35f23ba905"
+        ],
+        "x": 845,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "d1d43c7a01c0bc8d",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "g": "d98538dd8bd00088",
+        "name": "msg.topic|attributes",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "attributes",
+                "v": "{\"style\": \"background-color: yellow\", \"onclick\": \"uibuilder.eventSend(event)\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "15",
+        "topic": "example1",
+        "x": 250,
+        "y": 580,
+        "wires": [
+            [
+                "d14353b5112a3569"
+            ]
+        ]
+    },
+    {
+        "id": "d14353b5112a3569",
+        "type": "template",
+        "z": "36e46a8812418a38",
+        "g": "d98538dd8bd00088",
+        "name": "Send HTML, CSS and a script via the payload as a string",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<article>\n    <h3>My title</h3>\n    <p>\n        Any of this could be set dynamically using\n        <span class=\"_NR\">Node-RED</span>\n        <span id=\"_myspan\" style=\"padding:1rem;\">flows</span>.\n    </p>\n    <p>\n        The format of the \"Node-RED\" text is controlled\n        from a CSS class defined in this template.\n        The color of the text \"flows\" is controlled by a script\n        also defined in this template.\n    </p>\n    <p>\n        Now some form elements:\n    </p>\n</article>\n\n<style>\n    ._NR {\n        color: red;\n    }\n</style>\n\n<script>\n    console.log('Embedded Script running') // <- run every time we send the template\n    \n    // We only want to set this up once even if the template is sent again\n    if (!window._someuniquevar) {\n        let hue=0\n        // Change the background color every 1.5sec\n        setInterval(() => {\n            console.log(`Hue=${hue}`)\n            $('#_myspan').style.backgroundColor = `hsl(${hue}, 100%, 30%)`\n            hue += 10 // Increment the hue colour\n            if (hue > 359) hue=0 // reset back to zero. Hue 0<359\n        }, 1500)\n\n        // Define a new global flag:\n        window._someuniquevar = true\n    }\n</script>",
+        "output": "str",
+        "x": 570,
+        "y": 580,
+        "wires": [
+            [
+                "5c9697e02dccd2b3"
+            ]
+        ]
+    },
+    {
+        "id": "6b0d4ae9b8bcfd85",
+        "type": "comment",
+        "z": "36e46a8812418a38",
+        "name": "NOTE: If defining <uib-var> filter functions in the front-end, doing so in index.js \\n may result in early \"not found\" errors due to browser load timings. \\n Define them in scripts loaded before the uibuilder library. \\n See the client docs for more details. \\n NB: As always, feel free to PLAY with things first, \\n it will help you learn quicker.",
+        "info": "",
+        "x": 1230,
+        "y": 1240,
+        "wires": []
+    },
+    {
+        "id": "d9fdec7fcc85cd33",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "g": "1baa31baa12b852d",
+        "name": "(1a) msg.topic|attributes|value",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "attributes",
+                "v": "{\"id\":\"example1ainput\",\"style\":\"background-color: hsl(60deg 50% 50% / 70%)\",\"onclick\":\"uibuilder.eventSend(event)\"}",
+                "vt": "json"
+            },
+            {
+                "p": "value",
+                "v": "Value from Node-RED",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "15",
+        "topic": "example1a",
+        "x": 280,
+        "y": 720,
+        "wires": [
+            [
+                "5ec63813e8c5ec20"
+            ]
+        ]
+    },
+    {
+        "id": "27f9456ac541a25b",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "g": "1baa31baa12b852d",
+        "name": "(1b) msg.topic|attributes|value",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "value",
+                "v": "42",
+                "vt": "num"
+            },
+            {
+                "p": "attributes",
+                "v": "{\"id\":\"example1binput\",\"onclick\":\"uibuilder.eventSend(event)\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "15",
+        "topic": "example1b",
+        "x": 280,
+        "y": 760,
+        "wires": [
+            [
+                "5ec63813e8c5ec20"
+            ]
+        ]
+    },
+    {
+        "id": "5ec63813e8c5ec20",
+        "type": "link out",
+        "z": "36e46a8812418a38",
+        "g": "1baa31baa12b852d",
+        "name": "link out 94",
+        "mode": "link",
+        "links": [
+            "73283e35f23ba905"
+        ],
+        "x": 845,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "c93989c7c84fc30f",
+        "type": "comment",
+        "z": "36e46a8812418a38",
+        "g": "1baa31baa12b852d",
+        "name": "Example (1a) Numrtic input & (1b) Checkbox. Again show how to easily set values and attributes on \\n ANY tag via a simple msg and an attribute on the tag.",
+        "info": "",
+        "x": 500,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "18a0973ccd8d33e6",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "g": "1baa31baa12b852d",
+        "name": "(1b) msg.topic|checked",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "checked",
+                "v": "true",
+                "vt": "bool"
+            },
+            {
+                "p": "attributes",
+                "v": "{\"id\":\"example1binput\",\"onclick\":\"uibuilder.eventSend(event)\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "15",
+        "topic": "example1c",
+        "x": 260,
+        "y": 800,
+        "wires": [
+            [
+                "5ec63813e8c5ec20"
+            ]
+        ]
+    },
+    {
+        "id": "3bc3fea1d7af5066",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "name": "Send msg with given topic. Payload is an array of text/html entries",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "15",
+        "topic": "mytopic/#7",
+        "payload": "[\"Entry 1\",\"Entry 2\",\"Entry 3 with <span style='background-color:red;color:yellow;'>HTML</span>\"]",
+        "payloadType": "json",
+        "x": 290,
+        "y": 2020,
+        "wires": [
+            [
+                "f531dc510171631e"
+            ]
+        ]
+    },
+    {
+        "id": "f531dc510171631e",
+        "type": "link out",
+        "z": "36e46a8812418a38",
+        "name": "link out 136",
+        "mode": "link",
+        "links": [
+            "d5ffe9a264b1c424"
+        ],
+        "x": 745,
+        "y": 2020,
+        "wires": []
+    },
+    {
+        "id": "46f84c6a765c4b78",
+        "type": "comment",
+        "z": "36e46a8812418a38",
+        "name": "Example (7) <uib-var> using the attribute type=\"list\"",
+        "info": "",
+        "x": 250,
+        "y": 1980,
+        "wires": []
+    },
+    {
+        "id": "131a44e1d908cad3",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "name": "Send msg with given topic. Payload is an array of text/html entries",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "15",
+        "topic": "mytopic/#8",
+        "payload": "[{\"id\":1,\"name\":\"John Doe\",\"age\":28,\"email\":\"john.doe@example.com\",\"isActive\":true},{\"id\":2,\"name\":\"Jane Smith\",\"age\":34,\"email\":\"jane.smith@example.com\",\"isActive\":false},{\"id\":3,\"name\":\"Emily Johnson\",\"age\":45,\"email\":\"emily.johnson@example.com\",\"isActive\":true},{\"id\":4,\"name\":\"Michael Brown\",\"age\":52,\"email\":\"michael.brown@example.com\",\"isActive\":true},{\"id\":5,\"name\":\"Sarah Davis\",\"age\":30,\"email\":\"sarah.davis@example.com\",\"isActive\":false}]",
+        "payloadType": "json",
+        "x": 290,
+        "y": 2140,
+        "wires": [
+            [
+                "d74fc7af492d7a5c"
+            ]
+        ]
+    },
+    {
+        "id": "d74fc7af492d7a5c",
+        "type": "link out",
+        "z": "36e46a8812418a38",
+        "name": "link out 137",
+        "mode": "link",
+        "links": [
+            "d5ffe9a264b1c424"
+        ],
+        "x": 745,
+        "y": 2140,
+        "wires": []
+    },
+    {
+        "id": "419cf1cb94d3508e",
+        "type": "comment",
+        "z": "36e46a8812418a38",
+        "name": "Example (8) <uib-var> using the attribute type=\"table\"",
+        "info": "",
+        "x": 260,
+        "y": 2100,
+        "wires": []
+    },
+    {
+        "id": "f953435d84bb745f",
+        "type": "inject",
+        "z": "36e46a8812418a38",
+        "name": "As above but using an object instead of an array",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "15",
+        "topic": "mytopic/#8",
+        "payload": "{\"one\":{\"id\":1,\"name\":\"John Doe\",\"age\":28,\"email\":\"john.doe@example.com\",\"isActive\":true},\"two\":{\"id\":2,\"name\":\"Jane Smith\",\"age\":34,\"email\":\"jane.smith@example.com\",\"isActive\":false},\"three\":{\"id\":3,\"name\":\"Emily Johnson\",\"age\":45,\"email\":\"emily.johnson@example.com\",\"isActive\":true},\"four\":{\"id\":4,\"name\":\"Michael Brown\",\"age\":52,\"email\":\"michael.brown@example.com\",\"isActive\":true},\"five\":{\"id\":5,\"name\":\"Sarah Davis\",\"age\":30,\"email\":\"sarah.davis@example.com\",\"isActive\":false}}",
+        "payloadType": "json",
+        "x": 240,
+        "y": 2180,
+        "wires": [
+            [
+                "d74fc7af492d7a5c"
+            ]
+        ]
+    },
+    {
+        "id": "9d6ea882f98313bf",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-uibuilder": "7.5.0"
+        }
+    }
+]

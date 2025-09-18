@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2025-01-06 18:05:18
+updated: 2025-08-28 15:33:02
 ---
 
 The following custom web components are built into UIBUILDER:
@@ -11,6 +11,7 @@ The following custom web components are built into UIBUILDER:
 * [`<apply-template>`](#apply-template) - Apply the content of an HTML `<template>` to the UI without the need for JavaScript.
 * [`<uib-meta>`](#uib-meta) - Display page metadata such as the created/last-updated timestamp or size. Taken from the physical page file.
 * [`<uib-var>`](#uib-var) - Substitute dynamic data into the UI (similar to `{{varname}}` in frameworks).
+* [`<uib-control>`](#uib-control) - Change the styling and other parameters of the uibuilder client.
 
 ## Introduction
 
@@ -61,7 +62,7 @@ If this attribute is present (it does not need a value), the source template wil
 
 This is helpful if you need to ensure that the source template can only ever be applied once.
 
-Technically, the content of the template is ["adopted"](https://developer.mozilla.org/en-US/docs/Web/API/Document/adoptNode) and so is not longer available in the template.
+Technically, the content of the template is ["adopted"](https://developer.mozilla.org/en-US/docs/Web/API/Document/adoptNode) and so is no longer available in the template.
 
 ### Example  :id=apply-template-examples
 
@@ -322,6 +323,39 @@ loaded is `<uib-var variable="version"></uib-var>`.
 Use a `uib-tag` node:
 
 ![example uib-tag node](image.png)
+
+## Built-in: `<uib-control>` :id=uib-control
+
+> [!WARNING]
+> This component is currently EXPERIMENTAL.
+>
+> It may or may not work as expected. Use with caution.
+
+This component is designed to provide a discrete, expandable control panel that lets users change parameters and styling of uibuilder's front-end client.
+
+Included in your page using the `<uib-control>` tag, see the examples below on how to include this in your HTML.
+
+There is no need to separately load the component, that is done automatically by the uibuilder client library.
+
+
+### Attributes :id=uib-control-attribs
+
+These attributes can be added to the `<uib-control>` tag. Noting that attributes must always have _string_ values, e.g. `topic="my/topic/#1"`.
+
+No attributes are currently defined.
+
+### Styling
+
+The component tries to load `./index.css` as a stylesheet so that your own styling can be used in any output.
+
+Simply ensure that the file is served from the same URL location as your main page.
+
+### Examples :id=uib-control-examples
+
+#### ???
+
+```html
+```
 
 ## External components
 

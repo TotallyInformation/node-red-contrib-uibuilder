@@ -28,7 +28,7 @@
 
 // #region ----- Module level variables ---- //
 
-const { getSource, } = require('../libs/uiblib')
+const { getSource, } = require('../libs/uiblib.cjs')
 // const lowCode = require('../libs/low-code')
 
 /** Main (module) variables - acts as a configuration object

@@ -1,7 +1,8 @@
-/* eslint-disable class-methods-use-this */
+/* eslint-disable jsdoc/no-undefined-types */
+/* eslint-disable jsdoc/valid-types */
 /** Manage npm packages
  *
- * Copyright (c) 2021-2024 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2025 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -25,12 +26,13 @@
  * @typedef {import('../../typedefs.js').uibPackageJson} uibPackageJson
  */
 
-const { join } = require('node:path')
-const { copy, copySync, existsSync, writeJson } = require('./fs.cjs')
-const { runOsCmd, runOsCmdSync } = require('./uiblib.js')
+const { join, } = require('node:path')
+const { copy, copySync, existsSync, readJSONSync, writeJson, } = require('./fs.cjs')
+const { runOsCmd, runOsCmdSync, } = require('./uiblib.cjs')
+const uibGlobalConfig = require('./uibGlobalConfig.cjs')
 
 class UibPackages {
-    //#region ---- Class Variables ----
+    // #region ---- Class Variables ----
 
     /** PRIVATE Flag to indicate whether setup() has been run (ignore the false eslint error)
      * @type {boolean}
@@ -59,25 +61,40 @@ class UibPackages {
     dependencyProblems
 
     // OS Command options for running npm commands - https://nodejs.org/docs/latest-v18.x/api/child_process.html#child_processspawncommand-args-options
+    /**
+     * @type {{
+     *   cwd: string,
+     *   shell: boolean,
+     *   windowsHide: boolean,
+     *   timeout: number,
+     *   out: string,
+     *   verbose: boolean,
+     *   stream?: (...args: any[]) => void, // output stream
+     *   childProcess?: (...args: any[]) => void, // ref to child process
+     * }}
+     */
     npmCmdOpts = {
         cwd: '',
         shell: true,
         windowsHide: true,
         timeout: 300000, // 5min
         out: '', // uib addition - set to 'bare' when requesting JSON output
+        verbose: true, // @since 7.5.0 - default to verbose output
+        // stream: undefined, // Optional callback for streaming output
     }
 
-    //#endregion ---- ---- ----
+    // #endregion ---- ---- ----
 
     constructor() {
         /** Get npm's global install location */
+        // @ts-ignore
         this.globalPrefix = this.npmGetGlobalPrefix()
     } // ---- End of constructor ---- //
 
     /** Gets the global install folder for npm & saves to a class variable
-     * @returns {string} The npm global install folder name
+     * @returns {Promise<string>} The npm global install folder name
      */
-    async npmGetGlobalPrefix() { // eslint-disable-line class-methods-use-this
+    async npmGetGlobalPrefix() {
         // Does not need setup to have run
 
         const opts = this.npmCmdOpts
@@ -92,11 +109,15 @@ class UibPackages {
         /** @type {string} */
         let out
         try {
-            out = await runOsCmd('npm', args, opts)
+            const result = await runOsCmd('npm', args, opts)
+            out = result.all
         } catch (e) {
             const myerr = new Error(`runOsCmd/npmGetGlobalPrefix failed. ${e.message}`)
+            // @ts-ignore
             myerr.all = ''
+            // @ts-ignore
             myerr.code = 3
+            // @ts-ignore
             myerr.command = `npm ${args.join(' ')}`
             throw myerr
         }
@@ -105,9 +126,10 @@ class UibPackages {
     } // ---- End of npmGetGlobalPrefix ---- //
 
     /** Configure this class with uibuilder module specifics
-     * @param {uibConfig} uib uibuilder module-level configuration
+     * param {uibConfig} uib uibuilder module-level configuration
      */
-    setup( uib ) {
+    setup() {
+        const uib = uibGlobalConfig
         if ( !uib ) throw new Error('[uibuilder:UibPackages.js:setup] Called without required uib parameter or uib is undefined.')
         if ( uib.RED === null ) throw new Error('[uibuilder:UibPackages.js:setup] uib.RED is null')
         if ( uib.rootFolder === null ) throw this.#rootFldrNullError
@@ -142,12 +164,12 @@ class UibPackages {
         if (this.dependencyProblems) {
             setTimeout(() => {
                 this.log.warn('------------------------------------------------------')
-                this.log.warn([`🌐⚠️[uibuilder:package-mgt:setup] Problems with uibuilder root package.json.\nRoot folder: ${this.uib.rootFolder}\nPlease resolve before continuing.`, this.dependencyProblems,])
+                this.log.warn([`🌐⚠️[uibuilder:package-mgt:setup] Problems with uibuilder root package.json.\nRoot folder: ${this.uib.rootFolder}\nPlease resolve before continuing.`, this.dependencyProblems])
                 this.log.warn('------------------------------------------------------\n \n')
             }, 3000)
         }
 
-        // SYNC - minimum update of the in-memory pj.uibuilder.packages with enough info to be able to serve the folders
+        // SYNC - minimum update of the in-memory this.uibPackageJson.uibuilder.packages with enough info to be able to serve the folders
         this.pkgsQuickUpd()
 
         // At this point we have the refs to uib and RED & enough to be able to serve the libraries
@@ -159,19 +181,15 @@ class UibPackages {
         log.trace('🌐[uibuilder:package-mgt:setup] Package Management setup completed')
     } // ---- End of setup ---- //
 
-    /** Make sure that <uibRoot>/package.json exists and contains basic info
-     * @returns {boolean} True if successful
-     */
+    /** Make sure that <uibRoot>/package.json exists and contains basic info */
     createBasicPj() {
         if (!this.log) console.error('🌐🛑[uibuilder:package-mgt:createBasicPj] this.log not defined!')
         try {
-            const pj = copySync([__dirname, '..', '..', 'templates', 'uibroot-package.json'], [this.uib.rootFolder, 'package.json'])
+            copySync([__dirname, '..', '..', 'templates', 'uibroot-package.json'], [this.uib.rootFolder, 'package.json'])
             this.log.trace(`🌐[uibuilder[:package-mgt:createBasicPj] Basic package.json created in "${this.uib.rootFolder}"`)
-            return pj
         } catch (e) {
             this.log.error(`🌐🛑[uibuilder:package-mgt:createBasicPj] Basic package.json creation FAILED in "${this.uib.rootFolder}". ${e.message}`, e)
-            console.trace()
-            return null
+            return
         }
     }
 
@@ -185,7 +203,7 @@ class UibPackages {
         if ( this.uib === undefined ) throw this.#uibUndefinedError
         if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
 
-        const opts = { ...this.npmCmdOpts }
+        const opts = { ...this.npmCmdOpts, }
         opts.cwd = this.uib.rootFolder
         opts.out = 'bare' // returns just the output string
 
@@ -246,7 +264,7 @@ class UibPackages {
         // Make sure all dependencies are reflected in uibuilder.packagedetails
         for (const depName in pj.dependencies) {
             if ( !pj.uibuilder.packages[depName] ) {
-                pj.uibuilder.packages[depName] = { installedVersion: pj.dependencies[depName] }
+                pj.uibuilder.packages[depName] = { installedVersion: pj.dependencies[depName], }
             }
         }
         // Get folders for web:startup:serveVendorPackages()
@@ -281,7 +299,7 @@ class UibPackages {
         }
 
         try {
-            await writeJson(fileName, json, { spaces: 2 })
+            await writeJson(fileName, json, { spaces: 2, })
             this.log.trace(`🌐[uibuilder:package-mgt:writePackageJson] package.json file written successfully in ${folder}`)
         } catch (err) {
             this.log.error(`🌐🛑[uibuilder:package-mgt:writePackageJson] Failed to write package.json.  ${folder}`, this.packageJson, err)
@@ -297,7 +315,7 @@ class UibPackages {
         // Make sure only packages in uibRoot/package.json dependencies are processed
         if ( !pj.dependencies[pkgName] ) return
 
-        const packages =  pj.uibuilder.packages
+        const packages = pj.uibuilder.packages
 
         packages[pkgName] = {}
         const pkg = packages[pkgName]
@@ -353,10 +371,13 @@ class UibPackages {
             pkg.installedFrom = 'npm'
 
             // Add current version details
-            let res = await this.npmOutdated(pkgName)
+            let res = await this.npmOutdated(pkgName) ?? '{}'
             try {
                 res = JSON.parse(res)
-            } catch (e) { /* */ }
+            } catch (e) {
+                this.log.warn(`🌐⚠️[UibPackages:updIndividualPkgDetails] cannot parse npmOutdated output for ${pkgName}. ${e.message}`)
+                console.log(res)
+            }
             if ( res[pkgName] ) {
                 res = {
                     current: res[pkgName].current,
@@ -394,7 +415,85 @@ class UibPackages {
         this.writePackageJson(rootFolder, pj)
     }
 
- 
+    /** Get the instance node for a uibuilder instance
+     * @param {string} url The URL of the uibuilder instance
+     * @returns {uibNode|null} The instance node or null if not found
+     */
+    getInstanceNode(url) {
+        const RED = this.uib.RED
+
+        // Get the node id of the instance
+        let node
+        for (const [key, value] of Object.entries(this.uib.instances)) {
+            if (value === url) node = RED.nodes.getNode(key)
+        }
+
+        // // Make sure we got a node
+        // if (!node) {
+        //     RED.log.error(`🌐🛑[UibFs:getInstanceLiveHtmlFiles] No node found for url="${url}" - called before all nodes loaded in Node-RED?`)
+        // }
+
+        return node || null
+    }
+
+    /** Get the root folder for a uibuilder instance
+     * @throws Error if setup has not been called
+     * @param {string} url The URL of the uibuilder instance
+     * @returns {string|null} The root folder path or null if not found
+     */
+    getInstanceRootFolder(url) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:getInstanceRootFolder]')
+        if ( this.uib.RED === null ) throw new Error('uib.RED is null. Check setup order [UibFs:getInstanceRootFolder]')
+
+        // Get the node instance
+        const node = this.getInstanceNode(url)
+        // If no node found, throw error
+        if (!node) {
+            this.log.warn(`🌐⚠️[UibFs:getInstanceRootFolder] No node found for url="${url}" - called before all nodes loaded in Node-RED?`)
+            return null
+        }
+
+        // Get the root folder for the uibuilder instance
+        const rootFolder = node?.instanceFolder
+        return rootFolder || null
+    }
+
+    /** Get the list of npm script names for a uibuilder instance
+     * @param {string} url The URL of the uibuilder instance
+     * @returns {Array<string>} Array of npm script names or empty list if not found
+     */
+    getInstanceNpmScriptNames( url ) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+        if ( this.#isConfigured !== true ) {
+            this.log.warn('🌐⚠️[uibuilder:UibPackages:getInstanceNpmScriptNames] Cannot run. Setup has not been called.'
+            )
+            return []
+        }
+
+        // Get the instance root folder
+        // const rootFolder = getInstanceRootFolder(url)
+        const rootFolder = this.getInstanceRootFolder(url)
+        if (!rootFolder) {
+            // getInstanceRootFolder will have already logged a warning
+            return []
+        }
+
+        // Read the package.json file for the uibuilder instance
+        let pj
+        try {
+            pj = readJSONSync(join(rootFolder, this.packageJson))
+        } catch (e) {
+            this.log.error(`🌐🛑[uibuilder:UibPackages:getInstanceNpmScriptNames] Error reading package.json for url="${url}": ${e.message}`)
+            return []
+        }
+
+        // Get the list of npm script names for a uibuilder instance
+        const npmScriptNames = Object.keys(pj?.scripts || {})
+
+        return npmScriptNames
+    }
+
     /** Find install folder for a package - allows an array of locations to be given
      * NOTE: require.resolve can be a little ODD!
      *       When run from a linked package, it uses the link root not the linked location,
@@ -437,12 +536,12 @@ class UibPackages {
         }
         if (!this.uibPackageJson) return false
 
-        if (!this.uibPackageJson.uibuilder.packages[packageName]) return false // eslint-disable-line sonarjs/prefer-single-boolean-return
+        if (!this.uibPackageJson.uibuilder.packages[packageName]) return false
 
         return true
     } // ----  End of isPackageInstalled ---- //
 
-    //#region -- Manage Packages via npm --
+    // #region -- Manage Packages via npm --
 
     // TODO Use RED.events `UIBUILDER/npm` as option to show log during install
     /** Install or update an npm package
@@ -470,7 +569,7 @@ class UibPackages {
         if ( this.uib.rootFolder === null ) throw new Error('this.log.rootFolder is null')
         if ( toLocation === '' ) toLocation = this.uib.rootFolder
 
-        const opts = { ...this.npmCmdOpts }
+        const opts = { ...this.npmCmdOpts, }
         opts.cwd = toLocation
         opts.out = ''
 
@@ -492,15 +591,21 @@ class UibPackages {
             out = await runOsCmd('npm', args, opts)
         } catch (e) {
             const myerr = new Error(`runOsCmd/npmInstallPackage failed. ${e.message}`)
+            // @ts-ignore
             myerr.all = ''
+            // @ts-ignore
             myerr.code = 3
+            // @ts-ignore
             myerr.command = `npm ${args.join(' ')}`
             throw myerr
         }
         if (out.code > 0) {
             const myerr = new Error(`Install failed. Code: ${out.code}`)
+            // @ts-ignore
             myerr.all = out.all
+            // @ts-ignore
             myerr.code = out.code
+            // @ts-ignore
             myerr.command = out.command
             throw myerr
         }
@@ -525,7 +630,7 @@ class UibPackages {
             return ''
         }
 
-        const opts = { ...this.npmCmdOpts }
+        const opts = { ...this.npmCmdOpts, }
         opts.cwd = this.uib.rootFolder
         opts.out = ''
 
@@ -546,15 +651,21 @@ class UibPackages {
             out = await runOsCmd('npm', args, opts)
         } catch (e) {
             const myerr = new Error(`runOsCmd/npmRemovePackage failed. ${e.message}`)
+            // @ts-ignore
             myerr.all = ''
+            // @ts-ignore
             myerr.code = 3
+            // @ts-ignore
             myerr.command = `npm ${args.join(' ')}`
             throw myerr
         }
         if (out.code > 0) {
             const myerr = new Error(`Removal failed. Code: ${out.code}`)
+            // @ts-ignore
             myerr.all = out.all
+            // @ts-ignore
             myerr.code = out.code
+            // @ts-ignore
             myerr.command = out.command
             throw myerr
         }
@@ -577,7 +688,7 @@ class UibPackages {
             return
         }
 
-        const opts = { ...this.npmCmdOpts }
+        const opts = { ...this.npmCmdOpts, }
         opts.cwd = this.uib.rootFolder
         opts.out = 'bare' // returns just the output string
 
@@ -590,11 +701,15 @@ class UibPackages {
         /** @type {string} */
         let out
         try {
-            out = await runOsCmd('npm', args, opts)
+            const result = await runOsCmd('npm', args, opts)
+            out = result.all
         } catch (e) {
             const myerr = new Error(`runOsCmd/npmOutdated failed. ${e.message}`)
+            // @ts-ignore
             myerr.all = ''
+            // @ts-ignore
             myerr.code = 3
+            // @ts-ignore
             myerr.command = `npm ${args.join(' ')}`
             throw myerr
         }
@@ -621,7 +736,7 @@ class UibPackages {
         // if ( toLocation === '' ) toLocation = this.uib.rootFolder
         const toLocation = this.uib.rootFolder
 
-        const opts = { ...this.npmCmdOpts }
+        const opts = { ...this.npmCmdOpts, }
         opts.cwd = toLocation
         opts.out = ''
 
@@ -643,15 +758,21 @@ class UibPackages {
             out = await runOsCmd('npm', args, opts)
         } catch (e) {
             const myerr = new Error(`runOsCmd/npmInstallPackage failed. ${e.message}`)
+            // @ts-ignore
             myerr.all = ''
+            // @ts-ignore
             myerr.code = 3
+            // @ts-ignore
             myerr.command = `npm ${args.join(' ')}`
             throw myerr
         }
         if (out.code > 0) {
             const myerr = new Error(`Install failed. Code: ${out.code}`)
+            // @ts-ignore
             myerr.all = out.all
+            // @ts-ignore
             myerr.code = out.code
+            // @ts-ignore
             myerr.command = out.command
             throw myerr
         }
@@ -662,8 +783,99 @@ class UibPackages {
         // return /** @type {string} */ (all)
     }
 
-    //#endregion -- ---- --
-} // ----- End of UibPackages ----- //
+    // #endregion -- ---- --
+
+    /** Run an npm script in the context of a specific URL (uibuilder instance)
+     * @param {string} scriptName The name of the npm script to run
+     * @param {string} url The URL (name) of the uibuilder instance
+     * @param {Function} [streamOutput] Optional. If provided, will be called with each chunk of output as soon as it arrives
+     * @returns {Promise<{all:string, code:number, command:string, pid?: number}>} Combined stdout/stderr, return code of the executed command, with .kill() method
+     * @throws {Error} If this.log is undefined (setup not called)
+     * @example
+     * const promise = npmRunScript('build', 'myurl', chunk => console.log(chunk))
+     * // To kill:
+     * promise.kill()
+     */
+    npmRunScript(scriptName, url, streamOutput) {
+        if ( this.log === undefined ) throw this.#logUndefinedError
+
+        if ( this.#isConfigured !== true ) {
+            throw new Error(`runOsCmd/npmRunScript failed for url="${url}". Cannot run. Setup has not been called`)
+        }
+
+        if ( !scriptName || scriptName === '' ) {
+            throw new Error(`runOsCmd/npmRunScript failed for url="${url}". No script name provided.`)
+        }
+
+        // Get the instance root folder
+        const rootFolder = this.getInstanceRootFolder(url)
+        if (!rootFolder) {
+            throw new Error(`runOsCmd/npmRunScript failed for url="${url}". No root folder`)
+        }
+
+        const opts = { ...this.npmCmdOpts, }
+        opts.cwd = rootFolder
+        opts.out = ''
+        opts.verbose = false
+        if (typeof streamOutput === 'function') {
+            // @ts-ignore
+            opts.stream = streamOutput
+        }
+        let childProcessRef = null
+        opts.childProcess = (cp) => {
+            childProcessRef = cp
+        }
+
+        const args = [
+            !['outdated', 'update', 'install'].includes(scriptName) ? 'run' : '',
+            scriptName,
+            '--long',
+            '--no-fund',
+            '--no-audit',
+            '--no-update-notifier',
+            '--no-progress',
+            '--color=false',
+        ]
+
+        /** Use runOsCmd directly to get the child process and allow kill
+         * @type {Promise<{all:string, code:number, command:string, pid?: number}>}
+         */
+        const promiseBase = new Promise((resolve, reject) => {
+            // Use then/catch for async
+            runOsCmd('npm', args, opts)
+                .then((result) => {
+                    if (result.code > 1) {
+                        const myerr = new Error(`Run script failed for url="${url}". Code: ${result.code}`)
+                        // @ts-ignore
+                        myerr.all = result.all
+                        // @ts-ignore
+                        myerr.code = result.code
+                        // @ts-ignore
+                        myerr.command = result.command
+                        reject(myerr)
+                        return
+                    }
+                    resolve(result)
+                    return
+                })
+                .catch((e) => {
+                    const myerr = new Error(`runOsCmd/npmRunScript failed for url="${url}". ${e.message}`)
+                    // @ts-ignore
+                    myerr.all = ''
+                    // @ts-ignore
+                    myerr.code = 3
+                    // @ts-ignore
+                    myerr.command = `npm ${args.join(' ')}`
+                    reject(myerr)
+                })
+        })
+        // Attach kill method
+        const promise = promiseBase
+        // @ts-ignore
+        promise.pid = childProcessRef ? childProcessRef.pid : null
+        return promise
+    } // ---- End of npmRunScript ---- //
+}
 
 /** Singleton model. Only 1 instance of UibWeb should ever exist.
  * Use as: `const packageMgt = require('./package-mgt.js')`
@@ -671,5 +883,3 @@ class UibPackages {
 // @ts-ignore
 const uibPackages = new UibPackages()
 module.exports = uibPackages
-
-// EOF

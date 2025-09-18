@@ -3,7 +3,7 @@ title: Standardised msg._client properties for authenticated clients
 description: |
   msg._client is a standardised message property added to both UIBUILDER and FlowFuse's Dashboard 2.0 outputs when an authenticated client is detected. Authentication happens using an external tool such as FlowFuse authentication, Cloudflare access, Authelia, Authentik, Keycloak, etc.
 created: 2024-08-04 12:49:35
-updated: 2024-09-06 13:27:03
+updated: 2025-07-12 16:26:13
 ---
 
 > [!NOTE]
@@ -16,6 +16,9 @@ updated: 2024-09-06 13:27:03
 > In general, try to make web pages loadable by anyone but do not output any sensitive data.
 >
 > Alternatively, you can also block and redirect access to the web page(s) as well. Either via a standard proxy or by using [uibuilder's ExpressJS middleware feature](/uib-configuration#ltuibrootgtconfiguibmiddlewarejs).
+
+> [!TIP]
+> Check out the [uibuilder settings in Node-RED's settings.js](/uib-configuration#settingsjs) for information on the message, client and socket.io hooks. These allow you to enhance or override the `msg._client` data, simulate user authentication, block message send/receive, and redirect unauthenticated users.
 
 ## msg._client properties
 
