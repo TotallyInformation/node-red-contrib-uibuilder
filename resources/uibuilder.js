@@ -142,7 +142,7 @@ function doPkgUpd(evt) {
  * @param {object} node A reference to the panel's `this` object
  * @param {JQuery<HTMLElement>} element the jQuery DOM element to which any row content should be added
  * @param {number} index the index of the row
- * @param {string|*} data data object for the row. {} if add button pressed, else data passed to addItem method
+ * @param {string|object} data data object for the row. {} if add button pressed, else data passed to addItem method
  */
 function addPackageRow(node, element, index, data) {
     let hRow = ''
@@ -180,9 +180,11 @@ function addPackageRow(node, element, index, data) {
 
         // if wanted !== installed, show update
         let upd = ''
+        // Replace all characters except a-z, A-Z, 0-9, _, -, and . with _ Fixes Issue #556
+        const uniqueId = data.replace(/[^a-zA-Z0-9_\-\.]/g, '_')
         if ( pkgSpec.outdated && pkgSpec.outdated.wanted && pkgSpec.installedVersion !== pkgSpec.outdated.wanted ) {
-            upd = `<button id="upd_${data}" style="color:orange;background-color:black;" title="Click to update (or install again to get a non-standard version)">UPDATE: ${pkgSpec.outdated.wanted}</button>`
-            $('#node-input-packageList').on('click', `#upd_${data}`, { pkgName: data, node: node, }, doPkgUpd)
+            upd = `<button id="upd_${uniqueId}" style="color:orange;background-color:black;" title="Click to update (or install again to get a non-standard version)">UPDATE: ${pkgSpec.outdated.wanted}</button>`
+            $('#node-input-packageList').on('click', `#upd_${uniqueId}`, { pkgName: data, node: node, }, doPkgUpd)
         }
 
         // addItem method was called with a packageName passed
@@ -1065,7 +1067,7 @@ function enableEdit(urlErrors, enable = true) {
 } // ---- End of enableEdit ---- //
 
 /** Show key data for URL changes
- * @param {*} node Reference to node definition
+ * @param {object} node Reference to node definition
  * @param {*} value Value
  */
 function debugUrl(node, value) {
@@ -1090,7 +1092,7 @@ function debugUrl(node, value) {
  * Max 20 chars, can't contain any of ['..', ]
  * @param {string} value The url value to validate
  * @returns {boolean} true = valid
- * @this {*}
+ * @this {object}
  */
 function validateUrl(value) {
     if ($('#node-input-url').is(':visible')) {
@@ -1234,7 +1236,7 @@ function validateUrl(value) {
 /** Validation Function: Validate the session length property
  * If security is on, must contain a number
  * @returns {boolean} true = valid, false = not valid
- * @this {*}
+ * @this {object}
  */
 // function validateSessLen() {
 //     // NB: `this` is the node instance configuration as at last press of Done
@@ -1270,7 +1272,7 @@ function validateUrl(value) {
  * In uibuilder.js, can change uib.reDeployNeeded to be the last version before the v that made a breaking change.
  * @example If the node was last deployed with v4.1.2 and the current version is now v5.0.0, set uib.reDeployNeeded to '4.1.2'
  * @returns {boolean} True if valid
- * @this {*}
+ * @this {object}
  */
 function validateVersion() {
     if ( this.url !== undefined ) { // Undefined means that the node hasn't been configured at all yet
