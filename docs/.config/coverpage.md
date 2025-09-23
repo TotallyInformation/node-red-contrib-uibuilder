@@ -14,12 +14,11 @@ for Node-RED
 
 > Easy data-driven web UI's. Batteries included!
 
-- No-code and Low-code options, driven from Node-RED
-- Dynamic data interchange between Node-RED and the browser
-- Can use any or no front-end framework
-- Can integrate with existing web development workflows
+UIBUILDER is a Node-RED add-on that makes it easy to build custom web UIs that talk to your flows. It supports no-code &amp; low-code nodes (create UI from Node-RED itself), full-code front-end templates you edit, and everything in between.
 
-[GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
-[Get Started](about)
-[Quick Start](walkthrough1)
+*No-code and Low-code options, driven from Node-RED* || *Dynamic data interchange Node-RED <--> browser* || *No front-end framework needed but use any of them if you want to* || *Integrate with existing web development workflows*
+
+[About](about)
+[Get Started](quickstart)
+[Full Walkthrough](walkthrough1)
 
