@@ -21,7 +21,7 @@
 
 # UIBUILDER FOR Node-RED
 
-<div style="color:#ffcb6b;font-size:1.5em;margin-bottom:1.4em;"> Easy data-driven web UI's. Batteries included!</div>
+> Easy data-driven web UI's. Batteries included!
 
 UIBUILDER is a Node-RED add-on that makes it easy to build custom web UIs that talk to your flows. It supports no-code &amp; low-code nodes (create UI from Node-RED itself), full-code front-end templates you edit, and everything in between.
 
