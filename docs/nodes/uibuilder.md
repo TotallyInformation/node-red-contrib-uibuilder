@@ -3,7 +3,7 @@ title: The main uibuilder node
 description: |
   Usage and configuration.
 created: 2023-02-05 16:31:39
-updated: 2025-08-12 18:14:50
+updated: 2025-09-24 15:59:35
 ---
 
 > [!note]
@@ -66,12 +66,12 @@ The Topic string will be added to messages being sent to the front-end if the in
 
 #### Template Settings
 
+UIBUILDER templates let you have a rapid prototype for your front-end code. A template loads a complete set of front-end files and folders along with a README and an npm style `package.json` file and a `src` folder containing at least an `index.html`, `index.css`, and `index.js` file. This allows a template to be a complete working model, ready to go.
+
 > [!NOTE]
 > Changing the template overwrites existing files with the same names in your `<uibRoot>/<url>` server folder. So make sure you take copies before pressing the Load button if you don't want to loose them.
 
-uibuilder Templates let you have a rapid prototype for your front-end code. The Templates load a complete set of front-end files along with a README and an npm style `package.json` file. This allows a template to be a complete working model, ready to go.
-
-As at uibuilder v5, there are 4 built-in Templates plus the ability to load external templates from GitHub and elsewhere. More information on templates can be found in the [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) page and in the [Creating Templates](creating-templates) page.
+As at uibuilder v7, there is 1 built-in internal and 4 pre-defined external templates plus the ability to load custom external templates from GitHub and elsewhere. More information on templates can be found in the [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) page and in the [Creating Templates](creating-templates) page.
 
 ### Files Tab
 

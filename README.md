@@ -63,7 +63,7 @@ You will need to restart Node-RED if installing manually.
 
 For a super-quick start, once installed, please see the [Getting Started](quickstart) guide.
 
-For more guidance, check out the [First-timers walkthrough](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/walkthrough1) in the documentation and the [Introduction Video](https://www.youtube.com/watch?v=IVWR_3cx05A).
+For more guidance, check out the [First-timers walkthrough](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/walkthrough1) and the [Introduction Video](https://www.youtube.com/watch?v=IVWR_3cx05A).
 
 Also try out the built-in example flows (via the Node-RED Import menu).
 

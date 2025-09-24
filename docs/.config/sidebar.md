@@ -1,5 +1,5 @@
 * [About](/about.md)
-* [Getting Started](/using/getting-started.md)
+* [Quick Start](/using/quickstart.md)
 * Using <span class="uib-name"><span class="uib-red">ui</span>builder</span>
   * [A first-timers walkthough](walkthrough1.md "Let's get started!")
   * [Configuring](uib-configuration.md "Configure the UIBUILDER platform. Affects all uibuilder nodes")

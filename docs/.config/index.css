@@ -460,6 +460,15 @@ p:has(> a[href*="tips/"]):before {
     font-size: 0.9em;
 }
 
+details {
+    margin: 1.5rem 0;
+}
+summary > h2 {
+    display: inline;
+    border-bottom-width: 0 !important;
+    cursor: pointer;
+}
+
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }

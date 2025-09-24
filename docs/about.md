@@ -3,13 +3,14 @@ title: About UIBUILDER for Node-RED
 description: |
   UIBUILDER provides tools for easily creating data-driven web applications using the Node-RED low-code programming platform.
 created: 2024-05-02 11:17:20
-updated: 2025-09-04 11:13:32
+updated: 2025-09-24 17:09:39
 ---
 
-> [!NOTE]
-> You can learn more about how UIBUILDER for Node-RED works by visiting the [DeepWiki](https://deepwiki.com/TotallyInformation/node-red-contrib-uibuilder) entry.
->
-> DeepWiki is an AI-powered knowledge base that can help you find answers to your questions about UIBUILDER.
+Want to get a quick start? See the [Quick Start Guide](using/quickstart). Or maybe you want a [Full Walkthrough](walkthrough1) instead?
+
+There is also a series of video tutorials on [YouTube](https://www.youtube.com/watch?v=IVWR_3cx05A&list=PL9IEADRqAal3mG3RcF0cJaaxIgFh3GdRQ).
+
+[tip:rotate]
 
 ## What is it?
 
@@ -64,6 +65,8 @@ UIBUILDER simply does the complex background tasks for you and then gets out of 
 ### Node-RED
 
 [Node-RED](https://nodered.org/) is a flow-based programming tool, originally developed by IBM's Emerging Technology Services team and now a part of the JS Foundation. It provides a browser-based editor that makes it easy to wire together flows using the wide range of nodes in the palette that can be deployed to its runtime in a single-click.
+
+![uibuilder Basic Flow Example](/images/uib-basic-flow-eg.png)
 
 ### ExpressJS
 
@@ -121,3 +124,4 @@ These are the nodes available as part of UIBUILDER.
 ## Additional Information
 
 [Additional Info](.config/links.md ':include')
+

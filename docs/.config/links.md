@@ -3,7 +3,7 @@ title: Additional links for UIBUILDER
 description: |
   Related information
 created: 2024-05-02 11:47:18
-updated: 2025-01-06 17:23:33
+updated: 2025-09-24 16:52:04
 ---
 
 - ![uib](https://github.com/TotallyInformation/node-red-contrib-uibuilder/raw/main/front-end/images/node-blue.ico) [UIBUILDER for Node-RED](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
@@ -29,3 +29,5 @@ updated: 2025-01-06 17:23:33
 - 🚤 [HotNipi Gauge Web Component](https://github.com/TotallyInformation/gauge-hotnipi) - A really nice looking gauge component. Works with Node-RED, UIBUILDER, or stand-alone.
 
 - 🧪 [Array Grouper](https://github.com/TotallyInformation/groupit) - Stand-alone function to reshape an array of objects.
+
+- Learn more about how UIBUILDER for Node-RED works by visiting the [DeepWiki](https://deepwiki.com/TotallyInformation/node-red-contrib-uibuilder) entry. DeepWiki is an AI-powered knowledge base that can help you find answers to your questions about UIBUILDER.

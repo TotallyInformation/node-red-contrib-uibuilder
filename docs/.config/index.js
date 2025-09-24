@@ -159,7 +159,7 @@ window.$docsify = {
 
                 rotateInterval = setInterval(() => {
                     rotatingTips.forEach((tipId) => {
-                        console.log('Rotating tip:', tipId)
+                        // console.log('Rotating tip:', tipId)
                         const randomTip = getRandomTip()
                         if (randomTip) {
                             const tipMarkdown = getSingleTipFile(randomTip)
@@ -169,7 +169,7 @@ window.$docsify = {
                                 // Convert markdown to HTML using Docsify's internal function
                                 tipElement.innerHTML = `
                                     <div class="alert callout tip">
-                                        <p class="title"><span class="icon icon-tip"></span>Tip</p>
+                                        <p class="title"><span class="icon icon-tip"></span>Tip <span style="color:darkgrey;font-size:small;">&nbsp;&nbsp;(Changes every 15sec)</span></p>
                                         <p>
                                             <em>${randomTip.replace('.md', '').replace('uibuilder','<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')}</em>
                                         </p><p>
@@ -180,7 +180,7 @@ window.$docsify = {
                             }
                         }
                     })
-                }, 60000) // 60 seconds = 1 minute
+                }, 15000) // 60 seconds = 1 minute
             }
 
             // Process tip shortcodes in markdown
@@ -245,12 +245,14 @@ window.$docsify = {
                         content = content.replace(match, `
 
 <div id="${tipType}-${tipId}" class="doctips doc${tipType}" title="${tipTitle}">
-
-> [!TIP]
-> _${tipTitle}_
->
-> ${tipMarkdown}
-
+<div class="alert callout tip">
+    <p class="title"><span class="icon icon-tip"></span>Tip <span style="color:darkgrey;font-size:small;">&nbsp;&nbsp;(Changes every 15sec)</span></p>
+    <p>
+        <em>${tipTitle}</em>
+    </p><p>
+        ${tipMarkdown}
+    </p>
+</div>
 </div>
 `
                         )
@@ -286,7 +288,7 @@ window.$docsify = {
 
         // My custom plugin
         function ti(hook, vm) {
-            console.log({hook,vm})
+            // console.log({hook,vm})
 
             const orgName = 'Julian Knight (Totally Information)'
             const orgUrl = 'https://it.knightnet.org.uk'

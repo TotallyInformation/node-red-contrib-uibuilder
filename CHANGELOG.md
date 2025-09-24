@@ -33,6 +33,8 @@ NOTE: If using the `uibRouter` SPA client library, please note that the startup 
 
 ### 📌 Highlights
 
+* New "Quick Start" guides added to the documentation. Two main approaches: no-code/low-code and low-code/custom code. Each approach has a step-by-step guide to get you started quickly. In addition, several documentation pages now have rotating "tips" selected randomly from a list, they change every 15 seconds.
+
 * A new browser overlay **notification message feature** available. Using `showOverlay` allows messages of different types (info, success, warning, and error) to be displayed to users in the browser. This can be triggered from Node-RED or from front-end code. Messages can be auto-dismissed after a few seconds (the default), or retained until manually dismissed.
 
 * The `uibuilder` node now has an **extra tab** "scripts" which lets you *run npm scripts* defined in your instance root's package.json file.
@@ -191,6 +193,7 @@ For the updated navigation menus, the following CSS variables (show with their d
 
 ### Documentation
 
+* **NEW** Quickstart guide completely rewritten. Now has two main approaches: no-code/low-code and low-code/custom code. Each approach has a step-by-step guide to get you started quickly.
 * Rearranged the sidebar for additional clarity.
 * **NEW** "Reactive UI's" in the client section. This is a new section that describes how to use the reactive attributes in UIBUILDER to create dynamic web pages with minimal code. It includes a summary of the available attributes and how to use them.
 * Updated `uib-configuration` documentation to show the latest settings.js options including the msg, client and socket.io hooks. These allow you to enhance or override the `msg._client` data, simulate user authentication, block message send/receive, and redirect unauthenticated users.

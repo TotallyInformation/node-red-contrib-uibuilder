@@ -3,7 +3,7 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-09-15 15:23:17
+updated: 2025-09-24 17:19:28
 author: Julian Knight (Totally Information)
 ---
 
@@ -174,6 +174,7 @@ None
 
 ## Ideas
 
+* Improve `[tips]`. Allow pause/start on rotation. Add an `all` option.
 * Move uib-brand.css to a new sub-package. Publish separately.
 * Enhance CSS with ideas from [OpenProps](https://open-props.style).
 * Move all runtime code to ESM's and rely on ESBUILD to build the runtime. This will allow us to use the latest JS features but retain backwards compatibility.
