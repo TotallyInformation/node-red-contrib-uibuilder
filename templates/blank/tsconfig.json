@@ -1,14 +1,18 @@
 {
-  "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
-    "noEmit": true,
-    "strict": true,
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "baseUrl": "./src",
-    "typeRoots": ["./types"]
-  },
-  "include": ["types", "src/**/*.js"]
+    "compilerOptions": {
+        "allowJs": true,
+        "checkJs": true,
+        "noEmit": true,
+        "strict": true,
+        "target": "ES2020",
+        "module": "ESNext",
+        "baseUrl": "./src",
+        "typeRoots": [
+            "./types"
+        ]
+    },
+    "include": [
+        "types/**/*.d.ts",
+        "src/**/*.{js,cjs,mjs}"
+    ]
 }

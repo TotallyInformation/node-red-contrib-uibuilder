@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/valid-types */
 /** UIBUILDER's global configuration data
  * Moved from nodes/uibuilder/uibuilder.js to here to for clarity and central loading. @since v7.3.0
  *
@@ -26,7 +27,7 @@
  */
 
 const path = require('path')
-const fslib  = require('./fs.cjs')   // File/folder handling library (by Totally Information)
+const fslib = require('./fs.cjs') // File/folder handling library (by Totally Information)
 
 const pkgJson = fslib.readJSONSync(path.join( __dirname, '..', '..', 'package.json' ))
 /** @type {uibConfig} */

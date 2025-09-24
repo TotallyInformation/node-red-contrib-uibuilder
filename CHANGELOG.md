@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2025-07-10 11:20:28
+updated: 2025-09-07 21:24:01
 ---
 
 # Changelog
@@ -9,6 +9,7 @@ updated: 2025-07-10 11:20:28
 Please see the documentation for archived changelogs - a new archive is produced for each major version. Check the [roadmap](./docs/roadmap.md) for future developments.
 
 Please see the roadmap in the docs for the backlog of future planned developments.
+
 
 ## Compatibility of current release
 
@@ -24,6 +25,209 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 <!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
 
+## v7.5.0
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.0...v7.5.0).
+
+NOTE: If using the `uibRouter` SPA client library, please note that the startup processing has changed slightly. You may now get an error if you have specified a route container element but it doesn't exist. Unfortunately, some of the examples shared have this error and so will now break unless that container element id is changed. Sorry about that. The built-in router/SPA example has been updated to reflect this change.
+
+### 📌 Highlights
+
+* New "Quick Start" guides added to the documentation. Two main approaches: no-code/low-code and low-code/custom code. Each approach has a step-by-step guide to get you started quickly. In addition, several documentation pages now have rotating "tips" selected randomly from a list, they change every 15 seconds.
+
+* A new browser overlay **notification message feature** available. Using `showOverlay` allows messages of different types (info, success, warning, and error) to be displayed to users in the browser. This can be triggered from Node-RED or from front-end code. Messages can be auto-dismissed after a few seconds (the default), or retained until manually dismissed.
+
+* The `uibuilder` node now has an **extra tab** "scripts" which lets you *run npm scripts* defined in your instance root's package.json file.
+  
+  These can be any script that can be run on the host OS. They run in the OS's default shell. Output from the script is captured and returned to Node-RED in the panel beneath the list of scripts. When a script is running, a "Kill Script" button is visible, clicking this wil abort the script immediately.
+
+* The 🌐 emoji is now in use consistently across UIBUILDER. You will find it in announcements on the forum, log messages, on the web page open buttons in the Editor and elsewhere. I am using this because emoji's are single-characters and usable anywhere that UTF-8 text is usable.
+
+* uibuilder installation will now **ERROR** and stop if the Node-RED userDir folder is not writable. This is to prevent the uibuilder node from being misconfigured and not working correctly. The error message will show the userDir folder that is not writable.
+
+* When using uibuilder's custom web server option, you now have the option to create a `<uibRoot>/.public` folder. It is served as the root URL. This is where you can place static files that you want to serve from the custom web server. The folder will be created automatically if it does not exist. You can also use this folder to serve static files such as images, CSS, and JavaScript files. Create an `index.html` file in the folder to serve a custom root home page. The folder is not served if you are using the default Node-RED web server (Use Node-RED's public folder for that).
+
+* The documentation now has a **"Tips" page** that rotates through a selection of tips. I will be adding more tips over time. If you have any tips that you think would be useful, please let me know.
+
+### Example flows
+
+* **NEW** `uib-basic` An inject node to a uibuilder node with debug nodes on each output. Inputs and outputs minimised. Outputs show full msg and show msg count.
+* **UPDATED** Client-side code > FE Router Test. A complete front-end router example flow including html, js and route partials.
+* **UPDATE** "Remote Commands" renamed to "Control UI from Node-RED" and refreshed. New showOverlay notifications included.
+
+### uibuilder node
+
+* **NEW** Two new Editor actions have been added. This enables you to run these actions from keyboard shortcuts.
+
+  * `open-uibuilder-site` - opens the selected uibuilder instances web site in a new browser tab.
+  * `edit-uibuilder-site` - opens the selected uibuilder instances source folder in your full IDE. THe configuration for this comes from the "Code Editor URL" in the node's advanced properties tab (defaulting to VS Code).
+
+* Updated the buttons on the Editor config panel's top button bar to use icons instead of text. Note that the wireframe globe is now used consistently across uibuilder.
+
+* **NEW** An extra tab "scripts" has been added. This lets you run npm scripts defined in your instance root's package.json file.
+  
+  These can be any script that can be run on the host OS. They run in the OS's default shell. Output from the script is captured and returned to Node-RED in the panel beneath the list of scripts. When a script is running, a "Kill Script" button is visible, clicking this wil abort the script immediately.
+
+  In addition to scripts that you define, the default npm `outdated`, `update`, and `install` scripts are also available to run.
+
+* **FIX** for issue #564. VSCode edit link would not work if the uibuilder root folder did not start with a `/`. Also, the VSCode edit link could not be amended.
+
+* **FIX** for duplicate url error when node is used in a subflow. [Ref](https://discourse.nodered.org/t/uibuilder-url-inconsistancies-and-issues/98853).
+
+* **FIX** for issue #556. The library list in the Editor config panel would not work correctly if a library name contained special characters. Thanks to Paul Reed for reporting this issue.
+
+#### Ui class
+
+* **Fixed** a hidden issue with `replaceSlot()`. The safe method of creating a DocumentFragment does not work if the parent element is a `<template>`. For that, you can only use `innerHTML`.
+
+* **NEW** showOverlay function. This function creates and displays an overlay window with customizable content and behavior. See the uibuilder client documentation for more details.
+
+### uib-sender node
+
+* **BUG FIX** It was not returning messages from the front-end. This was a regression bug from a previous update. Many thanks to [@Robert0](https://discourse.nodered.org/t/uibuilder-sender-node-no-response/98553) for reporting.
+
+### `uib-brand.css` front-end styles
+
+* Improved colour contrast for default text/background.
+* Improved background contrast for forms. Forms now stand out if emmbedded in an `<article>` element.
+* Corrected the foreground/background colour for inputs and textareas. Now works better in light mode.
+* Improved appearance of inputs and select elements outside of forms.
+* Updated the table header styles to make them sticky. This means that the table headers will remain visible when scrolling down a long table. This is particularly useful for large tables with many rows.
+* Changed `accent-color` to use the `--primary` variable rather than the `--brand` variable. `accent-color` is used by browsers to set the colour of form elements such as checkboxes and radio buttons. This means that the colour will now match the primary colour used in the rest of the uibuilder styles.
+* Added `cursor: pointer;` to the `<summary>` element. This makes it clearer that the element is clickable and can be expanded or collapsed.
+* Improved `.status-side-panel` styles. Allowing background color to be overridden with `--status-color`.
+
+For forms, the following CSS variables (show with their defaults) can be used to more easily change the appearance of the forms:
+
+```css
+/* The main background color for form elements */
+--form-bg: var(--surface1);
+/* The main text color for form elements */
+--form-fg: var(--text2);
+/* The border color for form elements */
+--form-border: 1px solid var(--text3);
+```
+
+For the updated navigation menus, the following CSS variables (show with their defaults) can be used to more easily change the appearance of the menus:
+
+```css
+/* The main background color for the menu */
+--nav-bg: var(--surface3);
+/* The main text color for the menu */
+--nav-fg: var(--text2);
+/* Secondary background color - used when hovering over other menu items */
+--nav-2nd-bg: var(--primary-bg);
+/* More contrasting text color - used for selected menu items */
+--nav-2nd-fg: var(--text1);
+/* More contrasting background color - Used for menu pop-up background */
+--nav-3rd-bg: var(--surface2);
+```
+
+### uibuilder client library
+
+* **NEW** function `uibuilder.reactive(srcvar)`
+
+  This function allows you to create a reactive variable. It outputs a custom event when the variable changes (including deep object changes). It returns the reactive version of the variable. This also has several new methods:
+  * `onChange(property, callback)`: Adds a listener that triggers the callback when the specified property of the reactive variable changes. If `'*'` is specified, it listens for any change to the variable. It returns a reference to the callback that can be used to remove the listener later. The reference also has a `cancel()` method
+  * `cancelChange(callbackRef)`: Removes a listener using a saved callback reference.
+  
+  > [!WARNING]
+  > If the reactive variable is a *primative* type (string, number, boolean), then the you MUST use the `myvar.value = 42` syntax to change the value. If you use `myvar = 42`, then the reactive variable will overwritten. The `value` property will also let you change a primative even if it has been created with `const`.
+
+* **NEW** `showOverlay` function. This function creates and displays an overlay window with customizable content and behavior. This is an easy way to display some temporary information to the user.
+
+  Also available as an external (from Node-RED) command. In that case, `msg.payload` is used as the content of the overlay unless `options.content` is specified. Controlling options can be passed in the `msg._uib.options` property
+
+* Updated the client library type description files. They are available in the `types` folder of the `blank` template. There is a `tsconfig.json` file in the root of that template that includes the type definitions. This means that you can now get better code completion, descriptions and type checking when using the client library in your own code. Feel free to copy the file and the folder to your own projects.
+
+  > [!WARNING]
+  > The type definitions are not automatically updated when the client library is updated. You will need to update them manually by copying the files from UIBUILDER's `templates/blank/src/front-end-module` folder.
+
+* Updated the `showDialog` function:
+
+  * Allow more flexible use. Any of the parameters can now be `null` and the function will use sensible defaults. That lets you simple call `uibuilder.showDialog(null, null, msg)` to get a notification that overlays the rest of the page and can be dismissed simply by clicking anywhere on the page. Note that the actual definition of the function resides in the `ui.js` source module.
+  * Allow any keypress or touch to dismiss the dialog.
+
+* UI library source file renamed from `ui.js` to `ui.mjs`. This is to make it clearer that it is an ES module. The file is still compiled into the client library as before. The gulp build process has been updated to reflect this change and simplified in line with the main client module build.
+
+* **UPDATED** Full uibuilder intellisense is now available for VS Code users when editing front-end JavaScript. Update your JS files to include `/// <reference path="../types/uibuilder.d.ts" />` at the start of your code. Don't forget to update the `types` folder with updated type definitions after upgrading uibuilder. You may need to manually create the `types` folder if using templates from previous versions.
+
+* **UPDATED** The feature that allows external commands to be sent from Node-RED has been improved. It now supports additional options for customizing the command behavior. Currently only used by the new `showOverlay` command.
+
+* **FIXED** `uibuilder.formatNumber(...)` - fixed handling of decimal places. Previously 0 dp was not working.
+
+### uibRouter SPA client library
+
+* Added functions to auto-generate a menu of routes. Driven by updated router configuration data. Example:
+
+  ```js
+  {
+    defaultRoute: 'route01',
+    routes: [
+        { id: 'theme', src: './fe-routes/theme-editor.html', type: 'url', 
+            title: 'Theme Editor', description: 'Theme editor.' },
+        { id: 'route01', src: './fe-routes/route01.html', type: 'url', 
+            title: 'Home Summary', description: 'A summary view of the home.' },
+        { id: 'wanted', src: './fe-routes/wanted.html', type: 'url', 
+            title: 'To Do', description: 'My to do list for this site.' },
+    ],
+    routeMenus: [
+        {
+            id: 'menu1',
+            menuType: 'horizontal',
+            label: 'Main Menu',
+        },
+    ],
+  }
+  ```
+
+  In this version, only horizontal, single-level menus are supported. In the future, expect to see multi-level and vertical menus. Possibly also tabbed menus. Search forms may also be added.
+
+* **BUG FIX** If you define the route container in the config but it does not exist, we now throw and error and stop. If you haven't defined a container at all, it is auto-created and attached to the body element and a warning issued.
+
+* Significantly improved documentation.
+
+### uibuilder configuration
+
+* Updated the template middleware files that are copied to `<uibRoot>/.config/*.js-template` on each restart. Added links to uibuilder documentation and pointed out the use of the message and security hooks now available via the Node-RED settings.js file.
+
+### Documentation
+
+* **NEW** Quickstart guide completely rewritten. Now has two main approaches: no-code/low-code and low-code/custom code. Each approach has a step-by-step guide to get you started quickly.
+* Rearranged the sidebar for additional clarity.
+* **NEW** "Reactive UI's" in the client section. This is a new section that describes how to use the reactive attributes in UIBUILDER to create dynamic web pages with minimal code. It includes a summary of the available attributes and how to use them.
+* Updated `uib-configuration` documentation to show the latest settings.js options including the msg, client and socket.io hooks. These allow you to enhance or override the `msg._client` data, simulate user authentication, block message send/receive, and redirect unauthenticated users.
+* Updated the `security/authenticated-client-properties` documentation. Added a tip about the hooks in the settings.js file.
+* **NEW** Added a new "how-to" article describing how to use Node-RED and uibuilder as a live web development server. This is a simple way to get a live reload server without needing to use complex build tools.
+* Updated the comparison between uibuilder and Dashboard 2. Emphasising uibuilder's multi-app capabilities and dark mode.
+* Significantly improved uibRouter SPA documentation.
+* Updated walkthrough to match current templates. (Issue #563).
+* **NEW** Rotating "Tips" page added. Updates once per minute from a random selection of tips.
+* Main README updated with improved badges. Fixed the documentation badge, added a sponsor badge. A DeepWiki badge also added.
+* Comparison with Dashboard 2 updated to reflect current capabilities of both projects.
+
+* Some rework of the Docsify configuration.
+
+  * Added a "Tips" page that rotates through a selection of tips.
+  * Added a new tips custom Docsify plugin that allows display of tips from a given source folder. Used on the tips page. Provides rotating, random and specified tips.
+  * Removed the auto-restyleing of the word "UIBUILDER" that was using HTML colours. It was causing issues with some themes and was not accessible. I will add a manual `[UIBUILDER]` Markdown extension that can be used when needed.
+
+### **NEW** Experimental front-end client library
+
+* **NEW** `../uibuilder/experimental.mjs` experimental front-end library. Internally loads the live client library and extends it with experimental features. It does require some setup and its features WILL change unexpectedly.
+
+  Note that this library is only available as an ES Module.
+
+* `src/front-end-module/experimental-demo.html` - A simple demo page that shows how to use the experimental features. It is not intended for production use. You will need to copy the html file to a uibuilder instance's `src` folder and then load it in your browser. The demo page will show you how to use the experimental features. It may not always be up to date with the latest experimental features.
+
+The purpose of this is to allow greater experimentation with new features without disturbing the live client library.
+
+### Development changes
+
+* **NEW** file `src\front-end-module\reactive.mjs` - contains the new `Reactive` class that implements the reactive variable functionality. This is a new module that can be used in the front-end client library but can also be used independently. This is provided as source only for now. Though it is compiled into the client library as well and so available via the `uibuilder.getReactiveClass()` and `uibuilder.reactive()` functions.
+* uibuilder runtime library files renamed from *.js to *.cjs for clarity. Part of the long-term effort to move eventually to ES Modules.
+* More code cleanup using latest ESLINT rules.
+
 ## v7.4.3
 
 [Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.4.2...v7.4.3).
@@ -36,8 +240,8 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * Dependabot updates to dependencies.
 * Merge PR #553 from mutec: Fixes an issue with the glob function in `libs/fs.cjs`. Only impacts Windows users.
-* Fix issue [#546](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/546). Issues with the client ui library's showDialogue function.
-* Update the ui showDialogue function - improving layout and updating the CSS styles in the `uib-brand.css` file.
+* Fix issue [#546](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/546). Issues with the client ui library's `showDialog` function.
+* Update the ui `showDialog` function - improving layout and updating the CSS styles in the `uib-brand.css` file.
 
 ## v7.4.1
 

@@ -30,8 +30,8 @@
 const { join }     = require('path')
 const { existsSync, getFileMeta } = require('./fs.cjs')
 const socketio = require('socket.io')
-const { urlJoin }    = require('./tilib')    // General purpose library (by Totally Information)
-const { setNodeStatus }   = require('./uiblib')   // Utility library for uibuilder
+const { urlJoin }    = require('./tilib.cjs')    // General purpose library (by Totally Information)
+const { setNodeStatus }   = require('./uiblib.cjs')   // Utility library for uibuilder
 // const security = require('./sec-lib') // uibuilder security module
 
 /** Parse x-forwarded-for headers.
@@ -557,7 +557,7 @@ class UibSockets {
         }
 
         if ( msg?._uib?.originator && (typeof msg._uib.originator === 'string') ) {
-            RED.events.emit(`uibuilder/return-to-sender/${msg._uib.originator}`, msg)
+            RED.events.emit(`UIBUILDER/return-to-sender/${msg._uib.originator}`, msg)
         } else {
             node.send(msg)
         }
@@ -784,7 +784,7 @@ class UibSockets {
                 that.sendCtrlMsg(ctrlMsg, node, 'addNS:disconnect')
 
                 // Let other nodes know a client is disconnecting (via custom event manager)
-                this.RED.events.emit(`uibuilder/${node.url}/clientDisconnect`, ctrlMsg)
+                this.RED.events.emit(`UIBUILDER/${node.url}/clientDisconnect`, ctrlMsg)
             }) // --- End of on-connection::on-disconnect() --- //
 
             // Listen for msgs from clients on standard channel
@@ -908,7 +908,7 @@ class UibSockets {
             that.sendCtrlMsg(ctrlMsg, node, 'addNS:connection')
 
             // Let other nodes know a client is connecting (via custom event manager)
-            this.RED.events.emit(`uibuilder/${node.url}/clientConnect`, ctrlMsg)
+            this.RED.events.emit(`UIBUILDER/${node.url}/clientConnect`, ctrlMsg)
 
             //#endregion ---- run when client connects ---- //
 

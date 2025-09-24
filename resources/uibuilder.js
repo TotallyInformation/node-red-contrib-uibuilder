@@ -1,10 +1,9 @@
+/* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable @stylistic/newline-per-chained-call */
 // @ts-nocheck
-
 // Now loading as a module so no need to further Isolate this code
-// #region --------- module variables for the panel --------- //
 
-// RED._debug({topic: 'RED.settings', payload:RED.settings})
+// #region --------- module variables for the panel --------- //
 
 // NOTE: window.uibuilder is added by editor-common.js - see `resources` folder
 const uibuilder = window['uibuilder'] // eslint-disable-line no-redeclare
@@ -19,6 +18,9 @@ const defaultTemplate = 'blank'
 /** List of installed packages - rebuilt when editor is opened, updates by library mgr */
 let packages = uibuilder.packages
 
+/** List of npm script names for the current instance */
+let npmScriptNames = []
+
 /** placeholder for ACE editor vars - so that they survive close/reopen admin config ui
  * @typedef {object} uiace Options for the ACE/Monaco code editor
  * @property {string} format What format to use for the code editor (html)
@@ -32,10 +34,18 @@ const uiace = {
     fname: 'index.html',
     fullscreen: false,
 }
+
 /** placeholder for instance folder list
     @type {Array<string>}
-*/
+ */
 let folders = []
+
+/** Placeholder for long-running npm scripts
+ * Allows tracking and returning to them even if the Edit panel is closed
+ * and later re-opened.
+ */
+if (!window['uibuilder'].runningScripts) window['uibuilder'].runningScripts = {}
+const runningScripts = window['uibuilder'].runningScripts
 
 // #endregion ------------------------------------------------- //
 
@@ -132,7 +142,7 @@ function doPkgUpd(evt) {
  * @param {object} node A reference to the panel's `this` object
  * @param {JQuery<HTMLElement>} element the jQuery DOM element to which any row content should be added
  * @param {number} index the index of the row
- * @param {string|*} data data object for the row. {} if add button pressed, else data passed to addItem method
+ * @param {string|object} data data object for the row. {} if add button pressed, else data passed to addItem method
  */
 function addPackageRow(node, element, index, data) {
     let hRow = ''
@@ -170,9 +180,11 @@ function addPackageRow(node, element, index, data) {
 
         // if wanted !== installed, show update
         let upd = ''
+        // Replace all characters except a-z, A-Z, 0-9, _, -, and . with _ Fixes Issue #556
+        const uniqueId = data.replace(/[^a-zA-Z0-9_\-\.]/g, '_')
         if ( pkgSpec.outdated && pkgSpec.outdated.wanted && pkgSpec.installedVersion !== pkgSpec.outdated.wanted ) {
-            upd = `<button id="upd_${data}" style="color:orange;background-color:black;" title="Click to update (or install again to get a non-standard version)">UPDATE: ${pkgSpec.outdated.wanted}</button>`
-            $('#node-input-packageList').on('click', `#upd_${data}`, { pkgName: data, node: node, }, doPkgUpd)
+            upd = `<button id="upd_${uniqueId}" style="color:orange;background-color:black;" title="Click to update (or install again to get a non-standard version)">UPDATE: ${pkgSpec.outdated.wanted}</button>`
+            $('#node-input-packageList').on('click', `#upd_${uniqueId}`, { pkgName: data, node: node, }, doPkgUpd)
         }
 
         // addItem method was called with a packageName passed
@@ -345,6 +357,37 @@ function removePackageRow(packageName) {
     return null
 } // ---- End of removePackageRow ---- //
 
+/** Get the list of npm script names for the uibuilder instance, updates `npmScriptNames` var
+ * @param {string} url The instance url
+ */
+function getInstanceNpmScriptNames(url) {
+    const stdScripts = ['outdated', 'update', 'install']
+    // Call to admin-api-v3 to get the list of npm script names
+    $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        async: false,
+        url: './uibuilder/admin/' + url,
+        data: {
+            cmd: 'getNpmScriptNames',
+        },
+        beforeSend: function(jqXHR) {
+            const authTokens = RED.settings.get('auth-tokens')
+            if (authTokens) {
+                jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+            }
+        },
+    })
+        .done(function(data, _textStatus, jqXHR) {
+            npmScriptNames = [...data, ...stdScripts]
+            // console.log(`🌐[uibuilder:getInstanceNpmScriptNames:getJSON] npm script names for '${url}':`, npmScriptNames, data)
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            console.error( `🌐🛑[uibuilder:getInstanceNpmScriptNames:getJSON] '${url}' Error: ${textStatus}`, errorThrown )
+            RED.notify(`uibuilder: Could not get the npm script names for '${url}'.<br>${errorThrown}`, { type: 'error', })
+        })
+}
+
 // #endregion ==== Package Management Functions ==== //
 
 // #region ==== File Management Functions ==== //
@@ -461,7 +504,9 @@ function getFileContents() {
                 jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
             }
         },
-        success: function(data) {
+    })
+        .done(function(data, textStatus, jqXHR) {
+            // console.log( '🌐[uibuilder:getFileContents:get] File fetched successfully', textStatus, data, jqXHR)
             $('#node-input-template-editor').show()
             $('#node-input-template-editor-no-file').hide()
             // Add the fetched data to the editor
@@ -474,8 +519,7 @@ function getFileContents() {
             uiace.editorSession.getUndoManager().isClean()
             // Position the cursor in the edit area
             uiace.editor.focus()
-        },
-    })
+        })
         .fail(function(_jqXHR, textStatus, errorThrown) {
             console.error( '🌐🛑[uibuilder:getFileContents:get] Error ' + textStatus, errorThrown )
             uiace.editorSession.setValue('')
@@ -487,7 +531,7 @@ function getFileContents() {
             // Default the language selector in case it wasn't recognised
             if (!$('#node-input-format option:selected').length) $('#node-input-format').val('text')
         })
-} // --- End of getFileContents --- //
+}
 
 /** Get the list of files for the chosen url & folder
  * @param {string} [selectedFile] Optional. If present will select this filename after refresh, otherwise 1st file is selected.
@@ -872,10 +916,13 @@ function saveFile() {
  * @returns {{pre,post,url,icon}} Prefix and postfix for link + vscode url scheme & icon
  */
 function vscodeLink(node) {
-    if (node.url) {
-        if (uibuilder.localHost) node.editurl = `vscode://file${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank`
-        else node.editurl = `vscode://vscode-remote/ssh-remote+${uibuilder.nrServer}${RED.settings.uibuilderRootFolder}/${node.url}/?windowId=_blank`
-        $('#node-input-editurl').val(node.editurl)
+    if (!node.editurl) {
+        let root = RED.settings.uibuilderRootFolder
+        if ( !root.startsWith('/') ) root = '/' + root
+        if (node.url) {
+            if (uibuilder.localHost) node.editurl = `vscode://file${root}/${node.url}/?windowId=_blank`
+            else node.editurl = `vscode://vscode-remote/ssh-remote+${uibuilder.nrServer}${root}/${node.url}/?windowId=_blank`
+        }
     }
 
     let pre, post
@@ -1020,7 +1067,7 @@ function enableEdit(urlErrors, enable = true) {
 } // ---- End of enableEdit ---- //
 
 /** Show key data for URL changes
- * @param {*} node Reference to node definition
+ * @param {object} node Reference to node definition
  * @param {*} value Value
  */
 function debugUrl(node, value) {
@@ -1040,11 +1087,12 @@ function debugUrl(node, value) {
     log('-- this --', node)
     console.groupEnd()
 }
+
 /** Live URL Validation Function: Validate the url property
  * Max 20 chars, can't contain any of ['..', ]
  * @param {string} value The url value to validate
  * @returns {boolean} true = valid
- * @this {*}
+ * @this {object}
  */
 function validateUrl(value) {
     if ($('#node-input-url').is(':visible')) {
@@ -1058,10 +1106,35 @@ function validateUrl(value) {
     this.urlDeployedChanged = uibuilder.deployedUibInstances[this.id] !== value //  || (this.oldUrl !== undefined && this.url !== this.oldUrl)
     this.urlChanged = (this.url !== value)
 
+    /** WARNING: The instance ID for deployed instances in a subflow are NOT the same as those
+     * in the editor. This means the the instance ID is not the same as the this.id of the node
+     * Subflow id's have a `-` in them so we need to check for that too.
+     */
+
     let f = Object.values(uibuilder.deployedUibInstances).indexOf(value)
-    this.urlDeployedDup = ( f > -1 && Object.keys(uibuilder.deployedUibInstances)[f] !== this.id )
+    if (f > -1) {
+        let fId = Object.keys(uibuilder.deployedUibInstances)[f]
+        // If the deployed instance is in a subflow, actual id is after the `-`
+        if ( fId.indexOf('-') !== -1 ) {
+            fId = fId.split('-')[1]
+        }
+        this.urlDeployedDup = fId !== this.id
+        if (value.startsWith('overview')) console.log(`>> urlDeployedDup >> fId: ${fId}, this.id: ${this.id}, this.urlDeployedDup: ${this.urlDeployedDup}`)
+    } else {
+        this.urlDeployedDup = false
+    }
+
     f = Object.values(editorInstances).indexOf(value)
-    this.urlEditorDup = ( f > -1 && Object.keys(editorInstances)[f] !== this.id )
+    if (f > -1) {
+        let fId = Object.keys(editorInstances)[f]
+        if ( fId.indexOf('-') !== -1 ) {
+            fId = fId.split('-')[1]
+        }
+        this.urlEditorDup = fId !== this.id
+        if (value.startsWith('overview')) console.log(`>> urlEditorDup >> fId: ${fId}, this.id: ${this.id}, this.urlEditorDup: ${this.urlEditorDup}`)
+    } else {
+        this.urlEditorDup = false
+    }
 
     // If value is undefined, node hasn't been configured yet - we assume empty url which is invalid
     if ( value === undefined ) {
@@ -1111,7 +1184,7 @@ function validateUrl(value) {
     // Check whether the url is already in use in another undeployed uib node
     if ( this.urlEditorDup === true ) {
         // RED.notify(`<b>ERROR</b>: <p>The chosen URL (${value}) is already in use in another undeployed uib node.<br>It must be changed before you can save/commit</p>`, {type: 'error'})
-        this.urlErrors.dup = 'Cannot be a URL already in use'
+        this.urlErrors.dup = 'Cannot be a URL already in use even if not yet deployed'
     }
 
     // Check whether the folder already exists - if it does, give a warning & adopt it
@@ -1163,7 +1236,7 @@ function validateUrl(value) {
 /** Validation Function: Validate the session length property
  * If security is on, must contain a number
  * @returns {boolean} true = valid, false = not valid
- * @this {*}
+ * @this {object}
  */
 // function validateSessLen() {
 //     // NB: `this` is the node instance configuration as at last press of Done
@@ -1199,7 +1272,7 @@ function validateUrl(value) {
  * In uibuilder.js, can change uib.reDeployNeeded to be the last version before the v that made a breaking change.
  * @example If the node was last deployed with v4.1.2 and the current version is now v5.0.0, set uib.reDeployNeeded to '4.1.2'
  * @returns {boolean} True if valid
- * @this {*}
+ * @this {object}
  */
 function validateVersion() {
     if ( this.url !== undefined ) { // Undefined means that the node hasn't been configured at all yet
@@ -1441,6 +1514,8 @@ function templateSettings(node) {
 
 // #endregion ==== Template Management Functions ==== //
 
+// #region ==== Misc Functions ==== //
+
 /** Set initial hidden & checkbox states (called from onEditPrepare)
  * @param {object} node A reference to the panel's `this` object
  */
@@ -1473,7 +1548,7 @@ function showServerInUse(node) {
             `Server folder: ${vslink.pre}${RED.settings.uibuilderRootFolder}/${node.url}/${$('#node-input-sourceFolder').val()}/${vslink.post}`
         )
     }
-} // ---- end of showServerInUse ---- //
+}
 
 /** Handle URL changes
  * See also validateUrl.
@@ -1501,139 +1576,14 @@ function urlChange(node) {
 
     // Update the IDE edit link (editurl)
     vscodeLink(node)
-} // ---- end of urlChange ---- //
-
-/** Run when switching to the Files tab
- * @param {object} node A reference to the panel's `this` object
- */
-function tabFiles(node) {
-    // Build the file list
-    getFileList()
-
-    // We only need to do all of this once
-    if ( uiace.editorLoaded !== true ) {
-        // @ts-expect-error ts(2352) Clear out the editor
-        if ( /** @type {string} */ ($('#node-input-template').val('')) !== '') $('#node-input-template').val('')
-
-        // Create the ACE editor component
-        uiace.editor = RED.editor.createEditor({
-            id: 'node-input-template-editor',
-            mode: 'ace/mode/' + uiace.format,
-            value: node.template,
-        })
-        // Keep a reference to the current editor session
-        uiace.editorSession = uiace.editor.getSession()
-        /** If the editor has changes, enable the save & reset buttons
-         * using input event instead of change since it's called with some timeout
-         * which is needed by the undo (which takes some time to update)
-         */
-        uiace.editor.on('input', function() {
-            // Is the editor clean?
-            fileIsClean(uiace.editorSession.getUndoManager().isClean())
-        })
-        /* uiace.editorSession.on('change', function(delta) {
-            // delta.start, delta.end, delta.lines, delta.action
-            console.log('🌐ACE Editor CHANGE Event', delta)
-        }) */
-        uiace.editorLoaded = true
-
-        // When inside the editor, allow ctrl-s to save the file rather than the default of saving the web page
-        const aceDiv = document.getElementsByClassName('red-ui-editor-text-container')
-        aceDiv.item(0).addEventListener('keydown', (evt) => {
-            // @ts-ignore
-            if ( evt.ctrlKey === true && evt.key === 's' ) {
-                evt.preventDefault()
-                saveFile()
-            }
-        })
-
-        // Resize to max available height
-        setACEheight()
-
-        // Be friendly and auto-load the initial file via the admin API
-        getFileContents()
-        fileIsClean(true)
-    }
-} // ---- End of tabFiles() ---- //
+}
 
 /** Return the correct height of the libraries list
  * @returns {number} Calculated height of the libraries list
  */
 function getLibrariesListHeight() {
     return ($('.red-ui-tray-footer').position()).top - ($('#package-list-container').offset()).top + 25
-} // ---- End of getLibrariesListHeight() ---- //
-
-/** Run when switching to the Libraries tab
- * @param {object} node A reference to the panel's `this` object
- */
-function tabLibraries(node) {
-    // ! TODO Improve feedback
-
-    // Setup the package list https://nodered.org/docs/api/ui/editableList/
-    $('#node-input-packageList').editableList({
-        addItem: function addItem(element, index, data) {
-            addPackageRow(node, element, index, data)
-        },
-        removeItem: removePackageRow, // function(data){},
-        // resizeItem: function() {}, // function(_row,_index) {},
-        header: $('<div>').append('<b>Installed Packages (Install again to update)</b>'),
-        height: getLibrariesListHeight(),
-        addButton: true,
-        removable: true,
-        scrollOnAdd: true,
-        sortable: false,
-    })
-
-    // reset and populate the list
-    $('#node-input-packageList').editableList('empty')
-    $('#node-input-packageList').editableList('addItems', Object.keys(packages))
-
-    // spinner
-    $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
-    $('i.spinner').hide()
-} // ---- End of tabLibraries() ---- //
-
-/** Prep tabs
- * @param {object} node A reference to the panel's `this` object
- */
-function prepTabs(node) {
-    const tabs = RED.tabs.create({
-        id: 'tabs',
-        scrollable: false,
-        collapsible: false,
-        onchange: function(tab) {
-            // Show only the content (i.e. the children) of the selected tabsheet, and hide the others
-            $('#tabs-content')
-                .children()
-                .hide()
-            $('#' + tab.id).show()
-
-            // ? Could move these to their own show event. Might even unload some stuff on hide?
-
-            switch (tab.id) {
-                case 'tab-files': {
-                    tabFiles(node)
-                    break
-                }
-
-                case 'tab-libraries': {
-                    tabLibraries(node)
-                    break
-                }
-
-                default: {
-                    break
-                }
-            }
-        },
-    })
-
-    tabs.addTab({ id: 'tab-core', label: 'Core', })
-    tabs.addTab({ id: 'tab-files', label: 'Files', })
-    tabs.addTab({ id: 'tab-libraries', label: 'Libraries', })
-    // tabs.addTab({ id: 'tab-security',  label: 'Security'  })
-    tabs.addTab({ id: 'tab-advanced', label: 'Advanced', })
-} // ---- End of preTabs ---- //
+}
 
 /** File Editor */
 function fileEditor() {
@@ -1903,18 +1853,19 @@ function fileEditor() {
     })
 } // ---- End of fileEditor ----
 
-/** Prep for edit
- * @param {*} node -
+/** Add uibuilder's custom buttons to the node-red editor node config panel's top button bar
+ * Currently, open, docs and vscode buttons are added after the Delete button.
+ * @param {object} node A reference to the panel's `this` object
  */
-function onEditPrepare(node) {
+function customButtonBar(node) {
     // Add open and docs buttons to top button bar, next to Delete button
-    $('<button type="button" title="Open the uibuilder web page" id="btntopopen" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-globe" aria-hidden="true"></i> Open</button>')
+    $('<button type="button" title="Open the uibuilder web page" id="btntopopen" class="ui-button ui-corner-all ui-widget leftButton">🌐</button>')
         .on('click', (evt) => {
             evt.preventDefault()
             window.open(`${uibuilder.urlPrefix}${$('#node-input-url').val()}`, '_blank')
         })
         .appendTo($('div.red-ui-tray-toolbar'))
-    $('<button type="button" title="Open uibuilder Documentation" class="ui-button ui-corner-all ui-widget leftButton"><i class="fa fa-book" aria-hidden="true"></i> Docs</button>')
+    $('<button type="button" title="Open uibuilder Documentation" class="ui-button ui-corner-all ui-widget leftButton">📘</button>')
         .on('click', (evt) => {
             evt.preventDefault()
             RED.sidebar.help.show('uibuilder')
@@ -1929,6 +1880,390 @@ function onEditPrepare(node) {
             window.open(vsc.url)
         })
         .appendTo($('div.red-ui-tray-toolbar'))
+}
+
+/** Kill a running npm script for this uibuilder instance
+ * @param {object} node A reference to the panel's `this` object
+ * @param {string} processId The process ID of the npm script to kill
+ */
+function killNpmScript(node, processId) {
+    if (!processId) return
+    if (!runningScripts[node.url]) return
+
+    const xhr = new XMLHttpRequest()
+    const params = {
+        cmd: 'killInstanceNpmScript',
+        processId: processId,
+    }
+
+    xhr.open('PUT', `uibuilder/admin/${node.url}`, true)
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText)
+            if (response.killed) {
+                RED.notify(`🌐 Process ${runningScripts[node.url].scriptName} for ${node.url} killed successfully`, { type: 'success', })
+                runningScripts[node.url].xhr.abort()
+            } else {
+                RED.notify(`🌐 Failed to kill process ${runningScripts[node.url].scriptName} for ${node.url}. ${response.error}`, { type: 'error', })
+            }
+        } else {
+            RED.notify(`🌐 Failed to kill process ${runningScripts[node.url].scriptName} for ${node.url}. XHR Status: ${xhr.status}`, { type: 'error', })
+        }
+    }
+
+    const formData = Object.keys(params)
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+        .join('&')
+
+    xhr.send(formData)
+}
+
+/** Run an npm script for this uibuilder instance
+ * Uses the admin-api-v3 to run the script. Output from running the script is streamed back to the panel.
+ * The script must be defined in the package.json file for the uibuilder instance.
+ * @param {object} node A reference to the panel's `this` object
+ * @param {string} scriptName Name of the npm script to run
+ */
+function runNpmScript(node, scriptName) {
+    const elScriptOutput = $('#npm-script-output')
+    const elKillContainer = $('#kill-button-container')
+    const elKillButton = $('#npm-script-kill')
+
+    // Only allow 1 script to be run at any time for a single url
+    if (runningScripts[node.url]) {
+        elKillButton.show()
+        RED.notify(`🌐 uibuilder: npm script '${scriptName}' for '${node.url}' is already running.\nOnly 1 script can be run at a time.`, { type: 'error', })
+        return
+    }
+    // Record the running script
+    const runningScript = runningScripts[node.url] = {
+        scriptName,
+    }
+
+    let currentProcessId = null
+    let output = `Running ${scriptName}...\n\n`
+    let xhr = runningScript.xhr = null // Keep track of xhr to allow later cancellation
+
+    elKillButton.on('click', () => {
+        console.log(`🌐[uibuilder:runNpmScript] Kill button clicked for '${scriptName}' for '${node.url}'`)
+        if (currentProcessId) {
+            killNpmScript(node, currentProcessId)
+            // Abort the active request once we've issued a script kill
+            // if (xhr) xhr.abort()
+        }
+        // Remove this click event handler
+        elKillButton.off('click')
+    })
+
+    elScriptOutput.text(output)
+
+    // Use XMLHttpRequest for streaming chunked output
+    xhr = new XMLHttpRequest()
+    xhr.open('PUT', './uibuilder/admin/' + node.url, true)
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+    const authTokens = RED.settings.get('auth-tokens')
+    if (authTokens) {
+        xhr.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+    }
+    // Send data as url-encoded
+    xhr.send('cmd=runInstanceNpmScript&scriptName=' + encodeURIComponent(scriptName))
+
+    let lastProcessedLength = 0
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.LOADING || xhr.readyState === XMLHttpRequest.DONE) {
+            const newData = xhr.responseText.substring(lastProcessedLength)
+            lastProcessedLength = xhr.responseText.length
+
+            // Split by newline for chunked JSON
+            const lines = newData.split('\n')
+
+            lines.forEach(function(line) {
+                if (!line.trim()) return
+                try {
+                    const msg = JSON.parse(line)
+                    switch (msg.type) {
+                        // At request start
+                        case 'processId': {
+                            runningScripts[node.url].processId = currentProcessId = msg.processId
+                            elKillButton.show()
+                            break
+                        }
+                        // As the request progresses
+                        case 'stream': {
+                            output += msg.data
+                            updateOutput()
+                            break
+                        }
+                        // At request end
+                        case 'end': {
+                            if (msg.result && msg.result.all) {
+                                output += `\n${msg.result.all}`
+                                updateOutput()
+                            }
+                            currentProcessId = null
+                            elKillButton.hide()
+                            runningScripts[node.url] = undefined
+                            RED.notify(`🌐 uibuilder: npm script '${scriptName}' for '${node.url}' completed.`, { type: 'success', })
+                            break
+                        }
+                        // If the request errors
+                        case 'error': {
+                            output += `${msg.message}\n${msg.all || ''}\n... Script ended`
+                            updateOutput()
+                            currentProcessId = null
+                            elKillButton.hide()
+                            runningScripts[node.url] = undefined
+                            RED.notify(`🌐 uibuilder: running npm script '${scriptName}' for '${node.url}' Failed.<br>${msg.message}`, { type: 'error', })
+                            break
+                        }
+                    }
+                } catch (e) {
+                    // Just in case
+                    console.warn(`🌐[uibuilder:runNpmScript] JSON parse error for line: ${line}`, e)
+                }
+            })
+        }
+    }
+
+    xhr.onerror = function() {
+        $('#npm-script-output').text('Error running script')
+        RED.notify(`uibuilder: running npm script '${scriptName}' for '${node.url}' Failed.`, { type: 'error', })
+        currentProcessId = null
+        elKillButton.hide()
+        runningScripts[node.url] = undefined
+    }
+
+    xhr.onabort = function() {
+        output += '\n... Script aborted by user'
+        updateOutput()
+        RED.notify(`🌐 uibuilder: npm script '${scriptName}' for '${node.url}' was aborted.`, { type: 'warning', })
+        currentProcessId = null
+        elKillButton.hide()
+        runningScripts[node.url] = undefined
+    }
+
+    /** Update the output display, restricting to last 10000 lines
+     * @param {boolean} [forceUpdate] Force update even if throttled (default=false)
+     */
+    function updateOutput(forceUpdate = false) {
+        // Throttle updates to improve performance
+        if (!forceUpdate && updateOutput.lastUpdate && (Date.now() - updateOutput.lastUpdate) < 100) {
+            // Schedule delayed update if not already scheduled
+            if (!updateOutput.pending) {
+                updateOutput.pending = setTimeout(() => {
+                    updateOutput.pending = null
+                    updateOutput(true)
+                }, 100)
+            }
+            return
+        }
+        updateOutput.lastUpdate = Date.now()
+
+        // Trim to last 10000 lines efficiently
+        const maxLines = 10000
+        if (output.includes('\n')) {
+            const lines = output.split('\n')
+            if (lines.length > maxLines) {
+                const trimmed = lines.slice(-maxLines)
+                output = trimmed.join('\n')
+
+                // Add indicator that content was trimmed
+                if (!output.startsWith('... [Output truncated]')) {
+                    output = `... [Output truncated]\n${output}`
+                }
+            }
+        }
+
+        if (elScriptOutput.length) {
+            elScriptOutput.text(output)
+
+            // Auto-scroll to bottom
+            const scrollContainer = elScriptOutput.parent()
+            if (scrollContainer.length) {
+                scrollContainer.scrollTop(scrollContainer[0].scrollHeight)
+            }
+        }
+    }
+}
+
+// #endregion ==== Misc Functions ==== //
+
+// #region ==== Tab display functions ==== //
+
+/** Run when switching to the Files tab
+ * @param {object} node A reference to the panel's `this` object
+ */
+function tabFiles(node) {
+    // Build the file list
+    getFileList()
+
+    // We only need to do all of this once
+    if ( uiace.editorLoaded !== true ) {
+        // @ts-expect-error ts(2352) Clear out the editor
+        if ( /** @type {string} */ ($('#node-input-template').val('')) !== '') $('#node-input-template').val('')
+
+        // Create the ACE editor component
+        uiace.editor = RED.editor.createEditor({
+            id: 'node-input-template-editor',
+            mode: 'ace/mode/' + uiace.format,
+            value: node.template,
+        })
+        // Keep a reference to the current editor session
+        uiace.editorSession = uiace.editor.getSession()
+        /** If the editor has changes, enable the save & reset buttons
+         * using input event instead of change since it's called with some timeout
+         * which is needed by the undo (which takes some time to update)
+         */
+        uiace.editor.on('input', function() {
+            // Is the editor clean?
+            fileIsClean(uiace.editorSession.getUndoManager().isClean())
+        })
+        /* uiace.editorSession.on('change', function(delta) {
+            // delta.start, delta.end, delta.lines, delta.action
+            console.log('🌐ACE Editor CHANGE Event', delta)
+        }) */
+        uiace.editorLoaded = true
+
+        // When inside the editor, allow ctrl-s to save the file rather than the default of saving the web page
+        const aceDiv = document.getElementsByClassName('red-ui-editor-text-container')
+        aceDiv.item(0).addEventListener('keydown', (evt) => {
+            // @ts-ignore
+            if ( evt.ctrlKey === true && evt.key === 's' ) {
+                evt.preventDefault()
+                saveFile()
+            }
+        })
+
+        // Resize to max available height
+        setACEheight()
+
+        // Be friendly and auto-load the initial file via the admin API
+        getFileContents()
+        fileIsClean(true)
+    }
+}
+
+/** Run when switching to the Libraries tab
+ * @param {object} node A reference to the panel's `this` object
+ */
+function tabLibraries(node) {
+    // ! TODO Improve feedback
+    // console.log('>> packages >>', packages)
+
+    // Setup the package list https://nodered.org/docs/api/ui/editableList/
+    $('#node-input-packageList').editableList({
+        addItem: function addItem(element, index, data) {
+            // console.log('>> addItem >>', {node, element, index, data})
+            addPackageRow(node, element, index, data)
+        },
+        removeItem: removePackageRow, // function(data){},
+        // resizeItem: function() {}, // function(_row,_index) {},
+        header: $('<div>').append('<b>Installed Packages (Install again to update)</b>'),
+        height: getLibrariesListHeight(),
+        addButton: true,
+        removable: true,
+        scrollOnAdd: true,
+        sortable: false,
+    })
+
+    // reset and populate the list
+    $('#node-input-packageList').editableList('empty')
+    $('#node-input-packageList').editableList('addItems', Object.keys(packages))
+
+    // spinner
+    $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
+    $('i.spinner').hide()
+}
+
+/** Run when switching to the Run NPM Scripts tab
+ * @param {object} node A reference to the panel's `this` object
+ */
+function tabRunNpmScripts(node) {
+    getInstanceNpmScriptNames(node.url) // Sets npmScriptNames
+
+    const scriptList = $('#npm-script-list')
+    const elKillButton = $('#npm-script-kill')
+
+    // Clear the list
+    scriptList.empty()
+
+    npmScriptNames.forEach( (scriptName) => {
+        // Add a button for each script
+        scriptList.append(
+            `<li><button id="btn-${scriptName}">${scriptName}</button></li>`
+        )
+        // Add the click handler for each button
+        $(`#btn-${scriptName}`).on('click', function() { // (e) {
+            runNpmScript(node, scriptName)
+        })
+    })
+
+    // If a script is still running, display the kill button
+    console.log(`[uibuilder:tabRunNpmScripts] Running scripts for ${node.url}:`, runningScripts[node.url])
+    if (runningScripts[node.url]) {
+        elKillButton.show()
+    } else {
+        elKillButton.hide()
+    }
+}
+
+/** Prep tabs
+ * @param {object} node A reference to the panel's `this` object
+ */
+function prepTabs(node) {
+    const tabs = RED.tabs.create({
+        id: 'tabs',
+        scrollable: false,
+        collapsible: false,
+        onchange: function(tab) {
+            // Show only the content (i.e. the children) of the selected tabsheet, and hide the others
+            $('#tabs-content')
+                .children()
+                .hide()
+            $('#' + tab.id).show()
+
+            // ? Could move these to their own show event. Might even unload some stuff on hide?
+
+            switch (tab.id) {
+                case 'tab-files': {
+                    tabFiles(node)
+                    break
+                }
+
+                case 'tab-runnpmscripts': {
+                    tabRunNpmScripts(node)
+                    break
+                }
+
+                case 'tab-libraries': {
+                    tabLibraries(node)
+                    break
+                }
+
+                default: {
+                    break
+                }
+            }
+        },
+    })
+
+    tabs.addTab({ id: 'tab-core', label: 'Core', })
+    tabs.addTab({ id: 'tab-files', label: 'Files', })
+    tabs.addTab({ id: 'tab-runnpmscripts', label: 'Scripts', })
+    tabs.addTab({ id: 'tab-libraries', label: 'Libraries', })
+    // tabs.addTab({ id: 'tab-security',  label: 'Security'  })
+    tabs.addTab({ id: 'tab-advanced', label: 'Advanced', })
+} // ---- End of preTabs ---- //
+
+// #endregion ==== Tab display functions ==== //
+
+/** Prep for edit
+ * @param {object} node A reference to the panel's `this` object
+ */
+function onEditPrepare(node) {
+    customButtonBar(node)
 
     // Update the open and node details buttons below the url
     $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${node.url}`)

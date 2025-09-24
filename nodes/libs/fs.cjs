@@ -216,10 +216,7 @@ class UibFs {
         const RED = this.uib.RED
 
         // Get the node id of the instance
-        let node
-        for (const [key, value] of Object.entries(this.uib.instances)) {
-            if (value === url) node = RED.nodes.getNode(key)
-        }
+        const node = this.getInstanceNode(url)
 
         // Make sure we got a node
         if (!node) {
@@ -240,6 +237,27 @@ class UibFs {
 
         return allFiles
     } // -- End of getInstanceLiveHtmlFiles -- //
+
+    /** Get the instance node for a uibuilder instance
+     * @param {string} url The URL of the uibuilder instance
+     * @returns {uibNode|null} The instance node or null if not found
+     */
+    getInstanceNode(url) {
+        const RED = this.uib.RED
+
+        // Get the node id of the instance
+        let node
+        for (const [key, value] of Object.entries(this.uib.instances)) {
+            if (value === url) node = RED.nodes.getNode(key)
+        }
+
+        // // Make sure we got a node
+        // if (!node) {
+        //     RED.log.error(`🌐🛑[UibFs:getInstanceLiveHtmlFiles] No node found for url="${url}" - called before all nodes loaded in Node-RED?`)
+        // }
+
+        return node || null
+    }
 
     /** Get a text file from uibuilder's master template folders
      * @param {*} template The name of the master template, e.g. "blank" or "esm-blank-client"
@@ -572,6 +590,7 @@ class UibFs {
     // #region ---- Synchronous methods ----
 
     /** Synchronously try access and error if fail.
+     * @throws Error if required access not available
      * @param {string} path Path to try to access
      * @param {'r'|'w'|'rw'|number} mode Modes required to work: r, w or rw
      */

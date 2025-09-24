@@ -3,26 +3,85 @@ title: Possible Future Features
 description: |
   What is being worked on for the next release.
 created: 2025-01-05 12:34:47
-updated: 2025-07-09 17:54:25
+updated: 2025-09-24 17:19:28
 author: Julian Knight (Totally Information)
 ---
 
+## To Fix
+
+* uibuilder node in a sub-flow [ref](https://discourse.nodered.org/t/uibuilder-url-inconsistancies-and-issues/98853/4)
+* Paul's disappearing library items. [#556](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/556)
+
 ## In Progress
+
+None
+
+### Ongoing work
 
 * Background rework (may take several releases):
   * [ ] Changing `uib-brand.css` to use more modern CSS, leaving it up to LightningCSS to build for older browsers. In particular, using nested definitions.
   * [ ] Remove remaining ~~5~~ 4 fsextra functions from fs lib. `ensureDirSync` is completed.
   * [ ] Move all nodes editor html to use modules. [Ref](https://discourse.nodered.org/t/text-javascript-vs-module-in-html/94215/4)
-  * [ ] Rename all .js node.js files to .cjs to avoid confusion with ESM modules.
+  * [ ] Rename all .js node.js files to .cjs to avoid confusion with ESM modules. (libs now all done).
   * [ ] No need to pass uib var now it is in a module, can simply require it. (Except for libs/fs which is already used by the uib module).
 
-## To Fix
+* Update admin-api-v3:
+  * [ ] Remove dependencies on fg (use fs.cjs instead).
+  * [ ] Make more use of AsyncLocalStorage to allow async functions to be wrapped in sync callers.
 
-* Failed rename of instance folder may get stuck.
-* Form CSS: 
-  * Input fields should not have a black background in light mode.
+* [ ] Script run
+  * [x]  Retain at least the link to the run id so that the panel can be exited and returned to and still allow cancelling the script. 
+  * [ ]  Consider also retaining the complete xhr request and streamed output.
 
 ## To Do
+
+(See the roadmap for lots more, these are just the current thoughts)
+
+* [ ] Add a node-red Tour for each release.
+
+* Router improvements
+  * [ ] Auto-menu generation for menus.
+    * [ ] Update router auto-menu with improvements from home site.
+    * [ ] Add search option. `<search>`/`<div role="search">` element that can be used to search the menu.
+    * [ ] Add nestable menu support.
+    * [ ] Add vertical menu support.
+    * [ ] ? Add tabbed menu support ?
+    * [ ] SPA documentation.
+
+* [ ] Failed rename of instance folder may get stuck.
+
+* [ ] Library manager updates
+  * [ ] Capture streamed command output as per the scripts tab.
+  * [ ] Check where an "error" property in package.json might come from [ref](https://discourse.nodered.org/t/uibuilder-package-json-error/98691).
+
+* [ ] Router library
+  * [ ] Add route description to automenu. Either as title or as an aria-label attribute.
+  * [ ] Content wrongly removed from route if an element has an id matching the route id. [ref](https://discourse.nodered.org/t/uibuilder-novice-coding/98693/5).
+  * [x] Rename the example to include "SPA" for clarity.
+  * [ ] Make sure new routes added from node-red (or addRoutes) only appear once.
+  * [ ] Add position option to auto-menu (add numeric `position` prop, cope with multiple of the same number, allow 'first', 'last' options).
+  * [ ] Investigate and implement best no-code/low-code way to auto-create the SPA from Node-RED. [ref](https://discourse.nodered.org/t/uibuilder-button/98970/13?u=totallyinformation).
+
+* [ ] Adjust gulp tasks to copy changed fe types file(s) (nb: src\front-end-module\tsconfig.json is different to templates\blank\tsconfig.json, don't copy it)
+  * [ ] to `templates\blank\types`
+  * [ ] to external template repo's
+  * [ ] Find out how to create a uib fe @types package (and add to template devDependencies)
+  * [ ] Find out how to automate updates to types when the fe module changes
+* [ ] Check that FE updates allow attributes to be set to `null` to unset them.
+* [ ] Also check that FE JS use of `uib.set('msg', ...)` works as expected.
+* [x] Add an experimental library that extends the uibuilder client library to allow playing with possible future features.
+
+* [ ] Dialog (modal/non-modal overlay)
+  * [ ] component(?) that can consume a template and display it as a dialog. [ref](https://discourse.nodered.org/t/uibuilder-help-in-developing-a-dashboard/97478/18)
+
+* [ ] Reactivity - phase 1
+  * [x] Create a reactive wrapper `uibuilder.reactive()`.
+    * [x] Move to separate class file
+    * [ ] Add `reactive` and `getReactiveClass` to function reference.
+  * [ ] Create a MutationObserver for any DOM attributes that start with `:` (`uib-bind` - binds an attribute to a variable) or `@` (`uib-on` - binds an event to a function).
+    * [ ] Extend to allow `uib-show` (show/hide elements).
+    * [ ] Extend to allow `uib-text` (innerText).
+    * [ ] Extend to allow `uib-model` (two-way data binding for input elements).
 
 * [ ] For the `uib-topic` attribute, allow msg.payload to be an array or object. Consider adding a `uib-fmt` attribute to allow output specification:
   * `uib-fmt="json"` - output as a syntax highlighted JSON object.
@@ -31,13 +90,42 @@ author: Julian Knight (Totally Information)
 
 * [ ] Allow overriding of the JSON max upload size for the custom Express server. [Ref](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988)
 
+* [ ] Add new example showing use of the TI Web Component library.
+* [ ] Add new classes for LAYOUTs.
+* [ ] Add experimental rective menu updates to router library.
+* [ ] Add SVGAnimate class to web components package.
+
+* CSS
+  * [ ] Make `form > label` use a variable for `align-self`.
+  * [ ] Add more css vars for styling buttons. [Ref](https://discourse.nodered.org/t/uibuilder-button/98970/21)
+
 * Documentation
+  * [ ] Add a manual `[UIBUILDER]` Markdown extension to replace the former auto-colouring of the word "UIBUILDER".
   * [ ] Add content to Lists, Maps, Tables, Dashboard Layouts, Cards, Articles.
   * [ ] Properly document file uploads and how to handle them. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
   * [ ] Add thanks to the contributors in the readme.
+  * [ ] Setting up and using VS Code for front-end development with uibuilder
+    * [ ] Link in uibuilder nodes
+    * [ ] Setting up remote VS Code
+    * [ ] Useful extensions for front-end development
+    * [ ] Configure browser dev tools (e.g. round-trip edits)
 
-#### Consider
+* Toaster improvements
+  * [x] Initial rework
+  * [ ] More work needed - probably delayed now that new showOverlay is available.
+  * [ ] Test
 
+## Experiments (See experimental library)
+
+* [x] reactive-binding
+* [x] enhanced-dialogs
+* [x] auto-layout
+* [x] template-engine
+* [ ] Uibuilder visual theme config. [Inspiration](https://tweakpane.github.io/)
+
+## Consider
+
+* Auto-generate a manifest web endpoint that delivers a manifest file for the current uibuilder instance. This would allow clients to have a faster startup. [ref](https://discourse.nodered.org/t/add-pwa-feature-to-uibuilder/97807/2)
 * For onTopic and uib-topic, allow wildcards in the topic name.
 * Move log reference into the `uibGlobalConfig` object. Remove passed references.
 * Some form of more direct RPC implementation between client and server. What functions might the server be able to do for the client? What might the server want to ask of or control on the client?
@@ -79,30 +167,78 @@ author: Julian Knight (Totally Information)
   *  It should be created dynamically based on the instance. So that it is pre-defined with the correct Socket.IO namespace, etc.
 * A manifest file for offline use.
   *  Requires a change to the templates.
+* Mount instance dependencies (e.g. libraries listed in the instances package.json). This would allow the instance to use the libraries without having to install them in the global node_modules.
+* uibuilder node scripts feature - capture running script output even if the config panel has been closed. Restore on re-open.
+* uib-watch node - with reload and notify options.
 
-
-## Answers needed
 
 ## Ideas
 
+* Improve `[tips]`. Allow pause/start on rotation. Add an `all` option.
 * Move uib-brand.css to a new sub-package. Publish separately.
 * Enhance CSS with ideas from [OpenProps](https://open-props.style).
 * Move all runtime code to ESM's and rely on ESBUILD to build the runtime. This will allow us to use the latest JS features but retain backwards compatibility.
+* Maybe think about having a control msg from NR to clients that will re-arrange elements on the page. Possibly an array (map?) of element selectors in a set order. Would probably need a "root" element that is the parent of all the elements to be re-arranged. Could also be used to show/hide elements.
+* Sending events from client to server using beacons.
+* FE: Write a template parser capable of parsing `<b>{{myvar}}</b>` into `<b><uib-var variable="myvar"></uib-var></b>`.
+
+### Wacky?
+
+* Using [Pyodide](https://pyodide.org/en/stable/index.html) to run Python natively in Node-RED.
+* [RxDB](https://rxdb.info/) - new nodes including a db server attached to Node-RED using RxDB's http server?
 
 ## New documentation
 
-* A "Creating UI's" section - showing how to create different UI structures
-  * Grid layouts
-  * Dashboard layouts
-  * Forms
-  * Tables
-  * Charts
-  * Maps
-  * Articles
-  * Lists
-  * Cards
+* Document the `.public` folder and how to use it with the custom web server.
 
 ## Videos
 
+* uibuilder's folders.
+* SPA (Single Page Application) vs MPA (Multi Page Application) and how to use uibuilder with both.
+* SPA/Router details
+  * Noting timings and when to load libraries, filter fns, etc.
+  * Common elements vs route "pages".
+  * Menu's.
 * uib-sidebar: How to use the new uib-sidebar node.
 * Updates on how to have data-driven updates to the UI.
+* Differences between IIFE and ESM module use.
+* UIBUILDER URL paths.
+* Custom web server and the `.public` folder.
+* SSR (Server-Side Rendering)
+* Middleware & Hooks
+* New uibuilder experimental library.
+* Instance API's.
+* Using a separate user-facing web server (separate from Node-RED's defaults that server up the Dashboards and http-in/-response nodes)
+* HTML structure/hierarchy.
+* The DOM.
+* Setting up and using VS Code for front-end development with uibuilder.
+* Web component library.
+
+### Shorts
+
+* Using CSS variables with uib-brand (e.g. using --max-width)
+
+## Communications
+
+* Use IFTTT to cross-post:
+  * New video - to Discord, Twitter
+  * New Release - to Discord, Twitter, (NR Forum)
+
+  Other possibles: Instagram, Blog, LinkedIn, NR Forum, BlueSky, Mastodon.
+
+
+## Thoughts
+
+Do we actually NEED the `uib-*` dynamic attributes? With `uib-topic`, we can already control any content/attributes/properties simply by sending a msg. We can also use `uibuilder.set('msg', ....)` from front-end code so really we don't need anything else? `uib-show` could simply be adding/removing a class. Inputs might be dealt with by simply using the `set` method. Not true 2-way binding but is that really needed?
+
+Even `uib-on` isn't really needed since we can just use the HTML `onchange`, `onclick`, etc. attributes.
+
+NB: `uib-var` can already bind to a variable other than `msg`.
+
+**Need some documentation** to explain the above and how to replicate framework-like features using the existing uibuilder features. And a video.
+Create a comparison table of how to do things with VueJS vs Node-RED/uibuilder.
+
+**Consider** creating a `topicMsg` or similar uibuilder function that makes data-binding easy. Use data-topic/name/id (in that order) on the input to define the topic.
+
+Still need more thought on this because it does not quite allow for the simple linking of an input to an output. How, for example, could we link the value of an input to the value of an attribute without any need for code? This is probably less important when working with Node-RED however, since round-tripping the data generally has minimal overhead and has the advantage of being able to share one users inputs with some/all users outputs.
+

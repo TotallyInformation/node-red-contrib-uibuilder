@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/valid-types */
 /** A zero dependency web component that will display some metadata about the current web page.
  */
 /*
@@ -16,7 +17,7 @@
   limitations under the License.
 */
 
-import TiBaseComponent from './ti-base-component'
+import TiBaseComponent from './ti-base-component.mjs'
 
 // const template = document.createElement('template')
 // template.innerHTML = /** @type {HTMLTemplateElement} */ /*html*/`<span></span>`
@@ -31,34 +32,34 @@ import TiBaseComponent from './ti-base-component'
 
 /**
  * @class
- * @extends TiBaseComponent
+ * @augments TiBaseComponent
  * @description Define a new zero dependency custom web component ECMA module that can be used as an HTML tag
  *
  * @element component-template
  * @memberOf Live
 
  * METHODS FROM BASE:
-  * @method config Update runtime configuration, return complete config
-  * @method createShadowSelectors Creates the jQuery-like $ and $$ methods
-  * @method deepAssign Object deep merger
-  * @method doInheritStyles If requested, add link to an external style sheet
-  * @method ensureId Adds a unique ID to the tag if no ID defined.
-  * @method _connect Call from start of connectedCallback. Sets connected prop and creates shadow selectors
-  * @method _event(name,data) Standardised custom event dispatcher
-  * @method _disconnect Call from end of disconnectedCallback. Clears connected prop and removes shadow selectors
-  * @method _ready Call from end of connectedCallback. Sets connected prop and outputs events
-  * @method _uibMsgHandler Not yet in use
+  * @function config Update runtime configuration, return complete config
+  * @function createShadowSelectors Creates the jQuery-like $ and $$ methods
+  * @function deepAssign Object deep merger
+  * @function doInheritStyles If requested, add link to an external style sheet
+  * @function ensureId Adds a unique ID to the tag if no ID defined.
+  * @function _connect Call from start of connectedCallback. Sets connected prop and creates shadow selectors
+  * @function _event(name,data) Standardised custom event dispatcher
+  * @function _disconnect Call from end of disconnectedCallback. Clears connected prop and removes shadow selectors
+  * @function _ready Call from end of connectedCallback. Sets connected prop and outputs events
+  * @function _uibMsgHandler Not yet in use
  * STANDARD METHODS:
-  * @method attributeChangedCallback Called when an attribute is added, removed, updated or replaced
-  * @method connectedCallback Called when the element is added to a document
-  * @method constructor Construct the component
-  * @method disconnectedCallback Called when the element is removed from a document
+  * @function attributeChangedCallback Called when an attribute is added, removed, updated or replaced
+  * @function connectedCallback Called when the element is added to a document
+  * @function constructor Construct the component
+  * @function disconnectedCallback Called when the element is removed from a document
 
  * OTHER METHODS:
-  * method doFilter Apply value filter if specified
-  * @method doFormat(val,type) Format a value using this.format
-  * @method doWatch Process changes to the required uibuilder variable
-  * @method varDom(chkVal) Convert this.value to DOM output (applies output filter if needed)
+  * @function doFilter Apply value filter if specified
+  * @function doFormat(val,type) Format a value using this.format
+  * @function doWatch Process changes to the required uibuilder variable
+  * @function varDom(chkVal) Convert this.value to DOM output (applies output filter if needed)
 
  * CUSTOM EVENTS:
   * @fires component-template:connected - When an instance of the component is attached to the DOM. `evt.details` contains the details of the element.
@@ -67,9 +68,9 @@ import TiBaseComponent from './ti-base-component'
   * @fires component-template:attribChanged - When a watched attribute changes. `evt.details.data` contains the details of the change.
   * NOTE that listeners can be attached either to the `document` or to the specific element instance.
 
- * @constructor
+ * @class
   * @throws {Error} Throws an error if the uibuilder client library is not available.
- 
+
  * Standard watched attributes (common across all my components):
   * @attr {string|boolean} inherit-style - Optional. Load external styles into component (only useful if using template). If present but empty, will default to './index.css'. Optionally give a URL to load.
   * @attr {string} name - Optional. HTML name attribute. Included in output _meta prop.
@@ -79,28 +80,28 @@ import TiBaseComponent from './ti-base-component'
   * @attr {string} type - Optional. What type of metadata to display. Default is 'created'. Options are 'created', 'updated', 'crup', 'both', 'size', 'modified', 'all'
 
  * PROPS FROM BASE:
-  * @prop {number} _iCount Static. The component version string (date updated)
-  * @prop {boolean} uib True if UIBUILDER for Node-RED is loaded
-  * @prop {object} uibuilder Reference to loaded UIBUILDER for Node-RED client library if loaded (else undefined)
-  * @prop {function(string): Element} $ jQuery-like shadow dom selector (or undefined if shadow dom not used)
-  * @prop {function(string): NodeList} $$  jQuery-like shadow dom multi-selector (or undefined if shadow dom not used)
-  * @prop {boolean} connected False until connectedCallback finishes
-  * @prop {string} name Placeholder for the optional name attribute
-  * @prop {object} opts This components controllable options - get/set using the `config()` method - empty object by default
-  * @prop {string} baseVersion Static. The base component version string (date updated).
+  * @property {number} _iCount Static. The component version string (date updated)
+  * @property {boolean} uib True if UIBUILDER for Node-RED is loaded
+  * @property {object} uibuilder Reference to loaded UIBUILDER for Node-RED client library if loaded (else undefined)
+  * @property {function(string): Element} $ jQuery-like shadow dom selector (or undefined if shadow dom not used)
+  * @property {function(string): NodeList} $$  jQuery-like shadow dom multi-selector (or undefined if shadow dom not used)
+  * @property {boolean} connected False until connectedCallback finishes
+  * @property {string} name Placeholder for the optional name attribute
+  * @property {object} opts This components controllable options - get/set using the `config()` method - empty object by default
+  * @property {string} baseVersion Static. The base component version string (date updated).
  * OTHER STANDARD PROPS:
-  * @prop {string} componentVersion Static. The component version string (date updated). Also has a getter that returns component and base version strings.
+  * @property {string} componentVersion Static. The component version string (date updated). Also has a getter that returns component and base version strings.
 
  * Other props:
-  * @prop {string} format - Chosen formatting - default to none
-  * @prop {'d'|'dt'|'t'|'k'|'m'} formats - what are the available formats?
-  * @prop {boolean} report - Whether to send update value to Node-RED on change. Default is false
-  * @prop {object} topicMonitors - Holds uibuilder.onTopic listeners
-  * @prop {string} type - What is the value type. Default is 'created'
-  * @prop {'created'|'updated'|'crup'|'both'| 'size'|'modified'|'all'} types - what are the available types?
-  * @prop {boolean} undef - Whether to output if the variable is undefined. Default is false
-  * @prop {*} value - Current value of the watched variable
-  * @prop {string} variable - Name of the uibuilder managed variable to use. Default is 'pageMeta'
+  * @property {string} format - Chosen formatting - default to none
+  * @property {'d'|'dt'|'t'|'k'|'m'} formats - what are the available formats?
+  * @property {boolean} report - Whether to send update value to Node-RED on change. Default is false
+  * @property {object} topicMonitors - Holds uibuilder.onTopic listeners
+  * @property {string} type - What is the value type. Default is 'created'
+  * @property {'created'|'updated'|'crup'|'both'| 'size'|'modified'|'all'} types - what are the available types?
+  * @property {boolean} undef - Whether to output if the variable is undefined. Default is false
+  * @property {*} value - Current value of the watched variable
+  * @property {string} variable - Name of the uibuilder managed variable to use. Default is 'pageMeta'
   * By default, all attributes are also created as properties
 
  * @slot Container contents
@@ -120,7 +121,7 @@ class UibMeta extends TiBaseComponent {
     /** Component version */
     static componentVersion = '2025-01-06'
 
-    //#region --- Class Properties ---
+    // #region --- Class Properties ---
 
     /** @type {string} Name of the uibuilder mangaged variable to use */
     variable = 'pageMeta'
@@ -133,14 +134,14 @@ class UibMeta extends TiBaseComponent {
     /** What is the value type */
     type = 'created'
     /** what are the available types? */
-    types = ['created', 'updated', 'crup', 'both', 'size', 'modified', 'all', ]
+    types = ['created', 'updated', 'crup', 'both', 'size', 'modified', 'all']
     /** Chosen formatting - default to none */
     format = ''
     /** what are the available formats? */
     formats = ['d', 'dt', 't', 'k', 'm']
     /** Holds uibuilder.onTopic listeners */
     topicMonitors = {}
-    
+
     // Makes HTML attribute change watched
     static get observedAttributes() {
         return [
@@ -150,12 +151,12 @@ class UibMeta extends TiBaseComponent {
             'type', 'format',
         ]
     }
-    
-    //#endregion --- Class Properties ---
+
+    // #endregion --- Class Properties ---
 
     constructor() {
         super()
-        this.shadow = this.attachShadow({ mode: 'open', delegatesFocus: true })
+        this.shadow = this.attachShadow({ mode: 'open', delegatesFocus: true, })
         //  .append(template.content.cloneNode(true))
 
         this.$ = this.shadowRoot.querySelector.bind(this.shadowRoot)
@@ -190,8 +191,8 @@ class UibMeta extends TiBaseComponent {
      * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
      * Attribute values can only ever be strings
      * @param {string} attrib The name of the attribute that is changing
-     * @param {string} newVal The new value of the attribute
      * @param {string} oldVal The old value of the attribute
+     * @param {string} newVal The new value of the attribute
      */
     attributeChangedCallback(attrib, oldVal, newVal) {
         /** Optionally ignore attrib changes until instance is fully connected
@@ -226,7 +227,7 @@ class UibMeta extends TiBaseComponent {
         }
 
         // Keep at end. Let everyone know that an attribute has changed for this instance of the component
-        this._event('attribChanged', { attribute: attrib, newVal: newVal, oldVal: oldVal })
+        this._event('attribChanged', { attribute: attrib, newVal: newVal, oldVal: oldVal, })
     }
 
     /** Process changes to the required uibuilder variable */
@@ -241,7 +242,7 @@ class UibMeta extends TiBaseComponent {
         window['uibuilder'].onChange(this.variable, (val) => {
             this.value = val
             this.varDom()
-            if (this.report === true) window['uibuilder'].send({ topic: this.variable, payload: this.value || undefined })
+            if (this.report === true) window['uibuilder'].send({ topic: this.variable, payload: this.value || undefined, })
         })
     }
 
@@ -295,7 +296,7 @@ class UibMeta extends TiBaseComponent {
         }
         // if (this.uib) this.shadow.innerHTML = window['uibuilder'].sanitiseHTML(out)
         // else this.shadow.innerHTML = out
-        if (out !== undefined) this.shadow.innerHTML = out
+        this.shadow.innerHTML = out
 
         // this.shadow.appendChild(this.css)
     }
@@ -330,13 +331,13 @@ class UibMeta extends TiBaseComponent {
             }
 
             case 'k': {
-                if (type === 'num') out = `${uibuilder.round(val/1024, 1)} k`
+                if (type === 'num') out = `${uibuilder.round(Number(val) / 1024, 1)} k`
                 else out = val
                 break
             }
 
             case 'm': {
-                if (type === 'num') out = `${uibuilder.round(val/1048576, 2)} M`
+                if (type === 'num') out = `${uibuilder.round(Number(val) / 1048576, 2)} M`
                 else out = val
                 break
             }

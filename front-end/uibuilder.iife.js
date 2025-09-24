@@ -1,3 +1,4 @@
+"use strict";
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -49,18 +50,115 @@
     }
   });
 
-  // src/front-end-module/ui.js
+  // src/front-end-module/libs/show-overlay.mjs
+  function showOverlay(options = {}) {
+    const {
+      content = "",
+      title = "",
+      icon = "",
+      type = "info",
+      showDismiss,
+      autoClose = 5,
+      time = true
+    } = options;
+    const overlayContainerId = "uib-info-overlay";
+    let overlayContainer = document.getElementById(overlayContainerId);
+    if (!overlayContainer) {
+      overlayContainer = document.createElement("div");
+      overlayContainer.id = overlayContainerId;
+      document.body.appendChild(overlayContainer);
+      console.log(">> SHOW OVERLAY >>", options, document.getElementById(overlayContainerId));
+    }
+    const entryId = "overlay-entry-".concat(Date.now(), "-").concat(Math.random().toString(36).substr(2, 9));
+    const overlayEntry = document.createElement("div");
+    overlayEntry.id = entryId;
+    overlayEntry.style.marginBottom = "0.5rem";
+    const typeStyles = {
+      info: {
+        iconDefault: "\u2139\uFE0F",
+        titleDefault: "Information",
+        color: "hsl(188.2deg 77.78% 40.59%)"
+      },
+      success: {
+        iconDefault: "\u2705",
+        titleDefault: "Success",
+        color: "hsl(133.7deg 61.35% 40.59%)"
+      },
+      warning: {
+        iconDefault: "\u26A0\uFE0F",
+        titleDefault: "Warning",
+        color: "hsl(35.19deg 84.38% 62.35%)"
+      },
+      error: {
+        iconDefault: "\u274C",
+        titleDefault: "Error",
+        color: "hsl(2.74deg 92.59% 62.94%)"
+      }
+    };
+    const currentTypeStyle = typeStyles[type] || typeStyles.info;
+    const shouldShowDismiss = showDismiss !== void 0 ? showDismiss : autoClose === null;
+    const iconHtml = icon || currentTypeStyle.iconDefault;
+    const titleText = title || currentTypeStyle.titleDefault;
+    let timeHtml = "";
+    if (time) {
+      const now = /* @__PURE__ */ new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+      const timestamp = "".concat(year, "-").concat(month, "-").concat(day, " ").concat(hours, ":").concat(minutes, ":").concat(seconds);
+      timeHtml = '<div class="uib-overlay-time" style="font-size: 0.8em; color: var(--text3, #999); margin-left: auto; margin-right: '.concat(shouldShowDismiss ? "0.5rem" : "0", ';">').concat(timestamp, "</div>");
+    }
+    overlayEntry.innerHTML = /* html */
+    '\n        <div class="uib-overlay-entry" style="--callout-color:'.concat(currentTypeStyle.color, ';">\n            <div class="uib-overlay-header">\n                <div class="uib-overlay-icon">').concat(iconHtml, '</div>\n                <div class="uib-overlay-title">').concat(titleText, "</div>\n                ").concat(timeHtml, "\n                ").concat(shouldShowDismiss ? '<button class="uib-overlay-dismiss" data-entry-id="'.concat(entryId, '" title="Close">\xD7</button>') : "", '\n            </div>\n            <div class="uib-overlay-content">\n                ').concat(content, "\n            </div>\n        </div>\n    ");
+    if (overlayContainer.children.length > 0) {
+      overlayContainer.insertBefore(overlayEntry, overlayContainer.firstChild);
+    } else {
+      overlayContainer.appendChild(overlayEntry);
+    }
+    const closeOverlayEntry = () => {
+      const entry = document.getElementById(entryId);
+      if (!entry) return;
+      entry.style.animation = "slideOut 0.3s ease-in";
+      setTimeout(() => {
+        if (entry.parentNode) {
+          entry.remove();
+        }
+      }, 300);
+    };
+    const dismissBtn = overlayEntry.querySelector(".uib-overlay-dismiss");
+    if (dismissBtn) {
+      dismissBtn.addEventListener("click", closeOverlayEntry);
+    }
+    let autoCloseTimer = null;
+    if (autoClose !== null && autoClose > 0) {
+      autoCloseTimer = setTimeout(closeOverlayEntry, autoClose * 1e3);
+    }
+    return {
+      close: () => {
+        if (autoCloseTimer) {
+          clearTimeout(autoCloseTimer);
+        }
+        closeOverlayEntry();
+      },
+      id: entryId
+    };
+  }
+
+  // src/front-end-module/ui.mjs
   var _a;
   var Ui = (_a = class {
-    //#endregion --- class variables ---
+    // #endregion --- class variables ---
     /** Called when `new Ui(...)` is called
      * @param {globalThis} win Either the browser global window or jsdom dom.window
      * @param {Function} [extLog] A function that returns a function for logging
      * @param {Function} [jsonHighlight] A function that returns a highlighted HTML of JSON input
      */
     constructor(win, extLog, jsonHighlight) {
-      //#region --- Class variables ---
-      __publicField(this, "version", "7.4.2-src");
+      // #region --- Class variables ---
+      __publicField(this, "version", "7.5.0-src");
       // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
       __publicField(this, "sanitiseExtraTags", ["uib-var"]);
       __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -102,7 +200,7 @@
         _a.md = _a.win["markdownit"](_a.mdOpts);
       }
     }
-    //#region ---- Internal Methods ----
+    // #region ---- Internal Methods ----
     _markDownIt() {
       if (!_a.win["markdownit"]) return;
       if (!this.ui_md_plugins && _a.win["uibuilder"] && _a.win["uibuilder"].ui_md_plugins) this.ui_md_plugins = _a.win["uibuilder"].ui_md_plugins;
@@ -553,8 +651,8 @@
       });
     }
     // --- end of _uiUpdate ---
-    //#endregion ---- -------- ----
-    //#region ---- External Methods ----
+    // #endregion ---- -------- ----
+    // #region ---- External Methods ----
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
      * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
      * If the selected element is a <template>, returns the first child element.
@@ -654,8 +752,8 @@
       if (!config) config = {};
       if (!config.onceOnly) config.onceOnly = false;
       if (!config.mode) config.mode = "insert";
-      const template = _a.doc.getElementById(sourceId);
-      if (!template || template.tagName !== "TEMPLATE") {
+      const template2 = _a.doc.getElementById(sourceId);
+      if (!template2 || template2.tagName !== "TEMPLATE") {
         _a.log("error", "Ui:applyTemplate", "Source must be a <template>. id='".concat(sourceId, "'"))();
         return;
       }
@@ -669,8 +767,8 @@
         _a.log("warn", "Ui:applyTemplate", "Target element is not empty, content is replaced. id='".concat(targetId, "'"))();
       }
       let templateContent;
-      if (config.onceOnly === true) templateContent = _a.doc.adoptNode(template.content);
-      else templateContent = _a.doc.importNode(template.content, true);
+      if (config.onceOnly === true) templateContent = _a.doc.adoptNode(template2.content);
+      else templateContent = _a.doc.importNode(template2.content, true);
       if (templateContent) {
         if (config.attributes) {
           const el = templateContent.firstElementChild;
@@ -953,7 +1051,7 @@
         const listEntries = _a.doc.querySelectorAll("".concat(cssSelector, " li"));
         if (listEntries) {
           thisOut.list = {
-            "entries": listEntries.length
+            entries: listEntries.length
           };
         }
       }
@@ -961,7 +1059,7 @@
         const listEntries = _a.doc.querySelectorAll("".concat(cssSelector, " dt"));
         if (listEntries) {
           thisOut.list = {
-            "entries": listEntries.length
+            entries: listEntries.length
           };
         }
       }
@@ -971,9 +1069,9 @@
         const cols = _a.doc.querySelectorAll("".concat(cssSelector, " > tbody > tr:last-child > *"));
         if (bodyEntries || headEntries || cols) {
           thisOut.table = {
-            "headRows": headEntries ? headEntries.length : 0,
-            "bodyRows": bodyEntries ? bodyEntries.length : 0,
-            "columns": cols ? cols.length : 0
+            headRows: headEntries ? headEntries.length : 0,
+            bodyRows: bodyEntries ? bodyEntries.length : 0,
+            columns: cols ? cols.length : 0
           };
         }
       }
@@ -1043,6 +1141,10 @@
       if (!el) return;
       if (!slot) slot = "";
       slot = this.sanitiseHTML(slot);
+      if (el.nodeName === "TEMPLATE") {
+        el.innerHTML = slot;
+        return;
+      }
       const tempFrag = _a.doc.createRange().createContextualFragment(slot);
       const elRange = _a.doc.createRange();
       elRange.selectNodeContents(el);
@@ -1071,22 +1173,37 @@
       if (!_a.win["DOMPurify"]) return html;
       return _a.win["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
     }
-    /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
+    // TODO - Allow notify to sit in corners rather than take over the screen
+    /** Show a pop-over "toast" dialog or a modal alert
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
-     * @param {"notify"|"alert"} type Dialog type
-     * @param {object} ui standardised ui data
-     * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
-     * @returns {void}
+     * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
+     * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
+     * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
+     * @returns {HTMLDivElement|null} The toast element (which may disappear after a timeout) or null if no content
+     * @example
+     * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
+     * @example
+     * Ui.showDialog('alert', null, msg)
      */
     showDialog(type, ui, msg) {
+      if (!type || !["notify", "alert"].includes(type)) {
+        type = "notify";
+      }
+      if (!ui) {
+        ui = {
+          noAutohide: true,
+          modal: true,
+          appendToast: false
+        };
+      }
       let body = "";
       if (msg.payload && typeof msg.payload === "string") body += "<div>".concat(msg.payload, "</div>");
       if (ui.content) body += "<div>".concat(ui.content, "</div>");
       if (body === "") {
         _a.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
-        return;
+        return null;
       }
       let title = "";
       if (ui.title) title = ui.title;
@@ -1106,41 +1223,116 @@
         ui.autohide = false;
       }
       content = '<div class="toast-head">'.concat(icon).concat(title, '</div><div class="toast-body">').concat(body, "</div>");
-      let toaster = _a.doc.getElementById("toaster");
-      if (toaster === null) {
-        toaster = _a.doc.createElement("div");
-        toaster.id = "toaster";
-        toaster.title = "Click to clear all notifcations";
-        toaster.setAttribute("class", "toaster");
-        toaster.setAttribute("role", "dialog");
-        toaster.setAttribute("arial-label", "Toast message");
-        toaster.onclick = function() {
-          toaster.remove();
-        };
-        _a.doc.body.insertAdjacentElement("afterbegin", toaster);
-      }
-      const toast = _a.doc.createElement("div");
-      toast.title = "Click to clear this notifcation";
-      toast.setAttribute("class", "toast ".concat(ui.variant ? ui.variant : "", " ").concat(type));
-      toast.innerHTML = content;
-      toast.setAttribute("role", "alertdialog");
-      if (ui.modal) toast.setAttribute("aria-modal", ui.modal);
-      toast.onclick = function(evt) {
-        evt.stopPropagation();
-        toast.remove();
-        if (toaster.childElementCount < 1) toaster.remove();
+      const removeToaster = () => {
+        if (!toaster) return;
+        _a.doc.body.removeEventListener("keyup", toasterEventHandler);
+        toaster.removeEventListener("keyup", toasterEventHandler);
+        toaster.removeEventListener("touchend", toasterEventHandler);
+        toaster.removeEventListener("click", toasterEventHandler);
+        toaster.remove();
       };
-      if (type === "alert") {
+      const removeToast = (localToast) => {
+        localToast.removeEventListener("keyup", toasterEventHandler);
+        localToast.removeEventListener("touchend", toasterEventHandler);
+        localToast.removeEventListener("click", toasterEventHandler);
+        localToast.remove();
+        if (toaster && toaster.childElementCount === 0) removeToaster();
+      };
+      const toasterEventHandler = (evt) => {
+        evt.stopPropagation();
+        if (!toaster) return;
+        console.log(
+          "toasterEventHandler",
+          evt,
+          toaster.contains(evt.target),
+          newToast.contains(evt.target),
+          newToast === evt.target
+        );
+        removeToaster();
+      };
+      const toastEventHandler = (evt) => {
+        evt.stopPropagation();
+        let localToast;
+        if (evt.target.classList.contains("toast")) {
+          localToast = evt.target;
+        } else {
+          localToast = evt.target.closest(".toast");
+        }
+        if (!localToast) {
+          _a.log(1, "Ui:showDialog", "Event target is not a (or in a) toast element, ignoring event")();
+          return;
+        }
+        const hasInteractiveElement = !!localToast.querySelector("input, textarea, button");
+        console.log(
+          "toastEventHandler",
+          hasInteractiveElement,
+          evt,
+          localToast.contains(evt.target),
+          localToast === evt.target
+        );
+        if (hasInteractiveElement) {
+          if (evt.key !== "Escape") return;
+          removeToast(localToast);
+        }
+        removeToast(localToast);
+      };
+      const newToast = _a.doc.createElement("div");
+      newToast.title = "Click or Esc to clear this notifcation";
+      newToast.setAttribute("class", "toast ".concat(type));
+      newToast.setAttribute("role", type === "alert" ? "alertdialog" : "dialog");
+      newToast.dataset.modal = ui.modal;
+      newToast.dataset.autohide = ui.autohide;
+      newToast.dataset.autoHideDelay = ui.autoHideDelay;
+      newToast.innerHTML = content;
+      if (ui.appendToast === true) {
+        const lastToast = Array.from(_a.doc.body.querySelectorAll(".toast")).pop();
+        if (lastToast) {
+          lastToast.insertAdjacentElement("afterend", newToast);
+        } else {
+          _a.doc.body.insertBefore(newToast, _a.doc.body.firstChild);
+        }
+      } else {
+        _a.doc.body.insertBefore(newToast, _a.doc.body.firstChild);
       }
-      toaster.insertAdjacentElement(ui.appendToast === true ? "beforeend" : "afterbegin", toast);
+      newToast.addEventListener("keyup", toastEventHandler);
+      newToast.addEventListener("click", toastEventHandler);
+      newToast.addEventListener("touchend", toastEventHandler);
       if (ui.autohide === true) {
         setInterval(() => {
-          toast.remove();
-          if (toaster.childElementCount < 1) toaster.remove();
+          removeToast(newToast);
         }, ui.autoHideDelay);
       }
+      let toaster;
+      if (ui.modal === true) {
+        toaster = _a.doc.getElementById("toaster");
+        if (toaster === null) {
+          toaster = _a.doc.createElement("div");
+          toaster.id = "toaster";
+          toaster.title = "Click, touch, or ESC to clear notifcations";
+          toaster.setAttribute("class", "toaster");
+          toaster.setAttribute("arial-label", "Toast message");
+          toaster.addEventListener("click", toasterEventHandler);
+          toaster.addEventListener("touchend", toasterEventHandler);
+          _a.doc.body.addEventListener("keyup", toasterEventHandler);
+          _a.doc.body.insertAdjacentElement("afterbegin", toaster);
+        }
+      }
+      return newToast;
     }
-    // --- End of showDialog ---
+    /** Creates and displays an overlay window with customizable content and behavior
+     * @param {object} options - Configuration options for the overlay
+     *   @param {string} [options.content] - Main content (text or HTML) to display
+     *   @param {string} [options.title] - Optional title above the main content
+     *   @param {string} [options.icon] - Optional icon to display left of title (HTML or text)
+     *   @param {string} [options.type] - Overlay type: 'success', 'info', 'warning', or 'error'
+     *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
+     *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
+     *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
+     * @returns {object} Object with close() method to manually close the overlay
+     */
+    showOverlay(options) {
+      return showOverlay(options);
+    }
     /** Directly manage UI via JSON
      * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
      */
@@ -1198,7 +1390,6 @@
       });
       return out;
     }
-    // --- end of uiGet --- //
     /** External alias for _uiComposeComponent
      * @param {*} el HTML Element to enhance
      * @param {*} comp Individual uibuilder ui component spec
@@ -1206,7 +1397,7 @@
     uiEnhanceElement(el, comp) {
       this._uiComposeComponent(el, comp);
     }
-    //#region --- table handling ---
+    // #region --- table handling ---
     /** Column metadata object definition
      * @typedef columnDefinition
      * @property {number} index The column index number
@@ -1268,11 +1459,11 @@
         opts.cols = [];
         Object.keys(data[0]).forEach((col, i) => {
           opts.cols.push({
-            "index": i,
-            "hasName": hasName,
-            "name": hasName ? col : void 0,
-            "key": col != null ? col : i,
-            "title": col
+            index: i,
+            hasName,
+            name: hasName ? col : void 0,
+            key: col != null ? col : i,
+            title: col
           });
         });
       }
@@ -1526,8 +1717,7 @@
       if (!tbodyEl) throw new Error("[tblAddDataRow] Table must have a tbody tag, tbody section ".concat(options.body, " does not exist"));
       tbodyEl.deleteRow(rowIndex);
     }
-    //#endregion --- table handling ---
-    //#endregion ---- external methods ----
+    // #endregion --- table handling ---
   }, /** Reference to DOM window - must be passed in the constructor
    * Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
    * @type {Window}
@@ -2475,12 +2665,12 @@
       }
     }
   }
-  var hasXHR2 = function() {
+  var hasXHR2 = (function() {
     const xhr = newRequest({
       xdomain: false
     });
     return xhr && xhr.responseType !== null;
-  }();
+  })();
   var XHR = class extends BaseXHR {
     constructor(opts) {
       super(opts);
@@ -4902,8 +5092,15 @@
     connect: lookup2
   });
 
-  // src/components/ti-base-component.js
+  // src/components/ti-base-component.mjs
   var _TiBaseComponent = class _TiBaseComponent extends HTMLElement {
+    // get id() {
+    //     return this.id
+    // }
+    // set id(value) {
+    //     // this.id = value
+    //     console.log('>> SETTING ID:', value, this.id, this.getAttribute('id'))
+    // }
     /** NB: Attributes not available here - use connectedCallback to reference */
     constructor() {
       super();
@@ -4924,37 +5121,33 @@
       __publicField(this, "$$");
       /** True when instance finishes connecting.
        * Allows initial calls of attributeChangedCallback to be
-       * ignored if needed. */
+       * ignored if needed.
+       */
       __publicField(this, "connected", false);
       /** Placeholder for the optional name attribute @type {string} */
       __publicField(this, "name");
       /** Runtime configuration settings @type {object} */
       __publicField(this, "opts", {});
     }
-    /** Report the current component version string */
+    /** Report the current component version string
+     * @returns {string} The component version & base version as a string
+     */
     static get version() {
       return "".concat(this.componentVersion, " (Base: ").concat(this.baseVersion, ")");
     }
-    /** Optionally apply an external linked style sheet (called from connectedCallback)
-     * @param {*} url The URL for the linked style sheet
-     */
-    async doInheritStyles() {
-      if (!this.hasAttribute("inherit-style")) return;
-      let url2 = this.getAttribute("inherit-style");
-      if (!url2) url2 = "./index.css";
-      const linkEl = document.createElement("link");
-      linkEl.setAttribute("type", "text/css");
-      linkEl.setAttribute("rel", "stylesheet");
-      linkEl.setAttribute("href", url2);
-      this.shadowRoot.appendChild(linkEl);
-      console.info("[".concat(this.localName, '] Inherit-style requested. Loading: "').concat(url2, '"'));
-    }
     /** OPTIONAL. Update runtime configuration, return complete config
      * @param {object|undefined} config If present, partial or full set of options. If undefined, fn returns the current full option settings
+     * @returns {object} The full set of options
      */
     config(config) {
       if (config) this.opts = _TiBaseComponent.deepAssign(this.opts, config);
       return this.opts;
+    }
+    /** Creates the $ and $$ fns that do css selections against the shadow dom */
+    createShadowSelectors() {
+      var _a3, _b;
+      this.$ = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector.bind(this.shadowRoot);
+      this.$$ = (_b = this.shadowRoot) == null ? void 0 : _b.querySelectorAll.bind(this.shadowRoot);
     }
     /** Utility object deep merge fn
      * @param {object} target Merge target object
@@ -4975,6 +5168,21 @@
       }
       return target;
     }
+    /** Optionally apply an external linked style sheet for Shadow DOM (called from connectedCallback)
+     * param {*} url The URL for the linked style sheet
+     */
+    async doInheritStyles() {
+      if (!this.shadowRoot) return;
+      if (!this.hasAttribute("inherit-style")) return;
+      let url2 = this.getAttribute("inherit-style");
+      if (!url2) url2 = "./index.css";
+      const linkEl = document.createElement("link");
+      linkEl.setAttribute("type", "text/css");
+      linkEl.setAttribute("rel", "stylesheet");
+      linkEl.setAttribute("href", url2);
+      this.shadowRoot.appendChild(linkEl);
+      console.info("[".concat(this.localName, '] Inherit-style requested. Loading: "').concat(url2, '"'));
+    }
     /** Ensure that the component instance has a unique ID & check again if uib loaded */
     ensureId() {
       this.uib = !!window["uibuilder"];
@@ -4982,17 +5190,89 @@
         this.id = "".concat(this.localName, "-").concat(++this.constructor._iCount);
       }
     }
-    /** Creates the $ and $$ fns that do css selections against the shadow dom */
-    createShadowSelectors() {
-      var _a3, _b;
-      this.$ = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector.bind(this.shadowRoot);
-      this.$$ = (_b = this.shadowRoot) == null ? void 0 : _b.querySelectorAll.bind(this.shadowRoot);
-    }
-    // TODO Needs enhancing - does nothing at the moment
-    /** Handle a `uibuilder:msg:_ui:update:${this.id}` custom event
-     * @param {CustomEvent} evt uibuilder `uibuilder:msg:_ui:update:${this.id}` custom event evt.details contains the data
+    /** Check if slot has meaningful content (not just whitespace)
+     * @returns {boolean} True if slot has non-empty content
      */
-    _uibMsgHandler(evt) {
+    hasSlotContent() {
+      const slot = this.shadowRoot.querySelector("slot");
+      const assignedNodes = slot.assignedNodes();
+      return assignedNodes.some((node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          return true;
+        }
+        if (node.nodeType === Node.TEXT_NODE) {
+          return node.textContent.trim().length > 0;
+        }
+        return false;
+      });
+    }
+    /** Attaches a new stylesheet before all other stylesheets in the light DOM
+     * @param {string} cssText - CSS text to inject directly
+     * @param {number} order - Optional order/priority for stylesheet placement. Lower numbers = higher priority (inserted first). Defaults to 0.
+     * @returns {Element} The created or existing style element
+     * @throws {Error} If cssText is not provided
+     * @example
+     * // Inject CSS text directly with default order
+     * dataList.prependStylesheet('.custom { color: hsl(0, 100%, 50%); }')
+     *
+     * // Inject CSS with specific order (lower number = higher priority)
+     * dataList.prependStylesheet('.base { font-size: 1rem; }', 1)
+     * dataList.prependStylesheet('.critical { color: hsl(0, 100%, 50%); }', 0)
+     */
+    prependStylesheet(cssText, order = 0) {
+      if (!cssText) {
+        throw new Error("[".concat(this.localName, "] cssText must be provided"));
+      }
+      const existingStylesheet = this._findExistingStylesheet();
+      if (existingStylesheet) return existingStylesheet;
+      const styleElement = document.createElement("style");
+      styleElement.textContent = cssText;
+      styleElement.setAttribute("data-component", this.localName);
+      styleElement.setAttribute("data-order", order.toString());
+      this._prependToDocumentHead(styleElement, order);
+      return styleElement;
+    }
+    /** Send a message to the Node-RED server via uibuilder if available
+     * NB: These web components are NEVER dependent on Node-RED or uibuilder.
+     * @param {string} evtName The event name to send
+     * @param {*} data The data to send
+     */
+    uibSend(evtName, data) {
+      if (this.uib) {
+        if (this.uibuilder.ioConnected) {
+          this.uibuilder.send({
+            topic: "".concat(this.localName, ":").concat(evtName),
+            payload: data,
+            id: this.id,
+            name: this.name
+          });
+        } else {
+          console.warn("[".concat(this.localName, "] uibuilder not connected to server, cannot send:"), evtName, data);
+        }
+      }
+    }
+    // #region ---- Methods private to extended classes ----
+    // These are called from a class that extends this base class but should not be called directly by the user.
+    /** Standardised connection. Call from the start of connectedCallback fn */
+    _connect() {
+      this.ensureId();
+      this.doInheritStyles();
+      if (this.uib) this.uibuilder.onTopic("".concat(this.localName, "::").concat(this.id), this._uibMsgHandler.bind(this));
+    }
+    /** Standardised constructor. Keep after call to super()
+     * @param {Node|string} template Nodes/string content that will be cloned into the shadow dom
+     * @param {{mode:'open'|'closed',delegatesFocus:boolean}=} shadowOpts Options passed to attachShadow
+     */
+    _construct(template2, shadowOpts) {
+      if (!template2) return;
+      if (!shadowOpts) shadowOpts = { mode: "open", delegatesFocus: true };
+      this.attachShadow(shadowOpts).append(template2);
+      this.createShadowSelectors();
+    }
+    /** Standardised disconnection. Call from the END of disconnectedCallback fn */
+    _disconnect() {
+      document.removeEventListener("uibuilder:msg:_ui:update:".concat(this.id), this._uibMsgHandler);
+      this._event("disconnected");
     }
     /** Custom event dispacher `component-name:name` with detail data
      * @example
@@ -5000,11 +5280,11 @@
      * @example
      *   this._event('ready', {age: 42, type: 'android'})
      *
-     * @param {string} name A name to give the event, added to the component-name separated with a :
+     * @param {string} evtName A name to give the event, added to the component-name separated with a :
      * @param {*=} data Optional data object to pass to event listeners via the evt.detail property
      */
-    _event(name2, data) {
-      this.dispatchEvent(new CustomEvent("".concat(this.localName, ":").concat(name2), {
+    _event(evtName, data) {
+      this.dispatchEvent(new CustomEvent("".concat(this.localName, ":").concat(evtName), {
         bubbles: true,
         composed: true,
         detail: {
@@ -5014,34 +5294,81 @@
         }
       }));
     }
-    /** Standardised constructor. Keep after call to super()
-     * @param {Node|string} template Nodes/string content that will be cloned into the shadow dom
-     * @param {{mode:'open'|'closed',delegatesFocus:boolean}=} shadowOpts Options passed to attachShadow
-     */
-    _construct(template, shadowOpts) {
-      if (!shadowOpts) shadowOpts = { mode: "open", delegatesFocus: true };
-      this.attachShadow(shadowOpts).append(template);
-      this.createShadowSelectors();
-    }
-    /** Standardised connection. Call from the start of connectedCallback fn */
-    _connect() {
-      this.ensureId();
-      this.doInheritStyles();
-    }
-    /** Standardised disconnection. Call from the END of disconnectedCallback fn */
-    _disconnect() {
-      document.removeEventListener("uibuilder:msg:_ui:update:".concat(this.id), this._uibMsgHandler);
-      this._event("disconnected");
-    }
     /** Call from end of connectedCallback */
     _ready() {
       this.connected = true;
       this._event("connected");
       this._event("ready");
     }
+    /** Handle a `${this.localName}::${this.id}` custom event
+     * Each prop in the msg.payload is set as a prop on the component instance.
+     * @param {object} msg A uibuilder message object
+     */
+    _uibMsgHandler(msg) {
+      if (typeof msg.payload !== "object") {
+        console.warn("[".concat(this.localName, "] Ignoring msg, payload is not an object:"), msg);
+        return;
+      }
+      Object.keys(msg.payload).forEach((key) => {
+        if (key.startsWith("_")) return;
+        this[key] = msg.payload[key];
+      });
+    }
+    // #endregion ---- Methods private to the extended classes ----
+    // #region ---- Methods private to the base class only ----
+    /** Find existing component stylesheet with the same data-component attribute value
+     * Assumes that the style element has a `data-component` attribute set to the component's local name
+     * @returns {Element|null} Existing element or null if not found
+     * @private
+     */
+    _findExistingStylesheet() {
+      const existing = document.head.querySelector(
+        'style[data-component="'.concat(this.localName, '"]')
+      );
+      return existing;
+    }
+    /** Helper method to prepend a style element to the document head with order consideration
+     * @param {HTMLElement} styleElement - The style element to prepend
+     * @param {number} order - The order/priority for placement (lower numbers = higher priority)
+     * @private
+     */
+    _prependToDocumentHead(styleElement, order) {
+      var _a3;
+      const head = document.head;
+      const existingComponentStyles = Array.from(head.querySelectorAll("style[data-component]"));
+      if (existingComponentStyles.length === 0) {
+        const firstChild = head.firstChild;
+        if (firstChild) {
+          head.insertBefore(styleElement, firstChild);
+        } else {
+          head.appendChild(styleElement);
+        }
+        return;
+      }
+      let insertBefore = null;
+      for (const existing of existingComponentStyles) {
+        const existingOrder = parseInt((_a3 = existing.getAttribute("data-order")) != null ? _a3 : "0", 10);
+        if (order < existingOrder) {
+          insertBefore = existing;
+          break;
+        }
+      }
+      if (insertBefore) {
+        head.insertBefore(styleElement, insertBefore);
+      } else {
+        const lastInjected = existingComponentStyles[existingComponentStyles.length - 1];
+        const nextSibling = lastInjected.nextSibling;
+        if (nextSibling) {
+          head.insertBefore(styleElement, nextSibling);
+        } else {
+          head.appendChild(styleElement);
+        }
+      }
+    }
+    // #endregion ---- Methods private to the base class only ----
   };
   /** Component version */
-  __publicField(_TiBaseComponent, "baseVersion", "2025-01-09");
+  __publicField(_TiBaseComponent, "baseVersion", "2025-06-09");
   /** Holds a count of how many instances of this component are on the page that don't have their own id
    * Used to ensure a unique id if needing to add one dynamically
    */
@@ -5049,7 +5376,7 @@
   var TiBaseComponent = _TiBaseComponent;
   var ti_base_component_default = TiBaseComponent;
 
-  // src/components/uib-var.js
+  // src/components/uib-var.mjs
   var _variable, _varCb, _topic, _topicCb;
   var UibVar = class extends ti_base_component_default {
     //#endregion --- Class Properties ---
@@ -5330,12 +5657,12 @@
   var uib_var_default = UibVar;
   window["UibVar"] = UibVar;
 
-  // src/components/uib-meta.js
+  // src/components/uib-meta.mjs
   var UibMeta = class extends ti_base_component_default {
-    //#endregion --- Class Properties ---
+    // #endregion --- Class Properties ---
     constructor() {
       super();
-      //#region --- Class Properties ---
+      // #region --- Class Properties ---
       /** @type {string} Name of the uibuilder mangaged variable to use */
       __publicField(this, "variable", "pageMeta");
       /** Current value of the watched variable */
@@ -5385,8 +5712,8 @@
      * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
      * Attribute values can only ever be strings
      * @param {string} attrib The name of the attribute that is changing
-     * @param {string} newVal The new value of the attribute
      * @param {string} oldVal The old value of the attribute
+     * @param {string} newVal The new value of the attribute
      */
     attributeChangedCallback(attrib, oldVal, newVal) {
       if (oldVal === newVal) return;
@@ -5454,7 +5781,7 @@
           break;
         }
       }
-      if (out !== void 0) this.shadow.innerHTML = out;
+      this.shadow.innerHTML = out;
     }
     /** Format a value using this.format
      * @param {Date|string|number} val Value to format
@@ -5481,12 +5808,12 @@
           break;
         }
         case "k": {
-          if (type === "num") out = "".concat(uibuilder.round(val / 1024, 1), " k");
+          if (type === "num") out = "".concat(uibuilder.round(Number(val) / 1024, 1), " k");
           else out = val;
           break;
         }
         case "m": {
-          if (type === "num") out = "".concat(uibuilder.round(val / 1048576, 2), " M");
+          if (type === "num") out = "".concat(uibuilder.round(Number(val) / 1048576, 2), " M");
           else out = val;
           break;
         }
@@ -5528,26 +5855,32 @@
   var uib_meta_default = UibMeta;
   window["UibMeta"] = UibMeta;
 
-  // src/components/apply-template.js
+  // src/components/apply-template.mjs
   var ApplyTemplate = class extends ti_base_component_default {
+    /** NB: Attributes not available here - use connectedCallback to reference */
     constructor() {
       super();
       // Holder for once attribute
       __publicField(this, "once", false);
       if (!this.uibuilder) throw new Error("[apply-template] uibuilder client library not available");
     }
-    // Makes HTML attribute change watched
+    /** Makes HTML attribute change watched
+     * @returns {Array<string>} List of all of the html attribs (props) listened to
+     */
     static get observedAttributes() {
       return [
         // Standard watched attributes:
-        /*'inherit-style',*/
+        /* 'inherit-style', */
         "name",
         // Other watched attributes:
         "template-id",
         "once"
       ];
     }
-    // Runs when an instance is added to the DOM
+    /** Runs when an instance is added to the DOM
+     * Runs AFTER the initial attributeChangedCallback's
+     * @private
+     */
     connectedCallback() {
       this._connect();
       const templateId = this["template-id"];
@@ -5555,17 +5888,17 @@
       if (!templateId) {
         throw new Error("[ApplyTemplate] Template id attribute not provided. Template must be identified by an id attribute");
       }
-      const template = document.getElementById(templateId);
-      if (!template || template.tagName !== "TEMPLATE") {
+      const template2 = document.getElementById(templateId);
+      if (!template2 || template2.tagName !== "TEMPLATE") {
         throw new Error("[ApplyTemplate] Source must be a <template>. id='".concat(templateId, "'"));
       }
       const existContent = this.innerHTML;
       this.innerHTML = "";
       let templateContent;
       if (onceOnly === false) {
-        templateContent = document.importNode(template.content, true);
+        templateContent = document.importNode(template2.content, true);
       } else {
-        templateContent = document.adoptNode(template.content);
+        templateContent = document.adoptNode(template2.content);
       }
       this.appendChild(templateContent);
       if (existContent) {
@@ -5576,16 +5909,19 @@
       }
       this._ready();
     }
-    /** Runs when an instance is removed from the DOM */
+    /** Runs when an instance is removed from the DOM
+     * @private
+     */
     disconnectedCallback() {
       this._disconnect();
     }
-    /** Handle watched attributes
-     * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
-     * Attribute values can only ever be strings
-     * @param {string} attrib The name of the attribute that is changing
-     * @param {string} newVal The new value of the attribute
-     * @param {string} oldVal The old value of the attribute
+    /** Runs when an observed attribute changes - Note: values are always strings
+     * NOTE: On initial startup, this is called for each watched attrib set in HTML.
+     *       and BEFORE connectedCallback is called.
+     * @param {string} attrib Name of watched attribute that has changed
+     * @param {string} oldVal The previous attribute value
+     * @param {string} newVal The new attribute value
+     * @private
      */
     attributeChangedCallback(attrib, oldVal, newVal) {
       if (oldVal === newVal) return;
@@ -5594,13 +5930,766 @@
     }
   };
   /** Component version */
-  __publicField(ApplyTemplate, "componentVersion", "2025-01-05");
+  __publicField(ApplyTemplate, "componentVersion", "2025-08-28");
   var apply_template_default = ApplyTemplate;
   window["ApplyTemplate"] = ApplyTemplate;
 
+  // src/components/uib-control.mjs
+  var template = document.createElement("template");
+  template.innerHTML = /* html */
+  '\n    <style>\n        :host {\n            display: block;   /* default is inline */\n            contain: content; /* performance boost */\n            position: fixed;  /* Float over all content */\n            top: var(--uib-control-top, 1.25rem);\n            right: var(--uib-control-right, 1.25rem);\n            z-index: var(--uib-control-z-index, 9999); /* Ensure it floats above other content */\n            max-width: var(--uib-control-max-width, 18.75rem);\n        }\n        \n        .control-container {\n            background: var(--uib-control-bg, hsl(0, 0%, 98%));\n            border: var(--uib-control-border, 1px solid hsl(0, 0%, 85%));\n            border-radius: var(--uib-control-border-radius, 0.5rem);\n            box-shadow: var(--uib-control-shadow, 0 0.25rem 0.75rem hsla(0, 0%, 0%, 0.15));\n            transition: var(--uib-control-transition, all 0.3s ease);\n            position: relative;\n        }\n        \n        .control-container.dragging {\n            transition: none;\n            user-select: none;\n            z-index: 10000;\n        }\n        \n        .emoji-toggle {\n            cursor: pointer;\n            padding: var(--uib-control-emoji-padding, 0.5rem 0.75rem);\n            font-size: var(--uib-control-emoji-size, 1.5rem);\n            background: transparent;\n            border: none;\n            display: block;\n            width: 100%;\n            text-align: center;\n            user-select: none;\n            transition: transform 0.2s ease;\n            position: relative;\n        }\n        \n        .emoji-toggle.dragging {\n            cursor: grabbing;\n        }\n        \n        .emoji-toggle:hover {\n            transform: scale(1.1);\n        }\n        \n        .emoji-toggle:focus {\n            outline: 0.125rem solid var(--uib-control-focus-color, hsl(220, 90%, 50%));\n            outline-offset: 0.125rem;\n        }\n        \n        .content-box {\n            padding: 0;\n            border-top: var(--uib-control-content-border, 1px solid hsl(0, 0%, 90%));\n            background: var(--uib-control-content-bg, hsl(0, 0%, 100%));\n            display: none;\n            min-width: var(--uib-control-content-min-width, 15.625rem);\n        }\n        \n        .content-box.show {\n            display: block;\n            animation: fadeIn 0.2s ease-out;\n        }\n        \n        /* Tab navigation styles */\n        .tab-navigation {\n            display: flex;\n            border-bottom: 1px solid var(--uib-control-content-border, hsl(0, 0%, 90%));\n            background: var(--uib-control-bg, hsl(0, 0%, 98%));\n        }\n        \n        .tab-button {\n            flex: 1;\n            padding: 0.75rem 1rem;\n            border: none;\n            background: transparent;\n            color: var(--uib-control-text-color, hsl(0, 0%, 20%));\n            font-size: var(--uib-control-font-size, 0.9rem);\n            font-weight: 500;\n            cursor: pointer;\n            transition: all 0.2s ease;\n            border-bottom: 2px solid transparent;\n        }\n        \n        .tab-button:hover {\n            background: var(--uib-control-content-bg, hsl(0, 0%, 100%));\n        }\n        \n        .tab-button:focus {\n            outline: 0.125rem solid var(--uib-control-focus-color, hsl(220, 90%, 50%));\n            outline-offset: -0.125rem;\n            z-index: 1;\n            position: relative;\n        }\n        \n        .tab-button.active {\n            background: var(--uib-control-content-bg, hsl(0, 0%, 100%));\n            border-bottom-color: var(--uib-control-focus-color, hsl(220, 90%, 50%));\n            color: var(--uib-control-focus-color, hsl(220, 90%, 50%));\n        }\n        \n        /* Tab content styles */\n        .tab-content {\n            position: relative;\n        }\n        \n        .tab-panel {\n            padding: var(--uib-control-content-padding, 1rem);\n            display: none;\n        }\n        \n        .tab-panel.active {\n            display: block;\n        }\n        \n        .tab-panel:focus {\n            outline: none;\n        }\n        \n        @keyframes fadeIn {\n            from { opacity: 0; transform: translateY(-0.625rem); }\n            to { opacity: 1; transform: translateY(0); }\n        }\n        \n        /* Default content styling */\n        .theme-toggle-section {\n            margin-bottom: 1rem;\n            padding-bottom: 0.75rem;\n            border-bottom: 1px solid var(--uib-control-content-border, hsl(0, 0%, 90%));\n        }\n        \n        .theme-label {\n            display: inline-block;\n            font-size: var(--uib-control-font-size, 0.9rem);\n            font-weight: 500;\n            color: var(--uib-control-text-color, hsl(0, 0%, 20%));\n            margin-right: 0.5rem;\n        }\n        \n        .theme-buttons-container {\n            display: inline-flex;\n            border: 1px solid var(--uib-control-border, hsl(0, 0%, 85%));\n            border-radius: 0.375rem;\n            overflow: hidden;\n            background: var(--uib-control-content-bg, hsl(0, 0%, 100%));\n        }\n        \n        .theme-button {\n            padding: 0.375rem 0.75rem;\n            border: none;\n            background: var(--uib-control-content-bg, hsl(0, 0%, 100%));\n            color: var(--uib-control-text-color, hsl(0, 0%, 20%));\n            font-size: var(--uib-control-font-size, 0.9rem);\n            font-weight: 500;\n            cursor: pointer;\n            transition: all 0.2s ease;\n            border-right: 1px solid var(--uib-control-border, hsl(0, 0%, 85%));\n            min-width: 2.5rem;\n            text-align: center;\n        }\n        \n        .theme-button:last-child {\n            border-right: none;\n        }\n        \n        .theme-button:hover {\n            background: var(--uib-control-bg, hsl(0, 0%, 98%));\n        }\n        \n        .theme-button:focus {\n            outline: 0.125rem solid var(--uib-control-focus-color, hsl(220, 90%, 50%));\n            outline-offset: -0.125rem;\n            z-index: 1;\n            position: relative;\n        }\n        \n        .theme-button.active {\n            background: var(--uib-control-focus-color, hsl(220, 90%, 50%));\n            color: hsl(0, 0%, 100%);\n        }\n        \n        .theme-button.active:hover {\n            background: hsl(220, 90%, 45%);\n        }\n        \n        .content-box p {\n            margin: 0 0 0.5rem 0;\n            color: var(--uib-control-text-color, hsl(0, 0%, 20%));\n            font-size: var(--uib-control-font-size, 0.9rem);\n            line-height: 1.4;\n        }\n        \n        .content-box p:last-child {\n            margin-bottom: 0;\n        }\n    </style>\n    <div class="control-container">\n        <button class="emoji-toggle" type="button" aria-expanded="false" aria-label="Toggle control panel (click) or drag to move">\n            \u{1F39B}\uFE0F\n        </button>\n        <div class="content-box" role="region" aria-label="Control panel content">\n            <div class="tab-navigation" role="tablist" aria-label="Content tabs">\n                <button id="tab-btn-1" class="tab-button active" type="button" role="tab" aria-selected="true" aria-controls="tab1">\n                    Settings\n                </button>\n                <button id="tab-btn-2" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="tab2">\n                    Page Info\n                </button>\n            </div>\n            <div class="tab-content">\n                <div id="tab1" class="tab-panel active" role="tabpanel" aria-labelledby="tab-btn-1" tabindex="0">\n                    <div class="theme-toggle-section">\n                        <label class="theme-label">Theme:</label>\n                        <div class="theme-buttons-container" role="radiogroup" aria-label="Theme selection">\n                            <button id="theme-auto" class="theme-button active" type="button" data-theme="auto" aria-pressed="true">\n                                Auto\n                            </button>\n                            <button id="theme-light" class="theme-button" type="button" data-theme="light" aria-pressed="false">\n                                Light\n                            </button>\n                            <button id="theme-dark" class="theme-button" type="button" data-theme="dark" aria-pressed="false">\n                                Dark\n                            </button>\n                        </div>\n                    </div>\n                    <slot></slot>\n                </div>\n                <div id="tab2" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-2" tabindex="0">\n                    <div id="viewportSize">Window Width: -- px, Height: -- px</div>\n                    <div id="clientSize">Client Width: -- px, Height: -- px</div>\n                </div>\n            </div>\n        </div>\n    </div>\n';
+  var _uniqueKey, _toggleButton, _dragHandlers, _toggleHandlers, _resizeHandler;
+  var UibControl = class extends ti_base_component_default {
+    /** NB: Attributes not available here - use connectedCallback to reference */
+    constructor() {
+      super();
+      // Unique key for local storage
+      __privateAdd(this, _uniqueKey);
+      __privateAdd(this, _toggleButton);
+      __privateAdd(this, _dragHandlers, {
+        mouseMove: null,
+        mouseUp: null,
+        touchMove: null,
+        touchEnd: null
+      });
+      __privateAdd(this, _toggleHandlers, {
+        click: null,
+        keydown: null,
+        outsideClick: null,
+        touchStart: null,
+        touchEnd: null,
+        themeChange: null,
+        tabClick: null,
+        tabKey: null
+      });
+      __privateAdd(this, _resizeHandler, null);
+      if (template && template.content) this._construct(template.content.cloneNode(true));
+    }
+    /** Makes HTML attribute change watched
+     * @returns {Array<string>} List of all of the html attribs (props) listened to
+     */
+    static get observedAttributes() {
+      return [
+        // Standard watched attributes:
+        "inherit-style",
+        "name",
+        // Other watched attributes:
+        "close-on-outside-click",
+        "save-position"
+      ];
+    }
+    // #region ---- Internal methods ----
+    /** Setup the toggle functionality for the emoji button
+     * @private
+     */
+    _setupToggle() {
+      var _a3, _b;
+      const toggleButton = __privateSet(this, _toggleButton, (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector(".emoji-toggle"));
+      const contentBox = (_b = this.shadowRoot) == null ? void 0 : _b.querySelector(".content-box");
+      if (!toggleButton || !contentBox) return;
+      let isExpanded = false;
+      const clickHandler = () => {
+        isExpanded = !isExpanded;
+        if (isExpanded) {
+          contentBox.classList.add("show");
+          toggleButton.setAttribute("aria-expanded", "true");
+        } else {
+          contentBox.classList.remove("show");
+          toggleButton.setAttribute("aria-expanded", "false");
+        }
+        this._event("toggle", { expanded: isExpanded });
+      };
+      const keydownHandler = (evt) => {
+        if (evt instanceof KeyboardEvent && evt.key === "Escape" && isExpanded) {
+          isExpanded = false;
+          contentBox.classList.remove("show");
+          toggleButton.setAttribute("aria-expanded", "false");
+          this._event("toggle", { expanded: false });
+        }
+      };
+      toggleButton.addEventListener("click", clickHandler);
+      toggleButton.addEventListener("keydown", keydownHandler);
+      let touchStartTime = 0;
+      let touchStartX = 0;
+      let touchStartY = 0;
+      const touchStartHandler = (evt) => {
+        if (evt.touches.length === 1) {
+          touchStartTime = Date.now();
+          touchStartX = evt.touches[0].clientX;
+          touchStartY = evt.touches[0].clientY;
+        }
+      };
+      const touchEndHandler = (evt) => {
+        if (evt.changedTouches.length === 1) {
+          const touchEndTime = Date.now();
+          const touchEndX = evt.changedTouches[0].clientX;
+          const touchEndY = evt.changedTouches[0].clientY;
+          const duration = touchEndTime - touchStartTime;
+          const distance = Math.sqrt(
+            Math.pow(touchEndX - touchStartX, 2) + Math.pow(touchEndY - touchStartY, 2)
+          );
+          if (duration < 300 && distance < 10) {
+            clickHandler();
+            evt.preventDefault();
+          }
+        }
+      };
+      toggleButton.addEventListener("touchstart", touchStartHandler, { passive: true });
+      toggleButton.addEventListener("touchend", touchEndHandler, { passive: false });
+      __privateGet(this, _toggleHandlers).click = clickHandler;
+      __privateGet(this, _toggleHandlers).keydown = keydownHandler;
+      __privateGet(this, _toggleHandlers).touchStart = touchStartHandler;
+      __privateGet(this, _toggleHandlers).touchEnd = touchEndHandler;
+      if (this.hasAttribute("close-on-outside-click")) {
+        const outsideClickHandler = (evt) => {
+          if (isExpanded && evt.target instanceof Node && !this.contains(evt.target)) {
+            isExpanded = false;
+            contentBox.classList.remove("show");
+            toggleButton.setAttribute("aria-expanded", "false");
+            this._event("toggle", { expanded: false });
+          }
+        };
+        document.addEventListener("click", outsideClickHandler);
+        __privateGet(this, _toggleHandlers).outsideClick = outsideClickHandler;
+      }
+      this._setupThemeToggle();
+      this._setupTabs();
+    }
+    /** Setup theme toggle functionality
+     * @private
+     */
+    _setupThemeToggle() {
+      var _a3, _b;
+      const themeButtonsContainer = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector(".theme-buttons-container");
+      const themeButtons = (_b = this.shadowRoot) == null ? void 0 : _b.querySelectorAll(".theme-button");
+      if (!themeButtonsContainer || !(themeButtons == null ? void 0 : themeButtons.length)) return;
+      const currentTheme = this._getCurrentTheme();
+      this._updateButtonStates(themeButtons, currentTheme);
+      const themeChangeHandler = (evt) => {
+        if (!(evt.target instanceof HTMLButtonElement) || !evt.target.classList.contains("theme-button")) return;
+        evt.preventDefault();
+        const selectedTheme = evt.target.getAttribute("data-theme");
+        if (!selectedTheme) return;
+        this._updateButtonStates(themeButtons, selectedTheme);
+        this._setTheme(selectedTheme);
+        this._event("theme-changed", { theme: selectedTheme });
+      };
+      themeButtonsContainer.addEventListener("click", themeChangeHandler);
+      __privateGet(this, _toggleHandlers).themeChange = themeChangeHandler;
+    }
+    /** Update the theme button states
+     * @private
+     * @param {NodeList} buttons - The theme button elements
+     * @param {string} activeTheme - The theme to set as active
+     */
+    _updateButtonStates(buttons, activeTheme) {
+      buttons.forEach((button) => {
+        if (!(button instanceof HTMLButtonElement)) return;
+        const buttonTheme = button.getAttribute("data-theme");
+        const isActive = buttonTheme === activeTheme;
+        if (isActive) {
+          button.classList.add("active");
+          button.setAttribute("aria-pressed", "true");
+        } else {
+          button.classList.remove("active");
+          button.setAttribute("aria-pressed", "false");
+        }
+      });
+    }
+    /** Setup tab functionality
+     * @private
+     */
+    _setupTabs() {
+      var _a3, _b, _c;
+      const tabNavigation = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector(".tab-navigation");
+      const tabButtons = (_b = this.shadowRoot) == null ? void 0 : _b.querySelectorAll(".tab-button");
+      const tabPanels = (_c = this.shadowRoot) == null ? void 0 : _c.querySelectorAll(".tab-panel");
+      if (!tabNavigation || !(tabButtons == null ? void 0 : tabButtons.length) || !(tabPanels == null ? void 0 : tabPanels.length)) return;
+      const tabClickHandler = (evt) => {
+        if (!(evt.target instanceof HTMLButtonElement) || !evt.target.classList.contains("tab-button")) return;
+        evt.preventDefault();
+        const clickedButton = evt.target;
+        const targetPanelId = clickedButton.getAttribute("aria-controls");
+        if (!targetPanelId) return;
+        tabButtons.forEach((button) => {
+          if (!(button instanceof HTMLButtonElement)) return;
+          const isActive = button === clickedButton;
+          if (isActive) {
+            button.classList.add("active");
+            button.setAttribute("aria-selected", "true");
+          } else {
+            button.classList.remove("active");
+            button.setAttribute("aria-selected", "false");
+          }
+        });
+        tabPanels.forEach((panel) => {
+          if (!(panel instanceof HTMLElement)) return;
+          const isActive = panel.id === targetPanelId;
+          if (isActive) {
+            panel.classList.add("active");
+          } else {
+            panel.classList.remove("active");
+          }
+        });
+        this._event("tab-changed", { activeTab: targetPanelId });
+      };
+      const tabKeyHandler = (evt) => {
+        if (!(evt.target instanceof HTMLButtonElement) || !evt.target.classList.contains("tab-button")) return;
+        const currentIndex = Array.from(tabButtons).indexOf(evt.target);
+        let targetIndex = currentIndex;
+        switch (evt.key) {
+          case "ArrowLeft":
+            targetIndex = currentIndex > 0 ? currentIndex - 1 : tabButtons.length - 1;
+            evt.preventDefault();
+            break;
+          case "ArrowRight":
+            targetIndex = currentIndex < tabButtons.length - 1 ? currentIndex + 1 : 0;
+            evt.preventDefault();
+            break;
+          case "Home":
+            targetIndex = 0;
+            evt.preventDefault();
+            break;
+          case "End":
+            targetIndex = tabButtons.length - 1;
+            evt.preventDefault();
+            break;
+          default:
+            return;
+        }
+        const targetButton = tabButtons[targetIndex];
+        if (targetButton instanceof HTMLButtonElement) {
+          targetButton.focus();
+          targetButton.click();
+        }
+      };
+      tabNavigation.addEventListener("click", tabClickHandler);
+      tabNavigation.addEventListener("keydown", tabKeyHandler);
+      __privateGet(this, _toggleHandlers).tabClick = tabClickHandler;
+      __privateGet(this, _toggleHandlers).tabKey = tabKeyHandler;
+    }
+    /** Get the current theme setting
+     * @private
+     * @returns {string} Current theme ('light', 'dark', or 'auto')
+     */
+    _getCurrentTheme() {
+      const htmlElement = document.documentElement;
+      if (htmlElement.classList.contains("light")) {
+        return "light";
+      } else if (htmlElement.classList.contains("dark")) {
+        return "dark";
+      }
+      try {
+        const savedTheme = localStorage.getItem("uib-control-theme");
+        if (savedTheme && ["light", "dark", "auto"].includes(savedTheme)) {
+          return savedTheme;
+        }
+      } catch (error) {
+        console.warn("Failed to read theme preference:", error);
+      }
+      return "auto";
+    }
+    /** Set the theme mode
+     * @private
+     * @param {string} theme - Theme mode ('light', 'dark', or 'auto')
+     */
+    _setTheme(theme) {
+      const htmlElement = document.documentElement;
+      htmlElement.classList.remove("light", "dark");
+      switch (theme) {
+        case "light":
+          htmlElement.classList.add("light");
+          break;
+        case "dark":
+          htmlElement.classList.add("dark");
+          break;
+        case "auto":
+          break;
+        default:
+          console.warn("Invalid theme mode:", theme);
+          return;
+      }
+      try {
+        localStorage.setItem("uib-control-theme", theme);
+      } catch (error) {
+        console.warn("Failed to save theme preference:", error);
+      }
+    }
+    /** Setup drag functionality for moving the control panel
+     * @private
+     */
+    _setupDrag() {
+      var _a3, _b;
+      const toggleButton = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector(".emoji-toggle");
+      const container = (_b = this.shadowRoot) == null ? void 0 : _b.querySelector(".control-container");
+      if (!toggleButton || !container) return;
+      let isDragging = false;
+      let dragStarted = false;
+      let startX = 0;
+      let startY = 0;
+      let initialX = 0;
+      let initialY = 0;
+      const dragThreshold = 5;
+      const startDrag = (evt) => {
+        const clientX = evt instanceof MouseEvent ? evt.clientX : evt.touches[0].clientX;
+        const clientY = evt instanceof MouseEvent ? evt.clientY : evt.touches[0].clientY;
+        startX = clientX;
+        startY = clientY;
+        const rect = this.getBoundingClientRect();
+        initialX = rect.left;
+        initialY = rect.top;
+        isDragging = true;
+        dragStarted = false;
+        evt.preventDefault();
+      };
+      toggleButton.addEventListener("mousedown", startDrag);
+      const mouseMove = (evt) => {
+        if (!isDragging || !(evt instanceof MouseEvent)) return;
+        const deltaX = evt.clientX - startX;
+        const deltaY = evt.clientY - startY;
+        if (!dragStarted && (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold)) {
+          dragStarted = true;
+          container.classList.add("dragging");
+          toggleButton.classList.add("dragging");
+        }
+        if (dragStarted) {
+          const newX = initialX + deltaX;
+          const newY = initialY + deltaY;
+          const maxX = window.innerWidth - this.offsetWidth;
+          const maxY = window.innerHeight - this.offsetHeight;
+          const constrainedX = Math.max(0, Math.min(newX, maxX));
+          const constrainedY = Math.max(0, Math.min(newY, maxY));
+          this.style.left = "".concat(constrainedX, "px");
+          this.style.top = "".concat(constrainedY, "px");
+          this.style.right = "auto";
+          this.style.bottom = "auto";
+          evt.preventDefault();
+        }
+      };
+      const mouseUp = (evt) => {
+        if (!isDragging) return;
+        const wasDragStarted = dragStarted;
+        isDragging = false;
+        if (dragStarted) {
+          dragStarted = false;
+          container.classList.remove("dragging");
+          toggleButton.classList.remove("dragging");
+          if (this.hasAttribute("save-position")) {
+            this._savePosition();
+          }
+          this._event("drag-end", {
+            x: parseInt(this.style.left, 10) || 0,
+            y: parseInt(this.style.top, 10) || 0
+          });
+        }
+        if (wasDragStarted) {
+          evt.preventDefault();
+          evt.stopPropagation();
+        }
+      };
+      toggleButton.addEventListener("touchstart", startDrag);
+      const touchMove = (evt) => {
+        if (!isDragging || !(evt instanceof TouchEvent) || evt.touches.length !== 1) return;
+        const touch = evt.touches[0];
+        const deltaX = touch.clientX - startX;
+        const deltaY = touch.clientY - startY;
+        if (!dragStarted && (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold)) {
+          dragStarted = true;
+          container.classList.add("dragging");
+          toggleButton.classList.add("dragging");
+        }
+        if (dragStarted) {
+          const newX = initialX + deltaX;
+          const newY = initialY + deltaY;
+          const maxX = window.innerWidth - this.offsetWidth;
+          const maxY = window.innerHeight - this.offsetHeight;
+          const constrainedX = Math.max(0, Math.min(newX, maxX));
+          const constrainedY = Math.max(0, Math.min(newY, maxY));
+          this.style.left = "".concat(constrainedX, "px");
+          this.style.top = "".concat(constrainedY, "px");
+          this.style.right = "auto";
+          this.style.bottom = "auto";
+          evt.preventDefault();
+        }
+      };
+      const touchEnd = (evt) => {
+        if (!isDragging) return;
+        const wasDragStarted = dragStarted;
+        isDragging = false;
+        if (dragStarted) {
+          dragStarted = false;
+          container.classList.remove("dragging");
+          toggleButton.classList.remove("dragging");
+          if (this.hasAttribute("save-position")) {
+            this._savePosition();
+          }
+          this._event("drag-end", {
+            x: parseInt(this.style.left, 10) || 0,
+            y: parseInt(this.style.top, 10) || 0
+          });
+        }
+        if (wasDragStarted) {
+          evt.preventDefault();
+          evt.stopPropagation();
+        }
+      };
+      document.addEventListener("mousemove", mouseMove);
+      document.addEventListener("mouseup", mouseUp);
+      document.addEventListener("touchmove", touchMove);
+      document.addEventListener("touchend", touchEnd);
+      document.addEventListener("touchcancel", touchEnd);
+      __privateSet(this, _dragHandlers, {
+        mouseMove,
+        mouseUp,
+        touchMove,
+        touchEnd
+      });
+    }
+    /** Save the current position to localStorage
+     * @private
+     */
+    _savePosition() {
+      const saveKey = this.getAttribute("save-position") || "uib-control-position";
+      const position = {
+        left: this.style.left,
+        top: this.style.top,
+        timestamp: Date.now()
+      };
+      __privateSet(this, _uniqueKey, this.id ? "".concat(this.id, "-").concat(saveKey) : saveKey);
+      try {
+        localStorage.setItem(__privateGet(this, _uniqueKey), JSON.stringify(position));
+      } catch (error) {
+        console.warn("Failed to save uib-control position:", error);
+      }
+    }
+    /** Restore saved position from localStorage
+     * @private
+     */
+    _restorePosition() {
+      if (!this.hasAttribute("save-position")) return;
+      const saveKey = this.getAttribute("save-position") || "uib-control-position";
+      try {
+        const savedData = localStorage.getItem(__privateGet(this, _uniqueKey));
+        if (savedData) {
+          const position = JSON.parse(savedData);
+          if (position.left && position.top) {
+            this.style.left = position.left;
+            this.style.top = position.top;
+            this.style.right = "auto";
+            this.style.bottom = "auto";
+            this._event("position-restored", {
+              x: parseInt(position.left, 10) || 0,
+              y: parseInt(position.top, 10) || 0,
+              timestamp: position.timestamp
+            });
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to restore uib-control position:", error);
+      }
+    }
+    /** Function to update the viewport size display
+     * @private
+     */
+    _updateViewportSize() {
+      var _a3, _b;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const viewportEl = (_a3 = this.shadowRoot) == null ? void 0 : _a3.getElementById("viewportSize");
+      if (viewportEl) {
+        viewportEl.textContent = "Window Width: ".concat(width, "px, Height: ").concat(height, "px");
+      }
+      const clientEl = (_b = this.shadowRoot) == null ? void 0 : _b.getElementById("clientSize");
+      if (clientEl) {
+        clientEl.textContent = "Client Width: ".concat(document.documentElement.clientWidth, "px, Height: ").concat(document.documentElement.clientHeight, "px");
+      }
+    }
+    // #endregion ---- Internal methods ----
+    /** Runs when an instance is added to the DOM
+     * Runs AFTER the initial attributeChangedCallback's
+     * @private
+     */
+    connectedCallback() {
+      this._connect();
+      this._setupToggle();
+      this._setupDrag();
+      this._restorePosition();
+      const savedTheme = this._getCurrentTheme();
+      if (savedTheme !== "auto") {
+        this._setTheme(savedTheme);
+      }
+      this._updateViewportSize();
+      __privateSet(this, _resizeHandler, this._updateViewportSize.bind(this));
+      window.addEventListener("resize", __privateGet(this, _resizeHandler));
+      this._ready();
+    }
+    /** Runs when an instance is removed from the DOM
+     * @private
+     */
+    disconnectedCallback() {
+      var _a3, _b;
+      if (__privateGet(this, _toggleButton) && __privateGet(this, _toggleHandlers)) {
+        if (__privateGet(this, _toggleHandlers).click) {
+          __privateGet(this, _toggleButton).removeEventListener("click", __privateGet(this, _toggleHandlers).click);
+        }
+        if (__privateGet(this, _toggleHandlers).keydown) {
+          __privateGet(this, _toggleButton).removeEventListener("keydown", __privateGet(this, _toggleHandlers).keydown);
+        }
+        if (__privateGet(this, _toggleHandlers).touchStart) {
+          __privateGet(this, _toggleButton).removeEventListener("touchstart", __privateGet(this, _toggleHandlers).touchStart);
+        }
+        if (__privateGet(this, _toggleHandlers).touchEnd) {
+          __privateGet(this, _toggleButton).removeEventListener("touchend", __privateGet(this, _toggleHandlers).touchEnd);
+        }
+        if (__privateGet(this, _toggleHandlers).themeChange) {
+          const themeButtonsContainer = (_a3 = this.shadowRoot) == null ? void 0 : _a3.querySelector(".theme-buttons-container");
+          if (themeButtonsContainer) {
+            themeButtonsContainer.removeEventListener("click", __privateGet(this, _toggleHandlers).themeChange);
+          }
+        }
+        if (__privateGet(this, _toggleHandlers).tabClick || __privateGet(this, _toggleHandlers).tabKey) {
+          const tabNavigation = (_b = this.shadowRoot) == null ? void 0 : _b.querySelector(".tab-navigation");
+          if (tabNavigation) {
+            if (__privateGet(this, _toggleHandlers).tabClick) {
+              tabNavigation.removeEventListener("click", __privateGet(this, _toggleHandlers).tabClick);
+            }
+            if (__privateGet(this, _toggleHandlers).tabKey) {
+              tabNavigation.removeEventListener("keydown", __privateGet(this, _toggleHandlers).tabKey);
+            }
+          }
+        }
+        if (__privateGet(this, _toggleHandlers).outsideClick) {
+          document.removeEventListener("click", __privateGet(this, _toggleHandlers).outsideClick);
+        }
+      }
+      if (__privateGet(this, _resizeHandler)) {
+        window.removeEventListener("resize", __privateGet(this, _resizeHandler));
+        __privateSet(this, _resizeHandler, null);
+      }
+      if (__privateGet(this, _dragHandlers).mouseMove) {
+        document.removeEventListener("mousemove", __privateGet(this, _dragHandlers).mouseMove);
+      }
+      if (__privateGet(this, _dragHandlers).mouseUp) {
+        document.removeEventListener("mouseup", __privateGet(this, _dragHandlers).mouseUp);
+      }
+      if (__privateGet(this, _dragHandlers).touchMove) {
+        document.removeEventListener("touchmove", __privateGet(this, _dragHandlers).touchMove);
+      }
+      if (__privateGet(this, _dragHandlers).touchEnd) {
+        document.removeEventListener("touchend", __privateGet(this, _dragHandlers).touchEnd);
+        document.removeEventListener("touchcancel", __privateGet(this, _dragHandlers).touchEnd);
+      }
+      __privateSet(this, _dragHandlers, {
+        mouseMove: null,
+        mouseUp: null,
+        touchMove: null,
+        touchEnd: null
+      });
+      __privateSet(this, _toggleHandlers, {
+        click: null,
+        keydown: null,
+        outsideClick: null,
+        touchStart: null,
+        touchEnd: null,
+        themeChange: null,
+        tabClick: null,
+        tabKey: null
+      });
+      __privateSet(this, _toggleButton, null);
+      this._disconnect();
+    }
+    /** Runs when an observed attribute changes - Note: values are always strings
+     * NOTE: On initial startup, this is called for each watched attrib set in HTML.
+     *       and BEFORE connectedCallback is called.
+     * @param {string} attrib Name of watched attribute that has changed
+     * @param {string} oldVal The previous attribute value
+     * @param {string} newVal The new attribute value
+     * @private
+     */
+    attributeChangedCallback(attrib, oldVal, newVal) {
+      if (oldVal === newVal) return;
+      this[attrib] = newVal;
+      this._event("attribChanged", { attribute: attrib, newVal, oldVal });
+    }
+  };
+  _uniqueKey = new WeakMap();
+  _toggleButton = new WeakMap();
+  _dragHandlers = new WeakMap();
+  _toggleHandlers = new WeakMap();
+  _resizeHandler = new WeakMap();
+  /** Component version */
+  __publicField(UibControl, "componentVersion", "2025-08-28");
+  var uib_control_default = UibControl;
+  window["UibControl"] = UibControl;
+
+  // src/front-end-module/reactive.mjs
+  var Reactive = class {
+    // Version of the reactive module
+    /** Create a new Reactive instance
+     * @param {*} srcvar The source variable to wrap
+     */
+    constructor(srcvar) {
+      this.target = typeof srcvar === "object" && srcvar !== null ? srcvar : { value: srcvar };
+      this.changeListeners = /* @__PURE__ */ new Map();
+      this.listenerIdCounter = 0;
+    }
+    /** Helper function to check if an object is already reactive
+     * @param {*} obj Object to check
+     * @returns {boolean} True if the object is already reactive
+     * @private
+     */
+    _isReactive(obj) {
+      return obj && obj.__v_isReactive === true;
+    }
+    /** Helper function to trigger all change listeners
+     * @param {string} propertyPath Full property path (e.g., "user.name")
+     * @param {*} value New value
+     * @param {*} oldValue Previous value
+     * @param {*} target The target object
+     * @private
+     */
+    _triggerListeners(propertyPath, value2, oldValue, target) {
+      this.changeListeners.forEach((callback) => {
+        try {
+          callback(value2, oldValue, propertyPath, target);
+        } catch (error) {
+          console.warn('[uibuilder:reactive] Error in onChange listener for "'.concat(propertyPath, '":'), error);
+        }
+      });
+    }
+    /** Helper function to make an object reactive with property path tracking
+     * @param {*} obj Object to make reactive
+     * @param {string} basePath Base property path for nested objects
+     * @returns {Proxy} Reactive proxy object
+     * @private
+     */
+    _createReactiveObject(obj, basePath = "") {
+      if (!obj || typeof obj !== "object") return obj;
+      if (this._isReactive(obj)) return obj;
+      if (Element && obj instanceof Element || obj instanceof Date || obj instanceof RegExp) {
+        console.warn("[uibuilder:reactive] Can not proxy DOM elements or other special objects");
+        return obj;
+      }
+      const proxy = new Proxy(obj, {
+        get: (target, key, receiver) => {
+          if (key === "__v_isReactive") return true;
+          if (key === "onChange") {
+            return (callback) => {
+              if (typeof callback !== "function") {
+                throw new Error("[uibuilder:reactive] onChange callback must be a function");
+              }
+              const listenerId = ++this.listenerIdCounter;
+              this.changeListeners.set(listenerId, callback);
+              return {
+                id: listenerId,
+                cancel: () => {
+                  this.changeListeners.delete(listenerId);
+                }
+              };
+            };
+          }
+          if (key === "cancelChange") {
+            return (listenerRef) => {
+              if (!listenerRef || typeof listenerRef.cancel !== "function") {
+                console.warn("[uibuilder:reactive] Invalid listener reference provided to cancelChange");
+                return false;
+              }
+              try {
+                listenerRef.cancel();
+                return true;
+              } catch (error) {
+                console.warn("[uibuilder:reactive] Error cancelling listener:", error);
+                return false;
+              }
+            };
+          }
+          const result = Reflect.get(target, key, receiver);
+          if (result && typeof result === "object" && !this._isReactive(result)) {
+            const newPath = basePath ? "".concat(basePath, ".").concat(String(key)) : String(key);
+            return this._createReactiveObject(result, newPath);
+          }
+          return result;
+        },
+        set: (target, key, value2, receiver) => {
+          if (key === "__v_isReactive" || key === "onChange" || key === "cancelChange") return true;
+          const oldValue = target[key];
+          const hadKey = Object.prototype.hasOwnProperty.call(target, key);
+          const result = Reflect.set(target, key, value2, receiver);
+          if (!hadKey || value2 !== oldValue) {
+            const propertyPath = basePath ? "".concat(basePath, ".").concat(String(key)) : String(key);
+            this._triggerListeners(propertyPath, value2, oldValue, receiver);
+            try {
+              this._dispatchCustomEvent("uibuilder:reactive:propertyChanged", {
+                property: propertyPath,
+                value: value2,
+                oldValue,
+                target: receiver
+              });
+            } catch (error) {
+              console.warn("[uibuilder:reactive] Error dispatching custom event:", error);
+            }
+          }
+          return result;
+        },
+        deleteProperty: (target, key) => {
+          const hadKey = Object.prototype.hasOwnProperty.call(target, key);
+          const oldValue = target[key];
+          const result = Reflect.deleteProperty(target, key);
+          if (hadKey && result) {
+            const propertyPath = basePath ? "".concat(basePath, ".").concat(String(key)) : String(key);
+            this._triggerListeners(propertyPath, void 0, oldValue, target);
+            try {
+              this._dispatchCustomEvent("uibuilder:reactive:propertyDeleted", {
+                property: propertyPath,
+                oldValue,
+                target
+              });
+            } catch (error) {
+              console.warn("[uibuilder:reactive] Error dispatching delete event:", error);
+            }
+          }
+          return result;
+        }
+      });
+      return proxy;
+    }
+    /** Standard fn to create a custom event with details & dispatch it
+     * @param {string} title The event name
+     * @param {*} details Any details to pass to event output
+     * @private
+     */
+    _dispatchCustomEvent(title, details) {
+      const event2 = new CustomEvent(title, { detail: details });
+      document.dispatchEvent(event2);
+    }
+    /** Create and return the reactive proxy
+     * @returns {Proxy} A proxy object that can be used reactively
+     */
+    create() {
+      return this._createReactiveObject(this.target);
+    }
+    /** Get the number of active listeners
+     * @returns {number} Number of active change listeners
+     */
+    getListenerCount() {
+      return this.changeListeners.size;
+    }
+    /** Clear all listeners
+     * @returns {void}
+     */
+    clearAllListeners() {
+      this.changeListeners.clear();
+    }
+  };
+  __publicField(Reactive, "version", "2025-06-14");
+  function reactive(srcvar) {
+    const reactiveInstance = new Reactive(srcvar);
+    return reactiveInstance.create();
+  }
+
   // src/front-end-module/uibuilder.module.mjs
   var import_meta = {};
-  var version = "7.4.2-iife";
+  var version = "7.5.0-iife";
   var isMinified = !/param/.test(function(param) {
   });
   function log() {
@@ -5652,6 +6741,12 @@
         strLevel = "error";
         break;
       }
+      case "print": {
+        if (log.level < 0) break;
+        level = 0;
+        strLevel = "print";
+        break;
+      }
       default: {
         level = -1;
         break;
@@ -5671,6 +6766,12 @@
   }
   log.LOG_STYLES = {
     // 0
+    print: {
+      css: "background: grey; color: yellow;",
+      txtCss: "color: grey;",
+      pre: "\u27A1\uFE0F",
+      console: "log"
+    },
     error: {
       css: "background: red; color: black;",
       txtCss: "color: red; ",
@@ -5713,7 +6814,7 @@
       pre: "",
       console: "log"
     },
-    names: ["error", "warn", "info", "log", "debug", "trace"],
+    names: ["print", "error", "warn", "info", "log", "debug", "trace"],
     reset: "color: inherit;",
     head: "font-weight:bold; font-style:italic;",
     level: "font-weight:bold; border-radius: 3px; padding: 2px 5px; display:inline-block;"
@@ -5886,6 +6987,7 @@
         "set",
         "showMsg",
         "showStatus",
+        "showOverlay",
         "uiGet",
         "uiWatch",
         "watchUrlHash"
@@ -6462,7 +7564,7 @@
       }
       if (!opts) opts = {};
       if (!intl) intl = navigator.language ? navigator.language : "en-GB";
-      if (decimalPlaces) {
+      if (typeof decimalPlaces === "number") {
         opts.minimumFractionDigits = decimalPlaces;
         opts.maximumFractionDigits = decimalPlaces;
       }
@@ -6536,6 +7638,23 @@
     navigate(url2) {
       if (url2) window.location.href = url2;
       return window.location;
+    }
+    /** Wrap a provided variable in a proxy object so that it can be used reactively
+     * @param {*} srcvar The source variable to wrap
+     * @returns {Proxy} A proxy object that can be used reactively
+     */
+    reactive(srcvar) {
+      return reactive(srcvar);
+    }
+    /** Get the Reactive class for advanced usage
+     * @returns {Function} The Reactive class constructor
+     * @example
+     * const ReactiveClass = uib.getReactiveClass()
+     * const reactiveInstance = new ReactiveClass(data, customEventDispatcher)
+     * const proxy = reactiveInstance.create()
+     */
+    getReactiveClass() {
+      return Reactive;
     }
     // ! TODO change ui uib-* attributes to use this
     /** Convert a string attribute into an variable/constant reference
@@ -6783,6 +7902,20 @@
     sanitiseHTML(html) {
       return _ui.sanitiseHTML(html);
     }
+    /** Creates and displays an overlay window with customizable content and behavior
+     * @param {object} options - Configuration options for the overlay
+     *   @param {string} [options.content] - Main content (text or HTML) to display
+     *   @param {string} [options.title] - Optional title above the main content
+     *   @param {string} [options.icon] - Optional icon to display left of title (HTML or text)
+     *   @param {string} [options.type] - Overlay type: 'success', 'info', 'warning', or 'error'
+     *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
+     *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
+     *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
+     * @returns {object} Object with close() method to manually close the overlay
+     */
+    showOverlay(options) {
+      return _ui.showOverlay(options);
+    }
     /** Add table event listener that returns the text or html content of either the full row or a single cell
      * NOTE: Assumes that the table has a `tbody` element.
      * If cells have a `data-col-name` attribute, it will be used in the output as the column name.
@@ -6833,10 +7966,14 @@
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
-     * @param {"notify"|"alert"} type Dialog type
-     * @param {object} ui standardised ui data
-     * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
+     * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
+     * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
+     * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
      * @returns {void}
+     * @example
+     * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
+     * @example
+     * Ui.showDialog('alert', null, msg)
      */
     showDialog(type, ui, msg) {
       _ui.showDialog(type, ui, msg);
@@ -6864,6 +8001,8 @@
       _ui.uiEnhanceElement(el, component);
     }
     // #endregion -- direct to _ui --
+    // ! TODO: Rework attrib handling to allow for uib-* and data-uib-* AND :* attributes
+    //   See other bookmarks as well
     /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
      * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
      *          as possible. Async so that calling function does not need to wait.
@@ -6896,17 +8035,7 @@
         }
       });
     }
-    /** Check a single HTML element for uib attributes and add auto-processors as needed.
-     * Async so that calling function does not need to wait.
-     * Understands only uib-topic at present. Msgs received on the topic can have:
-     *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
-     *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
-     * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
-     * @private
-     */
-    async _uibAttrScanOne(el) {
-      log("trace", "uibuilder:_uibAttrScanOne", "Setting up auto-processor for: ", el)();
-      const topic = el.getAttribute("uib-topic") || el.getAttribute("data-uib-topic");
+    _processUibTopic(el, topic) {
       this.onTopic(topic, (msg) => {
         log("trace", "uibuilder:_uibAttrScanOne", 'Msg with topic "'.concat(topic, '" received. msg content: '), msg)();
         msg._uib_processed_by = "_uibAttrScanOne";
@@ -6941,6 +8070,52 @@
           }
         }
         if (Object.prototype.hasOwnProperty.call(msg, "payload")) this.replaceSlot(el, msg.payload);
+      });
+    }
+    /** Check a single HTML element for uib attributes and add auto-processors as needed.
+     * Async so that calling function does not need to wait.
+     * Understands only uib-topic at present. Msgs received on the topic can have:
+     *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
+     *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
+     * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
+     * @private
+     */
+    async _uibAttrScanOne(el) {
+      log("trace", "uibuilder:_uibAttrScanOne", "Setting up auto-processor for: ", el)();
+      if (!el || !el.attributes) {
+        return;
+      }
+      let uibAttribs = [...el.attributes].filter((attr) => attr.name.startsWith("uib-") || attr.name.startsWith("data-uib-") || attr.name.startsWith(":"));
+      if (uibAttribs.length === 0) {
+        return;
+      }
+      uibAttribs = [...new Set(uibAttribs)];
+      uibAttribs.forEach((attr) => {
+        var _a3;
+        if ((attr == null ? void 0 : attr.name) === "uib-topic" || (attr == null ? void 0 : attr.name) === "data-uib-topic") this._processUibTopic(el, attr.value);
+        else if ((attr == null ? void 0 : attr.name.startsWith("uib-bind:")) || (attr == null ? void 0 : attr.name.startsWith("data-uib-bind:")) || (attr == null ? void 0 : attr.name.startsWith(":"))) {
+          const bindName = attr.name.replace(/^(uib-bind:|data-uib-bind:|:)/, "");
+          let value2 = attr.value;
+          try {
+            value2 = new Function("return (".concat(attr.value, ")"))();
+            log("print", "uibuilder:_uibAttrScanOne", "SUCCESS 1 uib-bind attribute:", bindName, "with value:", value2)();
+          } catch (e) {
+            log("print", "uibuilder:_uibAttrScanOne", "\u{1F7E5}Error 1 uib-bind attribute:", bindName, "with value:", value2)();
+            try {
+              console.log(globalThis);
+              value2 = (_a3 = globalThis[attr.value]) != null ? _a3 : attr.value;
+              log("print", "uibuilder:_uibAttrScanOne", "SUCCESS 2 uib-bind attribute:", bindName, "with value:", value2)();
+            } catch (e2) {
+              log("print", "uibuilder:_uibAttrScanOne", "\u{1F7E5}Error 2 uib-bind attribute:", bindName, "with value:", value2)();
+            }
+          }
+          if (bindName && value2) {
+            el.setAttribute(bindName, value2);
+            if (bindName === "value") el.value = value2;
+          } else {
+            log("warn", "uibuilder:_uibAttrScanOne", "Invalid uib-bind attribute:", attr.name, "with value:", value2, "for element:", el)();
+          }
+        }
       });
     }
     /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
@@ -7598,7 +8773,7 @@
      * @private
      */
     _uibCommand(msg) {
-      var _a3;
+      var _a3, _b, _c, _d, _e, _f, _g, _h, _i;
       if (!msg._uib || !msg._uib.command) {
         log("error", "uibuilder:_uibCommand", "Invalid command message received", { msg })();
         msg.payload = msg.error = "Invalid command message received";
@@ -7610,9 +8785,10 @@
         log("error", "Uib:_uibCommand", "Command '".concat(cmd, " is not allowed to be called externally"))();
         return;
       }
-      const prop = msg._uib.prop;
-      const value2 = msg._uib.value;
-      const quiet = (_a3 = msg._uib.quiet) != null ? _a3 : false;
+      const prop = (_a3 = msg._uib) == null ? void 0 : _a3.prop;
+      const value2 = (_b = msg._uib) == null ? void 0 : _b.value;
+      const quiet = (_g = (_f = (_c = msg._uib) == null ? void 0 : _c.quiet) != null ? _f : (_e = (_d = msg._uib) == null ? void 0 : _d.options) == null ? void 0 : _e.quiet) != null ? _g : false;
+      const options = (_i = (_h = msg._uib) == null ? void 0 : _h.options) != null ? _i : { type: prop, title: value2, quiet };
       let response, info;
       switch (cmd) {
         // case 'elementIsVisible': { // temporarily deprecated
@@ -7675,6 +8851,11 @@
         }
         case "showStatus": {
           response = this.showStatus(value2, prop);
+          break;
+        }
+        case "showOverlay": {
+          if (msg.payload && !(options == null ? void 0 : options.content)) options.content = msg.payload;
+          response = this.showOverlay(options);
           break;
         }
         case "uiGet": {
@@ -8263,7 +9444,115 @@
   customElements.define("uib-var", uib_var_default);
   customElements.define("uib-meta", uib_meta_default);
   customElements.define("apply-template", apply_template_default);
+  customElements.define("uib-control", uib_control_default);
 })();
+/**
+ * @description Overlay window for displaying messages and notifications.
+ * Included in the UI module and from there into the main uibuilder module.
+ * @license Apache-2.0
+ * @author Julian Knight (Totally Information)
+ * @copyright (c) 2025-2025 Julian Knight (Totally Information)
+ */
+/**
+ * @class
+ * @augments TiBaseComponent
+ * @description Define a new zero dependency custom web component that displays as a floating control panel.
+ * By default shows just an emoji toggle button that floats over all page content. When clicked,
+ * toggles between showing just the emoji and displaying a content box with additional content.
+ *
+ * @element uib-control
+ * @license Apache-2.0
+
+ * METHODS FROM BASE: (see TiBaseComponent)
+ * STANDARD METHODS:
+  * @function attributeChangedCallback Called when an attribute is added, removed, updated or replaced
+  * @function connectedCallback Called when the element is added to a document
+  * @function constructor Construct the component
+  * @function disconnectedCallback Called when the element is removed from a document
+
+ * OTHER METHODS:
+  * @function _setupToggle Private method to setup toggle functionality
+  * @function _setupThemeToggle Private method to setup theme toggle functionality
+  * @function _setupTabs Private method to setup tab functionality
+  * @function _setupDrag Private method to setup drag functionality
+  * @function _savePosition Private method to save position to localStorage
+  * @function _restorePosition Private method to restore position from localStorage
+  * @function _getCurrentTheme Private method to get current theme setting
+  * @function _setTheme Private method to set theme mode
+
+ * CUSTOM EVENTS:
+  * "uib-control:connected" - When an instance of the component is attached to the DOM. `evt.details` contains the details of the element.
+  * "uib-control:ready" - Alias for connected. The instance can handle property & attribute changes
+  * "uib-control:disconnected" - When an instance of the component is removed from the DOM. `evt.details` contains the details of the element.
+  * "uib-control:attribChanged" - When a watched attribute changes. `evt.details.data` contains the details of the change.
+  * "uib-control:toggle" - When the control panel is toggled. `evt.details.data.expanded` indicates whether panel is expanded.
+  * "uib-control:drag-end" - When dragging ends. `evt.details.data` contains x and y coordinates.
+  * "uib-control:position-restored" - When saved position is restored. `evt.details.data` contains position and timestamp.
+  * "uib-control:theme-changed" - When theme is changed. `evt.details.data.theme` contains the selected theme.
+  * "uib-control:tab-changed" - When tab is changed. `evt.details.data.activeTab` contains the active tab ID.
+  * NOTE that listeners can be attached either to the `document` or to the specific element instance.
+
+ * Standard watched attributes (common across all my components):
+  * @property {string|boolean} inherit-style - Optional. Load external styles into component (only useful if using template). If present but empty, will default to './index.css'. Optionally give a URL to load.
+  * @property {string} name - Optional. HTML name attribute. Included in output _meta prop.
+
+ * Other watched attributes:
+  * @property {boolean} close-on-outside-click - Optional. If present, clicking outside the component will close the panel.
+  * @property {string} save-position - Optional. If present, saves the dragged position to localStorage. Value is used as storage key (defaults to 'uib-control-position').
+
+ * PROPS FROM BASE: (see TiBaseComponent)
+ * OTHER STANDARD PROPS:
+  * @property {string} componentVersion Static. The component version string (date updated). Also has a getter that returns component and base version strings.
+
+ * Other props:
+  * By default, all attributes are also created as properties
+
+ NB: properties marked with 💫 are dynamic and have getters/setters.
+
+ * CSS Custom Properties (for theming):
+  * --uib-control-top: Top position (default: 1.25rem)
+  * --uib-control-right: Right position (default: 1.25rem)
+  * --uib-control-z-index: Z-index for layering (default: 9999)
+  * --uib-control-max-width: Maximum width of component (default: 18.75rem)
+  * --uib-control-bg: Background color (default: hsl(0, 0%, 98%))
+  * --uib-control-border: Border style (default: 1px solid hsl(0, 0%, 85%))
+  * --uib-control-border-radius: Border radius (default: 0.5rem)
+  * --uib-control-shadow: Box shadow (default: 0 0.25rem 0.75rem hsla(0, 0%, 0%, 0.15))
+  * --uib-control-emoji-size: Size of emoji toggle (default: 1.5rem)
+  * --uib-control-content-padding: Content padding (default: 1rem)
+
+ * @slot Container contents - Content displayed in the expandable panel
+
+ * @example
+  * <uib-control name="myControl">
+  *   <p>Your control panel content here</p>
+  * </uib-control>
+
+ * @example
+  * <uib-control close-on-outside-click save-position="my-panel-pos">
+  *   <div>
+  *     <h3>Draggable Control Panel</h3>
+  *     <button>Action 1</button>
+  *     <button>Action 2</button>
+  *   </div>
+  * </uib-control>
+
+ * @example
+  * <!-- Save position with default key -->
+  * <uib-control save-position>
+  *   <p>This panel remembers its position</p>
+  * </uib-control>
+
+ * See https://github.com/runem/web-component-analyzer?tab=readme-ov-file#-how-to-document-your-components-using-jsdoc
+ */
+/**
+ * @kind module
+ * @module reactive
+ * @description Reactive proxy implementation for uibuilder (Loosely based on Vue.js v3 reactivity)
+ * @license Apache-2.0
+ * @author Julian Knight (Totally Information)
+ * @copyright (c) 2025 Julian Knight (Totally Information)
+ */
 /**
  * @kind module
  * @module uibuilder

@@ -3,7 +3,7 @@ title: Configuring UIBUILDER
 description: |
   Describes how to change UIBUILDER's configuration, options and settings.
 created: 2021-12-30 17:38:33
-updated: 2024-03-24 21:31:48
+updated: 2025-07-12 16:43:49
 ---
 
 > [!NOTE]
@@ -28,59 +28,54 @@ However, there are some additional places you may need to make changes to.
 * **`uibRoot>/<instance-url>/`** - contains the settings, build modules and front-end code for the specific instance
   of `uibuilder` nodes.
 
+* **`<uibRoot>/package.json`** - contains details about uibuilder installed and served front-end libraries. This should not be edited directly, it is automatically updated by uibuilder's library manager.
+
 ## `settings.js`
 
 This file contains the global settings for Node-RED. You can add a new property to it called `uibuilder` as in the following example that describes all of the current options.
 
 ```js
-   /** Custom settings for all uibuilder node instances */
-   uibuilder: {
-        /** Optional HTTP PORT. Required for custom server.
+    /** Custom settings for all uibuilder node instances */
+    uibuilder: {
+        /** Optional HTTP PORT.
          * If set and different to Node-RED's uiPort, uibuilder will create
          * a separate webserver for its own use.
          */
         port: process.env.UIBPORT || 3001,
 
         /** Optional: Change location of uibRoot
-         * If set, instead of something like `~/.node-red/uibuilder`, the 
-         * uibRoot folder can be anywhere you like.
+         * If set, instead of something like `~/.node-red/uibuilder`, the uibRoot folder can be anywhere you like.
          */
         uibRoot: process.env.UIBROOT || path.join(os.homedir(), 'myuibroot'),
-        
+        // For project-specific uibuilder folders:
+        // uibRoot: path.join(os.homedir(), '.node-red', 'projects', 'uibuilder')
+
         /** Only used if a custom ExpressJS server in use (see port above)
-         * Optional: Default will be the same as Node-RED. 
-         * @type {('http'|'https')} 
+         * Optional: Default will be the same as Node-RED. @type {('http'|'https')}
          */
         customType: 'http',
-        
-        /** Only required if type is https, http2. Defines the cert & key. 
+
+        /** Only required if type is https, http2. Defines the cert & key.
          * See Node-RED https settings for more details.
+         * If not defined, will use Node-RED's https properties.
          * @type {Object<Buffer,Buffer>}
          */
         // https: {
         //     key: 'keyname.key',
         //     cert: 'fullchain.cer'
         // },
-        
+
         /** Optional: Custom ExpressJS server options
-         *  Only required if using a custom webserver (see port setting above). 
-         * For a full list of available options, refer to
-         *   http://expressjs.com/en/api.html#app.settings.table
+         *  Only required if using a custom webserver (see port setting above).
+         *  Available options: http://expressjs.com/en/api.html#app.settings.table
          */
         serverOptions: {
-            // If you want to turn off URL case sensitivity
-            // 'case sensitive routing': false,
-            
             // http://expressjs.com/en/api.html#trust.proxy.options.table
-            // true/false; or subnet(s) to trust; or custom function 
-            //   returning true/false. default=false
-            'trust proxy': true,
-            
-            /** Optional view engine - the engine must be installed into 
-             *  your userDir (e.g. where this file lives)
-             * If set as shown, ExpressJS will translate source files ending
-             * in .ejs to HTML.
-             * See https://expressjs.com/en/guide/using-template-engines.html
+            'trust proxy': true,  // true/false; or subnet(s) to trust; or custom function returning true/false. default=false
+            /** Optional view engine - the engine must be pre-installed into your userDir
+             *  (e.g. where this settings.js file lives)
+             * If set as shown, ExpressJS will translate source files ending in .ejs to HTML.
+             * See https://expressjs.com/en/guide/using-template-engines.html for details.
              */
             'view engine': 'ejs',
             // Optional global settings for view engine
@@ -90,24 +85,137 @@ This file contains the global settings for Node-RED. You can add a new property 
             'footon': 'bar stool',
         },
 
-        /** Optional: Socket.IO Server Options. 
+        /** Optional: Socket.IO Server options
          * See https://socket.io/docs/v4/server-options/
-         * Note that the `path` property will be ignored, it is set by 
-         * uibuilder itself. You can set any other setting, though you 
-         * might break uibuilder unless you know what you are doing.
-         * @type {Object}
+         * Note that the `path` property will be ignored, it is set by uibuilder itself.
+         * You can set anything else though you might break uibuilder unless you know what you are doing.
+         * @type {object}
          */
         // socketOptions: {
-        //     // Make the default buffer larger (default=1MB)
+        //     // Make the default msg buffer larger (default=1MB)
         //     maxHttpBufferSize: 1e8 // 100 MB
         // },
 
         /** Controls whether the uibuilder instance API feature is enabled
-         *  Off by default since uncontrolled instance api's are a security and 
+         *  Off by default since uncontrolled instance api's are a security and
          *  operational risk. Use with caution. See Docs for details.
          */
-        instanceApiAllowed: true,
-   },
+        // instanceApiAllowed: true,
+
+        hooks: {
+            /** Hook fn run every time any uibuilder node receives a message from the front-end client.
+             * You CAN:
+             * - Stop the inbound msg by returning false.
+             * - Change the msg that is received before it is output.
+             * You _could_ change the node's values BUT DO NOT! Bad things likely to happen if you do.
+             * @param {object} data
+             * @param {object} data.msg READ/WRITE. The msg that is being sent
+             * @param {object} data.node READ-ONLY! The settings of the node sending the message
+             * @returns {boolean} true = receive the msg. false = block the msg.
+             */
+            msgReceived: (data) => {
+                const {msg, node} = data
+
+                // console.log('hooks:msgReceived - msg: ', msg)
+                // console.log('hooks:msgReceived - uibuilder url: ', node.url)
+
+                if (msg.blockme) return false // simplistic example
+                                
+                // Example of altering the msg
+                // msg._hook = 'I WAS HOOKED!'
+
+                // Block inputs except from logged in users
+                // if (!msg._client) return false
+
+                // Default, allows msgs to flow
+                return true
+            },
+            /** Hook fn run every time any uibuilder node is sending a msg to a front-end client
+             * This could therefore get run thousands of times! So best to filter up front as shown.
+             * You CAN:
+             * - stop the outbound msg by returning false.
+             * - Change the msg that is sent
+             * You _could_ change the node's values BUT DO NOT! Bad things likely to happen if you do.
+             * @param {object} data
+             * @param {object} data.msg READ/WRITE. The msg that is being sent
+             * @param {uibNode} data.node READ-ONLY! The settings of the node sending the message
+             * @returns {boolean} true = receive the msg. false = block the msg.
+             */
+            msgSending: (data) => {
+                const {msg, node} = data
+
+                // You generally want to let things through as early as possible for efficiency.
+                // Filter by node.url, if url is not equal to 'test', then allow the msg's to flow as normal
+                // if (node.url !== 'test') return true
+
+                // Filter to restrict by topic - only allow anything through if topic is 'test'
+                // if (msg.topic !== 'test') return false
+
+                // console.log('hooks:msgReceived - msg: ', msg)
+                // console.log('hooks:msgReceived - uibuilder url: ', node.url)
+
+                // Block message sending if msg.blockme is set to true
+                if (msg.blockme) return false // simplistic example
+
+                // Block outputs except to logged in users
+                // if (!msg._client) return false
+
+                // Default, allows msgs to flow
+                return true
+            },
+            /** Hook fn run whenever uibuilder looks up a connected client's details. NOTE:
+             * This will be run every time a client connects AND every time it sends a msg to Node-RED.
+             * This lets you amend the details including out._client which can contain authenticated user details.
+             * @param {object} data
+             *   @param {object} data.client Key client information - this can be amended in this fn
+             *     @param {object} data.client._uib Standard uibuilder client meta info
+             *     @param {object=} data.client._client Only if a recognised authenticated client
+             *   @param {socketio.Socket} data.socket Reference to client socket connection
+             * @param {object} data.node READ-ONLY! The settings of the node sending the message
+             */
+            clientDetails: (data) => {
+                const {client, socket, node} = data
+
+                // Quick and dirrty way to stop ALL clients from connecting if client._client object is not set
+                // See: https://totallyinformation.github.io/node-red-contrib-uibuilder/#/security/authenticated-client-properties
+                // if (!client?._client) return false
+
+                // Show potentially useful client details in the log:
+                // node.log(`🌐 [uibuilder:hooks:clientDetails] for ${node.url}:`)
+                // console.log('socket.request.headers: ', socket.request.headers)
+                // console.log('socket.handshake.auth: ', socket.handshake.auth)
+
+                // Simplistic e.g. to block a specific user from being logged in
+                if (client?._client?.userId === 'horrible.user') delete client._client
+            },
+            /** Hook fn that allows overrides of Socket.IO connection headers. NOTE:
+             * Connection headers will only ever update when a client (re)connects or
+             * possibly also for long-polling requests.
+             * @see https://socket.io/docs/v4/server-api/#event-headers for details
+             * @param {object} data 
+             * @param {object<string:string>} data.headers Response Headers
+             * @param {Express.Request} data.req ExpressJS Request object
+             */
+            socketIoHeaders: (data) => {
+                const { headers, req } = data
+
+                // headers contains the response headers that go back to the client.
+                headers['x-wowser'] = 'The Client gets this'
+
+                // Simulate an authenticated user
+                // If these are set, a msg._client object is added to uibuilder output messages
+                // req.headers['remote-user'] = 'test-user'
+                // req.headers['remote-name'] = 'Test User'
+                // req.headers['remote-email'] = 'test.user@example.com'
+                // req.headers['x-user-role'] = 'test-role'
+                // req.headers['x-forwarded-groups'] = 'group1,group2'
+
+                // NB: This is NOT suitable for session controls since it will only update
+                //     when a client (re)connects, not when otherwise sending/receiving msgs.
+                //     Use the msgReceived amd msgSending hooks for session management.
+            },
+        },
+    },
 ```
 
 ## `<uibRoot>/.config/`

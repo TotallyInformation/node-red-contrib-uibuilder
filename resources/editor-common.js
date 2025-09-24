@@ -12,8 +12,9 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
         /** Add a "uibuilder" object to the Node-RED Editor
          * To contain common functions, variables and constants for UIBUILDER nodes
          */
+        // @ts-ignore
         const uibuilder = window['uibuilder'] = {
-            // Standard palette category for all uibuilder nodes
+            // @ts-ignore Standard palette category for all uibuilder nodes
             paletteCategory: 'uibuilder',
             // Standard width for typed input fields
             typedInputWidth: '68.5%',
@@ -66,7 +67,8 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                             return element.attr( 'aria-label' )
                         } else if ( element.is( 'img[alt]' ) ) {
                             return element.attr( 'alt' )
-                        } else return ''
+                        }
+                        return ''
                     },
                 })
             },
@@ -81,7 +83,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                     dataType: 'json',
                     url: './uibuilder/admin/dummy',
                     data: {
-                        'cmd': 'listinstances',
+                        cmd: 'listinstances',
                     },
                     beforeSend: function(jqXHR) {
                         const authTokens = RED.settings.get('auth-tokens')
@@ -94,8 +96,8 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                         // Also pre-populate the editorUibInstances to avoid the problem that
                         // that list is built too late during Editor load
                         if (Object.keys(this.editorUibInstances).length === 0) this.editorUibInstances = this.deployedUibInstances
-                        // uibuilder.log('[uibuilder] Deployed Instances >>', instances, this )
-                    }
+                        // uibuilder.log('🌐[uibuilder] Deployed Instances >>', instances, this )
+                    },
                 })
                 return this.deployedUibInstances
             }, // ---- end of getDeployedUrls ---- //
@@ -116,7 +118,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
             },
         }
 
-        //#region --- Calculate the node url root & the uibuilder FE url prefix
+        // #region --- Calculate the node url root & the uibuilder FE url prefix
         const eUrlSplit = window.origin.split(':')
         // Is uibuilder using a custom server?
         if (RED.settings.uibuilderCustomServer.isCustom === true) {
@@ -131,7 +133,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
             uibuilder.serverType = 'Node-RED\'s'
         }
         uibuilder.urlPrefix = `${eUrlSplit.join(':')}/${uibuilder.nodeRoot}`
-        //#endregion ---- ---- ----
+        // #endregion ---- ---- ----
 
         if (RED.settings.uibuilderNodeEnv) {
             uibuilder.debug = RED.settings.uibuilderNodeEnv.toLowerCase() === 'development' || RED.settings.uibuilderNodeEnv.toLowerCase() === 'dev' // uibuilder.localHost
@@ -188,10 +190,10 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 // Keep a list of ALL uibuilder nodes in the editor incl disabled, undeployed, etc. Different to the deployed list
                 if (node.url) uibuilder.editorUibInstances[node.id] = node.url
                 // Inform interested functions that something was added (and why)
-                RED.events.emit('uibuilder/node-added', node)
+                RED.events.emit('UIBUILDER/node-added', node)
                 // -- IF uibuilderInstances <> editorInstances THEN there are undeployed instances. OR Disabled nodes/flows --
 
-                // uibuilder.log('[uibuilder] node added:', node)
+                // uibuilder.log('🌐[uibuilder] node added:', node)
             }
         })
         RED.events.on('nodes:change', function(node) {
@@ -200,9 +202,9 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 if (node.url) uibuilder.editorUibInstances[node.id] = node.url
                 else delete uibuilder.editorUibInstances[node.id]
                 // Inform interested functions that something was changed
-                RED.events.emit('uibuilder/node-changed', node)
+                RED.events.emit('UIBUILDER/node-changed', node)
 
-                uibuilder.log('[uibuilder] node changed:', node)
+                uibuilder.log('🌐[uibuilder] node changed:', node)
             }
         })
         RED.events.on('nodes:remove', function(node) {
@@ -210,20 +212,52 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 // update list
                 delete uibuilder.editorUibInstances[node.id]
                 // Inform interested functions that something was deleted
-                RED.events.emit('uibuilder/node-deleted', node)
+                RED.events.emit('UIBUILDER/node-deleted', node)
 
-                uibuilder.log('[uibuilder] node removed: ', node)
+                uibuilder.log('🌐[uibuilder] node removed: ', node)
             }
         })
         // RED.events.on('deploy', function() {
-        //     console.log('[uibuilder] Deployed')
+        //     console.log('🌐[uibuilder] Deployed')
         // })
         // RED.events.on('workspace:dirty', function(data) {
-        //     console.log('[uibuilder] Workspace dirty:', data)
+        //     console.log('🌐[uibuilder] Workspace dirty:', data)
         // })
         // RED.events.on('runtime-state', function(event) {
-        //     console.log('[uibuilder] Runtime State:', event)
+        //     console.log('🌐[uibuilder] Runtime State:', event)
         // })
+
+        // #region --- Add uibuilder-specific actions to the RED editor ---
+
+        // Action to open a selected uibuilder node's site in a new tab
+        RED.actions.add('uibuilder:open-uibuilder-site', () => {
+            // Get the selected node
+            const selectedNode = RED.view.selection().nodes
+            // If there is a single selected node and it is a uibuilder node, open
+            if (selectedNode && selectedNode.length === 1 && selectedNode[0].type === 'uibuilder') {
+                // Open the uibuilder site in a new tab
+                const url = `${uibuilder.urlPrefix}${selectedNode[0].url}`
+                window.open(url, '_blank')
+            } else {
+                RED.notify('🌐 Please select a single uibuilder node to open its site', 'error')
+            }
+        })
+
+        // Action to open a selected uibuilder node's front-end code in an IDE
+        RED.actions.add('uibuilder:edit-uibuilder-site', () => {
+            const selectedNode = RED.view.selection().nodes
+            if (selectedNode && selectedNode.length === 1 && selectedNode[0].type === 'uibuilder') {
+                const url = selectedNode[0].editurl
+                if (url) {
+                    window.open(url, '_blank')
+                } else {
+                    RED.notify('🌐 No IDE URL set for this uibuilder node', 'error')
+                }
+            } else {
+                RED.notify('🌐 Please select a single uibuilder node to open its front-end code in your IDE', 'error')
+            }
+        })
+        // #endregion ---- ---- ----
 
         /** If debug, dump out key information to console */
         if (uibuilder.debug === true) {
@@ -253,11 +287,41 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
 
                     '\n\nRED Keys: ', Object.keys(RED),
                     '\n\nRED.events Keys: ', Object.keys(RED.events),
-                    '\n\nRED.utils Keys: ', Object.keys(RED.utils),
+                    '\n\nRED.utils Keys: ', Object.keys(RED.utils)
                 )
                 console.groupEnd()
             }, 1500)
         }
+
+        // TODO: EXPERIMENTAL - Maybe dynamically add things to the help panel?
+        // // Create a mutation observer to watch for changes to the inner text of any element with the class '.red-ui-help.title'
+        // const observer = new MutationObserver((mutations) => {
+        //     mutations.forEach((mutation) => {
+        //         if (mutation.type === 'childList') {
+        //             console.log('🌐 MutationObserver: Detected childList mutation:', mutation.target.classList, mutation)
+        //             // Check if the target element has the class 'red-ui-help title'
+        //             if (mutation.target.classList.contains('red-ui-help-title')) {
+        //                 console.log('🌐 MutationObserver: Detected change in red-ui-help title element:', mutation.target);
+        //                 // If it does, update the title text
+        //                 const txt = mutation.target.innerText
+        //                 if (txt === 'uibuilder') mutation.target.innerText = 'uibuilder - Node-RED Front-End Builder'
+        //             }
+        //         } else {
+        //             console.log('🌐 MutationObserver: Detected mutation of type:', mutation.type);
+        //         }
+        //     })
+        // })
+        // // start observing from `div.red-ui-help`
+        // const helpDiv = document.querySelector('.red-ui-panel > .red-ui-help')
+        // if (helpDiv) {
+        //     console.log('🌐 MutationObserver: Starting to observe red-ui-help element:', helpDiv);
+        //     observer.observe(helpDiv, {
+        //         childList: true, // Watch for changes to the children of the target node
+        //         subtree: true, // Watch for changes in all descendants of the target node
+        //     })
+        // } else {
+        //     console.warn('🌐 MutationObserver: No red-ui-help element found to observe.')
+        // }
     },
     // onremove: function() {},
 })

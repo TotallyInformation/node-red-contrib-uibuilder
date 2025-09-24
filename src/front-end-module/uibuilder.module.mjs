@@ -24,17 +24,19 @@
 
 // We need the Socket.IO & ui libraries & the uib-var component  --- //
 // @ts-ignore - Note: Only works when using esbuild to bundle
-import Ui from './ui'
+import Ui from './ui.mjs'
 import io from 'socket.io-client' // eslint-disable-line import/no-named-as-default
-import UibVar from '../components/uib-var'
-import UibMeta from '../components/uib-meta'
-import ApplyTemplate from '../components/apply-template'
+import UibVar from '../components/uib-var.mjs'
+import UibMeta from '../components/uib-meta.mjs'
+import ApplyTemplate from '../components/apply-template.mjs'
+import UibControl from '../components/uib-control.mjs'
+import { reactive as createReactive, Reactive } from './reactive.mjs'
 // import { dom } from './tinyDom'
 
 // Incorporate the logger module - NB: This sets a global `log` object for use if it can.
 // import logger from './logger'
 
-const version = '7.4.2-src'
+const version = '7.5.0-src'
 
 // #region --- Module-level utility functions --- //
 
@@ -104,6 +106,13 @@ function log() {
             break
         }
 
+        case 'print': {
+            if (log.level < 0) break
+            level = 0
+            strLevel = 'print'
+            break
+        }
+
         default: {
             level = -1
             break
@@ -128,6 +137,12 @@ function log() {
 // Nice console styling
 log.LOG_STYLES = {
     // 0
+    print: {
+        css: 'background: grey; color: yellow;',
+        txtCss: 'color: grey;',
+        pre: '➡️',
+        console: 'log',
+    },
     error: {
         css: 'background: red; color: black;',
         txtCss: 'color: red; ',
@@ -170,7 +185,7 @@ log.LOG_STYLES = {
         console: 'log',
     },
 
-    names: ['error', 'warn', 'info', 'log', 'debug', 'trace'],
+    names: ['print', 'error', 'warn', 'info', 'log', 'debug', 'trace'],
     reset: 'color: inherit;',
     head: 'font-weight:bold; font-style:italic;',
     level: 'font-weight:bold; border-radius: 3px; padding: 2px 5px; display:inline-block;',
@@ -323,7 +338,8 @@ export const Uib = class Uib {
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
         'elementExists', 'get', 'getManagedVarList', 'getWatchedVars', 'htmlSend', 'include',
-        'navigate', 'scrollTo', 'set', 'showMsg', 'showStatus', 'uiGet', 'uiWatch', 'watchUrlHash',
+        'navigate', 'scrollTo', 'set', 'showMsg', 'showStatus', 'showOverlay',
+        'uiGet', 'uiWatch', 'watchUrlHash',
     ]
 
     /** @type {Object<string, string>} Managed uibuilder variables */
@@ -868,7 +884,7 @@ export const Uib = class Uib {
         }
         if (!opts) opts = {}
         if (!intl) intl = navigator.language ? navigator.language : 'en-GB'
-        if (decimalPlaces) {
+        if (typeof decimalPlaces === 'number') {
             opts.minimumFractionDigits = decimalPlaces
             opts.maximumFractionDigits = decimalPlaces
         }
@@ -948,6 +964,25 @@ export const Uib = class Uib {
     navigate(url) {
         if (url) window.location.href = url
         return window.location
+    }
+
+    /** Wrap a provided variable in a proxy object so that it can be used reactively
+     * @param {*} srcvar The source variable to wrap
+     * @returns {Proxy} A proxy object that can be used reactively
+     */
+    reactive(srcvar) {
+        return createReactive(srcvar)
+    }
+
+    /** Get the Reactive class for advanced usage
+     * @returns {Function} The Reactive class constructor
+     * @example
+     * const ReactiveClass = uib.getReactiveClass()
+     * const reactiveInstance = new ReactiveClass(data, customEventDispatcher)
+     * const proxy = reactiveInstance.create()
+     */
+    getReactiveClass() {
+        return Reactive
     }
 
     // ! TODO change ui uib-* attributes to use this
@@ -1270,6 +1305,21 @@ export const Uib = class Uib {
         return _ui.sanitiseHTML(html)
     }
 
+    /** Creates and displays an overlay window with customizable content and behavior
+     * @param {object} options - Configuration options for the overlay
+     *   @param {string} [options.content] - Main content (text or HTML) to display
+     *   @param {string} [options.title] - Optional title above the main content
+     *   @param {string} [options.icon] - Optional icon to display left of title (HTML or text)
+     *   @param {string} [options.type] - Overlay type: 'success', 'info', 'warning', or 'error'
+     *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
+     *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
+     *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
+     * @returns {object} Object with close() method to manually close the overlay
+     */
+    showOverlay(options) {
+        return _ui.showOverlay(options)
+    }
+
     /** Add table event listener that returns the text or html content of either the full row or a single cell
      * NOTE: Assumes that the table has a `tbody` element.
      * If cells have a `data-col-name` attribute, it will be used in the output as the column name.
@@ -1323,10 +1373,14 @@ export const Uib = class Uib {
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
-     * @param {"notify"|"alert"} type Dialog type
-     * @param {object} ui standardised ui data
-     * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
+     * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
+     * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
+     * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
      * @returns {void}
+     * @example
+     * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
+     * @example
+     * Ui.showDialog('alert', null, msg)
      */
     showDialog(type, ui, msg) {
         _ui.showDialog(type, ui, msg)
@@ -1359,6 +1413,9 @@ export const Uib = class Uib {
 
     // #endregion -- direct to _ui --
 
+    // ! TODO: Rework attrib handling to allow for uib-* and data-uib-* AND :* attributes
+    //   See other bookmarks as well
+
     /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
      * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
      *          as possible. Async so that calling function does not need to wait.
@@ -1369,7 +1426,7 @@ export const Uib = class Uib {
     async _uibAttribObserver(mutations/* , observer */) {
         mutations.forEach( async (m) => { // async so process does not wait
             log('trace', 'uibuilder:_uibAttribObserver', 'Mutations ', m)()
-            // Deal with attribute changes
+            // ! wrong - Deal with attribute changes
             if (m.attributeName && (m.attributeName.startsWith('uib') || m.attributeName.startsWith('data-uib'))) {
                 // log(0, 'attribute mutation', m.attributeName, m.target.getAttribute(m.attributeName), m.oldValue, m )()
                 this._uibAttrScanOne(m.target)
@@ -1382,7 +1439,7 @@ export const Uib = class Uib {
                     try { // Nodes might not always have attributes
                         aNames = [...n.attributes]
                     } catch (e) {}
-                    // Get any added elements that have uib attribs
+                    // ! wrong - Get any added elements that have uib attribs
                     const intersect = this.arrayIntersect(this.uibAttribs, aNames)
                     // Process them
                     intersect.forEach( async (el) => {
@@ -1390,6 +1447,7 @@ export const Uib = class Uib {
                     })
                     // And get any children of the added elements that have uib attribs (a node might not have querySelectorAll method)
                     let uibChildren = []
+                    // ! wrong
                     if (n.querySelectorAll) uibChildren = n.querySelectorAll(this.#uibAttrSel)
                     // Process them
                     uibChildren.forEach( async (el) => {
@@ -1400,17 +1458,7 @@ export const Uib = class Uib {
         })
     }
 
-    /** Check a single HTML element for uib attributes and add auto-processors as needed.
-     * Async so that calling function does not need to wait.
-     * Understands only uib-topic at present. Msgs received on the topic can have:
-     *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
-     *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
-     * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
-     * @private
-     */
-    async _uibAttrScanOne(el) {
-        log('trace', 'uibuilder:_uibAttrScanOne', 'Setting up auto-processor for: ', el)()
-        const topic = el.getAttribute('uib-topic') || el.getAttribute('data-uib-topic')
+    _processUibTopic(el, topic) {
         // Create a topic listener
         this.onTopic(topic, (msg) => {
             log('trace', 'uibuilder:_uibAttrScanOne', `Msg with topic "${topic}" received. msg content: `, msg)()
@@ -1463,6 +1511,68 @@ export const Uib = class Uib {
         })
     }
 
+    /** Check a single HTML element for uib attributes and add auto-processors as needed.
+     * Async so that calling function does not need to wait.
+     * Understands only uib-topic at present. Msgs received on the topic can have:
+     *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
+     *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
+     * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
+     * @private
+     */
+    async _uibAttrScanOne(el) {
+        log('trace', 'uibuilder:_uibAttrScanOne', 'Setting up auto-processor for: ', el)()
+        // Get all of the elements attributes that start with uib- or data-uib- or :
+        if (!el || !el.attributes) {
+            // log('warn', 'uibuilder:_uibAttrScanOne', 'No element or no attributes found. Skipping.', el)()
+            return
+        }
+        // Get the attributes that start with uib- or data-uib-
+        let uibAttribs = [...el.attributes].filter(attr => attr.name.startsWith('uib-') || attr.name.startsWith('data-uib-') || attr.name.startsWith(':'))
+        // If no uib attributes, then skip
+        if (uibAttribs.length === 0) {
+            // log('trace', 'uibuilder:_uibAttrScanOne', 'No uib attributes found. Skipping.', el)()
+            return
+        }
+        // Remove duplicates
+        uibAttribs = [...new Set(uibAttribs)]
+
+        uibAttribs.forEach((attr) => {
+            if (attr?.name === 'uib-topic' || attr?.name === 'data-uib-topic') this._processUibTopic(el, attr.value)
+            // Check for uib-bind:* attributes
+            else if (attr?.name.startsWith('uib-bind:') || attr?.name.startsWith('data-uib-bind:') || attr?.name.startsWith(':')) {
+                // Get the bind name
+                const bindName = attr.name.replace(/^(uib-bind:|data-uib-bind:|:)/, '')
+                // log('print', 'uibuilder:_uibAttrScanOne', 'Processing uib-bind:', bindName, 'for element:', el)()
+                // treat the attribute value as a javascript function, run the function safely
+                let value = attr.value
+                try {
+                    value = (new Function(`return (${attr.value})`))()
+                    log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 1 uib-bind attribute:', bindName, 'with value:', value)()
+                } catch (e) {
+                    log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 1 uib-bind attribute:', bindName, 'with value:', value)()
+                    try {
+                        console.log(globalThis)
+                        value = globalThis[attr.value] ?? attr.value
+                        // value = (new Function(`return (window.${attr.value})`))()
+                        log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 2 uib-bind attribute:', bindName, 'with value:', value)()
+                    } catch (e) {
+                        log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 2 uib-bind attribute:', bindName, 'with value:', value)()
+                    }
+                }
+
+                // set the attribute names by bindName to the value of the attribute
+                if (bindName && value) {
+                    // Set the attribute to the value of the bindName
+                    el.setAttribute(bindName, value)
+                    // If the bindName is 'value', then also set the value of the element
+                    if (bindName === 'value') el.value = value
+                } else {
+                    log('warn', 'uibuilder:_uibAttrScanOne', 'Invalid uib-bind attribute:', attr.name, 'with value:', value, 'for element:', el)()
+                }
+            }
+        })
+    }
+
     /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
      * Async so that calling function does not need to wait.
      * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
@@ -1471,6 +1581,7 @@ export const Uib = class Uib {
     async _uibAttrScanAll(parentEl) {
         if (!Array.isArray(parentEl)) parentEl = [parentEl]
         parentEl.forEach( async (p) => { // async so process does not wait
+            // ! wrong
             const uibChildren = p.querySelectorAll(this.#uibAttrSel)
             // log('trace', 'uibuilder:_uibAttrScanAll:forEach:children', 'p, uibChildren: ', p, uibChildren)()
             if (uibChildren.length > 0) {
@@ -2322,9 +2433,11 @@ export const Uib = class Uib {
             log('error', 'Uib:_uibCommand', `Command '${cmd} is not allowed to be called externally`)()
             return
         }
-        const prop = msg._uib.prop
-        const value = msg._uib.value
-        const quiet = msg._uib.quiet ?? false
+        // @since v7.5.0 allow msg._uib.options instead of prop/value to allow more flexible commands
+        const prop = msg._uib?.prop
+        const value = msg._uib?.value
+        const quiet = msg._uib?.quiet ?? msg._uib?.options?.quiet ?? false
+        const options = msg._uib?.options ?? { type: prop, title: value, quiet: quiet, }
         let response, info
 
         // Don't forget to update `#extCommands`, `docs/client-docs/control-from-node-red.md` & `functions.md`
@@ -2401,6 +2514,12 @@ export const Uib = class Uib {
 
             case 'showStatus': {
                 response = this.showStatus(value, prop)
+                break
+            }
+
+            case 'showOverlay': {
+                if (msg.payload && !options?.content) options.content = msg.payload
+                response = this.showOverlay(options)
                 break
             }
 
@@ -3436,5 +3555,6 @@ uibuilder.start()
 customElements.define('uib-var', UibVar)
 customElements.define('uib-meta', UibMeta)
 customElements.define('apply-template', ApplyTemplate)
+customElements.define('uib-control', UibControl)
 
 // #endregion --- Wrap up ---

@@ -30,9 +30,11 @@
 //     xmlns: 'http://www.w3.org/2000/xmlns/' // sic for the final slash...
 // }
 
+import { showOverlay } from './libs/show-overlay.mjs'
+
 const Ui = class Ui {
-    //#region --- Class variables ---
-    version = '7.4.2-src'
+    // #region --- Class variables ---
+    version = '7.5.0-src'
 
     // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
     sanitiseExtraTags = ['uib-var']
@@ -58,7 +60,7 @@ const Ui = class Ui {
     static md
     /** Optional Markdown-IT Plugins */
     ui_md_plugins
-    //#endregion --- class variables ---
+    // #endregion --- class variables ---
 
     /** Called when `new Ui(...)` is called
      * @param {globalThis} win Either the browser global window or jsdom dom.window
@@ -81,7 +83,7 @@ const Ui = class Ui {
 
         // If a suitable function not passed in, create a dummy one
         if (extLog) Ui.log = extLog
-        else Ui.log = function() { return function() {} }
+        else Ui.log = function() { return function() {} } // eslint-disable-line @stylistic/max-statements-per-line
 
         // If a JSON HTML highlighting function passed then use it, else a dummy fn
         if (jsonHighlight) this.syntaxHighlight = jsonHighlight
@@ -113,7 +115,7 @@ const Ui = class Ui {
         }
     }
 
-    //#region ---- Internal Methods ----
+    // #region ---- Internal Methods ----
 
     _markDownIt() {
         // If Markdown-IT pre-loaded, then configure it now
@@ -154,7 +156,7 @@ const Ui = class Ui {
                 Ui.log('error', 'Ui:_markDownIt:plugins', 'Could not load plugins, ui_md_plugins is not an array')()
                 return
             }
-            this.ui_md_plugins.forEach( plugin => {
+            this.ui_md_plugins.forEach( (plugin) => {
                 if (typeof plugin === 'string') {
                     Ui.md.use(Ui.win[plugin])
                 } else {
@@ -179,17 +181,17 @@ const Ui = class Ui {
             const notify = new Notification(config.title, config)
             return new Promise( (resolve, reject) => {
                 // Doesn't ever seem to fire (at least in Chromium)
-                notify.addEventListener('close', ev => {
+                notify.addEventListener('close', (ev) => {
                     // @ts-ignore
                     ev.currentTarget.userAction = 'close'
                     resolve(ev)
                 })
-                notify.addEventListener('click', ev => {
+                notify.addEventListener('click', (ev) => {
                     // @ts-ignore
                     ev.currentTarget.userAction = 'click'
                     resolve(ev)
                 })
-                notify.addEventListener('error', ev => {
+                notify.addEventListener('error', (ev) => {
                     // @ts-ignore
                     ev.currentTarget.userAction = 'error'
                     reject(ev)
@@ -372,7 +374,7 @@ const Ui = class Ui {
             })
         }
 
-        //#region Add Slot content to innerHTML
+        // #region Add Slot content to innerHTML
         if (comp.slot) {
             this.replaceSlot(el, comp.slot)
         }
@@ -380,7 +382,7 @@ const Ui = class Ui {
 
         // TODO Add multi-slot capability (default slot must always be processed first as innerHTML is replaced)
 
-        //#region Add Slot Markdown content to innerHTML IF marked library is available
+        // #region Add Slot Markdown content to innerHTML IF marked library is available
         if (comp.slotMarkdown) {
             this.replaceSlotMarkdown(el, comp)
         }
@@ -436,7 +438,7 @@ const Ui = class Ui {
         if (ui.components) {
             if (!Array.isArray(ui.components)) ui.components = [ui.components]
 
-            ui.components.forEach(async component => {
+            ui.components.forEach(async (component) => {
                 // NOTE: This happens asynchronously but we don't wait
                 import(component)
             })
@@ -445,7 +447,7 @@ const Ui = class Ui {
         if (ui.srcScripts) {
             if (!Array.isArray(ui.srcScripts)) ui.srcScripts = [ui.srcScripts]
 
-            ui.srcScripts.forEach(script => {
+            ui.srcScripts.forEach((script) => {
                 this.loadScriptSrc(script)
             })
         }
@@ -459,7 +461,7 @@ const Ui = class Ui {
         if (ui.srcStyles) {
             if (!Array.isArray(ui.srcStyles)) ui.srcStyles = [ui.srcStyles]
 
-            ui.srcStyles.forEach(sheet => {
+            ui.srcStyles.forEach((sheet) => {
                 this.loadStyleSrc(sheet)
             })
         }
@@ -561,7 +563,7 @@ const Ui = class Ui {
             if (all !== true) els = [Ui.doc.querySelector(compToRemove)]
             else els = Ui.doc.querySelectorAll(compToRemove)
 
-            els.forEach(el => {
+            els.forEach((el) => {
                 try {
                     el.remove()
                 } catch (err) {
@@ -727,9 +729,9 @@ const Ui = class Ui {
         })
     } // --- end of _uiUpdate ---
 
-    //#endregion ---- -------- ----
+    // #endregion ---- -------- ----
 
-    //#region ---- External Methods ----
+    // #region ---- External Methods ----
 
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
      * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
@@ -874,7 +876,7 @@ const Ui = class Ui {
             // Apply config.attributes to the 1ST ELEMENT ONLY of the template content
             if (config.attributes) {
                 const el = templateContent.firstElementChild
-                Object.keys(config.attributes).forEach( attrib => {
+                Object.keys(config.attributes).forEach( (attrib) => {
                     // Apply each attribute and value
                     el.setAttribute(attrib, config.attributes[attrib])
                 })
@@ -1116,7 +1118,7 @@ const Ui = class Ui {
         }
 
         fetch(url)
-            .then(response => {
+            .then((response) => {
                 if (response.ok === false) {
                     // Ui.log('warn', 'Ui:loadui:then1', `Could not load '${url}'. Status ${response.status}, Error: ${response.statusText}`)()
                     throw new Error(`Could not load '${url}'. Status ${response.status}, Error: ${response.statusText}`)
@@ -1131,7 +1133,7 @@ const Ui = class Ui {
                 // Returns parsed json to next .then
                 return response.json()
             })
-            .then(data => {
+            .then((data) => {
                 if (data !== undefined) {
                     Ui.log('trace', 'Ui:loadui:then2', 'Parsed JSON successfully obtained')()
                     // Call the _uiManager
@@ -1140,7 +1142,7 @@ const Ui = class Ui {
                 }
                 return false
             })
-            .catch(err => {
+            .catch((err) => {
                 Ui.log('warn', 'Ui:loadui:catch', 'Error. ', err)()
             })
     } // --- end of loadui
@@ -1178,21 +1180,23 @@ const Ui = class Ui {
             attributes: undefined,
 
             isUserInput: node.validity ? true : false,
-            userInput: !node.validity ? undefined : {
-                value: node.value,
-                validity: undefined,
-                willValidate: node.willValidate,
-                valueAsDate: node.valueAsDate,
-                valueAsNumber: node.valueAsNumber,
-                type: node.type,
-            },
+            userInput: !node.validity
+                ? undefined
+                : {
+                    value: node.value,
+                    validity: undefined,
+                    willValidate: node.willValidate,
+                    valueAsDate: node.valueAsDate,
+                    valueAsNumber: node.valueAsNumber,
+                    type: node.type,
+                },
         }
 
         if (['UL', 'OL'].includes(node.nodeName)) {
             const listEntries = Ui.doc.querySelectorAll(`${cssSelector} li`)
             if (listEntries) {
                 thisOut.list = {
-                    'entries': listEntries.length,
+                    entries: listEntries.length,
                 }
             }
         }
@@ -1200,19 +1204,19 @@ const Ui = class Ui {
             const listEntries = Ui.doc.querySelectorAll(`${cssSelector} dt`)
             if (listEntries) {
                 thisOut.list = {
-                    'entries': listEntries.length,
+                    entries: listEntries.length,
                 }
             }
         }
         if (node.nodeName === 'TABLE') {
             const bodyEntries = Ui.doc.querySelectorAll(`${cssSelector} > tbody > tr`)
             const headEntries = Ui.doc.querySelectorAll(`${cssSelector} > thead > tr`)
-            const cols = Ui.doc.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`)  // #eltest > table > tbody > tr:nth-child(3)
+            const cols = Ui.doc.querySelectorAll(`${cssSelector} > tbody > tr:last-child > *`) // #eltest > table > tbody > tr:nth-child(3)
             if (bodyEntries || headEntries || cols) {
                 thisOut.table = {
-                    'headRows': headEntries ? headEntries.length : 0,
-                    'bodyRows': bodyEntries ? bodyEntries.length : 0,
-                    'columns': cols ? cols.length : 0,
+                    headRows: headEntries ? headEntries.length : 0,
+                    bodyRows: bodyEntries ? bodyEntries.length : 0,
+                    columns: cols ? cols.length : 0,
                 }
             }
         }
@@ -1292,6 +1296,16 @@ const Ui = class Ui {
         // If DOMPurify is loaded, apply it now
         slot = this.sanitiseHTML(slot)
 
+        // Override for where the el is a template, the normal handler does now work correctly
+        if (el.nodeName === 'TEMPLATE') {
+            el.innerHTML = slot
+            return
+        }
+
+        // Only use innerHTML for templates as the following does not work for them
+        // For everything else use a DocumentFragment for both security and performance.
+        //   It also preserves DOM state and does not destroy event handlers.
+
         // Create doc frag and apply html string (msg.payload or the slot property)
         const tempFrag = Ui.doc.createRange().createContextualFragment(slot)
 
@@ -1330,18 +1344,34 @@ const Ui = class Ui {
         return Ui.win['DOMPurify'].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs, })
     }
 
-    /** Show a pop-over "toast" dialog or a modal alert // TODO - Allow notify to sit in corners rather than take over the screen
+    // TODO - Allow notify to sit in corners rather than take over the screen
+    /** Show a pop-over "toast" dialog or a modal alert
      * Refs: https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/alertdialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/example-index/dialog-modal/dialog.html,
      *       https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/
-     * @param {"notify"|"alert"} type Dialog type
-     * @param {object} ui standardised ui data
-     * @param {object} [msg] msg.payload/msg.topic - only used if a string. Optional.
-     * @returns {void}
+     * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
+     * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
+     * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
+     * @returns {HTMLDivElement|null} The toast element (which may disappear after a timeout) or null if no content
+     * @example
+     * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
+     * @example
+     * Ui.showDialog('alert', null, msg)
      */
     showDialog(type, ui, msg) {
-
         // #region -- Check properties --
+
+        if (!type || !['notify', 'alert'].includes(type)) {
+            type = 'notify' // Default to notify
+        }
+
+        if (!ui) {
+            ui = {
+                noAutohide: true,
+                modal: true,
+                appendToast: false,
+            }
+        }
 
         let body = ''
         // Main body content
@@ -1350,17 +1380,16 @@ const Ui = class Ui {
         // Toast wont show anyway if content is empty, may as well warn user
         if (body === '') {
             Ui.log(1, 'Ui:showDialog', 'Toast content is blank. Not shown.')()
-            return
+            return null
         }
 
-        // Use msg.topic as title if no title provided
+        // Use msg.topic as alert title if no title provided
         let title = ''
         if (ui.title) title = ui.title
         else if (msg.topic) title = msg.topic
         // if (ui.title) content = `<div class="toast-head">${ui.title}</div><div class="toast-body">${content}</div>`
 
         // Allow for variants - @since v6.1 - don't bother - since this now sets CSS class, not tied to bootstrap-vue
-        // if ( !ui.variant || !['', 'primary', 'secondary', 'success', 'info', 'warn', 'warning', 'failure', 'error', 'danger'].includes(ui.variant)) ui.variant = ''
 
         // Toasts auto-hide by default after 10s but alerts do not auto-hide
         if (ui.noAutohide) ui.noAutoHide = ui.noAutohide
@@ -1383,53 +1412,152 @@ const Ui = class Ui {
 
         // #endregion -- -- --
 
-        // Create a toaster container element if not already created - or get a ref to it
-        let toaster = Ui.doc.getElementById('toaster')
-        if (toaster === null) {
-            toaster = Ui.doc.createElement('div')
-            toaster.id = 'toaster'
-            toaster.title = 'Click to clear all notifcations'
-            toaster.setAttribute('class', 'toaster')
-            toaster.setAttribute('role', 'dialog')
-            toaster.setAttribute('arial-label', 'Toast message')
-            toaster.onclick = function () {
-                // @ts-ignore
-                toaster.remove()
-            }
-            Ui.doc.body.insertAdjacentElement('afterbegin', toaster)
+        const removeToaster = () => {
+            if (!toaster) return
+            Ui.doc.body.removeEventListener('keyup', toasterEventHandler)
+            toaster.removeEventListener('keyup', toasterEventHandler)
+            toaster.removeEventListener('touchend', toasterEventHandler)
+            toaster.removeEventListener('click', toasterEventHandler)
+            toaster.remove()
         }
 
-        // Create a toast element. Would be nice to use <dialog> but that isn't well supported yet - come on Apple!
-        const toast = Ui.doc.createElement('div')
-        toast.title = 'Click to clear this notifcation'
-        toast.setAttribute('class', `toast ${ui.variant ? ui.variant : ''} ${type}`)
-        toast.innerHTML = content
-        toast.setAttribute('role', 'alertdialog')
-        if (ui.modal) toast.setAttribute('aria-modal', ui.modal)
-        toast.onclick = function (evt) {
+        const removeToast = (localToast) => {
+            localToast.removeEventListener('keyup', toasterEventHandler)
+            localToast.removeEventListener('touchend', toasterEventHandler)
+            localToast.removeEventListener('click', toasterEventHandler)
+            localToast.remove()
+            // If no more toasts in the toaster, remove the toaster itself
+            if (toaster && toaster.childElementCount === 0) removeToaster()
+        }
+
+        // Prevent toaster events from affecting toast & remote itself
+        const toasterEventHandler = (evt) => {
             evt.stopPropagation()
-            toast.remove()
-            // @ts-ignore
-            if (toaster.childElementCount < 1) toaster.remove()
+            if (!toaster) return
+            console.log(
+                'toasterEventHandler',
+                evt,
+                toaster.contains(evt.target),
+                newToast.contains(evt.target),
+                newToast === evt.target
+            )
+            // removeToast(evt)
+            removeToaster()
         }
 
-        // TODO
-        if (type === 'alert') {
-            // newD.setAttribute('aria-labelledby', '')
-            // newD.setAttribute('aria-describedby', '')
+        const toastEventHandler = (evt) => {
+            evt.stopPropagation()
+
+            // Create a reference to the event target or the targets parent that has a class of 'toast'
+            let localToast
+            if (evt.target.classList.contains('toast')) {
+                localToast = evt.target
+            } else {
+                localToast = evt.target.closest('.toast')
+            }
+            if (!localToast) {
+                Ui.log(1, 'Ui:showDialog', 'Event target is not a (or in a) toast element, ignoring event')()
+                return
+            }
+
+            // Does the toast contain an input, textarea or button element?
+            const hasInteractiveElement = !!localToast.querySelector('input, textarea, button')
+
+            console.log(
+                'toastEventHandler',
+                hasInteractiveElement,
+                evt,
+                localToast.contains(evt.target),
+                localToast === evt.target
+            )
+
+            if (hasInteractiveElement) {
+                // Only respond to Escape key
+                if (evt.key !== 'Escape') return
+                // If hasInteractiveElement is true, then only close on Escape key
+                removeToast(localToast)
+            }
+
+            removeToast(localToast)
         }
 
-        toaster.insertAdjacentElement(ui.appendToast === true ? 'beforeend' : 'afterbegin', toast)
+        // Create a toast element (the actual dialog box). Would be nice to use <dialog> but that isn't well supported yet - come on Apple!
+        const newToast = Ui.doc.createElement('div')
+        newToast.title = 'Click or Esc to clear this notifcation'
+        newToast.setAttribute('class', `toast ${type}`)
+        newToast.setAttribute('role', type === 'alert' ? 'alertdialog' : 'dialog')
+        newToast.dataset.modal = ui.modal
+        newToast.dataset.autohide = ui.autohide
+        newToast.dataset.autoHideDelay = ui.autoHideDelay
+        // newToast.dataset.appendToast = ui.appendToast
+        newToast.innerHTML = content
 
-        // Auto-hide
+        // toaster.insertAdjacentElement(ui.appendToast === true ? 'beforeend' : 'afterbegin', newToast)
+        if (ui.appendToast === true) {
+            // Insert newToast after the last toast in Ui.doc.body
+            const lastToast = Array.from(Ui.doc.body.querySelectorAll('.toast')).pop()
+            if (lastToast) {
+                lastToast.insertAdjacentElement('afterend', newToast)
+            } else {
+                Ui.doc.body.insertBefore(newToast, Ui.doc.body.firstChild)
+            }
+        } else {
+            // Ui.doc.body.insertAdjacentElement('afterbegin', toaster)
+            Ui.doc.body.insertBefore(newToast, Ui.doc.body.firstChild)
+        }
+
+        // Add event handlers to each toast that still allow esc to close but only close on click if they do not contain an input, textarea or button element
+        newToast.addEventListener('keyup', toastEventHandler)
+        newToast.addEventListener('click', toastEventHandler)
+        newToast.addEventListener('touchend', toastEventHandler)
+
+        // Auto-hide each toast after a delay
         if (ui.autohide === true) {
             setInterval(() => {
-                toast.remove()
-                // @ts-ignore
-                if (toaster.childElementCount < 1) toaster.remove()
+                // removeToaster()
+                removeToast(newToast)
             }, ui.autoHideDelay)
         }
-    } // --- End of showDialog ---
+
+        // Only needed if using modal
+        let toaster
+        if (ui.modal === true) {
+            // Create a toaster container element if not already created - or get a ref to it
+            toaster = Ui.doc.getElementById('toaster')
+            if (toaster === null) {
+                toaster = Ui.doc.createElement('div')
+                toaster.id = 'toaster'
+                toaster.title = 'Click, touch, or ESC to clear notifcations'
+                toaster.setAttribute('class', 'toaster')
+                toaster.setAttribute('arial-label', 'Toast message')
+
+                toaster.addEventListener('click', toasterEventHandler)
+                toaster.addEventListener('touchend', toasterEventHandler)
+                // default active element is the body, attach the keyup event handler to the body to catch Escape key
+                Ui.doc.body.addEventListener('keyup', toasterEventHandler)
+
+                Ui.doc.body.insertAdjacentElement('afterbegin', toaster)
+            }
+        }
+
+        // Retursn a reference to the new toast element
+        return newToast
+    }
+
+    /** Creates and displays an overlay window with customizable content and behavior
+     * @param {object} options - Configuration options for the overlay
+     *   @param {string} [options.content] - Main content (text or HTML) to display
+     *   @param {string} [options.title] - Optional title above the main content
+     *   @param {string} [options.icon] - Optional icon to display left of title (HTML or text)
+     *   @param {string} [options.type] - Overlay type: 'success', 'info', 'warning', or 'error'
+     *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
+     *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
+     *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
+     * @returns {object} Object with close() method to manually close the overlay
+     */
+    showOverlay(options) {
+        return showOverlay(options)
+    }
 
     /** Directly manage UI via JSON
      * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
@@ -1454,7 +1582,7 @@ const Ui = class Ui {
 
         const out = []
 
-        selection.forEach(node => {
+        selection.forEach((node) => {
             // Specific property asked for ...
             if (propName) {
                 if (propName === 'classes') propName = 'class'
@@ -1498,7 +1626,7 @@ const Ui = class Ui {
         })
 
         return out
-    } // --- end of uiGet --- //
+    }
 
     /** External alias for _uiComposeComponent
      * @param {*} el HTML Element to enhance
@@ -1508,7 +1636,7 @@ const Ui = class Ui {
         this._uiComposeComponent(el, comp)
     }
 
-    //#region --- table handling ---
+    // #region --- table handling ---
 
     /** Column metadata object definition
      * @typedef columnDefinition
@@ -1528,7 +1656,7 @@ const Ui = class Ui {
      *   @param {HTMLElement|string} opts.parent Default=body. The table will be added as a child. May be an actual HTML element or a CSS Selector
      *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
      */
-    createTable(data=[], opts={parent: 'body',}) {
+    createTable(data = [], opts = { parent: 'body', }) {
         if (!opts.parent) throw new Error('[ui.js:createTable] opts.parent must be provided')
         this.buildHtmlTable(data, opts)
     }
@@ -1551,7 +1679,7 @@ const Ui = class Ui {
      *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
      * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
      */
-    buildHtmlTable(data, opts={}) {
+    buildHtmlTable(data, opts = {}) {
         // If data is an object of objects, convert it to an array of objects
         let rowKeys
         const dataType = Object.prototype.toString.apply(data)
@@ -1585,11 +1713,11 @@ const Ui = class Ui {
             opts.cols = []
             Object.keys(data[0]).forEach( (col, i) => {
                 opts.cols.push({
-                    'index': i,
-                    'hasName': hasName,
-                    'name': hasName ? col : undefined,
-                    'key': col ?? i,
-                    'title': col,
+                    index: i,
+                    hasName: hasName,
+                    name: hasName ? col : undefined,
+                    key: col ?? i,
+                    title: col,
                 })
             })
         }
@@ -1597,7 +1725,7 @@ const Ui = class Ui {
         tbl.cols = opts.cols
 
         // Add the table column headings
-        opts.cols.forEach(col => {
+        opts.cols.forEach((col) => {
             const thEl = Ui.doc.createElement('th')
             thEl.textContent = col.title
             // @ts-ignore
@@ -1658,7 +1786,7 @@ const Ui = class Ui {
      *
      * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
      */
-    tblAddRow(tbl, rowData={}, options={}) {
+    tblAddRow(tbl, rowData = {}, options = {}) {
         const tblType = Object.prototype.toString.apply(tbl)
 
         if (Object.prototype.toString.apply(options) !== '[object Object]') throw new Error(`[tblAddDataRow] options must be an object`)
@@ -1797,7 +1925,7 @@ const Ui = class Ui {
 
                 if (options.eventScope === 'row') {
                     // Loop through each <td> in the clicked row
-                    clickedRow.querySelectorAll('td').forEach(cell => {
+                    clickedRow.querySelectorAll('td').forEach((cell) => {
                         const colName = this.tblGetCellName(cell, options.pad)
                         out[colName] = options.returnType === 'text' ? cell.textContent.trim() : cell.innerHTML
                     })
@@ -1924,9 +2052,7 @@ const Ui = class Ui {
         tbodyEl.deleteRow(rowIndex)
     }
 
-    //#endregion --- table handling ---
-
-    //#endregion ---- external methods ----
+    // #endregion --- table handling ---
 }
 
 export default Ui

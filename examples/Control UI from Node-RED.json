@@ -1,0 +1,2756 @@
+[
+    {
+        "id": "56443195ea782ac2",
+        "type": "tab",
+        "label": "Client Cmd Tests",
+        "disabled": false,
+        "info": "Demonstrates and tests uibuilder client\r\ncommands sent from Node-RED.",
+        "env": []
+    },
+    {
+        "id": "5d9e25e34533c465",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "name": "Control a web page - issues to all connected pages \\n ",
+        "style": {
+            "stroke": "#777777",
+            "label": true,
+            "color": "#000000",
+            "fill": "#ffefbf",
+            "fill-opacity": "0.2"
+        },
+        "nodes": [
+            "b34ceaa60b79bc3a",
+            "00de39fae10f15e6",
+            "4a13f941904a122b",
+            "0f067d8c7209ff9c",
+            "1c068daa3a77bdb4",
+            "16010315c365626a",
+            "3e8b444312601e34",
+            "4ef549da49d18e40"
+        ],
+        "x": 14,
+        "y": 523,
+        "w": 632,
+        "h": 338
+    },
+    {
+        "id": "e25baed2b1efe9a7",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "name": "Test Data - Inject to see the effect of some of the commands \\n ",
+        "style": {
+            "fill": "#bfdbef",
+            "fill-opacity": "0.21",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "1d1f5b0d55f6a646",
+            "463baba887b1ba54",
+            "3bacf340a18a123b",
+            "f21cb178c880c38c",
+            "d342da6a1fd7fe1c",
+            "dd0f91438befda74",
+            "3765cd6597296c35",
+            "3a2598858575dc41",
+            "5d8f7e2a251f57b2",
+            "bc2b5cbcae309807"
+        ],
+        "x": 814,
+        "y": 83,
+        "w": 552,
+        "h": 258
+    },
+    {
+        "id": "5f79bf4a4f4f3f36",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "name": "uibuilder client Test Page \\n ",
+        "style": {
+            "fill": "#dbcbe7",
+            "fill-opacity": "0.2",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "7c8adbf5b52fc611",
+            "501e49abf6e5a607",
+            "618c5774773d9086",
+            "6f4dfd051ff2cf83",
+            "dea4924479704c6e",
+            "75e04dbce19bc0e1",
+            "fd14560e7aa0f275",
+            "472ff48730d1b698",
+            "32f6056e316798bf",
+            "363f0c47148e997e",
+            "3b043396fab746f0",
+            "65dffaaedb01010f"
+        ],
+        "x": 14,
+        "y": 83,
+        "w": 782,
+        "h": 238
+    },
+    {
+        "id": "e0a48c7ef200ea29",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "name": "Dynamically load external files of different types \\n Place files in the same folder as your index.html file or use any URL \\n ",
+        "style": {
+            "label": true,
+            "color": "#000000",
+            "fill": "#bfc7d7",
+            "fill-opacity": "0.26"
+        },
+        "nodes": [
+            "2ff102b3f7bbbad6",
+            "4ce1fc8c40ccbf7d",
+            "fa7f8d5ddcbdd7ac",
+            "82e8db6decd2dd1b",
+            "57905e02bd2658d4",
+            "88db38578e24a526",
+            "ef5602ddf9f7422d",
+            "f83742762fb77e58",
+            "810b9dd6a392018c"
+        ],
+        "x": 14,
+        "y": 887,
+        "w": 427,
+        "h": 394
+    },
+    {
+        "id": "a788bb7b3bb7e959",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "name": "This initialises the page & cache on startup \\n ",
+        "style": {
+            "fill": "#e3f3d3",
+            "fill-opacity": "0.18",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "4b29103fb972307d",
+            "16cdac4094403b45",
+            "f078cbb95b319197",
+            "911214c9aa6fdbb0",
+            "6416796b98c7bc07"
+        ],
+        "x": 14,
+        "y": 363,
+        "w": 622,
+        "h": 98
+    },
+    {
+        "id": "764d90fd92d61c40",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "name": "Front-end library tests and commands \\n ",
+        "style": {
+            "fill": "#ffffff",
+            "fill-opacity": "0.26",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "d1375f241f2b70b2",
+            "948afbc2b3902c35",
+            "dc40edf09b701c8e",
+            "03809295cdb2edab",
+            "89e0f8d7969256e8",
+            "acfbefa843a501a8",
+            "67af5d84c2f15e53"
+        ],
+        "x": 774,
+        "y": 1223,
+        "w": 552,
+        "h": 318
+    },
+    {
+        "id": "8c03d470df5348dc",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "name": "Get information about a page or elements on it, return to Node-RED as an output msg",
+        "style": {
+            "fill": "#dbcbe7",
+            "fill-opacity": "0.13",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "b57b1b7083a669af",
+            "139bca811a1753ae",
+            "1db4309a628d785c",
+            "abc43c01d88f7a05",
+            "8eef4c98c396d83a",
+            "39132410683f03a1"
+        ],
+        "x": 694,
+        "y": 519,
+        "w": 692,
+        "h": 242
+    },
+    {
+        "id": "9425d8d31cc7d467",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "name": "Get or change uibuilder managed variables",
+        "style": {
+            "fill": "#ffffbf",
+            "fill-opacity": "0.17",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "11c72d21bf13c7f4",
+            "19946054083359d7",
+            "dee94a5d9723bec9",
+            "6c494e54473698fc",
+            "791fd9d8c3e056a4"
+        ],
+        "x": 694,
+        "y": 779,
+        "w": 692,
+        "h": 214
+    },
+    {
+        "id": "d3f7bb9709cb92d2",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "name": "Insert Markdown using template (which supports Mustache variables) and uib-element \\n OR Directly using the `set` command \\n ",
+        "style": {
+            "label": true,
+            "fill": "#ffffff",
+            "fill-opacity": "0.25",
+            "color": "#000000"
+        },
+        "nodes": [
+            "ab72b1d0039a5cb3",
+            "e33a29855f036e79",
+            "7c499ac47dc01640",
+            "a466cf8403fad13c",
+            "2d07723a33514785",
+            "552437fe0298e347",
+            "1f7bb2e124b5633c"
+        ],
+        "x": 474,
+        "y": 1027,
+        "w": 852,
+        "h": 174
+    },
+    {
+        "id": "6259c8dcec04e9d6",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "910674e234808e66",
+            "c0a48b02ace7faea",
+            "a4392440eeda4c51",
+            "756993c325791499"
+        ],
+        "x": 814,
+        "y": 359,
+        "w": 472,
+        "h": 122
+    },
+    {
+        "id": "8e10750486ced78f",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "g": "eb4bfc28276db7ac",
+        "name": "Toaster tests",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "139eec1153ab5698",
+            "360b68dca85320c6",
+            "5cc27ea9e77b90f0",
+            "d2fca7d667d788e4",
+            "9828cdd065942743",
+            "733164a073f04226",
+            "eb252eb404331121",
+            "b5f0636af57e1b7e",
+            "0d4433021f8616b2"
+        ],
+        "x": 74,
+        "y": 1639,
+        "w": 322,
+        "h": 362
+    },
+    {
+        "id": "63da4c0b011c8cd2",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "g": "eb4bfc28276db7ac",
+        "name": "Notification tests",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "a5acf75926689905",
+            "4ad35a026de96c25",
+            "8573de8217f94cac"
+        ],
+        "x": 74,
+        "y": 1499,
+        "w": 524.8000030517578,
+        "h": 122
+    },
+    {
+        "id": "1421e572180af89d",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "g": "aa61b31fbba31085",
+        "name": "Information Overlay Test - this is the preferred method. since v7.5.0",
+        "style": {
+            "label": true,
+            "fill": "#e3f3d3",
+            "fill-opacity": "0.48",
+            "color": "#000000"
+        },
+        "nodes": [
+            "af8f393604698bb5",
+            "3f77b1f859c01f20",
+            "1917fc6a3a1d7970"
+        ],
+        "x": 54,
+        "y": 1359,
+        "w": 425,
+        "h": 82
+    },
+    {
+        "id": "aa61b31fbba31085",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "name": "Show messages to users on a uibuilder web page \\n ",
+        "style": {
+            "label": true,
+            "fill": "#bfdbef",
+            "fill-opacity": "0.27",
+            "color": "#000000"
+        },
+        "nodes": [
+            "1421e572180af89d",
+            "eb4bfc28276db7ac"
+        ],
+        "x": 22,
+        "y": 1317,
+        "w": 628.8000030517578,
+        "h": 736
+    },
+    {
+        "id": "eb4bfc28276db7ac",
+        "type": "group",
+        "z": "56443195ea782ac2",
+        "g": "aa61b31fbba31085",
+        "name": "These methods are no longer recommended since v7.5.0 and may not work as expected. \\n If this is a problem, please reach out.",
+        "style": {
+            "fill": "#ff0000",
+            "fill-opacity": "0.06",
+            "label": true,
+            "color": "#BB0000"
+        },
+        "nodes": [
+            "8e10750486ced78f",
+            "63da4c0b011c8cd2"
+        ],
+        "x": 48,
+        "y": 1457,
+        "w": 576.8000030517578,
+        "h": 570
+    },
+    {
+        "id": "75e04dbce19bc0e1",
+        "type": "junction",
+        "z": "56443195ea782ac2",
+        "g": "5f79bf4a4f4f3f36",
+        "x": 340,
+        "y": 180,
+        "wires": [
+            [
+                "7c8adbf5b52fc611"
+            ]
+        ]
+    },
+    {
+        "id": "363f0c47148e997e",
+        "type": "junction",
+        "z": "56443195ea782ac2",
+        "g": "5f79bf4a4f4f3f36",
+        "x": 700,
+        "y": 220,
+        "wires": [
+            [
+                "618c5774773d9086"
+            ]
+        ]
+    },
+    {
+        "id": "1f7bb2e124b5633c",
+        "type": "junction",
+        "z": "56443195ea782ac2",
+        "g": "d3f7bb9709cb92d2",
+        "x": 1180,
+        "y": 1160,
+        "wires": [
+            [
+                "a466cf8403fad13c"
+            ]
+        ]
+    },
+    {
+        "id": "7c8adbf5b52fc611",
+        "type": "uibuilder",
+        "z": "56443195ea782ac2",
+        "g": "5f79bf4a4f4f3f36",
+        "name": "",
+        "topic": "",
+        "url": "iife-client-tests",
+        "okToGo": true,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "6.1.0",
+        "showMsgUib": true,
+        "title": "",
+        "descr": "",
+        "editurl": "vscode://file/src/uibRoot/iife-client-tests/",
+        "x": 510,
+        "y": 200,
+        "wires": [
+            [
+                "501e49abf6e5a607"
+            ],
+            [
+                "32f6056e316798bf",
+                "363f0c47148e997e"
+            ]
+        ],
+        "info": "This example uses a blank template with\r\nthe IIFE build of the front-end client.\r\n\r\nIt does not use any front-end framework, just\r\npure HTML, CSS and JavaScript.\r\n\r\nThe IIFE build should be included using a link\r\ntag in your HTML."
+    },
+    {
+        "id": "501e49abf6e5a607",
+        "type": "debug",
+        "z": "56443195ea782ac2",
+        "g": "5f79bf4a4f4f3f36",
+        "name": "uibuilder standard output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 675,
+        "y": 160,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #1 (top) which is\r\nthe standard output.\r\n\r\nHere you will see any standard msg sent from\r\nyour front-end code."
+    },
+    {
+        "id": "618c5774773d9086",
+        "type": "debug",
+        "z": "56443195ea782ac2",
+        "g": "5f79bf4a4f4f3f36",
+        "name": "uibuilder control output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 735,
+        "y": 240,
+        "wires": [],
+        "l": false,
+        "info": "This shows the data coming out of the\r\nuibuilder node's Port #2 (bottom) which is\r\nthe control output.\r\n\r\nHere you will see any control msg either sent\r\nby the node itself or from the front-end library.\r\n\r\nFor example the \"client disconnect\" and\r\n\"client connect\" messages. Or the \"visibility\"\r\nmessages from the client.\r\n\r\nLoop the \"client connect\", \"cache replay\" and\r\n\"cache clear\" messages back to a `uib-cache`\r\nnode before the input to uibuilder in order\r\nto control the output of the cache."
+    },
+    {
+        "id": "6f4dfd051ff2cf83",
+        "type": "comment",
+        "z": "56443195ea782ac2",
+        "g": "5f79bf4a4f4f3f36",
+        "name": "Chk Description in each node",
+        "info": "",
+        "x": 460,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "dea4924479704c6e",
+        "type": "link in",
+        "z": "56443195ea782ac2",
+        "g": "5f79bf4a4f4f3f36",
+        "name": "uib-client-tests-uncached",
+        "links": [
+            "16010315c365626a",
+            "1d1f5b0d55f6a646",
+            "4ce1fc8c40ccbf7d",
+            "81158a3cb7a12342",
+            "756993c325791499",
+            "948afbc2b3902c35",
+            "19946054083359d7",
+            "a466cf8403fad13c",
+            "139bca811a1753ae",
+            "791fd9d8c3e056a4",
+            "2a2c1f70c3239c2c",
+            "380c808ba64e7133",
+            "af8f393604698bb5",
+            "df9724d83d8ae9f4",
+            "8573de8217f94cac",
+            "b5f0636af57e1b7e"
+        ],
+        "x": 185,
+        "y": 180,
+        "wires": [
+            [
+                "75e04dbce19bc0e1"
+            ]
+        ]
+    },
+    {
+        "id": "1d1f5b0d55f6a646",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "e25baed2b1efe9a7",
+        "name": "link out 13",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 1325,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "b34ceaa60b79bc3a",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "5d9e25e34533c465",
+        "name": "showMsg: Toggle Visible Msgs",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showMsg\",\"prop\":\"body\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "toggle-visible-msgs",
+        "x": 180,
+        "y": 580,
+        "wires": [
+            [
+                "16010315c365626a"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "00de39fae10f15e6",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "5d9e25e34533c465",
+        "name": "showStatus: Toggle Visible Status",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"showStatus\",\"prop\":\"body\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "toggle-visible-status",
+        "x": 190,
+        "y": 620,
+        "wires": [
+            [
+                "16010315c365626a"
+            ]
+        ],
+        "info": "Change the \"prop\" value to a CSS Selector.\r\n\r\nThe display will appear as the last child of\r\nthat selected element.\r\n\r\ne.g. `body` or `#more`."
+    },
+    {
+        "id": "4a13f941904a122b",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "5d9e25e34533c465",
+        "name": "set: Client Log Level 5",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"logLevel\",\"value\":5}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "set-log-level-5",
+        "x": 160,
+        "y": 660,
+        "wires": [
+            [
+                "16010315c365626a"
+            ]
+        ]
+    },
+    {
+        "id": "0f067d8c7209ff9c",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "5d9e25e34533c465",
+        "name": "set: Client Log Level 0",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"logLevel\",\"value\":0}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "set-log-level-0",
+        "x": 160,
+        "y": 700,
+        "wires": [
+            [
+                "16010315c365626a"
+            ]
+        ]
+    },
+    {
+        "id": "1c068daa3a77bdb4",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "5d9e25e34533c465",
+        "name": "get: client version var",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"get\",\"prop\":\"version\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "get-client-version",
+        "x": 160,
+        "y": 740,
+        "wires": [
+            [
+                "16010315c365626a"
+            ]
+        ]
+    },
+    {
+        "id": "463baba887b1ba54",
+        "type": "uib-update",
+        "z": "56443195ea782ac2",
+        "g": "e25baed2b1efe9a7",
+        "name": "",
+        "topic": "",
+        "mode": "update",
+        "modeSourceType": "update",
+        "cssSelector": "#more",
+        "cssSelectorType": "str",
+        "slotSourceProp": "\"Chunga! \" & \t$formatInteger($random() * 100, \"0\")\t",
+        "slotSourcePropType": "jsonata",
+        "attribsSource": "{\t  \"style\": \"background-color: rgb(\" & $random() * 200 & \",\" & $random() * 200 & \",\" & $random() * 200 & \");\"\t}",
+        "attribsSourceType": "jsonata",
+        "slotPropMarkdown": false,
+        "x": 1140,
+        "y": 140,
+        "wires": [
+            [
+                "1d1f5b0d55f6a646"
+            ]
+        ]
+    },
+    {
+        "id": "3bacf340a18a123b",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e25baed2b1efe9a7",
+        "name": "",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 995,
+        "y": 140,
+        "wires": [
+            [
+                "463baba887b1ba54"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "f21cb178c880c38c",
+        "type": "uib-element",
+        "z": "56443195ea782ac2",
+        "g": "e25baed2b1efe9a7",
+        "name": "",
+        "topic": "",
+        "elementtype": "ul",
+        "parent": "#more",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "more-ol",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 1130,
+        "y": 180,
+        "wires": [
+            [
+                "1d1f5b0d55f6a646"
+            ]
+        ]
+    },
+    {
+        "id": "d342da6a1fd7fe1c",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e25baed2b1efe9a7",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "wrapper",
+                "v": "b-scene",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "[\"one\",\"two\",\"three\"]",
+        "payloadType": "json",
+        "x": 985,
+        "y": 180,
+        "wires": [
+            [
+                "f21cb178c880c38c"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "dd0f91438befda74",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e25baed2b1efe9a7",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "\"LI with random: \" & $formatInteger($random() * 255, \"0\")\t",
+        "payloadType": "jsonata",
+        "x": 945,
+        "y": 220,
+        "wires": [
+            [
+                "3765cd6597296c35"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "3765cd6597296c35",
+        "type": "uib-element",
+        "z": "56443195ea782ac2",
+        "g": "e25baed2b1efe9a7",
+        "name": "",
+        "topic": "",
+        "elementtype": "li",
+        "parent": "#more-ol",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "2",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 1110,
+        "y": 220,
+        "wires": [
+            [
+                "1d1f5b0d55f6a646"
+            ]
+        ]
+    },
+    {
+        "id": "3a2598858575dc41",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e25baed2b1efe9a7",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "sform1",
+        "payload": "[{\"id\":\"r1\",\"type\":\"text\",\"required\":false,\"label\":\"Text Input:\",\"value\":\"Foo\"},{\"id\":\"r2\",\"type\":\"color\",\"required\":false,\"label\":\"Colour:\",\"value\":\"#427798\"},{\"id\":\"r3\",\"type\":\"date\",\"required\":true,\"label\":\"Date:\"},{\"id\":\"r4\",\"type\":\"range\",\"required\":false,\"label\":\"Range (0-100):\",\"value\":\"20\",\"min\":0,\"max\":100},{\"id\":\"r5\",\"type\":\"button\",\"label\":\"Send to Node-RED\",\"value\":\"Buttons can have values as well\"}]",
+        "payloadType": "json",
+        "x": 930,
+        "y": 260,
+        "wires": [
+            [
+                "5d8f7e2a251f57b2"
+            ]
+        ]
+    },
+    {
+        "id": "5d8f7e2a251f57b2",
+        "type": "uib-element",
+        "z": "56443195ea782ac2",
+        "g": "e25baed2b1efe9a7",
+        "name": "",
+        "topic": "",
+        "elementtype": "sform",
+        "parent": "#more",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "sform1",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 1120,
+        "y": 260,
+        "wires": [
+            [
+                "1d1f5b0d55f6a646"
+            ]
+        ]
+    },
+    {
+        "id": "bc2b5cbcae309807",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e25baed2b1efe9a7",
+        "name": "Remove",
+        "props": [
+            {
+                "p": "mode",
+                "v": "remove",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 920,
+        "y": 300,
+        "wires": [
+            [
+                "5d8f7e2a251f57b2"
+            ]
+        ]
+    },
+    {
+        "id": "16010315c365626a",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "5d9e25e34533c465",
+        "name": "link out 32",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 605,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "2ff102b3f7bbbad6",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e0a48c7ef200ea29",
+        "name": "",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"include\",\"prop\":\"./test.html\",\"value\":{\"id\":\"incHtm\",\"parent\":\"#more\",\"attributes\":{\"style\":\"width:50%;\"}}}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "include-HMTL-file",
+        "x": 150,
+        "y": 960,
+        "wires": [
+            [
+                "4ce1fc8c40ccbf7d"
+            ]
+        ]
+    },
+    {
+        "id": "4ce1fc8c40ccbf7d",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "e0a48c7ef200ea29",
+        "name": "link out 37",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 315,
+        "y": 1100,
+        "wires": []
+    },
+    {
+        "id": "fa7f8d5ddcbdd7ac",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e0a48c7ef200ea29",
+        "name": "",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"include\",\"prop\":\"./test.txt\",\"value\":{\"id\":\"incTxt\",\"parent\":\"#more\", \"position\": 1}}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "include-text-file",
+        "x": 160,
+        "y": 1160,
+        "wires": [
+            [
+                "4ce1fc8c40ccbf7d"
+            ]
+        ]
+    },
+    {
+        "id": "82e8db6decd2dd1b",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e0a48c7ef200ea29",
+        "name": "",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"include\",\"prop\":\"./SmallCat.jpg\",\"value\":{\"id\":\"incImg\",\"parent\":\"#more\",\"attributes\":{\"style\":\"width:10em;\"}}}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "include-jpg-file",
+        "x": 160,
+        "y": 1040,
+        "wires": [
+            [
+                "4ce1fc8c40ccbf7d"
+            ]
+        ]
+    },
+    {
+        "id": "57905e02bd2658d4",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e0a48c7ef200ea29",
+        "name": "",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"include\",\"prop\":\"./flower.mp4\",\"value\":{\"id\":\"incVid\",\"parent\":\"#more\",\"attributes\":{\"style\":\"width:50%;\"}}}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "include-vid-file",
+        "x": 160,
+        "y": 1120,
+        "wires": [
+            [
+                "4ce1fc8c40ccbf7d"
+            ]
+        ]
+    },
+    {
+        "id": "88db38578e24a526",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e0a48c7ef200ea29",
+        "name": "",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"include\",\"prop\":\"./apple.svg\",\"value\":{\"id\":\"incImg\",\"parent\":\"#more\",\"attributes\":{\"style\":\"width:10em;\"}}}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "include-svg-file",
+        "x": 160,
+        "y": 1080,
+        "wires": [
+            [
+                "4ce1fc8c40ccbf7d"
+            ]
+        ]
+    },
+    {
+        "id": "ef5602ddf9f7422d",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e0a48c7ef200ea29",
+        "name": "",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"include\",\"prop\":\"./sc_task.pdf\",\"value\":{\"id\":\"incPdf\",\"parent\":\"#more\",\"attributes\":{\"style\":\"width:99%;\"}}}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "include-pdf-file",
+        "x": 160,
+        "y": 1000,
+        "wires": [
+            [
+                "4ce1fc8c40ccbf7d"
+            ]
+        ]
+    },
+    {
+        "id": "f83742762fb77e58",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e0a48c7ef200ea29",
+        "name": "",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"remove\",\"components\":[\"#incTxt\"]}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "remove-text-file",
+        "x": 160,
+        "y": 1200,
+        "wires": [
+            [
+                "4ce1fc8c40ccbf7d"
+            ]
+        ]
+    },
+    {
+        "id": "810b9dd6a392018c",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "e0a48c7ef200ea29",
+        "name": "",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"include\",\"prop\":\"./test.json\",\"value\":{\"id\":\"incJson\",\"parent\":\"#more\",\"position\":\"first\",\"attributes\":{\"style\":\"width:50%;\"}}}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "include-json-file",
+        "x": 160,
+        "y": 1240,
+        "wires": [
+            [
+                "4ce1fc8c40ccbf7d"
+            ]
+        ]
+    },
+    {
+        "id": "fd14560e7aa0f275",
+        "type": "uib-cache",
+        "z": "56443195ea782ac2",
+        "g": "5f79bf4a4f4f3f36",
+        "cacheall": false,
+        "cacheKey": "topic",
+        "newcache": true,
+        "num": 1,
+        "storeName": "default",
+        "name": "Cache",
+        "storeContext": "context",
+        "varName": "uib_cache",
+        "x": 290,
+        "y": 260,
+        "wires": [
+            [
+                "7c8adbf5b52fc611"
+            ]
+        ],
+        "info": "Cache inputs based on the msg.topic.\r\n\r\nJust the last msg is kept for each\r\ntopic.\r\n\r\nDefault context store is used in this\r\nexample since not everyone will have\r\ndefined a file-based store.\r\n\r\nThat means that if you want an initial\r\nzero-code layout, you need to trigger\r\nits sending from a trigger node that\r\nfires when Node-RED (re)starts."
+    },
+    {
+        "id": "472ff48730d1b698",
+        "type": "link in",
+        "z": "56443195ea782ac2",
+        "g": "5f79bf4a4f4f3f36",
+        "name": "uib-client-tests-cached",
+        "links": [
+            "32f6056e316798bf",
+            "16cdac4094403b45"
+        ],
+        "x": 185,
+        "y": 280,
+        "wires": [
+            [
+                "fd14560e7aa0f275"
+            ]
+        ]
+    },
+    {
+        "id": "32f6056e316798bf",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "5f79bf4a4f4f3f36",
+        "name": "client-tests-control-outputs",
+        "mode": "link",
+        "links": [
+            "472ff48730d1b698"
+        ],
+        "x": 675,
+        "y": 240,
+        "wires": [],
+        "info": "Sends control messages back to the cache input\r\n\r\nThis ensures that when new clients (browser\r\ntabs) connect or if a page is reloaded, \r\nthe browser gets the cached data automatically.\r\n\r\nYou could filter this output to only include\r\n\"client connect\" messages if you wanted to \r\nimprove efficiency when you expect lots of \r\nclients to connect."
+    },
+    {
+        "id": "3b043396fab746f0",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "5f79bf4a4f4f3f36",
+        "name": "Clear Cache",
+        "props": [
+            {
+                "p": "uibuilderCtrl",
+                "v": "clear cache",
+                "vt": "str"
+            },
+            {
+                "p": "cacheControl",
+                "v": "CLEAR",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 130,
+        "y": 240,
+        "wires": [
+            [
+                "fd14560e7aa0f275"
+            ]
+        ]
+    },
+    {
+        "id": "4b29103fb972307d",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "a788bb7b3bb7e959",
+        "name": "On Start (Heading)",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "on-start",
+        "payload": "[\"uibuilder Client Tests\",\"Using the IIFE Library\"]",
+        "payloadType": "json",
+        "x": 150,
+        "y": 420,
+        "wires": [
+            [
+                "f078cbb95b319197"
+            ]
+        ],
+        "info": "Runs on Node-RED startup so that the cache is always\r\npopulated even if you do not have a Node-RED persistent\r\ncontext store defined.\r\n\r\nSets the payload for the page title, heading and\r\nsub-heading.\r\n\r\nAlso sets a distinct msg.topic which is used by the\r\n`uib-cache` node."
+    },
+    {
+        "id": "16cdac4094403b45",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "a788bb7b3bb7e959",
+        "name": "initial setup to cache",
+        "mode": "link",
+        "links": [
+            "472ff48730d1b698"
+        ],
+        "x": 595,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "f078cbb95b319197",
+        "type": "uib-element",
+        "z": "56443195ea782ac2",
+        "g": "a788bb7b3bb7e959",
+        "name": "Pg Title",
+        "topic": "",
+        "elementtype": "title",
+        "parent": "body",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "position": "last",
+        "positionSourceType": "str",
+        "confData": {},
+        "x": 320,
+        "y": 420,
+        "wires": [
+            [
+                "6416796b98c7bc07"
+            ]
+        ],
+        "info": "Sets the page title and heading along with a\r\nsub-heading."
+    },
+    {
+        "id": "911214c9aa6fdbb0",
+        "type": "uib-element",
+        "z": "56443195ea782ac2",
+        "g": "a788bb7b3bb7e959",
+        "name": "descr",
+        "topic": "",
+        "elementtype": "article",
+        "parent": "body",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "description",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "heading": "head",
+        "headingSourceType": "msg",
+        "headingLevel": "h2",
+        "position": "2",
+        "positionSourceType": "str",
+        "passthrough": false,
+        "confData": {},
+        "x": 510,
+        "y": 420,
+        "wires": [
+            [
+                "16cdac4094403b45"
+            ]
+        ],
+        "info": "Adds a descriptive text box with a heading\r\nNote that the position is set to 2 so that\r\nit appears after the page sub-heading even\r\nif you have inserted other elements onto the\r\npage."
+    },
+    {
+        "id": "6416796b98c7bc07",
+        "type": "change",
+        "z": "56443195ea782ac2",
+        "g": "a788bb7b3bb7e959",
+        "name": "descr",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "This page is an example of a zero-code web page driven by uibuilder and Node-RED. No code was harmed in the making of this page. 😁<p>Try out the various remote commands that the uibuilder client allows</p>",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "head",
+                "pt": "msg",
+                "to": "uibuilder tests",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 425,
+        "y": 420,
+        "wires": [
+            [
+                "911214c9aa6fdbb0"
+            ]
+        ],
+        "l": false,
+        "info": "Set the descriptive text for the page.\r\nAlso sets a heading for the text box.\r\n\r\nFor uibuilder v6.1, we have to reset the\r\n`msg.payload` for this. I aim to make this\r\nmore flexible in the future."
+    },
+    {
+        "id": "65dffaaedb01010f",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "5f79bf4a4f4f3f36",
+        "name": "Reload",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"reload\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "reload",
+        "x": 150,
+        "y": 140,
+        "wires": [
+            [
+                "75e04dbce19bc0e1"
+            ]
+        ],
+        "info": "Sends a pre-formatted msg to the front-end that\r\ncauses the page to reload itself."
+    },
+    {
+        "id": "910674e234808e66",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "6259c8dcec04e9d6",
+        "name": "Light",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "mark-light",
+        "payload": "{\"class\":\"light\"}",
+        "payloadType": "json",
+        "x": 910,
+        "y": 400,
+        "wires": [
+            [
+                "c0a48b02ace7faea"
+            ]
+        ]
+    },
+    {
+        "id": "c0a48b02ace7faea",
+        "type": "uib-update",
+        "z": "56443195ea782ac2",
+        "g": "6259c8dcec04e9d6",
+        "name": "Set Light/Dark mode",
+        "topic": "",
+        "mode": "update",
+        "modeSourceType": "modeType",
+        "cssSelector": "html",
+        "cssSelectorType": "str",
+        "slotSourceProp": "",
+        "slotSourcePropType": "msg",
+        "attribsSource": "payload",
+        "attribsSourceType": "msg",
+        "slotPropMarkdown": false,
+        "x": 1100,
+        "y": 400,
+        "wires": [
+            [
+                "756993c325791499"
+            ]
+        ]
+    },
+    {
+        "id": "a4392440eeda4c51",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "6259c8dcec04e9d6",
+        "name": "Dark",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "mark-dark",
+        "payload": "{\"class\":\"dark\"}",
+        "payloadType": "json",
+        "x": 910,
+        "y": 440,
+        "wires": [
+            [
+                "c0a48b02ace7faea"
+            ]
+        ]
+    },
+    {
+        "id": "756993c325791499",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "6259c8dcec04e9d6",
+        "name": "link out 40",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 1245,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "d1375f241f2b70b2",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "764d90fd92d61c40",
+        "name": "get: Vue version",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"get\",\"prop\":\"vueVersion\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "get-vue-version",
+        "x": 1100,
+        "y": 1360,
+        "wires": [
+            [
+                "948afbc2b3902c35"
+            ]
+        ]
+    },
+    {
+        "id": "948afbc2b3902c35",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "764d90fd92d61c40",
+        "name": "link out 47",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 1285,
+        "y": 1380,
+        "wires": []
+    },
+    {
+        "id": "dc40edf09b701c8e",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "764d90fd92d61c40",
+        "name": "get: Is VueJS framework loaded?",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"get\",\"prop\":\"isVue\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "is-vue-loaded",
+        "x": 1050,
+        "y": 1320,
+        "wires": [
+            [
+                "948afbc2b3902c35"
+            ]
+        ]
+    },
+    {
+        "id": "03809295cdb2edab",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "764d90fd92d61c40",
+        "name": "get: Is DOMPurify FE library loaded?",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"get\",\"prop\":\"purify\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "get-is-dompurify-loaded",
+        "x": 1040,
+        "y": 1280,
+        "wires": [
+            [
+                "948afbc2b3902c35"
+            ]
+        ]
+    },
+    {
+        "id": "89e0f8d7969256e8",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "764d90fd92d61c40",
+        "name": "get: Is Markdown-IT FE library loaded?",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"get\",\"prop\":\"markdown\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "is-markdown-library-loaded",
+        "x": 1030,
+        "y": 1400,
+        "wires": [
+            [
+                "948afbc2b3902c35"
+            ]
+        ]
+    },
+    {
+        "id": "acfbefa843a501a8",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "764d90fd92d61c40",
+        "name": "Use _ui low-code to send some Markdown",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "[{\"method\":\"replace\",\"components\":[{\"type\":\"div\",\"id\":\"md\",\"parent\":\"#more\",\"attributes\":{},\"slotMarkdown\":\"## H2 - Markdown input\\n\\nSome text in a para\\n\\n* List #1\\n* List #2\\n\"}]}]",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "send-markdown",
+        "x": 1020,
+        "y": 1500,
+        "wires": [
+            [
+                "948afbc2b3902c35"
+            ]
+        ]
+    },
+    {
+        "id": "b57b1b7083a669af",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8c03d470df5348dc",
+        "name": "elementExists: #more - does an element with ID=more exist on the page?",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"elementExists\",\"prop\":\"#more\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "does-element-exist-more-div",
+        "x": 1000,
+        "y": 720,
+        "wires": [
+            [
+                "139bca811a1753ae"
+            ]
+        ]
+    },
+    {
+        "id": "19946054083359d7",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "9425d8d31cc7d467",
+        "name": "link out 57",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 1345,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "ab72b1d0039a5cb3",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "d3f7bb9709cb92d2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 660,
+        "y": 1100,
+        "wires": [
+            [
+                "7c499ac47dc01640"
+            ]
+        ]
+    },
+    {
+        "id": "e33a29855f036e79",
+        "type": "uib-element",
+        "z": "56443195ea782ac2",
+        "g": "d3f7bb9709cb92d2",
+        "name": "",
+        "topic": "",
+        "elementtype": "markdown",
+        "parent": "body",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "md001",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
+        "position": "2",
+        "positionSourceType": "str",
+        "passthrough": false,
+        "confData": {},
+        "x": 1070,
+        "y": 1100,
+        "wires": [
+            [
+                "a466cf8403fad13c"
+            ]
+        ]
+    },
+    {
+        "id": "7c499ac47dc01640",
+        "type": "template",
+        "z": "56443195ea782ac2",
+        "g": "d3f7bb9709cb92d2",
+        "name": "Template Markdown",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "markdown",
+        "syntax": "mustache",
+        "template": "\n### TESTING `uib-var`\n\nUIBUILDER client library version:\n\"<uib-var variable=\"version\"></uib-var>\"\n\nLast Message from Node-RED: <uib-var variable=\"msg\" type=\"plain\" undefined report></uib-var>\n\n### My Dynamic Markdown\n\n<uib-var variable=\"myMarkdown\" type=\"markdown\"></uib-var>",
+        "output": "str",
+        "x": 840,
+        "y": 1100,
+        "wires": [
+            [
+                "e33a29855f036e79"
+            ]
+        ]
+    },
+    {
+        "id": "a466cf8403fad13c",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "d3f7bb9709cb92d2",
+        "name": "link out 60",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 1285,
+        "y": 1100,
+        "wires": []
+    },
+    {
+        "id": "2d07723a33514785",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "d3f7bb9709cb92d2",
+        "name": "set: myMarkdown var",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"set\",\"prop\":\"myMarkdown\",\"value\":\"\"}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 620,
+        "y": 1160,
+        "wires": [
+            [
+                "552437fe0298e347"
+            ]
+        ]
+    },
+    {
+        "id": "552437fe0298e347",
+        "type": "template",
+        "z": "56443195ea782ac2",
+        "g": "d3f7bb9709cb92d2",
+        "name": "Template Markdown",
+        "field": "_uib.value",
+        "fieldType": "msg",
+        "format": "markdown",
+        "syntax": "mustache",
+        "template": "\n## A Markdown Heading (H2)\n\nThis is dynamically inserted markdown\n\n* This is\n* a markdown\n* list\n",
+        "output": "str",
+        "x": 840,
+        "y": 1160,
+        "wires": [
+            [
+                "1f7bb2e124b5633c"
+            ]
+        ]
+    },
+    {
+        "id": "11c72d21bf13c7f4",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "9425d8d31cc7d467",
+        "name": "getManagedVarList: List all client managed variables",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"getManagedVarList\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "list-managed-vars-summary",
+        "x": 930,
+        "y": 820,
+        "wires": [
+            [
+                "19946054083359d7"
+            ]
+        ]
+    },
+    {
+        "id": "dee94a5d9723bec9",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "9425d8d31cc7d467",
+        "name": "getWatchedVars: List client managed variables having a watcher",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"getWatchedVars\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "list-watched-vars",
+        "x": 970,
+        "y": 860,
+        "wires": [
+            [
+                "19946054083359d7"
+            ]
+        ]
+    },
+    {
+        "id": "6c494e54473698fc",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "9425d8d31cc7d467",
+        "name": "set: myvarstore (browser local storage, autoload) \\n - save data to browser local storage with auto-load",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\t    \"command\":\"set\",\"prop\":\"myvarstore\",\t    \"value\":{\"a\": $number($formatInteger($random() * 100, \"0\")), \"b\": \"hello\", \"c\": true},\t    \"options\":{\"store\": true, \"autoload\": true}\t}",
+                "vt": "jsonata"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "set-myvarstore-store-autoload",
+        "x": 930,
+        "y": 940,
+        "wires": [
+            [
+                "791fd9d8c3e056a4"
+            ]
+        ],
+        "info": "Sets a client managed variable `myvarstore` to an object \r\nAND writes it to localStorage if possible.\r\n\r\nIt also sets the autoload flag so that if the page is\r\nreloaded by the user, the variable is restored (if possible).\r\n\r\nWARNING: localStorage is shared between all pages/tabs \r\non the same (sub)domain and port (origin).\r\n\r\nNOTE that localStorage only survives until the browser is closed.\r\n\r\nSee [Controling from Node-RED](./uibuilder/docs/#/client-docs/control-from-node-red#set-variable)\r\nin the docs for details."
+    },
+    {
+        "id": "ea8462256d481dcb",
+        "type": "comment",
+        "z": "56443195ea782ac2",
+        "name": "This page contains examples and tests of the uibuilder front-end client commands that can be issued from Node-RED to your web pages",
+        "info": "",
+        "x": 470,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "139bca811a1753ae",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "8c03d470df5348dc",
+        "name": "link out 70",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 1345,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "1db4309a628d785c",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8c03d470df5348dc",
+        "name": "uiGet: #more - Get useful info about an HTML element",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"uiGet\",\"prop\":\"#more\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "uiget-more-div",
+        "x": 940,
+        "y": 640,
+        "wires": [
+            [
+                "139bca811a1753ae"
+            ]
+        ]
+    },
+    {
+        "id": "abc43c01d88f7a05",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8c03d470df5348dc",
+        "name": "htmlSend: Get the latest displayed HTML back to Node-RED",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"htmlSend\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "html-send",
+        "x": 960,
+        "y": 560,
+        "wires": [
+            [
+                "139bca811a1753ae"
+            ]
+        ]
+    },
+    {
+        "id": "8eef4c98c396d83a",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8c03d470df5348dc",
+        "name": "uiWatch: #more (toggle) - Watch for changes to the page",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"uiWatch\",\"prop\":\"#more\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "ui-watch-more-div",
+        "x": 950,
+        "y": 680,
+        "wires": [
+            [
+                "139bca811a1753ae"
+            ]
+        ]
+    },
+    {
+        "id": "791fd9d8c3e056a4",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "9425d8d31cc7d467",
+        "name": "link out 71",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 1345,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "67af5d84c2f15e53",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "764d90fd92d61c40",
+        "name": "Dynamically load MarkdownIT library from CDN",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"load\",\"srcScripts\":[\"https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js\"]}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "load-markdownit-cdn",
+        "x": 1000,
+        "y": 1460,
+        "wires": [
+            [
+                "948afbc2b3902c35"
+            ]
+        ]
+    },
+    {
+        "id": "39132410683f03a1",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8c03d470df5348dc",
+        "name": "uiGet: #more (class) - Get classes",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"uiGet\",\"prop\":\"#more\", \"value\":\"class\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "uiget-class-more-div",
+        "x": 880,
+        "y": 600,
+        "wires": [
+            [
+                "139bca811a1753ae"
+            ]
+        ]
+    },
+    {
+        "id": "ce177435d3d1ac2b",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "name": "",
+        "props": [
+            {
+                "p": "_uib.tabId",
+                "v": "t858284",
+                "vt": "str"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "Test-clientid-filter",
+        "payload": "foobar",
+        "payloadType": "str",
+        "x": 1020,
+        "y": 1900,
+        "wires": [
+            [
+                "380c808ba64e7133"
+            ]
+        ]
+    },
+    {
+        "id": "380c808ba64e7133",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "name": "link out 74",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 1165,
+        "y": 1900,
+        "wires": []
+    },
+    {
+        "id": "6a371a0d58cd4e20",
+        "type": "comment",
+        "z": "56443195ea782ac2",
+        "name": "Example updated: 2025-09-06 \\n Tested using UIBUILDER v7.5.0",
+        "info": "",
+        "x": 1070,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "139eec1153ab5698",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8e10750486ced78f",
+        "name": "Plain Toast",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib.componentRef",
+                "v": "globalNotification",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toast",
+        "payload": "This is a plain toast notification from Node-RED!",
+        "payloadType": "str",
+        "x": 240,
+        "y": 1680,
+        "wires": [
+            [
+                "b5f0636af57e1b7e"
+            ]
+        ]
+    },
+    {
+        "id": "360b68dca85320c6",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8e10750486ced78f",
+        "name": "Buttered Toast",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"title\":\"NiceTitle!\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toast",
+        "payload": "This is a buttered toast notification from Node-RED!",
+        "payloadType": "str",
+        "x": 230,
+        "y": 1720,
+        "wires": [
+            [
+                "b5f0636af57e1b7e"
+            ]
+        ]
+    },
+    {
+        "id": "5cc27ea9e77b90f0",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8e10750486ced78f",
+        "name": "Plain, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutohide\":true}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toastt, No Auto",
+        "payload": "This is a plain toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 230,
+        "y": 1760,
+        "wires": [
+            [
+                "b5f0636af57e1b7e"
+            ]
+        ]
+    },
+    {
+        "id": "d2fca7d667d788e4",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8e10750486ced78f",
+        "name": "Buttered, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutohide\":true,\"title\":\"Buttered, Yum!\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toastt, No Auto",
+        "payload": "This is a plain toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 210,
+        "y": 1800,
+        "wires": [
+            [
+                "b5f0636af57e1b7e"
+            ]
+        ]
+    },
+    {
+        "id": "9828cdd065942743",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8e10750486ced78f",
+        "name": "Warn, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutohide\":true,\"title\":\"Buttered, Yum!\",\"variant\":\"warn\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toastt, No Auto",
+        "payload": "This is a plain toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 230,
+        "y": 1840,
+        "wires": [
+            [
+                "b5f0636af57e1b7e"
+            ]
+        ]
+    },
+    {
+        "id": "733164a073f04226",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8e10750486ced78f",
+        "name": "Error, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutohide\":true,\"title\":\"Buttered, Yum!\",\"variant\":\"error\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toastt, No Auto",
+        "payload": "This is a plain toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 230,
+        "y": 1880,
+        "wires": [
+            [
+                "b5f0636af57e1b7e"
+            ]
+        ]
+    },
+    {
+        "id": "eb252eb404331121",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8e10750486ced78f",
+        "name": "Info, No Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "_uib",
+                "v": "{\"componentRef\":\"globalNotification\",\"options\":{\"noAutohide\":true,\"title\":\"Buttered, Yum!\",\"variant\":\"info\"}}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "A Toastt, No Auto",
+        "payload": "This is a plain toast notification from Node-RED that doesn't auto-expire",
+        "payloadType": "str",
+        "x": 230,
+        "y": 1920,
+        "wires": [
+            [
+                "b5f0636af57e1b7e"
+            ]
+        ]
+    },
+    {
+        "id": "b5f0636af57e1b7e",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "8e10750486ced78f",
+        "name": "uib ctrls out",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 355,
+        "y": 1740,
+        "wires": []
+    },
+    {
+        "id": "0d4433021f8616b2",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "8e10750486ced78f",
+        "name": "showDialog",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "showDialog",
+        "payload": "{\"title\":\"Dialogue\",\"content\":\"This is a dialogue\",\"varient\":\"\",\"noAutohide\":true,\"modal\":true,\"appendToast\":false}",
+        "payloadType": "json",
+        "x": 230,
+        "y": 1960,
+        "wires": [
+            [
+                "b5f0636af57e1b7e"
+            ]
+        ]
+    },
+    {
+        "id": "a5acf75926689905",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "63da4c0b011c8cd2",
+        "name": "Show an on-page notification (method: notify)",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"notify\",\"variant\":\"info\",\"title\":\"A Manual Title\",\"content\":\"A message from low-code\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "show-popup",
+        "payload": "This is a message from the payload",
+        "payloadType": "str",
+        "x": 290,
+        "y": 1540,
+        "wires": [
+            [
+                "8573de8217f94cac"
+            ]
+        ],
+        "info": "Note that this is different to the `notification` uib command,\r\nthat shows an OS toast notification, this shows an on-page\r\npop-over.\r\n\r\nThe difference between this and the \"alert\" method is that\r\nthis does autohides by default and it has no warning icon.\r\n\r\nOtherwise, it is the same and both use the `showDialog`\r\nmethod under the skin."
+    },
+    {
+        "id": "4ad35a026de96c25",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "63da4c0b011c8cd2",
+        "name": "Show an on-page notification (method: alert)",
+        "props": [
+            {
+                "p": "_ui",
+                "v": "{\"method\":\"alert\",\"variant\":\"info\",\"title\":\"A Manual Title\",\"content\":\"A message from low-code\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "show-popup",
+        "payload": "This is a message from the payload",
+        "payloadType": "str",
+        "x": 290,
+        "y": 1580,
+        "wires": [
+            [
+                "8573de8217f94cac"
+            ]
+        ],
+        "info": "Note that this is different to the `notification` uib command,\r\nthat shows an OS toast notification, this shows an on-page\r\npop-over.\r\n\r\nThe difference between this and the \"notify\" method is that\r\nthis does not autohide and it has a warning icon.\r\n\r\nOtherwise, it is the same and both use the `showDialog`\r\nmethod under the skin."
+    },
+    {
+        "id": "8573de8217f94cac",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "63da4c0b011c8cd2",
+        "name": "link out 1",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 557.8000030517578,
+        "y": 1551.7999877929688,
+        "wires": []
+    },
+    {
+        "id": "af8f393604698bb5",
+        "type": "link out",
+        "z": "56443195ea782ac2",
+        "g": "1421e572180af89d",
+        "name": "link out 4",
+        "mode": "link",
+        "links": [
+            "dea4924479704c6e"
+        ],
+        "x": 355,
+        "y": 1400,
+        "wires": []
+    },
+    {
+        "id": "3f77b1f859c01f20",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "1421e572180af89d",
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "Test-show-info-overlay",
+        "x": 115,
+        "y": 1400,
+        "wires": [
+            [
+                "1917fc6a3a1d7970"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "1917fc6a3a1d7970",
+        "type": "function",
+        "z": "56443195ea782ac2",
+        "g": "1421e572180af89d",
+        "name": "msg._uib ...",
+        "func": "// set x to be a random integer between 0 and 3\nconst x = Math.floor(Math.random() * 4)\n// random null or 5\nconst auto = Math.random() < 0.5 ? null : 5\nconst myIcon = Math.random() < 0.5 ? undefined : '👍'\nconst showTime = Math.random() < 0.5 ? true : false\n\nconst types = ['info', 'success', 'warning', 'error']\n\nmsg._uib = {\n    // The command for the uibuilder client to execute\n    \"command\": \"showOverlay\", // Show an information overlay panel\n    // The options passed to the command (@since v7.5.0)\n    \"options\": {\n        // Optional. Defaults to type\n        \"title\": \"Test from Node-RED\",\n        // Optional. Sets the icon, colour (and heading if not provided)\n        //   info, success, warning, error (default: info)\n        \"type\": types[x],\n        // Optional. Either null for manual close or\n        //    number of seconds\n        \"autoClose\": auto,\n\n        // Optional. Defaults provided for each type\n        \"icon\": myIcon,\n        // Optional. Defaults to true\n        // \"time\": true,\n        // Optional. Will use msg.payload if not supplied.\n        // \"content\": \"This is some content, <b>can be</b> <i>HTML</i>\",\n    },\n    // By default, the client returns a confirmation.\n    // Set this to true to prevent that.\n    \"quiet\": true,\n}\n\nmsg.payload = `This is some text to display. <p> It <u>can</u> contain <b style=\"color:purple;\">HTML</b> as well</p>\n  <div>\n    Type: ${types[x]}, autoClose: ${auto}, icon override: ${myIcon}\n  </div>\n`\n\nreturn msg",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 240,
+        "y": 1400,
+        "wires": [
+            [
+                "af8f393604698bb5"
+            ]
+        ]
+    },
+    {
+        "id": "3e8b444312601e34",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "5d9e25e34533c465",
+        "name": "scrollTo: Scroll to the top of the page if it isn't visible (quiet:true)",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"scrollTo\",\"prop\":\"top\", \"quiet\": true}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "scroll-to-top",
+        "x": 290,
+        "y": 820,
+        "wires": [
+            [
+                "16010315c365626a"
+            ]
+        ],
+        "info": "The `prop` OR the `value` property can be set with the URL\r\nto navigate to.\r\n\r\nThe URL can be:\r\n\r\n1. A full URL (e.g. `https://example.com/somewhere`)\r\n2. A relative URL (e.g. `./anotherpage.html`)\r\n3. A routing hash (e.g. `#route02`)\r\n\r\nOr a combination of (1 OR 2) and 3.\r\n\r\n#### Relative URLs\r\n\r\nAre relative to the CURRENT PAGE. So if that is \r\n`index.html`, `./page2.html` would be in the same\r\nsource folder as would `./folder` (which would move to\r\n`./folder/index.html`).\r\n\r\nSimilarly, if on the `folder` page, `../` would move up\r\na level to the main index html page.\r\n\r\n#### Routing Hashes\r\n\r\nFor pure front-end routing, using `uibrouter` or similar\r\nlibrary, simply send `#newroute` to move to the new route\r\nwithout reloading the page.\r\n\r\nPutting a hash on the end of a full or relative URL will\r\ntrigger the route on the resulting page load."
+    },
+    {
+        "id": "4ef549da49d18e40",
+        "type": "inject",
+        "z": "56443195ea782ac2",
+        "g": "5d9e25e34533c465",
+        "name": "SPA navigate: Hash change (router)",
+        "props": [
+            {
+                "p": "_uib",
+                "v": "{\"command\":\"navigate\",\"prop\":\"#more\"}",
+                "vt": "json"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "navigate",
+        "x": 200,
+        "y": 780,
+        "wires": [
+            [
+                "16010315c365626a"
+            ]
+        ],
+        "info": "For pure SPA (Single Page App) front-end routing,\r\nusing the `uibrouter` or similar library,\r\nsimply send `#newroute` to move to the new route\r\nwithout reloading the page.\r\n\r\nPutting a hash on the end of a full or relative URL will\r\ntrigger the route on the resulting page load.\r\n\r\nHash route changes do not reload the web page.\r\n\r\nIf the page is not an SPA, nothing will happen."
+    },
+    {
+        "id": "5d4eb510485637f5",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-uibuilder": "7.5.0"
+        }
+    }
+]

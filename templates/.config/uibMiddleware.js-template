@@ -16,7 +16,7 @@
  * @param {object} res The ExpressJS result object
  * @param {function} next The callback to hand off to the next middleware
  */
- function uibMw(req,res,next) {
+function uibMw(req,res,next) {
 
     console.log('[uibuilder:uibMiddleware.js] Custom ExpressJS middleware called.')
     next()

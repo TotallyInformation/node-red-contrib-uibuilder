@@ -5,6 +5,8 @@
 - Follow project ESLINT configurations
 - Ensure WCAG 2.2 Level AA compliance
 - Apply Shift-Left security practices
+- Adherence to Best Practices: All suggestions, architectural patterns, and solutions must align with widely accepted industry best practices and established design principles. Avoid experimental, obscure, or overly "creative" approaches. Stick to what is proven and reliable.
+- Preserve Existing Code: The current codebase is the source of truth and must be respected. Prefer preservation of existing structure, style, and logic, however, present good alternatives where they exist.
 
 ## Code Style
 
@@ -26,6 +28,7 @@
 ### Documentation
 
 - Include JSDoc for functions and classes
+- Place the first line of JSDoc description on the same line as the /**
 - Add @param and @returns tags
 - Document thrown errors
 - Include usage examples for complex functions
@@ -36,6 +39,8 @@
 - Only use features available to 90%+ browsers/users
 - Include ARIA attributes where needed
 - Mobile-first responsive design
+- Prefer relative sizing such as %, em or rem units
+- Avoid the use of px sizing whenever possible
 - Use CSS custom properties
 - Follow BEM naming convention
 - Include print styles

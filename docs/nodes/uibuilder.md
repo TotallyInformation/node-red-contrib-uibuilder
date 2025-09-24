@@ -3,7 +3,7 @@ title: The main uibuilder node
 description: |
   Usage and configuration.
 created: 2023-02-05 16:31:39
-updated: 2025-01-02 17:00:15
+updated: 2025-09-24 15:59:35
 ---
 
 > [!note]
@@ -66,12 +66,12 @@ The Topic string will be added to messages being sent to the front-end if the in
 
 #### Template Settings
 
+UIBUILDER templates let you have a rapid prototype for your front-end code. A template loads a complete set of front-end files and folders along with a README and an npm style `package.json` file and a `src` folder containing at least an `index.html`, `index.css`, and `index.js` file. This allows a template to be a complete working model, ready to go.
+
 > [!NOTE]
 > Changing the template overwrites existing files with the same names in your `<uibRoot>/<url>` server folder. So make sure you take copies before pressing the Load button if you don't want to loose them.
 
-uibuilder Templates let you have a rapid prototype for your front-end code. The Templates load a complete set of front-end files along with a README and an npm style `package.json` file. This allows a template to be a complete working model, ready to go.
-
-As at uibuilder v5, there are 4 built-in Templates plus the ability to load external templates from GitHub and elsewhere. More information on templates can be found in the [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) page and in the [Creating Templates](creating-templates) page.
+As at uibuilder v7, there is 1 built-in internal and 4 pre-defined external templates plus the ability to load custom external templates from GitHub and elsewhere. More information on templates can be found in the [Configuring uibuilder](uib-configuration?id=ltuibrootgtltinstance-urlgt) page and in the [Creating Templates](creating-templates) page.
 
 ### Files Tab
 
@@ -83,6 +83,20 @@ You can create, delete and edit files here.
 > If you want to do any amount of file/folder editing, it is recommended to use a full code editor such as Visual Studio Code or similar. The built-in editor is very basic and does not have many of the features you might expect from a full editor. VS Code has a well supported remote editing feature that allows you to edit files on a remote server directly from your local machine.
 >
 > The Advanced tab has a setting that enables a direct link to your chosen editor assuming that it allows custom URL schemes. By default, this is set to Visual Studio Code but you can change it to any editor that supports custom URL schemes.
+
+### Scripts Tab (Since v7.5.0)
+
+This tab allows you to manage and run npm scripts defined in your instance root's package.json file as well as the default npm scripts `outdated`, `update`, and `install`.
+
+These can be any script that can be run on the host OS. They run in the OS's default shell. Output from the script is captured and returned to Node-RED in the panel beneath the list of scripts. When a script is running, a "Kill Script" button is visible, clicking this will abort the script immediately.
+
+If you add/amend scripts using the Files tab, switching back to this tab will update the list.
+
+> [!TIP]
+> If using the Svelte framework, which uses Rollup for its build process, if you want dynamic updates as you edit the front-end code, run the `dev` script `rollup -c rollup.config.js --bundleConfigAsCjs -w --environment NODE_ENV:development` _before_ opening the web page (or reload after running the script).
+
+> [!WARNING]
+> If you are running a long-running script, you may move to other tabs. However, if you exit the node's config panel while the script is running, you will not see all of the output and you will not be able to cancel the script using the kill button. It will continue to run in a background process. This may be improved in a future release.
 
 ### Libraries Tab
 

@@ -187,7 +187,12 @@ figcaption::before {
 #docsify-darklight-theme {
     top: 1rem;
     right: 5rem;
+    position: absolute;
     z-index: 999;
+}
+
+#docsify-darklight-theme p {
+    visibility: hidden;
 }
 
 /*#region TOC */
@@ -209,6 +214,7 @@ figcaption::before {
     }
     #docsify-darklight-theme {
         right: 5rem;
+        position: absolute
     }
   }
   
@@ -218,6 +224,7 @@ figcaption::before {
     }
     #docsify-darklight-theme {
         right: -8rem;
+        position: absolute;
     }
   }
   
@@ -343,4 +350,126 @@ td hr {
 
 td ol {
   padding-left: 0 !important;
+}
+
+/* Tips Plugin Styles */
+.uib-tip {
+    background: hsl(204 89% 55% / 10%);
+    border: 1px solid hsl(204 89% 55% / 30%);
+    border-radius: 0.5rem;
+    margin: 1.5rem 0;
+    overflow: hidden;
+    box-shadow: 0 2px 4px hsl(0 0% 0% / 10%);
+    transition: box-shadow 0.2s ease;
+}
+
+/* Style included tip content */
+p:has(> a[href*="tips/"]) {
+    background: hsl(204 89% 55% / 10%);
+    border: 1px solid hsl(204 89% 55% / 30%);
+    border-radius: 0.5rem;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    box-shadow: 0 2px 4px hsl(0 0% 0% / 10%);
+    transition: box-shadow 0.2s ease;
+    position: relative;
+}
+
+p:has(> a[href*="tips/"]):hover {
+    box-shadow: 0 4px 8px hsl(0 0% 0% / 15%);
+}
+
+/* Add tip icon for included tips */
+p:has(> a[href*="tips/"]):before {
+    content: '💡 Tip: ';
+    font-weight: 600;
+    color: hsl(204 89% 30%);
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.uib-tip:hover {
+    box-shadow: 0 4px 8px hsl(0 0% 0% / 15%);
+}
+
+.uib-tip-header {
+    background: hsl(204 89% 55% / 20%);
+    border-bottom: 1px solid hsl(204 89% 55% / 30%);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+}
+
+.uib-tip-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.uib-tip-icon {
+    font-size: 1.2em;
+    filter: drop-shadow(0 1px 2px hsl(0 0% 0% / 20%));
+}
+
+.uib-tip-title {
+    color: hsl(204 89% 30%);
+    font-size: 1rem;
+}
+
+.uib-tip-content {
+    padding: 1rem;
+    line-height: 1.6;
+}
+
+.uib-tip-content p:first-child {
+    margin-top: 0;
+}
+
+.uib-tip-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .uib-tip {
+        background: hsl(204 89% 55% / 15%);
+        border-color: hsl(204 89% 55% / 40%);
+    }
+    
+    .uib-tip-header {
+        background: hsl(204 89% 55% / 25%);
+        border-bottom-color: hsl(204 89% 55% / 40%);
+    }
+    
+    .uib-tip-title {
+        color: hsl(204 89% 70%);
+    }
+}
+
+/* Rotating Tips Styles */
+.uib-tip-rotating {
+    position: relative;
+    transition: opacity 0.3s ease;
+}
+
+.uib-tip-rotate-indicator {
+    animation: spin 4s linear infinite;
+    opacity: 0.7;
+    font-size: 0.9em;
+}
+
+details {
+    margin: 1.5rem 0;
+}
+summary > h2 {
+    display: inline;
+    border-bottom-width: 0 !important;
+    cursor: pointer;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
