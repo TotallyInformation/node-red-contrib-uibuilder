@@ -79,9 +79,9 @@ export class Reactive {
         if (!obj || typeof obj !== 'object') return obj
         if (this._isReactive(obj)) return obj
 
-        // Don't proxy DOM elements, functions, or other special objects
-        if ( (Element && obj instanceof Element) || typeof obj === 'function' || obj instanceof Date || obj instanceof RegExp) {
-            console.warn('[uibuilder:reactive] Can not proxy DOM elements, functions or other special objects')
+        // Don't proxy DOM elements, or other special objects
+        if ( (Element && obj instanceof Element) || obj instanceof Date || obj instanceof RegExp) {
+            console.warn('[uibuilder:reactive] Can not proxy DOM elements or other special objects')
             return obj
         }
 
