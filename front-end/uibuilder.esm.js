@@ -5657,10 +5657,10 @@ window["UibVar"] = UibVar;
 
 // src/components/uib-meta.mjs
 var UibMeta = class extends ti_base_component_default {
-  //#endregion --- Class Properties ---
+  // #endregion --- Class Properties ---
   constructor() {
     super();
-    //#region --- Class Properties ---
+    // #region --- Class Properties ---
     /** @type {string} Name of the uibuilder mangaged variable to use */
     __publicField(this, "variable", "pageMeta");
     /** Current value of the watched variable */
@@ -5710,8 +5710,8 @@ var UibMeta = class extends ti_base_component_default {
    * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
    * Attribute values can only ever be strings
    * @param {string} attrib The name of the attribute that is changing
-   * @param {string} newVal The new value of the attribute
    * @param {string} oldVal The old value of the attribute
+   * @param {string} newVal The new value of the attribute
    */
   attributeChangedCallback(attrib, oldVal, newVal) {
     if (oldVal === newVal) return;
@@ -5779,7 +5779,7 @@ var UibMeta = class extends ti_base_component_default {
         break;
       }
     }
-    if (out !== void 0) this.shadow.innerHTML = out;
+    this.shadow.innerHTML = out;
   }
   /** Format a value using this.format
    * @param {Date|string|number} val Value to format
@@ -5806,12 +5806,12 @@ var UibMeta = class extends ti_base_component_default {
         break;
       }
       case "k": {
-        if (type === "num") out = "".concat(uibuilder.round(val / 1024, 1), " k");
+        if (type === "num") out = "".concat(uibuilder.round(Number(val) / 1024, 1), " k");
         else out = val;
         break;
       }
       case "m": {
-        if (type === "num") out = "".concat(uibuilder.round(val / 1048576, 2), " M");
+        if (type === "num") out = "".concat(uibuilder.round(Number(val) / 1048576, 2), " M");
         else out = val;
         break;
       }
