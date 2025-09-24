@@ -264,7 +264,7 @@
         return;
       }
       menus.forEach((menu) => {
-        if (!menu.id) {
+        if (!(menu == null ? void 0 : menu.id)) {
           console.warn("[uibrouter:createMenus] Invalid menu definition: ".concat(JSON.stringify(menu)));
           return;
         }
@@ -276,7 +276,7 @@
         menuContainer.style.position = "relative";
         menuContainer.innerHTML = "";
         const navEl = document.createElement("nav");
-        if (menu == null ? void 0 : menu.label) navEl.setAttribute("aria-label", menu.label);
+        if (menu == null ? void 0 : menu.label) navEl.setAttribute("aria-label", menu == null ? void 0 : menu.label);
         if ((menu == null ? void 0 : menu.menuType) !== "vertical") navEl.classList.add("horizontal");
         else navEl.classList.add("vertical");
         const btnEl = document.createElement("button");
@@ -625,7 +625,7 @@
      */
     routeTitle() {
       const thisRoute = this.currentRoute() || {};
-      return thisRoute.title || thisRoute.id || "[ROUTE NOT FOUND]";
+      return (thisRoute == null ? void 0 : thisRoute.title) || (thisRoute == null ? void 0 : thisRoute.id) || "[ROUTE NOT FOUND]";
     }
     /** Return the description of the current route
      * @returns {string} Current route description

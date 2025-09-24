@@ -387,7 +387,7 @@ class UibRouter {
         }
 
         menus.forEach((menu) => {
-            if (!menu.id) {
+            if (!menu?.id) {
                 console.warn(`[uibrouter:createMenus] Invalid menu definition: ${JSON.stringify(menu)}`)
                 return
             }
@@ -410,7 +410,7 @@ class UibRouter {
 
             // Create a new nav element
             const navEl = document.createElement('nav')
-            if (menu?.label) navEl.setAttribute('aria-label', menu.label)
+            if (menu?.label) navEl.setAttribute('aria-label', menu?.label)
             // Add the "horizontal" (default) or "vertical" class to navEl
             if (menu?.menuType !== 'vertical') navEl.classList.add('horizontal')
             else navEl.classList.add('vertical')
@@ -909,7 +909,7 @@ class UibRouter {
      */
     routeTitle() {
         const thisRoute = this.currentRoute() || {}
-        return thisRoute.title || thisRoute.id || '[ROUTE NOT FOUND]'
+        return thisRoute?.title || thisRoute?.id || '[ROUTE NOT FOUND]'
     }
 
     /** Return the description of the current route
