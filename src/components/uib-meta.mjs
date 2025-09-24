@@ -296,7 +296,7 @@ class UibMeta extends TiBaseComponent {
         }
         // if (this.uib) this.shadow.innerHTML = window['uibuilder'].sanitiseHTML(out)
         // else this.shadow.innerHTML = out
-        if (out !== undefined) this.shadow.innerHTML = out
+        this.shadow.innerHTML = out
 
         // this.shadow.appendChild(this.css)
     }
