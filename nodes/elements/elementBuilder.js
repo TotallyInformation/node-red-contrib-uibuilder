@@ -360,7 +360,7 @@ module.exports = {
      */
     buildSForm: function buildSForm(node, msg, parent) {
         // Make sure node.data is an object or an array - if not, force to array
-        if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
+        if (!(Array.isArray(node.data) || (node.data != null && node.data.constructor != null && node.data.constructor.name === 'Object'))) node.data = [node.data]
 
         const err = ''
 
@@ -380,6 +380,12 @@ module.exports = {
         Object.keys(frm).forEach( (rowRef, i) => {
             // Data for this row/element of the form: id, type
             const frmRow = frm[rowRef]
+
+            // Check that frmRow is a valid object before processing
+            if (frmRow == null) {
+                node.warn(`🌐⚠️[uibuilder:uib-element:elementBuilder:buildSForm] Form row at index ${i} is null or undefined. Skipping.`)
+                return
+            }
 
             // TODO Check that required properties are present
 
