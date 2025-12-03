@@ -20,7 +20,7 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 2025-09-07
+ * @version: 2025-12-03
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -1066,6 +1066,21 @@ button.compact {
     text-transform: uppercase;
 }
 
+/* Visually hidden but still accessible to screen readers
+   Use for skip links, form explanations, status updates
+   otherwise not needed for sighted users.
+ */
+.visually-hidden:not(:focus):not(:active) {
+  /* Tab focusable elements will be visible when active */
+    border: 0;
+    clip-path: inset(100%);
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
 /*#endregion ---- Utility ---- */
 
 /*#region -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
