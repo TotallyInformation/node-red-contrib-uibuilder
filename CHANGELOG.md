@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2025-09-07 21:24:01
+updated: 2025-09-24 20:10:00
 ---
 
 # Changelog
@@ -24,6 +24,13 @@ Please see the roadmap in the docs for the backlog of future planned development
 ------------
 
 <!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
+
+## v7.6.0
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.5.0...v7.6.0).
+
+### 📌 Highlights
+
 
 ## v7.5.0
 
@@ -96,6 +103,7 @@ NOTE: If using the `uibRouter` SPA client library, please note that the startup 
 * Changed `accent-color` to use the `--primary` variable rather than the `--brand` variable. `accent-color` is used by browsers to set the colour of form elements such as checkboxes and radio buttons. This means that the colour will now match the primary colour used in the rest of the uibuilder styles.
 * Added `cursor: pointer;` to the `<summary>` element. This makes it clearer that the element is clickable and can be expanded or collapsed.
 * Improved `.status-side-panel` styles. Allowing background color to be overridden with `--status-color`.
+* Added `.visually-hidden` class for elements hidden from sighted users but still accessible to screen readers. Use for skip links, form explanations, and status updates otherwise not needed for sighted users.
 
 For forms, the following CSS variables (show with their defaults) can be used to more easily change the appearance of the forms:
 
@@ -137,6 +145,8 @@ For the updated navigation menus, the following CSS variables (show with their d
 * **NEW** `showOverlay` function. This function creates and displays an overlay window with customizable content and behavior. This is an easy way to display some temporary information to the user.
 
   Also available as an external (from Node-RED) command. In that case, `msg.payload` is used as the content of the overlay unless `options.content` is specified. Controlling options can be passed in the `msg._uib.options` property
+
+* **NEW** Added the `_receivedHRtime` property to messages received from the Node-RED server. This is a high-resolution timestamp (in milliseconds) of when the message was received. It can be used to measure latency and performance. It uses the [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) method which provides sub-millisecond accuracy. The value is the elapsed time since page navigation started.
 
 * Updated the client library type description files. They are available in the `types` folder of the `blank` template. There is a `tsconfig.json` file in the root of that template that includes the type definitions. This means that you can now get better code completion, descriptions and type checking when using the client library in your own code. Feel free to copy the file and the folder to your own projects.
 
@@ -225,6 +235,7 @@ The purpose of this is to allow greater experimentation with new features withou
 ### Development changes
 
 * **NEW** file `src\front-end-module\reactive.mjs` - contains the new `Reactive` class that implements the reactive variable functionality. This is a new module that can be used in the front-end client library but can also be used independently. This is provided as source only for now. Though it is compiled into the client library as well and so available via the `uibuilder.getReactiveClass()` and `uibuilder.reactive()` functions.
+* **NEW** npm script `bugfix-worktree` - creates a new git worktree for bugfix branches. This allows you to work on a bug fix in a separate directory while keeping your current dev branch work intact. You can have both directories open simultaneously without needing to stash changes or switch branches. When you're done with the bug fix, you can commit, push, create a PR, and then remove the worktree.
 * uibuilder runtime library files renamed from *.js to *.cjs for clarity. Part of the long-term effort to move eventually to ES Modules.
 * More code cleanup using latest ESLINT rules.
 

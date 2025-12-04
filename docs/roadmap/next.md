@@ -2,15 +2,18 @@
 title: Possible Future Features
 description: |
   What is being worked on for the next release.
-created: 2025-01-05 12:34:47
-updated: 2025-09-24 17:19:28
 author: Julian Knight (Totally Information)
+created: 2025-01-05 12:34:47
+updated: 2025-11-22 17:16:53
 ---
 
 ## To Fix
 
 * uibuilder node in a sub-flow [ref](https://discourse.nodered.org/t/uibuilder-url-inconsistancies-and-issues/98853/4)
 * Paul's disappearing library items. [#556](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/556)
+* Issues with docs. [ref](https://discourse.nodered.org/t/documents-for-uibuilder/99431/3), [#575](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/575)
+* Fieldset border issue [#574](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/574)
+* API v3 includes `node:inspector` which does not seem to be used. [ref](https://discourse.nodered.org/t/node-red-version-of-mqtt-explorer/99738/14).
 
 ## In Progress
 
@@ -125,6 +128,7 @@ None
 
 ## Consider
 
+* Move table handling to use older HTMLTableElement API. [ref1](https://christianheilmann.com/2025/10/08/abandonware-of-the-web-do-you-know-that-there-is-an-html-tables-api/), [ref2](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableElement)
 * Auto-generate a manifest web endpoint that delivers a manifest file for the current uibuilder instance. This would allow clients to have a faster startup. [ref](https://discourse.nodered.org/t/add-pwa-feature-to-uibuilder/97807/2)
 * For onTopic and uib-topic, allow wildcards in the topic name.
 * Move log reference into the `uibGlobalConfig` object. Remove passed references.
@@ -181,6 +185,8 @@ None
 * Maybe think about having a control msg from NR to clients that will re-arrange elements on the page. Possibly an array (map?) of element selectors in a set order. Would probably need a "root" element that is the parent of all the elements to be re-arranged. Could also be used to show/hide elements.
 * Sending events from client to server using beacons.
 * FE: Write a template parser capable of parsing `<b>{{myvar}}</b>` into `<b><uib-var variable="myvar"></uib-var></b>`.
+* Consider adding some telemetry. Idea being to better understand how many instances are in use, which versions and what platforms. Perhaps also detecting which browser types are in use to help steer coding. Would need to be opt-out, transparent and documented. Might use a [non-reversible device id?](https://www.npmjs.com/package/node-machine-id).
+  * An interesting pre-cursor to this might be to create an internal track of front-end client use. E.g. count the max # users connected to an instance and perhaps what browsers they are using (initially this would not be sent anywhere but would be accessible via the info page and written to a json file in each instance root folder).
 
 ### Wacky?
 
@@ -213,6 +219,7 @@ None
 * The DOM.
 * Setting up and using VS Code for front-end development with uibuilder.
 * Web component library.
+* Easy layouts using grid areas.
 
 ### Shorts
 

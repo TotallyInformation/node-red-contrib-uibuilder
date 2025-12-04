@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2025-05-04 19:34:59
+updated: 2025-11-04 22:13:33
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -1110,14 +1110,16 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 #### Node.js v14 features - code updates to leverage the latest features
 
-* [ ] ~~Replace `||` default value tests with `??` . Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining), [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining), [Nullish Coalescing](https://wiki.developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_Coalescing_Operator)~~ - started using
-* [ ] ~~Object.fromEntries (helps make an object either from Map or from a key/value array)~~ - already in use
+* [x] ~~Replace `||` default value tests with `??` . Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining), [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining), [Nullish Coalescing](https://wiki.developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_Coalescing_Operator)~~ - started using
+* [x] ~~Object.fromEntries (helps make an object either from Map or from a key/value array)~~ - already in use
 * [ ] **==Private Class methods==** (v14.5.1+)
 * [ ] **==Optional catch binding==**
 * [ ] [Intl.DisplayNames](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisplayNames)
 * [ ] [calendar &amp; numberingSystem for Intl.DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)
 * [ ] WeakReferences (v14.5.1+)
 * [ ] Array flat and flat map
+* [ ] `fs.rm` (with recursive and force options)
+* [ ] ``crypto.randomUUID()``
 * Experimental diagnostic reports. https://developer.ibm.com/articles/introducing-report-toolkit-for-nodejs-diagnostic-reports/, https://github.com/IBM/report-toolkit
 
 #### Changes due once Node.js v16 live:
@@ -1144,6 +1146,7 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
 
   * [ ] Blob - https://nodejs.org/api/buffer.html#class-blob
   * [ ] BroadcastChannel - https://nodejs.org/api/worker_threads.html#class-broadcastchannel-extends-eventtarget
+  * [ ] Fetch
 * Experimental
 
   * Fetch
@@ -1181,6 +1184,7 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
 * [ ] `glob` and `globSync` - external glob package no longer required
 * [ ] Native WebSocket available
 * [ ] Watch mode `node --watch`
+* [ ] `util.styleText()` - instead of the chalk library
 * Experimental
   * Ability to `require` ESM's synchronously
   * `node --run pkg-script` - run without `npm`
@@ -1193,6 +1197,8 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
   * AbortController and AbortSignal (experimental in v14)
 
   * Permission model (experimental in v20)
+
+  * `URLPattern` (experimental) - enables `new URLPattern({ pathname: '/users/:id' })`
 
 ### Other Ideas
 
