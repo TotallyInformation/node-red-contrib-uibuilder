@@ -1,12 +1,12 @@
 ---
-title: How to use Cloudflare Zero Trust with Node-RED
-description: A guide on integrating Cloudflare Zero Trust with Node-RED for enhanced security.
+title: Using Cloudflare Zero Trust with Node-RED
+description: A guide on integrating Cloudflare Zero Trust with Node-RED for enhanced Internet-facing security. Providing secure Internet access to locally-running Node-RED instances.
 created: 2025-11-19 16:31:05
 updated: 2025-11-19 19:50:20
 status: draft
 ---
 
-Cloudflare's Zero Trust (CFZT) platform provides excellent Internet security for your custom applications. It allows you to create a secure connection between the Internet and you private applications, including Node-RED and UIBUILDER.
+Cloudflare's Zero Trust (CFZT) platform provides excellent Internet security for your custom applications. It allows you to create a secure connection between the Internet and your private applications, including Node-RED and UIBUILDER.
 
 Cloudflare provides a generous free tier for personal use, so you can get started without incurring costs. For many uses, the free tier is sufficient.
 
@@ -37,9 +37,9 @@ There are three elements that need to be configured to use Cloudflare Zero Trust
    
      This should guide you through the initial setup steps. You should choose the "cloudflared" connector option when prompted rather than the "warp" option (which is more feature rich but more complex).
 
-     * Chose to "Connect a private web application". You must already have a public domain name set up and managed by Cloudflare to continue.
+     * Choose to "Connect a private web application". You must already have a public domain name set up and managed by Cloudflare to continue.
      * The next step defines the local application on your server. If you are going to run `cloudflared` on the same server as Node-RED, you can use `localhost`, `http` as the protocol and the port that Node-RED is running on (default is `1880`). You can also point to your own local proxy service here if you prefer.
-     * In the next step, choose your Cloudflare managed domain name and optionally chose a sub-domain name for this application. Ideally, sub-domain names should not indicate the nature of the application (e.g., `nodered.yourdomain.com` is less secure than `app1234.yourdomain.com`). A sub-domain, while optional, is recommended so that you can have multiple, separately managed web applications in the future.
+     * In the next step, choose your Cloudflare managed domain name and optionally choose a sub-domain name for this application. Ideally, sub-domain names should not indicate the nature of the application (e.g., `nodered.yourdomain.com` is less secure than `app1234.yourdomain.com`). A sub-domain, while optional, is recommended so that you can have multiple, separately managed web applications in the future.
      * Next step will ask you to define an Access Policy. The simplest option is the "One-time PIN" option, which will send a PIN to a registered users email address each time they log in. This is a good starting point for personal use. You can also set up more complex access policies later. The wizard will pre-select the email address you used to log in to Cloudflare.
      * Next, you are asked to choose or create a "Tunnel". The tunnel name is private so choose one that makes sense to you.
      * Next, you choose the closest operating system for your local server. This is so that Cloudflare can give you the correct installation instructions for the `cloudflared` connector software. For most Node-RED users, this is likely to be Debian 64 bit. (which covers Debian, Ubuntu, Raspberry Pi OS, etc).
@@ -51,7 +51,7 @@ There are three elements that need to be configured to use Cloudflare Zero Trust
 At this point, you should have a working CFZT setup that connects Cloudflare to your local Node-RED instance. Note, however, that the DNS configuration that has been set up for you may take some time to propagate through the Internet. You can check the DNS settings in the Cloudflare dashboard for your domain.
 
 > [!TIP]
-> At this point, you will only be able to access your application using a PIN login sent to your default cloudflare admin email address. If you want to ad other users and login methods, you will need to configure the "Integrations", "Identity Providers" and "Access Controls", "Policies"/"Applications" sections of the CFZT dashboard.
+> At this point, you will only be able to access your application using a PIN login sent to your default cloudflare admin email address. If you want to add other users and login methods, you will need to configure the "Integrations", "Identity Providers" and "Access Controls", "Policies"/"Applications" sections of the CFZT dashboard.
 
 You can check the tunnel status by going to the "Connectors" page (under "Networks") in the Cloudflare Zero Trust dashboard. You should see your tunnel listed as "Healthy". If you configure the tunnel, you can view the details. Note the "published application route" settings. There are some additional settings such as being able to add http headers that will be passed down to your local application. Particularly note the Access setting which tells Cloudflare to validate the access JWT token, if you leave that off, you should validate it yourself in Node-RED.
 
