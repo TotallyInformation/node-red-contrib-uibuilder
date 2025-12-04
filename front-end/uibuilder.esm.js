@@ -8591,6 +8591,7 @@ var Uib = (_a2 = class {
    * @private
    */
   _ctrlMsgFromServer(receivedCtrlMsg) {
+    const ts = performance.now();
     if (receivedCtrlMsg === null) {
       receivedCtrlMsg = {};
     } else if (typeof receivedCtrlMsg !== "object") {
@@ -8598,6 +8599,7 @@ var Uib = (_a2 = class {
       msg["uibuilderCtrl:" + this._ioChannels.control] = receivedCtrlMsg;
       receivedCtrlMsg = msg;
     }
+    receivedCtrlMsg._receivedHRtime = ts;
     this._checkTimestamp(receivedCtrlMsg);
     this.set("ctrlMsg", receivedCtrlMsg);
     this.set("msgsCtrlReceived", ++this.msgsCtrlReceived);
@@ -8753,7 +8755,9 @@ var Uib = (_a2 = class {
    * @private
    */
   _stdMsgFromServer(receivedMsg) {
+    const ts = performance.now();
     receivedMsg = this.makeMeAnObject(receivedMsg, "payload");
+    receivedMsg._receivedHRtime = ts;
     if (receivedMsg._uib && !this._forThis(receivedMsg._uib)) return;
     if (receivedMsg._ui && !this._forThis(receivedMsg._ui)) return;
     this._checkTimestamp(receivedMsg);

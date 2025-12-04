@@ -2152,6 +2152,9 @@ export const Uib = class Uib {
      * @private
      */
     _ctrlMsgFromServer(receivedCtrlMsg) {
+        // track received high-res timestamp
+        const ts = performance.now()
+
         // Make sure that msg is an object & not null
         if (receivedCtrlMsg === null) {
             receivedCtrlMsg = {}
@@ -2160,6 +2163,9 @@ export const Uib = class Uib {
             msg['uibuilderCtrl:' + this._ioChannels.control] = receivedCtrlMsg
             receivedCtrlMsg = msg
         }
+
+        // Add high-res timestamp to msg
+        receivedCtrlMsg._receivedHRtime = ts
 
         // @since 2018-10-07 v1.0.9: Work out local time offset from server
         this._checkTimestamp(receivedCtrlMsg)
@@ -2390,8 +2396,14 @@ export const Uib = class Uib {
      * @private
      */
     _stdMsgFromServer(receivedMsg) {
+        // track received high-res timestamp
+        const ts = performance.now()
+
         // Make sure that msg is an object & not null
         receivedMsg = this.makeMeAnObject(receivedMsg, 'payload')
+
+        // Add high-res timestamp to msg
+        receivedMsg._receivedHRtime = ts
 
         // Don't process if the inbound msg is not for us
         if (receivedMsg._uib && !this._forThis(receivedMsg._uib)) return
