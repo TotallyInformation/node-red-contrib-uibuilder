@@ -95,6 +95,29 @@ TBC - just notes for now.
 
 * Use the `path` setting in the CLI config. Can be a wildcard.
 
+## Development Testing
+
+Here, I assume that your client device and your Node-RED development server device are one and the same and that it is a Windows 11 desktop. This should work equally well on Linux or MacOS.
+
+### Client: Use Cloudflare WARP
+
+Start by installing the [Cloudflare WARP Client](https://developers.cloudflare.com/warp-client/) on your client device.
+
+> [!NOTE]
+> The WARP client is available for Windows, MacOS, Linux, iOS and Android. It provides secure outbound tunnels and DNS resolution via Cloudflare's network. It is a VPN client.
+>
+> Advanced information about WARP can be found in the [Cloudflare One WARP documentation](https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/warp/).
+>
+> You do not need to log into a Zero Trust account for this use of WARP, that is only for more advanced use cases.
+
+* Turn on Advanced > Configure Proxy Mode - set to 9999 (or other high port)
+* Configure a spare browser to use the resulting local proxy on `127.0.0.1:9999`. Set it to also proxy DNS.
+* Turn on the connection
+* Connect to [whatismyipaddress](https://whatismyipaddress.com/) or [what is my ip](https://whatismyip.org/)) and confirm that it states Cloudflare Inc. not your ISP.
+* Access the route you set up in the previous sections using this configured browser.
+
+This sends the browser's DNS and web traffic direct to Cloudflare through a tunnel rather than allowing internal access.
+
 ## CLI commands
 
 The `cloudflared` software provides a CLI for managing tunnels and connectors. Most of these commands will not be needed if you do everything via the web dashboard, but they can be useful for troubleshooting and advanced configuration.
