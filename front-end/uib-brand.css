@@ -20,7 +20,7 @@
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 2025-12-03
+ * @version: 2025-12-09
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -746,7 +746,7 @@ form input, form textarea, form select, form fieldset, form output {
     flex: 2;
     border-radius: var(--border-radius);
     padding:0.3rem;
-    border: 1px solid var(--form-border);
+    border: var(--form-border);
 }
 form button, input[type="button" i], form input[type="reset" i], form input[type="submit" i] {
     width:auto;
