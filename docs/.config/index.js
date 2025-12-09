@@ -379,6 +379,46 @@ window.$docsify = {
                 // Make top-level sidebar list items with nested lists collapsible
                 const sidebar = document.querySelector('.sidebar-nav > ul')
                 if (sidebar) {
+                    const STORAGE_KEY = 'uib-docs-sidebar-state'
+
+                    /** Get saved sidebar state from localStorage
+                     * @returns {Object} Saved state object or empty object
+                     */
+                    const getSavedState = () => {
+                        try {
+                            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}
+                        } catch (e) {
+                            return {}
+                        }
+                    }
+
+                    /** Save sidebar state to localStorage
+                     * @param {string} sectionId - The section identifier
+                     * @param {boolean} isOpen - Whether the section is open
+                     */
+                    const saveState = (sectionId, isOpen) => {
+                        try {
+                            const state = getSavedState()
+                            state[sectionId] = isOpen
+                            localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+                        } catch (e) {
+                            console.warn('Failed to save sidebar state:', e)
+                        }
+                    }
+
+                    /** Generate a stable ID from section text content
+                     * @param {HTMLElement} summaryEl - The summary element
+                     * @returns {string} A stable identifier for the section
+                     */
+                    const getSectionId = (summaryEl) => {
+                        // Use text content, trimmed and lowercased, as the key
+                        return summaryEl.textContent
+                            .trim().toLowerCase()
+                            .replace(/\s+/g, '-')
+                    }
+
+                    const savedState = getSavedState()
+
                     // Get all top-level list items
                     const topLevelItems = sidebar.querySelectorAll(':scope > li')
                     topLevelItems.forEach((li) => {
@@ -398,10 +438,19 @@ window.$docsify = {
 
                             // Create details/summary structure
                             const details = document.createElement('details')
-                            details.open = true // Default to open
-
                             const summary = document.createElement('summary')
                             summaryContent.forEach((node) => summary.appendChild(node))
+
+                            // Generate section ID and check saved state
+                            const sectionId = getSectionId(summary)
+                            // Default to open if no saved state exists
+                            const isOpen = savedState.hasOwnProperty(sectionId) ? savedState[sectionId] : true
+                            details.open = isOpen
+
+                            // Add toggle event listener to save state
+                            details.addEventListener('toggle', () => {
+                                saveState(sectionId, details.open)
+                            })
 
                             details.appendChild(summary)
                             details.appendChild(nestedList)

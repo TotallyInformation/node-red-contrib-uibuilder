@@ -33,9 +33,6 @@
     margin-top: .3rem;
     padding-top: .1rem;
 }
-.sidebar-nav>ul>li:has(ul)>details {
-    margin: 0;
-}
 .sidebar-nav>ul>li:not(:has(ul))>a {
     padding:0 !important;
 }
@@ -54,6 +51,14 @@
 }
 .results-panel.show > div > a p {
     font-size: smaller;
+}
+
+.sidebar-nav details {
+    margin: 0;
+}
+.sidebar-nav details > summary {
+    cursor: pointer;
+    /* list-style: none; */
 }
 
 .dhide {
