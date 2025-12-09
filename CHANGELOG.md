@@ -36,14 +36,20 @@ Please see the roadmap in the docs for the backlog of future planned development
 * The sidebar of documentation page links now scrolls the current page link into view.
 * The sidebar top-level entries that have children are now collapsible sections. Added because the documentaiton continues to grown.
 * The sidebar expand/collapse state for each section is remembered across page loads.
+* **Fixed** [Issue #575](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/575) - Broken CSS loads.
 
 ### uib-cache node
 
-* Added several techniques to reduce resource overheads when the cache is receiving very large numbers of inputs.
+* **Added** several techniques to reduce resource overheads when the cache is receiving very large numbers of inputs.
+
+### uib-elements node
+
+* **FIXED** [Issue 580](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/580) - Missing data could cause a Node-RED crash. Additional checks and try/catch trap added.
 
 ### `uib-brand.css` front-end styles
 
-* Added `.visually-hidden` class for elements hidden from sighted users but still accessible to screen readers. Use for skip links, form explanations, and status updates otherwise not needed for sighted users.
+* **Added** `.visually-hidden` class for elements hidden from sighted users but still accessible to screen readers. Use for skip links, form explanations, and status updates otherwise not needed for sighted users.
+* **FIXED** Misconfigured fieldset border.
 
 ### uibuilder client library
 
