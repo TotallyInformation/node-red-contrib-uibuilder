@@ -1,4 +1,4 @@
-/* eslint-disable sonarjs/no-duplicate-string */
+/* eslint-disable jsdoc/valid-types */
 /** Send a dynamic UI config to the uibuilder front-end library.
  * The FE library will update the UI accordingly.
  *
@@ -25,9 +25,9 @@
  * @typedef {import('../../typedefs').uibElNode} uibElNode <= Change this to be specific to this node
  */
 
-//#region ----- Module level variables ---- //
+// #region ----- Module level variables ---- //
 
-const { getSource } = require('../libs/uiblib.cjs')
+const { getSource, } = require('../libs/uiblib.cjs')
 const elBuilder = require('../elements/elementBuilder')
 
 /** Main (module) variables - acts as a configuration object
@@ -42,7 +42,7 @@ const mod = {
     nodeName: 'uib-element', // Note that 'uib-element' will be replaced with actual node-name. Do not forget to also add to package.json
 }
 
-//#endregion ----- Module level variables ---- //
+// #endregion ----- Module level variables ---- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
  * @param {runtimeRED} RED The Node-RED runtime object
@@ -119,7 +119,7 @@ function nodeInstance(config) {
  * @param {Function} done Per msg finish function, node-red v1+
  * @this {runtimeNode & uibElNode}
  */
-async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
+async function inputMsgHandler(msg, send, done) {
     const RED = mod.RED
 
     // TODO: Accept cache-replay and cache-clear
@@ -143,7 +143,15 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
     ])
 
     // Save the last input msg for replay to new client connections, creates/update this._ui
-    await elBuilder.buildUi(msg, this)
+    try {
+        await elBuilder.buildUi(msg, this)
+    } catch (e) {
+        this.error(`🌐🛑[uibuilder:uib-element:customNode:inputMsgHandler] ${e}`, this)
+        // Still emit something even on error
+        this._ui = {
+            error: e.message,
+        }
+    }
 
     // Emit the list (sends to the matching uibuilder instance) or fwd to output depending on settings
     emitMsg(msg, this)
@@ -152,7 +160,7 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
     done()
 } // ----- end of inputMsgHandler ----- //
 
-//#region ----- Module-level support functions ----- //
+// #region ----- Module-level support functions ----- //
 
 /** Build the output and send the msg (clone input msg and add _ui prop)
  * @param {*} msg The input or custom event msg data
@@ -166,7 +174,7 @@ function emitMsg(msg, node) {
         ...msg,
         ...{
             _ui: node._ui,
-        }
+        },
     }
 
     // Remove payload unless requested
@@ -179,7 +187,7 @@ function emitMsg(msg, node) {
     node.send(msg2)
 }
 
-//#endregion ----- Module-level support functions ----- //
+// #endregion ----- Module-level support functions ----- //
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = ModuleDefinition

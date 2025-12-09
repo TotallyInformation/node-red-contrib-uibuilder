@@ -232,7 +232,7 @@ module.exports = {
         // Add the ol/ul tag
         parent.components.push({
             type: node.elementtype,
-            slot: node.data,
+            slot: node.data || '',
         })
 
         return err
@@ -247,6 +247,7 @@ module.exports = {
      */
     buildDlList: function buildDlList(node, msg, parent) {
         // Make sure node.data is an object or an array - if not, force to array
+        if (!node.data) node.data = []
         if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
         const err = ''
@@ -326,14 +327,13 @@ module.exports = {
      */
     buildHTML: function buildHTML(node, msg, parent, md = false) {
         // Must be a string so convert arrays/objects
-        let data = node.data
-        if (!node.data) data = ''
-        else if (Array.isArray(node.data)) data = node.data.join('/n')
+        if (!node.data) node.data = ''
+        else if (Array.isArray(node.data)) node.data = node.data.join('/n')
         else if ( node.data.constructor.name === 'Object' ) {
             try {
-                data = JSON.stringify(node.data)
+                node.data = JSON.stringify(node.data)
             } catch (e) {
-                data = 'ERROR: Could not parse input data'
+                node.data = 'ERROR: Could not parse input data'
             }
         }
 
@@ -345,8 +345,8 @@ module.exports = {
             type: md === true ? 'div' : node.elementtype,
             parent: node.parent,
             position: node.position,
-            slot: md !== true ? data : undefined,
-            slotMarkdown: md === true ? data : undefined,
+            slot: md !== true ? node.data : undefined,
+            slotMarkdown: md === true ? node.data : undefined,
         } )
 
         return err
@@ -359,6 +359,7 @@ module.exports = {
      * @returns {string} Error description or empty error string
      */
     buildSForm: function buildSForm(node, msg, parent) {
+        if (!node.data) node.data = []
         // Make sure node.data is an object or an array - if not, force to array
         if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
@@ -524,6 +525,7 @@ module.exports = {
      */
     buildTable: function buildTable(node, msg, parent) {
         // Make sure node.data is an object or an array - if not, force to array
+        if (!node.data) node.data = []
         if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
         let cols = []
@@ -649,6 +651,7 @@ module.exports = {
      */
     buildTableRow: function buildTableRow(node, msg, parent) {
         // Payload must be an object (col/value pairs)
+        if (!node.data) node.data = {}
         // TODO Allow payload to be an array
 
         const err = ''
@@ -656,8 +659,8 @@ module.exports = {
         parent.method = 'add'
         const rLen = parent.components.push({
             type: 'tr',
-            parent: `${node.parent} > table > tbody`,
-            position: node.position,
+            parent: `${node.parent || 'body'} > table > tbody`,
+            position: node.position || 'last',
             components: [],
         })
         // const rowNum = -10
@@ -686,7 +689,7 @@ module.exports = {
     buildTag: function buildTag(node, msg, parent) {
         // Must be a string or array/object of strings
         // If array/object, then add LAST entry entry as <div role="doc-subtitle">
-
+        if (!node.data) node.data = []
         if (!Array.isArray(node.data)) node.data = [node.data]
 
         let err = ''
@@ -739,7 +742,7 @@ module.exports = {
     buildTitle: function buildTitle(node, msg, parent) {
         // Must be a string or array/object of strings
         // If array/object, then add LAST entry entry as <div role="doc-subtitle">
-
+        if (!node.data) node.data = []
         if (!Array.isArray(node.data)) node.data = [node.data]
 
         const err = ''
@@ -789,6 +792,7 @@ module.exports = {
      */
     buildUlOlList: function buildUlOlList(node, msg, parent) {
         // Make sure node.data is an object or an array - if not, force to array
+        if (!node.data) node.data = []
         if (!(Array.isArray(node.data) || node.data.constructor.name === 'Object')) node.data = [node.data]
 
         const err = ''
@@ -837,6 +841,7 @@ module.exports = {
      */
     buildUlOlRow: function buildUlOlRow(node, msg, parent) {
         // Payload must be a a string
+        if (!node.data) node.data = []
         if ( !Array.isArray(node.data) ) node.data = [node.data]
 
         const err = ''
