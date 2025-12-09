@@ -31,6 +31,16 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### 📌 Highlights
 
+### Documentation
+
+* The sidebar of documentation page links now scrolls the current page link into view.
+* The sidebar top-level entries that have children are now collapsible sections. Added because the documentaiton continues to grown.
+* The sidebar expand/collapse state for each section is remembered across page loads.
+
+### uib-cache node
+
+* Added several techniques to reduce resource overheads when the cache is receiving very large numbers of inputs.
+
 ### `uib-brand.css` front-end styles
 
 * Added `.visually-hidden` class for elements hidden from sighted users but still accessible to screen readers. Use for skip links, form explanations, and status updates otherwise not needed for sighted users.
