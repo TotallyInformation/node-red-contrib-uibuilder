@@ -70,6 +70,7 @@
   * [How to use low-code in the browser](how-to/use-low-code-in-fe.md "Define and update elements in the browser using low-code")
   * [Live development server](how-to/dev-server.md "How to use Node-RED as a live web development server")
   * [Loading external files](how-to/load-external-files.md "Including HTML, styles, scripts, and web components")
+  * [Remote edit front-end files](how-to/remote-editing.md "Editing front-end files using full IDE features")
   * [Send code to the browser](how-to/send-code-to-fe.md "Dynamically send JavaScript code from Node-RED to browser clients")
   * [Uploading files](how-to/send-file-to-server.md "How to send files from the browser to Node-RED")
   * [Use Fn nodes to change msg._ui](how-to/function-node.md)
