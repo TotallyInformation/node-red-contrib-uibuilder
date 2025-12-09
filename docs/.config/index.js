@@ -375,6 +375,13 @@ window.$docsify = {
                 next(html + footer.join(''))
             })
 
+            hook.doneEach(() => {
+                const activeLink = document.querySelector('.sidebar-nav li.active')
+                if (activeLink) {
+                    activeLink.scrollIntoView({ behavior: 'smooth', block: 'center', })
+                }
+            })
+
             // Invoked on each page load after new HTML has been appended to the DOM
             // hook.doneEach(() => {
             //     // replace the <title> tag
