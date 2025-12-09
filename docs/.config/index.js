@@ -376,6 +376,44 @@ window.$docsify = {
             })
 
             hook.doneEach(() => {
+                // Make top-level sidebar list items with nested lists collapsible
+                const sidebar = document.querySelector('.sidebar-nav > ul')
+                if (sidebar) {
+                    // Get all top-level list items
+                    const topLevelItems = sidebar.querySelectorAll(':scope > li')
+                    topLevelItems.forEach((li) => {
+                        const nestedList = li.querySelector(':scope > ul')
+                        // Only convert items that have a nested list (sections with children)
+                        if (nestedList) {
+                            // Check if already converted to details
+                            if (li.querySelector(':scope > details')) return
+
+                            // Get the text/link content (everything before the nested ul)
+                            const summaryContent = []
+                            const childNodes = Array.from(li.childNodes)
+                            for (const node of childNodes) {
+                                if (node === nestedList) break
+                                summaryContent.push(node.cloneNode(true))
+                            }
+
+                            // Create details/summary structure
+                            const details = document.createElement('details')
+                            details.open = true // Default to open
+
+                            const summary = document.createElement('summary')
+                            summaryContent.forEach((node) => summary.appendChild(node))
+
+                            details.appendChild(summary)
+                            details.appendChild(nestedList)
+
+                            // Clear the li and add the details element
+                            li.innerHTML = ''
+                            li.appendChild(details)
+                        }
+                    })
+                }
+
+                // Scroll active link into view
                 const activeLink = document.querySelector('.sidebar-nav li.active')
                 if (activeLink) {
                     activeLink.scrollIntoView({ behavior: 'smooth', block: 'center', })

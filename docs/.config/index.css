@@ -30,9 +30,11 @@
 }
 .sidebar-nav>ul>li:has(ul) {
     border-top: 1px solid var(--heading-h2-border-color);
-    margin-top: 1rem;
     margin-top: .3rem;
     padding-top: .1rem;
+}
+.sidebar-nav>ul>li:has(ul)>details {
+    margin: 0;
 }
 .sidebar-nav>ul>li:not(:has(ul))>a {
     padding:0 !important;
