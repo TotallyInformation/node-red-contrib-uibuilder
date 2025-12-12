@@ -2,14 +2,28 @@
     "compilerOptions": {
         "allowJs": true,
         "checkJs": true,
+        // Generate d.ts files
+        "declaration": true,
+        // This compiler run should only output d.ts files
+        "emitDeclarationOnly": true,
+        // Types should go into this directory.
+        "outDir": "types", // Removing this would place the .d.ts files next to the .js files
+        // go to js file when using IDE functions like "Go to Definition" in VSCode
+        "declarationMap": true,
+
         "strictNullChecks": false,
         "strict": false,
-        "lib": ["ES2022"],
+        "lib": [
+            "ES2022"
+        ],
         "module": "commonjs",
         "moduleResolution": "node",
         "target": "es2022",
         "noEmit": true,
-        "typeRoots": [".", "./types", "./node_modules/@types"]
-      }
-      
+        "typeRoots": [
+            ".",
+            "./types",
+            "./node_modules/@types"
+        ]
+    }
 }
