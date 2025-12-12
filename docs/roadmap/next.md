@@ -11,8 +11,6 @@ updated: 2025-11-22 17:16:53
 
 * uibuilder node in a sub-flow [ref](https://discourse.nodered.org/t/uibuilder-url-inconsistancies-and-issues/98853/4)
 * Paul's disappearing library items. [#556](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/556)
-* Issues with docs. [ref](https://discourse.nodered.org/t/documents-for-uibuilder/99431/3), [#575](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/575)
-* Fieldset border issue [#574](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/574)
 * API v3 includes `node:inspector` which does not seem to be used. [ref](https://discourse.nodered.org/t/node-red-version-of-mqtt-explorer/99738/14).
 
 ## In Progress
@@ -50,20 +48,18 @@ None
     * [ ] Add vertical menu support.
     * [ ] ? Add tabbed menu support ?
     * [ ] SPA documentation.
-
-* [ ] Failed rename of instance folder may get stuck.
-
-* [ ] Library manager updates
-  * [ ] Capture streamed command output as per the scripts tab.
-  * [ ] Check where an "error" property in package.json might come from [ref](https://discourse.nodered.org/t/uibuilder-package-json-error/98691).
-
-* [ ] Router library
   * [ ] Add route description to automenu. Either as title or as an aria-label attribute.
   * [ ] Content wrongly removed from route if an element has an id matching the route id. [ref](https://discourse.nodered.org/t/uibuilder-novice-coding/98693/5).
   * [x] Rename the example to include "SPA" for clarity.
   * [ ] Make sure new routes added from node-red (or addRoutes) only appear once.
   * [ ] Add position option to auto-menu (add numeric `position` prop, cope with multiple of the same number, allow 'first', 'last' options).
   * [ ] Investigate and implement best no-code/low-code way to auto-create the SPA from Node-RED. [ref](https://discourse.nodered.org/t/uibuilder-button/98970/13?u=totallyinformation).
+
+* [ ] Failed rename of instance folder may get stuck.
+
+* [ ] Library manager updates
+  * [ ] Capture streamed command output as per the scripts tab.
+  * [ ] Check where an "error" property in package.json might come from [ref](https://discourse.nodered.org/t/uibuilder-package-json-error/98691).
 
 * [ ] Adjust gulp tasks to copy changed fe types file(s) (nb: src\front-end-module\tsconfig.json is different to templates\blank\tsconfig.json, don't copy it)
   * [ ] to `templates\blank\types`
@@ -107,8 +103,8 @@ None
   * [ ] Add content to Lists, Maps, Tables, Dashboard Layouts, Cards, Articles.
   * [ ] Properly document file uploads and how to handle them. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
   * [ ] Add thanks to the contributors in the readme.
-  * [ ] Setting up and using VS Code for front-end development with uibuilder
-    * [ ] Link in uibuilder nodes
+  * [x] Setting up and using VS Code for front-end development with uibuilder
+    * [x] Link in uibuilder nodes
     * [ ] Setting up remote VS Code
     * [ ] Useful extensions for front-end development
     * [ ] Configure browser dev tools (e.g. round-trip edits)
@@ -129,7 +125,7 @@ None
 ## Consider
 
 * Move table handling to use older HTMLTableElement API. [ref1](https://christianheilmann.com/2025/10/08/abandonware-of-the-web-do-you-know-that-there-is-an-html-tables-api/), [ref2](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableElement)
-* Auto-generate a manifest web endpoint that delivers a manifest file for the current uibuilder instance. This would allow clients to have a faster startup. [ref](https://discourse.nodered.org/t/add-pwa-feature-to-uibuilder/97807/2)
+* ~~Auto-~~ Add a button to the uibuilder node's config panel to generate a manifest web endpoint that delivers a manifest file for the current uibuilder instance. This would allow clients to have a faster startup. [ref](https://discourse.nodered.org/t/add-pwa-feature-to-uibuilder/97807/2)
 * For onTopic and uib-topic, allow wildcards in the topic name.
 * Move log reference into the `uibGlobalConfig` object. Remove passed references.
 * Some form of more direct RPC implementation between client and server. What functions might the server be able to do for the client? What might the server want to ask of or control on the client?
