@@ -3,19 +3,20 @@ title: UIBUILDER Glossary
 description: |
   Terms used in this documentation and their meanings.
 created: 2019-05-27 17:13:00
-lastUpdated: 2023-09-30 13:05:48
-updated: 2023-12-30 17:01:41
+updated: 2025-12-09 17:01:41
 ---
 
 | Term         | Meaning                                                      |
 | ------------ | ------------------------------------------------------------ |
 | `<xxxx>`     | When a word is shown between angle brackets in the UIBUILDER documentation, it indicates that this is a variable. (unless it is clearly an HTML tag). |
 |              |                                                              |
+| Back-end     | Anything that relates to what happens on the Node-RED server. |
 | CSS Selector | The standardised code that allows CSS or JavaScript to identify one or more elements on a web page. See [MDN CSS Selectors](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) for details. e.g. the selector for an HTML element with an id of `more` would be `#more`, to select all the elements with a specific class, `.classname`, all list entries `li`. |
 | ECMA         | Non-profit standards organisation for information and communications systems. Amongst other things, manages the standards for JavaScript - formally known as *ECMA Script* - in the ECMA-262 standard. |
 | element      | Something on a web page. Defined by one or more HTML "tags" such as `<div>...</div>`. |
-| ESM          | AKA "ES Module" (ES=ECMA Script, AKA JavaScript). The Modern module form supported by modern browsers as well as Node.JS. Note that Node.JS also supports CommonJS modules, these are not supported by browsers). [Ref.1](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/), [Ref.2](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) |
-| IIFE         | "Immediately Invoked Function Expression". [Ref.](https://developer.mozilla.org/en-US/docs/Glossary/IIFE)
+| ESM          | AKA "ES Module" (ES=ECMA Script, AKA JavaScript). The Modern module form supported by modern browsers as well as Node.JS. Note that Node.JS also supports CommonJS modules, these are not supported by browsers). Many of UIBUILDER's front-end JavaScript files have a minified ESM version, these have to be loaded as a "module" in a script link in the HMTL file or `import`ed from such a module script. ESM's are the future of modular JavaScript, expect to see more of them over time. [Ref.1](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/), [Ref.2](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) |
+| Front-End    | Anything that relates to what happens in the client browser. Front-end files are sourced on the server but delivered over HTTP(S) to the client. Processing happens in the client browser and not on the server. |
+| IIFE         | "Immediately Invoked Function Expression". Many of UIBUILDER's front-end support JavaScript files have a minified IIFE version, this can be loaded as a script link in the HTML file. IIFE front-end scripts cannot be `import`ed in another JavaScript file. Beginners may find working with the IIFE files simpler as the HTML may be more familiar than imports. [Ref.](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) |
 | instance     | In Node-RED, when a node is added to a flow, it is said that this is an instance of a node. Unlike the Node-RED Dashboard, UIBUILDER can have many instances, each on a separate root url (*instanceRoot*).<br>In addtion, Node-RED itself can be run multiple times. Each of these is "an instance of Node-RED". |
 | instanceRoot | The root folder for a specific `uibuilder` node instance. It will be at `<uibRoot>/<url>/`. |
 | library      | One or more programme files that are utilised by other programs. Often delivered as one or more modules and installed as a _package_. |
