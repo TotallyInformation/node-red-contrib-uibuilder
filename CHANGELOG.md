@@ -31,6 +31,8 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### 📌 Highlights
 
+* In the Node-RED Editor, a popover is now shown after a UIBUILDER update. It contains highlights of the changes in the new version. It will only be shown once per version update.
+
 ### Documentation
 
 * The sidebar of documentation page links now scrolls the current page link into view.
@@ -58,7 +60,10 @@ Please see the roadmap in the docs for the backlog of future planned development
 ### Development changes
 
 * **NEW** npm script `bugfix-worktree` - creates a new git worktree for bugfix branches. This allows you to work on a bug fix in a separate directory while keeping your current dev branch work intact. You can have both directories open simultaneously without needing to stash changes or switch branches. When you're done with the bug fix, you can commit, push, create a PR, and then remove the worktree.
-
+* `nodes\libs\admin-api-v3.cjs` - Removed reference to `node:inspector` which is not used. [ref](https://discourse.nodered.org/t/node-red-version-of-mqtt-explorer/99738/14).
+* Security related fixes
+  * `syntaxHighlight` function in `tilib.cjs` - limited the size of JSON strings to 10k characters to prevent potential denial-of-service attacks via extremely large JSON payloads.
+  * `admin-api-v2.cjs` and `admin-api-v3.cjs` - ensured that parameters expected to be strings are not arrays. This prevents potential injection attacks via array parameters.
 
 ## v7.5.0
 

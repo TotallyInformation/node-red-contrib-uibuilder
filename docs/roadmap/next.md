@@ -4,14 +4,12 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2025-11-22 17:16:53
+updated: 2025-12-15 17:47:04
 ---
 
 ## To Fix
 
-* uibuilder node in a sub-flow [ref](https://discourse.nodered.org/t/uibuilder-url-inconsistancies-and-issues/98853/4)
-* Paul's disappearing library items. [#556](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/556)
-* API v3 includes `node:inspector` which does not seem to be used. [ref](https://discourse.nodered.org/t/node-red-version-of-mqtt-explorer/99738/14).
+None
 
 ## In Progress
 
@@ -26,6 +24,10 @@ None
   * [ ] Rename all .js node.js files to .cjs to avoid confusion with ESM modules. (libs now all done).
   * [ ] No need to pass uib var now it is in a module, can simply require it. (Except for libs/fs which is already used by the uib module).
 
+* Update library manager to use the same processes as the scripts tab.
+  * [ ] More robust updates.
+  * [ ] Show streamed output.
+
 * Update admin-api-v3:
   * [ ] Remove dependencies on fg (use fs.cjs instead).
   * [ ] Make more use of AsyncLocalStorage to allow async functions to be wrapped in sync callers.
@@ -38,9 +40,8 @@ None
 
 (See the roadmap for lots more, these are just the current thoughts)
 
-* [ ] Add a node-red Tour for each release.
-
 * Router improvements
+  * [ ] Add experimental rective menu updates to router library.
   * [ ] Auto-menu generation for menus.
     * [ ] Update router auto-menu with improvements from home site.
     * [ ] Add search option. `<search>`/`<div role="search">` element that can be used to search the menu.
@@ -67,8 +68,18 @@ None
   * [ ] Find out how to create a uib fe @types package (and add to template devDependencies)
   * [ ] Find out how to automate updates to types when the fe module changes
 * [ ] Check that FE updates allow attributes to be set to `null` to unset them.
-* [ ] Also check that FE JS use of `uib.set('msg', ...)` works as expected.
-* [x] Add an experimental library that extends the uibuilder client library to allow playing with possible future features.
+
+* [ ] On the build tab, check if instance folder has outstanding git changes. If so, show a commit button with auto msg of today's date and time.
+
+* [ ] Add either a link or at least a note to node help pointing to example flows.
+* [ ] Add example flows for each node.
+
+* [ ] Add remote command example flows.
+* [ ] Add `uib-var` example flows.
+
+* Templates
+  * [ ] Add template docs folder and auto-link to the template docs from the template description.
+  * [ ] Add an example flow feature to templates. An examples folder. A button in the template description to import the example flow(s) to the clipboard for import (auto-import if possible.)
 
 * [ ] Dialog (modal/non-modal overlay)
   * [ ] component(?) that can consume a template and display it as a dialog. [ref](https://discourse.nodered.org/t/uibuilder-help-in-developing-a-dashboard/97478/18)
@@ -91,8 +102,8 @@ None
 
 * [ ] Add new example showing use of the TI Web Component library.
 * [ ] Add new classes for LAYOUTs.
-* [ ] Add experimental rective menu updates to router library.
 * [ ] Add SVGAnimate class to web components package.
+* [ ] `resources\uib-sidebar.js` - add markdown support using RED.utils.renderMarkdown().
 
 * CSS
   * [ ] Make `form > label` use a variable for `align-self`.
@@ -124,6 +135,7 @@ None
 
 ## Consider
 
+* New node? `uib-markdown` - a node that converts markdown to HTML.
 * Move table handling to use older HTMLTableElement API. [ref1](https://christianheilmann.com/2025/10/08/abandonware-of-the-web-do-you-know-that-there-is-an-html-tables-api/), [ref2](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableElement)
 * ~~Auto-~~ Add a button to the uibuilder node's config panel to generate a manifest web endpoint that delivers a manifest file for the current uibuilder instance. This would allow clients to have a faster startup. [ref](https://discourse.nodered.org/t/add-pwa-feature-to-uibuilder/97807/2)
 * For onTopic and uib-topic, allow wildcards in the topic name.
@@ -216,6 +228,7 @@ None
 * Setting up and using VS Code for front-end development with uibuilder.
 * Web component library.
 * Easy layouts using grid areas.
+* Markdown.
 
 ### Shorts
 
