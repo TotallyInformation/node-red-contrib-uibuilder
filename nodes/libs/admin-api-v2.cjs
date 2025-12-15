@@ -56,8 +56,8 @@ function chkParamUrl(params) {
         return res
     }
 
-    // Trim the url
-    params.url = params.url.trim()
+    /** @type {string} Trim the url */
+    params.url = Array.isArray(params.url) ? params.url[0].trim() : params.url.trim()
 
     // URL must not exceed 20 characters
     if ( params.url.length > 20 ) {
@@ -97,7 +97,8 @@ function chkParamUrl(params) {
  */
 function chkParamFname(params) {
     const res = { statusMessage: '', status: 0, }
-    const fname = params.fname
+    /** @type {string} */
+    const fname = Array.isArray(params.fname) ? params.fname[0] : params.fname
 
     // We have to have an fname (file name) to work with
     if ( fname === undefined ) {
@@ -134,7 +135,8 @@ function chkParamFname(params) {
  */
 function chkParamFldr(params) {
     const res = { statusMessage: '', status: 0, }
-    const folder = params.folder
+    /** @type {string} */
+    const folder = Array.isArray(params.folder) ? params.folder[0] : params.folder
 
     // we have to have a folder name
     if ( folder === undefined ) {
@@ -680,6 +682,7 @@ function adminRouterV2(log) {
             res.status(500).end()
             return
         }
+        if ( Array.isArray(params.cmd) ) params.cmd = params.cmd[0]
         switch (params.cmd) {
             case 'install':
             case 'remove':
@@ -701,7 +704,16 @@ function adminRouterV2(log) {
             res.status(500).end()
             return
         }
-        // @ts-ignore
+        // If params.package is an array (multiple package names provided), just take the first one
+        if ( Array.isArray(params.package) ) params.package = params.package[0]
+        // @ts-ignore package name must be >0 in length
+        if ( params.package.length < 1 ) {
+            log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package name parameter is empty')
+            res.statusMessage = 'package name parameter is empty'
+            res.status(500).end()
+            return
+        }
+        // @ts-ignore package name must not exceed 255 characters
         if ( params.package.length > 255 ) {
             log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package name parameter is too long (>255 characters)')
             res.statusMessage = 'package name parameter is too long. Max 255 characters'
