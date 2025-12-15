@@ -3,6 +3,25 @@
  * Note that RED is available here
  */
 
+/** @typedef {Object} UibEditorObject
+ * @property {string} paletteCategory - Standard palette category for all uibuilder nodes
+ * @property {string} typedInputWidth - Standard width for typed input fields
+ * @property {boolean} localHost - Are we running on a local device?
+ * @property {string} nrServer - Server address of the Node-RED server
+ * @property {string} nodeRoot - URL root if needed (set to '' if using a custom uib server)
+ * @property {string} urlPrefix - URL prefix for all uib nodes
+ * @property {string} serverType - uib server type ('Node-RED\'s' or 'a custom')
+ * @property {Object.<string,string>} editorUibInstances - Tracks ALL uibuilder editor instance URL's by node id (includes undeployed and disabled nodes)
+ * @property {Object.<string,string>} deployedUibInstances - Tracks all DEPLOYED uibuilder instances url's by node id
+ * @property {Array} packages - Tracks uibuilder's installed front-end packages
+ * @property {string[]} uibNodeTypes - List of uib node names
+ * @property {boolean} debug - Debug output via log() - turn on/off with true/false
+ * @property {Function} log - Console log function (only active when debug is true)
+ * @property {Function} doTooltips - Add jQuery UI formatted tooltips
+ * @property {Function} getDeployedUrls - Get all of the currently deployed uibuilder URL's
+ * @property {Function} sortInstances - Sort an instances object by url
+ */
+
 // Register the plugin
 RED.plugins.registerPlugin('uib-editor-plugin', {
     type: 'uibuilder-editor-plugin', // optional plugin type
@@ -11,10 +30,10 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
 
         /** Add a "uibuilder" object to the Node-RED Editor
          * To contain common functions, variables and constants for UIBUILDER nodes
+         * @type {UibEditorObject}
          */
-        // @ts-ignore
-        const uibuilder = window['uibuilder'] = {
-            // @ts-ignore Standard palette category for all uibuilder nodes
+        const uibuilder = window['uibuilder'] = /** @type {UibEditorObject} */ ({
+            // Standard palette category for all uibuilder nodes
             paletteCategory: 'uibuilder',
             // Standard width for typed input fields
             typedInputWidth: '68.5%',
@@ -49,6 +68,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 else _dbg = dbg
                 this.log = _dbg ? console.log : function() {}
             },
+            // @ts-ignore
             log: function(...args) {},
 
             /** Add jQuery UI formatted tooltips - add as the last line of oneditprepare in a node
@@ -116,7 +136,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                     })
                 )
             },
-        }
+        })
 
         // #region --- Calculate the node url root & the uibuilder FE url prefix
         const eUrlSplit = window.origin.split(':')
@@ -291,6 +311,61 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 )
                 console.groupEnd()
             }, 1500)
+        }
+
+        // Check if the user has seen this version before - if not, show the changes
+        const isSeen = localStorage.getItem('uibuilder.lastSeenVersion') || 'none'
+        if (isSeen !== RED.settings.uibuilderCurrentVersion) {
+            // Get the contents of the changelog-highlights.md file and log to console
+            $.ajax({
+                type: 'GET',
+                dataType: 'text',
+                url: 'uibuilder/admin/isseen',
+                data: {
+                    cmd: 'getChangeSummary',
+                },
+                beforeSend: function(jqXHR) {
+                    const authTokens = RED.settings.get('auth-tokens')
+                    if (authTokens) {
+                        jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                    }
+                },
+                success: (data) => {
+                    // Get the version from the frontmatter
+                    const frontmatterMatch = data.match(/^---\s*\n([\s\S]*?)\n---/)
+                    if (frontmatterMatch) {
+                        const frontmatter = frontmatterMatch[1]
+                        const versionMatch = frontmatter.match(/version:\s*['"]?([^'"\n]+)['"]?/)
+                        if (versionMatch) {
+                            const version = versionMatch[1]
+                            uibuilder.log('🌐[uibuilder] Highlights frontmatter version:', version)
+                            // If the version is not the same as the current version, don't show anything
+                            if (version !== RED.settings.uibuilderCurrentVersion) return
+                            // Remove the frontmatter from the data & display the remainder in a node-red notification
+                            const changelog = RED.utils.renderMarkdown(data.replace(frontmatterMatch[0], '').trim())
+                            const n = RED.notify(
+                                `🌐 UIBUILDER has been updated to version ${version}\n${changelog}`,
+                                {
+                                    type: 'info',
+                                    fixed: true,
+                                    modal: true,
+                                    buttons: [{
+                                        text: 'Close',
+                                        click: (e) => {
+                                            n.close()
+                                        },
+                                    }],
+                                }
+                            )
+                            console.info(`🌐[uibuilder] Welcome to uibuilder version ${version} - this is your first view`)
+                            localStorage.setItem('uibuilder.lastSeenVersion', RED.settings.uibuilderCurrentVersion)
+                        }
+                    }
+                },
+                error: function(err) {
+                    console.error('ERROR', err)
+                },
+            })
         }
 
         // TODO: EXPERIMENTAL - Maybe dynamically add things to the help panel?
