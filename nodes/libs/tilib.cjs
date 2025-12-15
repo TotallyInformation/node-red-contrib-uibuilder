@@ -105,6 +105,10 @@ module.exports = {
             .key { color: #069fb3;}
         */
         json = JSON.stringify(json, undefined, 4)
+        // Trim to maximum of 10k characters
+        if (json.length > 10000) {
+            json = json.substring(0, 10000) + '...truncated...'
+        }
         json = json
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
