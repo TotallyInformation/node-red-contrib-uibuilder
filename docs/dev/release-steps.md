@@ -3,7 +3,7 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2025-05-29 10:16:03
+updated: 2025-12-15 12:53:32
 author: Julian Knight (Totally Information)
 ---
 
@@ -11,20 +11,28 @@ This assumes all main updates have been done for this release and that local tes
 
 ## Incorporating bug-fixes from `main` branch
 
-When working on a feature branch, it may be necessary to release a new bug-fix release from `main`. At that point, you should then incorporate the changes into your feature branch(es).
+When working on the dev branch, it may be necessary to release a new bug-fix release from `main`. At that point, you should then incorporate the changes into your feature branch(es).
+
+Firstly commit or stash any outstanding changes in your `dev` branch.
+
+Then, from the VSCode command line, do:
 
 ```bash
 git switch main
 git pull origin main
-git switch v7.3.0
+git switch dev
 git merge main
 ```
 Now the Source Control panel in VSCode will have any files with conflicts marked. Click on them to view the conflict and resolve. Then do another commit and push.
 
+If you did a stash, do `git stash pop` now to re-apply your changes.
+
 ## Creating a feature branch
 
-* On GitHub, click on the "Switch branches/tags" drop-down. Search for the new name - e.g. v7.3.0 - if it does not exist, GitHub will offer to create it from the current main branch.
-* In VSCode, switch to the SOURCE CONTROL sidebar, click on REMOTES, refresh if needed. Expand "origin" and click on the "Switch to branch..." icon.
+No longer needed - work is done directly on the `dev` branch.
+
+* ~~On GitHub, click on the "Switch branches/tags" drop-down. Search for the new name - e.g. v7.3.0 - if it does not exist, GitHub will offer to create it from the current main branch.~~
+* ~~In VSCode, switch to the SOURCE CONTROL sidebar, click on REMOTES, refresh if needed. Expand "origin" and click on the "Switch to branch..." icon.~~
 
 ## 01) Check docs/roadmap/next.md
 
@@ -49,13 +57,15 @@ Make sure version numbers are correct and aligned:
 
 * `npm outdated` & `npm update`.
 
+Remember to check the `templates/blank` folder dependencies too.
+
 ## 03a) Update the docs bundle
 
 * Run `npm run buildDocBundle` to update the docs bundle.
 
 ## 03b) Update the client library typescript definitions
 
-These are in `templates\blank\types`. They are updated by asking Copilot *"Update the typescript descripion files in `./templates/blank/types` to match the updated version of `./src/front-end-module/uibuilder.module.mjs`"*
+These are in `templates\blank\types`. They are updated by asking Copilot _"Update the typescript descripion files in `./templates/blank/types` to match the updated version of `./src/front-end-module/uibuilder.module.mjs`"_.
 
 ## 04) Do a final commit & push to the dev branch
 
@@ -73,7 +83,7 @@ For conflicts that can't be merged in GitHub web interface, use VSCode command l
 ```bash
 git switch main
 git pull origin main
-git switch v7.3.0
+git switch dev
 git merge main
 ```
 Now the Source Control panel in VSCode will have any files with conflicts marked. Click on them to view the conflict and resolve. Then do another commit and push.
@@ -112,6 +122,6 @@ Remember to switch branches to the version branch in VS Code before continuing.
 After publishing:
 
 ```bash
-git switch v7.0.0
+git switch dev
 git merge main
 ```
