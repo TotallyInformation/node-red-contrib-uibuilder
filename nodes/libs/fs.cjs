@@ -273,6 +273,13 @@ class UibFs {
         // const chkFolders = existsSync(join(uib.rootFolder, params.url))
     }
 
+    /** Read a file, return as a buffer unless options.encoding is provided
+     * @param {import('node:fs').PathLike} path The file path/name to read
+     * @param {object|string=} options
+     * @returns {string|Buffer} File contents as a string
+     */
+    readFile = fs.readFile
+
     /** Removes a file or directory. The directory can have contents. If the path does not exist, silently does nothing.
      * @param {string} path Folder/File to remove
      */
