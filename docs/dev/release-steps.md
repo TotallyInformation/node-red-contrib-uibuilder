@@ -3,7 +3,7 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2025-12-15 12:53:32
+updated: 2025-12-29 19:44:44
 author: Julian Knight (Totally Information)
 ---
 
@@ -57,7 +57,10 @@ Make sure version numbers are correct and aligned:
 
 * `npm outdated` & `npm update`.
 
-Remember to check the `templates/blank` folder dependencies too.
+Needs to be run against:
+* Root folder (uibuilder).
+* `packages/uib-md-utils` folder.
+* `templates/blank` folder.
 
 ## 03a) Update the docs bundle
 
@@ -66,6 +69,10 @@ Remember to check the `templates/blank` folder dependencies too.
 ## 03b) Update the client library typescript definitions
 
 These are in `templates\blank\types`. They are updated by asking Copilot _"Update the typescript descripion files in `./templates/blank/types` to match the updated version of `./src/front-end-module/uibuilder.module.mjs`"_.
+
+## 03c) Build the uib-md-utils package
+
+Run `npm run buildUibMdUtils` to build the package.
 
 ## 04) Do a final commit & push to the dev branch
 
