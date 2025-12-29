@@ -2,6 +2,9 @@
   "name": "node-red-contrib-uibuilder",
   "version": "7.6.0",
   "description": "Easily create data-driven web UI's for Node-RED. Single- & Multi-page. Multiple UI's. Work with existing web development workflows or mix and match with no-code/low-code features.",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "preinstall": "node ./bin/uibpreinstalljs",
     "watch": "gulp watch",
@@ -10,6 +13,7 @@
     "edit-docs": "%LOCALAPPDATA%/Programs/Typora/Typora.exe ./",
     "buildDocBundle": "node ./src/doc-bundle/build.mjs",
     "buildSidebar": "node ./bin/docsify-auto-sidebar.js",
+    "buildUibMdUtils": "npm run build --workspace=@totallyinformation/uib-md-utils",
     "graph": "madge --image ./docs/dev/runtime-deps.svg ./nodes",
     "inspectEslintConfig": "npx @eslint/config-inspector@latest",
     "bugfix-worktree": "git worktree add ../uibuilder-bugfix origin/main -b bug-fix"
@@ -73,6 +77,7 @@
       "uib-element": "nodes/uib-element/customNode.js",
       "uib-file-list": "nodes/uib-file-list/customNode.js",
       "uib-html": "nodes/uib-html/customNode.js",
+      "uib-markweb": "nodes/uib-markweb/customNode.js",
       "uib-save": "nodes/uib-save/customNode.js",
       "uib-sender": "nodes/uib-sender/uib-sender.js",
       "uib-sidebar": "nodes/uib-sidebar/customNode.js",
