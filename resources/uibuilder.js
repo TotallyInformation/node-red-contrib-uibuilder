@@ -2350,6 +2350,7 @@ RED.nodes.registerType(moduleName, {
         name: { value: '', },
         topic: { value: '', },
         url: { required: true, validate: validateUrl, },
+        instancePath: { value: '', }, // Allows for the node to use a different folder name than the url @since v7.6.0
         okToGo: {}, // Set by validateUrl, tells runtime if we are good to configure the node
         fwdInMessages: { value: false, }, // Should we send input msg's direct to output as well as the front-end?
         allowScripts: { value: false, }, // Should we allow msg's to send JavaScript to the front-end?
