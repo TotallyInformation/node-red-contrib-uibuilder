@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2025-12-15 17:47:04
+updated: 2025-12-20 19:11:13
 ---
 
 ## To Fix
@@ -13,7 +13,49 @@ None
 
 ## In Progress
 
-None
+### New node: uib-markweb
+
+A node that creates a website out of a folder of markdown content.
+
+Requirements:
+* Rework:
+  1. [ ] Change main uibuilder processing to allow separate specification of the source folder from the url.
+  2. [ ] Change new node to use uibuilder processing.
+* Config:
+  * [x] Source folder path on server
+  * [x] URL path to serve the content
+  * [x] Allow marked extensions to be specified - phase 1, fixed in code
+  * [ ] Add separate setting for the config folder to allow separation of content and config. Better security.
+    * [ ] Allow for a config folder in the source folder to hold config files (e.g. HTML wrapper, CSS, etc.)
+  * [ ] Add button on folder inputs to allow creation of the folder.
+  * [ ] Use uibRoot for installation of marked and extensions.
+  * [ ] Show full path and actual full url in the edit panel
+  * [ ] Show marked errors/warnings in the edit panel
+  * [ ] Show available marked extensions in the edit panel
+  * [ ] If marked and other extensions are not installed, show an install button in the Editor.
+  * [ ] Allow for a custom 404 page in the _config folder
+* Functionality:
+  * [x] Use uibuilder's web server to serve the content.
+  * [x] Server-side rendering using ExpressJS middleware and marked.
+  * [ ] HTML wrapper. `_template.html` file in source folder to allow customisation of the HTML wrapper round the rendered markdown.
+  * [ ] Block loading of CSS files. Or possibly auto-add them to the HTML wrapper?
+  * [ ] In Editor, if source folder is inaccessible, show a warning, mark the node invalid.
+  * [ ] Choose a better icon for the node.
+  * [ ] Help panel.
+  * [ ] Documentation.
+  * [ ] When adding libraries in the library manager, recheck whether marked and extensions are available.
+
+Requirements future:
+* [ ] Auto-generate a sidebar navigation from the folder structure. Allow for in-page section navigation using headings. Where present, have two tabs in the sidebar: "Contents" and "Sections" (ref Typora's layout).
+* [ ] In Editor, if there is a url clash with another uibuilder instance, show a warning.
+* [ ] Allow marked extensions to be specified via settings.js uibuilder config.
+* [ ] Mount client versions of marked and extensions to front-end for use in std uibuilder front-ends.
+* [ ] Update front-end uibuilder library to use marked to render markdown content instead of just markdown-it.
+
+Future possible ideas:
+* Allow custom CSS to be specified?
+* Use uibuilder front-end client library to handle dynamic updates?
+
 
 ### Ongoing work
 
@@ -56,54 +98,68 @@ None
   * [ ] Add position option to auto-menu (add numeric `position` prop, cope with multiple of the same number, allow 'first', 'last' options).
   * [ ] Investigate and implement best no-code/low-code way to auto-create the SPA from Node-RED. [ref](https://discourse.nodered.org/t/uibuilder-button/98970/13?u=totallyinformation).
 
-* [ ] Failed rename of instance folder may get stuck.
+* Back-end
+  * [ ] In web.js, add marked browser libary to the list of served static files.
+  * [ ] Failed rename of instance folder may get stuck.
 
-* [ ] Library manager updates
-  * [ ] Capture streamed command output as per the scripts tab.
-  * [ ] Check where an "error" property in package.json might come from [ref](https://discourse.nodered.org/t/uibuilder-package-json-error/98691).
+  * [ ] Library manager updates
+    * [ ] Capture streamed command output as per the scripts tab.
+    * [ ] Check where an "error" property in package.json might come from [ref](https://discourse.nodered.org/t/uibuilder-package-json-error/98691).
 
-* [ ] Adjust gulp tasks to copy changed fe types file(s) (nb: src\front-end-module\tsconfig.json is different to templates\blank\tsconfig.json, don't copy it)
-  * [ ] to `templates\blank\types`
-  * [ ] to external template repo's
-  * [ ] Find out how to create a uib fe @types package (and add to template devDependencies)
-  * [ ] Find out how to automate updates to types when the fe module changes
-* [ ] Check that FE updates allow attributes to be set to `null` to unset them.
+  * [ ] Adjust gulp tasks to copy changed fe types file(s) (nb: src\front-end-module\tsconfig.json is different to templates\blank\tsconfig.json, don't copy it)
+    * [ ] to `templates\blank\types`
+    * [ ] to external template repo's
+    * [ ] Find out how to create a uib fe @types package (and add to template devDependencies)
+    * [ ] Find out how to automate updates to types when the fe module changes
+  
+  * [ ] On the build tab, check if instance folder has outstanding git changes. If so, show a commit button with auto msg of today's date and time.
 
-* [ ] On the build tab, check if instance folder has outstanding git changes. If so, show a commit button with auto msg of today's date and time.
+  * [ ] Add either a link or at least a note to node help pointing to example flows.
+  * [ ] Add example flows for each node.
 
-* [ ] Add either a link or at least a note to node help pointing to example flows.
-* [ ] Add example flows for each node.
+  * [ ] Add remote command example flows.
+  * [ ] Add `uib-var` example flows.
 
-* [ ] Add remote command example flows.
-* [ ] Add `uib-var` example flows.
+  * [ ] Allow overriding of the JSON max upload size for the custom Express server. [Ref](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988)
+
+  * [ ] Add new example showing use of the TI Web Component library.
+  * [ ] Add new classes for LAYOUTs.
+  * [ ] Add SVGAnimate class to web components package.
+  * [ ] `resources\uib-sidebar.js` - add markdown support using RED.utils.renderMarkdown().
+
+* Front-end
+
+  * [ ] Add support for marked.
+
+  * [ ] When handling attribute updates from msg, if msg.attributes is a string, attempt to parse it as JSON before giving up. [ref](https://discourse.nodered.org/t/what-am-i-doing-wrong-or-help/99960/3)
+
+  * [ ] Check that FE updates allow attributes to be set to `null` to unset them.
+
+  * [ ] Dialog (modal/non-modal overlay)
+    * [ ] component(?) that can consume a template and display it as a dialog. [ref](https://discourse.nodered.org/t/uibuilder-help-in-developing-a-dashboard/97478/18)
+
+  * [ ] For the `uib-topic` attribute, allow msg.payload to be an array or object. Consider adding a `uib-fmt` attribute to allow output specification:
+    * `uib-fmt="json"` - output as a syntax highlighted JSON object.
+    * `uib-fmt="list"` - output as an HTML list.
+    * `uib-fmt="table"` - output as an HTML table.
+
+  * [ ] Reactivity - phase 1
+    * [x] Create a reactive wrapper `uibuilder.reactive()`.
+      * [x] Move to separate class file
+      * [ ] Add `reactive` and `getReactiveClass` to function reference.
+    * [ ] Create a MutationObserver for any DOM attributes that start with `:` (`uib-bind` - binds an attribute to a variable) or `@` (`uib-on` - binds an event to a function).
+      * [ ] Extend to allow `uib-show` (show/hide elements).
+      * [ ] Extend to allow `uib-text` (innerText).
+      * [ ] Extend to allow `uib-model` (two-way data binding for input elements).
+
+  * Toaster improvements
+    * [x] Initial rework
+    * [ ] More work needed - probably delayed now that new showOverlay is available.
+    * [ ] Test
 
 * Templates
   * [ ] Add template docs folder and auto-link to the template docs from the template description.
   * [ ] Add an example flow feature to templates. An examples folder. A button in the template description to import the example flow(s) to the clipboard for import (auto-import if possible.)
-
-* [ ] Dialog (modal/non-modal overlay)
-  * [ ] component(?) that can consume a template and display it as a dialog. [ref](https://discourse.nodered.org/t/uibuilder-help-in-developing-a-dashboard/97478/18)
-
-* [ ] Reactivity - phase 1
-  * [x] Create a reactive wrapper `uibuilder.reactive()`.
-    * [x] Move to separate class file
-    * [ ] Add `reactive` and `getReactiveClass` to function reference.
-  * [ ] Create a MutationObserver for any DOM attributes that start with `:` (`uib-bind` - binds an attribute to a variable) or `@` (`uib-on` - binds an event to a function).
-    * [ ] Extend to allow `uib-show` (show/hide elements).
-    * [ ] Extend to allow `uib-text` (innerText).
-    * [ ] Extend to allow `uib-model` (two-way data binding for input elements).
-
-* [ ] For the `uib-topic` attribute, allow msg.payload to be an array or object. Consider adding a `uib-fmt` attribute to allow output specification:
-  * `uib-fmt="json"` - output as a syntax highlighted JSON object.
-  * `uib-fmt="list"` - output as an HTML list.
-  * `uib-fmt="table"` - output as an HTML table.
-
-* [ ] Allow overriding of the JSON max upload size for the custom Express server. [Ref](https://discourse.nodered.org/t/json-payloads-larger-than-100kb-are-refused-when-using-ui-builder/95988)
-
-* [ ] Add new example showing use of the TI Web Component library.
-* [ ] Add new classes for LAYOUTs.
-* [ ] Add SVGAnimate class to web components package.
-* [ ] `resources\uib-sidebar.js` - add markdown support using RED.utils.renderMarkdown().
 
 * CSS
   * [ ] Make `form > label` use a variable for `align-self`.
@@ -120,10 +176,6 @@ None
     * [ ] Useful extensions for front-end development
     * [ ] Configure browser dev tools (e.g. round-trip edits)
 
-* Toaster improvements
-  * [x] Initial rework
-  * [ ] More work needed - probably delayed now that new showOverlay is available.
-  * [ ] Test
 
 ## Experiments (See experimental library)
 
