@@ -382,6 +382,7 @@ function nodeInstance(config) {
     this.topic = config.topic ?? ''
     this.url = config.url // Undefined or '' is not valid
     this.oldUrl = config.oldUrl
+    this.instancePath = config.instancePath ?? this.url // Allows for the node to use a different folder name than the url
     this.fwdInMessages = config.fwdInMessages ?? false
     this.allowScripts = config.allowScripts ?? false
     this.allowStyles = config.allowStyles ?? false
@@ -444,12 +445,14 @@ function nodeInstance(config) {
 
     // NB: uibRoot folder checks done in runtimeSetup()
 
+    // Double-check that this.instancePath has a valid value
+    if ( !this.instancePath ) this.instancePath = this.url
+
     /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
      *   Files in this folder are also served to URL but take preference
      *   over those in the nodes folders (which act as defaults) @type {string}
      */
-    this.instanceFolder = path.join(/** @type {string} */ (uib.rootFolder), this.url)
-
+    this.instanceFolder = path.join(/** @type {string} */ (uib.rootFolder), this.instancePath)
     // ! TODO Need to find a way to make this more robust for when folder rename fails
     // Check whether the url has been changed. If so, rename the folder
     if ( this.oldUrl !== undefined && this.oldUrl !== '' && this.url !== this.oldUrl ) {
