@@ -36,7 +36,7 @@ const express = require('express')
 const socketjs = require('./socket.cjs')
 // const { getNs } = require('./socket.js') // NO! This gives an error because of incorrect `this` binding
 const { getClientId, sortApps, } = require('./uiblib.cjs')
-const { accessSync, existsSync, mkdirSync, fgSync, } = require('./fs.cjs')
+const { accessSync, existsSync, fgSync, mkdirSync, readFile, } = require('./fs.cjs')
 const { mylog, urlJoin, } = require('./tilib.cjs') // dumpReq, mylog
 // WARNING: Don't try to deconstruct this, if you do the initial uibPackageJson access fails for some reason
 const packageMgt = require('./package-mgt.cjs')
@@ -473,7 +473,7 @@ class UibWeb {
                 type: 'Static',
                 folder: publicFolder,
             })
-            log.info(`🌐[uibuilder:web:_servePublicRoot] Custom web server in use. Serving custom root URL from '${publicFolder}'`)
+            log.trace(`🌐[uibuilder:web:_servePublicRoot] Custom web server in use. Serving custom root URL from '${publicFolder}'`)
         } else {
             log.info(`🌐[uibuilder:web:_servePublicRoot] Public folder '${publicFolder}' does not exist, not serving custom root URL`)
         }
@@ -598,8 +598,10 @@ class UibWeb {
 
     /** Setup the web resources for a specific uibuilder instance
      * @param {uibNode} node Reference to the uibuilder node instance
+     * @param {string} [routeSpec] The ExpressJS route specifier for this instance, defaults to the url
+     * @param {express.RequestHandler} [handler] The main ExpressJS handler for this instance, defaults to static handler
      */
-    instanceSetup(node) {
+    instanceSetup(node, routeSpec, handler) {
         if (this.uib.RED === null) throw new Error('this.uib.RED is null')
         this.uib.RED.log.trace(`🌐[uibuilder[:web.js:instanceSetup] Setup for URL: ${node.url}`)
 
@@ -625,28 +627,34 @@ class UibWeb {
         /** We want to add services in the right order - first load takes preference:
          *   (1) Middleware: (a) common (for all instances), (b) internal (all instances), (c) (if allowed in settings) instance API middleware
          *   (2) Front-end user code: (a) dynamic templated (*.ejs) & explicit (*.html) from views folder, (b) src or dist static
-         *   (3) Master static folders - for the built-in front-end resources (css, default html, client libraries, etc)
-         *   (4) [Optionally] The folder lister
-         *   (5) Common static folder is last
-         * TODO Make sure the above is documented in Docs
+         *   (3a) Master static folders - for the built-in front-end resources (css, default html, client libraries, etc)
+         *   (3b) Common static folder is last
          */
 
+        // Default main handler name and url spec
+        if (!handler) handler = this.setupInstanceStatic(node) // customStatic - Add static route for instance local custom files (src or dist)
+        if (!routeSpec) routeSpec = urlJoin(node.url)
+
+        // We don't need all the routes for every case, only for full uibuilder nodes
+        let fullRoutes = true
+        if (node.type !== 'uibuilder') {
+            fullRoutes = false
+        }
+
         // (1.) Instance log route (./_clientLog)
-        this.addBeaconRoute(node)
+        if (fullRoutes) this.addBeaconRoute(node)
         // (1a) httpMiddleware - Optional common middleware from a custom file (same for all instances)
         this.addMiddlewareFile(node)
         // (1b) masterMiddleware - uib's internal dynamic middleware to add uibuilder specific headers & cookie
         this.addMasterMiddleware(node)
-
-        // (1c) Add user-provided API middleware
-        if (uib.instanceApiAllowed === true ) this.addInstanceApiRouter(node)
-        else log.trace(`🌐[uibuilder[:webjs:instanceSetup] Instance API's not permitted. '${node.url}'`)
-
-        // ! IN-PROGRESS (1d) Add user-provided router middleware
-        this.addInstanceCustomRoutes(node)
-
-        if (uib.rootFolder === null) throw new Error('uib.rootFolder has no value')
-        const rootFolder = uib.rootFolder
+        // (1c) & (1d)
+        if (fullRoutes) {
+            // (1c) Add user-provided API middleware
+            if ( uib.instanceApiAllowed === true ) this.addInstanceApiRouter(node)
+            else log.trace(`🌐[uibuilder[:webjs:instanceSetup] Instance API's not permitted. '${node.url}'`)
+            // ! IN-PROGRESS (1d) Add user-provided router middleware
+            this.addInstanceCustomRoutes(node)
+        }
 
         // ! IN PROCRESS - Render views
         /** (2a) Render dynamic and explicit template files from views folder
@@ -657,8 +665,8 @@ class UibWeb {
          * ? TODO give access to global/flow/node vars ? DANGEROUS - needs a list for specific entries instead.
          * ? TODO change instance static to optional render
          */
-        this.instanceRouters[node.url].use( (req, res, next) => {
-            const pathRoot = join(rootFolder, node.url, 'views')
+        if (fullRoutes) this.instanceRouters[node.url].use( (req, res, next) => {
+            const pathRoot = join(node.instanceFolder, 'views')
             const requestedView = parse(req.path)
             let filePath = join(pathRoot, requestedView.base)
 
@@ -666,8 +674,8 @@ class UibWeb {
                 filePath = join(pathRoot, `${requestedView.name}.ejs`)
                 if (existsSync(filePath)) {
                     try {
-                        // res.render( join(uib.rootFolder, node.url, 'views', requestedView.name), {foo:'Crunchy', footon: 'bar stool', _env: node.context().global.get('_env')} )
-                        res.render( join(rootFolder, node.url, 'views', requestedView.name), { _env: node.context().global.get('_env'), } )
+                        // res.render( join(node.instanceFolder, 'views', requestedView.name), {foo:'Crunchy', footon: 'bar stool', _env: node.context().global.get('_env')} )
+                        res.render( join(pathRoot, requestedView.name), { _env: node.context().global.get('_env'), } )
                     } catch (e) {
                         res.sendFile( requestedView.base, { root: pathRoot, } )
                     }
@@ -677,24 +685,24 @@ class UibWeb {
             return next()
         }) // --- End of render views --- //
 
-        // (2b) THIS IS THE IMPORTANT ONE - customStatic - Add static route for instance local custom files (src or dist)
-        this.instanceRouters[node.url].use( this.setupInstanceStatic(node) )
+        // (2b) THIS IS THE IMPORTANT ONE - It is the main instance handler
+        this.instanceRouters[node.url].use( handler )
 
-        // (3) Master Static - Add static route for uibuilder's built-in front-end code
-        if ( this.masterStatic !== undefined ) {
-            this.instanceRouters[node.url].use( express.static( this.masterStatic, uib.staticOpts ) )
-            this.routers.instances[node.url].push( { name: 'Master Code', path: `${this.uib.httpRoot}/${node.url}/`, desc: 'Built-in FE code, same for all instances', type: 'Static', folder: this.masterStatic, } )
+        // (3a) & (3b)
+        if (fullRoutes) {
+            // (3a) Master Static - Add static route for uibuilder's built-in front-end code
+            if ( this.masterStatic !== undefined ) {
+                this.instanceRouters[node.url].use( express.static( this.masterStatic, uib.staticOpts ) )
+                this.routers.instances[node.url].push( { name: 'Master Code', path: `${this.uib.httpRoot}/${node.url}/`, desc: 'Built-in FE code, same for all instances', type: 'Static', folder: this.masterStatic, } )
+            }
+            // (3b) Serve up the uibuilder static common folder on `<httpNodeRoot>/<url>/<commonFolderName>` (it is already available on `<httpNodeRoot>/uibuilder/<commonFolderName>/`, see _webSetup()
+            if (uib.commonFolder === null) throw new Error('uib.commonFolder is null')
+            this.instanceRouters[node.url].use( urlJoin(uib.commonFolderName), express.static( uib.commonFolder, uib.staticOpts ) )
+            this.routers.instances[node.url].push( { name: 'Common Code', path: `${this.uib.httpRoot}/${node.url}/common/`, desc: 'Shared FE code, same for all instances', type: 'Static', folder: uib.commonFolder, } )
         }
 
-        if (uib.commonFolder === null) throw new Error('uib.commonFolder is null')
-
-        // (5) Serve up the uibuilder static common folder on `<httpNodeRoot>/<url>/<commonFolderName>` (it is already available on `<httpNodeRoot>/uibuilder/<commonFolderName>/`, see _webSetup()
-        this.instanceRouters[node.url].use( urlJoin(uib.commonFolderName), express.static( uib.commonFolder, uib.staticOpts ) )
-        // Track routes
-        this.routers.instances[node.url].push( { name: 'Common Code', path: `${this.uib.httpRoot}/${node.url}/common/`, desc: 'Shared FE code, same for all instances', type: 'Static', folder: uib.commonFolder, } )
-
         // Apply this instances router to the url path on `<httpNodeRoot>/<url>/`
-        this.app.use( urlJoin(node.url), this.instanceRouters[node.url])
+        this.app.use( routeSpec, this.instanceRouters[node.url])
 
         // this.dumpUserRoutes(true)
         // this.dumpInstanceRoutes(true, node.url)
@@ -746,8 +754,7 @@ class UibWeb {
 
         const that = this
 
-        /**
-         * Return a middleware handler
+        /** Return a middleware handler
          * @param {express.Request} req Express request object
          * @param {express.Response} res Express response object
          * @param {express.NextFunction} next Express next() function
@@ -810,7 +817,7 @@ class UibWeb {
         that.routers.instances[node.url].push( { name: 'uib Internal Middleware', path: `${that.uib.httpRoot}/${node.url}/`, desc: 'Master middleware, same for all instances', type: 'Handler', folder: '(internal)', } )
     } // --- End of addMasterMiddleware --- //
 
-    /** (2) Front-end code is mounted here - Add static ExpressJS route for an instance local resource files
+    /** (2b) Front-end code is mounted here - Add static ExpressJS route for an instance local resource files
      * Called on startup but may also be called if user changes setting Advanced/Serve
      * @param {uibNode} node Reference to the uibuilder node instance
      * @returns {express.RequestHandler} serveStatic for the folder containing the front-end code
@@ -870,7 +877,7 @@ class UibWeb {
         return express.static( customFull, uib.staticOpts )
     } // --- End of setupInstanceStatic --- //
 
-    /** Load & return an ExpressJS Router from file(s) in <uibRoot>/<node.url>/api/*.js
+    /** (1c) Load & return an ExpressJS Router from file(s) in <uibRoot>/<node.url>/api/*.js
      * @param {uibNode} node Reference to the uibuilder node instance
      * @returns {object|undefined} Valid instance router or undefined
      */
@@ -881,7 +888,7 @@ class UibWeb {
         const log = this.log
 
         // Allow all .js files in api folder to be loaded, always returns an array - NB: Fast Glob requires fwd slashes even on Windows
-        const apiFiles = fgSync(`${uib.rootFolder}/${node.url}/api/*.js`)
+        const apiFiles = fgSync(`${node.instanceFolder}/api/*.js`)
         apiFiles.forEach( (instanceApiPath) => {
             // Try to require the api module file
             let instanceApi
@@ -1114,7 +1121,7 @@ class UibWeb {
         return page
     } // ---- End of showInstanceDetails ---- //
 
-    /** Creates a route for logging to NR from the front-end via HTTP Beacons
+    /** 1) Creates a route for logging to NR from the front-end via HTTP Beacons
      * In FE code, use as: navigator.sendBeacon('./_clientLog', `pageshow. From Cache?: ${event.persisted}`)
      * Only text can be sent. This fn attempts to split the text on "::". If it succeeds, the 1st entry
      * is assumed to be the log level. If no level provided, assumes "debug" level so it won't show in NR logs by default.
@@ -1132,7 +1139,7 @@ class UibWeb {
 
         // Only the text processor is useful since navigator.sendBeacon() only seems to send text no matter what MDN says. //express.json(), express.text(), express.urlencoded({extended: true}),
         this.instanceRouters[node.url].post(logUrl, express.text(), (req, res) => {
-            log.trace(`🌐[uibuilder[:web:addLogRoute:${node.url}] POST to client logger: ${req.body}`)
+            log.trace(`🌐[uibuilder:web:addLogRoute:${node.url}] POST to client logger: ${req.body}`)
             res.status(204) // 204 = no content
 
             const splitBody = req.body.split('::')
@@ -1173,19 +1180,17 @@ class UibWeb {
         this.routers.instances[node.url].push( { name: 'Client Log', path: logUrl, desc: 'Client beacon log back to Node-RED', type: 'POST', folder: 'N/A', } )
     }
 
-    /** If allowed and if any exist, add instance custom routes from <uibRoot>/<node.url>/routes/*.js
+    /** 1d) If allowed and if any exist, add instance custom routes from <uibRoot>/<node.url>/routes/*.js
      * @param {uibNode} node configuration data for this instance
      */
     addInstanceCustomRoutes(node) {
-        // Reference static vars
-        const uib = this.uib
         // const RED = this.RED
         const log = this.log
 
         // Is this capability turned on in settings.js?
 
         // Add routers from each <uibRoot>/<node.url>/routes/*.js file (Empty list if fldr doesn't exist or no files)
-        const routeFiles = fgSync(`${uib.rootFolder}/${node.url}/routes/*.js`)
+        const routeFiles = fgSync(`${node.instanceFolder}/routes/*.js`)
         routeFiles.forEach( (routeFilePath) => {
             let instanceRouteFile = {}
             let routeKeys = []
