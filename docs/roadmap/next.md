@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2025-12-20 19:11:13
+updated: 2025-12-30 19:54:17
 ---
 
 ## To Fix
@@ -19,16 +19,25 @@ A node that creates a website out of a folder of markdown content.
 
 Requirements:
 * Rework:
-  1. [ ] Change main uibuilder processing to allow separate specification of the source folder from the url.
-  2. [ ] Change new node to use uibuilder processing.
+  1. [x] Change main uibuilder processing to allow separate specification of the source folder from the url.
+  2. [x] Change new node to use uibuilder processing.
+  3. [x] Include libs from `@totallyinformation/uib-md-utils` package.
+  4. [x] Remove redundant chkLibs code.
+  5. [x] Add new ExpressJS middleware to handle markdown rendering using marked.
+  6. [ ] Add uibuilder namespace handling.
+  7. [ ] Pass all discovered content attributes to the front end as a uibuilder managed variable.
+  8. [ ] Improve HTML styling.
+  9. [ ] lib/web
+     1. [x] Update uibuilder route add to allow different middleware per route. e.g. static or markdown.
+  10. [ ] uibuilder Editor common
+     1. [ ] Include uib-markweb in url checks.
 * Config:
   * [x] Source folder path on server
   * [x] URL path to serve the content
   * [x] Allow marked extensions to be specified - phase 1, fixed in code
   * [ ] Add separate setting for the config folder to allow separation of content and config. Better security.
-    * [ ] Allow for a config folder in the source folder to hold config files (e.g. HTML wrapper, CSS, etc.)
+    * [ ] Allow for a config folder in/or outside the source folder to hold config files (e.g. HTML wrapper, CSS, etc.)
   * [ ] Add button on folder inputs to allow creation of the folder.
-  * [ ] Use uibRoot for installation of marked and extensions.
   * [ ] Show full path and actual full url in the edit panel
   * [ ] Show marked errors/warnings in the edit panel
   * [ ] Show available marked extensions in the edit panel
@@ -37,15 +46,26 @@ Requirements:
 * Functionality:
   * [x] Use uibuilder's web server to serve the content.
   * [x] Server-side rendering using ExpressJS middleware and marked.
+  * [x] Include markdown libraries via npm private workspace and bundle via esbuild.
+  * [x] Support for a HTML wrapper template with {{...}} replacements.
   * [ ] HTML wrapper. `_template.html` file in source folder to allow customisation of the HTML wrapper round the rendered markdown.
   * [ ] Block loading of CSS files. Or possibly auto-add them to the HTML wrapper?
   * [ ] In Editor, if source folder is inaccessible, show a warning, mark the node invalid.
   * [ ] Choose a better icon for the node.
   * [ ] Help panel.
   * [ ] Documentation.
-  * [ ] When adding libraries in the library manager, recheck whether marked and extensions are available.
+* Markdown extensions
+  * [x] Front-matter, including ability to include fields in Markdown text and HTML wrapper.
+  * [x] GFM.
+  * [ ] GFM-style callouts/alerts.
+  * [ ] Checklists.
+  * [ ] Code syntax highlighting.
+  * [ ] Mermaid diagrams.
+  * [ ] Page table-of-contents
+  * [ ] Navigation sidebar (both auto-generated and manual), possibly a horizontal version as well.
 
 Requirements future:
+* [ ] Add separate bundle of marked and fm for front-end use.
 * [ ] Auto-generate a sidebar navigation from the folder structure. Allow for in-page section navigation using headings. Where present, have two tabs in the sidebar: "Contents" and "Sections" (ref Typora's layout).
 * [ ] In Editor, if there is a url clash with another uibuilder instance, show a warning.
 * [ ] Allow marked extensions to be specified via settings.js uibuilder config.

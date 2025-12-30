@@ -39,6 +39,7 @@ Please see the roadmap in the docs for the backlog of future planned development
 * The sidebar top-level entries that have children are now collapsible sections. Added because the documentaiton continues to grown.
 * The sidebar expand/collapse state for each section is remembered across page loads.
 * **Fixed** [Issue #575](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/575) - Broken CSS loads.
+* Improvements to developer detailed documentation including details on the uibuilder/uib-markweb instance setup. Should make things a lot easier if other developers want to take part in the future.
 
 ### uib-cache node
 
@@ -61,6 +62,8 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * **NEW** Added the `_receivedHRtime` property to messages received from the Node-RED server. This is a high-resolution timestamp (in milliseconds) of when the message was received. It can be used to measure latency and performance. It uses the [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) method which provides sub-millisecond accuracy. The value is the elapsed time since page navigation started.
 
+* Added `instanceFolder` to uibuilder node settings. This to bring it into line with the new uib-markweb node, in the future, allow instance root folders to be specified anywhere.
+
 ### Development changes
 
 * **NEW** npm script `bugfix-worktree` - creates a new git worktree for bugfix branches. This allows you to work on a bug fix in a separate directory while keeping your current dev branch work intact. You can have both directories open simultaneously without needing to stash changes or switch branches. When you're done with the bug fix, you can commit, push, create a PR, and then remove the worktree.
@@ -70,6 +73,10 @@ Please see the roadmap in the docs for the backlog of future planned development
 * **NEW** workspace private package `@totallyinformation/uib-md-utils` - A collection of Markdown utility functions that can be shared between uibuilder's server and front-end client libraries. The package bundles its own dependencies using ESBuild.
 
 * `nodes\libs\admin-api-v3.cjs` - Removed reference to `node:inspector` which is not used. [ref](https://discourse.nodered.org/t/node-red-version-of-mqtt-explorer/99738/14).
+
+* `nodes/libs/web.cjs`
+  * Made `instanceSetup` more flexible by adding `routeSpec` and `handler` (function) arguments. This allows different types of routes to be added for an instance, e.g. static file serving, markdown rendering, etc.
+  * Also in `instanceSetup`, reduced the number of routes added to an insance if the node is not a uibuilder node. Allows for simpler nodes such as `uib-markweb`.
 
 * Security related fixes
   * `syntaxHighlight` function in `tilib.cjs` - limited the size of JSON strings to 10k characters to prevent potential denial-of-service attacks via extremely large JSON payloads.
