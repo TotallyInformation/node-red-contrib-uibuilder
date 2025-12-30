@@ -1,0 +1,54 @@
+<!--
+    Copyright (c) 2025-2025 Julian Knight (Totally Information)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<script  type="module" async src="./resources/node-red-contrib-uibuilder/uib-markweb.js"></script>
+
+<script type="text/html" data-template-name="uib-markweb">
+<div id="ti-edit-panel">
+    <div aria-label="Source folder on server" class="form-row">
+        <label for="node-input-source"><i class="fa fa-tasks"></i> Source</label>
+        <input type="text" id="node-input-source" placeholder="Source folder on server">
+    </div>
+    <div aria-label="Additional path information" class="form-row form-tips node-help">
+        Actual server path: 
+    </div>
+    <div aria-label="URL path to serve MarkWeb files on" class="form-row">
+        <label for="node-input-url"><i class="fa fa-tasks"></i> URL</label>
+        <input type="text" id="node-input-url" placeholder="URL path to serve on">
+    </div>
+    <div aria-label="Additional information" class="form-row form-tips node-help">
+        Actual URL: 
+    </div>
+
+    <div aria-label="Node label" class="form-row">
+        <label for="node-input-name"><i class="fa fa-tasks"></i> Name</label>
+        <input type="text" id="node-input-name">
+    </div>
+
+    <div aria-label="Errors and warnings" class="form-row form-tips node-help">
+        Errors and warnings:
+        <ul></ul>
+    </div>
+
+    <div aria-label="Extension information" class="form-row form-tips node-help">
+        Marked extension available:
+        <ul></ul>
+    </div>
+
+    <!-- TODO: Will need options for auto-menu -->
+
+</div>
+</script>

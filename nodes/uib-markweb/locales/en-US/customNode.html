@@ -1,0 +1,178 @@
+<script type="text/html" data-help-name="uib-markweb">
+    <p>
+        Zero-code UI builder. Creates HTML elements from simple input data.<br>
+        Outputs <code>msg._ui</code> standard configuration data.
+    </p>
+    <p>
+        Please try out the examples in the import library. <a href="./uibuilder/docs/#/nodes/uib-markweb" target="_blank">Documentation</a>.
+    </p>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">array | object</span></dt>
+        <dd>
+            The string, array or object that defines the output.<br>
+            Each element type has its own input data definition.<br>
+            See the info box for each type.<br>
+            Other inputs can be used instead, see settings.
+        </dd>
+
+        <dt class="optional">mode <span class="property-type">string</span></dt>
+        <dd>Optionally, set to "remove" which will remove the element from the UI. Requires that the HTML ID is set.</dd>
+        <dd>Payload is not needed in this case, it will be ignored.</dd>
+        <dd>Otherwise not needed.</dd>
+
+        <dt class="optional">topic <span class="property-type">string</span></dt>
+        <dd>Optionally, the MQTT topic to use. Takes preference over the topic defined in settings.</dd>
+
+        <dt class="optional">other <span class="property-type">various</span></dt>
+        <dd>
+            Other properties can be used for the various other settings in the node if desired.
+        </dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <dl class="message-properties">
+        <dt>_ui <span class="property-type">object</span></dt>
+        <dd>
+            The _ui configuration properties that defines the creation of the element.<br>
+            Use this in your own flows or in a JSON input for an initial setup of the UI if desired.
+            <p>
+                Most commonly, simply send to the input of a <code>uibuilder</code> node or a <code>uib-cache</code>
+                node. uibuilder will automatically create the desired HTML in the client browser.
+            </p>
+        </dd>
+
+        <dt>topic <span class="property-type">string</span></dt>
+        <dd>
+            The input topic.
+            <p>
+                When chaining <code>uib-element</code>/<code>uib-update</code> nodes together, make sure that at least the final
+                output has a unique topic string so that caching using the <code>uib-cache</code> node is
+                easier.
+            </p>
+        </dd>
+    </dl>
+    <p>
+        Note that other inputs are <b>not</b> carried forward to the output.
+    </p>
+
+    <h3>Node Settings</h3>
+    <dl class="message-properties">
+        <dt>Type <span class="property-type">selection</span></dt>
+        <dd>
+            What kind of element or component to create?
+        </dd>
+        <dd>
+            Each selection will show an information box
+            that explains what is created and what input data is needed.
+        </dd>
+
+        <dt>Parent <span class="property-type">string</span></dt>
+        <dd>
+            Required. A <a href="https://developer.mozilla.org/en-US/docs/web/css/css_selectors" target="_blank">CSS selector</a> that the elements will be attached to.
+            E.g. "div#more" or just "#more" would attach the element as a child of a DIV tag <code>&lt;div id="more"></code>.<br>
+            "p.myclass" would attach the list as a child of a P tag that has a class including <code>myclass</code>.
+        </dd>
+        <dd>
+            The default parent is <code>body</code> tag. (e.g. the end of the UI)
+        </dd>
+        <dd>
+            Most of the uibuilder templates have a pre-defined div with an ID of <code>#more</code> for convenience.
+        </dd>
+
+        <dt class="optional">HTML ID <span class="property-type">string</span></dt>
+        <dd>
+            The HTML element id of the resulting HTML tag.
+        </dd>
+        <dd>
+            If not provided, the element will be hard to update or remove from the UI procedurally.
+            (The remove mode of this node would not be usable)
+        </dd>
+        <dd>Applied to the <b>wrapping <code>&lt;div></code> tag</b> where that applies.</dd>
+        <dd>
+            ID's must be unique on the page otherwise updates/replacement processing
+            will be challenging.
+        </dd>
+
+        <div style="margin:8px 8px 2px 13px;border:1px solid var(--red-ui-secondary-border-color);padding:4px;">
+            <p>
+                <i>NOTE:</i> Pre-define the styles and classes for your UI in a CSS style sheet where possible.
+                Use <code>uib-update</code> nodes or front-end code to procedurally change them.
+            </p><p>
+                Each created element should be easily accessible. Use your browser's
+                Developer Tools to select the appropriate element and copy the CSS selector.
+            </p>
+        </div>
+
+        <dt>Data <span class="property-type">any</span></dt>
+        <dd>
+            Required. Either a msg or context property containing the core data or .
+        </dd>
+
+        <dt>Position <span class="property-type">string</span></dt>
+        <dd>
+            Required. Position of the resulting UI element relative to the selected <i>Parent</i> element.
+        </dd>
+        <dd>
+            <i>last</i>, <i>first</i>, or a number. Default is <i>last</i>.
+        </dd>
+        <dd>
+            Positions the new element within the parent elements child elements. 
+            E.g. Selecting a list as the parent and adding a new list row, selecting 
+            <code>first</code> would add the new row at the start of the list.
+        </dd>
+
+        <dt class="optional">Heading <span class="property-type">string</span></dt>
+        <dd>
+            Optional text to use as a heading for the added element.
+            Leave blank for no heading.
+        </dd>
+        <dd>
+            Heading level 2 is the default. Levels 2-6 are available.
+        </dd>
+
+        <dt class="optional">Passthrough <span class="property-type">boolean</span></dt>
+        <dd>
+            If checked, pass <code>msg.payload</code> to output. By default, <code>msg.payload</code> is removed.
+        </dd>
+        <dd>
+            Checking this option will also tell the uibuilder client to enable <code>uibuilder.onChange('msg', fn)</code> processing
+            which is normally disabled when a msg with a <code>_ui</code> property is received.
+        </dd>
+
+        <dt class="optional">Topic <span class="property-type">string</span></dt>
+        <dd>
+            Optional. Fixed topic string. Only used if the input <code>msg</code> does not
+            contain a <code>topic</code> property.
+        </dd>
+
+        <dt class="optional">Name <span class="property-type">string</span></dt>
+        <dd>Optional short description shown in the admin interface</dd>
+    </dl>
+
+    <h3>Details</h3>
+    <p>
+        Select the type of element to create, parent element and HTML ID. Then send the 
+        output to a uibuilder node to create/update/remove the element.
+    </p>
+    <p>
+        The resulting output produces the dynamic, configuration-driven, low-code <code>msg._ui</code>
+        JSON configuration data used by the uibuilder front-end client library to automatically
+        create HTML on your page. So this can be further processed, saved for future use or sent 
+        direct to a uibuilder node (via a <code>uib-cache</code> node if desired).
+    </p>
+    <p>
+        You can also easily remove the resulting HTML from your page simply by sending a msg
+        containing just <code>msg.mode</code> set to "remove". As long as you have chosen a defined <i>HTML ID</i>.
+    </p>
+    <p>
+        In standard mode, resending to the same parent/HTML ID will cause the original element to be replaced completely.
+    </p>
+    <p>
+        To update parts of the resulting UI element, use the <code>uib-update</code> node with an appropriate CSS Selector.
+    </p>
+    <p>
+        Multiple <code>uib-update</code> and <code>uib-element</code> nodes can be chained together for more complex needs.
+    </p>
+</script>
