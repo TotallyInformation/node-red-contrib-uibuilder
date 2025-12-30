@@ -3,7 +3,7 @@ title: uibuilder instance template processing
 description: |
   The process to create/change the the template of a uibuilder instance.
 created: 2025-05-04 19:36:47
-updated: 2025-05-18 13:19:58
+updated: 2025-12-30 11:24:23
 ---
 
 ## New uibuilder node
