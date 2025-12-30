@@ -2920,7 +2920,7 @@ var require_front_matter = __commonJS({
   }
 });
 
-// src/index.js
+// src/index.mjs
 var index_exports = {};
 __export(index_exports, {
   fm: () => import_front_matter.default,
@@ -5064,8 +5064,8 @@ var parseInline = marked.parseInline;
 var parser = _Parser.parse;
 var lexer = _Lexer.lex;
 
-// src/index.js
-var import_front_matter = __toESM(require_front_matter());
+// src/index.mjs
+var import_front_matter = __toESM(require_front_matter(), 1);
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   fm,

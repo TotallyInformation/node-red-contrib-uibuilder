@@ -5057,8 +5057,8 @@ var parseInline = marked.parseInline;
 var parser = _Parser.parse;
 var lexer = _Lexer.lex;
 
-// src/index.js
-var import_front_matter = __toESM(require_front_matter());
+// src/index.mjs
+var import_front_matter = __toESM(require_front_matter(), 1);
 var export_fm = import_front_matter.default;
 export {
   export_fm as fm,

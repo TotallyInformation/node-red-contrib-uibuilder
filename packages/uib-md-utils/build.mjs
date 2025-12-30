@@ -10,12 +10,15 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 const commonOptions = {
-    entryPoints: [join(__dirname, 'src/index.js')],
+    entryPoints: [join(__dirname, 'src/index.mjs')],
     bundle: true,
     platform: 'node',
     target: 'node18',
     minify: false, // Keep readable for debugging
     sourcemap: false,
+    loader: {
+        '.mjs': 'js',
+    },
 }
 
 // Build CommonJS version
