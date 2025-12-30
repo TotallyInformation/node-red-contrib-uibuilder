@@ -248,6 +248,7 @@
  * @property {string} url The url path (and folder path) to be used by this instance
  * @property {boolean} okToGo Is the url valid for this node or not? Not passed into the node, only used to stop processing.
  * @property {string} oldUrl The PREVIOUS url path (and folder path) after a url rename
+ * @property {string} instancePath Allows for the node to use a different folder name than the url
  * @property {boolean} fwdInMessages Forward input msgs to output #1?
  * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
  * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
@@ -282,6 +283,7 @@
  * @property {string} topic msg.topic overrides incoming msg.topic
  * @property {string} url The url path (and folder path) to be used by this instance
  * @property {string} oldUrl The PREVIOUS url path (and folder path) after a url rename
+ * @property {string} instancePath Allows for the node to use a different folder name than the url
  * @property {boolean} fwdInMessages Forward input msgs to output #1?
  * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
  * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
@@ -396,6 +398,10 @@
  * @property {string=} httpRoot Copy of RED.settings.httpRoot for ease of use
  * @property {string=} reDeployNeeded If the last deployed version is this version or earlier and the current version is greater than this, tell the Editor that a redeploy is needed
  * @property {boolean} instanceApiAllowed Are instance-level API's allowed to be loaded? Could be a security issue so controlled from settings.js uibuilder.instanceApiAllowed. Default=false
+ *
+ * @property {object} markedLibs References to marked and its plugins for markdown processing
+ * @property {object} markedLibs.marked The marked library reference
+ * @property {object} markedLibs.plugins Marked plugin references & availability
  */
 
 /** senderNode1
@@ -422,6 +428,15 @@
  * @property {string} varName The variable name in use in the store
  * @property {Function} getC A reference to the context get function for this node instance
  * @property {Function} setC A reference to the context set function for this node instance
+ */
+
+/** uibMwNode - uib-markweb node
+ * @typedef {object} uibMwNode Local copy of the node instance config + other info
+ * @property {string} source The server source folder for the MarkWeb files
+ * @property {string} url The URL path to serve the MarkWeb files from
+ * @property {string} name only used for labelling the node in the flow
+ * @property {''} sourceFolder Used in web.instanceSetup() for uibuilder nodes, must be '' here
+ * @property {string} instanceFolder The full path to the instance folder. Used in web.instanceSetup()
  */
 
 /** uibListNode
