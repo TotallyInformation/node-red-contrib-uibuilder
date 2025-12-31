@@ -46,14 +46,19 @@ RED.nodes.registerType(moduleName, {
         markedAvailable: { value: false, validate: validateLibs, },
     },
     align: 'left',
-    inputs: 0,
-    // inputLabels: '',
-    outputs: 0,
-    // outputLabels: [''],
-    icon: 'pencilBoxMultipleWhite.svg',
+    inputs: 1,
+    inputLabels: 'Msg to send to front-end',
+    outputs: 2,
+    outputLabels: ['Data from front-end', 'Control Msgs from front-end'],
+    // icon: 'node-white.svg',
+    // icon: 'node-blue-inverted.svg',
+    icon: 'semanticWebWhite.svg',
     label: function () {
-        return this.name || moduleName
+        const url = this.url ? `<${this.url}>` : '<no url>'
+        const name = this.name ? `${this.name} ` : ''
+        return `${name}${url}`
     },
+
     paletteLabel: moduleName,
     category: uibuilder.paletteCategory,
     color: 'var(--uib-node-colour)', // '#E6E0F8'
