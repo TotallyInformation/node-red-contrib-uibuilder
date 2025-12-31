@@ -541,8 +541,8 @@ function nodeInstance(config) {
     // Save a reference to sendToFe to allow this and other nodes referencing this to send direct to clients
     this.sendToFe = sockets.sendToFe.bind(sockets)
 
-    log.trace(`🌐[uibuilder[:nodeInstance:${this.url}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, this.url )}`)
-    log.trace(`🌐[uibuilder[:nodeInstance:${this.url}] Source files . : ${this.instanceFolder}`)
+    log.trace(`🌐[uibuilder:nodeInstance:${this.url}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, this.url )}`)
+    log.trace(`🌐[uibuilder:nodeInstance:${this.url}] Source files . : ${this.instanceFolder}`)
 
     // We only do the following if io is not already assigned (e.g. after a redeploy)
     this.statusDisplay.text = 'Node Initialised'
