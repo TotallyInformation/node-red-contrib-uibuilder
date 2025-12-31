@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2025-12-30 19:54:17
+updated: 2025-12-31 17:38:12
 ---
 
 ## To Fix
@@ -17,6 +17,9 @@ None
 
 A node that creates a website out of a folder of markdown content.
 
+Issues:
+* [x] ~~Relative links in sub-folders do not work correctly. e.g `../uibuilder....`~~ `<base>` added to HTML head to fix.
+
 Requirements:
 * Rework:
   1. [x] Change main uibuilder processing to allow separate specification of the source folder from the url.
@@ -24,12 +27,14 @@ Requirements:
   3. [x] Include libs from `@totallyinformation/uib-md-utils` package.
   4. [x] Remove redundant chkLibs code.
   5. [x] Add new ExpressJS middleware to handle markdown rendering using marked.
-  6. [ ] Add uibuilder namespace handling.
-  7. [ ] Pass all discovered content attributes to the front end as a uibuilder managed variable.
-  8. [ ] Improve HTML styling.
-  9. [ ] lib/web
+  6. [x] Change to SPA style serving.
+  7. [x] Add uibuilder socket.io namespace handling.
+  8. [ ] Allow source folder to be outside the userDir folder.
+  9. [ ] Pass all discovered content attributes to the front end as a uibuilder managed variable.
+  10. [ ] Improve HTML styling.
+  11. [ ] lib/web
      1. [x] Update uibuilder route add to allow different middleware per route. e.g. static or markdown.
-  10. [ ] uibuilder Editor common
+  12. [ ] uibuilder Editor common
      1. [ ] Include uib-markweb in url checks.
 * Config:
   * [x] Source folder path on server
@@ -48,6 +53,7 @@ Requirements:
   * [x] Server-side rendering using ExpressJS middleware and marked.
   * [x] Include markdown libraries via npm private workspace and bundle via esbuild.
   * [x] Support for a HTML wrapper template with {{...}} replacements.
+  * [x] SEARCH functionality.
   * [ ] HTML wrapper. `_template.html` file in source folder to allow customisation of the HTML wrapper round the rendered markdown.
   * [ ] Block loading of CSS files. Or possibly auto-add them to the HTML wrapper?
   * [ ] In Editor, if source folder is inaccessible, show a warning, mark the node invalid.
@@ -66,6 +72,7 @@ Requirements:
 
 Requirements future:
 * [ ] Add separate bundle of marked and fm for front-end use.
+* [ ] Add option to use the new Navigate web API for SPA navigation. (Safari from 2025-12, Chromium from 2022, Firefox not yet supported).
 * [ ] Auto-generate a sidebar navigation from the folder structure. Allow for in-page section navigation using headings. Where present, have two tabs in the sidebar: "Contents" and "Sections" (ref Typora's layout).
 * [ ] In Editor, if there is a url clash with another uibuilder instance, show a warning.
 * [ ] Allow marked extensions to be specified via settings.js uibuilder config.
