@@ -622,7 +622,7 @@ class UibWeb {
 
         // Create router for this node instance
         this.instanceRouters[node.url] = express.Router(this.#routerOptions) // eslint-disable-line new-cap
-        this.routers.instances[node.url].push( { name: 'Instance Rooter', path: `${this.uib.httpRoot}/${node.url}/`, desc: 'Other routes hang off this', type: 'Router', folder: '--', } )
+        this.routers.instances[node.url].push( { name: `${node.type} Instance Router`, path: `${this.uib.httpRoot}/${node.url}/`, desc: 'Other routes hang off this', type: 'Router', folder: '--', } )
 
         /** We want to add services in the right order - first load takes preference:
          *   (1) Middleware: (a) common (for all instances), (b) internal (all instances), (c) (if allowed in settings) instance API middleware
@@ -774,6 +774,7 @@ class UibWeb {
                     // Content-Security-Policy': "script-src 'self'",
                     // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
                     'x-powered-by': 'uibuilder',
+                    'Content-Security-Policy': "default-src 'self' 'unsafe-inline' data: blob:; connect-src 'self' ws: wss:; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:;",
                     // Tell the client what Socket.IO namespace to use,
                     'uibuilder-namespace': node.url, // only client accessible from xhr or web worker
                     'uibuilder-node': node.id,
