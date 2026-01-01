@@ -44,7 +44,7 @@
     "eslint-plugin-n": "^17.15.1",
     "eslint-plugin-promise": "^7.2.1",
     "execa": "^5",
-    "globals": "^16.0.0",
+    "globals": "^17.0.0",
     "gulp": "^5.0.0",
     "gulp-clean-css": "^4.3.0",
     "gulp-esbuild": "^0.14.0",
