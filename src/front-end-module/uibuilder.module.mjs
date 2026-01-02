@@ -31,12 +31,13 @@ import UibMeta from '../components/uib-meta.mjs'
 import ApplyTemplate from '../components/apply-template.mjs'
 import UibControl from '../components/uib-control.mjs'
 import { reactive as createReactive, Reactive } from './reactive.mjs'
+import { formatDate } from './libs/format-date-time.mjs'
 // import { dom } from './tinyDom'
 
 // Incorporate the logger module - NB: This sets a global `log` object for use if it can.
 // import logger from './logger'
 
-const version = '7.5.0-src'
+const version = '7.6.0-src'
 
 // #region --- Module-level utility functions --- //
 
@@ -868,6 +869,14 @@ export const Uib = class Uib {
 
         return exists
     } // --- End of elementExists --- //
+
+    /** Format a Date using Intl with optional pattern support.
+     * @param {Date|string|number} date Input JS Date, date string, or timestamp
+     * @param {string} [pattern] Optional pattern string
+     * @param {string} [locale] Locale code. Defaults to browser locale.
+     * @returns {string} Formatted date string
+     */
+    formatDate = formatDate
 
     /** Format a number using the INTL standard library - compatible with uib-var filter function
      * @param {number} value Number to format

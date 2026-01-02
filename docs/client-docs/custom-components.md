@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2025-08-28 15:33:02
+updated: 2026-01-02 13:37:42
 ---
 
 The following custom web components are built into UIBUILDER:
@@ -265,6 +265,9 @@ This is the standard method for UIBUILDER instances but this feature is not depe
 
 ### Useful filter functions
 
+> [!TIP]
+> When used as a filter function, the first parameter passed to the function is always the variable or topic value - so you do not specify it in the `filter` attribute. Any additional parameters provided in the `filter` attribute are passed after this.
+
 #### formatNumber :id=uib-var-format-number
 
 Formats a number to a given locale and optionally, a set number of decimal places.
@@ -279,6 +282,15 @@ Note that the value is passed automatically so the first provided argument is th
 Parameters: `formatNumber(value, decimalPlaces, intl, opts)`. Where `opts` is an INTL formatting object.
 
 See details in the [client functions doc](client-docs/functions#formatNumber).
+
+#### formatDate :id=uib-var-format-date
+
+[formatDate](fns/format-date-time.md ':include')
+
+Example:
+```html
+<uib-var topic="mydate" filter="formatDate('iso', 'en-GB')"></uib-var>
+```
 
 #### Other pre-defined filters
 

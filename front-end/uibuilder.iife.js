@@ -2305,7 +2305,7 @@
       return hostname.indexOf(":") === -1 ? hostname : "[" + hostname + "]";
     }
     _port() {
-      if (this.opts.port && (this.opts.secure && Number(this.opts.port !== 443) || !this.opts.secure && Number(this.opts.port) !== 80)) {
+      if (this.opts.port && (this.opts.secure && Number(this.opts.port) !== 443 || !this.opts.secure && Number(this.opts.port) !== 80)) {
         return ":" + this.opts.port;
       } else {
         return "";
@@ -3536,6 +3536,7 @@
     Decoder: () => Decoder,
     Encoder: () => Encoder,
     PacketType: () => PacketType,
+    isPacketValid: () => isPacketValid,
     protocol: () => protocol3
   });
 
@@ -3641,10 +3642,15 @@
   // node_modules/socket.io-parser/build/esm/index.js
   var RESERVED_EVENTS = [
     "connect",
+    // used on the client side
     "connect_error",
+    // used on the client side
     "disconnect",
+    // used on both sides
     "disconnecting",
+    // used on the server side
     "newListener",
+    // used by the Node.js EventEmitter
     "removeListener"
     // used by the Node.js EventEmitter
   ];
@@ -3719,9 +3725,6 @@
       return buffers;
     }
   };
-  function isObject(value2) {
-    return Object.prototype.toString.call(value2) === "[object Object]";
-  }
   var Decoder = class _Decoder extends Emitter {
     /**
      * Decoder constructor
@@ -3893,6 +3896,37 @@
       this.buffers = [];
     }
   };
+  function isNamespaceValid(nsp) {
+    return typeof nsp === "string";
+  }
+  var isInteger = Number.isInteger || function(value2) {
+    return typeof value2 === "number" && isFinite(value2) && Math.floor(value2) === value2;
+  };
+  function isAckIdValid(id) {
+    return id === void 0 || isInteger(id);
+  }
+  function isObject(value2) {
+    return Object.prototype.toString.call(value2) === "[object Object]";
+  }
+  function isDataValid(type, payload) {
+    switch (type) {
+      case PacketType.CONNECT:
+        return payload === void 0 || isObject(payload);
+      case PacketType.DISCONNECT:
+        return payload === void 0;
+      case PacketType.EVENT:
+        return Array.isArray(payload) && (typeof payload[0] === "number" || typeof payload[0] === "string" && RESERVED_EVENTS.indexOf(payload[0]) === -1);
+      case PacketType.ACK:
+        return Array.isArray(payload);
+      case PacketType.CONNECT_ERROR:
+        return typeof payload === "string" || isObject(payload);
+      default:
+        return false;
+    }
+  }
+  function isPacketValid(packet) {
+    return isNamespaceValid(packet.nsp) && isAckIdValid(packet.id) && isDataValid(packet.type, packet.data);
+  }
 
   // node_modules/socket.io-client/build/esm/on.js
   function on(obj, ev, fn) {
@@ -4158,7 +4192,6 @@
       };
       args.push((err, ...responseArgs) => {
         if (packet !== this._queue[0]) {
-          return;
         }
         const hasError = err !== null;
         if (hasError) {
@@ -4390,8 +4423,8 @@
       this._pid = pid;
       this.connected = true;
       this.emitBuffered();
-      this.emitReserved("connect");
       this._drainQueue(true);
+      this.emitReserved("connect");
     }
     /**
      * Emit buffered events (received and emitted).
@@ -6687,9 +6720,77 @@
     return reactiveInstance.create();
   }
 
+  // src/front-end-module/libs/format-date-time.mjs
+  var FORMATTER_CACHE = /* @__PURE__ */ new Map();
+  function getFormatter(locale, options) {
+    const key = "".concat(locale, "|").concat(JSON.stringify(options));
+    if (!FORMATTER_CACHE.has(key)) {
+      FORMATTER_CACHE.set(
+        key,
+        new Intl.DateTimeFormat(locale, options)
+      );
+    }
+    return FORMATTER_CACHE.get(key);
+  }
+  function getParts(date, locale = navigator.language) {
+    const formatter = getFormatter(locale, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      weekday: "long",
+      hour12: false
+    });
+    return Object.fromEntries(
+      formatter.formatToParts(date).map((p) => [p.type, p.value])
+    );
+  }
+  function getNames(date, locale = navigator.language) {
+    return {
+      MMMM: getFormatter(locale, { month: "long" }).format(date),
+      MMM: getFormatter(locale, { month: "short" }).format(date),
+      dddd: getFormatter(locale, { weekday: "long" }).format(date),
+      ddd: getFormatter(locale, { weekday: "short" }).format(date)
+    };
+  }
+  function formatDate(date, pattern, locale = navigator.language) {
+    if (!(date instanceof Date)) {
+      date = new Date(date);
+    }
+    if (isNaN(date)) {
+      throw new TypeError("Invalid Date");
+    }
+    if (pattern == null || pattern === "") {
+      return new Intl.DateTimeFormat(locale).format(date);
+    }
+    if (pattern === "iso") {
+      pattern = "YYYY-MM-DD HH:mm";
+    } else if (pattern === "ISO") {
+      pattern = "YYYY-MM-DD HH:mm:ss";
+    }
+    const parts2 = getParts(date, locale);
+    const names = getNames(date, locale);
+    const tokens = {
+      YYYY: parts2.year,
+      MM: parts2.month,
+      DD: parts2.day,
+      HH: parts2.hour,
+      mm: parts2.minute,
+      ss: parts2.second,
+      ...names
+    };
+    return pattern.replace(
+      /YYYY|MMMM|MMM|MM|DD|dddd|ddd|HH|mm|ss/g,
+      // @ts-ignore
+      (token) => tokens[token]
+    );
+  }
+
   // src/front-end-module/uibuilder.module.mjs
   var import_meta = {};
-  var version = "7.5.0-iife";
+  var version = "7.6.0-iife";
   var isMinified = !/param/.test(function(param) {
   });
   function log() {
@@ -7138,6 +7239,14 @@
           }
         }
       });
+      // --- End of elementExists --- //
+      /** Format a Date using Intl with optional pattern support.
+       * @param {Date|string|number} date Input JS Date, date string, or timestamp
+       * @param {string} [pattern] Optional pattern string
+       * @param {string} [locale] Locale code. Defaults to browser locale.
+       * @returns {string} Formatted date string
+       */
+      __publicField(this, "formatDate", formatDate);
       // --- End of elementIsVisible --- //
       // #endregion -------- -------- -------- //
       // #region ------- UI handlers --------- //
@@ -7548,7 +7657,6 @@
       }
       return exists;
     }
-    // --- End of elementExists --- //
     /** Format a number using the INTL standard library - compatible with uib-var filter function
      * @param {number} value Number to format
      * @param {number} decimalPlaces Number of decimal places to include. Default=no default
