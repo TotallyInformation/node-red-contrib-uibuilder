@@ -295,6 +295,7 @@
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
+ * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  *
  * @property {string} instanceFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
@@ -437,6 +438,16 @@
  * @property {string} name only used for labelling the node in the flow
  * @property {''} sourceFolder Used in web.instanceSetup() for uibuilder nodes, must be '' here
  * @property {string} instanceFolder The full path to the instance folder. Used in web.instanceSetup()
+ * @property {string} configFolder The full or relative path to the config folder. Used in web.instanceSetup()
+ * @property {string} pageTemplate The pages HTML template content - cached for efficiency
+ * @property {Function} sendToFe Ref to sockets.sendToFe
+ *
+ * @property {object} statusDisplay Settings for the uibuilder node status
+ * @property {string} statusDisplay.text Text to display
+ * @property {string} statusDisplay.fill Fill colour: black, blue, red, yellow, ...
+ * @property {string} statusDisplay.shape dot or ring
+ *
+
  */
 
 /** uibListNode
