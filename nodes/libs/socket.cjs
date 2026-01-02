@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/valid-types */
 /** Manage Socket.IO on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
  *
@@ -16,7 +17,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* eslint-disable class-methods-use-this, sonarjs/no-duplicate-string, max-params */
 'use strict'
 
 /** --- Type Defs ---
@@ -27,11 +27,11 @@
  * @typedef {import('express')} Express
  */
 
-const { join }     = require('path')
-const { existsSync, getFileMeta } = require('./fs.cjs')
+const { join, } = require('path')
+const { existsSync, getFileMeta, } = require('./fs.cjs')
 const socketio = require('socket.io')
-const { urlJoin }    = require('./tilib.cjs')    // General purpose library (by Totally Information)
-const { setNodeStatus }   = require('./uiblib.cjs')   // Utility library for uibuilder
+const { urlJoin, } = require('./tilib.cjs') // General purpose library (by Totally Information)
+const { setNodeStatus, } = require('./uiblib.cjs') // Utility library for uibuilder
 // const security = require('./sec-lib') // uibuilder security module
 
 /** Parse x-forwarded-for headers.
@@ -156,7 +156,7 @@ class UibSockets {
         // setup() has not yet been run
         this._isConfigured = false
 
-        //#region ---- References to core Node-RED & uibuilder objects ---- //
+        // #region ---- References to core Node-RED & uibuilder objects ---- //
         /** @type {runtimeRED|undefined} */
         this.RED = undefined
         /** @type {uibConfig|undefined} Reference link to uibuilder.js global configuration object */
@@ -167,12 +167,13 @@ class UibSockets {
          * Used to enable the Socket.IO client code to be served to the front-end
          */
         this.server = undefined
-        //#endregion ---- References to core Node-RED & uibuilder objects ---- //
+        // #endregion ---- References to core Node-RED & uibuilder objects ---- //
 
-        //#region ---- Common variables ---- //
+        // #region ---- Common variables ---- //
 
         /** URI path for accessing the socket.io client from FE code. Based on the uib node instance URL.
-         * @constant {string} uib_socketPath */
+         * @constant {string} uib_socketPath
+         */
         this.uib_socketPath = undefined
 
         /** An instance of Socket.IO Server */
@@ -188,7 +189,7 @@ class UibSockets {
          */
         this.ioNamespaces = {}
 
-        //#endregion ---- ---- //
+        // #endregion ---- ---- //
     } // --- End of constructor() --- //
 
     /** Assign uibuilder and Node-RED core vars to Class static vars.
@@ -221,7 +222,7 @@ class UibSockets {
         if (uib.configFolder === null) throw new Error('[uibuilder:socket.js:setup] uib.configFolder is null')
 
         // If available, set up optional outbound msg middleware
-        this.outboundMsgMiddleware = function outboundMsgMiddleware( msg, url, channel ) { return null }
+        this.outboundMsgMiddleware = function outboundMsgMiddleware( msg, url, channel ) { return null } // eslint-disable-line @stylistic/max-statements-per-line
         // Try to load the sioMsgOut middleware function - sioMsgOut applies to all outgoing msgs
         const mwfile = join(uib.configFolder, uib.sioMsgOutMwName)
         if ( existsSync(mwfile) ) { // not interested if the file doesn't exist
@@ -264,7 +265,7 @@ class UibSockets {
         log.trace(`🌐[uibuilder[:socket:socketIoSetup] Socket.IO initialisation - Socket Path=${uibSocketPath}, CORS Origin=*` )
         // Socket.Io server options, see https://socket.io/docs/v4/server-options/
         let ioOptions = {
-            'path': uibSocketPath,
+            path: uibSocketPath,
             // NOTE: webtransport requires HTTP/3 and TLS. HTTP/2 & 3 not yet available in Node.js
             // transports: ['polling', 'websocket', 'webtransport'],
             serveClient: false, // No longer required from v7
@@ -304,7 +305,7 @@ class UibSockets {
         // Runs when a connection or long-poll request happens - allows overrides of socket.request.headers (=== socket.handshake.headers)
         this.io.engine.on('headers', (headers, req) => {
             // Optional hook to override headers - set in settings.js uibuilder.hooks.socketIoHeaders
-            this.hooks('socketIoHeaders', { headers, req })
+            this.hooks('socketIoHeaders', { headers, req, })
         })
     } // --- End of socketIoSetup() --- //
 
@@ -327,14 +328,14 @@ class UibSockets {
         const RED = this.RED
         let out = true
 
-        if (!RED?.settings?.uibuilder?.hooks?.[hookName]) return
+        if (!RED?.settings?.uibuilder?.hooks?.[hookName]) return undefined
 
         const hook = RED.settings.uibuilder.hooks[hookName]
         if (typeof hook === 'function') {
             try {
                 out = RED.settings.uibuilder.hooks[hookName](data)
             } catch (e) {
-                this.log.warn(`🌐⚠️[uibuilder:socket:hooks] Could not run 'uibuilder.hooks.${hookName}' hook in settings.js. ${e.message}`, { e, data })
+                this.log.warn(`🌐⚠️[uibuilder:socket:hooks] Could not run 'uibuilder.hooks.${hookName}' hook in settings.js. ${e.message}`, { e, data, })
             }
         }
 
@@ -368,7 +369,7 @@ class UibSockets {
         if ( channel === uib.ioChannels.control && !msg.from ) msg.from = 'server'
 
         // Run uibuilder.hooks.msgSending hook - NOTE: msg might be amended by the hook
-        if (this.hooks('msgSending', { msg, node }) === false) {
+        if (this.hooks('msgSending', { msg, node, }) === false) {
             log.warn(`🌐⚠️[uibuilder:socket:sendToFe] outbound msg blocked for "${node.url}" by "uibuilder.hooks.msgSending" hook in settings.js`)
         }
 
@@ -398,7 +399,7 @@ class UibSockets {
      * @param {uibNode} node WARNING: Not a full reference to a node instance, only node.url is available
      * @param {string=} socketId Optional. If included, only send to specific client id (mostly expecting this to be on msg._socketID so not often required)
      */
-    sendToFe2(msg, node, socketId) { // eslint-disable-line class-methods-use-this
+    sendToFe2(msg, node, socketId) {
         const uib = this.uib
 
         const ioNs = this.ioNamespaces[node.url]
@@ -409,7 +410,7 @@ class UibSockets {
         if (socketId) msg._socketId = socketId
 
         // Run uibuilder.hooks.msgSending hook - NOTE: msg might be amended by the hook
-        if (this.hooks('msgSending', { msg, node }) === false) {
+        if (this.hooks('msgSending', { msg, node, }) === false) {
             this.log.warn(`🌐⚠️[uibuilder:socket:sendToFe2] outbound msg blocked for "${node.url}" by "uibuilder.hooks.msgSending" hook in settings.js`)
         }
 
@@ -434,7 +435,7 @@ class UibSockets {
         this.log.trace(`🌐[uibuilder[:sendCtrlMsg] FROM: '${from}'`)
 
         // Run uibuilder.hooks.msgReceived hook - NOTE: msg might be amended by the hook
-        if (this.hooks('msgReceived', { msg, node }) === false) {
+        if (this.hooks('msgReceived', { msg, node, }) === false) {
             this.log.warn(`🌐⚠️[uibuilder:socket:sendToFe] Control msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
             return
         }
@@ -461,34 +462,34 @@ class UibSockets {
         const client = {}
         client._uib = {
             /** What was the originating uibuilder URL */
-            'url': node.url,
+            url: node.url,
 
-            '_socketId': socket.id,
+            _socketId: socket.id,
             /** Is this client reconnected after temp loss? */
-            'recovered': socket.recovered,
+            recovered: socket.recovered,
             /** Do our best to get the actual IP addr of client despite any Proxies */
-            'ip': realClientIP,
+            ip: realClientIP,
             /** The referring webpage, should be the full URL of the uibuilder page */
-            'referer': headers.referer,
+            referer: headers.referer,
 
             // Let the flow know what v of uib client is in use
-            'version': handshake.auth.clientVersion,
+            version: handshake.auth.clientVersion,
             /** What is the stable client id (set by uibuilder, retained till browser restart) */
-            'clientId': handshake.auth.clientId,
+            clientId: handshake.auth.clientId,
             /** What is the client tab identifier (set by uibuilder modern client) */
-            'tabId': handshake.auth.tabId,
+            tabId: handshake.auth.tabId,
             /** What was the originating page name (for SPA's) */
-            'pageName': pageName,
+            pageName: pageName,
             /** The browser's URL parameters */
-            'urlParams': handshake.auth.urlParams,
+            urlParams: handshake.auth.urlParams,
             /** How many times has this client reconnected (e.g. after sleep) */
-            'connections': handshake.auth.connectedNum,
+            connections: handshake.auth.connectedNum,
             /** True if https/wss */
-            'tls': handshake.secure,
+            tls: handshake.secure,
             /** When the client connected to the server */
-            'connectedTimestamp': (new Date(handshake.issued)).toISOString(),
+            connectedTimestamp: (new Date(handshake.issued)).toISOString(),
             // 'browserConnectTimestamp': handshake.auth.browserConnectTimestamp,
-            'connectHeaders': headers,
+            connectHeaders: headers,
         }
 
         // @ts-ignore
@@ -529,7 +530,7 @@ class UibSockets {
 
         // Run uibuilder.hooks.msgReceived hook if it exists - NOTE: msg might be amended by the hook
         // Allows client data to be amended
-        this.hooks('clientDetails', { client, socket, node })
+        this.hooks('clientDetails', { client, socket, node, })
 
         return client
     }
@@ -551,7 +552,7 @@ class UibSockets {
         const RED = this.RED
 
         // Run uibuilder.hooks.msgReceived hook - NOTE: msg might be amended by the hook
-        if (this.hooks('msgReceived', { msg, node }) === false) {
+        if (this.hooks('msgReceived', { msg, node, }) === false) {
             this.log.warn(`🌐⚠️[uibuilder:socket:sendToFe] msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
             return
         }
@@ -582,13 +583,13 @@ class UibSockets {
             case 'string':
             case 'number':
             case 'boolean':
-                msg = { 'topic': node.topic, 'payload': msg }
+                msg = { topic: node.topic, payload: msg, }
         }
 
         // If the sender hasn't added msg._socketId, add the Socket.id now
         if ( !Object.prototype.hasOwnProperty.call(msg, '_socketId') ) msg._socketId = socket.id
 
-        const { _uib, _client } = this.getClientDetails(socket, node)
+        const { _uib, _client, } = this.getClientDetails(socket, node)
 
         // If required, add/merge the client details to the msg using msg._uib, remove if not required
         if (node.showMsgUib) {
@@ -596,7 +597,7 @@ class UibSockets {
             else {
                 msg._uib = {
                     ...msg._uib,
-                    ..._uib
+                    ..._uib,
                 }
             }
         }
@@ -628,12 +629,12 @@ class UibSockets {
             case 'string':
             case 'number':
             case 'boolean':
-                msg = { 'uibuilderCtrl': msg }
+                msg = { uibuilderCtrl: msg, }
         }
 
         // Apply standard client details to the control msg
-        const { _uib, _client } = this.getClientDetails(socket, node)
-        msg = { ...msg, ..._uib }
+        const { _uib, _client, } = this.getClientDetails(socket, node)
+        msg = { ...msg, ..._uib, }
         if (_client) msg._client = _client
 
         // Control msgs should say where they came from
@@ -642,7 +643,7 @@ class UibSockets {
         if ( !msg.topic ) msg.topic = node.topic
 
         // Can we handle a control request directly? If not, send it out of port #2
-        switch (msg.uibuilderCtrl) { // eslint-disable-line sonarjs/no-small-switch
+        switch (msg.uibuilderCtrl) {
             case 'get page meta': {
                 // This returns the data straight back to the requesting client, does not output to port #2
                 getFileMeta(join(node.instanceFolder, node.sourceFolder, msg.pageName))
@@ -720,9 +721,9 @@ class UibSockets {
             }
         }
 
-        //#region -- trace room events --
+        // #region -- trace room events --
         // NB: Only sockets can join rooms, not the server
-        { // eslint-disable-line no-lone-blocks
+        {
             const thislog = log.trace
             ioNs.adapter.on('create-room', (room) => {
                 thislog(
@@ -745,13 +746,13 @@ class UibSockets {
                 )
             })
         }
-        //#endregion -- -- --
+        // #endregion -- -- --
 
         const that = this
 
         // When a client connects to the server - create the socket listeners & do other stuff
         ioNs.on('connection', (socket) => {
-            //#region ----- Event Handlers ----- //
+            // #region ----- Event Handlers ----- //
 
             // NOTE: as of sio v4, disconnect seems to be fired AFTER a connect when a client reconnects
             socket.on('disconnect', (reason, description) => {
@@ -765,14 +766,14 @@ class UibSockets {
                 setNodeStatus( node )
 
                 // Let the control output port know a client has disconnected
-                const { _uib, _client } = this.getClientDetails(socket, node)
+                const { _uib, _client, } = this.getClientDetails(socket, node)
                 const ctrlMsg = {
                     ...{
-                        'uibuilderCtrl': 'client disconnect',
-                        'reason': reason,
-                        'topic': node.topic || undefined,
-                        'from': 'server',
-                        'description': description,
+                        uibuilderCtrl: 'client disconnect',
+                        reason: reason,
+                        topic: node.topic || undefined,
+                        from: 'server',
+                        description: description,
                     },
                     ..._uib,
                 }
@@ -802,7 +803,7 @@ class UibSockets {
                 log.error(`🌐🛑[uibuilder:socket:addNs:${url}] ERROR received, ID: ${socket.id}, Reason: ${err.message}`)
 
                 // Let the control output port (port #2) know there has been an error
-                const { _uib, _client } = this.getClientDetails(socket, node)
+                const { _uib, _client, } = this.getClientDetails(socket, node)
                 const ctrlMsg = {
                     ...{
                         uibuilderCtrl: 'socket error',
@@ -836,9 +837,9 @@ class UibSockets {
                 ioNs.to(room).emit(room, msg, socket.handshake.auth)
                 // TODO Option to send on as a node-red msg
             })
-            //#endregion ----- Event Handlers ----- //
+            // #endregion ----- Event Handlers ----- //
 
-            //#region ---- run when client connects ---- //
+            // #region ---- run when client connects ---- //
 
             // How many client connections are there?
             node.ioClientsCount = ioNs.sockets.size
@@ -870,13 +871,13 @@ class UibSockets {
 
             // Initial connect message to client
             const msgClient = {
-                'uibuilderCtrl': 'client connect',
-                'serverTimestamp': (new Date()),
-                'topic': node.topic || undefined,
-                'version': uib.version,  // Let the front-end know what v of uib is in use
-                '_socketId': socket.id,
+                uibuilderCtrl: 'client connect',
+                serverTimestamp: (new Date()),
+                topic: node.topic || undefined,
+                version: uib.version, // Let the front-end know what v of uib is in use
+                _socketId: socket.id,
                 // @ts-ignore
-                'maxHttpBufferSize': this.io.opts.maxHttpBufferSize || 1048576, // Let the client know the max msg size that can be sent, default=1MB
+                maxHttpBufferSize: this.io.opts.maxHttpBufferSize || 1048576, // Let the client know the max msg size that can be sent, default=1MB
             }
             // msgClient.ip = getClientRealIpAddress(socket)
             // msgClient.clientId = socket.handshake.auth.clientId
@@ -893,7 +894,7 @@ class UibSockets {
             that.sendToFe(msgClient, node, uib.ioChannels.control)
 
             // Send initial client connect control msg (via port #2)
-            const { _uib, _client } = this.getClientDetails(socket, node)
+            const { _uib, _client, } = this.getClientDetails(socket, node)
             const ctrlMsg = {
                 ...{
                     uibuilderCtrl: 'client connect',
@@ -910,15 +911,15 @@ class UibSockets {
             // Let other nodes know a client is connecting (via custom event manager)
             this.RED.events.emit(`UIBUILDER/${node.url}/clientConnect`, ctrlMsg)
 
-            //#endregion ---- run when client connects ---- //
+            // #endregion ---- run when client connects ---- //
 
-            //#region ---- Rooms ----
+            // #region ---- Rooms ----
             // Ensures uib is listening to all clients and pages
             socket.join(`clientId:${socket.handshake.auth.clientId}`)
             socket.join(`pageName:${socket.handshake.auth.pageName}`)
             // Not bothering with a tabId room - gets filtered at client anyway
             // rooms for pathName not needed as each path has own namespace
-            //#endregion ---- ---- ----
+            // #endregion ---- ---- ----
         }) // --- End of on-connection() --- //
     } // --- End of addNS() --- //
 
@@ -927,7 +928,6 @@ class UibSockets {
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     removeNS(node) {
-
         const ioNs = this.ioNamespaces[node.url]
 
         // Disconnect all connected sockets for this Namespace (Socket.io v4+)
