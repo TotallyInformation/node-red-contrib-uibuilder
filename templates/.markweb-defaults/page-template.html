@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<!-- Everything like %%....%% gets replaced on first page load if attributes available.
+  -- Everything that has a data-attribute="...." gets updated when navigating via SPA.
+  -- Everything like {{....}} gets replaced when the route is loaded.
+  -- Links with a data-spa-link attribute are intercepted for SPA navigation.
+  -- % %body% % is where the main content goes. If you don't include it, you get no content!
+  -->
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <base href="%%url%%/">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="%%description%%" data-attribute="description">
+    <link rel="icon" href="../uibuilder/images/node-blue.ico">
+    <title data-attribute="title">%%title%%</title>
+    <link type="text/css" rel="stylesheet" href="../uibuilder/uib-brand.min.css" media="all">
+    <style>
+        /* #region CSS Custom Properties for Menu */
+        :root {
+            --menu-bg: var(--surface3);
+            --menu-bg-hover: hsl(210, 100%, 95%);
+            --menu-bg-active: hsl(210, 100%, 90%);
+            --menu-text: var(--text-primary);
+            --menu-text-hover: hsl(210, 100%, 40%);
+            --menu-border: hsl(220, 15%, 85%);
+            --menu-shadow: hsla(220, 20%, 20%, 0.15);
+            --menu-transition: 0.2s ease;
+            --menu-item-padding: 0.75rem 1rem;
+            --menu-min-width: 12rem;
+            --menu-breakpoint: 768px;
+            --menu-z-index: 1000;
+        }
+        /* #endregion CSS Custom Properties for Menu */
+
+        /* #region Base Menu Styles */
+        .horizontal {
+            position: relative;
+            background: var(--menu-bg);
+            border-bottom: 1px solid var(--menu-border);
+        }
+
+        .horizontal .routemenu {
+            display: flex;
+            flex-wrap: wrap;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .horizontal .routemenu li {
+            position: relative;
+        }
+
+        .horizontal .routemenu a {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: var(--menu-item-padding);
+            color: var(--menu-text);
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background-color var(--menu-transition), color var(--menu-transition);
+        }
+
+        .horizontal .routemenu a:hover,
+        .horizontal .routemenu a:focus {
+            background: var(--menu-bg-hover);
+            color: var(--menu-text-hover);
+            outline: none;
+        }
+
+        .horizontal .routemenu a:focus-visible {
+            outline: 2px solid var(--menu-text-hover);
+            outline-offset: -2px;
+        }
+
+        .horizontal .routemenu a.active {
+            background: var(--menu-bg-active);
+            color: var(--menu-text-hover);
+        }
+
+        /* Submenu indicator arrow for items with children */
+        .horizontal .routemenu li:has(> ul) > a::after {
+            content: '';
+            border: 0.3em solid transparent;
+            border-top-color: currentColor;
+            margin-left: auto;
+            transition: transform var(--menu-transition);
+        }
+        /* #endregion Base Menu Styles */
+
+        /* #region Dropdown/Submenu Styles (Desktop) */
+        .horizontal .routemenu ul {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: var(--menu-min-width);
+            list-style: none;
+            margin: 0;
+            padding: 0.25rem 0;
+            background: var(--menu-bg);
+            border: 1px solid var(--menu-border);
+            border-radius: 0.25rem;
+            box-shadow: 0 4px 12px var(--menu-shadow);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-0.5rem);
+            transition: opacity var(--menu-transition), 
+                        visibility var(--menu-transition), 
+                        transform var(--menu-transition);
+            z-index: var(--menu-z-index);
+        }
+
+        /* Nested submenus fly out to the right */
+        .horizontal .routemenu ul ul {
+            top: -0.25rem;
+            left: 100%;
+            transform: translateX(-0.5rem);
+        }
+
+        /* Arrow points right for nested submenus */
+        .horizontal .routemenu ul li:has(> ul) > a::after {
+            border-top-color: transparent;
+            border-left-color: currentColor;
+        }
+
+        /* Show submenu on hover/focus */
+        .horizontal .routemenu li:hover > ul,
+        .horizontal .routemenu li:focus-within > ul {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .horizontal .routemenu ul li:hover > ul,
+        .horizontal .routemenu ul li:focus-within > ul {
+            transform: translateX(0);
+        }
+
+        /* Prevent submenu from closing when moving to it */
+        .horizontal .routemenu li:hover > ul::before {
+            content: '';
+            position: absolute;
+            top: -1rem;
+            left: 0;
+            right: 0;
+            height: 1rem;
+        }
+
+        .horizontal .routemenu ul li:hover > ul::before {
+            top: 0;
+            left: -1rem;
+            width: 1rem;
+            height: 100%;
+        }
+
+        /* Submenu items full width */
+        .horizontal .routemenu ul a {
+            padding: 0.5rem 1rem;
+        }
+
+        /* Handle right-edge overflow - flip nested menus to left */
+        .horizontal .routemenu ul.flip-left {
+            left: auto;
+            right: 100%;
+            transform: translateX(0.5rem);
+        }
+
+        .horizontal .routemenu ul li:hover > ul.flip-left,
+        .horizontal .routemenu ul li:focus-within > ul.flip-left {
+            transform: translateX(0);
+        }
+        /* #endregion Dropdown/Submenu Styles (Desktop) */
+
+        /* #region Menu Toggle Button (Burger) */
+        .menu-toggle {
+            display: none;
+            padding: 0.75rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--menu-text);
+        }
+
+        .menu-toggle svg {
+            width: 1.5rem;
+            height: 1.5rem;
+            fill: currentColor;
+            transition: transform var(--menu-transition);
+        }
+
+        .menu-toggle[aria-expanded="true"] svg {
+            transform: rotate(90deg);
+        }
+        /* #endregion Menu Toggle Button (Burger) */
+
+        /* #region Search Styles */
+        #search-form { 
+            position: relative;
+            margin-left: auto;
+            padding: 0.5rem;
+        }
+        #search-input { padding: 0.5rem; border: 1px solid hsl(0, 0%, 80%); border-radius: 0.25rem; }
+        #search-results {
+            /* position: absolute; */
+            /* top: 100%; */
+            /* left: 0; */
+            /* right: 0; */
+            /* background: hsl(0, 0%, 100%); */
+            border: 1px solid hsl(0, 0%, 80%);
+            border-radius: var(--border-radius, 0.25rem);
+            max-height: 20em;
+            overflow-y: auto;
+            /* z-index: calc(var(--menu-z-index) + 1); */
+            /* box-shadow: 0 4px 6px hsla(0, 0%, 0%, 0.1); */
+        }
+        #search-results a {
+            display: block;
+            padding: 0.75rem;
+            text-decoration: none;
+            border-bottom: 1px solid hsl(0, 0%, 90%);
+        }
+        #search-results a:hover { background: hsl(210, 100%, 95%); }
+        #search-results a:last-child { border-bottom: none; }
+        #search-results strong { display: block; color: hsl(210, 100%, 40%); }
+        #search-results small { color: hsl(0, 0%, 50%); font-size: 0.85em; }
+        #search-results .no-results { padding: 0.75rem; color: hsl(0, 0%, 50%); }
+        #search-results .search-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            background: hsl(210, 20%, 95%);
+            border-bottom: 1px solid hsl(0, 0%, 80%);
+            font-weight: 500;
+        }
+        #search-results .search-close {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            font-size: 1.25rem;
+            line-height: 1;
+            color: hsl(0, 0%, 50%);
+            border-radius: 0.25rem;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        #search-results .search-close:hover,
+        #search-results .search-close:focus {
+            background: hsl(0, 0%, 90%);
+            color: hsl(0, 0%, 20%);
+        }
+        /* #endregion Search Styles */
+
+        /* #region Mobile/Responsive Menu Styles */
+        @media (max-width: 768px) {
+            /* Show burger button */
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Hide menu by default on mobile */
+            .horizontal .routemenu {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--menu-bg);
+                border: 1px solid var(--menu-border);
+                border-top: none;
+                box-shadow: 0 4px 12px var(--menu-shadow);
+                max-height: 80vh;
+                overflow-y: auto;
+                z-index: var(--menu-z-index);
+            }
+
+            /* Show menu when toggle is expanded */
+            .horizontal[aria-expanded="true"] .routemenu {
+                display: flex;
+            }
+
+            /* Reset submenu positioning for mobile */
+            .horizontal .routemenu ul {
+                position: static;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+                box-shadow: none;
+                border: none;
+                border-radius: 0;
+                padding: 0;
+                background: hsl(220, 20%, 94%);
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+            }
+
+            /* Show submenu when parent has .submenu-open */
+            .horizontal .routemenu li.submenu-open > ul {
+                max-height: 50rem;
+            }
+
+            /* Indent nested items */
+            .horizontal .routemenu ul a {
+                padding-left: 2rem;
+            }
+
+            .horizontal .routemenu ul ul a {
+                padding-left: 3rem;
+            }
+
+            .horizontal .routemenu ul ul ul a {
+                padding-left: 4rem;
+            }
+
+            /* Rotate arrow when submenu is open */
+            .horizontal .routemenu li.submenu-open > a::after {
+                transform: rotate(180deg);
+            }
+
+            /* Nested submenu arrows always point down on mobile */
+            .horizontal .routemenu ul li:has(> ul) > a::after {
+                border-left-color: transparent;
+                border-top-color: currentColor;
+            }
+
+            /* Disable hover effects on mobile */
+            .horizontal .routemenu li:hover > ul {
+                max-height: 0;
+            }
+
+            .horizontal .routemenu li.submenu-open:hover > ul {
+                max-height: 50rem;
+            }
+
+            /* Search form in mobile menu */
+            #search-form {
+                order: -1;
+                width: 100%;
+                padding: 0.75rem;
+                border-bottom: 1px solid var(--menu-border);
+            }
+
+            #search-input {
+                width: 100%;
+            }
+        }
+
+        /* Touch device optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .horizontal .routemenu a {
+                padding: 1rem;
+                min-height: 44px;
+            }
+        }
+
+        /* Print styles - hide navigation */
+        @media print {
+            .horizontal,
+            #menu1 {
+                display: none !important;
+            }
+        }
+        /* #endregion Mobile/Responsive Menu Styles */
+
+        /* #region GFM Alert Box Styles */
+        .markdown-alert {
+            padding: 0 1em;
+            margin-bottom: 16px;
+            color: inherit;
+            border-left: 0.25em solid #444c56;
+        }
+
+        .markdown-alert-title {
+            display: inline-flex;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .markdown-alert-note {
+            border-left-color: #539bf5;
+        }
+
+        .markdown-alert-tip {
+            border-left-color: #57ab5a;
+        }
+
+        .markdown-alert-important {
+            border-left-color: #986ee2;
+        }
+
+        .markdown-alert-warning {
+            border-left-color: #c69026;
+        }
+
+        .markdown-alert-caution {
+            border-left-color: #e5534b;
+        }
+
+        .markdown-alert-note > .markdown-alert-title {
+            color: #539bf5;
+        }
+
+        .markdown-alert-tip > .markdown-alert-title {
+            color: #57ab5a;
+        }
+
+        .markdown-alert-important > .markdown-alert-title {
+            color: #986ee2;
+        }
+
+        .markdown-alert-warning > .markdown-alert-title {
+            color: #c69026;
+        }
+
+        .markdown-alert-caution > .markdown-alert-title {
+            color: #e5534b;
+        }
+        /* #endregion GFM Alert Box Styles */
+    </style>
+    
+</head><body>
+    <header>
+        <h1 data-attribute="title">%%title%%</h1>
+        <div id="menu1" style="position: relative;">
+            <nav aria-label="Main Menu" class="horizontal" aria-expanded="false">
+                <button class="menu-toggle" aria-expanded="false">
+                    <svg viewBox="0 0 0.8 0.8" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0.1 0.15h0.6a0.05 0.05 0 0 1 0 0.1H0.1a0.05 0.05 0 1 1 0 -0.1m0 0.2h0.6a0.05 0.05 0 0 1 0 0.1H0.1a0.05 0.05 0 1 1 0 -0.1m0 0.2h0.6a0.05 0.05 0 0 1 0 0.1H0.1a0.05 0.05 0 0 1 0 -0.1"></path>
+                    </svg>
+                </button>
+                <ul class="routemenu" role="menubar">
+                    <li><a href="/" role="menuitem" data-spa-link>Home</a></li>
+                    <li><a href="./no1" role="menuitem" data-spa-link>No.1</a></li>
+                    <li>
+                        <a href="./another" role="menuitem" aria-haspopup="true" data-spa-link>Another</a>
+                        <ul role="menu" aria-label="Another submenu">
+                            <li><a href="./another/no2.md" role="menuitem" data-spa-link>No.2</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="./markdown-tests" role="menuitem" aria-haspopup="true" data-spa-link>Markdown Tests</a>
+                        <ul role="menu" aria-label="Markdown Tests submenu">
+                            <li><a href="./markdown-tests/footnotes.md" role="menuitem" data-spa-link>Examples: Footnotes</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <form id="search-form" role="search" onsubmit="return false">
+                    <input type="search" id="search-input" placeholder="Search..." aria-label="Search pages">
+                </form>
+            </nav>
+        </div>
+        <article id="search-results" hidden></article>
+        <div class="visible-status" data-attribute="status">{{status}}</div>
+    </header>
+
+    <main>
+        
+    %%body%%
+    </main>
+
+    <footer style="background-color: darkblue;border: 1px solid silver;">
+        <uib-var variable="pageData.description" type="object"></uib-var>
+    </footer>
+
+    <script type="module">
+        import uibuilder from '../uibuilder/uibuilder.esm.min.js'
+        uibuilder.onChange('pageData', (pageData) => {
+            console.log('uibuilder.pageData has changed: ', pageData)
+        })
+
+        // #region Multi-level Menu Functionality
+        /** Initialize multi-level navigation menu with mobile support
+         * Handles burger toggle, submenu expansion, keyboard navigation, and edge detection
+         */
+        function initMenu() {
+            const nav = document.querySelector('.horizontal')
+            const menuToggle = nav?.querySelector('.menu-toggle')
+            const routemenu = nav?.querySelector('.routemenu')
+
+            if (!nav || !menuToggle || !routemenu) return
+
+            // Mobile: Toggle menu visibility
+            menuToggle.addEventListener('click', () => {
+                const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true'
+                menuToggle.setAttribute('aria-expanded', !isExpanded)
+                nav.setAttribute('aria-expanded', !isExpanded)
+            })
+
+            // Mobile: Handle submenu toggle on click for items with children
+            routemenu.addEventListener('click', (e) => {
+                const isMobile = window.matchMedia('(max-width: 768px)').matches
+                if (!isMobile) return
+
+                const link = e.target.closest('a')
+                const li = link?.closest('li')
+                const hasSubmenu = li?.querySelector(':scope > ul')
+
+                if (link && hasSubmenu) {
+                    e.preventDefault()
+                    li.classList.toggle('submenu-open')
+                    
+                    // Close sibling submenus
+                    const siblings = li.parentElement.querySelectorAll(':scope > li.submenu-open')
+                    siblings.forEach(sibling => {
+                        if (sibling !== li) sibling.classList.remove('submenu-open')
+                    })
+                }
+            })
+
+            // Desktop: Detect edge overflow and flip submenus
+            const checkSubmenuOverflow = () => {
+                const submenus = routemenu.querySelectorAll('ul ul')
+                submenus.forEach(submenu => {
+                    submenu.classList.remove('flip-left')
+                    const rect = submenu.getBoundingClientRect()
+                    if (rect.right > window.innerWidth) {
+                        submenu.classList.add('flip-left')
+                    }
+                })
+            }
+
+            // Check overflow on hover
+            routemenu.addEventListener('mouseenter', checkSubmenuOverflow, true)
+            window.addEventListener('resize', () => {
+                // Reset mobile menu state on resize
+                if (!window.matchMedia('(max-width: 768px)').matches) {
+                    nav.setAttribute('aria-expanded', 'false')
+                    menuToggle.setAttribute('aria-expanded', 'false')
+                    routemenu.querySelectorAll('.submenu-open').forEach(el => {
+                        el.classList.remove('submenu-open')
+                    })
+                }
+                checkSubmenuOverflow()
+            })
+
+            // Keyboard navigation
+            routemenu.addEventListener('keydown', (e) => {
+                const focusedItem = document.activeElement
+                const li = focusedItem?.closest('li')
+                const hasSubmenu = li?.querySelector(':scope > ul')
+                const isInSubmenu = focusedItem?.closest('ul ul')
+
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault()
+                        if (isInSubmenu) {
+                            // Move to next sibling in submenu
+                            const nextItem = li?.nextElementSibling?.querySelector('a')
+                            nextItem?.focus()
+                        } else if (hasSubmenu) {
+                            // Open submenu and focus first item
+                            const firstSubItem = hasSubmenu.querySelector('a')
+                            firstSubItem?.focus()
+                        }
+                        break
+
+                    case 'ArrowUp':
+                        e.preventDefault()
+                        if (isInSubmenu) {
+                            const prevItem = li?.previousElementSibling?.querySelector('a')
+                            if (prevItem) {
+                                prevItem.focus()
+                            } else {
+                                // Go back to parent
+                                const parentLink = li?.closest('ul')?.closest('li')?.querySelector(':scope > a')
+                                parentLink?.focus()
+                            }
+                        }
+                        break
+
+                    case 'ArrowRight':
+                        e.preventDefault()
+                        if (!isInSubmenu) {
+                            // Move to next top-level item
+                            const nextTopItem = li?.nextElementSibling?.querySelector('a')
+                            nextTopItem?.focus()
+                        } else if (hasSubmenu) {
+                            // Open nested submenu
+                            const firstSubItem = hasSubmenu.querySelector('a')
+                            firstSubItem?.focus()
+                        }
+                        break
+
+                    case 'ArrowLeft':
+                        e.preventDefault()
+                        if (isInSubmenu) {
+                            // Go back to parent
+                            const parentLink = li?.closest('ul')?.closest('li')?.querySelector(':scope > a')
+                            parentLink?.focus()
+                        } else {
+                            // Move to previous top-level item
+                            const prevTopItem = li?.previousElementSibling?.querySelector('a')
+                            prevTopItem?.focus()
+                        }
+                        break
+
+                    case 'Escape':
+                        // Close any open submenus and mobile menu
+                        nav.setAttribute('aria-expanded', 'false')
+                        menuToggle.setAttribute('aria-expanded', 'false')
+                        menuToggle.focus()
+                        break
+
+                    case 'Enter':
+                    case ' ':
+                        if (hasSubmenu && window.matchMedia('(max-width: 768px)').matches) {
+                            e.preventDefault()
+                            li.classList.toggle('submenu-open')
+                        }
+                        break
+                }
+            })
+
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!nav.contains(e.target) && nav.getAttribute('aria-expanded') === 'true') {
+                    nav.setAttribute('aria-expanded', 'false')
+                    menuToggle.setAttribute('aria-expanded', 'false')
+                }
+            })
+        }
+
+        // Initialize menu on DOM ready
+        initMenu()
+        // #endregion Multi-level Menu Functionality
+
+        const contentEl = document.getElementById('content')
+        const baseUrl = '%%url%%'
+        const searchInput = document.getElementById('search-input')
+        const searchResults = document.getElementById('search-results')
+        let searchTimeout = null
+        console.log('Base URL:', baseUrl)
+        
+        /** Handle SPA navigation
+         * @param {string} href The URL to navigate to
+         * @param {boolean} [pushState=true] Whether to push to history
+         */
+        async function navigate(href, pushState = true) {
+            console.log('Navigating to:', href)
+            contentEl.classList.add('loading')
+            // Hide search results when navigating
+            searchResults.hidden = true
+            searchInput.value = ''
+            
+            try {
+                const response = await fetch(href, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                
+                if (!response.ok) throw new Error('Page not found')
+                
+                const data = await response.json()
+                // TODO: Sanitize data.body for safety
+                contentEl.innerHTML = data.body || '<p>No content</p>'
+                // Pseudo-send updated page data to local uib store
+                delete data.body // We don't need body in uibuilder store
+                uibuilder.set('pageData', data )
+
+                // Update elements with data-attribute based on response data
+                document.querySelectorAll('[data-attribute]').forEach(el => {
+                    const attr = el.getAttribute('data-attribute')
+                    if (attr && data[attr] !== undefined) {
+                        if (el.hasAttribute('content')) {
+                            el.setAttribute('content', data[attr])
+                        } else {
+                            el.textContent = data[attr]
+                        }
+                    }
+                })
+                
+                // Update active nav link(s)
+                document.querySelectorAll('nav a').forEach(a => {
+                    a.classList.toggle('active', baseUrl + a.getAttribute('href') === href)
+                })
+                
+                if (pushState) {
+                    history.pushState({ path: href }, '', href)
+                }
+                
+                // Update page title if provided
+                if (data.title) {
+                    document.title = data.title
+                }
+                
+            } catch (err) {
+                contentEl.innerHTML = '<p>Error loading page. <a href="' + href + '">Try again</a></p>'
+            } finally {
+                contentEl.classList.remove('loading')
+            }
+        }
+        
+        /** Intercept clicks on links
+         * All internal links (without ":" in href) are handled via SPA navigation.
+         * Relative links are all assumed to be relative to baseUrl.
+         * External links (with ":") are not intercepted.
+         */
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a')
+            if (link) {
+                const href = link.getAttribute('href')
+                // If href is external (contains a ":"), do not intercept
+                if (!href || href.includes(':')) return
+
+                console.log('Link click intercepted:', link)
+                e.preventDefault()
+                if (href.startsWith('.')) navigate(link.getAttribute('href'))
+                else {
+                    if (href.startsWith('/')) navigate(baseUrl + link.getAttribute('href'))
+                    else navigate(baseUrl + '/' + link.getAttribute('href'))
+                }
+            }
+        })
+        
+        // Handle browser back/forward
+        window.addEventListener('popstate', (e) => {
+            console.log('popstate', e.state)
+            if (e.state?.path) {
+                navigate(e.state.path, false)
+            }
+        })
+        
+        // Set initial state
+        history.replaceState({ path: location.href }, '', location.href)
+
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout)
+            const query = e.target.value.trim()
+            
+            if (query.length < 2) {
+                searchResults.hidden = true
+                return
+            }
+            
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(baseUrl + '/.search?q=' + encodeURIComponent(query))
+                    const data = await response.json()
+                    
+                    const headerHtml = '<div class="search-header"><span>Search results:</span>' +
+                        '<button class="search-close" aria-label="Close search results" type="button">&times;</button></div>'
+                    
+                    if (data.results.length === 0) {
+                        searchResults.innerHTML = headerHtml + '<p class="no-results">No results found</p>'
+                    } else {
+                        searchResults.innerHTML = headerHtml + data.results.map(r => 
+                            '<a href="' + r.path + '" data-spa-link>' +
+                            '<strong>' + escapeHtml(r.title) + '</strong>' +
+                            '<small>' + escapeHtml(r.snippet || r.description || '') + '</small></a>'
+                        ).join('')
+                    }
+                    
+                    // Attach close button handler
+                    searchResults.querySelector('.search-close')?.addEventListener('click', () => {
+                        searchResults.hidden = true
+                        searchInput.value = ''
+                    })
+                    searchResults.hidden = false
+                } catch (err) {
+                    console.error('Search error:', err)
+                    searchResults.innerHTML = '<p class="no-results">Search error</p>'
+                    searchResults.hidden = false
+                }
+            }, 300)
+        })
+
+        // Hide search results when clicking outside
+        // document.addEventListener('click', (e) => {
+        //     if (!e.target.closest('#search-form')) {
+        //         searchResults.hidden = true
+        //     }
+        // })
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div')
+            div.textContent = text
+            return div.innerHTML
+        }
+    </script>
+</body></html>
