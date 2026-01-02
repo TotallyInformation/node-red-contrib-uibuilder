@@ -2,10 +2,11 @@
  * Bundles marked and front-matter into both CJS and ESM formats
  */
 
-import esbuild from 'esbuild'
+import * as esbuild from 'esbuild' // eslint-disable-line n/no-extraneous-import
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
+// @ts-ignore
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
@@ -22,6 +23,7 @@ const commonOptions = {
 }
 
 // Build CommonJS version
+// @ts-ignore
 await esbuild.build({
     ...commonOptions,
     outfile: join(__dirname, 'index.cjs'),
@@ -32,6 +34,7 @@ await esbuild.build({
 })
 
 // Build ESM version
+// @ts-ignore
 await esbuild.build({
     ...commonOptions,
     outfile: join(__dirname, 'index.mjs'),
