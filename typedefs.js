@@ -399,10 +399,6 @@
  * @property {string=} httpRoot Copy of RED.settings.httpRoot for ease of use
  * @property {string=} reDeployNeeded If the last deployed version is this version or earlier and the current version is greater than this, tell the Editor that a redeploy is needed
  * @property {boolean} instanceApiAllowed Are instance-level API's allowed to be loaded? Could be a security issue so controlled from settings.js uibuilder.instanceApiAllowed. Default=false
- *
- * @property {object} markedLibs References to marked and its plugins for markdown processing
- * @property {object} markedLibs.marked The marked library reference
- * @property {object} markedLibs.plugins Marked plugin references & availability
  */
 
 /** senderNode1
