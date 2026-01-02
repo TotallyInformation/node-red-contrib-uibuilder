@@ -16,7 +16,8 @@
     },
     "devDependencies": {
         "front-matter": "^4.0.2",
-        "marked": "^15.0.6"
+        "marked": "^15.0.6",
+        "marked-alert": "^2.1.2"
     },
     "engines": {
         "node": ">=18.5"

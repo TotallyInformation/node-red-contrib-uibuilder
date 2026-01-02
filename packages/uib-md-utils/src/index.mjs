@@ -4,6 +4,9 @@
 
 import { marked } from 'marked'
 import fm from 'front-matter'
+import markedAlert from 'marked-alert'
+
+marked.use(markedAlert())
 
 export {
     marked,
