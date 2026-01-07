@@ -1,18 +1,73 @@
 ---
 title: Websocket Handling Library
 description: |
-  A singleton class that manages the interactions with Socket.IO and so provides all of the communications between Node-RED and front-end code.
+  A singleton class that manages the interactions with Socket.IO and so provides all of the realtime communications between Node-RED server and front-end browser client.
 created: 2021-06-27 21:35:00
-lastUpdated: 2023-09-30 16:44:10
-updated: 2023-12-30 17:01:42
+updated: 2026-01-02 15:16:13
 ---
 
 `nodes/libs/socket.js`
 
-- [Socket.IO Server Options](#socketio-server-options)
-- [Socket.IO Middleware](#socketio-middleware)
-- [Socket.IO Options](#socketio-options)
-- [Default CORS Options](#default-cors-options)
+## Socket.IO Rooms and Namespaces
+
+A Socket.IO [Namespace](https://socket.io/docs/v4/namespaces/) is created for each `uibuilder` and `uib-markweb` instance.
+
+Namespaces and channels (rooms) ensure that message channels are isolated.
+
+Within each Namespace, 3 standard Socket.IO [Channels/Rooms](https://socket.io/docs/v4/rooms/) are created. These are:
+* `client` - For messages sent from the server to the client.
+* `server` - For messages sent from the client to the server.
+* `ctrl` - For control messages sent between client and server.
+
+Additional rooms can also be created as required. However, as of v7.6, these are still poorly tested. Additional rooms might be used to create client-to-client messaging for example.
+
+### Control messages
+
+These are mostly from the client to the server to indicate status changes such as page load, visibility changes, network reconnects etc. They also can trigger cache replay's for the `uib-cache` node.
+
+An initial control message is also send from the server to a connecting client when the socket.io connection is established. This message contains important metadata about the instance such as version numbers, instance URL, server timestamp, etc.
+
+Most client-to-server control messages are forwarded to output port #2 of the `uibuilder`/`uib-markweb` nodes for processing by Node-RED flows. Input messages containing the `msg.uibuilderCtrl` property are ignored to prevent control loops.
+
+There are also some client-to-server control messages that request server-side actions, these are never forwarded to output port #2. These include:
+
+* `msg.uibuilderCtrl = "get page meta"` - Requests the server to return the metadata for a specified page in the instance's source folder. The server responds with a control message containing the metadata. (This does not work for `uib-markweb` instances currently.)
+
+* `msg.uibuilderCtrl = "internal"` - Can be used by a node to trigger node-specific actions. The node must define its own internal control message handlers in the `node.internalControls` object. The message must include a `controlType` property to specify which internal control action to invoke.
+
+Control messages from the client are always enhanced with extra metadata upon receipt by the server, via the `this.getClientDetails` method. The extra data is added to `msg._uib`. This includes:
+```js
+{
+   _socketId: socket.id,
+   /** What was the originating uibuilder URL */
+   url: node.url,
+   /** Is this client reconnected after temp loss? */
+   recovered: socket.recovered,
+   /** Do our best to get the actual IP addr of client despite any Proxies */
+   ip: realClientIP,
+   /** The referring webpage, should be the full URL of the uibuilder page */
+   referer: headers.referer,
+   // Let the flow know what v of uib client is in use
+   version: handshake.auth.clientVersion,
+   /** What is the stable client id (set by uibuilder, retained till browser restart) */
+   clientId: handshake.auth.clientId,
+   /** What is the client tab identifier (set by uibuilder modern client) */
+   tabId: handshake.auth.tabId,
+   /** What was the originating page name (for SPA's) */
+   pageName: pageName,
+   /** The browser's URL parameters */
+   urlParams: handshake.auth.urlParams,
+   /** How many times has this client reconnected (e.g. after sleep) */
+   connections: handshake.auth.connectedNum,
+   /** True if https/wss */
+   tls: handshake.secure,
+   /** When the client connected to the server */
+   connectedTimestamp: (new Date(handshake.issued)).toISOString(),
+   // HTTP Header info
+   connectHeaders: headers,
+}
+```
+The `handshake` data comes from Socket.IO and contains information provided by the client when it connects.
 
 ## Socket.IO Server Options
 
