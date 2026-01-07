@@ -770,22 +770,23 @@ class UibWeb {
                     // Help reduce risk of XSS and other attacks
                     'X-XSS-Protection': '1;mode=block',
                     'X-Content-Type-Options': 'nosniff',
+                    'Content-Security-Policy': "default-src 'self' 'unsafe-inline' data: blob:; connect-src 'self' ws: wss:; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:;",
                     // 'X-Frame-Options': 'SAMEORIGIN',
-                    // Content-Security-Policy': "script-src 'self'",
                     // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
                     'x-powered-by': 'uibuilder',
-                    'Content-Security-Policy': "default-src 'self' 'unsafe-inline' data: blob:; connect-src 'self' ws: wss:; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:;",
+                    'Access-Control-Expose-Headers': 'uibuilder-namespace, uibuilder-webRoot, uibuilder-client-id, uibuilder-node',
                     // Tell the client what Socket.IO namespace to use,
                     'uibuilder-namespace': node.url, // only client accessible from xhr or web worker
+                    'uibuilder-webRoot': uib.nodeRoot.replace(/\//g, ''),
+                    'uibuilder-client-id': clientId,
                     'uibuilder-node': node.id,
-                    // 'uibuilder-path': mypath,
                 })
                 // .links({
                 //     help: '',
                 // })
                 .cookie('uibuilder-namespace', node.url, {
                     path: mypath,
-                    sameSite: true,
+                    sameSite: 'lax',
                     // @ts-expect-error
                     expires: 0, // session cookie only - expires/maxAge
                     secure: qSec,
@@ -793,7 +794,7 @@ class UibWeb {
                 // Give the client a fixed session id
                 .cookie('uibuilder-client-id', clientId, {
                     path: mypath,
-                    sameSite: true,
+                    sameSite: 'lax',
                     // @ts-expect-error
                     expires: 0, // session cookie only - expires/maxAge
                     secure: qSec,
@@ -801,7 +802,7 @@ class UibWeb {
                 // Tell clients what httpNodeRoot to use (affects Socket.io path)
                 .cookie('uibuilder-webRoot', uib.nodeRoot.replace(/\//g, ''), {
                     path: mypath,
-                    sameSite: true,
+                    sameSite: 'lax',
                     // @ts-expect-error
                     expires: 0, // session cookie only - expires/maxAge
                     secure: qSec,
