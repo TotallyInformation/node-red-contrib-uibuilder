@@ -53,12 +53,16 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * Added a new config variable `instancePath`. This is the first change that will eventually allow uibuilder instances to use a different server folder than `<uibRoot>/<url>`.
 
+* * **NEW** `httpHeaders` property added. This contains the HTTP headers received when the front-end client first connects to the server. This can be useful for debugging and for advanced use cases such as authentication and user tracking. Async so issues a custom event when ready. The `start()` function is now not called until they are ready because the headers are the most reliable way to get the namespace and Node-RED web root (stupid Firefox refuses to read the cookies!)
+
 ### `uib-brand.css` front-end styles
 
 * **Added** `.visually-hidden` class for elements hidden from sighted users but still accessible to screen readers. Use for skip links, form explanations, and status updates otherwise not needed for sighted users.
 * **FIXED** Misconfigured fieldset border.
 
 ### uibuilder client library
+
+* **NEW** Added the `formatDate` function to the client library. This uses the Intl API to format dates according to locale and optional pattern. See the [documentation](./docs/clients/uibuilder-client-library.md#formatdate) for details. Really useful as a filter function and works great with the new `uib-markweb` features.
 
 * **NEW** Added the `_receivedHRtime` property to messages received from the Node-RED server. This is a high-resolution timestamp (in milliseconds) of when the message was received. It can be used to measure latency and performance. It uses the [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) method which provides sub-millisecond accuracy. The value is the elapsed time since page navigation started.
 
@@ -71,6 +75,12 @@ Please see the roadmap in the docs for the backlog of future planned development
 * **NEW** Added npm workspaces under folder `packages`. This is to allow easier management of shared utility packages.
 
 * **NEW** workspace private package `@totallyinformation/uib-md-utils` - A collection of Markdown utility functions that can be shared between uibuilder's server and front-end client libraries. The package bundles its own dependencies using ESBuild.
+
+* **NEW** Control message added. `msg.uibuilderCtrl = 'internal'` allows internal control messages to be sent to nodes.
+
+  Provides a hook such that receipt of a control msg can trigger a node process. Requires msg to include `{uibuilderCtrl: 'internal', controlType: 'someControlType', ...}`. The node can then define its own internal control message handlers in the `node.internalControls` object.
+
+  WARNING: Carefully validate allinputs
 
 * `nodes\libs\admin-api-v3.cjs` - Removed reference to `node:inspector` which is not used. [ref](https://discourse.nodered.org/t/node-red-version-of-mqtt-explorer/99738/14).
 
