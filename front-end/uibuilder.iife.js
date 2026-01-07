@@ -6790,6 +6790,14 @@
 
   // src/front-end-module/uibuilder.module.mjs
   var import_meta = {};
+  var perf = /* @__PURE__ */ new Map();
+  perf.set("loading uibuilder client library", performance.now());
+  var __uibHeadersPromise = fetch(location.href, { method: "HEAD", cache: "no-store" }).then((r) => {
+    const h = {};
+    r.headers.forEach((v, k) => h[k] = v);
+    window.__uibHeaders = h;
+    return h;
+  });
   var version = "7.6.0-iife";
   var isMinified = !/param/.test(function(param) {
   });
@@ -7075,6 +7083,8 @@
       __privateAdd(this, _sendUrlHash, false);
       // Used to help create unique element ID's if one hasn't been provided, increment on use
       __privateAdd(this, _uniqueElID, 0);
+      // Reference to our mini web worker
+      // #headerWorker = uibHeaderWorker
       // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
       __privateAdd(this, _extCommands, [
         "elementExists",
@@ -7174,6 +7184,8 @@
       __publicField(this, "markdown", false);
       // Current URL hash. Initial set is done from start->watchHashChanges via a set to make it watched
       __publicField(this, "urlHash", location.hash);
+      // HTTP Headers on initial load - contain useful uibuilder info
+      __publicField(this, "httpHeaders", {});
       // #endregion ---- ---- ---- ---- //
       // TODO Move to proper getters/setters
       // #region ---- Externally Writable (via .set method, read via .get method) ---- //
@@ -7291,6 +7303,13 @@
        */
       __publicField(this, "removeClass", _ui.removeClass);
       log("trace", "Uib:constructor", "Starting")();
+      perf.set("constructor starting", performance.now());
+      __uibHeadersPromise.then((headers) => {
+        this.httpHeaders = headers;
+        perf.set("http headers", performance.now());
+        this._dispatchCustomEvent("uibuilder:httpHeadersReady", headers);
+        return;
+      });
       window.addEventListener("offline", (e) => {
         this.set("online", false);
         this.set("ioConnected", false);
@@ -7301,12 +7320,6 @@
         log("warn", "Browser", "Reconnected to network")();
         this._checkConnect();
       });
-      document.cookie.split(";").forEach((c) => {
-        const splitC = c.split("=");
-        this.cookies[splitC[0].trim()] = splitC[1];
-      });
-      this.set("clientId", this.cookies["uibuilder-client-id"]);
-      log("trace", "Uib:constructor", "Client ID: ", this.clientId)();
       this.set("tabId", window.sessionStorage.getItem("tabId"));
       if (!this.tabId) {
         this.set("tabId", "t".concat(Math.floor(Math.random() * 1e6)));
@@ -7325,24 +7338,6 @@
           document.querySelector('td[data-vartype="'.concat(event2.detail.prop, '"]')).innerText = JSON.stringify(event2.detail.value);
         }
       });
-      this.set("ioNamespace", this._getIOnamespace());
-      if ("uibuilder-webRoot" in this.cookies) {
-        this.set("httpNodeRoot", this.cookies["uibuilder-webRoot"]);
-        log("trace", "Uib:constructor", 'httpNodeRoot set by cookie to "'.concat(this.httpNodeRoot, '"'))();
-      } else {
-        const fullPath = window.location.pathname.split("/").filter(function(t) {
-          return t.trim() !== "";
-        });
-        if (fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith(".html")) fullPath.pop();
-        fullPath.pop();
-        this.set("httpNodeRoot", "/".concat(fullPath.join("/")));
-        log("trace", "[Uib:constructor]", 'httpNodeRoot set by URL parsing to "'.concat(this.httpNodeRoot, '". NOTE: This may fail for pages in sub-folders.'))();
-      }
-      this.set("ioPath", this.urlJoin(this.httpNodeRoot, _a2._meta.displayName, "vendor", "socket.io"));
-      log("trace", "Uib:constructor", 'ioPath: "'.concat(this.ioPath, '"'))();
-      this.set("pageName", window.location.pathname.replace("".concat(this.ioNamespace, "/"), ""));
-      if (this.pageName.endsWith("/")) this.set("pageName", "".concat(this.pageName, "index.html"));
-      if (this.pageName === "") this.set("pageName", "index.html");
       try {
         const autoloadVars = this.getStore("_uibAutoloadVars");
         if (Object.keys(autoloadVars).length > 0) {
@@ -7352,8 +7347,25 @@
         }
       } catch (e) {
       }
+      this._uibAttrScanAll(document);
+      const observer = new MutationObserver(this._uibAttribObserver.bind(this));
+      observer.observe(document, {
+        subtree: true,
+        attributes: true,
+        attributeOldValue: true,
+        attributeFilter: this.uibAttribs,
+        childList: true
+      });
+      this._watchHashChanges();
+      this.onChange("msg", (msg) => {
+        if (__privateGet(this, _isShowMsg) === true) {
+          const eMsg = document.getElementById("uib_last_msg");
+          if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg);
+        }
+      });
       this._dispatchCustomEvent("uibuilder:constructorComplete");
       log("trace", "Uib:constructor", "Ending")();
+      perf.set("constructor finished", performance.now());
     }
     // #endregion -- not external --
     // #endregion --- End of variables ---
@@ -9244,6 +9256,55 @@
       reader.readAsArrayBuffer(file);
     }
     // #endregion -------- ------------ -------- //
+    // #region ------- Web Worker -------- //
+    /** Get HTTP headers that were sent with the page request
+     * Uses a web worker to fetch headers from the server.
+     * @param {string} [headerName] Optional specific header name to retrieve (case-insensitive)
+     * @returns {Promise<Object|string|null>} Promise resolving to all headers object, a specific header value, or null
+     * @example
+     * // Get all headers
+     * const allHeaders = await uibuilder.headers()
+     * console.log(allHeaders)
+     *
+     * // Get a specific header
+     * const contentType = await uibuilder.headers('content-type')
+     * console.log(contentType)
+     *
+     * // Using .then()
+     * uibuilder.headers('x-uibuilder-namespace').then(ns => console.log(ns))
+     */
+    // async headers(headerName) {
+    //     return this.#headerWorker.getHeadersAsync(headerName)
+    // }
+    /** Get HTTP headers synchronously (may be empty if not yet fetched)
+     * @param {string} [headerName] Optional specific header name to retrieve (case-insensitive)
+     * @returns {object|string|null} All headers object, a specific header value, or null
+     * @example
+     * // Get all headers (may be empty if called too early)
+     * const allHeaders = uibuilder.headersSync()
+     *
+     * // Check if headers are ready first
+     * if (uibuilder.headersReady) {
+     *     const contentType = uibuilder.headersSync('content-type')
+     * }
+     */
+    // headersSync(headerName) {
+    //     return this.#headerWorker.getHeaders(headerName)
+    // }
+    /** Check if HTTP headers have been fetched and are available
+     * @returns {boolean} True if headers are ready to be read
+     */
+    // get headersReady() {
+    //     return this.#headerWorker.isReady
+    // }
+    /** Re-fetch HTTP headers from the server
+     * Useful if you need to refresh headers after some server-side change
+     * @param {string} [url] Optional URL to fetch headers from (defaults to current page)
+     */
+    // refreshHeaders(url) {
+    //     this.#headerWorker.fetchHeaders(url)
+    // }
+    // #endregion ------- ------- -------- //
     // #region ------- Socket.IO -------- //
     /** Return the Socket.IO namespace
      * The cookie method is the most reliable but this falls back to trying to work it
@@ -9256,7 +9317,8 @@
      */
     _getIOnamespace() {
       let ioNamespace;
-      ioNamespace = this.cookies["uibuilder-namespace"];
+      ioNamespace = this.httpHeaders["uibuilder-namespace"] || this.cookies["uibuilder-namespace"];
+      if (ioNamespace.startsWith("/")) ioNamespace = ioNamespace.slice(1);
       if (ioNamespace === void 0 || ioNamespace === "") {
         const u = window.location.pathname.split("/").filter(function(t) {
           return t.trim() !== "";
@@ -9367,6 +9429,9 @@
         this._socket = void 0;
         this.set("ioConnected", false);
       }
+      if (this.headers) {
+        console.log("HTTP Headers: ", this.headersReady, this.headers);
+      }
       this.socketOptions.path = this.ioPath;
       log("trace", "Uib:ioSetup", "About to create IO object. Transports: [".concat(this.socketOptions.transports.join(", "), "]"))();
       this._socket = lookup2(this.ioNamespace, this.socketOptions);
@@ -9431,10 +9496,38 @@
      */
     start(options) {
       log("trace", "Uib:start", "Starting")();
+      perf.set("start starting", performance.now());
       if (__privateGet(this, _MsgHandler)) this.cancelChange("msg", __privateGet(this, _MsgHandler));
       if (this.started === true) {
         log("info", "Uib:start", "Start function already called. Resetting Socket.IO and msg handler.")();
       }
+      if (!document.cookie) log("error", "uibuilder:start", "No cookies! There should be some, is this stupid Firefox?")();
+      document.cookie.split(";").forEach((c) => {
+        const splitC = c.split("=");
+        this.cookies[splitC[0].trim()] = splitC[1];
+      });
+      this.set("clientId", this.httpHeaders["uibuilder-client-id"] || this.cookies["uibuilder-client-id"] || void 0);
+      log("trace", "Uib:constructor", "Client ID: ", this.clientId)();
+      this.set("ioNamespace", this._getIOnamespace());
+      if (this.httpHeaders) {
+        this.set("httpNodeRoot", this.httpHeaders["uibuilder-webroot"]);
+      } else if ("uibuilder-webRoot" in this.cookies) {
+        this.set("httpNodeRoot", this.cookies["uibuilder-webRoot"]);
+        log("trace", "Uib:constructor", 'httpNodeRoot set by cookie to "'.concat(this.httpNodeRoot, '"'))();
+      } else {
+        const fullPath = window.location.pathname.split("/").filter(function(t) {
+          return t.trim() !== "";
+        });
+        if (fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith(".html")) fullPath.pop();
+        fullPath.pop();
+        this.set("httpNodeRoot", "/".concat(fullPath.join("/")));
+        log("trace", "[Uib:constructor]", 'httpNodeRoot set by URL parsing to "'.concat(this.httpNodeRoot, '". NOTE: This may fail for pages in sub-folders.'))();
+      }
+      this.set("ioPath", this.urlJoin(this.httpNodeRoot, _a2._meta.displayName, "vendor", "socket.io"));
+      log("trace", "Uib:constructor", 'ioPath: "'.concat(this.ioPath, '"'))();
+      this.set("pageName", window.location.pathname.replace("".concat(this.ioNamespace, "/"), ""));
+      if (this.pageName.endsWith("/")) this.set("pageName", "".concat(this.pageName, "index.html"));
+      if (this.pageName === "") this.set("pageName", "index.html");
       log("log", "Uib:start", "Cookies: ", this.cookies, "\nClient ID: ".concat(this.clientId))();
       log("trace", "Uib:start", "ioNamespace: ", this.ioNamespace, "\nioPath: ".concat(this.ioPath))();
       if (options) {
@@ -9446,11 +9539,10 @@
       this.set("lastNavType", entry.type);
       this.set("started", this._ioSetup());
       if (this.started === true) {
-        log("trace", "Uib:start", "Start completed. Socket.IO client library loaded.")();
+        log("trace", "Uib:start", "Socket.IO client library loaded.")();
       } else {
-        log("error", "Uib:start", "Start completed. ERROR: Socket.IO client library NOT LOADED.")();
+        log("error", "Uib:start", "ERROR: Socket.IO client library NOT LOADED.")();
       }
-      this._watchHashChanges();
       if (window["Vue"]) {
         this.set("isVue", true);
         try {
@@ -9473,22 +9565,9 @@
       } else {
         log("trace", "Uib:start", "Markdown-IT is not loaded.")();
       }
-      this.onChange("msg", (msg) => {
-        if (__privateGet(this, _isShowMsg) === true) {
-          const eMsg = document.getElementById("uib_last_msg");
-          if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg);
-        }
-      });
-      this._uibAttrScanAll(document);
-      const observer = new MutationObserver(this._uibAttribObserver.bind(this));
-      observer.observe(document, {
-        subtree: true,
-        attributes: true,
-        attributeOldValue: true,
-        attributeFilter: this.uibAttribs,
-        childList: true
-      });
       this._dispatchCustomEvent("uibuilder:startComplete");
+      perf.set("start finished", performance.now());
+      console.log("Performance: ", perf);
     }
     // #endregion -------- ------------ -------- //
   }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _uniqueElID = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), _uibAttrSel = new WeakMap(), // #region --- Static variables ---
@@ -9552,11 +9631,13 @@
   } finally {
   }
   var uibuilder_module_default = uibuilder2;
-  uibuilder2.start();
-  customElements.define("uib-var", uib_var_default);
-  customElements.define("uib-meta", uib_meta_default);
-  customElements.define("apply-template", apply_template_default);
-  customElements.define("uib-control", uib_control_default);
+  document.addEventListener("uibuilder:httpHeadersReady", () => {
+    uibuilder2.start();
+    customElements.define("uib-var", uib_var_default);
+    customElements.define("uib-meta", uib_meta_default);
+    customElements.define("apply-template", apply_template_default);
+    customElements.define("uib-control", uib_control_default);
+  });
 })();
 /**
  * @description Overlay window for displaying messages and notifications.

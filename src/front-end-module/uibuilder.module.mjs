@@ -15,10 +15,27 @@
  * @copyright (c) 2022-2025 Julian Knight (Totally Information)
  */
 
+const perf = new Map()
+perf.set('loading uibuilder client library', performance.now())
+
+// Fastest way to get the http headers - called in constructor
+const __uibHeadersPromise = fetch(location.href, { method: 'HEAD', cache: 'no-store', })
+    .then((r) => {
+        // console.log('>> >> HEADERS >> >> ', r.headers)
+        const h = {}
+        r.headers.forEach((v, k) => h[k] = v)
+        window.__uibHeaders = h
+        return h
+        // return r.headers
+    })
+
 // #region --- Type Defs --- //
 /**
  * A string containing HTML markup
  * @typedef {string} html
+ */
+/**
+ * @type {import('./libs/uib-worker.mjs').UibHeaderWorker} Reference to header worker
  */
 // #endregion --- Type Defs --- //
 
@@ -32,6 +49,7 @@ import ApplyTemplate from '../components/apply-template.mjs'
 import UibControl from '../components/uib-control.mjs'
 import { reactive as createReactive, Reactive } from './reactive.mjs'
 import { formatDate } from './libs/format-date-time.mjs'
+// import uibHeaderWorker from './libs/uib-worker.mjs'
 // import { dom } from './tinyDom'
 
 // Incorporate the logger module - NB: This sets a global `log` object for use if it can.
@@ -336,6 +354,8 @@ export const Uib = class Uib {
     #sendUrlHash = false
     // Used to help create unique element ID's if one hasn't been provided, increment on use
     #uniqueElID = 0
+    // Reference to our mini web worker
+    // #headerWorker = uibHeaderWorker
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
         'elementExists', 'get', 'getManagedVarList', 'getWatchedVars', 'htmlSend', 'include',
@@ -434,6 +454,8 @@ export const Uib = class Uib {
     markdown = false
     // Current URL hash. Initial set is done from start->watchHashChanges via a set to make it watched
     urlHash = location.hash
+    // HTTP Headers on initial load - contain useful uibuilder info
+    httpHeaders = {}
     // #endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
@@ -2906,6 +2928,59 @@ export const Uib = class Uib {
     }
     // #endregion -------- ------------ -------- //
 
+    // #region ------- Web Worker -------- //
+    /** Get HTTP headers that were sent with the page request
+     * Uses a web worker to fetch headers from the server.
+     * @param {string} [headerName] Optional specific header name to retrieve (case-insensitive)
+     * @returns {Promise<Object|string|null>} Promise resolving to all headers object, a specific header value, or null
+     * @example
+     * // Get all headers
+     * const allHeaders = await uibuilder.headers()
+     * console.log(allHeaders)
+     *
+     * // Get a specific header
+     * const contentType = await uibuilder.headers('content-type')
+     * console.log(contentType)
+     *
+     * // Using .then()
+     * uibuilder.headers('x-uibuilder-namespace').then(ns => console.log(ns))
+     */
+    // async headers(headerName) {
+    //     return this.#headerWorker.getHeadersAsync(headerName)
+    // }
+
+    /** Get HTTP headers synchronously (may be empty if not yet fetched)
+     * @param {string} [headerName] Optional specific header name to retrieve (case-insensitive)
+     * @returns {object|string|null} All headers object, a specific header value, or null
+     * @example
+     * // Get all headers (may be empty if called too early)
+     * const allHeaders = uibuilder.headersSync()
+     *
+     * // Check if headers are ready first
+     * if (uibuilder.headersReady) {
+     *     const contentType = uibuilder.headersSync('content-type')
+     * }
+     */
+    // headersSync(headerName) {
+    //     return this.#headerWorker.getHeaders(headerName)
+    // }
+
+    /** Check if HTTP headers have been fetched and are available
+     * @returns {boolean} True if headers are ready to be read
+     */
+    // get headersReady() {
+    //     return this.#headerWorker.isReady
+    // }
+
+    /** Re-fetch HTTP headers from the server
+     * Useful if you need to refresh headers after some server-side change
+     * @param {string} [url] Optional URL to fetch headers from (defaults to current page)
+     */
+    // refreshHeaders(url) {
+    //     this.#headerWorker.fetchHeaders(url)
+    // }
+    // #endregion ------- ------- -------- //
+
     // #region ------- Socket.IO -------- //
 
     /** Return the Socket.IO namespace
@@ -2921,7 +2996,8 @@ export const Uib = class Uib {
         let ioNamespace
 
         /** Try getting the namespace cookie. */
-        ioNamespace = this.cookies['uibuilder-namespace']
+        ioNamespace = this.httpHeaders['uibuilder-namespace'] || this.cookies['uibuilder-namespace']
+        if (ioNamespace.startsWith('/')) ioNamespace = ioNamespace.slice(1)
 
         // if it wasn't available, try using the current url path
         if (ioNamespace === undefined || ioNamespace === '') {
@@ -3083,12 +3159,18 @@ export const Uib = class Uib {
             this.set('ioConnected', false)
         }
 
+        if (this.headers) {
+            console.log('HTTP Headers: ', this.headersReady, this.headers)
+        }
+
         // Update the URL path to make sure we have the right one
         this.socketOptions.path = this.ioPath
+        // console.log('>> ioPath: ', this.ioPath, ' >> ioNamespace: ', this.ioNamespace, this.socketOptions)
 
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
         log('trace', 'Uib:ioSetup', `About to create IO object. Transports: [${this.socketOptions.transports.join(', ')}]`)()
         this._socket = io(this.ioNamespace, this.socketOptions)
+        // console.log(this._socket, '>> ioPath: ', this.ioPath, ' >> ioNamespace: ', this.ioNamespace, this.socketOptions)
 
         this._connectGlobal()
 
@@ -3274,6 +3356,16 @@ export const Uib = class Uib {
 
     constructor() {
         log('trace', 'Uib:constructor', 'Starting')()
+        perf.set('constructor starting', performance.now())
+
+        __uibHeadersPromise.then((headers) => { // eslint-disable-line promise/catch-or-return
+            this.httpHeaders = headers
+            perf.set('http headers', performance.now())
+            // console.log('>> >> HEADERS >> >> ', performance.now(), headers)
+            // trigger a custom event to say that headers are ready
+            this._dispatchCustomEvent('uibuilder:httpHeadersReady', headers)
+            return
+        })
 
         // Track whether the client is online or offline
         window.addEventListener('offline', (e) => {
@@ -3286,15 +3378,6 @@ export const Uib = class Uib {
             log('warn', 'Browser', 'Reconnected to network')()
             this._checkConnect()
         })
-
-        document.cookie.split(';').forEach((c) => {
-            const splitC = c.split('=')
-            this.cookies[splitC[0].trim()] = splitC[1]
-        })
-
-        /** Client ID set by uibuilder - lasts until browser profile is closed, applies to all tabs */
-        this.set('clientId', this.cookies['uibuilder-client-id'])
-        log('trace', 'Uib:constructor', 'Client ID: ', this.clientId)()
 
         /** Tab ID - lasts while the tab is open (even if reloaded)
          * WARNING: Duplicating a tab retains the same tabId
@@ -3336,12 +3419,82 @@ export const Uib = class Uib {
             }
         })
 
+        // Attempt to restore autoload variables
+        try {
+            const autoloadVars = this.getStore('_uibAutoloadVars')
+            if (Object.keys(autoloadVars).length > 0) {
+                Object.keys(autoloadVars).forEach( (id) => {
+                    this.set(id, this.getStore(id))
+                })
+            }
+        } catch (e) {}
+
+        // Initial scan for uib-* attributes & add suitable change processors
+        this._uibAttrScanAll(document)
+        // Observer to watch for new/changed elements & add suitable change processors
+        const observer = new MutationObserver(this._uibAttribObserver.bind(this))
+        observer.observe(document, {
+            subtree: true,
+            attributes: true,
+            attributeOldValue: true,
+            attributeFilter: this.uibAttribs,
+            childList: true,
+        })
+
+        // Watch for URL hash changes in case using a front-end router. Updates watched var `urlHash` and socket.io `auth.urlHash`
+        this._watchHashChanges()
+
+        // Set up msg listener for the optional showMsg
+        this.onChange('msg', (msg) => {
+            if (this.#isShowMsg === true) {
+                const eMsg = document.getElementById('uib_last_msg')
+                if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg)
+            }
+        })
+
+        this._dispatchCustomEvent('uibuilder:constructorComplete')
+
+        log('trace', 'Uib:constructor', 'Ending')()
+        perf.set('constructor finished', performance.now())
+    }
+
+    /** Start up Socket.IO comms and listeners
+     * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
+     * necessarily work out the correct ioPath to use.
+     * Also, if cookies aren't permitted in the browser, both ioPath and ioNamespace may need to be specified.
+     * @param {object} [options] The start options object.
+     * @returns {void}
+     */
+    start(options) {
+        log('trace', 'Uib:start', 'Starting')()
+        perf.set('start starting', performance.now())
+
+        // Cancel the msg event handler if already present
+        if ( this.#MsgHandler ) this.cancelChange('msg', this.#MsgHandler)
+
+        if (this.started === true) {
+            log('info', 'Uib:start', 'Start function already called. Resetting Socket.IO and msg handler.')()
+        }
+
+        if (!document.cookie) log('error', 'uibuilder:start', 'No cookies! There should be some, is this stupid Firefox?')()
+        document.cookie.split(';').forEach((c) => {
+            const splitC = c.split('=')
+            this.cookies[splitC[0].trim()] = splitC[1]
+        })
+
+        /** Client ID set by uibuilder - lasts until browser profile is closed, applies to all tabs */
+        this.set('clientId', this.httpHeaders['uibuilder-client-id'] || this.cookies['uibuilder-client-id'] || undefined)
+        log('trace', 'Uib:constructor', 'Client ID: ', this.clientId)()
+
         this.set('ioNamespace', this._getIOnamespace())
 
-        // #region - Try to make sure client uses Socket.IO client version from the uibuilder module (using cookie or path) @since v2.0.0 2019-02-24 allows for httpNodeRoot
+        // console.log('window.location', window.location, this.ioNamespace)
+        // console.log('cookies: ', this.cookies, document.cookie)
 
         /** httpNodeRoot (to set path) */
-        if ('uibuilder-webRoot' in this.cookies) {
+        if (this.httpHeaders) {
+            this.set('httpNodeRoot', this.httpHeaders['uibuilder-webroot'])
+        } else if ('uibuilder-webRoot' in this.cookies) {
             this.set('httpNodeRoot', this.cookies['uibuilder-webRoot'])
             log('trace', 'Uib:constructor', `httpNodeRoot set by cookie to "${this.httpNodeRoot}"`)()
         } else {
@@ -3362,41 +3515,6 @@ export const Uib = class Uib {
         this.set('pageName', window.location.pathname.replace(`${this.ioNamespace}/`, ''))
         if ( this.pageName.endsWith('/') ) this.set('pageName', `${this.pageName}index.html`)
         if ( this.pageName === '' ) this.set('pageName', 'index.html')
-
-        // Attempt to restore autoload variables
-        try {
-            const autoloadVars = this.getStore('_uibAutoloadVars')
-            if (Object.keys(autoloadVars).length > 0) {
-                Object.keys(autoloadVars).forEach( (id) => {
-                    this.set(id, this.getStore(id))
-                })
-            }
-        } catch (e) {}
-
-        // ! Experimental service worker
-        // this.registerServiceWorker('sw')
-
-        this._dispatchCustomEvent('uibuilder:constructorComplete')
-
-        log('trace', 'Uib:constructor', 'Ending')()
-    }
-
-    /** Start up Socket.IO comms and listeners
-     * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
-     * necessarily work out the correct ioPath to use.
-     * Also, if cookies aren't permitted in the browser, both ioPath and ioNamespace may need to be specified.
-     * @param {object} [options] The start options object.
-     * @returns {void}
-     */
-    start(options) {
-        log('trace', 'Uib:start', 'Starting')()
-
-        // Cancel the msg event handler if already present
-        if ( this.#MsgHandler ) this.cancelChange('msg', this.#MsgHandler)
-
-        if (this.started === true) {
-            log('info', 'Uib:start', 'Start function already called. Resetting Socket.IO and msg handler.')()
-        }
 
         log('log', 'Uib:start', 'Cookies: ', this.cookies, `\nClient ID: ${this.clientId}`)()
         log('trace', 'Uib:start', 'ioNamespace: ', this.ioNamespace, `\nioPath: ${this.ioPath}`)()
@@ -3420,13 +3538,10 @@ export const Uib = class Uib {
         this.set('started', this._ioSetup())
 
         if ( this.started === true ) {
-            log('trace', 'Uib:start', 'Start completed. Socket.IO client library loaded.')()
+            log('trace', 'Uib:start', 'Socket.IO client library loaded.')()
         } else {
-            log('error', 'Uib:start', 'Start completed. ERROR: Socket.IO client library NOT LOADED.')()
+            log('error', 'Uib:start', 'ERROR: Socket.IO client library NOT LOADED.')()
         }
-
-        // Watch for URL hash changes in case using a front-end router. Updates watched var `urlHash` and socket.io `auth.urlHash`
-        this._watchHashChanges()
 
         // Check if Vue is present (used for dynamic UI processing)
         if (window['Vue']) {
@@ -3454,27 +3569,9 @@ export const Uib = class Uib {
             log('trace', 'Uib:start', 'Markdown-IT is not loaded.')()
         }
 
-        // Set up msg listener for the optional showMsg
-        this.onChange('msg', (msg) => {
-            if (this.#isShowMsg === true) {
-                const eMsg = document.getElementById('uib_last_msg')
-                if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg)
-            }
-        })
-
-        // Initial scan for uib-* attributes & add suitable change processors
-        this._uibAttrScanAll(document)
-        // Observer to watch for new/changed elements & add suitable change processors
-        const observer = new MutationObserver(this._uibAttribObserver.bind(this))
-        observer.observe(document, {
-            subtree: true,
-            attributes: true,
-            attributeOldValue: true,
-            attributeFilter: this.uibAttribs,
-            childList: true,
-        })
-
         this._dispatchCustomEvent('uibuilder:startComplete')
+        perf.set('start finished', performance.now())
+        console.log('Performance: ', perf)
     }
 
     // #endregion -------- ------------ -------- //
@@ -3569,13 +3666,15 @@ try {
 export { uibuilder }
 export default uibuilder
 
-// Attempt to run start fn
-uibuilder.start()
+// Attempt to run start fn only after HTTP headers are ready
+document.addEventListener('uibuilder:httpHeadersReady', () => {
+    uibuilder.start()
 
-// Add built-in web component classes as a new Custom Element to the window object
-customElements.define('uib-var', UibVar)
-customElements.define('uib-meta', UibMeta)
-customElements.define('apply-template', ApplyTemplate)
-customElements.define('uib-control', UibControl)
+    // Add built-in web component classes as a new Custom Element to the window object
+    customElements.define('uib-var', UibVar)
+    customElements.define('uib-meta', UibMeta)
+    customElements.define('apply-template', ApplyTemplate)
+    customElements.define('uib-control', UibControl)
+})
 
 // #endregion --- Wrap up ---
