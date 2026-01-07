@@ -18,6 +18,7 @@ This highlight changes popover is now included. It will only be shown once after
 * New `.visually-hidden` class added to support accessibility best practices.
 
 #### Front-end client library
+* New function `asyncSend` allows you to send a message to the server and wait for a response. It returns a promise that resolves with the response message. This is useful for request/response patterns where you need to get data from the server before proceeding.
 * Incoming messages now have a `_receivedHRtime` property added. This is a high-resolution timestamp. It can be used to measure message transit times accurately.
 * Thanks to Firefox stupidity around cookies, the front-end client library now fetches the HTTP headers on initial load to get the namespace and Node-RED web root. Has to be done asynchronously, the `start()` function is now not called until headers available. This delays uibuilder startup very slightly but is far more reliable.
 

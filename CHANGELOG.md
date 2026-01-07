@@ -62,7 +62,11 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 ### uibuilder client library
 
-* **NEW** Added the `formatDate` function to the client library. This uses the Intl API to format dates according to locale and optional pattern. See the [documentation](./docs/clients/uibuilder-client-library.md#formatdate) for details. Really useful as a filter function and works great with the new `uib-markweb` features.
+* **NEW** Function `formatDate`. This uses the Intl API to format dates according to locale and optional pattern. See the [documentation](./docs/clients/uibuilder-client-library.md#formatdate) for details. Really useful as a filter function and works great with the new `uib-markweb` features.
+
+* **NEW** Function `randomUUID`. This function generates a random UUID (Universally Unique Identifier) using the browser's `crypto.randomUUID()` method if available. If not available, it falls back to a simple implementation that combines the current timestamp and a random string. This can be useful for generating unique IDs for elements, messages, or other purposes in your front-end code.
+
+* **NEW** Function `asyncSend`. This function allows you to send a message to the server and wait for a response. It returns a promise that resolves with the response message. This is useful for request/response patterns where you need to get data from the server before proceeding.
 
 * **NEW** Added the `_receivedHRtime` property to messages received from the Node-RED server. This is a high-resolution timestamp (in milliseconds) of when the message was received. It can be used to measure latency and performance. It uses the [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) method which provides sub-millisecond accuracy. The value is the elapsed time since page navigation started.
 
