@@ -296,6 +296,7 @@
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
  * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
+ * @property {Object<string, Function>} [internalControls] Internal custom hook functions called via control messages
  *
  * @property {string} instanceFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
@@ -436,6 +437,7 @@
  * @property {string} instanceFolder The full path to the instance folder. Used in web.instanceSetup()
  * @property {string} configFolder The full or relative path to the config folder. Used in web.instanceSetup()
  * @property {string} pageTemplate The pages HTML template content - cached for efficiency
+ * @property {Object<string, Function>} [internalControls] Internal custom hook functions called via control messages
  * @property {Function} sendToFe Ref to sockets.sendToFe
  *
  * @property {object} statusDisplay Settings for the uibuilder node status
@@ -443,7 +445,6 @@
  * @property {string} statusDisplay.fill Fill colour: black, blue, red, yellow, ...
  * @property {string} statusDisplay.shape dot or ring
  *
-
  */
 
 /** uibListNode
