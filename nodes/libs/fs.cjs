@@ -392,6 +392,7 @@ class UibFs {
         }
     } // ----- End of replaceTemplate() ----- //
 
+    // TODO Check if this works with uib-markweb too
     /** Return list of found files as folder/files and/or urls
      * @param {string} uibId The uibuilder node instance id to search
      * @param {boolean} live If true, the search root will be limited to the currently live served folder
@@ -486,6 +487,8 @@ class UibFs {
         return out
     }
 
+    /** Get a file's stats (async/promise) */
+    stat = fs.stat
     // TODO chk params
     /** Output a file to an instance folder (async/promise)
      * NB: Errors have the fn indicator at the end because this is expected to be a utility fn called from elsewhere
@@ -597,7 +600,7 @@ class UibFs {
     // #region ---- Synchronous methods ----
 
     /** Synchronously try access and error if fail.
-     * @throws Error if required access not available
+     * @throws {Error} Error if required access not available
      * @param {string} path Path to try to access
      * @param {'r'|'w'|'rw'|number} mode Modes required to work: r, w or rw
      */
@@ -710,7 +713,7 @@ class UibFs {
     }
 
     /** Read a JSON file and return as a JavaScript object
-     * @throws If reading or parsing fails
+     * @throws {Error} If reading or parsing fails
      * @param {string} file JSON file path/name to read
      * @returns {object} The parsed JSON file as an object
      */
