@@ -7756,6 +7756,9 @@ var Uib = (_a2 = class {
     if (url2) window.location.href = url2;
     return window.location;
   }
+  randomUUID() {
+    return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "".concat(Date.now(), "-").concat(Math.random().toString(36).substring(2, 11));
+  }
   /** Wrap a provided variable in a proxy object so that it can be used reactively
    * @param {*} srcvar The source variable to wrap
    * @returns {Proxy} A proxy object that can be used reactively
@@ -9019,6 +9022,71 @@ var Uib = (_a2 = class {
     }
   }
   // --- end of _uibCommand ---
+  /** Send a message to Node-RED and return a promise that resolves when a matching response is received.
+   * The response must have the same msg.topic and msg._uib.correlationId to match.
+   * @param {object} msg The message to send to Node-RED
+   * @param {object} [options] Options for the async send
+   * @param {number} [options.timeout] Timeout in milliseconds (default: 60000 = 60 seconds)
+   * @param {Function} [options.onSuccess] Optional callback function to call on success. Receives the response msg.
+   * @param {string} [options.originator] Optional Node-RED node ID to return the message to
+   * @returns {Promise<object>} Promise that resolves with the response message or rejects on timeout
+   * @example
+   * // Basic usage
+   * const response = await uibuilder.asyncSend({ topic: 'myTopic', payload: 'Hello' })
+   *
+   * // With options
+   * const response = await uibuilder.asyncSend(
+   *     { topic: 'getData', payload: { id: 123 } },
+   *     { timeout: 30000, onSuccess: (msg) => console.log('Got response:', msg) }
+   * )
+   *
+   * // Using .then()
+   * uibuilder.asyncSend({ topic: 'query', payload: 'test' })
+   *     .then(response => console.log('Response:', response))
+   *     .catch(err => console.error('Failed:', err))
+   */
+  asyncSend(msg, options = {}) {
+    var _a3, _b;
+    const timeout = (_a3 = options.timeout) != null ? _a3 : 6e4;
+    const onSuccess = options.onSuccess;
+    const originator = (_b = options.originator) != null ? _b : "";
+    msg = this.makeMeAnObject(msg, "payload");
+    const correlationId = this.randomUUID();
+    if (!msg.topic) {
+      msg.topic = this.topic || "uibuilder/asyncSend";
+    }
+    if (!msg._uib) msg._uib = {};
+    msg._uib.correlationId = correlationId;
+    const topic = msg.topic;
+    return new Promise((resolve, reject) => {
+      const cleanup = (tid, lref) => {
+        if (tid) clearTimeout(tid);
+        if (lref !== void 0) {
+          this.cancelTopic(topic, lref);
+        }
+      };
+      const timeoutId = setTimeout(() => {
+        cleanup(timeoutId, listenerRef);
+        reject(new Error("asyncSend timeout after ".concat(timeout, 'ms for topic "').concat(topic, '" with correlationId "').concat(correlationId, '"')));
+      }, timeout);
+      const listenerRef = this.onTopic(topic, (responseMsg) => {
+        var _a4;
+        if (((_a4 = responseMsg._uib) == null ? void 0 : _a4.correlationId) === correlationId) {
+          cleanup(timeoutId, listenerRef);
+          if (typeof onSuccess === "function") {
+            try {
+              onSuccess(responseMsg);
+            } catch (err) {
+              log("warn", "Uib:asyncSend", "onSuccess callback threw an error", err)();
+            }
+          }
+          resolve(responseMsg);
+        }
+      });
+      log("trace", "Uib:asyncSend", 'Sending async message with topic "'.concat(topic, '" and correlationId "').concat(correlationId, '"'), msg)();
+      this._send(msg, this._ioChannels.client, originator);
+    });
+  }
   /** Send log text to uibuilder's beacon endpoint (works even if socket.io not connected)
    * @param {string} txtToSend Text string to send
    * @param {string|undefined} logLevel Log level to use. If not supplied, will default to debug
