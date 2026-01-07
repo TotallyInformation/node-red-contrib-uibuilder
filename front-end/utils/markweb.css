@@ -1,0 +1,475 @@
+
+/* #region CSS Custom Properties for Menu */
+:root {
+    --menu-bg: var(--surface3);
+    --menu-bg-hover: hsl(210, 100%, 95%);
+    --menu-bg-active: hsl(210, 100%, 90%);
+    --menu-bg-parent-active-1: hsl(210, 80%, 94%);
+    --menu-bg-parent-active-2: hsl(210, 60%, 96%);
+    --menu-bg-parent-active-3: hsl(210, 40%, 97%);
+    --menu-text: var(--text1);
+    --menu-text-hover: hsl(210, 100%, 40%);
+    --menu-border: none; /* hsl(220, 15%, 85%) */
+    --menu-shadow: hsla(220, 20%, 20%, 0.15);
+    --menu-transition: 0.2s ease;
+    --menu-item-padding: 0.75rem 1rem;
+    --menu-min-width: 12rem;
+    --menu-breakpoint: 768px;
+    --menu-z-index: 1000;
+}
+/* #endregion CSS Custom Properties for Menu */
+
+/* #region Base Menu Styles */
+nav.horizontal {
+    background: var(--menu-bg);
+    border-bottom: 1px solid var(--menu-border);
+
+    .menubar {
+        display: flex;
+        flex-wrap: wrap;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .menubar li {
+        position: relative;
+    }
+    .menubar a {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: var(--menu-item-padding);
+        color: var(--menu-text);
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background-color var(--menu-transition), color var(--menu-transition);
+    }
+    .menubar a:hover, .menubar a:focus {
+        background: var(--menu-bg-hover);
+        color: var(--menu-text-hover);
+        outline: none;
+    }
+    .menubar a:focus-visible {
+        outline: 2px solid var(--menu-text-hover);
+        outline-offset: -2px;
+    }
+
+    .menubar a.active {
+        background: var(--menu-bg-active);
+        color: var(--menu-text-hover);
+    }
+
+    /* Parent items with active children - progressively lighter shades */
+    .menubar li.parent-active-1 > a {
+        background: var(--menu-bg-parent-active-1);
+        color: var(--menu-text-hover);
+    }
+
+    .menubar li.parent-active-2 > a {
+        background: var(--menu-bg-parent-active-2);
+        color: var(--menu-text-hover);
+    }
+
+    .menubar li.parent-active-3 > a {
+        background: var(--menu-bg-parent-active-3);
+        color: var(--menu-text-hover);
+    }
+
+    /* Submenu indicator arrow for items with children */
+    .menubar li:has(> ul) > a::after {
+        content: '';
+        border: 0.3em solid transparent;
+        border-top-color: currentColor;
+        margin-left: auto;
+        transition: transform var(--menu-transition);
+    }
+    /* Show submenu on hover/focus */
+    .menubar li:hover > ul,
+    .menubar li:focus-within > ul {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    /* Prevent submenu from closing when moving to it */
+    .menubar li:hover > ul::before {
+        content: '';
+        position: absolute;
+        top: -1rem;
+        left: 0;
+        right: 0;
+        height: 1rem;
+    }
+}
+/* #endregion Base Menu Styles */
+
+/* #region Dropdown/Submenu Styles (Desktop) */
+.horizontal .submenu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: var(--menu-min-width);
+    list-style: none;
+    margin: 0;
+    padding: 0.25rem 0;
+    background: var(--menu-bg);
+    border: 1px solid var(--menu-border);
+    border-radius: 0.25rem;
+    box-shadow: 0 4px 12px var(--menu-shadow);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-0.5rem);
+    transition: opacity var(--menu-transition), 
+                visibility var(--menu-transition), 
+                transform var(--menu-transition);
+    z-index: var(--menu-z-index);
+
+    /* Nested submenus fly out to the right */
+    ul {
+        top: -0.25rem;
+        left: 100%;
+        transform: translateX(-0.5rem);
+    }
+
+    /* Arrow points right for nested submenus */
+    li:has(> ul) > a::after {
+        border-top-color: transparent;
+        border-left-color: currentColor;
+    }
+
+    li:hover > ul,
+    li:focus-within > ul {
+        transform: translateX(0);
+    }
+
+    li:hover > ul::before {
+        top: 0;
+        left: -1rem;
+        width: 1rem;
+        height: 100%;
+    }
+
+    /* Submenu items full width */
+    a {
+        padding: 0.5rem 1rem;
+    }
+
+    /* Handle right-edge overflow - flip nested menus to left */
+    .horizontal .submenu.flip-left {
+        left: auto;
+        right: 100%;
+        transform: translateX(0.5rem);
+    }
+
+    li:hover > ul.flip-left,
+    li:focus-within > ul.flip-left {
+    transform: translateX(0);
+}
+}
+/* #endregion Dropdown/Submenu Styles (Desktop) */
+
+/* #region Menu Toggle Button (Burger) */
+.menu-toggle {
+    display: none;
+    padding: 0.75rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--menu-text);
+}
+
+.menu-toggle svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: currentColor;
+    transition: transform var(--menu-transition);
+}
+
+.menu-toggle[aria-expanded="true"] svg {
+    transform: rotate(90deg);
+}
+/* #endregion Menu Toggle Button (Burger) */
+
+/* #region Search Styles */
+#search-form { 
+    position: relative;
+    margin-left: auto;
+    padding: 0.5rem;
+}
+#search-input { padding: 0.5rem; border: 1px solid hsl(0, 0%, 80%); border-radius: 0.25rem; }
+#search-results {
+    /* position: absolute; */
+    /* top: 100%; */
+    /* left: 0; */
+    /* right: 0; */
+    /* background: hsl(0, 0%, 100%); */
+    border: 1px solid hsl(0, 0%, 80%);
+    border-radius: var(--border-radius, 0.25rem);
+    max-height: 20em;
+    overflow-y: auto;
+    /* z-index: calc(var(--menu-z-index) + 1); */
+    /* box-shadow: 0 4px 6px hsla(0, 0%, 0%, 0.1); */
+}
+#search-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    /* background: hsl(210, 20%, 95%); */
+    border-bottom: 1px solid var(--surface3);
+    font-weight: 500;
+
+    span:first-child {
+        display: inline-block;
+        font-size: 0.9rem;
+    }
+    .search-close {
+        display: inline-block;
+        cursor: pointer;
+        margin-inline-start: 1px;
+        margin-inline-end: 3px;
+        -webkit-user-modify: read-only !important;
+        user-select: none !important;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0.25rem 0.5rem;
+        font-size: 1.25rem;
+        line-height: 1;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .search-close:hover,
+    .search-close:focus {
+        background: hsl(0, 0%, 90%);
+        color: hsl(0, 0%, 20%);
+    }
+}
+
+#search-details {
+    a {
+        display: block;
+        padding: 0.75rem;
+        text-decoration: none;
+        border-bottom: 1px solid hsl(0, 0%, 90%);
+    }
+    a:hover { background: hsl(210, 50%, 15%); }
+    a:last-child { border-bottom: none; }
+    strong { display: block; color: hsl(210, 100%, 40%); }
+    small { color: hsl(0, 0%, 50%); font-size: 0.85em; }
+    .no-results { padding: 0.75rem; color: hsl(0, 0%, 50%); }
+}
+/* #endregion Search Styles */
+
+/* #region Mobile/Responsive Menu Styles */
+@media (max-width: 768px) {
+    /* Show burger button */
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Hide menu by default on mobile */
+    .horizontal .menubar {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--menu-bg);
+        border: 1px solid var(--menu-border);
+        border-top: none;
+        box-shadow: 0 4px 12px var(--menu-shadow);
+        max-height: 80vh;
+        overflow-y: auto;
+        z-index: var(--menu-z-index);
+    }
+
+    /* Show menu when toggle is expanded */
+    .horizontal[aria-expanded="true"] .menubar {
+        display: flex;
+    }
+
+    /* Reset submenu positioning for mobile */
+    {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        background: hsl(220, 20%, 94%);
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    /* Show submenu when parent has .submenu-open */
+    .horizontal .menubar li.submenu-open > ul {
+        max-height: 50rem;
+    }
+
+    /* Indent nested items */
+    a {
+        padding-left: 2rem;
+    }
+
+    ul a {
+        padding-left: 3rem;
+    }
+
+    ul ul a {
+        padding-left: 4rem;
+    }
+
+    /* Rotate arrow when submenu is open */
+    .horizontal .menubar li.submenu-open > a::after {
+        transform: rotate(180deg);
+    }
+
+    /* Nested submenu arrows always point down on mobile */
+    li:has(> ul) > a::after {
+        border-left-color: transparent;
+        border-top-color: currentColor;
+    }
+
+    /* Disable hover effects on mobile */
+    .horizontal .menubar li:hover > ul {
+        max-height: 0;
+    }
+
+    .horizontal .menubar li.submenu-open:hover > ul {
+        max-height: 50rem;
+    }
+
+    /* Search form in mobile menu */
+    #search-form {
+        order: -1;
+        width: 100%;
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--menu-border);
+    }
+
+    #search-input {
+        width: 100%;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .horizontal .menubar a {
+        padding: 1rem;
+        min-height: 44px;
+    }
+}
+
+/* Print styles - hide navigation */
+@media print {
+    .horizontal,
+    #menu1 {
+        display: none !important;
+    }
+}
+/* #endregion Mobile/Responsive Menu Styles */
+
+/* #region GFM Alert Box Styles */
+blockquote {
+    padding: 0.5em 1em 0.5em 1em;
+    margin: 0.5em 0 1em 0;
+    color: inherit;
+    border: none;
+    border-left: 0.25em solid hsl(213, 12%, 50%);
+    background-color: var(--menu-bg);
+    box-shadow: none;
+    p {
+        margin: 0.3em 0;
+    }
+}
+.markdown-alert {
+    padding: 0.5em 1em 0.5em 1em;
+    margin: 0.5em 0 1em 0;
+    color: inherit;
+    border-left: 0.25em solid #444c56;
+    background-color: var(--menu-bg);
+
+    p {
+        margin: 0.3em 0;
+    }
+    /* p:first-child {
+        padding: 0.3em 0 0 0;
+    }
+    p:last-child {
+        margin: 0 0;
+        padding: 0 0 0.3em 0;
+    } */
+}
+
+.markdown-alert-title {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 500;
+    margin: auto auto;
+    fill: var(--menu-text);
+}
+.octicon {
+    margin: 0.3em 0.5em 0.3em 0;
+}
+.markdown-alert-note {
+    border-left-color: #539bf5;
+    > .markdown-alert-title {
+        color: #539bf5;
+        fill: #539bf5;
+    }
+}
+
+.markdown-alert-tip {
+    border-left-color: #57ab5a;
+    > .markdown-alert-title {
+        color: #57ab5a;
+        fill: #57ab5a;
+    }
+}
+
+.markdown-alert-important {
+    border-left-color: #986ee2;
+    > .markdown-alert-title {
+        color: #986ee2;
+        fill: #986ee2;
+    }
+}
+
+.markdown-alert-warning {
+    border-left-color: #c69026;
+    > .markdown-alert-title {
+        color: #c69026;
+        fill: #c69026;
+    }
+}
+
+.markdown-alert-caution {
+    border-left-color: #e5534b;
+    > .markdown-alert-title {
+        color: #e5534b;
+        fill: #e5534b;
+    }
+}
+/* #endregion GFM Alert Box Styles */
+
+/* Accessibility: Skip to main content link */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--text1);
+    color: var(--surface1);
+    padding: 8px 12px;
+    z-index: 1000;
+    text-decoration: none;
+
+    &:focus {
+        top: 0;
+    }
+}
