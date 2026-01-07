@@ -286,8 +286,9 @@ function postDataUpdate(data) {
 
 /** Handle SPA navigation
  * @param {string} toUrl The URL to navigate to
+ * @param {boolean} [addToHistory] Whether to add this navigation to browser history (default: true)
  */
-async function navigate(toUrl) {
+async function navigate(toUrl, addToHistory = true) {
     elContent?.classList.add('loading')
     // Hide search results when navigating
     // elSearchResults.hidden = true
@@ -306,7 +307,7 @@ async function navigate(toUrl) {
     console.log(`Navigating to: "${toUrl}"`, baseUrl, window.location.origin)
 
     // Ask server for new page content via uibuilder control message (see onChange handler below)
-    uibuilder.sendCtrl({ uibuilderCtrl: 'internal', controlType: 'navigate', toUrl: toUrl, })
+    uibuilder.sendCtrl({ uibuilderCtrl: 'internal', controlType: 'navigate', toUrl: toUrl, addToHistory: addToHistory, })
 }
 
 /** Intercept clicks on links
@@ -324,7 +325,7 @@ document.addEventListener('click', (e) => {
 
         console.log('Link click intercepted:', href, link)
         e.preventDefault()
-        if (href.startsWith('.')) navigate(baseUrl + href)
+        if (href.startsWith('./')) navigate(baseUrl + href)
         else {
             if (href.startsWith('/')) navigate(baseUrl + href)
             else navigate(baseUrl + '/' + href)
@@ -334,14 +335,22 @@ document.addEventListener('click', (e) => {
 
 // Handle browser back/forward
 window.addEventListener('popstate', (evt) => {
-    console.log('popstate', evt.state)
+    console.log('popstate', evt)
     if (evt.state?.path) {
-        navigate(evt.state.path)
+        navigate(evt.state.path, false)
     }
 })
 
 // Set initial state
-history.replaceState({ path: location.href, }, '', location.href)
+let initialPath = location.href
+// Remove origin
+initialPath = initialPath.replace(window.location.origin, '')
+// If the initialPath === baseURL without trailing slash, set to baseURL
+if (initialPath === baseUrl.replace(/\/$/, '')) {
+    initialPath = baseUrl
+}
+// console.log('Setting initial history state:', initialPath)
+history.replaceState({ path: initialPath, status: 'initial load', }, '', initialPath)
 // #endregion --- SPA Navigation ---
 
 // #region --- Search functionality ---
@@ -415,7 +424,7 @@ function doResults(data, query) {
 
 /** Watch for search or navigation response from server & show results */
 uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
-    console.log('Control message received:', ctrlMsg)
+    // console.log('Control message received:', ctrlMsg)
     switch (ctrlMsg.topic) {
         case '_search-results': {
             console.log('Search results received from server:', ctrlMsg)
@@ -451,9 +460,13 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
             // Remove trailing slash from baseUrl
             const newUrl = baseUrl.replace(/\/$/, '') + data.path
-            console.log('pushState:', newUrl)
-            history.pushState({ path: data.path, }, '', newUrl)
-
+            // console.log('pushState:', newUrl)
+            if (ctrlMsg.addToHistory !== false) {
+                history.pushState(
+                    { path: newUrl, status: 'SPA page change', },
+                    '', newUrl
+                )
+            }
             break
         }
 
