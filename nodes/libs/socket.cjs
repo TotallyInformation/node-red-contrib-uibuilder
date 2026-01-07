@@ -348,10 +348,12 @@ class UibSockets {
      * @param {object} msg The message to output, include msg._socketId to send to a single client
      * @param {uibNode} node Reference to the uibuilder node instance
      * @param {string=} channel Optional. Which channel to send to (see uib.ioChannels) - defaults to client
+     * @param {boolean} [debug] Optional. If true, extra debug info is logged. Default false
      */
-    sendToFe( msg, node, channel ) {
+    sendToFe( msg, node, channel, debug = false ) {
         const uib = this.uib
         const log = this.log
+        const dType = debug ? 'info' : 'trace'
 
         const url = node.url
 
@@ -384,10 +386,10 @@ class UibSockets {
 
         // pass the complete msg object to the uibuilder client
         if (socketId) { // Send to specific client
-            log.trace(`🌐[uibuilder[:socket.js:sendToFe:${url}] msg sent on to client ${socketId}. Channel: ${channel}. ${JSON.stringify(msg)}`)
+            log[dType](`🌐[uibuilder[:socket.js:sendToFe:${url}] msg sent on to client ${socketId}. Channel: ${channel}. ${JSON.stringify(msg)}`)
             ioNs.to(socketId).emit(channel, msg)
         } else { // Broadcast
-            log.trace(`🌐[uibuilder[:socket.js:sendToFe:${url}] msg sent on to ALL clients. Channel: ${channel}. ${JSON.stringify(msg)}`)
+            log[dType](`🌐[uibuilder[:socket.js:sendToFe:${url}] msg sent on to ALL clients. Channel: ${channel}. ${JSON.stringify(msg)}`)
             ioNs.emit(channel, msg)
         }
     } // ---- End of sendToFe ---- //
@@ -645,6 +647,7 @@ class UibSockets {
         // Can we handle a control request directly? If not, send it out of port #2
         switch (msg.uibuilderCtrl) {
             case 'get page meta': {
+                // TODO: Does not work for uib-markweb - consider alternatives?
                 // This returns the data straight back to the requesting client, does not output to port #2
                 getFileMeta(join(node.instanceFolder, node.sourceFolder, msg.pageName))
                     .then( (fstats) => {
@@ -662,6 +665,19 @@ class UibSockets {
                     .catch( (err) => {
                         log.error(err)
                     })
+                break
+            }
+
+            case 'internal': {
+                // Internal control message - used for node-specific features
+                if (node.internalControls) {
+                    if (!msg.controlType) break
+                    try {
+                        node.internalControls[msg.controlType](msg)
+                    } catch (e) {
+                        log.error(`🌐[uibuilder:socket:listenFromClientCtrl] Error in internal control message handler: ${e.message}`)
+                    }
+                }
                 break
             }
 
