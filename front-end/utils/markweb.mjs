@@ -333,10 +333,12 @@ document.addEventListener('click', (e) => {
     }
 })
 
-// Handle browser back/forward
+// Handle browser back/forward - Track to avoid pushing state during popstate handling
+let isHandlingPopstate = false
 window.addEventListener('popstate', (evt) => {
     console.log('popstate', evt)
     if (evt.state?.path) {
+        isHandlingPopstate = true
         navigate(evt.state.path, false)
     }
 })
@@ -460,13 +462,16 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
             // Remove trailing slash from baseUrl
             const newUrl = baseUrl.replace(/\/$/, '') + data.path
-            // console.log('pushState:', newUrl)
-            if (ctrlMsg.addToHistory !== false) {
+            // Only push to history if not handling popstate and server says to add to history
+            // console.log('pushState:', newUrl, 'addToHistory:', ctrlMsg.addToHistory, 'isHandlingPopstate:', isHandlingPopstate)
+            if (ctrlMsg.addToHistory === true && !isHandlingPopstate) {
                 history.pushState(
                     { path: newUrl, status: 'SPA page change', },
                     '', newUrl
                 )
             }
+            // Reset the popstate flag after processing
+            isHandlingPopstate = false
             break
         }
 

@@ -430,8 +430,8 @@ async function doNavigate(msg) {
             topic: returnTopic,
             attributes: attributes,
             _socketId: msg._socketId,
-            // Gets the client to add this nav to browser history
-            addToHistory: msg.addToHistory || false,
+            // Gets the client to add this nav to browser history - explicitly convert to boolean
+            addToHistory: msg.addToHistory === true,
         }, this, uib.ioChannels.control)
     }
 
