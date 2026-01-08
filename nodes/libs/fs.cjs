@@ -41,7 +41,7 @@ const fs = require('node:fs/promises')
 // cb
 const { cp, writeFile, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // Sync
-const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readFileSync, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
+const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readdirSync, readFileSync, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // TODO Remove in future?
 const fg = require('fast-glob')
 const process = require('node:process')
@@ -51,6 +51,8 @@ const process = require('node:process')
 
 // Holder for degit which is only loaded when needed
 let degit = null
+// Keep a reference to `this` (in constructor) for use in async methods
+let me
 
 class UibFs {
     // #region --- Class vars ---
@@ -73,9 +75,13 @@ class UibFs {
 
     /** Node's fs libs constants */
     constants = fs.constants
+
     // #endregion --- ----- ---
 
-    // constructor() {} // ---- End of constructor ---- //
+    constructor() {
+        // ONLY WORKS BECAUSE THIS IS A SINGLETON!
+        me = this
+    }
 
     // #region ---- Utility methods ----
 
@@ -119,20 +125,38 @@ class UibFs {
     /** Walks through a folder and sub-folders returning list of files
      * @param {string} dir Folder name to start the walk
      * @param {string} ftype File extension to filter on, e.g. '.html'
+     * @param {number} [level] Current recursion level - used internally
      * @returns {Promise<string[]>} On each call, returns the next found file name
      */
-    async walk(dir, ftype) {
-        let files = await fs.readdir(dir)
+    async walk(dir, ftype, level = 0) {
+        let files
+        try {
+            files = await fs.readdir(dir)
+        } catch (err) {
+            console.error(`🌐🛑[UibFs:walk] Error reading directory '${dir}': ${err.message}`)
+            return []
+        }
+        console.log(`walk dir: ${dir}, ftype: ${ftype}, level: ${level}, files: ${files.length}`, me, this)
         // @ts-ignore
-        files = await Promise.all(files.map(async (file) => {
-            const filePath = join(dir, file)
-            const stats = await fs.stat(filePath)
-            if (stats.isDirectory()) {
-                return this.walk(filePath, ftype)
-            } else if (stats.isFile() && file.endsWith(ftype)) {
-                return filePath
-            }
-        }))
+        try {
+            files = await Promise.all(files.map(async (file) => {
+                const filePath = join(dir, file)
+                let stats
+                try {
+                    stats = await fs.stat(filePath)
+                } catch (err) {
+                    console.error(`🌐🛑[UibFs:walk] Error stating file '${filePath}': ${err.message}`)
+                }
+                if (stats && stats?.isDirectory()) {
+                    return me.walk(filePath, ftype, level++)
+                } else if (stats.isFile() && file.endsWith(ftype)) {
+                    return filePath
+                }
+            }))
+        } catch (err) {
+            console.error(`🌐🛑[UibFs:walk] Error processing files in directory '${dir}': ${err.message}`)
+            return []
+        }
 
         // Filter out undefined entries before concatenating
         return files.filter(Boolean).reduce((all, folderContents) => all.concat(folderContents), [])
@@ -711,6 +735,8 @@ class UibFs {
     mkdirSync(path, options) {
         return mkdirSync(path, options)
     }
+
+    readdirSync = readdirSync
 
     /** Read a JSON file and return as a JavaScript object
      * @throws {Error} If reading or parsing fails
