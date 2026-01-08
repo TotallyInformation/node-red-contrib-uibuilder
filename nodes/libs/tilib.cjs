@@ -1,4 +1,3 @@
-/* eslint-disable prefer-named-capture-group */
 /**
  * General utility library for Node.JS
  *
@@ -16,7 +15,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 'use strict'
 
 const path = require('path')
@@ -37,6 +36,7 @@ module.exports = {
 
     /** Joins all arguments as a URL string
      * @see http://stackoverflow.com/a/28592528/3016654
+     * Since v7.6.0 this also normalizes backslashes to forward slashes
      * param {...string} [path] URL fragments (picked up via the arguments var)
      * @returns {string} Joined path
      */
@@ -50,7 +50,7 @@ module.exports = {
                 return e
             })
             .join('/')
-        return  url.replace('//', '/')
+        return url.replace(/\\/g, '/').replace('//', '/')
     }, // ---- End of urlJoin ---- //
 
     /** Escape a user input string to use in a regular expression
@@ -113,9 +113,10 @@ module.exports = {
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
-        json = '<pre class="syntax-highlight" style="color:white;background-color:black;overflow:auto;">' +
-            json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
-                let cls = 'number'; let style = 'style="color:white"'
+        json = '<pre class="syntax-highlight" style="color:white;background-color:black;overflow:auto;">'
+            + json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
+                let cls = 'number'
+                let style = 'style="color:white"'
                 if ((/^"/).test(match)) {
                     if ((/:$/).test(match)) {
                         cls = 'key'
@@ -132,8 +133,8 @@ module.exports = {
                     style = 'style="color:magenta"'
                 }
                 return `<span class="${cls}" ${style}>${match}</span>`
-            }) +
-            '</pre>'
+            })
+            + '</pre>'
         return json
     }, // ----  ---- //
 
@@ -153,7 +154,7 @@ module.exports = {
     /** Compare 2 simple arrays, return array of arrays - additions and deletions
      * @param {Array} a1 First array
      * @param {Array} a2 Second array
-     * @returns {[string[],string[]]} Array of 2 arrays. Inner array 1: Additions, 2: Deletions
+     * @returns {Array<Array,Array>} Array of 2 arrays. Inner array 1: Additions, 2: Deletions
      */
     compareArrays: function(a1, a2) {
         const temp = [[], []]
@@ -197,19 +198,19 @@ module.exports = {
      */
     dumpReq: function(req) {
         return {
-            'headers': {
-                'host': req.headers.host,
-                'referer': req.headers.referer,
+            headers: {
+                host: req.headers.host,
+                referer: req.headers.referer,
             },
-            'url': req.url,
-            'method': req.method,
-            'baseUrl': req.baseUrl,
-            'hostname': req.hostname,
-            'originalUrl': req.originalUrl,
-            'path': req.path,
-            'protocol': req.protocol,
-            'secure': req.secure,
-            'subdomains': req.subdomains,
+            url: req.url,
+            method: req.method,
+            baseUrl: req.baseUrl,
+            hostname: req.hostname,
+            originalUrl: req.originalUrl,
+            path: req.path,
+            protocol: req.protocol,
+            secure: req.secure,
+            subdomains: req.subdomains,
         }
     }, // ----  ---- //
 
@@ -221,7 +222,7 @@ module.exports = {
      */
     dumpMem: (prefix) => {
         const mem = process.memoryUsage()
-        const formatMem = (m) => ( m / 1048576 ).toFixed(2)
+        const formatMem = m => ( m / 1048576 ).toFixed(2)
         mylog(`${prefix} Memory Use (MB): RSS=${formatMem(mem.rss)}. Heap: Used=${formatMem(mem.heapUsed)}, Tot=${formatMem(mem.heapTotal)}. Ext C++=${formatMem(mem.external)}`)
     },
 
