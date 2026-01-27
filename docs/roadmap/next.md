@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-01-04 21:14:57
+updated: 2026-01-21 13:47:35
 ---
 
 ## To Fix
@@ -17,24 +17,26 @@ None
 
 A node that creates a website out of a folder of markdown content.
 
-Issues:
+#### Issues:
 * [ ] ~~Check if return msgs get clientId, etc.~~ They don't, should they?
-* [ ] Back nav is skipping pages sometimes.
-* [ ] Search results don't have correct link - all use current page.
 * [ ] Search results should stay open after clicking a link.
 * [ ] Search not finding in other attributes?
-* [ ] If not .md file, need to fall through to static file serving? BReakout of navigation fn to use fetch?
+* [ ] Hash link returns are losing the path.
+* [ ] Notify connected clients when watch is triggered.
+* [ ] Indexes cannot currently deal with rename or delete events.
+* [ ] Make sure that `%%search%%` adds a `<search>` element wrapper.
 
-Wish list:
-* [ ] Use server fs watch to provide live updates to pages. Send msg to ALL connected clients when a file changes. Clients can then decide what to do (e.g. reload if they are viewing that page).
+#### Wish list:
+* [-] Use server fs watch to provide live updates to pages. Send msg to ALL connected clients when a file changes. Clients can then decide what to do (e.g. reload if they are viewing that page).
+* [-] Auto-menu generation. Horizontal and vertical options.
+* [-] On scroll, when nav menu scrolls offscreen, collapse it to a burger menu and keep it visible.
+
 * [ ] Allow source folder to be outside the userDir folder.
-* [ ] Pass all discovered content attributes to the front end as a uibuilder managed variable.
 * [ ] Improve HTML styling.
-* [ ] Auto-menu generation. Horizontal and vertical options.
-* [ ] On scroll, when nav menu scrolls offscreen, collapse it to a burger menu and keep it visible.
 * [ ] Page aliases. Allow front-matter `alias` field to specify alternative url paths for a page. Also have a master map.
 * [ ] Level specifier on nav element to limit depth and start level.
-* [ ] `%%index%%` placeholder to generate a list of pages with links. Should use a template for each entry. Allow sorting options (e.g. by created date, updated date, title, etc.). Templates should allow metadata fields to be used. Index must allow pagination. Must have a filter option (e.g. by tag, category, author, date range, etc.)
+* [ ] Add manual index-rebuild button to Editor.
+* [ ] Add watcher to the page template and global attributes files to auto-reload changes.
 
 * [ ] uibuilder Editor common
    * [ ] Include uib-markweb in url checks.
@@ -88,85 +90,6 @@ Wish list:
   * [ ] Show available marked extensions in the edit panel
   * [ ] If marked and other extensions are not installed, show an install button in the Editor.
   * [ ] Allow for a custom 404 page in the _config folder
-
-
-#### Requirements:
-* [x] Use uibuilder processing (web and sockets).
-* [x] Require markdown libs from workspace `@totallyinformation/uib-md-utils` package to avoid additional packages in main uibuilder package. Bundled via esbuild.
-* [x] Server-side rendering using new ExpressJS middleware to handle markdown rendering using marked.
-* [x] SPA style serving.
-* [x] SEARCH functionality.
-  * [x] Seach input box in the nav menu.
-  * [x] Search results in an `<article>` below the nav menu.
-  * [x] Backend search index with auto-update on file changes.
-* [x] Choose a better icon for the node.
-* [x] Folders or files starting with `_` or `.` are blocked.
-* [x] Switch navigation to use uibuilder messages instead of fetch. To allow for more dynamic updates.
-
-* Templates:
-  * [x] Support for a HTML wrapper template with `{{...}}` & `%%....%%` replacements.
-  * [x] HTML wrapper. `page-template.html` file in separate config folder to allow customisation of the HTML wrapper round the rendered markdown. With default backup in `templates/.markweb-defaults/`.
-  * [x] Global front matter fields. `global-attributes.json` file in separate config folder to allow customisation of the available front matter fields for the rendered markdown. With default backup in `templates/.markweb-defaults/`.
-  * [x] Wrap `%%body%%` in a `<div id="content">` before applying the content and remove the content id from the `<main>` element in the template. To allow other content in main without overwriting with new content.
-
-* Front-end processing:
-  * [x] Ensure that all links are intercepted for SPA navigation. But that external links (containing `:`) are not intercepted. **All relative links are relative to the BASE URL (not the current document).**
-
-* Node Editor Config:
-  * [x] Source folder path on server
-  * [x] URL path to serve the content
-  * [x] Allow marked extensions to be specified - phase 1, fixed in code
-
-* UIBUILDER changes
-  * [x] Change main uibuilder processing to allow separate specification of the source folder from the url.
-  * [x] Allow passing of a custom ExpressJS middleware function for a route.
-  * `nodes/libs/web.cjs`:
-     * [x] Update uibuilder route add to allow different middleware per route. e.g. static or markdown.
-
-
-* Markdown extensions
-  * [x] Front-matter, including ability to include fields in Markdown text and HTML wrapper.
-  * [x] GFM.
-  * [x] Checklists.
-  * [-] GFM-style callouts/alerts. Needs better styling.
-  * [ ] Clickable page headings that update the URL hash.
-  * [ ] Dynamic checklists (clickable checkboxes that update the display, fire an event and send to Node-RED).
-  * [ ] Code syntax highlighting.
-  * [ ] Mermaid diagrams.
-  * [ ] Page table-of-contents
-  * [ ] Navigation sidebar (both auto-generated and manual), possibly a horizontal version as well.
-  * [ ] Transclude other markdown files.
-  * [ ] Allow custom styling on Markdown elements via stdised syntax.
-  * [ ] Allow custom HTML attributes on Markdown elements via stdised syntax.
-  * [ ] Footnotes.
-  * [ ] details/summary wrappers for auto-collapsible headings sections (optional).
-  * [ ] Automated footer with last-modified date, copyright, author, etc.
-  * [ ] Common front matter fields:
-    * [x] `title`
-    * [ ] `description`
-    * [ ] `author`
-    * [ ] `created`/`updated` dates (need formatting)
-    * [ ] `status` (draft/published/etc)
-    * [ ] `tags`
-    * [ ] `category`
-    * [ ] _`template` (for future use) external content templates_
-
-Possible future Requirements:
-
-* [ ] Add separate bundle of marked and fm for front-end use.
-* [ ] Allow additional marked extensions to be specified via node config.
-* [ ] Consider caching nav and search indexes.
-* [ ] Add option to use the new Navigate web API for SPA navigation. (Safari from 2025-12, Chromium from 2022, Firefox not yet supported).
-* [ ] Auto-generate a sidebar navigation from the folder structure. Allow for in-page section navigation using headings. Where present, have two tabs in the sidebar: "Contents" and "Sections" (ref Typora's layout).
-* [ ] In Editor, if there is a url clash with another uibuilder instance, show a warning.
-* [ ] Allow marked extensions to be specified via settings.js uibuilder config.
-* [ ] Mount client versions of marked and extensions to front-end for use in std uibuilder front-ends.
-* [ ] Update front-end uibuilder library to use marked to render markdown content instead of just markdown-it.
-
-Future possible ideas:
-
-* Allow custom CSS to be specified?
-* Use uibuilder front-end client library to handle dynamic updates?
 
 
 ### Ongoing work
@@ -310,7 +233,7 @@ Future possible ideas:
 
 ## Consider
 
-* In the client, implement a promise-based send-with-response function. [re](https://discourse.nodered.org/t/navigation-guards-with-vuerouter-in-uibuilder/100109).
+* Move FS processing to use more streams. [Ref](https://blog.gaborkoos.com/posts/2026-01-06-Backpressure-in-JavaScript-the-Hidden-Force-Behind-Streams-Fetch-and-Async-Code/).
 * Move table handling to use older HTMLTableElement API. [ref1](https://christianheilmann.com/2025/10/08/abandonware-of-the-web-do-you-know-that-there-is-an-html-tables-api/), [ref2](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableElement)
 * ~~Auto-~~ Add a button to the uibuilder node's config panel to generate a manifest web endpoint that delivers a manifest file for the current uibuilder instance. This would allow clients to have a faster startup. [ref](https://discourse.nodered.org/t/add-pwa-feature-to-uibuilder/97807/2)
 * For onTopic and uib-topic, allow wildcards in the topic name.
