@@ -281,11 +281,14 @@ const UibLib = {
         const verbose = opts.verbose
 
         // Create spawn options by copying opts and removing custom properties
-        const spawnOpts = { shell: true, windowsHide: true, ...opts, }
+        // const spawnOpts = { shell: true, windowsHide: true, ...opts, }
+        const spawnOpts = { windowsHide: true, ...opts, }
         delete spawnOpts.stream
         delete spawnOpts.childProcess
         delete spawnOpts.out
         delete spawnOpts.verbose
+        // @ts-ignore Remove shell option, we handle it explicitly
+        // delete spawnOpts.shell
 
         // @ts-ignore Ensure stdio is set to 'pipe' so shell.stdout and shell.stderr are streams
         spawnOpts.stdio = 'pipe'
@@ -294,12 +297,22 @@ const UibLib = {
             // @ts-ignore
             spawnOpts.env = process.env
         }
+        // @ts-ignore Avoid DEP0190 by not using shell: true
+        spawnOpts.shell = false
+
         const cmdOut = `${cmd} ${args.join(' ')}`
+
+        // Determine the shell and its argument for running a command string
+        const isWindows = process.platform === 'win32'
+        const shellCmd = isWindows ? process.env.ComSpec || 'cmd.exe' : '/bin/sh'
+        const shellArg = isWindows ? '/c' : '-c'
 
         let shellRef
         const promise = new Promise((resolve, reject) => {
             // @ts-ignore Run the command. NB: shell contains shell.pid
-            const shell = spawn(cmd, args, spawnOpts)
+            // const shell = spawn(cmd, args, spawnOpts)
+            // This avoids DEP0190 by not using shell: true
+            const shell = spawn(shellCmd, [shellArg, cmdOut], spawnOpts)
             shellRef = shell
             // If opts.childProcess is a function, provide the child process reference to it
             if (typeof childProcess === 'function') {
@@ -522,6 +535,35 @@ const UibLib = {
                 if (err.code !== 'ESRCH') throw err
             }
         }
+    },
+
+    /** Escape an array of strings for safe use in a shell command
+     * Based on https://github.com/nodejs/help/issues/5063#issuecomment-3211961369
+     * @param {Array<string>} args Array of strings to escape
+     * @returns {string} The escaped string
+     */
+    shellescape: function shellescape(args) {
+        const isWindows = process.platform === 'win32'
+        const escaped = args.map((arg) => {
+            if (isWindows) {
+                // Windows: use double quotes, escape internal double quotes
+                if (/[^A-Za-z0-9_/:=-]/.test(arg)) {
+                    return `"${arg.replace(/"/g, '\\"')}"`
+                }
+                return arg
+            }
+            // Unix: use single quotes, escape internal single quotes
+            if (/[^A-Za-z0-9_/:=-]/.test(arg)) {
+                let result = `'${arg.replace(/'/g, "'\\''")}'`
+                result = result
+                    .replace(/^(?:'')+/g, '') // unduplicate single-quote at the beginning
+                    .replace(/\\'''/g, "\\'") // remove non-escaped single-quote if there are enclosed between 2 escaped
+                return result
+            }
+            return arg
+        })
+
+        return escaped.join(' ')
     },
 
     /** Sort a uibuilder instances object by url instead of the natural order added
