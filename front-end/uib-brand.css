@@ -532,6 +532,18 @@ body {
 h1, h2, h3, h4, h5, h6, heading {
     line-height: calc(1em + 0.5rem); /* dynamic heights for headings */
     text-wrap: balance;
+
+    a[href^="#"] {
+        display: inline-block;
+        font-size: small;
+        margin-left: 1em;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    &:hover a[href^="#"] {
+        opacity: 1;
+    }
 }
 p, li, figcaption {
     text-wrap: pretty;
@@ -601,12 +613,23 @@ select {
     border: none;
 }
 blockquote {
-    border: 1px solid var(--text3);
-    padding: 0.3rem;
-    box-shadow: var(--shadow);
+    /* box-shadow: var(--shadow); */
+    padding: 0.5em 1em 0.5em 1em;
+    margin: 0.5em 0 1em 0;
+    color: inherit;
+    border: none;
+    border-left: 0.25em solid var(--text3);
+    background-color: var(--surface3);
+    box-shadow: none;
+    p, div {
+        margin: 0.3em 0;
+    }
 }
 code {
+    display: inline-block;
     font-size: 120%;
+    background-color: var(--surface3);
+    padding: 0 0.3em 0 0.3em;
 }
 header, footer, main, section, article {
     /* default prep for container queries */
