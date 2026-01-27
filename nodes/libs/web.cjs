@@ -770,7 +770,7 @@ class UibWeb {
                     // Help reduce risk of XSS and other attacks
                     'X-XSS-Protection': '1;mode=block',
                     'X-Content-Type-Options': 'nosniff',
-                    'Content-Security-Policy': "default-src 'self' 'unsafe-inline' data: blob:; connect-src 'self' ws: wss:; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:;",
+                    'Content-Security-Policy': "default-src 'self' 'unsafe-inline' data: blob:; connect-src 'self' ws: wss:; img-src 'self' data: blob: https:; font-src 'self' data:; style-src 'self' 'unsafe-inline' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:;",
                     // 'X-Frame-Options': 'SAMEORIGIN',
                     // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
                     'x-powered-by': 'uibuilder',
