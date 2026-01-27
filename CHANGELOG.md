@@ -59,6 +59,7 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * **Added** `.visually-hidden` class for elements hidden from sighted users but still accessible to screen readers. Use for skip links, form explanations, and status updates otherwise not needed for sighted users.
 * **FIXED** Misconfigured fieldset border.
+* Tweaks to `blockquote` and `code` styles for better appearance.
 
 ### uibuilder client library
 
@@ -66,7 +67,7 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * **NEW** Function `randomUUID`. This function generates a random UUID (Universally Unique Identifier) using the browser's `crypto.randomUUID()` method if available. If not available, it falls back to a simple implementation that combines the current timestamp and a random string. This can be useful for generating unique IDs for elements, messages, or other purposes in your front-end code.
 
-* **NEW** Function `asyncSend`. This function allows you to send a message to the server and wait for a response. It returns a promise that resolves with the response message. This is useful for request/response patterns where you need to get data from the server before proceeding.
+* **NEW** Function `asyncSend`. This function allows you to send a message to the server and wait for a response. It returns a promise that resolves with the response message. This is useful for request/response patterns where you need to get data from the server before proceeding. [Ref](https://discourse.nodered.org/t/navigation-guards-with-vuerouter-in-uibuilder/100109).
 
 * **NEW** Added the `_receivedHRtime` property to messages received from the Node-RED server. This is a high-resolution timestamp (in milliseconds) of when the message was received. It can be used to measure latency and performance. It uses the [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) method which provides sub-millisecond accuracy. The value is the elapsed time since page navigation started.
 
@@ -78,7 +79,8 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * **NEW** Added npm workspaces under folder `packages`. This is to allow easier management of shared utility packages.
 
-* **NEW** workspace private package `@totallyinformation/uib-md-utils` - A collection of Markdown utility functions that can be shared between uibuilder's server and front-end client libraries. The package bundles its own dependencies using ESBuild.
+  * **NEW** workspace private package `@totallyinformation/uib-md-utils` - A collection of Markdown utility functions that can be shared between uibuilder's server and front-end client libraries. The package bundles its own dependencies using ESBuild.
+  * **NEW** workspace private package `@totallyinformation/uib-mf-utils` - Filing System utility sub-pages. Currently only chokidar to allow extended FS watch for markweb. The package bundles its own dependencies using ESBuild.
 
 * **NEW** Control message added. `msg.uibuilderCtrl = 'internal'` allows internal control messages to be sent to nodes.
 
@@ -87,6 +89,7 @@ Please see the roadmap in the docs for the backlog of future planned development
   WARNING: Carefully validate allinputs
 
 * `nodes\libs\admin-api-v3.cjs` - Removed reference to `node:inspector` which is not used. [ref](https://discourse.nodered.org/t/node-red-version-of-mqtt-explorer/99738/14).
+* Removed DEP0190 error when using node.js v4+ by removing `shell:true` from child_process spawn calls and replacing with an OS explicit shell command.
 
 * `nodes/libs/web.cjs`
   * Made `instanceSetup` more flexible by adding `routeSpec` and `handler` (function) arguments. This allows different types of routes to be added for an instance, e.g. static file serving, markdown rendering, etc.
