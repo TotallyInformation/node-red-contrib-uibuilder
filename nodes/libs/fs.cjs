@@ -39,7 +39,7 @@ const fsextra = require('fs-extra')
 // Async
 const fs = require('node:fs/promises')
 // cb
-const { cp, writeFile, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
+const { cp, watch, writeFile, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // Sync
 const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readdirSync, readFileSync, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // TODO Remove in future?
@@ -296,6 +296,8 @@ class UibFs {
         // const chkInstances = Object.values(uib.instances).includes(params.url)
         // const chkFolders = existsSync(join(uib.rootFolder, params.url))
     }
+
+    readdir = fs.readdir
 
     /** Read a file, return as a buffer unless options.encoding is provided
      * @param {import('node:fs').PathLike} path The file path/name to read
@@ -610,6 +612,8 @@ class UibFs {
             throw new Error(`Could not copy '${src}' to '${dest}'. ${e.message} [UibFs:copyCb]`)
         }
     }
+
+    watch = watch
 
     /** Write to a file (make sure it exists first)
      * @param {string|Buffer|URL|number} file File path to write to
