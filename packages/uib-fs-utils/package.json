@@ -1,0 +1,28 @@
+{
+    "name": "@totallyinformation/uib-fs-utils",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Internal Filing System utilities for uibuilder - bundled chokidar",
+    "main": "index.cjs",
+    "module": "index.mjs",
+    "exports": {
+        ".": {
+            "import": "./index.mjs",
+            "require": "./index.cjs"
+        }
+    },
+    "scripts": {
+        "build": "node build.mjs"
+    },
+    "devDependencies": {
+        "chokidar": "^5.0.0"
+    },
+    "engines": {
+        "node": ">=18.5"
+    },
+    "author": {
+        "name": "Julian Knight (TotallyInformation)",
+        "url": "https://github.com/TotallyInformation"
+    },
+    "license": "Apache-2.0"
+}
