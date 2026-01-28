@@ -389,16 +389,26 @@ const UibLib = {
      * @returns {object} The stdout/stderr output (interleaved) or the commands error reason
      */
     runOsCmdSync: function runOsCmdSync(cmd, args, opts) {
-        if (!opts) opts = { shell: true, windowsHide: true, }
+        if (!opts) opts = { windowsHide: true, }
         // opts.stdio = 'pipe' // force this option
 
+        // @ts-ignore Avoid DEP0190 by not using shell: true
+        opts.shell = false
+
+        const cmdOut = `${cmd} ${args.join(' ')}`
+
+        // Determine the shell and its argument for running a command string
+        const isWindows = process.platform === 'win32'
+        const shellCmd = isWindows ? process.env.ComSpec || 'cmd.exe' : '/bin/sh'
+        const shellArg = isWindows ? '/c' : '-c'
+
         /** @type {object} */
-        const out = spawnSync(cmd, args, opts)
+        const out = spawnSync(shellCmd, [shellArg, cmdOut], opts)
 
         if (opts.out === 'bare') {
             return out.stdout.toString()
         }
-        out.command = `${cmd} ${args.join(' ')}`
+        out.command = cmdOut
         return out
     },
 
