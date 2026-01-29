@@ -582,7 +582,6 @@ button, input[type="button" i], input[type="reset" i], input[type="submit" i], :
     text-align: center;
     transition: background 250ms ease-in-out, transform 150ms ease;
     -webkit-appearance: none;
-    -moz-appearance: none;
     appearance: none;
     border-radius: var(--border-radius);
     /* box-shadow: 0 3px 5px rgb(var(--uib-color-fg), 0.5); */
