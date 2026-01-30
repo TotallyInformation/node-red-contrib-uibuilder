@@ -45,6 +45,45 @@ function escapeHtml(text) {
 }
 // #endregion --- Utility Functions ---
 
+// TODO: Future feature
+// #region --- Checkbox Event Delegation ---
+/** Handle checkbox clicks using event delegation to support dynamically added checkboxes.
+ * @param {MouseEvent} evt - The click event
+ */
+const handleCheckboxClick = (evt) => {
+    const target = /** @type {HTMLElement} */ (evt.target)
+    if (target.matches('input[type="checkbox"]')) {
+        const checkbox = /** @type {HTMLInputElement} */ (target)
+        const identifier = checkbox.id || checkbox.name || checkbox.className || 'unnamed'
+        const checked = checkbox.checked
+
+        // Find associated label text (via for attribute or wrapping label)
+        let labelText = ''
+        if (checkbox.id) {
+            const labelFor = document.querySelector(`label[for="${checkbox.id}"]`)
+            if (labelFor) labelText = labelFor.textContent?.trim() || ''
+        }
+        if (!labelText) {
+            const parentLabel = checkbox.closest('label')
+            if (parentLabel) labelText = parentLabel.textContent?.trim() || ''
+        }
+
+        console.log(`Checkbox clicked: "${identifier}" - label: "${labelText}" - checked: ${checked}`)
+        uibuilder.send({
+            topic: 'markweb-checkbox-click',
+            checkboxId: identifier,
+            label: labelText,
+            checked: checked,
+        })
+    }
+}
+
+// Attach delegated event listener for all checkboxes (including dynamically added ones)
+// ! Disabled for now since this cannot (yet) update the source markdown
+// !  nor does it have a local state store to update checkbox states.
+// document.addEventListener('click', handleCheckboxClick)
+// #endregion --- Checkbox Event Delegation ---
+
 // #region --- SPA Navigation ---
 /** @type {HTMLElement|null} */
 let nav = null
