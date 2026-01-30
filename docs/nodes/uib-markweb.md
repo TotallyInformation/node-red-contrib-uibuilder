@@ -2,7 +2,7 @@
 title: uib-markweb - Dynamic web sites using Markdown
 description: ""
 created: 2026-01-09 15:10:14
-updated: 2026-01-10 13:06:42
+updated: 2026-01-30 15:05:31
 status: Draft
 since: v7.6.0
 ---
@@ -135,6 +135,7 @@ The client library looks to see if any of the changed files are currently being 
 * [x] Automated index lists of folders/files. With parameters to control depth, file types, sorting, etc.
 * [x] Pass all discovered content attributes to the front end as a uibuilder managed variable.
 * [x] `%%index%%` placeholder to generate a list of pages with links. Should use a template for each entry. Allow sorting options (e.g. by created date, updated date, title, etc.). Templates should allow metadata fields to be used. Index must allow pagination. Must have a filter option (e.g. by tag, category, author, date range, etc.)
+* [x] Live reload of changed markdown files. [ref](https://www.npmjs.com/package/markserv)
 
 
 ### Search
@@ -250,3 +251,47 @@ The client library looks to see if any of the changed files are currently being 
 
 </body></html>
 ```
+
+## Internal processes
+
+### URLs & URL mapping
+
+The URL specified in the node config is used as the base URL for the web site. It must be unique among all `uibuilder` and `uib-markweb` nodes in the Node-RED instance and must not clash with any other existing routes in Node-RED. The actual URL will depend on the Node-RED root URL configuration and/or the uibuilder custom web server if used. It is shown in the Editor UI for the node.
+
+Any additional path segments after the base URL are used to identify the specific markdown file or folder being requested. For example, if the base URL is `/docs` and the request is for `/docs/getting-started`, the node will look for a `getting-started.md` file in the source folder.
+
+### Server folder locations
+
+The `source` folder specified in the node config is used as the root folder for the markdown files. If a relative path is provided, it is made relative to the Node-RED `userDir` folder.
+
+The `configFolder` specified in the node config is used to store configuration files such as the HTML wrapper template and global attributes. If a relative path is provided, it is made relative to the Node-RED `userDir` folder.
+
+### Template files
+
+Template files must be stored in the `configFolder` specified in the node config. If a required template file is not found there, a default version from the package `templates/.markweb-defaults/` folder is used.
+
+### Global attributes
+
+These are read from a `global-attributes.json` file in the `configFolder`. If not found there, a default version from the package `templates/.markweb-defaults/` folder is used. They are merged with the front-matter attributes from each markdown file to provide the full set of available attributes for that file. They are merged before any page-specific front-matter, so page front-matter overrides global attributes.
+
+### File watching
+
+The node uses `chokidar` to watch the source folder for file and folder changes. When a change is detected, the navigation and search indexes are rebuilt after a debounce period (default 1 second). All connected clients are notified of the index rebuild and the specific changes detected. By default, the front-end library will check if the changed files are currently being viewed and request a resend of the page data if so which will update the display.
+
+> [!NOTE]
+> The file watcher only goes up to 9 levels deep to avoid performance issues.
+> Sensibly, you should avoid going more than 3-4 levels deep in your folder structure for usability reasons.
+>
+> File/folder _renames_ appear as a deletion and an addition. This may happen in any order depending on how the OS reports the changes.
+
+### Cached page metadata indexes
+
+The node maintains cached indexes of page metadata for navigation and search purposes. These indexes are rebuilt whenever a file or folder change is detected in the source folder. The indexes are stored in memory for fast access.
+
+The navigation index is a representation of the file and folder structure, including only folders and files that are valid markdown pages (i.e., those containing an `index.md` file for folders and nothing starting with `_`).
+
+When a client initially loads a page, the node uses the cached indexes to quickly retrieve the necessary metadata for that page, including front-matter attributes and content snippets for search results.
+
+When a client uses a link to navigate to a different "page", the node retrieves the metadata from the cached indexes and sends it to the client along with the rendered HTML content. The client library then updates the page display accordingly.
+
+Client updates are controlled by updating HTML elements with specific `data-attribute="..."` attributes so that only the necessary parts of the page are updated without a full page reload. The `data-attribute` values correspond to front-matter attributes and special placeholders like `body` for the main content.
