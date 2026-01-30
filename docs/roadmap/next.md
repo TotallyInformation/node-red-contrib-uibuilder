@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-01-21 13:47:35
+updated: 2026-01-30 12:13:38
 ---
 
 ## To Fix
@@ -18,15 +18,19 @@ None
 A node that creates a website out of a folder of markdown content.
 
 #### Issues:
+
+* [x] Notify connected clients when watch is triggered.
+* [x] Search not finding in other attributes?
+* [x] Hash link returns are losing the path.
+* [x] Make sure that `%%search%%` adds a `<search>` element wrapper.
+
 * [ ] ~~Check if return msgs get clientId, etc.~~ They don't, should they?
-* [ ] Search results should stay open after clicking a link.
-* [ ] Search not finding in other attributes?
-* [ ] Hash link returns are losing the path.
-* [ ] Notify connected clients when watch is triggered.
 * [ ] Indexes cannot currently deal with rename or delete events.
-* [ ] Make sure that `%%search%%` adds a `<search>` element wrapper.
 
 #### Wish list:
+
+* [x] Level specifier on nav element to limit depth and start level.
+
 * [-] Use server fs watch to provide live updates to pages. Send msg to ALL connected clients when a file changes. Clients can then decide what to do (e.g. reload if they are viewing that page).
 * [-] Auto-menu generation. Horizontal and vertical options.
 * [-] On scroll, when nav menu scrolls offscreen, collapse it to a burger menu and keep it visible.
@@ -34,27 +38,28 @@ A node that creates a website out of a folder of markdown content.
 * [ ] Allow source folder to be outside the userDir folder.
 * [ ] Improve HTML styling.
 * [ ] Page aliases. Allow front-matter `alias` field to specify alternative url paths for a page. Also have a master map.
-* [ ] Level specifier on nav element to limit depth and start level.
 * [ ] Add manual index-rebuild button to Editor.
 * [ ] Add watcher to the page template and global attributes files to auto-reload changes.
 
-* [ ] uibuilder Editor common
-   * [ ] Include uib-markweb in url checks.
+* [ ] uibuilder Editor
+  * [ ] Include uib-markweb in common url checks.
+  * [ ] If source folder is inaccessible, show a warning, mark the node invalid.
+  * [ ] Help panel.
+
 
 * [ ] Update the navigation index from the watcher. Include metadata (`folder`, `created`, `updated`, `tags`, `category`)
 
 * [ ] Add a "recent" page listing. Available as `{{recent}}`. Needs some directives to specify how many, from where (folder, tags, category), etc.
 
 * [ ] Additional search functionality:
-  * [ ] Move to `%%search%%` placeholder in template.
-  * [ ] Move to realtime comms instead of fetch.
+  * [x] Move to realtime comms instead of fetch.
+  * [ ] Allow `%%search%%` placeholder in template.
   * [ ] Support keyword search (using front-matter fields).
+  * [ ] Search results should stay open after clicking a link.
 
 * [ ] Custom 404 response page. Separate file in config folder with default content if not present.
 * [ ] Live reload of changed markdown files. [ref](https://www.npmjs.com/package/markserv)
 * [ ] Ensure non-markdown files are served correctly (e.g. images, pdfs, etc.)
-* [ ] In Editor, if source folder is inaccessible, show a warning, mark the node invalid.
-* [ ] Help panel.
 * [ ] Documentation.
 * [ ] Remove web router on node close.
 
@@ -88,8 +93,7 @@ A node that creates a website out of a folder of markdown content.
   * [ ] Show full path and actual full url in the edit panel
   * [ ] Show marked errors/warnings in the edit panel
   * [ ] Show available marked extensions in the edit panel
-  * [ ] If marked and other extensions are not installed, show an install button in the Editor.
-  * [ ] Allow for a custom 404 page in the _config folder
+  * [ ] Allow for a custom 404 "page" fragment in the _config folder
 
 
 ### Ongoing work
