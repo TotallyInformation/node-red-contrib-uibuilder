@@ -1,8 +1,10 @@
 /** The uibuilder.pageData object is set on load and when navigating
  * You can use it to do your own processing if desired
  */
-uibuilder.onChange('pageData', (pageData) => {
-    console.log(`uibuilder.pageData has changed (${pageData.from}): `, pageData)
+let pageData
+uibuilder.onChange('pageData', (newPageData) => {
+    console.log(`uibuilder.pageData has changed (${newPageData.from}): `, newPageData)
+    pageData = newPageData
 })
 
 const log = uibuilder.log
@@ -44,219 +46,378 @@ function escapeHtml(text) {
 // #endregion --- Utility Functions ---
 
 // #region --- SPA Navigation ---
+/** @type {HTMLElement|null} */
+let nav = null
+/** @type {HTMLElement|null} */
+let header = null
+/** @type {HTMLElement|null} */
+let burger = null
+/** @type {number} */
+let headerBottom = 0
+/** @type {boolean} */
+let isCollapsed = false
+
+/** Create the burger icon element
+ * @returns {HTMLElement} The burger button element
+ */
+const navCreateBurger = () => {
+    const btn = document.createElement('button')
+    btn.className = 'menu-burger'
+    btn.setAttribute('aria-label', 'Toggle navigation menu')
+    btn.setAttribute('aria-expanded', 'false')
+    btn.innerHTML = '<span></span><span></span><span></span>'
+    return btn
+}
+
+/** Update header bottom position (for resize handling)  */
+const navHorizontalUpdateHeaderPosn = () => {
+    if (header) {
+        const rect = header.getBoundingClientRect()
+        headerBottom = rect.bottom + window.scrollY
+    }
+}
+
+/** Handle scroll - collapse/expand nav based on scroll position */
+const navHorizontalScroll = () => {
+    if (!nav || !burger) return
+
+    const scrollY = window.scrollY
+    const shouldCollapse = scrollY > headerBottom
+
+    if (shouldCollapse !== isCollapsed) {
+        isCollapsed = shouldCollapse
+        nav.classList.toggle('collapsed', shouldCollapse)
+        burger.classList.toggle('visible', shouldCollapse)
+
+        // Close menu when un-collapsing
+        if (!shouldCollapse) {
+            nav.classList.remove('open')
+            burger.classList.remove('open')
+            burger.setAttribute('aria-expanded', 'false')
+        }
+    }
+}
+
+/** Toggle menu open/closed state */
+const navBurgerToggleMenu = () => {
+    if (!nav || !burger) return
+
+    const isOpen = nav.classList.toggle('open')
+    burger.classList.toggle('open', isOpen)
+    burger.setAttribute('aria-expanded', String(isOpen))
+}
+
+/** Close the menu */
+const navBurgerCloseMenu = () => {
+    if (!nav || !burger) return
+
+    nav.classList.remove('open')
+    burger.classList.remove('open')
+    burger.setAttribute('aria-expanded', 'false')
+}
+
+/** Handle clicks outside the menu to close it
+ * @param {MouseEvent} evt Click event
+ */
+const navBurgerClickOutside = (evt) => {
+    if (!nav || !burger) return
+    if (!isCollapsed || !nav.classList.contains('open')) return
+
+    const target = /** @type {HTMLElement} */ (evt.target)
+    if (!nav.contains(target) && !burger.contains(target)) {
+        navBurgerCloseMenu()
+    }
+}
+
+/** Handle mouse leaving the menu area */
+const navBurgerMouseLeave = () => {
+    if (isCollapsed && nav?.classList.contains('open')) {
+        navBurgerCloseMenu()
+    }
+}
+
+/** Initialise the navigation behaviour */
+const navHorizontalInit = () => {
+    nav = document.querySelector('nav.horizontal')
+    header = document.querySelector('header')
+
+    if (!nav) {
+        console.warn('[markweb-nav] No nav.horizontal element found')
+        return
+    }
+
+    // Create and insert burger button after nav
+    burger = navCreateBurger()
+    nav.insertAdjacentElement('afterend', burger)
+
+    // Calculate initial header position
+    navHorizontalUpdateHeaderPosn()
+
+    // Event listeners
+    window.addEventListener('scroll', navHorizontalScroll, { passive: true })
+    window.addEventListener('resize', () => {
+        navHorizontalUpdateHeaderPosn()
+        navHorizontalScroll()
+    }, { passive: true })
+
+    burger.addEventListener('click', navBurgerToggleMenu)
+    burger.addEventListener('touchstart', (evt) => {
+        evt.preventDefault()
+        navBurgerToggleMenu()
+    }, { passive: false })
+
+    // Close on click outside
+    document.addEventListener('click', navBurgerClickOutside)
+
+    // Close on mouse leave (with delay for UX)
+    let leaveTimeout = null
+    nav.addEventListener('mouseleave', () => {
+        leaveTimeout = setTimeout(navBurgerMouseLeave, 300)
+    })
+    nav.addEventListener('mouseenter', () => {
+        if (leaveTimeout) {
+            clearTimeout(leaveTimeout)
+            leaveTimeout = null
+        }
+    })
+    burger.addEventListener('mouseenter', () => {
+        if (leaveTimeout) {
+            clearTimeout(leaveTimeout)
+            leaveTimeout = null
+        }
+    })
+
+    // Hover to open when collapsed
+    burger.addEventListener('mouseenter', () => {
+        if (isCollapsed && !nav.classList.contains('open')) {
+            navBurgerToggleMenu()
+        }
+    })
+
+    // Initial check
+    navHorizontalScroll()
+}
+
+// Initialise when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', navHorizontalInit)
+} else {
+    navHorizontalInit()
+}
+
 /** Initialize multi-level navigation menu with mobile support
  * Handles burger toggle, submenu expansion, keyboard navigation, and edge detection
  */
-function initMenu() {
-    const nav = document.querySelector('.horizontal')
-    const menuToggle = nav?.querySelector('.menu-toggle')
-    const routemenu = nav?.querySelector('.routemenu')
+// function initMenu() {
+//     const nav = document.querySelector('.horizontal')
+//     const menuToggle = nav?.querySelector('.menu-toggle')
+//     const routemenu = nav?.querySelector('.routemenu')
 
-    if (!nav || !menuToggle || !routemenu) return
+//     if (!nav || !menuToggle || !routemenu) return
 
-    // Mobile: Toggle menu visibility
-    menuToggle.addEventListener('click', () => {
-        const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true'
-        // @ts-ignore
-        menuToggle.setAttribute('aria-expanded', !isExpanded)
-        // @ts-ignore
-        nav.setAttribute('aria-expanded', !isExpanded)
-    })
+//     // Mobile: Toggle menu visibility
+//     menuToggle.addEventListener('click', () => {
+//         const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true'
+//         // @ts-ignore
+//         menuToggle.setAttribute('aria-expanded', !isExpanded)
+//         // @ts-ignore
+//         nav.setAttribute('aria-expanded', !isExpanded)
+//     })
 
-    // Mobile: Handle submenu toggle on click for items with children
-    routemenu.addEventListener('click', (e) => {
-        const isMobile = window.matchMedia('(max-width: 768px)').matches
-        if (!isMobile) return
+//     // Mobile: Handle submenu toggle on click for items with children
+//     routemenu.addEventListener('click', (e) => {
+//         const isMobile = window.matchMedia('(max-width: 768px)').matches
+//         if (!isMobile) return
 
-        // @ts-ignore
-        const link = e.target.closest('a')
-        const li = link?.closest('li')
-        const hasSubmenu = li?.querySelector(':scope > ul')
+//         // @ts-ignore
+//         const link = e.target.closest('a')
+//         const li = link?.closest('li')
+//         const hasSubmenu = li?.querySelector(':scope > ul')
 
-        if (link && hasSubmenu) {
-            e.preventDefault()
-            li.classList.toggle('submenu-open')
+//         if (link && hasSubmenu) {
+//             e.preventDefault()
+//             li.classList.toggle('submenu-open')
 
-            // Close sibling submenus
-            const siblings = li.parentElement.querySelectorAll(':scope > li.submenu-open')
-            siblings.forEach((sibling) => {
-                if (sibling !== li) sibling.classList.remove('submenu-open')
-            })
-        }
-    })
+//             // Close sibling submenus
+//             const siblings = li.parentElement.querySelectorAll(':scope > li.submenu-open')
+//             siblings.forEach((sibling) => {
+//                 if (sibling !== li) sibling.classList.remove('submenu-open')
+//             })
+//         }
+//     })
 
-    // Desktop: Detect edge overflow and flip submenus
-    const checkSubmenuOverflow = () => {
-        const submenus = routemenu.querySelectorAll('ul ul')
-        submenus.forEach((submenu) => {
-            submenu.classList.remove('flip-left')
-            const rect = submenu.getBoundingClientRect()
-            if (rect.right > window.innerWidth) {
-                submenu.classList.add('flip-left')
-            }
-        })
-    }
+//     // Desktop: Detect edge overflow and flip submenus
+//     const checkSubmenuOverflow = () => {
+//         const submenus = routemenu.querySelectorAll('ul ul')
+//         submenus.forEach((submenu) => {
+//             submenu.classList.remove('flip-left')
+//             const rect = submenu.getBoundingClientRect()
+//             if (rect.right > window.innerWidth) {
+//                 submenu.classList.add('flip-left')
+//             }
+//         })
+//     }
 
-    // Check overflow on hover
-    routemenu.addEventListener('mouseenter', checkSubmenuOverflow, true)
-    window.addEventListener('resize', () => {
-        // Reset mobile menu state on resize
-        if (!window.matchMedia('(max-width: 768px)').matches) {
-            nav.setAttribute('aria-expanded', 'false')
-            menuToggle.setAttribute('aria-expanded', 'false')
-            routemenu.querySelectorAll('.submenu-open').forEach((el) => {
-                el.classList.remove('submenu-open')
-            })
-        }
-        checkSubmenuOverflow()
-    })
+//     // Check overflow on hover
+//     routemenu.addEventListener('mouseenter', checkSubmenuOverflow, true)
+//     window.addEventListener('resize', () => {
+//         // Reset mobile menu state on resize
+//         if (!window.matchMedia('(max-width: 768px)').matches) {
+//             nav.setAttribute('aria-expanded', 'false')
+//             menuToggle.setAttribute('aria-expanded', 'false')
+//             routemenu.querySelectorAll('.submenu-open').forEach((el) => {
+//                 el.classList.remove('submenu-open')
+//             })
+//         }
+//         checkSubmenuOverflow()
+//     })
 
-    // Keyboard navigation
-    routemenu.addEventListener('keydown', (e) => {
-        const focusedItem = document.activeElement
-        const li = focusedItem?.closest('li')
-        const hasSubmenu = li?.querySelector(':scope > ul')
-        const isInSubmenu = focusedItem?.closest('ul ul')
+//     // Keyboard navigation
+//     routemenu.addEventListener('keydown', (e) => {
+//         const focusedItem = document.activeElement
+//         const li = focusedItem?.closest('li')
+//         const hasSubmenu = li?.querySelector(':scope > ul')
+//         const isInSubmenu = focusedItem?.closest('ul ul')
 
-        // @ts-ignore
-        switch (e.key) {
-            case 'ArrowDown':
-                e.preventDefault()
-                if (isInSubmenu) {
-                    // Move to next sibling in submenu
-                    const nextItem = li?.nextElementSibling?.querySelector('a')
-                    nextItem?.focus()
-                } else if (hasSubmenu) {
-                    // Open submenu and focus first item
-                    const firstSubItem = hasSubmenu.querySelector('a')
-                    firstSubItem?.focus()
-                }
-                break
+//         // @ts-ignore
+//         switch (e.key) {
+//             case 'ArrowDown':
+//                 e.preventDefault()
+//                 if (isInSubmenu) {
+//                     // Move to next sibling in submenu
+//                     const nextItem = li?.nextElementSibling?.querySelector('a')
+//                     nextItem?.focus()
+//                 } else if (hasSubmenu) {
+//                     // Open submenu and focus first item
+//                     const firstSubItem = hasSubmenu.querySelector('a')
+//                     firstSubItem?.focus()
+//                 }
+//                 break
 
-            case 'ArrowUp':
-                e.preventDefault()
-                if (isInSubmenu) {
-                    const prevItem = li?.previousElementSibling?.querySelector('a')
-                    if (prevItem) {
-                        prevItem.focus()
-                    } else {
-                        // Go back to parent
-                        const parentLink = li?.closest('ul')
-                            ?.closest('li')
-                            ?.querySelector(':scope > a')
-                        // @ts-ignore
-                        parentLink?.focus()
-                    }
-                }
-                break
+//             case 'ArrowUp':
+//                 e.preventDefault()
+//                 if (isInSubmenu) {
+//                     const prevItem = li?.previousElementSibling?.querySelector('a')
+//                     if (prevItem) {
+//                         prevItem.focus()
+//                     } else {
+//                         // Go back to parent
+//                         const parentLink = li?.closest('ul')
+//                             ?.closest('li')
+//                             ?.querySelector(':scope > a')
+//                         // @ts-ignore
+//                         parentLink?.focus()
+//                     }
+//                 }
+//                 break
 
-            case 'ArrowRight':
-                e.preventDefault()
-                if (!isInSubmenu) {
-                    // Move to next top-level item
-                    const nextTopItem = li?.nextElementSibling?.querySelector('a')
-                    nextTopItem?.focus()
-                } else if (hasSubmenu) {
-                    // Open nested submenu
-                    const firstSubItem = hasSubmenu.querySelector('a')
-                    firstSubItem?.focus()
-                }
-                break
+//             case 'ArrowRight':
+//                 e.preventDefault()
+//                 if (!isInSubmenu) {
+//                     // Move to next top-level item
+//                     const nextTopItem = li?.nextElementSibling?.querySelector('a')
+//                     nextTopItem?.focus()
+//                 } else if (hasSubmenu) {
+//                     // Open nested submenu
+//                     const firstSubItem = hasSubmenu.querySelector('a')
+//                     firstSubItem?.focus()
+//                 }
+//                 break
 
-            case 'ArrowLeft':
-                e.preventDefault()
-                if (isInSubmenu) {
-                    // Go back to parent
-                    const parentLink = li?.closest('ul')
-                        ?.closest('li')
-                        ?.querySelector(':scope > a')
-                    // @ts-ignore
-                    parentLink?.focus()
-                } else {
-                    // Move to previous top-level item
-                    const prevTopItem = li?.previousElementSibling?.querySelector('a')
-                    prevTopItem?.focus()
-                }
-                break
+//             case 'ArrowLeft':
+//                 e.preventDefault()
+//                 if (isInSubmenu) {
+//                     // Go back to parent
+//                     const parentLink = li?.closest('ul')
+//                         ?.closest('li')
+//                         ?.querySelector(':scope > a')
+//                     // @ts-ignore
+//                     parentLink?.focus()
+//                 } else {
+//                     // Move to previous top-level item
+//                     const prevTopItem = li?.previousElementSibling?.querySelector('a')
+//                     prevTopItem?.focus()
+//                 }
+//                 break
 
-            case 'Escape':
-                // Close any open submenus and mobile menu
-                nav.setAttribute('aria-expanded', 'false')
-                menuToggle.setAttribute('aria-expanded', 'false')
-                // @ts-ignore
-                menuToggle.focus()
-                break
+//             case 'Escape':
+//                 // Close any open submenus and mobile menu
+//                 nav.setAttribute('aria-expanded', 'false')
+//                 menuToggle.setAttribute('aria-expanded', 'false')
+//                 // @ts-ignore
+//                 menuToggle.focus()
+//                 break
 
-            case 'Enter':
-            case ' ':
-                if (hasSubmenu && window.matchMedia('(max-width: 768px)').matches) {
-                    e.preventDefault()
-                    li.classList.toggle('submenu-open')
-                }
-                break
-        }
-    })
+//             case 'Enter':
+//             case ' ':
+//                 if (hasSubmenu && window.matchMedia('(max-width: 768px)').matches) {
+//                     e.preventDefault()
+//                     li.classList.toggle('submenu-open')
+//                 }
+//                 break
+//         }
+//     })
 
-    // Close mobile menu when clicking outside
-    document.addEventListener('click', (e) => {
-        // @ts-ignore
-        if (!nav.contains(e.target) && nav.getAttribute('aria-expanded') === 'true') {
-            nav.setAttribute('aria-expanded', 'false')
-            menuToggle.setAttribute('aria-expanded', 'false')
-        }
-    })
-}
+//     // Close mobile menu when clicking outside
+//     document.addEventListener('click', (e) => {
+//         // @ts-ignore
+//         if (!nav.contains(e.target) && nav.getAttribute('aria-expanded') === 'true') {
+//             nav.setAttribute('aria-expanded', 'false')
+//             menuToggle.setAttribute('aria-expanded', 'false')
+//         }
+//     })
+// }
 
 /** Update active navigation state and parent highlighting
  * @param {string} [currentPath] The current page path (defaults to window.location.pathname)
  */
-function updateActiveNavState(currentPath) {
-    let pathname = currentPath || window.location.pathname
+// function updateActiveNavState(currentPath) {
+//     let pathname = currentPath || window.location.pathname
 
-    // Normalize pathname: if starts with baseUrl, keep as-is; else remove "./" prefix and add baseUrl
-    if (!pathname.startsWith(baseUrl)) {
-        pathname = baseUrl + '/' + pathname.replace(/^\.\//, '')
-    }
+//     // Normalize pathname: if starts with baseUrl, keep as-is; else remove "./" prefix and add baseUrl
+//     if (!pathname.startsWith(baseUrl)) {
+//         pathname = baseUrl + '/' + pathname.replace(/^\.\//, '')
+//     }
 
-    // Clear all active and parent-active classes first
-    document.querySelectorAll('.routemenu a.active').forEach((a) => {
-        a.classList.remove('active')
-    })
-    document.querySelectorAll('.routemenu li[class*="parent-active"]').forEach((li) => {
-        li.classList.remove('parent-active-1', 'parent-active-2', 'parent-active-3')
-    })
+//     // Clear all active and parent-active classes first
+//     document.querySelectorAll('.routemenu a.active').forEach((a) => {
+//         a.classList.remove('active')
+//     })
+//     document.querySelectorAll('.routemenu li[class*="parent-active"]').forEach((li) => {
+//         li.classList.remove('parent-active-1', 'parent-active-2', 'parent-active-3')
+//     })
 
-    // Find matching link
-    let activeLink = null
-    document.querySelectorAll('.routemenu a').forEach((a) => {
-        const href = a.getAttribute('href')
-        if (!href) return
+//     // Find matching link
+//     let activeLink = null
+//     document.querySelectorAll('.routemenu a').forEach((a) => {
+//         const href = a.getAttribute('href')
+//         if (!href) return
 
-        // Normalize linkPath: if starts with baseUrl, keep as-is; else remove "./" prefix and add baseUrl
-        let linkPath = href
-        if (!linkPath.startsWith(baseUrl)) {
-            linkPath = baseUrl + '/' + linkPath.replace(/^\.\//, '')
-        }
+//         // Normalize linkPath: if starts with baseUrl, keep as-is; else remove "./" prefix and add baseUrl
+//         let linkPath = href
+//         if (!linkPath.startsWith(baseUrl)) {
+//             linkPath = baseUrl + '/' + linkPath.replace(/^\.\//, '')
+//         }
 
-        if (normalizePath(pathname) === normalizePath(linkPath)) {
-            activeLink = a
-            a.classList.add('active')
-        }
-    })
+//         if (normalizePath(pathname) === normalizePath(linkPath)) {
+//             activeLink = a
+//             a.classList.add('active')
+//         }
+//     })
 
-    // TODO Consider having a single ancestor highlight for multiple matches
-    // Apply parent-active classes bubbling up from active item
-    if (activeLink) {
-        // @ts-ignore
-        let parentLi = activeLink.closest('li')?.parentElement?.closest('li')
-        let level = 1
-        while (parentLi && level <= 3) {
-            parentLi.classList.add(`parent-active-${level}`)
-            parentLi = parentLi.parentElement?.closest('li')
-            level++
-        }
-    }
-}
+//     // TODO Consider having a single ancestor highlight for multiple matches
+//     // Apply parent-active classes bubbling up from active item
+//     if (activeLink) {
+//         // @ts-ignore
+//         let parentLi = activeLink.closest('li')?.parentElement?.closest('li')
+//         let level = 1
+//         while (parentLi && level <= 3) {
+//             parentLi.classList.add(`parent-active-${level}`)
+//             parentLi = parentLi.parentElement?.closest('li')
+//             level++
+//         }
+//     }
+// }
 
 /** Update page data after navigation
  * @param {object} data The page data returned from server
@@ -273,12 +434,21 @@ function postDataUpdate(data) {
         const attr = el.getAttribute('data-attribute')
         if (attr === 'body') return // Skip body as it is handled separately
         if (attr && data[attr] !== undefined) {
+            const isContent = !!el.hasAttribute('content')
+            // If el has attribute 'data-replace', switch el to be el's parent element
+            if (el.hasAttribute('data-replace')) {
+                const parent = el.parentElement
+                if (parent) {
+                    el = parent
+                }
+            }
             // Handle meta tags
-            if (el.hasAttribute('content')) {
+            if (isContent) {
                 el.setAttribute('content', data[attr])
             } else {
                 // Everything else
-                el.textContent = data[attr]
+                // el.textContent = data[attr]
+                el.innerHTML = data[attr]
             }
         }
     })
@@ -325,10 +495,24 @@ document.addEventListener('click', (e) => {
 
         console.log('Link click intercepted:', href, link)
         e.preventDefault()
+
+        // If href starts with "#" (anchor link), handle scrolling with history support
+        if (href.startsWith('#')) {
+            const targetId = href.slice(1)
+            const targetElement = document.getElementById(targetId)
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start', })
+                // Add to history so back/fwd browser nav works
+                history.pushState({ hash: href, }, '', href)
+            }
+            return
+        }
+
         if (href.startsWith('./')) navigate(baseUrl + href)
         else {
             if (href.startsWith('/')) navigate(baseUrl + href)
             else navigate(baseUrl + '/' + href)
+            // Don't pushState here since navigation might actually fail.
         }
     }
 })
@@ -336,8 +520,16 @@ document.addEventListener('click', (e) => {
 // Handle browser back/forward - Track to avoid pushing state during popstate handling
 let isHandlingPopstate = false
 window.addEventListener('popstate', (evt) => {
-    console.log('popstate', evt)
-    if (evt.state?.path) {
+    console.log('popstate', !!evt.state?.hash, evt.state)
+    // Handle hash-only navigation (anchor links)
+    if (evt.state?.hash) {
+        const targetId = evt.state.hash.slice(1)
+        const targetElement = document.getElementById(targetId)
+        if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start', })
+        }
+    } else if (evt.state?.path) {
+        // Handle full page navigation
         isHandlingPopstate = true
         navigate(evt.state.path, false)
     }
@@ -351,12 +543,13 @@ initialPath = initialPath.replace(window.location.origin, '')
 if (initialPath === baseUrl.replace(/\/$/, '')) {
     initialPath = baseUrl
 }
-// console.log('Setting initial history state:', initialPath)
+console.log('Setting initial history state:', initialPath, { path: initialPath, status: 'initial load', })
 history.replaceState({ path: initialPath, status: 'initial load', }, '', initialPath)
 // #endregion --- SPA Navigation ---
 
 // #region --- Search functionality ---
 let searchTimeout = null
+
 // Add event listener to close button
 const closeButtons = elSearchResults.querySelectorAll('.search-close')
 closeButtons.forEach((btnClose) => {
@@ -398,23 +591,24 @@ function doResults(data, query) {
 /** Handle input event on search input - ask server for search results
  * Sends an "internal" control message to uibuilder to request search
  */
-// elSearchInput.addEventListener('input', (e) => {
-//     clearTimeout(searchTimeout)
-//     // @ts-ignore
-//     const query = e.target.value.trim()
-//     if (query.length < 2) {
-//         elSearchResults.hidden = true
-//         return
-//     }
-//     // Debounce search request inputs
-//     searchTimeout = setTimeout(async () => {
-//         elSearchQuery.textContent = escapeHtml(query)
-//         elSearchCount.textContent = 'N/A'
-//         elSearchDetails.innerHTML = '<p class="no-results">Searching...</p>'
-//         elSearchResults.hidden = false
-//         uibuilder.sendCtrl({ uibuilderCtrl: 'internal', controlType: 'search', query: query, })
-//     }, 300)
-// })
+elSearchInput.addEventListener('input', (e) => {
+    if (searchTimeout) clearTimeout(searchTimeout)
+    // @ts-ignore
+    const query = e.target.value.trim()
+    if (query.length < 2) {
+        elSearchResults.hidden = true
+        return
+    }
+    // Debounce search request inputs
+    searchTimeout = setTimeout(async () => {
+        elSearchQuery.textContent = escapeHtml(query)
+        elSearchCount.textContent = 'N/A'
+        elSearchDetails.innerHTML = '<p class="no-results">Searching...</p>'
+        elSearchResults.hidden = false
+        console.log(`Requesting search for query: "${query}"`)
+        uibuilder.sendCtrl({ uibuilderCtrl: 'internal', controlType: 'search', query: query, })
+    }, 300)
+})
 
 // Hide search results when clicking outside
 // document.addEventListener('click', (e) => {
@@ -427,7 +621,26 @@ function doResults(data, query) {
 /** Watch for search or navigation response from server & show results */
 uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
     // console.log('Control message received:', ctrlMsg)
+
+    // UIBUILDER sends this on initial connect, use to request initial page metadata
+    if (ctrlMsg.uibuilderCtrl === 'client connect') {
+        console.log('Client connected to server, requesting initial page data.', initialPath)
+        uibuilder.sendCtrl({
+            uibuilderCtrl: 'internal',
+            controlType: 'getMetadata',
+            initialPath: initialPath.replace(baseUrl, '/') || '/',
+        })
+        return
+    }
+
     switch (ctrlMsg.topic) {
+        // From initial page data request only. No body in this since we already have it
+        case '_page-metadata': {
+            console.log('Initial page metadata received from server:', ctrlMsg)
+            // uibuilder.set('pageData', ctrlMsg.attributes )
+            break
+        }
+
         case '_search-results': {
             console.log('Search results received from server:', ctrlMsg)
             if (ctrlMsg.error) {
@@ -444,8 +657,26 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             break
         }
 
+        case '_indexes-changed': {
+            console.log('Indexes changed on server.', ctrlMsg)
+            break
+        }
+
+        // If the server watch fn detects a file/folder change
+        case '_source-change': {
+            console.log('Source changed on server.', ctrlMsg)
+            if (ctrlMsg.payload.url === pageData.toUrl) {
+                console.log('Current page affected by source change, reloading page content.')
+            }
+            break
+        }
+
         case '_page-navigation-result': {
-            console.log(`Page change from server (${ctrlMsg.attributes.from}):`, ctrlMsg)
+            console.log(
+                `Page change from ${ctrlMsg.from} (${ctrlMsg.attributes.from}):`,
+                ` New url: ${ctrlMsg.attributes.toUrl}.`,
+                ctrlMsg
+            )
             if (ctrlMsg.error) {
                 // TODO Handle not found
                 return
@@ -457,11 +688,9 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
             postDataUpdate(data)
 
-            // Update active nav link(s) and parent indicators
-            updateActiveNavState(data.path)
-
             // Remove trailing slash from baseUrl
             const newUrl = baseUrl.replace(/\/$/, '') + data.path
+
             // Only push to history if not handling popstate and server says to add to history
             // console.log('pushState:', newUrl, 'addToHistory:', ctrlMsg.addToHistory, 'isHandlingPopstate:', isHandlingPopstate)
             if (ctrlMsg.addToHistory === true && !isHandlingPopstate) {
@@ -470,8 +699,13 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                     '', newUrl
                 )
             }
+
             // Reset the popstate flag after processing
             isHandlingPopstate = false
+
+            // Update active nav link(s) and parent indicators
+            // updateActiveNavState(data.path)
+
             break
         }
 
@@ -483,6 +717,6 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 })
 
 // Initialize menu on DOM ready
-initMenu()
+// initMenu()
 // Set initial active state on page load
-updateActiveNavState()
+// updateActiveNavState()

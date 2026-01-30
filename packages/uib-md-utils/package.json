@@ -16,8 +16,11 @@
     },
     "devDependencies": {
         "front-matter": "^4.0.2",
-        "marked": "^15.0.6",
-        "marked-alert": "^2.1.2"
+        "highlight.js": "^11.11.1",
+        "markdown-it": "^14.1.0",
+        "marked": "^17",
+        "marked-alert": "^2.1.2",
+        "shiki": "^3.21.0"
     },
     "engines": {
         "node": ">=18.5"

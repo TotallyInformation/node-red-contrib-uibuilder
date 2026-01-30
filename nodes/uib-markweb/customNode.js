@@ -1,4 +1,5 @@
-/* eslint-disable jsdoc/valid-types */
+// @ts-nocheck
+/* eslint-disable jsdoc/no-undefined-types, jsdoc/valid-types */
 /** Send a dynamic UI config to the uibuilder front-end library.
  * The FE library will update the UI accordingly.
  *
@@ -18,6 +19,11 @@
  */
 'use strict'
 
+// Save indexes for convenient debugging - not needed for production
+if (!globalThis._uibuilder_) globalThis._uibuilder_ = {}
+if (!globalThis._uibuilder_.markweb) globalThis._uibuilder_.markweb = {}
+if (!globalThis._uibuilder_.markweb.indexes) globalThis._uibuilder_.markweb.indexes = {}
+
 /** --- Type Defs - should help with coding ---
  * @typedef {import('../../typedefs').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
@@ -30,9 +36,12 @@
 const { basename, join, isAbsolute, parse, relative, resolve, sep, } = require('path')
 const express = require('express')
 // ! TODO Move to fs.cjs
-const { watch, } = require('node:fs')
 
-const { accessSync, existsSync, fgSync, readFile, readFileSync, stat, } = require('../libs/fs.cjs')
+const {
+    accessSync, existsSync, fgSync,
+    readdirSync, readFile, readFileSync,
+    stat, watch,
+} = require('../libs/fs.cjs')
 const { urlJoin, } = require('../libs/tilib.cjs')
 const { setNodeStatus, } = require('../libs/uiblib.cjs') // Utility library for uibuilder
 const sockets = require('../libs/socket.cjs')
@@ -42,8 +51,81 @@ const uib = require('../libs/uibGlobalConfig.cjs')
 // Used to show approx size of variables in bytes: serialize(variableName).byteLength
 const { serialize, } = require('v8')
 
-// Import the bundled marked and front-matter libraries
-const { marked, fm, } = require('@totallyinformation/uib-md-utils') // eslint-disable-line n/no-extraneous-require
+// Import my utility packages using npm workspaces
+const { mdParse, fm, } = require('@totallyinformation/uib-md-utils') // eslint-disable-line n/no-extraneous-require
+const { chokidar, } = require('@totallyinformation/uib-fs-utils') // eslint-disable-line n/no-extraneous-require
+
+/** Object tree of folders and files
+ * @typedef {object} FolderTree
+ * @property {string} name - Name of the folder or file
+ * @property {string} type - 'folder' or 'file'
+ * @property {string} path - Path of the folder or file in URL form for matching to details if required
+ * @property {FolderTree[]} [children] - Children if folder
+ */
+
+/** walkFolderStructure - Recursively walks a folder structure and returns a nested object representing folders and files.
+ * Folders are only included if they contain an index.md file. Any folder or file starting with _ or . is ignored.
+ * @param {string} dirPath - The root directory to start walking from
+ * @param {string} [_startPath] - The initial starting path (used internally)
+ * @param {number} [_level] - Current recursion depth (used internally to prevent infinite loops)
+ * @returns {Promise<FolderTree|null>} Nested object representing the folder structure
+ * @throws {Error} If the directory cannot be read
+ * @example
+ * // Example usage:
+ * const structure = walkFolderStructure('/docs');
+ */
+const walkFolderStructure = async (dirPath, _startPath, _level = 0) => {
+    if (_level >= 10) {
+        throw new Error(`[walkFolderStructure] Maximum folder depth (10) exceeded at: ${dirPath}`)
+    }
+    if (_level === 0) _startPath = dirPath
+
+    /** Helper to check if a name should be ignored
+     * @param {string} name - The name of the file or folder
+     * @returns {boolean} True if the name should be ignored
+     */
+    const shouldIgnore = name => name.startsWith('_') || name.startsWith('.')
+
+    /** Read directory and filter out ignored entries */
+    let entries
+    try {
+        entries = readdirSync(dirPath, { withFileTypes: true, })
+    } catch (err) {
+        throw new Error(`Unable to read directory: ${dirPath}`)
+    }
+    // Ignore entries starting with _ or .
+    entries = entries.filter(e => !shouldIgnore(e.name))
+
+    // Only include this folder if it contains index.md
+    const hasIndexMd = entries.some(e => e.isFile() && e.name === 'index.md')
+    if (!hasIndexMd) return null
+
+    /** @type {FolderTree} */
+    const node = {
+        name: basename(dirPath),
+        type: 'folder',
+        path: urlJoin('/', relative(_startPath, dirPath)),
+        children: [],
+    }
+
+    for (const entry of entries) {
+        const fullPath = join(dirPath, entry.name)
+        if (entry.isDirectory()) {
+            const child = await walkFolderStructure(fullPath, _startPath, _level + 1)
+            if (child) node.children.push(child)
+        } else if (entry.isFile() && entry.name !== 'index.md') {
+            node.children.push({
+                name: entry.name,
+                type: 'file',
+                path: urlJoin('/', relative(_startPath, fullPath)),
+            })
+        }
+    }
+    return node
+}
+
+// Export for use elsewhere
+// module.exports.walkFolderStructure = walkFolderStructure
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -55,13 +137,6 @@ const mod = {
     nodeName: 'uib-markweb',
 }
 
-/** @type {Map<string, Map<string, object>>} Search indexes keyed by instance URL */
-const indexes = new Map()
-/** @type {Map<string, Map<string, object>>} Navigation indexes keyed by instance URL */
-const navIndexes = new Map()
-/** @type {Map<string, import('node:fs').FSWatcher>} File watchers keyed by instance URL */
-const fileWatchers = new Map()
-
 // #endregion ----- Module level variables ---- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
@@ -72,11 +147,6 @@ function ModuleDefinition(RED) {
 
     // Save a reference to the RED runtime for convenience
     if (!uib.RED) uib.RED = RED
-
-    // Check whether required libraries are available & loads them to uib.markedLibs
-    // if (!uib.markedLibs.marked.module) {
-    //     uib.markedLibs = checkLibs()
-    // }
 
     /** Register a new instance of the specified node type (2) */
     RED.nodes.registerType(mod.nodeName, nodeInstance, {
@@ -129,15 +199,19 @@ function nodeInstance(config) {
     // TODO Check if configFolder exists and is readable?
     processConfig.bind(this)
 
-    // Build search index asynchronously and set up file watcher
+    // Holder for search indexes - Map
+    this.index = new Map()
+
+    // Build search index asynchronously and set up file watcher, also notifies connected clients
     buildIndexes(this)
         .then(() => {
             return true
         })
         .catch((err) => {
-            log.warn(`🌐⚠️[uib-markweb:nodeInstance:${this.url}] Error building search index: ${err.message}`)
+            log.error(`🌐🛑[uib-markweb:nodeInstance:${this.url}] Uncaught error in buildIndexes: ${err.message}`)
         })
-    setupFileWatcher(this.instanceFolder, this.url, log)
+    // File/folder change watch (sets this.watcher so it can be cancelled)
+    setupFileWatcher(this)
 
     // @ts-ignore Set up web services for this instance (static folders, middleware, etc)
     web.instanceSetup(this, `${this.url}/:morePath(*)?`, handler.bind(this), { searchHandler: searchHandler.bind(this), })
@@ -149,49 +223,19 @@ function nodeInstance(config) {
     this.sendToFe = sockets.sendToFe.bind(sockets)
 
     // Define internal control messages and processing
-    this.internalControls = {
-        /** Internal control hook to perform a search, returns a list of results to the requesting client
-         * @param {object} msg A control message with at least { query: string }
-         */
-        search: (msg) => {
-            console.log(`🌐[uib-markweb:nodeInstance] Internal search control message received for instance URL "${this.url}": Query="${msg.query}"`)
-            const returnTopic = '_search-results'
-            const index = indexes.get(this.url)
-            if (!index) {
-                log.warn(`🌐⚠️[uib-markweb:nodeInstance:search}] Search attempted but index not ready for instance URL: "${this.url}"`)
-                this.sendToFe({
-                    topic: returnTopic,
-                    query: msg.query,
-                    results: [],
-                    error: 'Search index not ready',
-                    _socketId: msg._socketId, // Ensure response goes to requesting client only
-                }, this, uib.ioChannels.control)
-                return
-            }
-            const results = doSearch(index, msg.query)
-            this.sendToFe({
-                topic: returnTopic,
-                query: msg.query,
-                results: results,
-                _socketId: msg._socketId,
-            }, this, uib.ioChannels.control)
-        },
-
-        /** Internal control hook to navigate to a different page
-         * @param {object} msg A control message with at least { toUrl: string }
-         */
-        navigate: doNavigate.bind(this),
-    }
+    this.internalControls = internalControlMsgHooks(this, log)
 
     // Clean up watcher on node close
-    this.on('close', () => {
-        const watcher = fileWatchers.get(this.url)
-        if (watcher) {
-            watcher.close()
-            fileWatchers.delete(this.url)
-            log.trace(`🌐[uib-markweb:nodeInstance:${this.url}] File watcher closed`)
-        }
-        indexes.delete(this.url)
+    this.on('close', async () => {
+        await this.watcher2.close()
+        log.trace(`🌐[uib-markweb:close:${this.url}] File watcher closed`)
+        // const watcher = this.watcher
+        // if (watcher) {
+        //     watcher.close()
+        //     watcher.delete(this.url)
+        //     this.watcher = null
+        //     log.trace(`🌐[uib-markweb:nodeInstance:${this.url}] File watcher closed`)
+        // }
     })
 
     log.trace(`🌐[uib-markweb:nodeInstance:${this.url}] URL . . . . .  : ${urlJoin( uib.nodeRoot, this.url )}`)
@@ -236,27 +280,251 @@ function inputMsgHandler(msg, send, done) {
 
 // #region ----- Module-level support functions ----- //
 
+/** Define internal control message hooks for this node instance
+ * @param {runtimeNode & uibMwNode} node The current node instance
+ * @param {object} log The RED.log object for logging
+ * @returns {object} An object containing internal control message handler functions
+ * @this {runtimeNode & uibMwNode}
+ */
+function internalControlMsgHooks(node, log) {
+    return {
+        /** Internal control hook to perform a search, returns a list of results to the requesting client
+         * @param {object} msg A control message with at least { query: string }
+         */
+        search: (msg) => {
+            const returnTopic = '_search-results'
+            const index = node.index
+            if (!index) {
+                log.warn(`🌐⚠️[uib-markweb:nodeInstance:search}] Search attempted but index not ready for instance URL: "${node.url}"`)
+                node.sendToFe({
+                    topic: returnTopic,
+                    query: msg.query,
+                    results: [],
+                    error: 'Search index not ready',
+                    _socketId: msg._socketId, // Ensure response goes to requesting client only
+                }, node, uib.ioChannels.control)
+                return
+            }
+            let results
+            try {
+                results = doSearch(index, msg.query)
+            } catch (e) {
+                log.error(`🌐🛑[uib-markweb:nodeInstance:search}] Error performing search for instance URL "${node.url}": ${e.message}`)
+            }
+            node.sendToFe({
+                topic: returnTopic,
+                query: msg.query,
+                results: results,
+                _socketId: msg._socketId,
+            }, node, uib.ioChannels.control)
+        },
+
+        /** Internal control hook to navigate to a different page
+         * @param {object} msg A control message with at least { toUrl: string }
+         */
+        navigate: doNavigate.bind(node),
+
+        /** Internal control hook to get page metadata
+         * @param {object} msg A control message with at least { initialPath: string }
+         */
+        getMetadata: (msg) => {
+            const index = node.index
+            // console.log(`🌐[uib-markweb:nodeInstance] Internal get-metadata control message received for instance URL "${node.url}": "${msg.initialPath}"`, index.has(msg.initialPath), index)
+            const attributes = index.get(msg.initialPath)
+            const data = { ...attributes, }
+            delete data.body // We don't want this in the front-end
+
+            // Get the client to set the pageData managed prop
+            node.sendToFe({
+                topic: '_page-metadata',
+                initialPath: msg.initialPath,
+                attributes: data,
+                // attributes: data,
+                _socketId: msg._socketId, // Ensure response goes to requesting client only
+            }, node, uib.ioChannels.control)
+        },
+    }
+}
+
+// #region -- %%...%% specials processing -- //
 /** Wrap body content in a div#content & convert markdown to html
  * @param {'body'} key The special key being processed
  * @param {object} attributes The current pages attributes
- * @param {object} options Optional options passed to the %%nav [options]%% instruction. Applied as html attributes to the wrapper div
+ * @param {runtimeNode & uibMwNode} node The current node instance
+ * @param {object} [options] Optional options passed to the %%nav [options]%% instruction. Applied as html attributes to the wrapper div
  * @returns {string} Wrapped body content as an html string
  */
-function bodyWrapper(key, attributes, options) {
+function bodyWrapper(key, attributes, node, options) {
     console.log('🌐[bodyWrapper] options=', options)
     let attrs = ''
     if (options) {
-        attrs = Object.entries(options).map(([k, v]) => `${k}="${v}"`).join(' ')
+        attrs = Object.entries(options)
+            .map(([k, v]) => `${k}="${v}"`)
+            .join(' ')
     }
     let html = ''
     try {
-        html = marked(attributes.body)
+        html = mdParse(attributes.body)
     } catch (e) { /* ignore errors */ }
     return `<div id="content" ${attrs} data-attribute="body">${html || ''}</div>`
     // return `<div id="content" ${attrs} data-attribute="body">{{body}}</div>`
 }
 
-/** Build search & nav indexes from all markdown files asynchronously
+/** Create navigation menu HTML and return it
+ * @param {'nav'} key The special key being processed
+ * @param {object} attributes The current pages attributes
+ * @param {runtimeNode & uibMwNode} node The current node instance
+ * @param {object} options Optional options passed to the %%nav [options]%% instruction
+ * @returns {string} The generated navigation HTML
+ */
+function createNav(key, attributes, node, options) {
+    // console.log('  >>🌐[createNav] ', key, options, attributes)
+
+    if (!options) options = {}
+
+    options.nav = true
+
+    let currentStart = false
+    if ('start' in options) options.start = Number(options.start)
+    else {
+        // No start given so assume current level
+        options.start = attributes.depth
+        currentStart = true
+    }
+
+    if ('depth' in options) options.end = Number(options.depth)
+
+    if ('end' in options) options.end = Number(options.end)
+    else if (options.depth) options.end = options.start + options.depth
+    else if (currentStart) options.end = attributes.depth
+    else options.end = 3 // Max depth default
+
+    if (!('type' in options)) {
+        // type can be 'files', 'folders', or 'both'
+        options.type = 'folders'
+    }
+
+    options = { start: 0, end: 3, type: 'folders', orient: 'horizontal', nav: true, }
+    const links = indexListing(
+        key, attributes, node,
+        options
+    )
+    const isHorizontal = options?.orient === 'horizontal' || !options?.orient
+    const searchBox = /* html */`
+        <search>
+            <form id="search-form" role="search" onsubmit="return false">
+                <input type="search" id="search-input" placeholder="Search..." aria-label="Search pages">
+            </form>
+        </search>
+    `
+    return `
+    <nav data-attribute="nav" data-replace aria-label="Main menu" class="${options?.orient || 'horizontal'}" role="navigation">
+        ${links}
+        ${searchBox}
+    </nav>
+    `
+}
+
+/** Create an HTML list of links to pages the current level or between the given levels
+ * If start/end not provided, assume only the current level
+ * @param {'index'} key The special key being processed
+ * @param {object} attributes The current pages attributes
+ * @param {runtimeNode & uibMwNode} node The current node instance
+ * @param {object} [options] Optional options passed to the %%nav [options]%% instruction
+ * @param {string|number} [options.start] The starting depth level (0 = root)
+ * @param {string|number} [options.end] The ending depth level (0 = root)
+ * @returns {string} The generated navigation HTML
+ */
+function indexListing(key, attributes, node, options) {
+    let currentStart = false
+    if (!options) options = {}
+
+    if (!('nav' in options)) options.nav = false
+
+    if ('start' in options) options.start = Number(options.start)
+    else {
+        // No start given so assume current level
+        options.start = attributes.depth
+        currentStart = true
+    }
+
+    if ('depth' in options) options.end = Number(options.depth)
+
+    if ('end' in options) options.end = Number(options.end)
+    else if (options.depth) options.end = options.start + options.depth
+    else if (currentStart) options.end = attributes.depth
+    else options.end = 5 // Max depth default
+
+    if (!('type' in options)) {
+        // type can be 'files', 'folders', or 'both'
+        options.type = 'both'
+    }
+
+    const filtered = filteredIndex(currentStart, attributes, options, node)
+    // console.log('  >>🌐[indexListing] ', { key, options, attributes, filtered, })
+
+    // Build a hierarchical tree structure from the filtered paths
+    const tree = new Map()
+
+    for (const [path, doc] of filtered) {
+        // If no start given, and path matches current page, skip it
+        if (currentStart && path === attributes.path) continue
+
+        // Determine title
+        let title = doc.title
+        if (doc.path === '/') title = 'Home'
+        else if (doc.type === 'folder' && (!title || title === 'index')) {
+            // Get the last segment of the path as title and convert to title case
+            const segments = doc.path.replace(/\/$/, '').split('/').filter(Boolean)
+            const rawTitle = segments[segments.length - 1] || doc.path.slice(1, -1)
+            title = rawTitle.replace(/[_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+        }
+
+        // Split path into segments (remove empty strings from leading/trailing slashes)
+        const segments = path
+            .replace(/\/$/, '')
+            .split('/')
+            .filter(Boolean)
+        if (segments.length === 0) {
+            // Root path
+            if (!tree.has('/')) {
+                tree.set('/', { path: '/', title, children: new Map(), })
+            }
+            continue
+        }
+
+        // Navigate/create tree structure
+        let current = tree
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i]
+            const isLast = i === segments.length - 1
+
+            if (!current.has(segment)) {
+                current.set(segment, {
+                    path: isLast ? path : '/' + segments.slice(0, i + 1).join('/') + '/',
+                    title: isLast ? title : segment,
+                    children: new Map(),
+                })
+            } else if (isLast) {
+                // Update with actual doc info if this is the final segment
+                const node = current.get(segment)
+                node.path = path
+                node.title = title
+            }
+            current = current.get(segment).children
+        }
+    }
+
+    // If start and end levels are the same, omit folder (index) entries
+    const sameLevel = options.start === options.end
+
+    // Recursive function to render the tree structure as HTML
+    return renderTree(tree, sameLevel, options.nav)
+}
+
+// #endregion -- %%...%% specials processing -- //
+
+/** Build search & nav indexes from all markdown files asynchronously & notifies connected clients
  * @param {runtimeNode & uibMwNode} node Instance `this` context
  * param {string} sourcePath The source folder path
  * param {string} instanceUrl The instance URL (used as index key)
@@ -268,27 +536,39 @@ async function buildIndexes(node) {
     const url = node.url
     const instanceFolder = node.instanceFolder
 
-    const index = indexes.get(url) || new Map()
-    const navIndex = navIndexes.get(url) || new Map()
+    const index = node.index
+    const indexFolder = instanceFolder.replace(/\\/g, '/')
 
-    const files = fgSync(`${instanceFolder.replace(/\\/g, '/')}/**/*.md`)
-    log.info(`🌐[uib-markweb:buildSearchIndex:${url}] Building search index. sourcePath="${instanceFolder}". Found ${files.length} markdown files.`)
-
-    // TODO How to parallelize this?
-    for (const file of files) {
-        try {
-            await getMarkdownFile(node, index, file)
-        } catch (e) {
-            // Skip files that can't be read
-            log.warn(`🌐⚠️[uib-markweb:buildSearchIndex:${url}] Skipping file "${file}" due to error: ${e.message}`)
-        }
+    let files
+    try {
+        files = fgSync(`${indexFolder}/**/*.md`)
+    } catch (e) {
+        log.error(`🌐🛑[uib-markweb:buildSearchIndex:${url}] Error reading markdown files from source folder "${indexFolder}": ${e.message}`)
+        files = []
     }
+    log.info(`🌐[uib-markweb:buildSearchIndex:${url}] Building search index. sourcePath="${indexFolder}". Found ${files.length} markdown files.`)
 
-    // Keep these in memory as a cache
-    indexes.set(url, index)
-    console.log(`>>🌐${url}] `, indexes)
-    console.log(`>>🌐[uib-markweb:buildSearchIndex:${url}] Built index with ${index.size} entries. Size=${(serialize(index).byteLength / 1024).toFixed(0)}kb`)
-    log.info(`🌐[uib-markweb:buildSearchIndex:${url}] Finished index. sourcePath="${instanceFolder}", duration=${Math.round(performance.now() - strt)}ms`)
+    // Process all files in parallel
+    const results = await Promise.allSettled(
+        files.map(file => getMarkdownFile(node, file))
+    )
+
+    // Log any errors
+    results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+            log.error(`🌐🛑[uib-markweb:buildSearchIndex:${url}] Skipping file "${files[index]}" due to error: ${result.reason.message}`)
+        }
+    })
+
+    // notify ALL connected clients that indexes have changed
+    node.sendToFe({
+        topic: '_indexes-changed',
+    }, node, uib.ioChannels.control)
+
+    // ! TEMPORARY - for debugging convenience
+    globalThis._uibuilder_.markweb.indexes[url] = node.index
+
+    log.info(`🌐[uib-markweb:buildSearchIndex:${url}] Finished index. sourcePath="${instanceFolder}", duration=${Math.round(performance.now() - strt)}ms, Size=${(serialize(node.index).byteLength / 1024).toFixed(0)}kb`)
 }
 
 /** Build a list of navigable pages from all markdown files in the source folder
@@ -311,22 +591,9 @@ function buildNavigationIndex(sourcePath) {
     }
 }
 
-/** Create navigation menu HTML and return it
- * @param {'nav'} key The special key being processed
- * @param {object} attributes The current pages attributes
- * @param {object} options Optional options passed to the %%nav [options]%% instruction
- * @returns {string} The generated navigation HTML
- */
-function createNav(key, attributes, options) {
-    console.log('  >>🌐[createNav] ', key, options, attributes)
-    return `
-    <nav aria-label="Main menu" class="${options?.type || 'horizontal'}" role="navigation">
-    </nav>
-    `
-}
-
 /** Handle a navigation socket request
  * @param {object} msg A control message with at least { toUrl: string }
+ * @this {runtimeNode & uibMwNode}
  */
 async function doNavigate(msg) {
     const log = uib.RED.log
@@ -343,6 +610,7 @@ async function doNavigate(msg) {
     // Check if folder or file name starts with _ or . and deny access
     if (morePath.split(sep).some(part => part.startsWith('_') || part.startsWith('.'))) {
         log.error(`🌐🛑[uib-markweb:nodeInstance:navigate] Access denied to folder/file "${morePath}" because it is in a folder or file starting with "_" or "."`)
+        // @ts-ignore
         attributes = {
             error: true,
             title: 'Error',
@@ -362,6 +630,7 @@ async function doNavigate(msg) {
     // Security: Prevent path traversal
     if (!fullPath.startsWith(this.instanceFolder)) {
         log.error(`🌐🛑[uib-markweb:nodeInstance:navigate] Access denied to "${fullPath}" because it is outside "${this.instanceFolder}"`)
+        // @ts-ignore
         attributes = {
             error: true,
             title: 'Error',
@@ -392,12 +661,12 @@ async function doNavigate(msg) {
         parsedPath = parse(morePath)
     }
 
-    console.log(`🌐[uib-markweb:nodeInstance:navigate] Internal navigate control message received for instance URL: "${this.url}": 
-        toUrl="${msg.toUrl}", 
-        fullPath="${fullPath}", 
-        morePath="${morePath}", 
-        parsedPath=${JSON.stringify(parsedPath)}
-    `)
+    // console.log(`🌐[uib-markweb:nodeInstance:navigate] Internal navigate control message received for instance URL: "${this.url}": 
+    //     toUrl="${msg.toUrl}", 
+    //     fullPath="${fullPath}", 
+    //     morePath="${morePath}", 
+    //     parsedPath=${JSON.stringify(parsedPath)}
+    // `)
 
     // Now check that the file exists, return an error if not
     try {
@@ -405,6 +674,7 @@ async function doNavigate(msg) {
         log.trace(`🌐[uib-markweb:nodeInstance:navigate] Source file is accessible: "${fullPath}"`)
     } catch (err) {
         log.error(`🌐🛑[uib-markweb:nodeInstance:navigate] Source file "${fullPath}" not accessible: ${err.message}`)
+        // @ts-ignore
         attributes = {
             error: 'Page not found',
             title: 'Error',
@@ -422,10 +692,10 @@ async function doNavigate(msg) {
 
     if (parsedPath.ext === '.md') {
         // processTemplates(node.pageTemplate, attributes)
-        attributes = await getMarkdownFile(this, null, fullPath, morePath, parsedPath)
-        attributes.body = marked(processTemplates(attributes.body, attributes, 'doNavigate-body'))
+        attributes = await getMarkdownFile(this, fullPath, morePath, parsedPath)
+        attributes.body = mdParse(processTemplates(attributes.body, this, attributes, 'doNavigate-body'))
         attributes.from = 'navigate'
-        attributes.toUrl = morePath // msg.toUrl
+        attributes.toUrl = urlJoin(morePath) // Normalise
         this.sendToFe({
             topic: returnTopic,
             attributes: attributes,
@@ -445,16 +715,29 @@ async function doNavigate(msg) {
  */
 function doSearch(index, query) {
     const results = []
+    query = query.toLowerCase()
     for (const [path, doc] of index) {
-        const titleMatch = doc.title.toLowerCase().includes(query)
-        const contentMatch = doc.content.includes(query)
-        const descMatch = doc.description.toLowerCase().includes(query)
-        const tagMatch = doc.tags.some(tag => tag.toLowerCase().includes(query))
+        let titleMatch, contentMatch, descMatch, tagMatch
+        if (doc?.title) titleMatch = doc.title.toLowerCase().includes(query)
+        if (doc?.content) contentMatch = doc.content.includes(query)
+        if (doc?.description) descMatch = doc.description.toLowerCase().includes(query)
+        try {
+            // if (doc?.tags && doc.tags.length > 0) tagMatch = doc?.tags.some(tag => tag.toLowerCase().includes(query))
+            if (doc?.tags && Array.isArray(doc.tags) && doc.tags.length > 0) {
+                console.log('🌐[doSearch] doc.tags=',
+                    Array.isArray(doc.tags), doc.tags)
+                tagMatch = doc.tags.some(tag => tag.toLowerCase().includes(query))
+            }
+        } catch (e) {
+            console.error(`🌐🛑[uib-markweb:doSearch] Error checking document "${path}" for query "${query}": ${e.message}`)
+            console.trace()
+        }
 
         if (titleMatch || contentMatch || descMatch || tagMatch) {
             // Extract snippet around match
             let snippet = ''
-            const idx = doc.content.indexOf(query)
+            let idx = -1
+            if (contentMatch) idx = doc.content.toLowerCase().indexOf(query)
             if (idx >= 0) {
                 const start = Math.max(0, idx - 50)
                 const end = Math.min(doc.content.length, idx + query.length + 50)
@@ -476,24 +759,46 @@ function doSearch(index, query) {
     return results
 }
 
+/** Filter the index based on options
+ * @param {boolean} currentStart Whether to limit to current start path
+ * @param {object} attributes The current pages attributes
+ * @param {object} options Filtering options
+ *   @param {object} [options.sort] Sorting options
+ * @param {runtimeNode & uibMwNode} node The current node instance
+ * @returns {Array} Filtered index entries
+ */
+function filteredIndex(currentStart, attributes, options, node) {
+    const filtered = [...node.index].filter(
+        ([key, value]) =>
+            value.depth >= options.start
+            && value.depth <= options.end
+            && (currentStart ? value.path.startsWith(attributes.path) : true)
+            && (options.type === 'folders' ? value.type === 'folder' : true)
+            && (options.type === 'files' ? value.type === 'file' : true)
+    )
+    // TODO: Allow options.sort to specify sorting field(s) and order
+    // Sort the filtered array
+    filtered.sort((a, b) => a[1].path.localeCompare(b[1].path))
+    return filtered
+}
+
 /** Get and parse a markdown file
  * @param {runtimeNode & uibMwNode} node Instance `this` context
- * @param {Map} index Index map for this instance
  * @param {string} file FS path to the markdown file
  * param {string} fullPath Full path to the markdown file
- * @param {string} morePath Relative path or additional path info
- * @param {object} parsedPath Parsed path object
+ * @param {string} [morePath] Relative path or additional path info
+ * @param {object} [parsedPath] Parsed path object
  * @returns {Promise<object>} Parsed attributes and HTML body
  */
-async function getMarkdownFile(node, index, file, morePath, parsedPath) {
+async function getMarkdownFile(node, file, morePath, parsedPath) {
     // fullPath, morePath, parsedPath
     const log = uib.RED.log
     const userDir = uib.RED.settings.userDir
     log.trace(`🌐[uib-markweb:getMarkdownFile:${node.url}] Request for markdown file, source="${node.source}", file="${file}"`)
 
-    // check if urlPath already exists in searchIndex
-    if (!index) index = indexes.get(node.url) || new Map()
+    const index = node.index
 
+    // check if urlPath already exists in searchIndex
     // get the actual filename without the path
     const filename = basename(file)
     // Skip files starting with _ or .
@@ -571,53 +876,23 @@ async function getMarkdownFile(node, index, file, morePath, parsedPath) {
             tags: parsed.attributes?.tags || [],
             category: parsed.attributes?.category || '',
             author: parsed.attributes?.author || '',
-            // Use the file's actual last updated timestamp from the filing system
             path: urlPath,
+            // Use the file's actual last updated timestamp from the filing system
             fsMtimeMs: fStats.mtimeMs,
+            // Record whether this is a folder or a file
+            type: filename === 'index.md' ? 'folder' : 'file',
+            // Record the file name
+            file: filename,
+            // Record the folder depth (0 for root index.md, 1 for first level, etc)
+            depth: urlPath.split('/').length - 2,
+            // other: [morePath, parsedPath],
         }
         // attributes.htmlbody = processTemplates(attributes.body, attributes)
         index.set(urlPath, attributes)
     }
     // console.log(`  >>🌐 Indexing file: ${urlPath}, ${relativePath}, ${file}`)
-    return attributes
-
-    // try {
-    //     const buffer = await readFile(fullPath, 'utf8')
-    //     log.trace(`🌐[uib-markweb:handler] Read markdown file successfully: "${fullPath}"`)
-    //     // console.log(buffer.toString())
-    //     const content = fm(buffer)
-    //     attributes = content.attributes || {}
-    //     // Enhance content.attributes with some defaults
-    //     attributes.title = attributes.title || parsedPath.name
-    //     attributes.description = attributes.description || attributes.title || `uib-markweb served markdown file "${parsedPath.base}"`
-    //     // Replace any %%....%% or {{...}} in content.body with the matching content.attributes property value
-    //     attributes.body = processTemplates(content.body, attributes)
-    //     // attributes.body = content.body.replace(/%%([^%]+)%%|\{\{([^}]+)\}\}/g, (match, key1, key2) => {
-    //     //     const key = key1 || key2
-    //     //     const trimmedKey = key.trim()
-    //     //     if (trimmedKey === 'body') {
-    //     //         return bodyWrapper(attributes[trimmedKey] || '')
-    //     //     }
-    //     //     return attributes[trimmedKey] !== undefined ? attributes[trimmedKey] : match
-    //     // }) || ''
-    //     // attributes.body = marked(attributes.body)
-    //     // Replace any {{...}} in htmlTemplate with the matching content.attributes property value
-    //     // const html = htmlTemplate.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
-    //     //     const trimmedKey = key.trim()
-    //     //     return attributes[trimmedKey] !== undefined ? attributes[trimmedKey] : match
-    //     // })
-    // } catch (err) {
-    //     log.error(`🌐🛑[uib-markweb:handler] Error reading markdown file "${fullPath}". ${err.message}`)
-    //     // @ts-ignore
-    //     attributes = {
-    //         error: true,
-    //         title: 'Error',
-    //         description: `Error reading markdown file "${fullPath}"`,
-    //         body: `<h1>Error</h1><p>There was an error reading the requested markdown file.</p><pre>${err.message}</pre>`,
-    //     }
-    // }
-    // // attributes.nav = buildNavigationIndex( node.instanceFolder )
-    // return attributes
+    // Return a shallow copy to prevent mutations from affecting the cached index entry
+    return { ...attributes, }
 }
 
 /** ExpressJS middleware handler function for uib-markweb nodes
@@ -630,19 +905,26 @@ async function getMarkdownFile(node, index, file, morePath, parsedPath) {
 async function handler(req, res, next) {
     const log = uib.RED.log
 
+    // HEAD requests only need headers, not body - respond early to avoid duplicate processing
+    if (req.method === 'HEAD') {
+        res.set('Content-Type', 'text/html; charset=utf-8')
+        res.status(200).end()
+        return
+    }
+
     let morePath = req.params?.morePath || '' // 'index.md'
     // Guard: Verify this request is for this instance
     // req.baseUrl is the path where the router is mounted (should match this.url)
     // Normalize both paths for comparison (remove trailing slashes, handle case)
     const normalizedBaseUrl = req.baseUrl.replace(/\/+$/, '').toLowerCase()
     const normalizedInstanceUrl = this.url.replace(/\/+$/, '').toLowerCase()
-    console.log(`>>🌐[uib-markweb:handler]>>
-        Request URL: "${req.url}", 
-        Path: "${req.path}",
-        morePath: "${morePath}",
-        normalizedBaseUrl: "${normalizedBaseUrl}", 
-        normalizedInstanceUrl: "${normalizedInstanceUrl}"
-    `)
+    // console.log(`>>🌐[uib-markweb:handler]>>
+    //     Request URL: "${req.url}", 
+    //     Path: "${req.path}",
+    //     morePath: "${morePath}",
+    //     normalizedBaseUrl: "${normalizedBaseUrl}", 
+    //     normalizedInstanceUrl: "${normalizedInstanceUrl}"
+    // `)
     // console.log({req, res})
     // Handle requests that should be redirected to /uibuilder/...
     // e.g., /markweb/uibuilder/vendor/socket.io/... -> /uibuilder/vendor/socket.io/...
@@ -710,8 +992,8 @@ async function handler(req, res, next) {
 
     // Handle markdown files
     if (parsedPath.ext === '.md') {
-        const attributes = await getMarkdownFile(this, null, fullPath, morePath, parsedPath)
-        attributes.body = marked(processTemplates(attributes.body, attributes, 'handler-body'))
+        const attributes = await getMarkdownFile(this, fullPath, morePath, parsedPath)
+        attributes.body = mdParse(processTemplates(attributes.body, this, attributes, 'handler-body'))
         attributes.from = 'handler'
         attributes.toUrl = morePath
         attributes.reqType = isAjax ? 'ajax' : 'get'
@@ -722,19 +1004,22 @@ async function handler(req, res, next) {
             // Return full page for initial load / direct access
             const html = htmlTemplate(this, attributes)
             res.send(html)
-            // Send pageData to FE via socket.io after a short delay to allow FE to set up
-            setTimeout(() => {
-                // console.log('🌐[uib-markweb:handler] Sending pageData to FE via socket.io')
-                const data = { ...attributes, }
-                delete data.body // We don't want this in the front-end
-                // delete attributes.body // We don't want this in the front-end
-                this.sendToFe(
-                    { _uib: { command: 'set', prop: 'pageData', value: data, }, },
-                    // { _uib: { command: 'set', prop: 'pageData', value: attributes, }, },
-                    this,
-                    uib.ioChannels.server
-                )
-            }, 500)
+            // // Send pageData to FE via socket.io after a short delay to allow FE to set up
+            // setTimeout(() => {
+            //     // console.log('🌐[uib-markweb:handler] Sending pageData to FE via socket.io')
+            //     const data = { ...attributes, }
+            //     delete data.body // We don't want this in the front-end
+            //     const headers = res.getHeaders()
+            //     // Get the client to set the pageData managed prop
+            //     // No socket id available on first page load so use clientId if available
+            //     this.sendToFe({
+            //         topic: '_setMetaData',
+            //         attributes: data,
+            //         _uib: {
+            //             clientId: headers['uibuilder-client-id'] || undefined,
+            //         },
+            //     }, this, uib.ioChannels.control)
+            // }, 500)
         }
     } else {
         // Not a markdown file, serve static
@@ -762,7 +1047,7 @@ function htmlTemplate(node, attributes = {}) {
     //     try {
     //         // attributes.body = marked(processTemplates(attributes.body, attributes))
     //         attributes.body = processTemplates(attributes.body, attributes) || '<h2>Error: (htmlTemplate)</h2><div>processTemplates produced no output.</div>'
-    //         // attributes.body = marked(attributes.body)
+    //         // attributes.body = mdParse(attributes.body)
     //         // console.log('>> GOOD ATTRIBUTES >> ', attributes)
     //     } catch (err) {
     //         log.error(`🌐🛑[uib-markweb:htmlTemplate] Error converting markdown to HTML: ${err.message}`)
@@ -770,7 +1055,7 @@ function htmlTemplate(node, attributes = {}) {
     //     }
     // }
     // Replace any %%....%% or {{....}} in content with the matching attributes property value
-    const html = processTemplates(node.pageTemplate, attributes, 'htmlTemplate-pageTemplate')
+    const html = processTemplates(node.pageTemplate, node, attributes, 'htmlTemplate-pageTemplate')
     // console.log('🌐[uib-markweb:htmlTemplate] ', html)
     return html
 }
@@ -798,18 +1083,33 @@ function processConfig() {
 
 /** Replace %%...% and {{...}}
  * @param {string} text Text to process
+ * @param {runtimeNode & uibMwNode} node The current node instance
  * @param {object} [attributes] Attributes to use for replacements
+ * @param {string} [calledFrom] Optional string indicating where this function was called from (for logging)
  * @returns {string} Processed text
  */
-function processTemplates(text, attributes = {}, calledFrom = '') {
-    // Supported %%...%% special directives and their callback. The function is called with (key, attributes, options)
+function processTemplates(text, node, attributes = {}, calledFrom = '') {
+    // Supported %%...%% special directives and their callback. The function is called with (key, attributes, node, options)
     const specials = {
         'url': () => attributes.url,
         'nav': createNav,
         'search-results': () => '',
         // 'body': bodyWrapper,
         'body': () => attributes.body || '<div>No content</div>',
+        // Return an index list of pages from the current page level
+        'index': indexListing,
     }
+
+    // Protect backtick-wrapped patterns from processing (e.g., `%%nav%%` or `{{title}}`)
+    const protectedPatterns = []
+    const protectPattern = (match) => {
+        const placeholder = `__PROTECTED_${protectedPatterns.length}__`
+        protectedPatterns.push(match)
+        return placeholder
+    }
+    // Protect markdown backtick-wrapped patterns
+    text = text.replace(/`(%%[^%]+%%|\{\{[^}]+\}\})`/g, protectPattern)
+
     // %%...%% specials
     const foundKeys = { specials: [], attributes: [], }
     text = text.replace(/%%([^%]+)%%/g, (match, key1, key2) => {
@@ -824,7 +1124,7 @@ function processTemplates(text, attributes = {}, calledFrom = '') {
                 const bracketString = key.substring(bracketIndex + 1, endBracketIndex)
                 bracketContent = {}
                 bracketString.split(',').forEach((pair) => {
-                    const [k, v] = pair.split('=').map(s => s.trim())
+                    const [k, v] = pair.split('=').map(s => s.replace(/"/g, '').trim())
                     if (k) bracketContent[k] = v || ''
                 })
                 key = key.substring(0, bracketIndex).trim()
@@ -833,18 +1133,28 @@ function processTemplates(text, attributes = {}, calledFrom = '') {
         foundKeys.specials.push(key)
         // If there is a specials function for specials[key], call it and return the result
         if (specials[key]) {
-            return specials[key](key, attributes, bracketContent)
+            return specials[key](key, attributes, node, bracketContent)
         }
         // Otherwise, return the attribute value if exists or the original special if not
         return attributes[key] !== undefined ? attributes[key] : match
     })
+
+    // Protect HTML <code> wrapped patterns (after %%body%% inserts content with <code> tags)
+    text = text.replace(/<code>(%%[^%]+%%|\{\{[^}]+\}\})<\/code>/gi, protectPattern)
+
     // {{...}} attributes
     text = text.replace(/\{\{([^}]+)\}\}/g, (match, key1, key2) => {
         const key = (key1 || key2).trim()
         foundKeys.attributes.push(key)
         return attributes[key] !== undefined ? attributes[key] : match
     })
-    console.log(`>>🌐[processTemplates] (${calledFrom}) foundKeys=`, foundKeys)
+
+    // Restore protected patterns (backtick-wrapped %%...%% or {{...}})
+    protectedPatterns.forEach((pattern, index) => {
+        text = text.replace(`__PROTECTED_${index}__`, pattern)
+    })
+
+    // console.log(`>>🌐[processTemplates] (${calledFrom}) foundKeys=`, foundKeys)
     return text
 }
 
@@ -894,45 +1204,102 @@ function readConfigFile(node, fileName) {
     return content
 }
 
-/** Set up file watcher for the instance folder
- * @param {string} sourcePath The source folder path
- * @param {string} instanceUrl The instance URL (used as watcher key)
- * @param {object} log Node-RED log object
+/** Render a Map tree as nested UL HTML
+ * @param {Map} map The tree map to render
+ * @param {boolean} [sameLevel] Whether to render only files at the same level (skip folders)
+ * @param {boolean} [nav] Whether this is for the nav directive, default=false
+ * @param {number} [_level] Current recursion level (internal use)
+ * @returns {string} Nested HTML unordered lists
  */
-function setupFileWatcher(sourcePath, instanceUrl, log) {
-    // Close existing watcher if any
-    const existingWatcher = fileWatchers.get(instanceUrl)
-    if (existingWatcher) {
-        existingWatcher.close()
-    }
+function renderTree(map, sameLevel = false, nav = false, _level = 0) {
+    // Nothing to do
+    if (map.size === 0) return ''
+    // If not a nav menu, we need extra attributes so that the front-end can reflect changes
+    let hOpts = ''
+    if (_level === 0) hOpts = nav ? '' : 'data-attribute="index" data-replace'
 
+    let html = `<ul ${hOpts}>`
+    for (const [, entry] of map) {
+        // Ignore samelevel in recursive calls
+        const childHtml = renderTree(entry.children, false, nav, _level++)
+        // If same level, skip folder entries (show only files)
+        if (sameLevel && entry.path.endsWith('/')) {
+            // Still include children if any
+            if (childHtml) html += childHtml.replace(/^<ul>/, '').replace(/<\/ul>$/, '')
+            continue
+        }
+        html += `<li><a href="${entry.path}">${entry.title}</a>${childHtml}</li>`
+    }
+    html += '</ul>'
+    return html
+}
+
+/** Set up file watcher for the instance folder
+ * @param {runtimeNode & uibMwNode} node Instance `this` context
+ * param {string} node.sourcePath The source folder path
+ * param {string} node.url The instance URL (used as watcher key)
+ * param {object} node.log Node-RED log object
+ */
+function setupFileWatcher(node) {
+    const log = uib.RED.log
+    const sourcePath = node.instanceFolder
+    const instanceUrl = node.url
     let rebuildTimeout = null
-    const debounceMs = 500 // Debounce rapid changes
+    const debounceMs = 1000 // Debounce rapid changes
+    let changes = []
 
     try {
-        const watcher = watch(sourcePath, { recursive: true, }, (eventType, filename) => {
-            // Only react to .md file changes
-            if (!filename || !filename.endsWith('.md')) return
-
-            // Debounce to avoid rebuilding multiple times for rapid changes
-            if (rebuildTimeout) clearTimeout(rebuildTimeout)
-            rebuildTimeout = setTimeout(() => {
-                log.info(`🌐[uib-markweb:watcher:${instanceUrl}] File ${eventType}: ${filename}, rebuilding search index`)
-                // Build the search index
-                buildIndexes(this).catch((err) => {
-                    log.warn(`🌐⚠️[uib-markweb:watcher:${instanceUrl}] Error rebuilding search index: ${err.message}`)
-                })
-                // Build the navigation index
-                // buildNavigationIndex(sourcePath, instanceUrl).catch((err) => {
-                //     log.warn(`🌐⚠️[uib-markweb:watcher:${instanceUrl}] Error rebuilding navigation index: ${err.message}`)
-                // })
-            }, debounceMs)
+        // https://github.com/paulmillr/chokidar
+        const watcher = node.watcher2 = chokidar.watch(sourcePath, {
+            cwd: sourcePath,
+            persistent: true,
+            // Doesn't fire on initial setup
+            ignoreInitial: true,
+            // Only check up to 9 deep
+            depth: 9,
+            // Waits for writes to finish (adds 100ms polling, waits until stable for 2sec)
+            // Also adds 2 sec delay when renaming files so try to do without.
+            // awaitWriteFinish: true,
         })
 
-        fileWatchers.set(instanceUrl, watcher)
-        log.info(`🌐[uib-markweb:nodeInstance:${instanceUrl}] File watcher started for: ${sourcePath}`)
+        watcher.on('ready', () => {
+            log.info(`🌐[uib-markweb:setupFileWatcher:${instanceUrl}] File watcher started for: ${sourcePath}`)
+        })
+        // WARNING: A file rename is an unlink & add event pair - can happen in any order
+        watcher.on('all', (eventType, filename) => {
+            log.info(`🌐[uib-markweb:watcher:${instanceUrl}] File event detected: ${eventType}, ${filename}`, performance.now())
+            changes.push({ eventType, filename: urlJoin(filename), })
+            // Debounce to avoid rebuilding multiple times for rapid changes
+            if (rebuildTimeout) clearTimeout(rebuildTimeout)
+            rebuildTimeout = setTimeout(async () => {
+                const changesCopy = [...changes]
+                changes = []
+                log.info(`🌐[uib-markweb:watcher:${instanceUrl}] File/folder changes detected, rebuilding search index`)
+                // Build the search index
+                try {
+                    // Also notifies connected clients
+                    await buildIndexes(node)
+                } catch (err) {
+                    log.error(`🌐🛑[uib-markweb:watcher:${instanceUrl}] Error rebuilding search index: ${err.message}`)
+                    console.error(err)
+                }
+                // notify ALL connected clients that something changed
+                node.sendToFe({
+                    topic: '_source-change',
+                    payload: {
+                        instanceUrl: instanceUrl,
+                        eventType: eventType,
+                        url: urlJoin(filename),
+                    },
+                    changes: changesCopy,
+                }, node, uib.ioChannels.control)
+            }, debounceMs)
+        })
+        watcher.on('error', (error) => {
+            console.error(`>>🌐[uib-markweb:watcher:${instanceUrl}] Watcher error: ${error}`)
+        })
     } catch (err) {
-        log.warn(`🌐⚠️[uib-markweb:nodeInstance:${instanceUrl}] Could not set up file watcher: ${err.message}`)
+        log.error(`🌐🛑[uib-markweb:setupFileWatcher:${instanceUrl}] Could not set up file watcher: ${err.message}`)
     }
 }
 
@@ -954,10 +1321,10 @@ function searchHandler(req, res) {
         return
     }
 
-    const index = indexes.get(this.url)
-    if (!index) {
-        log.warn(`🌐⚠️[uib-markweb:searchHandler] Search attempted but index not ready for instance URL: "${this.url}"`)
-        res.json({ results: [], query, message: 'Search index not ready', })
+    const index = this.index
+    if (index.size === 0) {
+        log.warn(`🌐⚠️[uib-markweb:searchHandler:${this.url}] Search attempted but index is empty or not ready`)
+        res.json({ results: [], query, message: 'Search index empty or not ready', })
         return
     }
 

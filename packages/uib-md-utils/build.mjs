@@ -13,6 +13,7 @@ const __dirname = dirname(__filename)
 const commonOptions = {
     entryPoints: [join(__dirname, 'src/index.mjs')],
     bundle: true,
+    // This also excludes built-in Node.js modules like 'fs', 'path', etc. from the bundle
     platform: 'node',
     target: 'node18',
     minify: false, // Keep readable for debugging
