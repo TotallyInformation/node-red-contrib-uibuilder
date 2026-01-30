@@ -439,6 +439,8 @@
  * @property {string} pageTemplate The pages HTML template content - cached for efficiency
  * @property {Object<string, Function>} [internalControls] Internal custom hook functions called via control messages
  * @property {Function} sendToFe Ref to sockets.sendToFe
+ * @property {FSWatcher} watcher Ref to the fs watcher to allow it to be closed on node delete
+ * @property {Map} index Map of page names to page meta-data
  *
  * @property {object} statusDisplay Settings for the uibuilder node status
  * @property {string} statusDisplay.text Text to display
