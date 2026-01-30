@@ -2861,7 +2861,7 @@ var require_js_yaml2 = __commonJS({
 // ../../node_modules/front-matter/index.js
 var require_front_matter = __commonJS({
   "../../node_modules/front-matter/index.js"(exports, module) {
-    var parser = require_js_yaml2();
+    var parser2 = require_js_yaml2();
     var optionalByteOrderMark = "\\ufeff?";
     var platform = typeof process !== "undefined" ? process.platform : "";
     var pattern = "^(" + optionalByteOrderMark + "(= yaml =|---)$([\\s\\S]*?)^(?:\\2|\\.\\.\\.)\\s*$" + (platform === "win32" ? "\\r?" : "") + "(?:\\n)?)";
@@ -2906,7 +2906,7 @@ var require_front_matter = __commonJS({
           bodyBegin: 1
         };
       }
-      var loader = allowUnsafe ? parser.load : parser.safeLoad;
+      var loader = allowUnsafe ? parser2.load : parser2.safeLoad;
       var yaml = match2[match2.length - 1].replace(/^\s+|\s+$/g, "");
       var attributes = loader(yaml) || {};
       var body = string.replace(match2[0], "");
@@ -54936,6 +54936,834 @@ var require_lib = __commonJS({
   }
 });
 
+// ../../node_modules/markdown-it-attrs/utils.js
+var require_utils = __commonJS({
+  "../../node_modules/markdown-it-attrs/utils.js"(exports) {
+    exports.getAttrs = function(str, start, options) {
+      const allowedKeyChars = /[^\t\n\f />"'=]/;
+      const pairSeparator = " ";
+      const keySeparator = "=";
+      const classChar = ".";
+      const idChar = "#";
+      const attrs2 = [];
+      let key = "";
+      let value = "";
+      let parsingKey = true;
+      let valueInsideQuotes = false;
+      for (let i = start + options.leftDelimiter.length; i < str.length; i++) {
+        if (str.slice(i, i + options.rightDelimiter.length) === options.rightDelimiter) {
+          if (key !== "") {
+            attrs2.push([key, value]);
+          }
+          break;
+        }
+        const char_ = str.charAt(i);
+        if (char_ === keySeparator && parsingKey) {
+          parsingKey = false;
+          continue;
+        }
+        if (char_ === classChar && key === "") {
+          if (str.charAt(i + 1) === classChar) {
+            key = "css-module";
+            i += 1;
+          } else {
+            key = "class";
+          }
+          parsingKey = false;
+          continue;
+        }
+        if (char_ === idChar && key === "") {
+          key = "id";
+          parsingKey = false;
+          continue;
+        }
+        if (char_ === '"' && value === "" && !valueInsideQuotes) {
+          valueInsideQuotes = true;
+          continue;
+        }
+        if (char_ === '"' && valueInsideQuotes) {
+          valueInsideQuotes = false;
+          continue;
+        }
+        if (char_ === pairSeparator && !valueInsideQuotes) {
+          if (key === "") {
+            continue;
+          }
+          attrs2.push([key, value]);
+          key = "";
+          value = "";
+          parsingKey = true;
+          continue;
+        }
+        if (parsingKey && char_.search(allowedKeyChars) === -1) {
+          continue;
+        }
+        if (parsingKey) {
+          key += char_;
+          continue;
+        }
+        value += char_;
+      }
+      if (options.allowedAttributes && options.allowedAttributes.length) {
+        const allowedAttributes = options.allowedAttributes;
+        return attrs2.filter(function(attrPair) {
+          const attr = attrPair[0];
+          function isAllowedAttribute(allowedAttribute) {
+            return attr === allowedAttribute || allowedAttribute instanceof RegExp && allowedAttribute.test(attr);
+          }
+          return allowedAttributes.some(isAllowedAttribute);
+        });
+      }
+      return attrs2;
+    };
+    exports.addAttrs = function(attrs2, token) {
+      for (let j = 0, l = attrs2.length; j < l; ++j) {
+        const key = attrs2[j][0];
+        if (key === "class") {
+          token.attrJoin("class", attrs2[j][1]);
+        } else if (key === "css-module") {
+          token.attrJoin("css-module", attrs2[j][1]);
+        } else {
+          token.attrPush(attrs2[j]);
+        }
+      }
+      return token;
+    };
+    exports.hasDelimiters = function(where, options) {
+      if (!where) {
+        throw new Error('Parameter `where` not passed. Should be "start", "end" or "only".');
+      }
+      return function(str) {
+        const minCurlyLength = options.leftDelimiter.length + 1 + options.rightDelimiter.length;
+        if (!str || typeof str !== "string" || str.length < minCurlyLength) {
+          return false;
+        }
+        function validCurlyLength(curly) {
+          const isClass = curly.charAt(options.leftDelimiter.length) === ".";
+          const isId = curly.charAt(options.leftDelimiter.length) === "#";
+          return isClass || isId ? curly.length >= minCurlyLength + 1 : curly.length >= minCurlyLength;
+        }
+        let start, end, slice, nextChar;
+        const rightDelimiterMinimumShift = minCurlyLength - options.rightDelimiter.length;
+        switch (where) {
+          case "start":
+            slice = str.slice(0, options.leftDelimiter.length);
+            start = slice === options.leftDelimiter ? 0 : -1;
+            end = start === -1 ? -1 : str.indexOf(options.rightDelimiter, rightDelimiterMinimumShift);
+            nextChar = str.charAt(end + options.rightDelimiter.length);
+            if (nextChar && options.rightDelimiter.indexOf(nextChar) !== -1) {
+              end = -1;
+            }
+            break;
+          case "end":
+            start = str.lastIndexOf(options.leftDelimiter);
+            end = start === -1 ? -1 : str.indexOf(options.rightDelimiter, start + rightDelimiterMinimumShift);
+            end = end === str.length - options.rightDelimiter.length ? end : -1;
+            break;
+          case "only":
+            slice = str.slice(0, options.leftDelimiter.length);
+            start = slice === options.leftDelimiter ? 0 : -1;
+            slice = str.slice(str.length - options.rightDelimiter.length);
+            end = slice === options.rightDelimiter ? str.length - options.rightDelimiter.length : -1;
+            break;
+          default:
+            throw new Error(`Unexpected case ${where}, expected 'start', 'end' or 'only'`);
+        }
+        return start !== -1 && end !== -1 && validCurlyLength(str.substring(start, end + options.rightDelimiter.length));
+      };
+    };
+    exports.removeDelimiter = function(str, options) {
+      const start = escapeRegExp(options.leftDelimiter);
+      const end = escapeRegExp(options.rightDelimiter);
+      const curly = new RegExp(
+        "[ \\n]?" + start + "[^" + start + end + "]+" + end + "$"
+      );
+      const pos = str.search(curly);
+      return pos !== -1 ? str.slice(0, pos) : str;
+    };
+    function escapeRegExp(s) {
+      return s.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+    }
+    exports.escapeRegExp = escapeRegExp;
+    exports.getMatchingOpeningToken = function(tokens, i) {
+      if (tokens[i].type === "softbreak") {
+        return false;
+      }
+      if (tokens[i].nesting === 0) {
+        return tokens[i];
+      }
+      const level = tokens[i].level;
+      const type = tokens[i].type.replace("_close", "_open");
+      for (; i >= 0; --i) {
+        if (tokens[i].type === type && tokens[i].level === level) {
+          return tokens[i];
+        }
+      }
+      return false;
+    };
+    var HTML_ESCAPE_TEST_RE2 = /[&<>"]/;
+    var HTML_ESCAPE_REPLACE_RE2 = /[&<>"]/g;
+    var HTML_REPLACEMENTS2 = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;"
+    };
+    function replaceUnsafeChar2(ch) {
+      return HTML_REPLACEMENTS2[ch];
+    }
+    exports.escapeHtml = function(str) {
+      if (HTML_ESCAPE_TEST_RE2.test(str)) {
+        return str.replace(HTML_ESCAPE_REPLACE_RE2, replaceUnsafeChar2);
+      }
+      return str;
+    };
+  }
+});
+
+// ../../node_modules/markdown-it-attrs/patterns.js
+var require_patterns = __commonJS({
+  "../../node_modules/markdown-it-attrs/patterns.js"(exports, module) {
+    "use strict";
+    var utils = require_utils();
+    module.exports = (options) => {
+      const __hr = new RegExp("^ {0,3}[-*_]{3,} ?" + utils.escapeRegExp(options.leftDelimiter) + "[^" + utils.escapeRegExp(options.rightDelimiter) + "]");
+      return [
+        {
+          /**
+           * ```python {.cls}
+           * for i in range(10):
+           *     print(i)
+           * ```
+           */
+          name: "fenced code blocks",
+          tests: [
+            {
+              shift: 0,
+              block: true,
+              info: utils.hasDelimiters("end", options)
+            }
+          ],
+          transform: (tokens, i) => {
+            const token = tokens[i];
+            const start = token.info.lastIndexOf(options.leftDelimiter);
+            const attrs2 = utils.getAttrs(token.info, start, options);
+            utils.addAttrs(attrs2, token);
+            token.info = utils.removeDelimiter(token.info, options);
+          }
+        },
+        {
+          /**
+           * bla `click()`{.c} ![](img.png){.d}
+           *
+           * differs from 'inline attributes' as it does
+           * not have a closing tag (nesting: -1)
+           */
+          name: "inline nesting 0",
+          tests: [
+            {
+              shift: 0,
+              type: "inline",
+              children: [
+                {
+                  shift: -1,
+                  type: (str) => str === "image" || str === "code_inline"
+                },
+                {
+                  shift: 0,
+                  type: "text",
+                  content: utils.hasDelimiters("start", options)
+                }
+              ]
+            }
+          ],
+          /**
+           * @param {!number} j
+           */
+          transform: (tokens, i, j) => {
+            const token = tokens[i].children[j];
+            const endChar = token.content.indexOf(options.rightDelimiter);
+            const attrToken = tokens[i].children[j - 1];
+            const attrs2 = utils.getAttrs(token.content, 0, options);
+            utils.addAttrs(attrs2, attrToken);
+            if (token.content.length === endChar + options.rightDelimiter.length) {
+              tokens[i].children.splice(j, 1);
+            } else {
+              token.content = token.content.slice(endChar + options.rightDelimiter.length);
+            }
+          }
+        },
+        {
+          /**
+           * | h1 |
+           * | -- |
+           * | c1 |
+           *
+           * {.c}
+           */
+          name: "tables",
+          tests: [
+            {
+              // let this token be i, such that for-loop continues at
+              // next token after tokens.splice
+              shift: 0,
+              type: "table_close"
+            },
+            {
+              shift: 1,
+              type: "paragraph_open"
+            },
+            {
+              shift: 2,
+              type: "inline",
+              content: utils.hasDelimiters("only", options)
+            }
+          ],
+          transform: (tokens, i) => {
+            const token = tokens[i + 2];
+            const tableOpen = utils.getMatchingOpeningToken(tokens, i);
+            const attrs2 = utils.getAttrs(token.content, 0, options);
+            utils.addAttrs(attrs2, tableOpen);
+            tokens.splice(i + 1, 3);
+          }
+        },
+        {
+          /**
+           * | A | B |
+           * | -- | -- |
+           * | 1 | 2 |
+           *
+           * | C | D |
+           * | -- | -- |
+           *
+           * only `| A | B |` sets the colsnum metadata
+           */
+          name: "tables thead metadata",
+          tests: [
+            {
+              shift: 0,
+              type: "tr_close"
+            },
+            {
+              shift: 1,
+              type: "thead_close"
+            },
+            {
+              shift: 2,
+              type: "tbody_open"
+            }
+          ],
+          transform: (tokens, i) => {
+            const tr = utils.getMatchingOpeningToken(tokens, i);
+            const th = tokens[i - 1];
+            let colsnum = 0;
+            let n = i;
+            while (--n) {
+              if (tokens[n] === tr) {
+                tokens[n - 1].meta = Object.assign({}, tokens[n + 2].meta, { colsnum });
+                break;
+              }
+              colsnum += (tokens[n].level === th.level && tokens[n].type === th.type) >> 0;
+            }
+            tokens[i + 2].meta = Object.assign({}, tokens[i + 2].meta, { colsnum });
+          }
+        },
+        {
+          /**
+           * | A | B | C | D |
+           * | -- | -- | -- | -- |
+           * | 1 | 11 | 111 | 1111 {rowspan=3} |
+           * | 2 {colspan=2 rowspan=2} | 22 | 222 | 2222 |
+           * | 3 | 33 | 333 | 3333 |
+           */
+          name: "tables tbody calculate",
+          tests: [
+            {
+              shift: 0,
+              type: "tbody_close",
+              hidden: false
+            }
+          ],
+          /**
+           * @param {number} i index of the tbody ending
+           */
+          transform: (tokens, i) => {
+            let idx = i - 2;
+            while (idx > 0 && "tbody_open" !== tokens[--idx].type) ;
+            const calc = tokens[idx].meta.colsnum >> 0;
+            if (calc < 2) {
+              return;
+            }
+            const level = tokens[i].level + 2;
+            for (let n = idx; n < i; n++) {
+              if (tokens[n].level > level) {
+                continue;
+              }
+              const token = tokens[n];
+              const rows = token.hidden ? 0 : token.attrGet("rowspan") >> 0;
+              const cols = token.hidden ? 0 : token.attrGet("colspan") >> 0;
+              if (rows > 1) {
+                let colsnum = calc - (cols > 0 ? cols : 1);
+                for (let k = n, num = rows; k < i, num > 1; k++) {
+                  if ("tr_open" == tokens[k].type) {
+                    tokens[k].meta = Object.assign({}, tokens[k].meta);
+                    if (tokens[k].meta && tokens[k].meta.colsnum) {
+                      colsnum -= 1;
+                    }
+                    tokens[k].meta.colsnum = colsnum;
+                    num--;
+                  }
+                }
+              }
+              if ("tr_open" == token.type && token.meta && token.meta.colsnum) {
+                const max = token.meta.colsnum;
+                for (let k = n, num = 0; k < i; k++) {
+                  if ("td_open" == tokens[k].type) {
+                    num += 1;
+                  } else if ("tr_close" == tokens[k].type) {
+                    break;
+                  }
+                  num > max && (tokens[k].hidden || hidden(tokens[k]));
+                }
+              }
+              if (cols > 1) {
+                const one = [];
+                let end = n + 3;
+                let num = calc;
+                for (let k = n; k > idx; k--) {
+                  if ("tr_open" == tokens[k].type) {
+                    num = tokens[k].meta && tokens[k].meta.colsnum || num;
+                    break;
+                  } else if ("td_open" === tokens[k].type) {
+                    one.unshift(k);
+                  }
+                }
+                for (let k = n + 2; k < i; k++) {
+                  if ("tr_close" == tokens[k].type) {
+                    end = k;
+                    break;
+                  } else if ("td_open" == tokens[k].type) {
+                    one.push(k);
+                  }
+                }
+                const off = one.indexOf(n);
+                let real = num - off;
+                real = real > cols ? cols : real;
+                cols > real && token.attrSet("colspan", real + "");
+                for (let k = one.slice(num + 1 - calc - real)[0]; k < end; k++) {
+                  tokens[k].hidden || hidden(tokens[k]);
+                }
+              }
+            }
+          }
+        },
+        {
+          /**
+           * *emphasis*{.with attrs=1}
+           */
+          name: "inline attributes",
+          tests: [
+            {
+              shift: 0,
+              type: "inline",
+              children: [
+                {
+                  shift: -1,
+                  nesting: -1
+                  // closing inline tag, </em>{.a}
+                },
+                {
+                  shift: 0,
+                  type: "text",
+                  content: utils.hasDelimiters("start", options)
+                }
+              ]
+            }
+          ],
+          /**
+           * @param {!number} j
+           */
+          transform: (tokens, i, j) => {
+            const token = tokens[i].children[j];
+            const content = token.content;
+            const attrs2 = utils.getAttrs(content, 0, options);
+            const openingToken = utils.getMatchingOpeningToken(tokens[i].children, j - 1);
+            utils.addAttrs(attrs2, openingToken);
+            token.content = content.slice(content.indexOf(options.rightDelimiter) + options.rightDelimiter.length);
+          }
+        },
+        {
+          /**
+           * - item
+           * {.a}
+           */
+          name: "list softbreak",
+          tests: [
+            {
+              shift: -2,
+              type: "list_item_open"
+            },
+            {
+              shift: 0,
+              type: "inline",
+              children: [
+                {
+                  position: -2,
+                  type: "softbreak"
+                },
+                {
+                  position: -1,
+                  type: "text",
+                  content: utils.hasDelimiters("only", options)
+                }
+              ]
+            }
+          ],
+          /**
+           * @param {!number} j
+           */
+          transform: (tokens, i, j) => {
+            const token = tokens[i].children[j];
+            const content = token.content;
+            const attrs2 = utils.getAttrs(content, 0, options);
+            let ii = i - 2;
+            while (tokens[ii - 1] && tokens[ii - 1].type !== "ordered_list_open" && tokens[ii - 1].type !== "bullet_list_open") {
+              ii--;
+            }
+            utils.addAttrs(attrs2, tokens[ii - 1]);
+            tokens[i].children = tokens[i].children.slice(0, -2);
+          }
+        },
+        {
+          /**
+           * - nested list
+           *   - with double \n
+           *   {.a} <-- apply to nested ul
+           *
+           * {.b} <-- apply to root <ul>
+           */
+          name: "list double softbreak",
+          tests: [
+            {
+              // let this token be i = 0 so that we can erase
+              // the <p>{.a}</p> tokens below
+              shift: 0,
+              type: (str) => str === "bullet_list_close" || str === "ordered_list_close"
+            },
+            {
+              shift: 1,
+              type: "paragraph_open"
+            },
+            {
+              shift: 2,
+              type: "inline",
+              content: utils.hasDelimiters("only", options),
+              children: (arr) => arr.length === 1
+            },
+            {
+              shift: 3,
+              type: "paragraph_close"
+            }
+          ],
+          transform: (tokens, i) => {
+            const token = tokens[i + 2];
+            const content = token.content;
+            const attrs2 = utils.getAttrs(content, 0, options);
+            const openingToken = utils.getMatchingOpeningToken(tokens, i);
+            utils.addAttrs(attrs2, openingToken);
+            tokens.splice(i + 1, 3);
+          }
+        },
+        {
+          /**
+           * - end of {.list-item}
+           */
+          name: "list item end",
+          tests: [
+            {
+              shift: -2,
+              type: "list_item_open"
+            },
+            {
+              shift: 0,
+              type: "inline",
+              children: [
+                {
+                  position: -1,
+                  type: "text",
+                  content: utils.hasDelimiters("end", options)
+                }
+              ]
+            }
+          ],
+          /**
+           * @param {!number} j
+           */
+          transform: (tokens, i, j) => {
+            const token = tokens[i].children[j];
+            const content = token.content;
+            const attrs2 = utils.getAttrs(content, content.lastIndexOf(options.leftDelimiter), options);
+            utils.addAttrs(attrs2, tokens[i - 2]);
+            const trimmed = content.slice(0, content.lastIndexOf(options.leftDelimiter));
+            token.content = last(trimmed) !== " " ? trimmed : trimmed.slice(0, -1);
+          }
+        },
+        {
+          /**
+           * something with softbreak
+           * {.cls}
+           */
+          name: "\n{.a} softbreak then curly in start",
+          tests: [
+            {
+              shift: 0,
+              type: "inline",
+              children: [
+                {
+                  position: -2,
+                  type: "softbreak"
+                },
+                {
+                  position: -1,
+                  type: "text",
+                  content: utils.hasDelimiters("only", options)
+                }
+              ]
+            }
+          ],
+          /**
+           * @param {!number} j
+           */
+          transform: (tokens, i, j) => {
+            const token = tokens[i].children[j];
+            const attrs2 = utils.getAttrs(token.content, 0, options);
+            let ii = i + 1;
+            while (tokens[ii + 1] && tokens[ii + 1].nesting === -1) {
+              ii++;
+            }
+            const openingToken = utils.getMatchingOpeningToken(tokens, ii);
+            utils.addAttrs(attrs2, openingToken);
+            tokens[i].children = tokens[i].children.slice(0, -2);
+          }
+        },
+        {
+          /**
+           * horizontal rule --- {#id}
+           */
+          name: "horizontal rule",
+          tests: [
+            {
+              shift: 0,
+              type: "paragraph_open"
+            },
+            {
+              shift: 1,
+              type: "inline",
+              children: (arr) => arr.length === 1,
+              content: (str) => str.match(__hr) !== null
+            },
+            {
+              shift: 2,
+              type: "paragraph_close"
+            }
+          ],
+          transform: (tokens, i) => {
+            const token = tokens[i];
+            token.type = "hr";
+            token.tag = "hr";
+            token.nesting = 0;
+            const content = tokens[i + 1].content;
+            const start = content.lastIndexOf(options.leftDelimiter);
+            const attrs2 = utils.getAttrs(content, start, options);
+            utils.addAttrs(attrs2, token);
+            token.markup = content;
+            tokens.splice(i + 1, 2);
+          }
+        },
+        {
+          /**
+           * end of {.block}
+           */
+          name: "end of block",
+          tests: [
+            {
+              shift: 0,
+              type: "inline",
+              children: [
+                {
+                  position: -1,
+                  content: utils.hasDelimiters("end", options),
+                  type: (t) => t !== "code_inline" && t !== "math_inline"
+                }
+              ]
+            }
+          ],
+          /**
+           * @param {!number} j
+           */
+          transform: (tokens, i, j) => {
+            const token = tokens[i].children[j];
+            const content = token.content;
+            const attrs2 = utils.getAttrs(content, content.lastIndexOf(options.leftDelimiter), options);
+            let ii = i + 1;
+            do
+              if (tokens[ii] && tokens[ii].nesting === -1) {
+                break;
+              }
+            while (ii++ < tokens.length);
+            const openingToken = utils.getMatchingOpeningToken(tokens, ii);
+            utils.addAttrs(attrs2, openingToken);
+            const trimmed = content.slice(0, content.lastIndexOf(options.leftDelimiter));
+            token.content = last(trimmed) !== " " ? trimmed : trimmed.slice(0, -1);
+          }
+        }
+      ];
+    };
+    function last(arr) {
+      return arr.slice(-1)[0];
+    }
+    function hidden(token) {
+      token.hidden = true;
+      token.children && token.children.forEach((t) => (t.content = "", hidden(t), void 0));
+    }
+  }
+});
+
+// ../../node_modules/markdown-it-attrs/index.js
+var require_markdown_it_attrs = __commonJS({
+  "../../node_modules/markdown-it-attrs/index.js"(exports, module) {
+    "use strict";
+    var patternsConfig = require_patterns();
+    var defaultOptions2 = {
+      leftDelimiter: "{",
+      rightDelimiter: "}",
+      allowedAttributes: []
+    };
+    module.exports = function attributes(md2, options_) {
+      let options = Object.assign({}, defaultOptions2);
+      options = Object.assign(options, options_);
+      const patterns = patternsConfig(options);
+      function curlyAttrs(state) {
+        const tokens = state.tokens;
+        for (let i = 0; i < tokens.length; i++) {
+          for (let p = 0; p < patterns.length; p++) {
+            const pattern = patterns[p];
+            let j = null;
+            const match2 = pattern.tests.every((t) => {
+              const res = test2(tokens, i, t);
+              if (res.j !== null) {
+                j = res.j;
+              }
+              return res.match;
+            });
+            if (match2) {
+              try {
+                pattern.transform(tokens, i, j);
+                if (pattern.name === "inline attributes" || pattern.name === "inline nesting 0") {
+                  p--;
+                }
+              } catch (error) {
+                console.error(`markdown-it-attrs: Error in pattern '${pattern.name}': ${error.message}`);
+                console.error(error.stack);
+              }
+            }
+          }
+        }
+      }
+      md2.core.ruler.before("linkify", "curly_attributes", curlyAttrs);
+    };
+    function test2(tokens, i, t) {
+      const res = {
+        match: false,
+        j: null
+        // position of child
+      };
+      const ii = t.shift !== void 0 ? i + t.shift : t.position;
+      if (t.shift !== void 0 && ii < 0) {
+        return res;
+      }
+      const token = get(tokens, ii);
+      if (token === void 0) {
+        return res;
+      }
+      for (const key of Object.keys(t)) {
+        if (key === "shift" || key === "position") {
+          continue;
+        }
+        if (token[key] === void 0) {
+          return res;
+        }
+        if (key === "children" && isArrayOfObjects(t.children)) {
+          if (token.children.length === 0) {
+            return res;
+          }
+          let match2;
+          const childTests = t.children;
+          const children = token.children;
+          if (childTests.every((tt) => tt.position !== void 0)) {
+            match2 = childTests.every((tt) => test2(children, tt.position, tt).match);
+            if (match2) {
+              const j = last(childTests).position;
+              res.j = j >= 0 ? j : children.length + j;
+            }
+          } else {
+            for (let j = 0; j < children.length; j++) {
+              match2 = childTests.every((tt) => test2(children, j, tt).match);
+              if (match2) {
+                res.j = j;
+                break;
+              }
+            }
+          }
+          if (match2 === false) {
+            return res;
+          }
+          continue;
+        }
+        switch (typeof t[key]) {
+          case "boolean":
+          case "number":
+          case "string":
+            if (token[key] !== t[key]) {
+              return res;
+            }
+            break;
+          case "function":
+            if (!t[key](token[key])) {
+              return res;
+            }
+            break;
+          case "object":
+            if (isArrayOfFunctions(t[key])) {
+              const r = t[key].every((tt) => tt(token[key]));
+              if (r === false) {
+                return res;
+              }
+              break;
+            }
+          // fall through for objects !== arrays of functions
+          default:
+            throw new Error(`Unknown type of pattern test (key: ${key}). Test should be of type boolean, number, string, function or array of functions.`);
+        }
+      }
+      res.match = true;
+      return res;
+    }
+    function isArrayOfObjects(arr) {
+      return Array.isArray(arr) && arr.length && arr.every((i) => typeof i === "object");
+    }
+    function isArrayOfFunctions(arr) {
+      return Array.isArray(arr) && arr.length && arr.every((i) => typeof i === "function");
+    }
+    function get(arr, n) {
+      return n >= 0 ? arr[n] : arr[arr.length + n];
+    }
+    function last(arr) {
+      return arr.slice(-1)[0] || {};
+    }
+  }
+});
+
 // src/index.mjs
 var import_front_matter = __toESM(require_front_matter(), 1);
 
@@ -56549,9 +57377,9 @@ Token.prototype.attrIndex = function attrIndex(name) {
   if (!this.attrs) {
     return -1;
   }
-  const attrs = this.attrs;
-  for (let i = 0, len = attrs.length; i < len; i++) {
-    if (attrs[i][0] === name) {
+  const attrs2 = this.attrs;
+  for (let i = 0, len = attrs2.length; i < len; i++) {
+    if (attrs2[i][0] === name) {
       return i;
     }
   }
@@ -58916,10 +59744,10 @@ function link(state, silent) {
     state.pos = labelStart;
     state.posMax = labelEnd;
     const token_o = state.push("link_open", "a", 1);
-    const attrs = [["href", href]];
-    token_o.attrs = attrs;
+    const attrs2 = [["href", href]];
+    token_o.attrs = attrs2;
     if (title) {
-      attrs.push(["title", title]);
+      attrs2.push(["title", title]);
     }
     state.linkLevel++;
     state.md.inline.tokenize(state);
@@ -59031,12 +59859,12 @@ function image(state, silent) {
       tokens
     );
     const token = state.push("image", "img", 0);
-    const attrs = [["src", href], ["alt", ""]];
-    token.attrs = attrs;
+    const attrs2 = [["src", href], ["alt", ""]];
+    token.attrs = attrs2;
     token.children = tokens;
     token.content = content;
     if (title) {
-      attrs.push(["title", title]);
+      attrs2.push(["title", title]);
     }
   }
   state.pos = pos;
@@ -60109,6 +60937,154 @@ var lib_default = MarkdownIt;
 var import_lib2 = __toESM(require_lib(), 1);
 var es_default = import_lib2.default;
 
+// ../../node_modules/markdown-it-github-alerts/dist/index.mjs
+var DEFAULT_GITHUB_ICONS = {
+  note: '<svg class="octicon octicon-info mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>',
+  tip: '<svg class="octicon octicon-light-bulb mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>',
+  important: '<svg class="octicon octicon-report mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>',
+  warning: '<svg class="octicon octicon-alert mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>',
+  caution: '<svg class="octicon octicon-stop mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>'
+};
+var MarkdownItGitHubAlerts = (md2, options = {}) => {
+  const {
+    markers = ["TIP", "NOTE", "IMPORTANT", "WARNING", "CAUTION"],
+    icons = DEFAULT_GITHUB_ICONS,
+    matchCaseSensitive = false,
+    titles = {},
+    classPrefix = "markdown-alert"
+  } = options;
+  const markerNameRE = markers === "*" ? "\\w+" : markers.join("|");
+  const RE = new RegExp(`^\\\\?\\[\\!(${markerNameRE})\\]([^\\n\\r]*)`, matchCaseSensitive ? "" : "i");
+  md2.core.ruler.after("block", "github-alerts", (state) => {
+    const tokens = state.tokens;
+    for (let i = 0; i < tokens.length; i++) {
+      if (tokens[i].type === "blockquote_open") {
+        const open = tokens[i];
+        const startIndex = i;
+        while (tokens[i]?.type !== "blockquote_close" && i <= tokens.length)
+          i += 1;
+        const close = tokens[i];
+        const endIndex = i;
+        const firstContent = tokens.slice(startIndex, endIndex + 1).find((token) => token.type === "inline");
+        if (!firstContent)
+          continue;
+        const match2 = firstContent.content.match(RE);
+        if (!match2)
+          continue;
+        const type = match2[1].toLowerCase();
+        const title = match2[2].trim() || (titles[type] ?? capitalize(type));
+        const icon = icons[type] ?? "";
+        firstContent.content = firstContent.content.slice(match2[0].length).trimStart();
+        open.type = "alert_open";
+        open.tag = "div";
+        open.meta = {
+          title,
+          type,
+          icon
+        };
+        close.type = "alert_close";
+        close.tag = "div";
+      }
+    }
+  });
+  md2.renderer.rules.alert_open = function(tokens, idx) {
+    const { title, type, icon } = tokens[idx].meta;
+    return `<div class="${classPrefix} ${classPrefix}-${type}"><p class="${classPrefix}-title">${icon}${title}</p>`;
+  };
+};
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// src/index.mjs
+var import_markdown_it_attrs = __toESM(require_markdown_it_attrs(), 1);
+
+// src/tasklist.mjs
+var disableCheckboxes = true;
+var useLabelWrapper = false;
+function attrSet2(token, name, value) {
+  const index = token.attrIndex(name);
+  const attr = [name, value];
+  if (index < 0) {
+    token.attrPush(attr);
+  } else {
+    token.attrs[index] = attr;
+  }
+}
+function parentToken(tokens, index) {
+  const targetLevel = tokens[index].level - 1;
+  for (let i = index - 1; i >= 0; i--) {
+    if (tokens[i].level === targetLevel) {
+      return i;
+    }
+  }
+  return -1;
+}
+function isTodoItem(tokens, index) {
+  return isInline(tokens[index]) && isParagraph(tokens[index - 1]) && isListItem(tokens[index - 2]) && startsWithTodoMarkdown(tokens[index]);
+}
+function todoify(token, TokenConstructor) {
+  const textContent = token.content.slice(4);
+  if (useLabelWrapper) {
+    const labelToken = new TokenConstructor("html_inline", "", 0);
+    const checkbox = makeCheckbox(token, TokenConstructor);
+    labelToken.content = `<label class="task-list-item-label">${checkbox.content}${textContent}</label>`;
+    token.children = [labelToken];
+    token.content = textContent;
+  } else {
+    token.children.unshift(makeCheckbox(token, TokenConstructor));
+    token.children[1].content = token.children[1].content.slice(4);
+    token.content = textContent;
+    if (token.children[1].position) {
+      token.children[1].position += 4;
+    }
+    if (token.children[1].size) {
+      token.children[1].size -= 4;
+    }
+  }
+}
+function makeCheckbox(token, TokenConstructor) {
+  const checkbox = new TokenConstructor("html_inline", "", 0);
+  const disabledAttr = disableCheckboxes ? ' disabled="" ' : "";
+  let checkedAttr = "";
+  if (token.content.indexOf("[x] ") === 0 || token.content.indexOf("[X] ") === 0) {
+    checkedAttr = ' checked="" ';
+  }
+  let uibActionAttr = "";
+  checkbox.content = `<input class="task-list-item-checkbox"${checkedAttr}${disabledAttr}${uibActionAttr}type="checkbox">`;
+  return checkbox;
+}
+function isInline(token) {
+  return token.type === "inline";
+}
+function isParagraph(token) {
+  return token.type === "paragraph_open";
+}
+function isListItem(token) {
+  return token.type === "list_item_open";
+}
+function startsWithTodoMarkdown(token) {
+  return token.content.indexOf("[ ] ") === 0 || token.content.indexOf("[x] ") === 0 || token.content.indexOf("[X] ") === 0;
+}
+function taskLists(md2, options) {
+  if (options) {
+    useLabelWrapper = !!options.label;
+  }
+  md2.core.ruler.after("inline", "github-task-lists", function(state) {
+    if (options) {
+      disableCheckboxes = typeof options.enabled === "function" ? !options.enabled() : !options.enabled;
+    }
+    const tokens = state.tokens;
+    for (let i = 2; i < tokens.length; i++) {
+      if (isTodoItem(tokens, i)) {
+        todoify(tokens[i], state.Token);
+        attrSet2(tokens[i - 2], "class", "task-list-item" + (!disableCheckboxes ? " enabled" : ""));
+        attrSet2(tokens[parentToken(tokens, i - 2)], "class", "contains-task-list");
+      }
+    }
+  });
+}
+
 // src/index.mjs
 var md = lib_default({
   html: true,
@@ -60129,6 +61105,13 @@ var md = lib_default({
     return "";
   }
 });
+var parser = md.use(import_markdown_it_attrs.default).use(MarkdownItGitHubAlerts).use(
+  taskLists,
+  {
+    enabled: false,
+    label: true
+  }
+);
 var mdParse = md.render.bind(md);
 var export_fm = import_front_matter.default;
 export {

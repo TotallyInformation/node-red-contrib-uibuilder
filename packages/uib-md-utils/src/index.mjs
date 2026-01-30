@@ -5,14 +5,21 @@
  * -
  */
 
-// import { marked } from 'marked'
 // https://www.npmjs.com/package/front-matter
 import fm from 'front-matter'
-// https://github.com/bent10/marked-extensions/tree/main/packages/alert
-// import markedAlert from 'marked-alert'
-
+// https://www.npmjs.com/package/markdown-it
 import markdownit from 'markdown-it'
+// ?? https://www.npmjs.com/package/markdown-it-highlightjs ??
+// https://www.npmjs.com/package/highlight.js
 import hljs from 'highlight.js'
+// https://www.npmjs.com/package/markdown-it-obsidian-callouts
+// import mdItObsidianCallouts from 'markdown-it-obsidian-callouts'
+// https://github.com/antfu/markdown-it-github-alerts
+import MarkdownItGitHubAlerts from 'markdown-it-github-alerts'
+// https://github.com/arve0/markdown-it-attrs
+import attrs from 'markdown-it-attrs'
+// Private version of task lists
+import { taskLists } from './tasklist.mjs'
 
 const md = markdownit({
     html: true,
@@ -33,6 +40,18 @@ const md = markdownit({
         return '' // use external default escaping
     },
 })
+
+const parser = md
+    .use(attrs)
+    // .use(mdItObsidianCallouts)
+    .use(MarkdownItGitHubAlerts)
+    .use(
+        taskLists,
+        {
+            enabled: false,
+            label: true,
+        }
+    )
 
 /** Custom heading ID renderer for marked to allow {#custom-id} syntax in headings
  * See: https://github.com/markedjs/marked-custom-heading-id
@@ -81,6 +100,8 @@ function customHeadingId() {
 //     markedAlert(),
 //     customHeadingId()
 // )
+
+
 
 const mdParse = md.render.bind(md)
 
