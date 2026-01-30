@@ -16,7 +16,7 @@
     <link type="text/css" rel="stylesheet" href="../uibuilder/utils/markweb.css" media="all">
     <!-- You can add your own stylesheets here -->
 
-    <script type="module" src="../uibuilder/uibuilder.esm.min.js"></script>
+    <script type="module" src="../uibuilder/uibuilder.esm.min.js?logLevel=1"></script>
     <!-- Base URL is REQUIRED by the module! The uibuilder client lib is loaded by this module -->
     <script type="module" src="../uibuilder/utils/markweb.mjs" data-base-url="%%url%%"></script>
     <!-- You can add your own scripts here -->
@@ -25,7 +25,7 @@
 
     <a class="skip-link" href="#main">Skip to main content</a>
     <header>
-        %%nav [type=horizontal,start=0,end=3]%%
+        %%nav [orient=horizontal,start=0,end=3,type=both]%%
         <h1 data-attribute="title">{{title}}</h1>
         %%search-results%%
         <article id="search-results" hidden>
@@ -38,7 +38,7 @@
         <div class="visible-status" data-attribute="status">{{status}}</div>
     </header>
 
-    <main>
+    <main id="main">
         <div data-attribute="body">%%body%%</div>
     </main>
 
