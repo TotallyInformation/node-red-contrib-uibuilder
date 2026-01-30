@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-01-30 12:13:38
+updated: 2026-01-30 13:12:32
 ---
 
 ## To Fix
@@ -30,10 +30,12 @@ A node that creates a website out of a folder of markdown content.
 #### Wish list:
 
 * [x] Level specifier on nav element to limit depth and start level.
+* [x] On scroll, when nav menu scrolls offscreen, collapse it to a burger menu and keep it visible.
+* [x] Use server fs watch to provide live updates to pages. Send msg to ALL connected clients when a file changes. Clients can then decide what to do (e.g. reload if they are viewing that page).
 
-* [-] Use server fs watch to provide live updates to pages. Send msg to ALL connected clients when a file changes. Clients can then decide what to do (e.g. reload if they are viewing that page).
-* [-] Auto-menu generation. Horizontal and vertical options.
-* [-] On scroll, when nav menu scrolls offscreen, collapse it to a burger menu and keep it visible.
+* [-] Auto-menu generation.
+  * [x] Horizontal
+  * [ ] Vertical options.
 
 * [ ] Allow source folder to be outside the userDir folder.
 * [ ] Improve HTML styling.
@@ -58,10 +60,10 @@ A node that creates a website out of a folder of markdown content.
   * [ ] Search results should stay open after clicking a link.
 
 * [ ] Custom 404 response page. Separate file in config folder with default content if not present.
-* [ ] Live reload of changed markdown files. [ref](https://www.npmjs.com/package/markserv)
 * [ ] Ensure non-markdown files are served correctly (e.g. images, pdfs, etc.)
 * [ ] Documentation.
 * [ ] Remove web router on node close.
+* [ ] Consider allowing URL parameters to be passed as front-matter variables? (but not allwing overwriting of existing front-matter variables).
 
 * Hugo Compatibility:
   * [ ] ❓Support for `%%...%%` template placeholders.
