@@ -2,7 +2,7 @@
 title: uib-markweb - Dynamic web sites using Markdown
 description: ""
 created: 2026-01-09 15:10:14
-updated: 2026-01-30 15:05:31
+updated: 2026-01-30 18:17:34
 status: Draft
 since: v7.6.0
 ---
@@ -117,7 +117,9 @@ The client library looks to see if any of the changed files are currently being 
 >
 > The node uses 2 packages from separate workspaces:
 > * `@totallyinformation/uib-fs-utils` - Chokidar for file watching.
-> * `@totallyinformation/uib-md-utils` - Front-Matter, Marked & extensions.
+> * `@totallyinformation/uib-md-utils` - Front-Matter, Markdown-IT & extensions.
+>
+> The original intent was to use the `marked` package as is already used and installed by Node-RED. However, it is not possible to access that library reliably from a custom node due to the way Node-RED manages its dependencies. In addition, it has some significant limitations. So `markdown-it` has been used instead.
 
 ## Requirements
 
@@ -160,7 +162,7 @@ The client library looks to see if any of the changed files are currently being 
 
 * [x] Source folder path on server
 * [x] URL path to serve the content
-* [x] Allow marked extensions to be specified - phase 1, fixed in code
+* [x] Allow markdown-it extensions to be specified - phase 1, fixed in code
 
 ### UIBUILDER changes needed
 
@@ -170,13 +172,19 @@ The client library looks to see if any of the changed files are currently being 
    * [x] Update uibuilder route add to allow different middleware per route. e.g. static or markdown.
 
 ### Markdown extensions wanted
-* [x] Front-matter, including ability to include fields in Markdown text and HTML wrapper.
-* [x] GFM.
-* [x] Checklists.
-* [x] GFM-style callouts/alerts.
-* [x] Clickable page headings that update the URL hash.
-* [ ] Dynamic checklists (clickable checkboxes that update the display, fire an event and send to Node-RED).
-* [ ] Code syntax highlighting.
+* [x] Front-matter, including ability to include fields in Markdown text and HTML wrapper. Uses the [`front-matter`](https://www.npmjs.com/package/front-matter) package.
+* [ ] Core CommonMark support. Provided by [`markdown-it`](https://www.npmjs.com/package/markdown-it) package.
+  * [x] GFM Tables.
+  * [x] GFM Strikethrough.
+* Markdown-it extensions:
+  * [x] Code syntax highlighting. Provided by [`markdown-it-highlightjs`](https://www.npmjs.com/package/markdown-it-highlightjs) extension.
+  * [x] GFM Task Lists/checklists. Provided by custom extension.
+  * [x] Custom heading IDs using `{#custom-id}`or `{id="custom-id"}` syntax. Provided by custom extension. Also allows custom attributes on other elements. Including custom classes with simple `{.classname}` syntax. Provided by [`markdown-it-attrs`](https://www.npmjs.com/package/markdown-it-attrs) extension.
+  * [x] GFM-style Alert/Callout boxes. Provided by [`markdown-it-github-alerts`](https://github.com/antfu/markdown-it-github-alerts) extension.
+  
+  * [ ] GFM Footnotes. Provided by [`markdown-it-footnote`](https://www.npmjs.com/package/markdown-it-footnote) extension.
+
+* [ ] Clickable page headings that update the URL hash.
 * [ ] Mermaid diagrams.
 * [ ] Page table-of-contents
 * [ ] Navigation sidebar (both auto-generated and manual), possibly a horizontal version as well.
@@ -196,17 +204,19 @@ The client library looks to see if any of the changed files are currently being 
   * `category`
   * [ ] _`template` (for future use) external content templates_
 
+* ~~Dynamic checklists (clickable checkboxes that update the display, fire an event and send to Node-RED).~~ Partly implemented but needs much more work. Deferred for now. Either needs to be able to update the source markdown or maintain state elsewhere.
+
 ## Possible future Requirements
 
-* [ ] Add separate bundle of marked and fm for front-end use.
-* [ ] Allow additional marked extensions to be specified via node config.
+* [ ] Add separate bundle of markdown-it and fm for front-end use.
+* [ ] Allow additional markdown-it extensions to be specified via node config.
 * [ ] Consider caching nav and search indexes.
 * [ ] Add option to use the new Navigate web API for SPA navigation. (Safari from 2025-12, Chromium from 2022, Firefox not yet supported).
 * [ ] Auto-generate a sidebar navigation from the folder structure. Allow for in-page section navigation using headings. Where present, have two tabs in the sidebar: "Contents" and "Sections" (ref Typora's layout).
 * [ ] In Editor, if there is a url clash with another uibuilder instance, show a warning.
-* [ ] Allow marked extensions to be specified via settings.js uibuilder config.
-* [ ] Mount client versions of marked and extensions to front-end for use in std uibuilder front-ends.
-* [ ] Update front-end uibuilder library to use marked to render markdown content instead of just markdown-it.
+* [ ] Allow markdown-it extensions to be specified via settings.js uibuilder config.
+* [ ] Mount client versions of markdown-it and extensions to front-end for use in std uibuilder front-ends.
+* [ ] Update front-end uibuilder library to use markdown-it to render markdown content instead of just markdown-it.
 
 ## Future possible ideas
 
