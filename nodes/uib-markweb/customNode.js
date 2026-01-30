@@ -193,16 +193,33 @@ function nodeInstance(config) {
         return
     }
 
-    this.instanceFolder = join(RED.settings.userDir, this.source)
+    // if source folder is a relative path, make it relative to userDir
+    if (isAbsolute(this.source)) {
+        this.instanceFolder = this.source
+    } else {
+        this.instanceFolder = join(RED.settings.userDir, this.source)
+    }
+    // Check if instanceFolder exists and is readable? Error if not
+    try {
+        accessSync( this.instanceFolder, 'r' )
+    } catch (err) {
+        this.error(`🌐🛑[uibuilder:uib-markweb] Source folder must be readable. Please check permissions. Source="${this.instanceFolder}"`)
+        return
+    }
 
-    // TODO Check if instanceFolder exists and is readable?
-    // TODO Check if configFolder exists and is readable?
-    processConfig.bind(this)
+    // if config folder is a relative path, make it relative to userDir
+    if (!isAbsolute(this.configFolder)) {
+        this.configFolder = join(RED.settings.userDir, this.configFolder)
+    }
+    // Check if configFolder exists and is readable? Config will use defaults if not
+    if (processConfig.bind(this) === false) {
+        log.warn(`🌐⚠️[uib-markweb:nodeInstance:${this.url}] Config folder is not accessible, using defaults. "${this.configFolder}"`)
+    }
 
     // Holder for search indexes - Map
     this.index = new Map()
 
-    // Build search index asynchronously and set up file watcher, also notifies connected clients
+    // Build search index asynchronously
     buildIndexes(this)
         .then(() => {
             return true
@@ -210,13 +227,13 @@ function nodeInstance(config) {
         .catch((err) => {
             log.error(`🌐🛑[uib-markweb:nodeInstance:${this.url}] Uncaught error in buildIndexes: ${err.message}`)
         })
-    // File/folder change watch (sets this.watcher so it can be cancelled)
+    // File/folder change watch (sets this.watcher so it can be cancelled), also notifies connected clients
     setupFileWatcher(this)
 
-    // @ts-ignore Set up web services for this instance (static folders, middleware, etc)
+    // Set up web services for this instance (static folders, middleware, etc)
     web.instanceSetup(this, `${this.url}/:morePath(*)?`, handler.bind(this), { searchHandler: searchHandler.bind(this), })
 
-    // @ts-ignore Socket.IO instance configuration. Each deployed instance has it's own namespace
+    // Socket.IO instance configuration. Each deployed instance has it's own namespace
     sockets.addNS(this) // NB: Namespace is set from url
 
     // Save a reference to sendToFe to allow this and other nodes referencing this to send direct to clients
@@ -227,7 +244,7 @@ function nodeInstance(config) {
 
     // Clean up watcher on node close
     this.on('close', async () => {
-        await this.watcher2.close()
+        await this.watcher.close()
         log.trace(`🌐[uib-markweb:close:${this.url}] File watcher closed`)
         // const watcher = this.watcher
         // if (watcher) {
@@ -718,38 +735,61 @@ function doSearch(index, query) {
     query = query.toLowerCase()
     for (const [path, doc] of index) {
         let titleMatch, contentMatch, descMatch, tagMatch
-        if (doc?.title) titleMatch = doc.title.toLowerCase().includes(query)
-        if (doc?.content) contentMatch = doc.content.includes(query)
-        if (doc?.description) descMatch = doc.description.toLowerCase().includes(query)
-        try {
-            // if (doc?.tags && doc.tags.length > 0) tagMatch = doc?.tags.some(tag => tag.toLowerCase().includes(query))
-            if (doc?.tags && Array.isArray(doc.tags) && doc.tags.length > 0) {
-                console.log('🌐[doSearch] doc.tags=',
-                    Array.isArray(doc.tags), doc.tags)
-                tagMatch = doc.tags.some(tag => tag.toLowerCase().includes(query))
-            }
-        } catch (e) {
-            console.error(`🌐🛑[uib-markweb:doSearch] Error checking document "${path}" for query "${query}": ${e.message}`)
-            console.trace()
-        }
 
-        if (titleMatch || contentMatch || descMatch || tagMatch) {
-            // Extract snippet around match
-            let snippet = ''
+        if (doc?.title) titleMatch = doc.title.toLowerCase().includes(query)
+        if (doc?.description) descMatch = doc.description.toLowerCase().includes(query)
+        if (doc?.tags && Array.isArray(doc.tags) && doc.tags.length > 0) {
+            tagMatch = doc.tags.some(tag => tag.toLowerCase().includes(query))
+        }
+        if (doc?.content) contentMatch = doc.content.toLowerCase().includes(query)
+
+        // Extract snippet around match
+        const MAXSNIPPETLENGTH = 50 // 50 gives max length of 100 chars
+        let snippet = ''
+        if (titleMatch) {
+            snippet = `Title: ${doc.title}`
+        } else if (tagMatch) {
+            snippet = `Tags: ${doc.tags.join(', ')}`
+        } else if (descMatch) {
+            snippet = `Description: ${doc.description}`
+        } else if (contentMatch) {
             let idx = -1
-            if (contentMatch) idx = doc.content.toLowerCase().indexOf(query)
+            idx = doc.content.toLowerCase().indexOf(query)
             if (idx >= 0) {
-                const start = Math.max(0, idx - 50)
-                const end = Math.min(doc.content.length, idx + query.length + 50)
+                const start = Math.max(0, idx - MAXSNIPPETLENGTH)
+                const end = Math.min(doc.content.length, idx + query.length + MAXSNIPPETLENGTH)
                 snippet = '...' + doc.content.slice(start, end) + '...'
             }
+        }
 
+        // Set relavence score
+        let score = 0
+        const foundIn = []
+        if (titleMatch) {
+            score += 10
+            foundIn.push('title')
+        }
+        if (tagMatch) {
+            score += 7
+            foundIn.push('tags')
+        }
+        if (descMatch) {
+            score += 5
+            foundIn.push('description')
+        }
+        if (contentMatch) {
+            score += 1
+            foundIn.push('content')
+        }
+
+        if (score > 0) {
             results.push({
                 path: doc.path,
                 title: doc.title,
                 description: doc.description,
                 snippet,
-                score: titleMatch ? 10 : (tagMatch ? 7 : (descMatch ? 5 : 1)),
+                score,
+                foundIn,
             })
         }
     }
@@ -865,12 +905,11 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
         }
 
         attributes = {
+            ...node.globalAttributes || {},
             ...parsed.attributes || {},
             title: parsed.attributes?.title || basename(file, '.md'),
             description: parsed.attributes?.description || '',
             // Store plain text (strip markdown) for searching
-            // TODO Might want to do the {{...}} replacements here as well?
-            // TODO Use the index in nav/handle when entry exists.
             // body: parsed.body.replace(/[#*`\[\]()]/g, '').toLowerCase() || '',
             body: parsed.body || '',
             tags: parsed.attributes?.tags || [],
@@ -885,6 +924,8 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
             file: filename,
             // Record the folder depth (0 for root index.md, 1 for first level, etc)
             depth: urlPath.split('/').length - 2,
+            // Full relative URL
+            toUrl: urlJoin(urlPath, filename),
             // other: [morePath, parsedPath],
         }
         // attributes.htmlbody = processTemplates(attributes.body, attributes)
@@ -1037,8 +1078,8 @@ function htmlTemplate(node, attributes = {}) {
     const log = uib.RED.log
     // TODO consider caching the page-template content for this instance for efficiency - but think about easy updates, how?
     node.pageTemplate = readConfigFile(node, 'page-template.html') || ''
-    const globalAttributes = readConfigFile(node, 'global-attributes.json') || {}
-    attributes = { ...globalAttributes, ...attributes, }
+    node.globalAttributes = readConfigFile(node, 'global-attributes.json') || {}
+    attributes = { ...node.globalAttributes, ...attributes, }
     attributes.url = node.url
     // add the markdown body
     // if (!attributes.body) {
@@ -1060,13 +1101,14 @@ function htmlTemplate(node, attributes = {}) {
     return html
 }
 
-/** Process configuration files from the config folder
+/** Check if this.configFolder exists and is readable
+ * @returns {boolean|null} True if configFolder exists and is readable, false if not, null if not set
  * @this {runtimeNode & uibMwNode}
  */
 function processConfig() {
-    // Check if this.configFolder exists and is readable
     const RED = uib.RED
     const log = RED.log
+    let ans = null
     if (this.configFolder) {
         // if configFolder is a relative path, make it relative to userDir
         if (!isAbsolute(this.configFolder)) {
@@ -1074,11 +1116,14 @@ function processConfig() {
         }
         try {
             accessSync( this.configFolder, 'r' )
-            log.trace(`🌐[uib-markweb:processConfig] Config folder is accessible. "${this.configFolder}"`)
+            ans = true
+            // log.trace(`🌐[uib-markweb:processConfig] Config folder is accessible. "${this.configFolder}"`)
         } catch (err) {
-            log.warn(`🌐⚠️[uib-markweb:processConfig] Config folder is not accessible, using defaults. "${this.configFolder}" - ${err.message}`)
+            ans = false
+            // log.warn(`🌐⚠️[uib-markweb:processConfig] Config folder is not accessible, using defaults. "${this.configFolder}" - ${err.message}`)
         }
     }
+    return ans
 }
 
 /** Replace %%...% and {{...}}
@@ -1161,7 +1206,7 @@ function processTemplates(text, node, attributes = {}, calledFrom = '') {
 /** Read a configuration file from configFolder or fallback to package templates folder
  * @param {runtimeNode & uibMwNode} node Instance `this` context
  * @param {string} fileName The name of the file to read
- * @returns {string|null} The file contents or null if not found in either location
+ * @returns {string|null} The file contents or null if not found or not readable
  */
 function readConfigFile(node, fileName) {
     const log = uib.RED.log
@@ -1176,18 +1221,20 @@ function readConfigFile(node, fileName) {
             log.trace(`🌐[uib-markweb:readConfigFile] Read file from configFolder: "${configPath}"`)
         } catch (err) {
             // File not accessible in configFolder, try templates folder
-            log.trace(`🌐[uib-markweb:readConfigFile] File not found or not readable in configFolder: "${configPath}"`)
+            log.trace(`🌐[uib-markweb:readConfigFile] File not found or not readable in configFolder: "${configPath}". Will try default.`)
         }
     }
 
-    // Fallback to templates/.markweb-defaults folder in the package
-    const templatesPath = join(__dirname, '..', '..', 'templates', '.markweb-defaults', fileName)
-    try {
-        accessSync(templatesPath, 'r')
-        content = readFileSync(templatesPath, 'utf8')
-        log.trace(`🌐[uib-markweb:readConfigFile] Read file from templates folder: "${templatesPath}"`)
-    } catch (err) {
-        log.warn(`🌐⚠️[uib-markweb:readConfigFile] File not found or not readable in either configFolder or templates: "${fileName}"`)
+    if (content === null) {
+        // Fallback to templates/.markweb-defaults folder in the package
+        const templatesPath = join(__dirname, '..', '..', 'templates', '.markweb-defaults', fileName)
+        try {
+            accessSync(templatesPath, 'r')
+            content = readFileSync(templatesPath, 'utf8')
+            log.trace(`🌐[uib-markweb:readConfigFile] Read file from templates folder: "${templatesPath}"`)
+        } catch (err) {
+            log.warn(`🌐⚠️[uib-markweb:readConfigFile] File not found or not readable in either configFolder or templates: "${fileName}"`)
+        }
     }
 
     // If the fileName extension is ".json", attempt to parse the content
@@ -1250,7 +1297,7 @@ function setupFileWatcher(node) {
 
     try {
         // https://github.com/paulmillr/chokidar
-        const watcher = node.watcher2 = chokidar.watch(sourcePath, {
+        const watcher = node.watcher = chokidar.watch(sourcePath, {
             cwd: sourcePath,
             persistent: true,
             // Doesn't fire on initial setup
@@ -1275,7 +1322,7 @@ function setupFileWatcher(node) {
                 const changesCopy = [...changes]
                 changes = []
                 log.info(`🌐[uib-markweb:watcher:${instanceUrl}] File/folder changes detected, rebuilding search index`)
-                // Build the search index
+                // (re)Build the search index
                 try {
                     // Also notifies connected clients
                     await buildIndexes(node)
