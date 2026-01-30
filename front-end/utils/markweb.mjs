@@ -638,6 +638,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         case '_page-metadata': {
             console.log('Initial page metadata received from server:', ctrlMsg)
             // uibuilder.set('pageData', ctrlMsg.attributes )
+            pageData = ctrlMsg.attributes
             break
         }
 
@@ -664,9 +665,10 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
         // If the server watch fn detects a file/folder change
         case '_source-change': {
-            console.log('Source changed on server.', ctrlMsg)
+            console.log('Source changed on server.', {ctrlMsg, pageData})
             if (ctrlMsg.payload.url === pageData.toUrl) {
                 console.log('Current page affected by source change, reloading page content.')
+                navigate(pageData.toUrl, false)
             }
             break
         }
