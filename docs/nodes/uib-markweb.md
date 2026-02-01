@@ -1,17 +1,12 @@
 ---
 title: uib-markweb - Dynamic web sites using Markdown
-description: ""
+description: >
+  The `uib-markweb` node allows you to create dynamic web sites using Markdown files.
 created: 2026-01-09 15:10:14
-updated: 2026-01-30 18:17:34
-status: Draft
+updated: 2026-02-01 15:37:55
+status: Release
 since: v7.6.0
 ---
-
-*(This document is a work-in-progress, it is not complete)*
-
-Available from uibuilder v7.6.0.
-
-The `uib-markweb` node allows you to create dynamic web sites using Markdown files.
 
 ## Configuration
 
@@ -26,25 +21,28 @@ The `uib-markweb` node allows you to create dynamic web sites using Markdown fil
 
 ## Special directives and variables
 
-These are mostly available both in the HTML wrapper template and in the Markdown files. Though some will only work in one or the other.
+These allow you to add dynamic content and functionality to your pages using simple tags.
+
+They are mostly available both in the HTML wrapper template and in the Markdown files. Though some will only work in one or the other.
 
 While these are initially processed server-side so that only HTML is passed over to the browser clients, the special front-end client library has processes to further update them dynamically as updates are sent from the server (using internal control messages). This is controlled by a couple of HMTL data attributes added to the rendered HTML.
 
 > [!TIP]
 > Because `uib-markweb` is built on top of uibuilder, you can use uibuilder's existing features to send messages from Node-RED to the front-end to further update the page dynamically as needed.
+>
+> Connected clients automatically receive page updates when the underlying markdown files change on the server. The client then automatically requests the updated page data and updates the display accordingly. This also allows you to do custom front-end processing of the updated data if desired.
 
 ### Directives
 
 These provide more complex processing than simple variable replacement. They are enclosed in `%%...%%` tags. Attributes are generally optional and are specified inside square brackets `[...]` as comma-separated `attribute=value` pairs.
 
-* `nav [attributes]` - Generates a navigation menu based on the folder structure. Attributes can be used to control depth, type (files/folders/both), orientation (horizontal/vertical), etc.
+* `%%nav [attributes]%%` - Generates a navigation menu based on the folder structure. Attributes can be used to control depth, type (files/folders/both), orientation (horizontal/vertical), etc.
 
-  `nav` uses the `index` directive internally to build the menu structure. So it accepts the same attributes as `index`, plus:
+  `nav` uses the `%%index%%` directive internally to build the menu structure. So it accepts the same attributes as `index`, plus:
 
-  * `orient` - The orientation of the menu: `horizontal` ~~or `vertical`~~ (default: `horizontal`). As of v7.6.0, only `horizontal` is implemented. You can use `index` to build vertical lists.
+  * `orient` - The orientation of the menu: `horizontal` ~~or `vertical`~~ (default: `horizontal`). As of v7.6.0, only `horizontal` is implemented. You can use `%%index%%` to build vertical lists.
 
-* `index [attributes]` - Generates an index list of files and/or folders. Attributes can be used to control depth, file types, sorting, etc.
-
+* `%%index [attributes]%%` - Generates an index list of files and/or folders. Attributes can be used to control depth, file types, sorting, etc.
   Attributes:
   * `start` - The starting depth level to include in the index list (default: the current page's depth).
   * `end` - The ending depth level (default: the current page's depth if `start` not provided, otherwise `5`).
@@ -59,9 +57,18 @@ These provide more complex processing than simple variable replacement. They are
   * `order` - The sorting direction: `asc` or `desc` (default: `asc`).
   * `exclude` - Comma-separated list of file or folder names to exclude (default: none).
 
-* `search-results [attributes]` - Placeholder for search results.
+* `%%search-results%%` - Placeholder for search results. Currently has no attributes.
 
-* `...` - Other directives may be added in the future.
+* `%%body%%` - Placeholder for the main content of the page. No attributes.
+  
+  > [!NOTE]
+  > Note that the `body` directive is required in the HTML wrapper template to display the page content. It must be contained in a parent HTML element with a `data-attribute="body"` attribute for dynamic updates to work correctly.
+  >
+  > Should really only be used in the HTML wrapper template, not in Markdown files.
+
+* `%%url%%` - The base URL of the web site. No attributes.
+
+* `%%...%%` - Other directives may be added in the future.
 
 ### Variables
 
@@ -69,28 +76,30 @@ These provide simple variable replacement from front-matter and global/system fi
 
 All front-matter fields from the Markdown files can be used as variables. Some common ones are:
 
-* `title` - The title of the page from front-matter.
-* `description` - The description of the page from front-matter.
-* `author` - The author of the page from front-matter.
-* `created` - The creation date of the page from front-matter.
-* `updated` - The last updated date of the page from front-matter.
-* `status` - The status of the page from front-matter.
-* `tags` - The tags of the page from front-matter.
-* `category` - The category of the page from front-matter.
+* `title` - The title of the page.
+* `description` - The description of the page.
+* `author` - The author of the page.
+* `created` - The creation date of the page.
+* `updated` - The last updated date of the page.
+* `status` - The status of the page. E.g., `draft`, `published`, etc.
+* `tags` - The list of tags of the page.
+* `category` - The category of the page.
 
-In addition, a few are added by a global JSON config file and the system:
+In addition, a global JSON config file is provided, the default version adds, you may override these in `global-attributes.json` in the config folder:
 
-* `status` - The default page status if pages don't provide one.
+* `status` - The default page status if pages don't provide one. `Draft`.
 
 * From system data:
-  * `depth` - How deep in the folder structure we are.
+
+  * `depth` - How deep in the folder structure the page is.
   * `path` - The current page path relative to the site root.
   * `toUrl` - The resource URL of the current page relative to the site root.
 
 * Possible future globals:
+
+  * `template` - A different HTML template to the default to allow for different page layouts.
   * `siteTitle` - The site title from global config.
   * `siteDescription` - The site description from global config.
-  * `baseUrl` - The base URL of the site.
 
 ## Processes
 
@@ -98,30 +107,127 @@ In addition, a few are added by a global JSON config file and the system:
 
 The node watches the source folder for changes to files and folders. When a change is detected, the navigation and search indexes are rebuilt automatically. All connected clients are notified when the index is rebuilt and what changes occurred.
 
+If a connected client is currently viewing a page that has changed, it requests a resend of the page data to update the display.
+
 > [!NOTE]
-> The file watcher only goes up to 9 levels deep to avoid performance issues.
+> The file watcher only goes up to 9 folder levels deep to avoid performance issues.
 >
 > Sensibly, you should avoid going more than 3-4 levels deep in your folder structure for usability reasons.
 
 After a file/folder change is detected, there is a debounce period (**default 1 second**) to allow for multiple rapid changes to be grouped together before rebuilding the indexes. Clients recieve a "_indexes-change" message followed by a "_file-change" message containing the list of changes detected (in `msg.changes`).
 
-The client library looks to see if any of the changed files are currently being viewed. If so, it requests a resend of the page data (over socket.io).
+> [!TIP]
+> Connected clients will only recieve updates after the 1 second debounce period. If you make multiple changes within that period, they will be grouped together into a single update.
+
+> [!NOTE]
+> File/folder _renames_ appear as a deletion and an addition. This may happen in any order depending on how the OS reports the changes.
+
+### URLs & URL mapping
+
+The URL specified in the node config is used as the *base URL* for the web site. It must be unique among all `uibuilder` and `uib-markweb` nodes in the Node-RED instance and must not clash with any other existing routes in Node-RED. The actual URL will depend on the Node-RED root URL configuration and/or the uibuilder custom web server if used. It is shown in the Editor UI for the node.
+
+Any additional path segments after the base URL are used to identify the specific markdown file or folder being requested.
+
+For example, if the base URL is `/docs` and the request is for `/docs/getting-started`, the node will look for a `getting-started.md` file in the source folder.
+
+However, if `getting-started` is a folder, the node will look for an `index.md` file inside that folder.
 
 > [!TIP]
-> After a file/folder change, there is a 1 second delay before the indexes are rebuilt.
+> All relative links in your markdown files are relative to the *base URL* of the site, *not the current document*. This is important for SPA navigation to work correctly.
+
+### Server folder locations
+
+The `source` folder specified in the node's Editor config is used as the root folder for the markdown files. If a relative path is provided, it is made relative to the Node-RED `userDir` folder.
+
+> [!TIP]
+> The source folder **must** already exist. The node will not create it for you.
+> 
+> It must have at least a single `index.md` file to serve any content.
+
+The `configFolder` specified in the node config is used to store configuration files such as the HTML wrapper template and global attributes. If a relative path is provided, it is made relative to the Node-RED `userDir` folder.
+
+> [!TIP]
+> The config folder must already exist. The node will not create it for you.
+>
+> It is recommended _not_ to use a sub-folder of the source folder for the config folder to avoid accidental exposure of config files via the web server.
+> 
+> The system will automatically copy default versions of `page-template.html` and `global-attributes.json` to the config folder on Node-RED startup if they are not already present.
+
+
+
+### Template files
+
+Custom template files, if desired, must be stored in the `configFolder` specified in the node config. If a required template file is not found there, a default version from the package `templates/.markweb-defaults/` folder is used.
+
+On Node-RED startup, the node checks for the presence of the following files in the `configFolder`: `page-template.html`, `global-attributes.json`. If any are missing, the default versions are copied from the package `templates/.markweb-defaults/` folder to the `configFolder` for easy customization.
+
+> [!NOTE]
+> In the first release (UIBUILDER v7.6.0), only `page-template.html` and `global-attributes.json` are supported. More will be added in the future.
+
+#### HTML wrapper template
+
+The HTML wrapper template is stored in the `page-template.html` file in the `configFolder`. If not found there, a default version from the package `templates/.markweb-defaults/` folder is used.
+
+This template is used to wrap the rendered HTML content from the markdown files. It can include `{{...}}` variable replacements and `%%...%%` directives as described above.
+
+Requirements (see the default template for details):
+
+* Any scripts should be treated as ES Modules.
+* Must include a `%%body%%` directive to indicate where the main content should be inserted.
+* The body must be wrapped in an HTML element with a `data-attribute="body"` attribute for dynamic updates to work correctly.
+* Must include a `<base href="%%url%%/">` tag in the `<head>` section for proper SPA navigation.
+* Must include the ESM version of the uibuilder client library and the `markweb.mjs` front-end processing library.
+* The `markweb.mjs` script tag must include a `data-base-url="%%url%%"` attribute to specify the base URL of the site.
+* The uibuilder client library script tag must be before the `markweb.mjs` script tag. It may include `?logLevel=1` (or some other level) on the URL to set the client debugging log level if desired.
+
+> [!TIP]
+> To get the default template back, simply rename your existing `page-template.html` file in the `configFolder` and restart Node-RED. The default version will be copied back into place. You may wish to keep a copy of it to hand for reference.
+
+### Global attributes
+
+These are read from the `global-attributes.json` file in the `configFolder`. If not found there, a default version from the package `templates/.markweb-defaults/` folder is used. They are merged with the front-matter attributes from each markdown file to provide the full set of available attributes for that file. They are merged before any page-specific front-matter, so page front-matter overrides global attributes.
+
+> [!TIP]
+> Global attributes can be used to define site-wide settings or metadata that should be available on every page and also to provide default values for common front-matter fields.
+
+### Cached page metadata indexes
+
+The node maintains cached indexes of page metadata for navigation and search purposes. These indexes are build at Node-RED starrtup and rebuilt whenever a file or folder change is detected in the source folder. The indexes are stored in memory for fast access.
+
+> [!WARNING]
+> For large sites with many markdown files, this could consume significant memory. Monitor your Node-RED instance for performance issues.
+>
+> Future releases will consider optimising memory use and options for persisting indexes to disk or using a database.
+
+The index is a representation of the file and folder structure, including only folders and files that are valid markdown pages (i.e., those containing an `index.md` file for folders, `*.md` for files, and nothing starting with `_`).
+
+When a client initially loads a page, the node uses the cached indexes to quickly retrieve the necessary metadata for that page, including front-matter attributes and content snippets for search results.
+
+When a client uses a link to navigate to a different "page", the node retrieves the metadata from the cached indexes and sends it to the client along with the rendered HTML content. The client library then updates the page display accordingly.
+
+Client updates are controlled by updating HTML elements with specific `data-attribute="..."` attributes so that only the necessary parts of the page are updated without a full page reload. The `data-attribute` values correspond to front-matter attributes and special placeholders like `body` for the main content.
+
+> [!TIP]
+> Use the `data-attribute` attributes in your _HTML wrapper template_ to control which parts of the page get updated during navigation & page updates. These are required as well as the `{{...}}` tags otherwise, the tags will only be processed on the initial page load.
+>
+> When using `{{...}}` tags in your _Markdown files_, you don't need to worry about `data-attribute` attributes.
+>
+> `%%...%%` special processing directives automatically add the necessary `data-attribute` attributes to their rendered HTML elements.
 
 ## Dependencies
 
 > [!NOTE]
 > All dependencies for this node are dealt with internally. You do not need to install any additional packages.
->
-> The node uses 2 packages from separate workspaces:
-> * `@totallyinformation/uib-fs-utils` - Chokidar for file watching.
-> * `@totallyinformation/uib-md-utils` - Front-Matter, Markdown-IT & extensions.
->
-> The original intent was to use the `marked` package as is already used and installed by Node-RED. However, it is not possible to access that library reliably from a custom node due to the way Node-RED manages its dependencies. In addition, it has some significant limitations. So `markdown-it` has been used instead.
+
+The node uses 2 packages from separate sub-workspaces:
+* `@totallyinformation/uib-fs-utils` - Chokidar for file watching.
+* `@totallyinformation/uib-md-utils` - Front-Matter, Markdown-IT & extensions.
+
+  The original intent was to use the `marked` package as is already used and installed by Node-RED. However, it is not possible to access that library reliably from a custom node due to the way Node-RED manages its dependencies. In addition, it has some significant limitations. So `markdown-it` has been used instead.
 
 ## Requirements
+
+This is a rough list of the original requirements for the `uib-markweb` node.
 
 * [x] Support Commonmark and GFM standards.
 * [x] Support front-matter in markdown files.
@@ -144,8 +250,11 @@ The client library looks to see if any of the changed files are currently being 
 * [x] Seach input box in the nav menu.
 * [x] Search results rendered via `%%search-results%%` directive allowing flexibility in positioning.
 * [x] Backend search index with auto-update on file changes.
+* [x] Search results retained on SPA navigation.
+* [x] Searches include: Front-matter fields, and body text.
+* [x] Search result highlighted if matching the current page.
 
-### Templates
+### Page templates
 
 * [x] Support for a HTML wrapper template with `{{...}}` & `%%....%%` replacements.
 * [x] HTML wrapper. `page-template.html` file in separate config folder to allow customisation of the HTML wrapper round the rendered markdown. With default backup in `templates/.markweb-defaults/`.
@@ -157,79 +266,73 @@ The client library looks to see if any of the changed files are currently being 
 ### Front-end processing
 
 * [x] Ensure that all links are intercepted for SPA navigation. But that external links (containing `:`) are not intercepted. **All relative links are relative to the BASE URL (not the current document).**
+* [x] Ensure that any links containing hash fragments (`#...`) are handled correctly for in-page navigation.
 
 ### Node Editor Configuration
 
-* [x] Source folder path on server
-* [x] URL path to serve the content
-* [x] Allow markdown-it extensions to be specified - phase 1, fixed in code
+* [x] Source folder path on server.
+* [x] URL path to serve the content.
+* [x] Allow markdown-it extensions to be specified - phase 1, fixed in code.
 
 ### UIBUILDER changes needed
 
-* [x] Change main uibuilder processing to allow separate specification of the source folder from the url.
-* [x] Allow passing of a custom ExpressJS middleware function for a route.
-* `nodes/libs/web.cjs`:
-   * [x] Update uibuilder route add to allow different middleware per route. e.g. static or markdown.
+* [x] Change main uibuilder processing to allow separate specification of the source folder from the url. (Previously, uibuilder assumed a 1:1 mapping of folder to url names).
+* [x] Allow passing of a custom ExpressJS middleware function for a route. (Wasn't previously needed as uibuilder only served static content, now needed so that nodes can have their own custom middleware).
 
-### Markdown extensions wanted
-* [x] Front-matter, including ability to include fields in Markdown text and HTML wrapper. Uses the [`front-matter`](https://www.npmjs.com/package/front-matter) package.
-* [ ] Core CommonMark support. Provided by [`markdown-it`](https://www.npmjs.com/package/markdown-it) package.
-  * [x] GFM Tables.
-  * [x] GFM Strikethrough.
-* Markdown-it extensions:
-  * [x] Code syntax highlighting. Provided by [`markdown-it-highlightjs`](https://www.npmjs.com/package/markdown-it-highlightjs) extension.
-  * [x] GFM Task Lists/checklists. Provided by custom extension.
-  * [x] Custom heading IDs using `{#custom-id}`or `{id="custom-id"}` syntax. Provided by custom extension. Also allows custom attributes on other elements. Including custom classes with simple `{.classname}` syntax. Provided by [`markdown-it-attrs`](https://www.npmjs.com/package/markdown-it-attrs) extension.
-  * [x] GFM-style Alert/Callout boxes. Provided by [`markdown-it-github-alerts`](https://github.com/antfu/markdown-it-github-alerts) extension.
-  
-  * [ ] GFM Footnotes. Provided by [`markdown-it-footnote`](https://www.npmjs.com/package/markdown-it-footnote) extension.
+### Required features of the markdown processor
 
-* [ ] Clickable page headings that update the URL hash.
+* [x] Full [Commonmark](https://commonmark.org) support.
+* [x] Standard heading ID's using the heading text.
+* [x] Headings have auto-generated anchor links for easy linking.
+* [x] Custom element ID's using `{#custom-id}` or `{id="custom-id"}` syntax.
+* [x] Custom element classes using `{.class-name}` or `{class="class-name"}` syntax.
+* [x] Custom element attributes using `{attrname="value"}` syntax.
+* [x] Task lists (checklists) using `* [ ]` and `* [x]` syntax.
+* [x] Autolinks for raw URLs and email addresses.
+* [x] GFM-style tables. Including left, center and right alignments.
+* [x] GFM-style alert boxes (AKA callouts).
+* [x] Crossed-out text using `~~strikethrough~~` syntax.
+* [x] Syntax highlighting in code blocks using triple backticks and language specifier (`highlight.js`).
+* [x] Access to YAML front-matter fields, including ability to include fields in Markdown text and HTML wrapper.
+
+## Requirements yet to be implemented
+
+These are considered useful enough to be implemented but may not make the initial release.
+
+### Required features of the markdown processor
+
+* [ ] Footnotes.
 * [ ] Mermaid diagrams.
 * [ ] Page table-of-contents
-* [ ] Navigation sidebar (both auto-generated and manual), possibly a horizontal version as well.
 * [ ] Transclude other markdown files.
-* [ ] Allow custom styling on Markdown elements via stdised syntax.
-* [ ] Allow custom HTML attributes on Markdown elements via stdised syntax.
-* [ ] Footnotes.
-* [ ] details/summary wrappers for auto-collapsible headings sections (optional).
+* [ ] Details/summary wrappers for auto-collapsible headings sections (optional).
 * [ ] Automated footer with last-modified date, copyright, author, etc.
-* [x] Common front matter fields:
-  * `title`
-  * `description`
-  * `author`
-  * `created`/`updated` dates (need formatting)
-  * `status` (draft/published/etc)
-  * `tags` (list)
-  * `category`
-  * [ ] _`template` (for future use) external content templates_
-
-* ~~Dynamic checklists (clickable checkboxes that update the display, fire an event and send to Node-RED).~~ Partly implemented but needs much more work. Deferred for now. Either needs to be able to update the source markdown or maintain state elsewhere.
-
-## Possible future Requirements
-
-* [ ] Add separate bundle of markdown-it and fm for front-end use.
-* [ ] Allow additional markdown-it extensions to be specified via node config.
-* [ ] Consider caching nav and search indexes.
-* [ ] Add option to use the new Navigate web API for SPA navigation. (Safari from 2025-12, Chromium from 2022, Firefox not yet supported).
 * [ ] Auto-generate a sidebar navigation from the folder structure. Allow for in-page section navigation using headings. Where present, have two tabs in the sidebar: "Contents" and "Sections" (ref Typora's layout).
+* [ ] Partly implemented but needs much more work. ~~Dynamic checklists (clickable checkboxes that update the display, fire an event and send to Node-RED).~~  Deferred for now. Either needs to be able to update the source markdown or maintain state elsewhere.
+
+
+## Possible future requirements
+
+These may or may not be implemented in future releases depending on demand and complexity.
+
+* [ ] Add separate bundle of markdown-it & extensions for front-end use.
+* [ ] Allow additional markdown-it extensions to be specified via node config.
+* [ ] Consider caching nav and search indexes. Possibly to disk or a database.
+* [ ] More comprehensive search features. Possibly using a dedicated search library.
 * [ ] In Editor, if there is a url clash with another uibuilder instance, show a warning.
-* [ ] Allow markdown-it extensions to be specified via settings.js uibuilder config.
+* [ ] Allow markdown-it extensions to be specified - probably via `settings.js` uibuilder config.
 * [ ] Mount client versions of markdown-it and extensions to front-end for use in std uibuilder front-ends.
-* [ ] Update front-end uibuilder library to use markdown-it to render markdown content instead of just markdown-it.
-
-## Future possible ideas
-
-* Allow custom CSS to be specified?
-* Use uibuilder front-end client library to handle dynamic updates?
+* [ ] Add option to use the new Navigate web API for SPA navigation. (Safari from 2025-12, Chromium from 2022, Firefox not yet supported).
 
 ## Default page template
+
+### Default layout with top navigation bar
 
 ```html
 <!DOCTYPE html>
 <!-- Everything like %%...%% and {{...}} gets replaced on first page load if attributes available.
   -- Everything that has a data-attribute="...." gets updated when navigating via SPA.
-  -- %%body%% is where the main content goes. If you don't include it, you get no content!
+  -- % %body% % is where the main content goes. If you don't include it, you get no content!
   -- <base> is REQUIRED for SPA navigation to work properly.
   -->
 <html lang="en"><head>
@@ -243,16 +346,20 @@ The client library looks to see if any of the changed files are currently being 
     <link type="text/css" rel="stylesheet" href="../uibuilder/uib-brand.min.css" media="all">
     <link type="text/css" rel="stylesheet" href="../uibuilder/utils/markweb.css" media="all">
     <!-- You can add your own stylesheets here -->
-    <script type="module" src="../uibuilder/uibuilder.esm.min.js"></script>
+
+    <script type="module" src="../uibuilder/uibuilder.esm.min.js?logLevel=1"></script>
     <!-- Base URL is REQUIRED by the module! The uibuilder client lib is loaded by this module -->
     <script type="module" src="../uibuilder/utils/markweb.mjs" data-base-url="%%url%%"></script>
     <!-- You can add your own scripts here -->
+
 </head><body>
+
     <a class="skip-link" href="#main">Skip to main content</a>
     <header>
-        %%nav [orient=horizontal,start=0,end=3,type=folder]%%
+        %%nav [orient=horizontal,start=0,end=3,type=both]%%
         <h1 data-attribute="title">{{title}}</h1>
         %%search-results%%
+        <div class="visible-status" data-attribute="status">{{status}}</div>
     </header>
 
     <main id="main">
@@ -260,48 +367,9 @@ The client library looks to see if any of the changed files are currently being 
     </main>
 
 </body></html>
+
 ```
 
-## Internal processes
+### Alternate layout with Docsify-style sidebar
 
-### URLs & URL mapping
-
-The URL specified in the node config is used as the base URL for the web site. It must be unique among all `uibuilder` and `uib-markweb` nodes in the Node-RED instance and must not clash with any other existing routes in Node-RED. The actual URL will depend on the Node-RED root URL configuration and/or the uibuilder custom web server if used. It is shown in the Editor UI for the node.
-
-Any additional path segments after the base URL are used to identify the specific markdown file or folder being requested. For example, if the base URL is `/docs` and the request is for `/docs/getting-started`, the node will look for a `getting-started.md` file in the source folder.
-
-### Server folder locations
-
-The `source` folder specified in the node config is used as the root folder for the markdown files. If a relative path is provided, it is made relative to the Node-RED `userDir` folder.
-
-The `configFolder` specified in the node config is used to store configuration files such as the HTML wrapper template and global attributes. If a relative path is provided, it is made relative to the Node-RED `userDir` folder.
-
-### Template files
-
-Template files must be stored in the `configFolder` specified in the node config. If a required template file is not found there, a default version from the package `templates/.markweb-defaults/` folder is used.
-
-### Global attributes
-
-These are read from a `global-attributes.json` file in the `configFolder`. If not found there, a default version from the package `templates/.markweb-defaults/` folder is used. They are merged with the front-matter attributes from each markdown file to provide the full set of available attributes for that file. They are merged before any page-specific front-matter, so page front-matter overrides global attributes.
-
-### File watching
-
-The node uses `chokidar` to watch the source folder for file and folder changes. When a change is detected, the navigation and search indexes are rebuilt after a debounce period (default 1 second). All connected clients are notified of the index rebuild and the specific changes detected. By default, the front-end library will check if the changed files are currently being viewed and request a resend of the page data if so which will update the display.
-
-> [!NOTE]
-> The file watcher only goes up to 9 levels deep to avoid performance issues.
-> Sensibly, you should avoid going more than 3-4 levels deep in your folder structure for usability reasons.
->
-> File/folder _renames_ appear as a deletion and an addition. This may happen in any order depending on how the OS reports the changes.
-
-### Cached page metadata indexes
-
-The node maintains cached indexes of page metadata for navigation and search purposes. These indexes are rebuilt whenever a file or folder change is detected in the source folder. The indexes are stored in memory for fast access.
-
-The navigation index is a representation of the file and folder structure, including only folders and files that are valid markdown pages (i.e., those containing an `index.md` file for folders and nothing starting with `_`).
-
-When a client initially loads a page, the node uses the cached indexes to quickly retrieve the necessary metadata for that page, including front-matter attributes and content snippets for search results.
-
-When a client uses a link to navigate to a different "page", the node retrieves the metadata from the cached indexes and sends it to the client along with the rendered HTML content. The client library then updates the page display accordingly.
-
-Client updates are controlled by updating HTML elements with specific `data-attribute="..."` attributes so that only the necessary parts of the page are updated without a full page reload. The `data-attribute` values correspond to front-matter attributes and special placeholders like `body` for the main content.
+TBC
