@@ -27,12 +27,17 @@ const elSearchCount = document.getElementById('search-count')
 const elSearchDetails = document.getElementById('search-details')
 
 // #region --- Utility Functions ---
-// Normalize: remove trailing slashes, .md extension, and double slashes
-const normalizePath = p => p
-    .replace(/\/+/g, '/') // collapse multiple slashes
-    .replace(/\/$/, '') // remove trailing slash
-    .replace(/\.md$/, '') // remove .md extension
-    .toLowerCase()
+// Normalize: remove trailing slashes, .md extension, leading slashes, and double slashes
+const normalizePath = p => {
+    if (!p) return ''
+    return p
+        .replace(/\/+/g, '/') // collapse multiple slashes
+        .replace(/^\//, '') // remove leading slash
+        .replace(/\/$/, '') // remove trailing slash
+        .replace(/\.md$/, '') // remove .md extension
+        .replace(/\/index$/, '') // remove trailing /index
+        .toLowerCase()
+}
 
 /** Escape HTML to prevent XSS - returns escaped text (HTML removed)
  * @param {string} text Input text
@@ -511,12 +516,20 @@ async function navigate(toUrl, addToHistory = true) {
     if (toUrl.startsWith(baseUrl)) {
         toUrl = toUrl.slice(baseUrl.length)
     }
+    // Extract and preserve hash fragment for client-side scrolling after content loads
+    let hashFragment = ''
+    if (toUrl.includes('#')) {
+        const hashIndex = toUrl.indexOf('#')
+        hashFragment = toUrl.slice(hashIndex)
+        toUrl = toUrl.slice(0, hashIndex)
+    }
     // #endregion --- Normalize toUrl ---
 
-    console.log(`Navigating to: "${toUrl}"`, baseUrl, window.location.origin)
+    console.log(`Navigating to: "${toUrl}"`, hashFragment ? `(hash: ${hashFragment})` : '', baseUrl, window.location.origin)
 
     // Ask server for new page content via uibuilder control message (see onChange handler below)
-    uibuilder.sendCtrl({ uibuilderCtrl: 'internal', controlType: 'navigate', toUrl: toUrl, addToHistory: addToHistory, })
+    // Pass hashFragment so client can scroll to it after content loads
+    uibuilder.sendCtrl({ uibuilderCtrl: 'internal', controlType: 'navigate', toUrl: toUrl, addToHistory: addToHistory, hashFragment: hashFragment, })
 }
 
 /** Intercept clicks on links
@@ -532,7 +545,6 @@ document.addEventListener('click', (e) => {
         // If href is external (contains a ":"), do not intercept
         if (!href || href.includes(':')) return
 
-        console.log('Link click intercepted:', href, link)
         e.preventDefault()
 
         // If href starts with "#" (anchor link), handle scrolling with history support
@@ -541,8 +553,9 @@ document.addEventListener('click', (e) => {
             const targetElement = document.getElementById(targetId)
             if (targetElement) {
                 targetElement.scrollIntoView({ behavior: 'smooth', block: 'start', })
-                // Add to history so back/fwd browser nav works
-                history.pushState({ hash: href, }, '', href)
+                // Add to history so back/fwd browser nav works - preserve the current page path
+                const currentPath = location.pathname + location.search
+                history.pushState({ hash: href, path: currentPath, }, '', currentPath + href)
             }
             return
         }
@@ -584,6 +597,21 @@ if (initialPath === baseUrl.replace(/\/$/, '')) {
 }
 console.log('Setting initial history state:', initialPath, { path: initialPath, status: 'initial load', })
 history.replaceState({ path: initialPath, status: 'initial load', }, '', initialPath)
+
+// If the page loaded with a hash, scroll to that element after content is ready
+if (location.hash) {
+    const scrollToHash = () => {
+        const targetId = location.hash.slice(1)
+        const targetElement = document.getElementById(targetId)
+        if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start', })
+        }
+    }
+    // Use requestAnimationFrame to ensure DOM is ready, with a small delay for content load
+    requestAnimationFrame(() => {
+        setTimeout(scrollToHash, 100)
+    })
+}
 // #endregion --- SPA Navigation ---
 
 // #region --- Search functionality ---
@@ -601,7 +629,7 @@ closeButtons.forEach((btnClose) => {
 })
 
 /** Process and display search results
- * @param {Array<{ title: string, url: string, snippet: string }>} data Search results data
+ * @param {Array<{ title: string, path: string, snippet: string, score?: number }>} data Search results data
  * @param {string} query The search query
  */
 function doResults(data, query) {
@@ -613,18 +641,57 @@ function doResults(data, query) {
         elSearchResults.hidden = false
         return
     }
+
+    // Determine the current page path for highlighting
+    let currentPath = window.location.pathname
+    if (currentPath.startsWith(baseUrl)) {
+        currentPath = currentPath.slice(baseUrl.length)
+    }
+    currentPath = normalizePath(currentPath)
+
     let html = ''
     data.forEach((item) => {
+        // Check if this result matches the current page
+        const itemPath = normalizePath(item.path)
+        const isCurrentPage = currentPath === itemPath
+        const activeClass = isCurrentPage ? ' search-result-active' : ''
+
+        // Build tooltip with score if available
+        const scoreTooltip = item.score !== undefined ? `title="Search score: ${item.score.toFixed(2)}"` : ''
+
         html += `
-            <a class="search-result" href="${escapeHtml(item.url)}">
+            <a class="search-result${activeClass}" href="${escapeHtml(item.path)}" ${scoreTooltip}>
                 <strong>${escapeHtml(item.title)}</strong>
-                <small>${escapeHtml(item.url)}</small>
+                <small>${escapeHtml(item.path)}</small>
                 <small>${escapeHtml(item.snippet)}</small>
             </a>
         `
     })
     elSearchDetails.innerHTML = html
     elSearchResults.hidden = false
+}
+
+/** Update search result highlighting based on current page */
+function updateSearchResultHighlight() {
+    if (elSearchResults.hidden) return
+
+    let currentPath = window.location.pathname
+    if (currentPath.startsWith(baseUrl)) {
+        currentPath = currentPath.slice(baseUrl.length)
+    }
+    currentPath = normalizePath(currentPath)
+
+    const resultLinks = elSearchDetails.querySelectorAll('.search-result')
+    resultLinks.forEach((link) => {
+        const href = link.getAttribute('href')
+        if (!href) return
+        const linkPath = normalizePath(href)
+        if (currentPath === linkPath) {
+            link.classList.add('search-result-active')
+        } else {
+            link.classList.remove('search-result-active')
+        }
+    })
 }
 
 /** Handle input event on search input - ask server for search results
@@ -729,16 +796,30 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
             postDataUpdate(data)
 
-            // Remove trailing slash from baseUrl
-            const newUrl = baseUrl.replace(/\/$/, '') + data.path
+            // Remove trailing slash from baseUrl and include hash fragment if present
+            const hashFragment = ctrlMsg.hashFragment || ''
+            const newUrl = baseUrl.replace(/\/$/, '') + data.path + hashFragment
 
             // Only push to history if not handling popstate and server says to add to history
             // console.log('pushState:', newUrl, 'addToHistory:', ctrlMsg.addToHistory, 'isHandlingPopstate:', isHandlingPopstate)
             if (ctrlMsg.addToHistory === true && !isHandlingPopstate) {
                 history.pushState(
-                    { path: newUrl, status: 'SPA page change', },
+                    { path: newUrl, hash: hashFragment || undefined, status: 'SPA page change', },
                     '', newUrl
                 )
+            }
+
+            // If there's a hash fragment, scroll to that element after content is rendered
+            if (hashFragment) {
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        const targetId = hashFragment.slice(1) // Remove leading #
+                        const targetElement = document.getElementById(targetId)
+                        if (targetElement) {
+                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start', })
+                        }
+                    }, 100)
+                })
             }
 
             // Reset the popstate flag after processing
@@ -746,6 +827,9 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
             // Update active nav link(s) and parent indicators
             // updateActiveNavState(data.path)
+
+            // Update search result highlighting to reflect current page
+            updateSearchResultHighlight()
 
             break
         }
