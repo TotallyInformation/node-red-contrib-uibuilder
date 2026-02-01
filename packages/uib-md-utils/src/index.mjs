@@ -18,6 +18,9 @@ import hljs from 'highlight.js'
 import MarkdownItGitHubAlerts from 'markdown-it-github-alerts'
 // https://github.com/arve0/markdown-it-attrs
 import attrs from 'markdown-it-attrs'
+// https://www.npmjs.com/package/markdown-it-anchor
+import anchor from 'markdown-it-anchor'
+
 // Private version of task lists
 import { taskLists } from './tasklist.mjs'
 
@@ -43,6 +46,19 @@ const md = markdownit({
 
 const parser = md
     .use(attrs)
+    .use(anchor, {
+        permalink: anchor.permalink.headerLink(),
+        // permalink: anchor.permalink.linkAfterHeader({
+        //     style: 'visually-hidden',
+        //     assistiveText: title => `Permalink to “${title}”`,
+        //     visuallyHiddenClass: 'visually-hidden',
+        //     wrapper: ['<div class="wrapper">', '</div>'],
+        // }),
+        // permalink: anchor.permalink.linkInsideHeader({
+        //     symbol: ' 🔗',
+        //     placement: 'after',
+        // }),
+    })
     // .use(mdItObsidianCallouts)
     .use(MarkdownItGitHubAlerts)
     .use(
