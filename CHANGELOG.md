@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2025-09-24 20:10:00
+updated: 2026-02-01 14:56:26
 ---
 
 # Changelog
@@ -33,11 +33,28 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * In the Node-RED Editor, a popover is now shown after a UIBUILDER update. It contains highlights of the changes in the new version. It will only be shown once per version update.
 
+* **NEW NODE** `uib-markweb` - Enables simple creation of dynamic web sites using Markdown files. It supports navigation menus, search, front-matter placeholders, custom templates and much more
+
+### New node: uib-markweb
+
+Create a folder containing at least an index.md file for each (sub-)folder. Add the new node and configure the base URL and source folder.
+
+The node will serve the markdown files as HTML pages using Single-Page Application (SPA) style navigation. The markdown is converted to HTML and inserted into a page template.
+
+The Markdown conversion is done on Node-RED startup and re-done when a source page changes. So loading and navigation from the browser remains very fast.
+
+It supports YAML front-matter in the markdown files. All front-matter attributes are available as placeholders in the page template and in the markdown using `{{attributeName}}` tags. Special instructions are also available to create navigation menus, index listings, search results, etc. These use `%%...%%` syntax.
+
+CommonMark and GitHub Flavored Markdown (GFM) are supported. Syntax highlighting for code blocks is also included. Some additional extensions are also supported such as custom attributes.
+
+See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
+
 ### Documentation
 
 * The sidebar of documentation page links now scrolls the current page link into view.
 * The sidebar top-level entries that have children are now collapsible sections. Added because the documentaiton continues to grown.
 * The sidebar expand/collapse state for each section is remembered across page loads.
+* Each page now automatically shows `status` and/or `since` front-matter.
 * **Fixed** [Issue #575](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/575) - Broken CSS loads.
 * Improvements to developer detailed documentation including details on the uibuilder/uib-markweb instance setup. Should make things a lot easier if other developers want to take part in the future.
 
@@ -52,8 +69,6 @@ Please see the roadmap in the docs for the backlog of future planned development
 ### uibuilder node
 
 * Added a new config variable `instancePath`. This is the first change that will eventually allow uibuilder instances to use a different server folder than `<uibRoot>/<url>`.
-
-* * **NEW** `httpHeaders` property added. This contains the HTTP headers received when the front-end client first connects to the server. This can be useful for debugging and for advanced use cases such as authentication and user tracking. Async so issues a custom event when ready. The `start()` function is now not called until they are ready because the headers are the most reliable way to get the namespace and Node-RED web root (stupid Firefox refuses to read the cookies!)
 
 ### `uib-brand.css` front-end styles
 
@@ -73,26 +88,28 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * Added `instanceFolder` to uibuilder node settings. This to bring it into line with the new uib-markweb node, in the future, allow instance root folders to be specified anywhere.
 
+* **NEW** `httpHeaders` property added. This contains the HTTP headers received when the front-end client first connects to the server. This can be useful for debugging and for advanced use cases such as authentication and user tracking. Async so issues a custom event when ready. The `start()` function is now not called until they are ready because the headers are the most reliable way to get the namespace and Node-RED web root (stupid Firefox refuses to read the cookies!).
+
 ### Development changes
 
-* **NEW** npm script `bugfix-worktree` - creates a new git worktree for bugfix branches. This allows you to work on a bug fix in a separate directory while keeping your current dev branch work intact. You can have both directories open simultaneously without needing to stash changes or switch branches. When you're done with the bug fix, you can commit, push, create a PR, and then remove the worktree.
+* **NEW** npm script `bugfix-worktree` - creates a new git worktree for bugfix branches. This enables work on a bug fix in a separate directory while keeping the current dev branch work intact. Both directories can be open simultaneously without needing to stash changes or switch branches. When done with the bug fix, commit, push, create a PR, and then remove the worktree.
 
 * **NEW** Added npm workspaces under folder `packages`. This is to allow easier management of shared utility packages.
 
   * **NEW** workspace private package `@totallyinformation/uib-md-utils` - A collection of Markdown utility functions that can be shared between uibuilder's server and front-end client libraries. The package bundles its own dependencies using ESBuild.
-  * **NEW** workspace private package `@totallyinformation/uib-mf-utils` - Filing System utility sub-pages. Currently only chokidar to allow extended FS watch for markweb. The package bundles its own dependencies using ESBuild.
+  * **NEW** workspace private package `@totallyinformation/uib-mf-utils` - Filing System utility sub-pages. Currently only `chokidar` to allow extended FS watch for markweb. The package bundles its own dependencies using ESBuild.
 
 * **NEW** Control message added. `msg.uibuilderCtrl = 'internal'` allows internal control messages to be sent to nodes.
 
   Provides a hook such that receipt of a control msg can trigger a node process. Requires msg to include `{uibuilderCtrl: 'internal', controlType: 'someControlType', ...}`. The node can then define its own internal control message handlers in the `node.internalControls` object.
 
-  WARNING: Carefully validate allinputs
+  WARNING: Carefully validate all inputs.
 
 * `nodes\libs\admin-api-v3.cjs` - Removed reference to `node:inspector` which is not used. [ref](https://discourse.nodered.org/t/node-red-version-of-mqtt-explorer/99738/14).
-* Removed DEP0190 error when using node.js v4+ by removing `shell:true` from child_process spawn calls and replacing with an OS explicit shell command.
+* Removed DEP0190 error when using node.js v24+ by removing `shell:true` from child_process spawn calls and replacing with an OS explicit shell command.
 
 * `nodes/libs/web.cjs`
-  * Made `instanceSetup` more flexible by adding `routeSpec` and `handler` (function) arguments. This allows different types of routes to be added for an instance, e.g. static file serving, markdown rendering, etc.
+  * Made `instanceSetup` more flexible by adding `routeSpec` and `handler` (function) arguments. This allows different types of routes to be added for an instance, e.g. static file serving, dynamic routing, markdown rendering, etc.
   * Also in `instanceSetup`, reduced the number of routes added to an insance if the node is not a uibuilder node. Allows for simpler nodes such as `uib-markweb`.
 
 * Security related fixes
