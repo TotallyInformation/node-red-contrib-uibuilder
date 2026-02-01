@@ -22,6 +22,20 @@
 }
 /* #endregion CSS Custom Properties for Menu */
 
+/* Prevent horizontal scrollbar from content overflow */
+/* html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+} */
+
+/* #region para Styles */
+div[data-attribute="body"] {
+    p, div {
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+}
+
 /* #region Base Menu Styles */
 nav.horizontal {
     position: sticky;
@@ -267,6 +281,19 @@ nav.horizontal.collapsed.open {
     strong { display: block; color: hsl(210, 100%, 40%); }
     small { color: hsl(0, 0%, 50%); font-size: 0.85em; }
     .no-results { padding: 0.75rem; color: hsl(0, 0%, 50%); }
+
+    /* Highlight search result matching current page */
+    a.search-result-active {
+        background: hsl(210, 60%, 92%);
+        border-left: 3px solid hsl(210, 100%, 45%);
+        padding-left: calc(0.75rem - 3px);
+    }
+    a.search-result-active:hover {
+        background: hsl(210, 60%, 85%);
+    }
+    a.search-result-active strong {
+        color: hsl(210, 100%, 30%);
+    }
 }
 /* #endregion Search Styles */
 
@@ -372,6 +399,16 @@ nav.horizontal.collapsed.open {
 }
 /* #endregion GFM Alert Box Styles */
 
+/* Task List Styles */
+.contains-task-list {
+    list-style: none;
+    padding-inline-start: unset;
+
+    .contains-task-list {
+        margin-left: 1.5em;
+    }
+}
+
 /* Accessibility: Skip to main content link */
 .skip-link {
     position: absolute;
@@ -387,3 +424,46 @@ nav.horizontal.collapsed.open {
         top: 0;
     }
 }
+
+/* Heading styles with bottom border */
+h2, h3, h4, h5, h6 {
+    width: 100%;
+    border-bottom: 1px solid var(--text3);
+    padding-bottom: 0.3em;
+    position: relative;
+
+    a[href^="#"] {
+        color: inherit;
+        /* display: inline-block; */
+        /* font-size: small; */
+        /* margin-left: 1em; */
+        /* opacity: 0; */
+        /* transition: opacity 0.2s ease-in-out; */
+        text-decoration: none;
+    }
+}
+
+/* Heading level tooltip on hover (CSS-only) */
+/* h2::after, h3::after, h4::after, h5::after, h6::after {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.6em;
+    font-weight: normal;
+    padding: 0.2em 0.5em;
+    background-color: var(--surface4);
+    color: var(--text2);
+    border-radius: 0.25em;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    pointer-events: none;
+} */
+/* h2:hover::after, h3:hover::after, h4:hover::after, h5:hover::after, h6:hover::after {
+    opacity: 0.8;
+}
+h2::after { content: "H2"; }
+h3::after { content: "H3"; }
+h4::after { content: "H4"; }
+h5::after { content: "H5"; }
+h6::after { content: "H6"; } */
