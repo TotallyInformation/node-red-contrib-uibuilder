@@ -532,18 +532,6 @@ body {
 h1, h2, h3, h4, h5, h6, heading {
     line-height: calc(1em + 0.5rem); /* dynamic heights for headings */
     text-wrap: balance;
-
-    a[href^="#"] {
-        display: inline-block;
-        font-size: small;
-        margin-left: 1em;
-        opacity: 0;
-        transition: opacity 0.2s ease-in-out;
-    }
-
-    &:hover a[href^="#"] {
-        opacity: 1;
-    }
 }
 p, li, figcaption {
     text-wrap: pretty;
