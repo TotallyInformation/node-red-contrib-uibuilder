@@ -366,7 +366,7 @@ function internalControlMsgHooks(node, log) {
     }
 }
 
-// #region -- %%...%% specials processing -- //
+// #region -- %%...%% specials processing (see processTemplates for calls) -- //
 /** Wrap body content in a div#content & convert markdown to html
  * @param {'body'} key The special key being processed
  * @param {object} attributes The current pages attributes
@@ -540,6 +540,26 @@ function indexListing(key, attributes, node, options) {
 
     // Recursive function to render the tree structure as HTML
     return renderTree(tree, sameLevel, options.nav)
+}
+
+/** Create search results wrapper HTML
+ * @param {'searchResults'} key The special key being processed
+ * @param {object} attributes The current pages attributes
+ * @param {runtimeNode & uibMwNode} node The current node instance
+ * @param {object} [options] Optional options passed to the %%search-results [options]%% instruction.
+ * @returns {string} The generated search results HTML
+ */
+function searchResultsWrapper(key, attributes, node, options) {
+    console.log('🌐[searchResultsWrapper] options=', options)
+    return /* html */`
+        <article id="search-results" hidden>
+            <div id="search-header">
+                <span>Search results for "<span id="search-query">N/A</span>" (<span id="search-count">N/A</span>)</span>
+                <button class="search-close" aria-label="Close search results">×</button>
+            </div>
+            <div id="search-details"></div>
+        </article>
+    `
 }
 
 // #endregion -- %%...%% specials processing -- //
@@ -1147,7 +1167,7 @@ function processTemplates(text, node, attributes = {}, calledFrom = '') {
     const specials = {
         'url': () => attributes.url,
         'nav': createNav,
-        'search-results': () => '',
+        'search-results': searchResultsWrapper,
         // 'body': bodyWrapper,
         'body': () => attributes.body || '<div>No content</div>',
         // Return an index list of pages from the current page level
