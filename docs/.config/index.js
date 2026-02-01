@@ -325,9 +325,15 @@ window.$docsify = {
                         if (desc) desc.setAttribute('content', fm.description)
                     }
 
+                    let statusTxt = ''
                     if (fm.status) {
-                        content = `> Status: ${fm.status}\n\n${content}`
+                        statusTxt += `<b>Status</b>: ${fm.status}. `
                     }
+                    if (fm.since) {
+                        statusTxt += `<b>Since</b>: UIBUILDER ${fm.since}. `
+                    }
+                    if (statusTxt !== '')
+                        content = `> ${statusTxt}\n\n${content}`
 
                     if (fm.title) {
                         content = `# ${fm.title}\n\n${content}`
