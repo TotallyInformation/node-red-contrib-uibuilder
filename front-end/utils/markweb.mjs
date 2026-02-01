@@ -618,15 +618,19 @@ if (location.hash) {
 let searchTimeout = null
 
 // Add event listener to close button
-const closeButtons = elSearchResults.querySelectorAll('.search-close')
-closeButtons.forEach((btnClose) => {
-    btnClose.addEventListener('click', () => {
-        elSearchResults.hidden = true
-        elSearchInput.value = ''
-        elSearchDetails.innerHTML = ''
-        elSearchInput.focus()
+if (elSearchResults) {
+    const closeButtons = elSearchResults.querySelectorAll('.search-close')
+    closeButtons.forEach((btnClose) => {
+        btnClose.addEventListener('click', () => {
+            elSearchResults.hidden = true
+            elSearchInput.value = ''
+            elSearchDetails.innerHTML = ''
+            elSearchInput.focus()
+        })
     })
-})
+} else {
+    console.warn('⚠️ Search results element not found.')
+}
 
 /** Process and display search results
  * @param {Array<{ title: string, path: string, snippet: string, score?: number }>} data Search results data
