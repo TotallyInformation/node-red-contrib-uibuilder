@@ -346,8 +346,11 @@ function internalControlMsgHooks(node, log) {
          */
         getMetadata: (msg) => {
             const index = node.index
-            // console.log(`🌐[uib-markweb:nodeInstance] Internal get-metadata control message received for instance URL "${node.url}": "${msg.initialPath}"`, index.has(msg.initialPath), index)
-            const attributes = index.get(msg.initialPath)
+            // Strip hash/fragment identifiers (e.g., #section) as they are client-side only
+            let lookupPath = msg.initialPath
+            if (lookupPath && lookupPath.includes('#')) lookupPath = lookupPath.split('#')[0]
+            // console.log(`🌐[uib-markweb:nodeInstance] Internal get-metadata control message received for instance URL "${node.url}": "${msg.initialPath}"`, index.has(lookupPath), index)
+            const attributes = index.get(lookupPath)
             const data = { ...attributes, }
             delete data.body // We don't want this in the front-end
 
@@ -620,6 +623,8 @@ async function doNavigate(msg) {
     let morePath = msg.toUrl.replace(new RegExp(`^${this.url}`), '')
     if (morePath.startsWith('.')) morePath = morePath.slice(1)
     if (morePath.startsWith('/')) morePath = morePath.slice(1)
+    // Strip hash/fragment identifiers (e.g., #section) as they are client-side only
+    if (morePath.includes('#')) morePath = morePath.split('#')[0]
     if (morePath === '.search' || morePath === '_search') {
         // Ignore for now
         return
@@ -719,6 +724,8 @@ async function doNavigate(msg) {
             _socketId: msg._socketId,
             // Gets the client to add this nav to browser history - explicitly convert to boolean
             addToHistory: msg.addToHistory === true,
+            // Pass hash fragment back to client for scrolling
+            hashFragment: msg.hashFragment || '',
         }, this, uib.ioChannels.control)
     }
 
@@ -912,6 +919,8 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
             // Store plain text (strip markdown) for searching
             // body: parsed.body.replace(/[#*`\[\]()]/g, '').toLowerCase() || '',
             body: parsed.body || '',
+            // Store plain text content for search indexing (strip markdown syntax)
+            content: parsed.body?.replace(/[#*`\[\]()!<>]/g, ' ').replace(/\s+/g, ' ').trim() || '',
             tags: parsed.attributes?.tags || [],
             category: parsed.attributes?.category || '',
             author: parsed.attributes?.author || '',
@@ -924,8 +933,8 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
             file: filename,
             // Record the folder depth (0 for root index.md, 1 for first level, etc)
             depth: urlPath.split('/').length - 2,
-            // Full relative URL
-            toUrl: urlJoin(urlPath, filename),
+            // Full relative URL (use relativePath which already contains the correct path)
+            toUrl: urlJoin('/', relativePath),
             // other: [morePath, parsedPath],
         }
         // attributes.htmlbody = processTemplates(attributes.body, attributes)
