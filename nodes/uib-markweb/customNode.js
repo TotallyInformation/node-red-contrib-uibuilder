@@ -1,5 +1,5 @@
 // @ts-nocheck
-/* eslint-disable jsdoc/no-undefined-types, jsdoc/valid-types */
+/* eslint-disable jsdoc/valid-types */
 /** Send a dynamic UI config to the uibuilder front-end library.
  * The FE library will update the UI accordingly.
  *
@@ -495,7 +495,7 @@ function indexListing(key, attributes, node, options) {
         if (doc.path === '/') title = 'Home'
         else if (doc.type === 'folder' && (!title || title === 'index')) {
             // Get the last segment of the path as title and convert to title case
-            const segments = doc.path.replace(/\/$/, '').split('/').filter(Boolean)
+            const segments = doc.path.replace(/\/$/, '').split('/').filter(Boolean) // eslint-disable-line @stylistic/newline-per-chained-call
             const rawTitle = segments[segments.length - 1] || doc.path.slice(1, -1)
             title = rawTitle.replace(/[_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
         }
@@ -702,13 +702,6 @@ async function doNavigate(msg) {
         }
         parsedPath = parse(morePath)
     }
-
-    // console.log(`🌐[uib-markweb:nodeInstance:navigate] Internal navigate control message received for instance URL: "${this.url}": 
-    //     toUrl="${msg.toUrl}", 
-    //     fullPath="${fullPath}", 
-    //     morePath="${morePath}", 
-    //     parsedPath=${JSON.stringify(parsedPath)}
-    // `)
 
     // Now check that the file exists, return an error if not
     try {
@@ -945,7 +938,7 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
             // body: parsed.body.replace(/[#*`\[\]()]/g, '').toLowerCase() || '',
             body: parsed.body || '',
             // Store plain text content for search indexing (strip markdown syntax)
-            content: parsed.body?.replace(/[#*`\[\]()!<>]/g, ' ').replace(/\s+/g, ' ').trim() || '',
+            content: parsed.body?.replace(/[#*`\[\]()!<>]/g, ' ').replace(/\s+/g, ' ').trim() || '', // eslint-disable-line @stylistic/newline-per-chained-call
             tags: parsed.attributes?.tags || [],
             category: parsed.attributes?.category || '',
             author: parsed.attributes?.author || '',
@@ -997,14 +990,6 @@ async function handler(req, res, next) {
     // Normalize both paths for comparison (remove trailing slashes, handle case)
     const normalizedBaseUrl = req.baseUrl.replace(/\/+$/, '').toLowerCase()
     const normalizedInstanceUrl = this.url.replace(/\/+$/, '').toLowerCase()
-    // console.log(`>>🌐[uib-markweb:handler]>>
-    //     Request URL: "${req.url}", 
-    //     Path: "${req.path}",
-    //     morePath: "${morePath}",
-    //     normalizedBaseUrl: "${normalizedBaseUrl}", 
-    //     normalizedInstanceUrl: "${normalizedInstanceUrl}"
-    // `)
-    // console.log({req, res})
     // Handle requests that should be redirected to /uibuilder/...
     // e.g., /markweb/uibuilder/vendor/socket.io/... -> /uibuilder/vendor/socket.io/...
     if (morePath.startsWith('uibuilder/')) {
