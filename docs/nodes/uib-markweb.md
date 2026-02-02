@@ -101,6 +101,18 @@ In addition, a global JSON config file is provided, the default version adds, yo
   * `siteTitle` - The site title from global config.
   * `siteDescription` - The site description from global config.
 
+## Optional front-end web components
+
+### show-meta
+
+The optional `<show-meta></show-meta>` web component can be included in your HTML wrapper template to display the current page's metadata for debugging purposes. It shows all front-matter attributes and global/system attributes in a formatted table.
+
+To load the component, include the following script tag in your HTML wrapper template's `<head>` section _before_ the `markweb.mjs` script tag:
+
+```html
+<script type="module" src="../uibuilder/utils/show-meta.mjs"></script>
+```
+
 ## Processes
 
 ### File/folder changes

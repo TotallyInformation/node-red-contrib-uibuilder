@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2026-01-02 13:37:42
+updated: 2026-02-02 15:58:45
 ---
 
 The following custom web components are built into UIBUILDER:
@@ -12,6 +12,8 @@ The following custom web components are built into UIBUILDER:
 * [`<uib-meta>`](#uib-meta) - Display page metadata such as the created/last-updated timestamp or size. Taken from the physical page file.
 * [`<uib-var>`](#uib-var) - Substitute dynamic data into the UI (similar to `{{varname}}` in frameworks).
 * [`<uib-control>`](#uib-control) - Change the styling and other parameters of the uibuilder client.
+
+In addition, some raw web component ES Module libraries may be included and made available under the `../uibuilder/components/` path. See [Additional components](#additional-components) below for details.
 
 ## Introduction
 
@@ -349,7 +351,6 @@ Included in your page using the `<uib-control>` tag, see the examples below on h
 
 There is no need to separately load the component, that is done automatically by the uibuilder client library.
 
-
 ### Attributes :id=uib-control-attribs
 
 These attributes can be added to the `<uib-control>` tag. Noting that attributes must always have _string_ values, e.g. `topic="my/topic/#1"`.
@@ -368,6 +369,33 @@ Simply ensure that the file is served from the same URL location as your main pa
 
 ```html
 ```
+
+## Additional components :id=additional-components
+
+### `<show-meta>` component :id=show-meta
+
+This component is designed to help with debugging _MarkWeb_ pages by showing the current page's metadata as known to the uibuilder client library.
+
+See the [uib-markweb documentation](nodes/markweb) for details of how to use this component with markweb.
+
+To use independently of markweb, simply include the component script in your HTML page as:
+
+```html
+<script type="module" src="../uibuilder/utils/show-meta.mjs"></script>
+```
+Then add the tag where you want the metadata to appear:
+
+```html
+<show-meta></show-meta>
+```
+And finally, use a script to update the metadata as required:
+
+```javascript
+const elShowMeta = document.querySelector('show-meta')
+elShowMeta.metadata = { title: 'My Page', author: 'John Doe', created: '2026-01-01' }
+```
+
+This component was added in UIBUILDER v7.6.0. It is provided only as a raw ES Module.
 
 ## External components
 

@@ -17,6 +17,8 @@
     <!-- You can add your own stylesheets here -->
 
     <script type="module" src="../uibuilder/uibuilder.esm.min.js?logLevel=1"></script>
+    <!-- OPTIONAL show-meta component to display page metadata for debugging -->
+    <script type="module" src="../uibuilder/utils/show-meta.mjs"></script>
     <!-- Base URL is REQUIRED by the module! The uibuilder client lib is loaded by this module -->
     <script type="module" src="../uibuilder/utils/markweb.mjs" data-base-url="%%url%%"></script>
     <!-- You can add your own scripts here -->
@@ -34,5 +36,7 @@
     <main id="main">
         <div data-attribute="body">%%body%%</div>
     </main>
+    <!-- OPTIONAL show-meta component to display page metadata for debugging -->
+    <show-meta></show-meta>
 
 </body></html>
