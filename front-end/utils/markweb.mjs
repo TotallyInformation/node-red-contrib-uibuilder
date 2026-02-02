@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/no-undefined-types */
 /** The uibuilder.pageData object is set on load and when navigating
  * You can use it to do your own processing if desired
  */
@@ -5,7 +6,7 @@ let pageData
 uibuilder.onChange('pageData', (newPageData) => {
     console.log(`uibuilder.pageData has changed (${newPageData.from}): `, newPageData)
     pageData = newPageData
-    // If <show-meta> component is present, update its metadata
+    // @ts-ignore If <show-meta> component is present, update its metadata
     if (elShowMeta) elShowMeta.metadata = pageData || {}
 })
 
@@ -31,7 +32,7 @@ const elShowMeta = document.querySelector('show-meta')
 
 // #region --- Utility Functions ---
 // Normalize: remove trailing slashes, .md extension, leading slashes, and double slashes
-const normalizePath = p => {
+const normalizePath = (p) => {
     if (!p) return ''
     return p
         .replace(/\/+/g, '/') // collapse multiple slashes
@@ -678,10 +679,11 @@ function doResults(data, query) {
     elSearchResults.hidden = false
 }
 
+/** Update the uibuilder pageData store
+ * @param {object} attributes The page attributes to set
+ */
 function updatePageData(attributes) {
     uibuilder.set('pageData', attributes )
-    // pageData = attributes
-    if (elShowMeta) elShowMeta.metadata = pageData || {}
 }
 
 /** Update search result highlighting based on current page */
