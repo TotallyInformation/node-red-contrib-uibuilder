@@ -5,6 +5,8 @@ let pageData
 uibuilder.onChange('pageData', (newPageData) => {
     console.log(`uibuilder.pageData has changed (${newPageData.from}): `, newPageData)
     pageData = newPageData
+    // If <show-meta> component is present, update its metadata
+    if (elShowMeta) elShowMeta.metadata = pageData || {}
 })
 
 const log = uibuilder.log
@@ -25,6 +27,7 @@ const elSearchResults = document.getElementById('search-results')
 const elSearchQuery = document.getElementById('search-query')
 const elSearchCount = document.getElementById('search-count')
 const elSearchDetails = document.getElementById('search-details')
+const elShowMeta = document.querySelector('show-meta')
 
 // #region --- Utility Functions ---
 // Normalize: remove trailing slashes, .md extension, leading slashes, and double slashes
@@ -198,17 +201,17 @@ const navHorizontalInit = () => {
     navHorizontalUpdateHeaderPosn()
 
     // Event listeners
-    window.addEventListener('scroll', navHorizontalScroll, { passive: true })
+    window.addEventListener('scroll', navHorizontalScroll, { passive: true, })
     window.addEventListener('resize', () => {
         navHorizontalUpdateHeaderPosn()
         navHorizontalScroll()
-    }, { passive: true })
+    }, { passive: true, })
 
     burger.addEventListener('click', navBurgerToggleMenu)
     burger.addEventListener('touchstart', (evt) => {
         evt.preventDefault()
         navBurgerToggleMenu()
-    }, { passive: false })
+    }, { passive: false, })
 
     // Close on click outside
     document.addEventListener('click', navBurgerClickOutside)
@@ -675,6 +678,12 @@ function doResults(data, query) {
     elSearchResults.hidden = false
 }
 
+function updatePageData(attributes) {
+    uibuilder.set('pageData', attributes )
+    // pageData = attributes
+    if (elShowMeta) elShowMeta.metadata = pageData || {}
+}
+
 /** Update search result highlighting based on current page */
 function updateSearchResultHighlight() {
     if (elSearchResults.hidden) return
@@ -747,8 +756,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         // From initial page data request only. No body in this since we already have it
         case '_page-metadata': {
             console.log('Initial page metadata received from server:', ctrlMsg)
-            // uibuilder.set('pageData', ctrlMsg.attributes )
-            pageData = ctrlMsg.attributes
+            updatePageData(ctrlMsg.attributes)
             break
         }
 
@@ -775,7 +783,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
         // If the server watch fn detects a file/folder change
         case '_source-change': {
-            console.log('Source changed on server.', {ctrlMsg, pageData})
+            console.log('Source changed on server.', { ctrlMsg, pageData, })
             if (ctrlMsg.payload.url === pageData.toUrl) {
                 console.log('Current page affected by source change, reloading page content.')
                 navigate(pageData.toUrl, false)
@@ -794,6 +802,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                 return
             }
             const data = ctrlMsg.attributes ?? []
+            updatePageData(data)
             // TODO: Sanitize data.body for safety
             // TODO: Should {{...}} replacements be done here? Instead of on server?
             if (elContent) elContent.innerHTML = data.body || '<p>No content</p>'
