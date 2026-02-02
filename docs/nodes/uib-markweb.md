@@ -3,7 +3,7 @@ title: uib-markweb - Dynamic web sites using Markdown
 description: >
   The `uib-markweb` node allows you to create dynamic web sites using Markdown files.
 created: 2026-01-09 15:10:14
-updated: 2026-02-01 15:37:55
+updated: 2026-02-02 16:10:39
 status: Release
 since: v7.6.0
 ---
@@ -74,32 +74,38 @@ These provide more complex processing than simple variable replacement. They are
 
 These provide simple variable replacement from front-matter and global/system fields. They are enclosed in `{{...}}` tags.
 
-All front-matter fields from the Markdown files can be used as variables. Some common ones are:
+All front-matter fields from the Markdown files can be used as variables. Some common ones are listed here.
+
+If not provided in the front-matter, the following default fields are always available, generated from the filing system information of the source Markdown files:
 
 * `title` - The title of the page.
-* `description` - The description of the page.
-* `author` - The author of the page.
 * `created` - The creation date of the page.
 * `updated` - The last updated date of the page.
-* `status` - The status of the page. E.g., `draft`, `published`, etc.
+
+From system data and not overridable by front-matter:
+
+* `depth` - How deep in the folder structure the page is.
+* `path` - The current page path relative to the site root.
+* `toUrl` - The resource URL of the current page relative to the site root.
+* `fsMtimeMs` - The last modified time of the source file in milliseconds since epoch. (Used internally checking for file updates).
+* `type` - The type of page: `file` or `folder`.
+
+Provided by the default global config file but overridable by front-matter. Additional ones may be added in your own `global-attributes.json` file:
+
+* `status` - The status of the page. E.g., `draft`, `published`, etc. *Default is `draft`.*
+
+Other commonly used front-matter fields you may wish to include in your Markdown files:
+
+* `description` - The description of the page.
+* `author` - The author of the page.
 * `tags` - The list of tags of the page.
 * `category` - The category of the page.
-
-In addition, a global JSON config file is provided, the default version adds, you may override these in `global-attributes.json` in the config folder:
-
-* `status` - The default page status if pages don't provide one. `Draft`.
-
-* From system data:
-
-  * `depth` - How deep in the folder structure the page is.
-  * `path` - The current page path relative to the site root.
-  * `toUrl` - The resource URL of the current page relative to the site root.
 
 * Possible future globals:
 
   * `template` - A different HTML template to the default to allow for different page layouts.
-  * `siteTitle` - The site title from global config.
-  * `siteDescription` - The site description from global config.
+  * `siteTitle` - The site title from global config. (Read-only).
+  * `siteDescription` - The site description from global config. (Read-only).
 
 ## Optional front-end web components
 

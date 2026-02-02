@@ -26,22 +26,27 @@ A node that creates a website out of a folder of markdown content.
 
 * [ ] ~~Check if return msgs get clientId, etc.~~ They don't, should they?
 * [ ] Indexes cannot currently deal with rename or delete events.
+* [ ] Generate title, created, updated from file details if not in front-matter.
+* [ ] Watcher for config folder.
+* [ ] Cache the default config folder files to avoid re-reading on every page load.
+* [ ] Watcher for default config folder?
+* [ ] Make sure nav and index are rebuilt on file changes.
 
 #### Wish list:
 
 * [x] Level specifier on nav element to limit depth and start level.
 * [x] On scroll, when nav menu scrolls offscreen, collapse it to a burger menu and keep it visible.
 * [x] Use server fs watch to provide live updates to pages. Send msg to ALL connected clients when a file changes. Clients can then decide what to do (e.g. reload if they are viewing that page).
+* [x] Allow source folder to be outside the userDir folder.
 
 * [-] Auto-menu generation.
   * [x] Horizontal
   * [ ] Vertical options.
 
-* [ ] Allow source folder to be outside the userDir folder.
+* [ ] Add watcher to the page template and global attributes files to auto-reload changes.
 * [ ] Improve HTML styling.
 * [ ] Page aliases. Allow front-matter `alias` field to specify alternative url paths for a page. Also have a master map.
 * [ ] Add manual index-rebuild button to Editor.
-* [ ] Add watcher to the page template and global attributes files to auto-reload changes.
 
 * [ ] uibuilder Editor
   * [ ] Include uib-markweb in common url checks.

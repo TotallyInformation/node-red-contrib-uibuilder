@@ -47,6 +47,9 @@ It supports YAML front-matter in the markdown files. All front-matter attributes
 
 CommonMark and GitHub Flavored Markdown (GFM) are supported. Syntax highlighting for code blocks is also included. Some additional extensions are also supported such as custom attributes.
 
+
+An optional web component `<show-meta>` is also provided to display the current page's metadata (front-matter attributes). This is useful for debugging and development.
+
 See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 
 ### Documentation
