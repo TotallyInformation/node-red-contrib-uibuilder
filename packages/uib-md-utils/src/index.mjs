@@ -7,7 +7,7 @@
 
 // https://www.npmjs.com/package/front-matter
 import fm from 'front-matter'
-// https://www.npmjs.com/package/markdown-it
+// @ts-ignore https://www.npmjs.com/package/markdown-it
 import markdownit from 'markdown-it'
 // ?? https://www.npmjs.com/package/markdown-it-highlightjs ??
 // https://www.npmjs.com/package/highlight.js
@@ -116,8 +116,6 @@ function customHeadingId() {
 //     markedAlert(),
 //     customHeadingId()
 // )
-
-
 
 const mdParse = md.render.bind(md)
 
