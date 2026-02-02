@@ -230,6 +230,9 @@ function nodeInstance(config) {
     // File/folder change watch (sets this.watcher so it can be cancelled), also notifies connected clients
     setupFileWatcher(this)
 
+    // Config folder watcher (sets this.configWatcher so it can be cancelled)
+    setupConfigWatcher(this)
+
     // Set up web services for this instance (static folders, middleware, etc)
     web.instanceSetup(this, `${this.url}/:morePath(*)?`, handler.bind(this), { searchHandler: searchHandler.bind(this), })
 
@@ -242,17 +245,16 @@ function nodeInstance(config) {
     // Define internal control messages and processing
     this.internalControls = internalControlMsgHooks(this, log)
 
-    // Clean up watcher on node close
+    // Clean up watchers on node close
     this.on('close', async () => {
-        await this.watcher.close()
-        log.trace(`🌐[uib-markweb:close:${this.url}] File watcher closed`)
-        // const watcher = this.watcher
-        // if (watcher) {
-        //     watcher.close()
-        //     watcher.delete(this.url)
-        //     this.watcher = null
-        //     log.trace(`🌐[uib-markweb:nodeInstance:${this.url}] File watcher closed`)
-        // }
+        if (this.watcher) {
+            await this.watcher.close()
+            log.trace(`🌐[uib-markweb:close:${this.url}] File watcher closed`)
+        }
+        if (this.configWatcher) {
+            await this.configWatcher.close()
+            log.trace(`🌐[uib-markweb:close:${this.url}] Config watcher closed`)
+        }
     })
 
     log.trace(`🌐[uib-markweb:nodeInstance:${this.url}] URL . . . . .  : ${urlJoin( uib.nodeRoot, this.url )}`)
@@ -445,6 +447,64 @@ function createNav(key, attributes, node, options) {
     `
 }
 
+/** Parse a duration string into milliseconds
+ * Duration format: number + type, e.g. '1w' (week), '1d' (day), '1m' (month), '1y' (year), '1h' (hour)
+ * Number can be negative, e.g. '-1w' for 1 week offset
+ * @param {string} durationStr - Duration string like '1w', '-2d', '3m'
+ * @returns {number|null} Duration in milliseconds or null if invalid
+ */
+function parseDuration(durationStr) {
+    if (!durationStr || typeof durationStr !== 'string') return null
+
+    const match = durationStr.trim().match(/^(-?\d+(?:\.\d+)?)\s*([a-zA-Z]+)$/)
+    if (!match) return null
+
+    const value = parseFloat(match[1])
+    const unit = match[2].toLowerCase()
+
+    // Conversion factors to milliseconds
+    const msPerSecond = 1000
+    const msPerMinute = msPerSecond * 60
+    const msPerHour = msPerMinute * 60
+    const msPerDay = msPerHour * 24
+    const msPerWeek = msPerDay * 7
+    const msPerMonth = msPerDay * 30 // Approximate
+    const msPerYear = msPerDay * 365 // Approximate
+
+    const units = {
+        s: msPerSecond,
+        sec: msPerSecond,
+        second: msPerSecond,
+        seconds: msPerSecond,
+        min: msPerMinute,
+        minute: msPerMinute,
+        minutes: msPerMinute,
+        h: msPerHour,
+        hr: msPerHour,
+        hour: msPerHour,
+        hours: msPerHour,
+        d: msPerDay,
+        day: msPerDay,
+        days: msPerDay,
+        w: msPerWeek,
+        wk: msPerWeek,
+        week: msPerWeek,
+        weeks: msPerWeek,
+        m: msPerMonth,
+        mo: msPerMonth,
+        month: msPerMonth,
+        months: msPerMonth,
+        y: msPerYear,
+        yr: msPerYear,
+        year: msPerYear,
+        years: msPerYear,
+    }
+
+    if (!(unit in units)) return null
+
+    return value * units[unit]
+}
+
 /** Create an HTML list of links to pages the current level or between the given levels
  * If start/end not provided, assume only the current level
  * @param {'index'} key The special key being processed
@@ -453,6 +513,10 @@ function createNav(key, attributes, node, options) {
  * @param {object} [options] Optional options passed to the %%nav [options]%% instruction
  * @param {string|number} [options.start] The starting depth level (0 = root)
  * @param {string|number} [options.end] The ending depth level (0 = root)
+ * @param {string} [options.from] Start date/time for filtering (any JS Date() format)
+ * @param {string} [options.to] End date/time for filtering (any JS Date() format, or 'now')
+ * @param {string} [options.duration] Duration offset from from/to (e.g. '1w', '-2d', '3m')
+ * @param {string|number} [options.latest] Return only the N most recent pages (sorted by updated/created date)
  * @returns {string} The generated navigation HTML
  */
 function indexListing(key, attributes, node, options) {
@@ -461,8 +525,17 @@ function indexListing(key, attributes, node, options) {
 
     if (!('nav' in options)) options.nav = false
 
-    if ('start' in options) options.start = Number(options.start)
-    else {
+    // Check if latest is specified - it changes default behavior for path/depth
+    const hasLatest = 'latest' in options
+    const hasExplicitStart = 'start' in options
+    const hasExplicitEnd = 'end' in options || 'depth' in options
+    const hasExplicitDateRange = 'from' in options || 'to' in options || 'duration' in options
+
+    if (hasExplicitStart) options.start = Number(options.start)
+    else if (hasLatest) {
+        // When latest is specified without explicit start, use depth 0 (root)
+        options.start = 0
+    } else {
         // No start given so assume current level
         options.start = attributes.depth
         currentStart = true
@@ -472,12 +545,74 @@ function indexListing(key, attributes, node, options) {
 
     if ('end' in options) options.end = Number(options.end)
     else if (options.depth) options.end = options.start + options.depth
-    else if (currentStart) options.end = attributes.depth
+    else if (hasLatest) {
+        // When latest is specified without explicit end, use max depth
+        options.end = 99
+    } else if (currentStart) options.end = attributes.depth
     else options.end = 5 // Max depth default
 
     if (!('type' in options)) {
         // type can be 'files', 'folders', or 'both'
         options.type = 'both'
+    }
+
+    // Process date/time range filtering options (only if explicitly provided)
+    // `from` and `to` accept date/time strings in any JS Date() recognized format
+    // `to` can also be 'now' representing current date/time
+    // `duration` can be used with either `from` or `to` (not both) as an offset
+    // Duration format: number + type, e.g. '1w' (week), '1d' (day), '1m' (month), '1y' (year), '1h' (hour)
+    // Number can be negative, e.g. '-1w' for 1 week ago
+    if (hasExplicitDateRange) {
+        const now = new Date()
+        let fromDate = null
+        let toDate = null
+
+        // Parse 'to' first (may be 'now')
+        if ('to' in options) {
+            if (options.to.toLowerCase() === 'now') {
+                toDate = now
+            } else {
+                toDate = new Date(options.to)
+                if (isNaN(toDate.getTime())) toDate = null
+            }
+        }
+
+        // Parse 'from'
+        if ('from' in options) {
+            fromDate = new Date(options.from)
+            if (isNaN(fromDate.getTime())) fromDate = null
+        }
+
+        // Handle duration offset (only if one of from/to is missing)
+        if ('duration' in options && !(fromDate && toDate)) {
+            const offset = parseDuration(options.duration)
+            if (offset !== null) {
+                if (fromDate && !toDate) {
+                    // from + duration = to
+                    toDate = new Date(fromDate.getTime() + offset)
+                } else if (toDate && !fromDate) {
+                    // to - duration = from (note: offset is added, so negative duration goes back)
+                    fromDate = new Date(toDate.getTime() - offset)
+                } else if (!fromDate && !toDate) {
+                    // No from or to, use now as base with duration
+                    // Assume duration is relative to now, creating a range ending at now
+                    toDate = now
+                    fromDate = new Date(now.getTime() - offset)
+                }
+            }
+        }
+
+        // Store parsed dates in options for filteredIndex
+        if (fromDate) options.fromDate = fromDate
+        if (toDate) options.toDate = toDate
+    }
+
+    // Parse latest option - returns only the N most recent pages
+    if ('latest' in options) {
+        options.latest = Number(options.latest)
+        if (isNaN(options.latest) || options.latest < 1) {
+            delete options.latest // Invalid value, ignore
+        }
     }
 
     const filtered = filteredIndex(currentStart, attributes, options, node)
@@ -828,21 +963,53 @@ function doSearch(index, query) {
  * @returns {Array} Filtered index entries
  */
 function filteredIndex(currentStart, attributes, options, node) {
-    const filtered = [...node.index].filter(
-        ([key, value]) =>
-            value.depth >= options.start
-            && value.depth <= options.end
-            && (currentStart ? value.path.startsWith(attributes.path) : true)
-            && (options.type === 'folders' ? value.type === 'folder' : true)
-            && (options.type === 'files' ? value.type === 'file' : true)
+    let filtered = [...node.index].filter(
+        ([key, value]) => {
+            // Depth filtering
+            if (value.depth < options.start || value.depth > options.end) return false
+            // Path prefix filtering
+            if (currentStart && !value.path.startsWith(attributes.path)) return false
+            // Type filtering
+            if (options.type === 'folders' && value.type !== 'folder') return false
+            if (options.type === 'files' && value.type !== 'file') return false
+
+            // Date range filtering (uses 'updated' or 'created' attribute)
+            if (options.fromDate || options.toDate) {
+                // Prefer 'updated', fall back to 'created'
+                const docDateStr = value.updated || value.created
+                if (!docDateStr) return false // No date to filter on
+
+                const docDate = new Date(docDateStr)
+                if (isNaN(docDate.getTime())) return false // Invalid date
+
+                if (options.fromDate && docDate < options.fromDate) return false
+                if (options.toDate && docDate > options.toDate) return false
+            }
+
+            return true
+        }
     )
-    // TODO: Allow options.sort to specify sorting field(s) and order
-    // Sort the filtered array
-    filtered.sort((a, b) => a[1].path.localeCompare(b[1].path))
+
+    // If latest option specified, sort by date descending and limit results
+    if (options.latest) {
+        // Sort by updated (or created) date, most recent first
+        filtered.sort((a, b) => {
+            const dateA = new Date(a[1].updated || a[1].created || 0)
+            const dateB = new Date(b[1].updated || b[1].created || 0)
+            return dateB.getTime() - dateA.getTime() // Descending (newest first)
+        })
+        // Limit to the specified number
+        filtered = filtered.slice(0, options.latest)
+    } else {
+        // TODO: Allow options.sort to specify sorting field(s) and order
+        // Default sort by path
+        filtered.sort((a, b) => a[1].path.localeCompare(b[1].path))
+    }
+
     return filtered
 }
 
-/** Get and parse a markdown file
+/** Get and parse a markdown file called from buildIndexes
  * @param {runtimeNode & uibMwNode} node Instance `this` context
  * @param {string} file FS path to the markdown file
  * param {string} fullPath Full path to the markdown file
@@ -925,8 +1092,15 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
         }
 
         // Generate title from filename if not in front-matter: remove .md, convert _ to space, capitalize first char
-        let derivedTitle = basename(file, '.md')
-        derivedTitle = derivedTitle.replace(/_/g, ' ')
+        let derivedTitle
+        const fileName = basename(file, '.md')
+        if (fileName === 'index') {
+            // Use the last segment of the path as the name
+            const segments = file.split(/[\\\/]/)
+            derivedTitle = segments[segments.length - 2].replace(/_/g, ' ')
+        } else {
+            derivedTitle = fileName.replace(/_/g, ' ')
+        }
         derivedTitle = derivedTitle.charAt(0).toUpperCase() + derivedTitle.slice(1)
 
         attributes = {
@@ -1370,6 +1544,82 @@ function setupFileWatcher(node) {
         })
     } catch (err) {
         log.error(`🌐🛑[uib-markweb:setupFileWatcher:${instanceUrl}] Could not set up file watcher: ${err.message}`)
+    }
+}
+
+/** Set up file watcher for the config folder
+ * Notifies connected clients when config files change so they can reload the page.
+ * @param {runtimeNode & uibMwNode} node Instance `this` context
+ */
+function setupConfigWatcher(node) {
+    const log = uib.RED.log
+    const configPath = node.configFolder
+    const instanceUrl = node.url
+    let notifyTimeout = null
+    const debounceMs = 500 // Debounce rapid changes
+
+    // Skip if configFolder is not set or not accessible
+    if (!configPath) {
+        log.trace(`🌐[uib-markweb:setupConfigWatcher:${instanceUrl}] No config folder set, skipping config watcher`)
+        return
+    }
+
+    try {
+        accessSync(configPath, 'r')
+    } catch (err) {
+        log.trace(`🌐[uib-markweb:setupConfigWatcher:${instanceUrl}] Config folder not accessible, skipping config watcher: ${configPath}`)
+        return
+    }
+
+    try {
+        const configWatcher = node.configWatcher = chokidar.watch(configPath, {
+            cwd: configPath,
+            persistent: true,
+            ignoreInitial: true,
+            depth: 5,
+        })
+
+        configWatcher.on('ready', () => {
+            log.info(`🌐[uib-markweb:setupConfigWatcher:${instanceUrl}] Config watcher started for: ${configPath}`)
+        })
+
+        configWatcher.on('all', (eventType, filename) => {
+            log.info(`🌐[uib-markweb:configWatcher:${instanceUrl}] Config file event: ${eventType}, ${filename}`)
+
+            // Debounce to avoid notifying multiple times for rapid changes
+            if (notifyTimeout) clearTimeout(notifyTimeout)
+            notifyTimeout = setTimeout(async () => {
+                // If global-attributes.json changed, rebuild the index since these are merged into all pages
+                if (filename === 'global-attributes.json') {
+                    log.info(`🌐[uib-markweb:configWatcher:${instanceUrl}] global-attributes.json changed, rebuilding index`)
+                    // Clear globalAttributes cache so it will be re-read
+                    node.globalAttributes = null
+                    try {
+                        await buildIndexes(node)
+                    } catch (err) {
+                        log.error(`🌐🛑[uib-markweb:configWatcher:${instanceUrl}] Error rebuilding index after global-attributes change: ${err.message}`)
+                    }
+                }
+
+                log.info(`🌐[uib-markweb:configWatcher:${instanceUrl}] Config file(s) changed, notifying all clients to reload`)
+
+                // Notify ALL connected clients that config changed - they should reload the current page
+                node.sendToFe({
+                    topic: '_config-change',
+                    payload: {
+                        instanceUrl: instanceUrl,
+                        eventType: eventType,
+                        file: filename,
+                    },
+                }, node, uib.ioChannels.control)
+            }, debounceMs)
+        })
+
+        configWatcher.on('error', (error) => {
+            console.error(`>>🌐[uib-markweb:configWatcher:${instanceUrl}] Config watcher error: ${error}`)
+        })
+    } catch (err) {
+        log.error(`🌐🛑[uib-markweb:setupConfigWatcher:${instanceUrl}] Could not set up config watcher: ${err.message}`)
     }
 }
 
