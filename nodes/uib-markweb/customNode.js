@@ -931,10 +931,15 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
             }
         }
 
+        // Generate title from filename if not in front-matter: remove .md, convert _ to space, capitalize first char
+        let derivedTitle = basename(file, '.md')
+        derivedTitle = derivedTitle.replace(/_/g, ' ')
+        derivedTitle = derivedTitle.charAt(0).toUpperCase() + derivedTitle.slice(1)
+
         attributes = {
             ...node.globalAttributes || {},
             ...parsed.attributes || {},
-            title: parsed.attributes?.title || basename(file, '.md'),
+            title: parsed.attributes?.title || derivedTitle,
             description: parsed.attributes?.description || '',
             // Store plain text (strip markdown) for searching
             // body: parsed.body.replace(/[#*`\[\]()]/g, '').toLowerCase() || '',
@@ -947,6 +952,10 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
             path: urlPath,
             // Use the file's actual last updated timestamp from the filing system
             fsMtimeMs: fStats.mtimeMs,
+            // Generate created from file birthtime if not in front-matter
+            created: parsed.attributes?.created || (fStats.birthtimeMs ? new Date(fStats.birthtimeMs).toISOString() : ''),
+            // Generate updated from file mtime if not in front-matter
+            updated: parsed.attributes?.updated || (fStats.mtimeMs ? new Date(fStats.mtimeMs).toISOString() : ''),
             // Record whether this is a folder or a file
             type: filename === 'index.md' ? 'folder' : 'file',
             // Record the file name
