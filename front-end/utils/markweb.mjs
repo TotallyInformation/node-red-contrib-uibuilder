@@ -783,6 +783,19 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             break
         }
 
+        // If the server watch fn detects a config file change, reload the current page
+        case '_config-change': {
+            console.log('Config file changed on server, reloading current page.', ctrlMsg)
+            // Reload the current page to pick up any config changes
+            if (pageData?.toUrl) {
+                navigate(pageData.toUrl, false)
+            } else {
+                // Fallback: reload the page if pageData is not available
+                window.location.reload()
+            }
+            break
+        }
+
         // If the server watch fn detects a file/folder change
         case '_source-change': {
             console.log('Source changed on server.', { ctrlMsg, pageData, })
