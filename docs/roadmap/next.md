@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-01-30 13:12:32
+updated: 2026-02-02 17:50:34
 ---
 
 ## To Fix
@@ -23,14 +23,23 @@ A node that creates a website out of a folder of markdown content.
 * [x] Search not finding in other attributes?
 * [x] Hash link returns are losing the path.
 * [x] Make sure that `%%search%%` adds a `<search>` element wrapper.
+* [x] Generate title, created, updated from file details if not in front-matter.
+* [x] Watcher for config folder.
+* [x] Make sure index is rebuilt on file changes.
+* [x] Add date/time range filter to `%%index%%`. `from`, `to` and `duration` options.
+* [x] Add `latest` option to `%%index%%` to show most recently updated/created pages.
 
-* [ ] ~~Check if return msgs get clientId, etc.~~ They don't, should they?
-* [ ] Indexes cannot currently deal with rename or delete events.
-* [ ] Generate title, created, updated from file details if not in front-matter.
-* [ ] Watcher for config folder.
+* [ ] Add tag(s)/category/author filter to `%%index%%`.
+* [ ] Add pagination to `%%index%%`.
+* [ ] Add sorting options to `%%index%%` (e.g. by created date, updated date, title, etc.).
+* [ ] Add template support to `%%index%%` to allow custom formatting of each entry.
+
+* [ ] Allow for missing index.md file. (list top-level folders and pages). Needed for Astro/Obsidian content.
 * [ ] Cache the default config folder files to avoid re-reading on every page load.
-* [ ] Watcher for default config folder?
-* [ ] Make sure nav and index are rebuilt on file changes.
+* [ ] Make sure nav is rebuilt on file changes.
+* [ ] *How to deal with category/tag listing pages?*
+* [ ] *Indexes cannot currently deal with rename or delete events*.
+* [ ] ~~Check if return msgs get clientId, etc.~~ They don't, should they?
 
 #### Wish list:
 
@@ -43,7 +52,7 @@ A node that creates a website out of a folder of markdown content.
   * [x] Horizontal
   * [ ] Vertical options.
 
-* [ ] Add watcher to the page template and global attributes files to auto-reload changes.
+* [ ] Page icon overrides. Allow front-matter `favicon` field to specify an icon for the page that overrides the default favicon.
 * [ ] Improve HTML styling.
 * [ ] Page aliases. Allow front-matter `alias` field to specify alternative url paths for a page. Also have a master map.
 * [ ] Add manual index-rebuild button to Editor.

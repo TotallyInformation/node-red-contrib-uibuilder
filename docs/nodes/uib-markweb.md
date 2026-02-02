@@ -1,9 +1,9 @@
 ---
 title: uib-markweb - Dynamic web sites using Markdown
-description: >
+description: |
   The `uib-markweb` node allows you to create dynamic web sites using Markdown files.
 created: 2026-01-09 15:10:14
-updated: 2026-02-02 16:10:39
+updated: 2026-02-02 20:13:30
 status: Release
 since: v7.6.0
 ---
@@ -36,28 +36,66 @@ While these are initially processed server-side so that only HTML is passed over
 
 These provide more complex processing than simple variable replacement. They are enclosed in `%%...%%` tags. Attributes are generally optional and are specified inside square brackets `[...]` as comma-separated `attribute=value` pairs.
 
-* `%%nav [attributes]%%` - Generates a navigation menu based on the folder structure. Attributes can be used to control depth, type (files/folders/both), orientation (horizontal/vertical), etc.
+#### Navigation menu (`%%nav%%`)
 
-  `nav` uses the `%%index%%` directive internally to build the menu structure. So it accepts the same attributes as `index`, plus:
+`%%nav [attributes]%%` - Generates a navigation menu based on the folder structure. Attributes can be used to control depth, type (files/folders/both), orientation (horizontal/vertical), etc.
 
-  * `orient` - The orientation of the menu: `horizontal` ~~or `vertical`~~ (default: `horizontal`). As of v7.6.0, only `horizontal` is implemented. You can use `%%index%%` to build vertical lists.
+`nav` uses the `%%index%%` directive internally to build the menu structure. So it accepts the same attributes as `index`, plus:
 
-* `%%index [attributes]%%` - Generates an index list of files and/or folders. Attributes can be used to control depth, file types, sorting, etc.
-  Attributes:
-  * `start` - The starting depth level to include in the index list (default: the current page's depth).
-  * `end` - The ending depth level (default: the current page's depth if `start` not provided, otherwise `5`).
+Attributes:
+
+* `orient` - The orientation of the menu: `horizontal` ~~or `vertical`~~ (default: `horizontal`). As of v7.6.0, only `horizontal` is implemented. You can use `%%index%%` to build vertical lists.
+
+#### Index list of files/folders (`%%index%%`)
+
+`%%index [attributes]%%` - Generates an index list of files and/or folders. Attributes can be used to control depth, file types, sorting, etc.
+
+Attributes:
+
+* `start` - The starting depth level to include in the index list (default: the current page's depth).
+* `end` - The ending depth level (default: the current page's depth if `start` not provided, otherwise `5`).
   
     `start` and `end` are base 0, so the root folder is level 0.
 
-  * `depth` - Shorthand to set the number of levels to include. Equivalent to `end = start + depth`.
-  * `type` - The type of items to include: `files`, `folders`, or `both` (default: `both`).
+* `depth` - Shorthand to set the number of levels to include. Equivalent to `end = start + depth`.
+* `type` - The type of items to include: `files`, `folders`, or `both` (default: `both`).
+* `from` - Filter to include only items created/updated after this date/time.
+* `to` - Filter to include only items created/updated before this date/time.
+
+  Can be set to `now` to mean the current date/time at the time of index list creation.
+
+  `%%index[from=2025-01-01, to=now]%%`
+
+
+* `duration` - Filter to include only items created/updated offset from either `from` or `to`.
   
-  Not yet implemented:
-  * `sort` - The sorting order: `name`, `date`, or `custom` (default: `name`).
-  * `order` - The sorting direction: `asc` or `desc` (default: `asc`).
-  * `exclude` - Comma-separated list of file or folder names to exclude (default: none).
+  E.g.:
+  
+  * `%%index[duration=1w]%%` Last week from now
+  * `%%index[from=2025-06-01, duration=1m]%%`
+  * `%%index[to=now, duration=2w]%%`
+  * Duration can be negative to go backwards in time from `to`. E.g., `to=now, duration=-1m` for the month before now.
+
+* `latest` - Lists the last `n` created/updated items. Overrides `start`, `end`, and `depth`.
+  
+  E.g.:
+  
+  * `%%index[latest=10]%%`- 10 most recently created/updated pages.
+  * `%%index[latest=5, type=files]%%` - 5 most recent files only.
+  * `%%index[latest=3, start=0, end=2]%%` - 3 most recent pages at depth 0-2.
+  * `%%index[latest=10, from=2025-01-01]%%` - 10 most recent since Jan 2025.
+  
+*Not yet implemented*:
+
+* `sort` - The sorting order: `name`, `date`, or `custom` (default: `name`).
+* `order` - The sorting direction: `asc` or `desc` (default: `asc`).
+* `exclude` - Comma-separated list of file or folder names to exclude (default: none).
+
+#### Search results placeholder (`%%search-results%%`)
 
 * `%%search-results%%` - Placeholder for search results. Currently has no attributes.
+
+#### Other directives
 
 * `%%body%%` - Placeholder for the main content of the page. No attributes.
   
@@ -262,6 +300,8 @@ This is a rough list of the original requirements for the `uib-markweb` node.
 * [x] Pass all discovered content attributes to the front end as a uibuilder managed variable.
 * [x] `%%index%%` placeholder to generate a list of pages with links. Should use a template for each entry. Allow sorting options (e.g. by created date, updated date, title, etc.). Templates should allow metadata fields to be used. Index must allow pagination. Must have a filter option (e.g. by tag, category, author, date range, etc.)
 * [x] Live reload of changed markdown files. [ref](https://www.npmjs.com/package/markserv)
+* [x] Generate title, created, updated page attributes from file details if not in front-matter.
+* [x] Watch the config folder for changes. Signal all connected clients to reload page if config files change.
 
 
 ### Search
