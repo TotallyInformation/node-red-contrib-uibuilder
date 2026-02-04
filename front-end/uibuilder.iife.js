@@ -5344,7 +5344,30 @@
       }
       Object.keys(msg.payload).forEach((key) => {
         if (key.startsWith("_")) return;
-        this[key] = msg.payload[key];
+        let key2 = key.toLowerCase();
+        if (key2.startsWith("data-")) key2 = "data";
+        switch (key2) {
+          case "value": {
+            this.setAttribute("value", msg.payload[key]);
+            break;
+          }
+          case "class": {
+            this.className = msg.payload[key];
+            break;
+          }
+          case "style": {
+            this.style.cssText = msg.payload[key];
+            break;
+          }
+          case "data": {
+            this.dataset[key.replace("data-", "")] = msg.payload[key];
+            break;
+          }
+          default: {
+            this[key] = msg.payload[key];
+            break;
+          }
+        }
       });
     }
     // #endregion ---- Methods private to the extended classes ----
@@ -5401,7 +5424,7 @@
     // #endregion ---- Methods private to the base class only ----
   };
   /** Component version */
-  __publicField(_TiBaseComponent, "baseVersion", "2025-06-09");
+  __publicField(_TiBaseComponent, "baseVersion", "2025-09-20");
   /** Holds a count of how many instances of this component are on the page that don't have their own id
    * Used to ensure a unique id if needing to add one dynamically
    */
@@ -5412,10 +5435,10 @@
   // src/components/uib-var.mjs
   var _variable, _varCb, _topic, _topicCb;
   var UibVar = class extends ti_base_component_default {
-    //#endregion --- Class Properties ---
+    // #endregion --- Class Properties ---
     constructor() {
       super();
-      //#region --- Class Properties ---
+      // #region --- Class Properties ---
       /** Name of the uibuilder mangaged variable to use @type {string} */
       __privateAdd(this, _variable);
       /** Current value of the watched variable */
@@ -5443,7 +5466,7 @@
         // Standard watched attributes:
         /* 'inherit-style', */
         "name",
-        // Other watched attributes:            
+        // Other watched attributes:
         "filter",
         "id",
         "report",
@@ -5469,7 +5492,9 @@
       if (!varName) return;
       __privateSet(this, _varCb, this.uibuilder.onChange(varName, this._varChange.bind(this)));
     }
-    /** Get the watched uibuilder variable name */
+    /** Get the watched uibuilder variable name
+     * @returns {string} The watched variable name
+     */
     get variable() {
       return __privateGet(this, _variable);
     }
@@ -5480,7 +5505,9 @@
       if (!topicName) return;
       __privateSet(this, _topicCb, this.uibuilder.onTopic(topicName, this._topicChange.bind(this)));
     }
-    /** Get the watched uibuilder msg topic */
+    /** Get the watched uibuilder msg topic
+     * @returns {string} The watched topic name
+     */
     get topic() {
       return __privateGet(this, _topic);
     }
@@ -5506,8 +5533,8 @@
      * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
      * Attribute values can only ever be strings
      * @param {string} attrib The name of the attribute that is changing
-     * @param {string} newVal The new value of the attribute
      * @param {string} oldVal The old value of the attribute
+     * @param {string} newVal The new value of the attribute
      */
     attributeChangedCallback(attrib, oldVal, newVal) {
       if (oldVal === newVal) return;
@@ -5575,7 +5602,7 @@
       let success = true;
       if (this.splitVarName.length > 0) {
         let target = value2;
-        let partSuccess = [];
+        const partSuccess = [];
         try {
           this.splitVarName.forEach((part) => {
             let successPart;
@@ -5610,7 +5637,7 @@
      */
     showVar(chkVal = true) {
       this.uibuilder.log("trace", this.localName, "showVar. chkVal: '".concat(chkVal, "'. Value="), this.value);
-      if (chkVal === true && !this.value && this.undef !== true) {
+      if (chkVal === true && this.value === void 0 && this.undef !== true) {
         return;
       }
       let val = chkVal ? this.doFilter(this.value) : this.doFilter();
@@ -5686,7 +5713,7 @@
   _topic = new WeakMap();
   _topicCb = new WeakMap();
   /** Component version */
-  __publicField(UibVar, "componentVersion", "2025-01-05");
+  __publicField(UibVar, "componentVersion", "2026-02-04");
   var uib_var_default = UibVar;
   window["UibVar"] = UibVar;
 
