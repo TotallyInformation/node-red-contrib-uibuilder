@@ -685,16 +685,239 @@ function indexListing(key, attributes, node, options) {
  * @returns {string} The generated search results HTML
  */
 function searchResultsWrapper(key, attributes, node, options) {
-    console.log('🌐[searchResultsWrapper] options=', options)
+    let headTxt
+    if (options && options.head === 'short') {
+        headTxt = '<span id="search-count">N/A</span> results'
+    } else {
+        headTxt = 'Search results for "<span id="search-query">N/A</span>" (<span id="search-count">N/A</span>)'
+    }
+    // console.log('🌐[searchResultsWrapper] options=', options)
     return /* html */`
         <article id="search-results" hidden>
             <div id="search-header">
-                <span>Search results for "<span id="search-query">N/A</span>" (<span id="search-count">N/A</span>)</span>
+                <span>${headTxt}</span>
                 <button class="search-close" aria-label="Close search results">×</button>
             </div>
             <div id="search-details"></div>
         </article>
     `
+}
+
+/** Render a sidebar navigation tree with collapsible details/summary elements
+ * @param {Map} map The tree map to render
+ * @param {object} options Sidebar rendering options
+ * @param {string} options.currentPath The current page path for highlighting
+ * @param {number} [_level] Current recursion level (internal use)
+ * @returns {string} Nested HTML with details/summary for collapsible sections
+ */
+function renderSidebarTree(map, options, _level = 0) {
+    if (map.size === 0) return ''
+
+    let html = '<ul>'
+    for (const [, entry] of map) {
+        const hasChildren = entry.children && entry.children.size > 0
+        const isCurrentPage = options.currentPath === entry.path
+            || options.currentPath === entry.path.replace(/\/$/, '')
+        const activeClass = isCurrentPage ? ' class="sidebar-active"' : ''
+        const titleAttr = entry.description ? ` title="${entry.description.replace(/"/g, '&quot;')}"` : ''
+
+        if (hasChildren) {
+            // Use details/summary for collapsible sections
+            const childHtml = renderSidebarTree(entry.children, options, _level + 1)
+            html += `<li>
+                <details data-path="${entry.path}">
+                    <summary${activeClass}${titleAttr}><a href="${entry.path}">${entry.title}</a></summary>
+                    ${childHtml}
+                </details>
+            </li>`
+        } else {
+            html += `<li${activeClass}><a href="${entry.path}"${titleAttr}>${entry.title}</a></li>`
+        }
+    }
+    html += '</ul>'
+    return html
+}
+
+/** Create sidebar HTML with navigation index, TOC, and search
+ * @param {'sidebar'} key The special key being processed
+ * @param {object} attributes The current pages attributes
+ * @param {runtimeNode & uibMwNode} node The current node instance
+ * @param {object} [options] Optional options passed to the %%sidebar [options]%% instruction
+ * @param {string} [options.search] Whether to include search box (default: 'true')
+ * @param {string} [options.open] Whether sidebar starts open (default: 'true')
+ * @param {string} [options.width] Default sidebar width (default: '20em')
+ * @param {string} [options.start] Start depth for nav index (default: '0')
+ * @param {string} [options.end] End depth for nav index (default: '5')
+ * @param {string} [options.position] Sidebar position - 'left' or 'right' (default: 'left')
+ * @returns {string} The generated sidebar HTML
+ */
+function createSidebar(key, attributes, node, options) {
+    const log = uib.RED.log
+    log.trace(`🌐[createSidebar] Creating sidebar for ${attributes.path}`, options)
+
+    if (!options) options = {}
+
+    // Parse options with defaults
+    const showSearch = options.search !== 'false'
+    const isOpen = options.open !== 'false'
+    const width = options.width || '20em'
+    const position = options.position || 'left'
+    const start = 'start' in options ? Number(options.start) : 0
+    const end = 'end' in options ? Number(options.end) : 5
+
+    // Check for sidebar.json override in config folder (don't warn if not found)
+    const sidebarOverride = readConfigFile(node, 'sidebar.json', true)
+
+    // Build the navigation index using filtered index
+    const indexOptions = {
+        start,
+        end,
+        type: 'both',
+        sidebar: true,
+    }
+
+    const filtered = filteredIndex(false, attributes, indexOptions, node)
+
+    // Build hierarchical tree from filtered index (similar to indexListing)
+    const tree = new Map()
+    for (const [path, doc] of filtered) {
+        // Determine title - prefer shortTitle over title
+        let title = doc.shortTitle || doc.title
+        if (doc.path === '/') title = 'Home'
+        else if (doc.type === 'folder' && (!title || title === 'index')) {
+            const segments = doc.path.replace(/\/$/, '').split('/')
+                .filter(Boolean)
+            const rawTitle = segments[segments.length - 1] || doc.path.slice(1, -1)
+            title = rawTitle.replace(/[_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+        }
+
+        // Split path into segments
+        const segments = path.replace(/\/$/, '').split('/')
+            .filter(Boolean)
+        if (segments.length === 0) {
+            if (!tree.has('/')) {
+                tree.set('/', {
+                    path: '/',
+                    title,
+                    description: doc.description || '',
+                    children: new Map(),
+                })
+            }
+            continue
+        }
+
+        // Navigate/create tree structure
+        let current = tree
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i]
+            const isLast = i === segments.length - 1
+
+            if (!current.has(segment)) {
+                current.set(segment, {
+                    path: isLast ? path : '/' + segments.slice(0, i + 1).join('/') + '/',
+                    title: isLast ? title : segment,
+                    description: isLast ? (doc.description || '') : '',
+                    children: new Map(),
+                })
+            } else if (isLast) {
+                const nodeEntry = current.get(segment)
+                nodeEntry.path = path
+                nodeEntry.title = title
+                nodeEntry.description = doc.description || ''
+            }
+            current = current.get(segment).children
+        }
+    }
+
+    // If we have a sidebar override, use it instead
+    let navIndexHtml
+    if (sidebarOverride && Array.isArray(sidebarOverride)) {
+        // Build tree from sidebar.json structure
+        navIndexHtml = buildSidebarFromJson(sidebarOverride, attributes.path)
+    } else {
+        // Render the tree with collapsible sections
+        navIndexHtml = renderSidebarTree(tree, { currentPath: attributes.path, })
+    }
+
+    // Generate data attributes for client-side use
+    const dataAttrs = `data-attribute="sidebar" data-width="${width}" data-position="${position}" data-open="${isOpen}"`
+
+    // Build the search box & results HTML if enabled
+    const searchBoxHtml = showSearch
+        ? /* html */`
+            <search>
+                <form id="search-form" role="search" onsubmit="return false">
+                    <input type="search" id="search-input"
+                        placeholder="Search..." aria-label="Search pages"
+                    >
+                </form>
+            </search>
+            ${searchResultsWrapper(key, attributes, node, { head: 'short', })}
+        `
+        : ''
+
+    // Build the complete sidebar HTML
+    return /* html */`
+        <div id="sidebar-resizer" title="Resize sidebar">
+            <label id="sidebar-toggle" class="sidebar-toggle" title="Toggle sidebar" aria-expanded="${isOpen}">
+                <input type='checkbox'>
+                <span></span><span></span><span></span>
+            </label>
+        </div>
+        <aside id="sidebar" ${dataAttrs} aria-label="Page navigation sidebar">
+            <div class="sidebar-content">
+                ${searchBoxHtml}
+                <div class="sidebar-tabs" role="tablist">
+                    <button id="sidebar-tab-nav" class="sidebar-tab active" role="tab" aria-selected="true" aria-controls="sidebar-panel-nav">
+                        Navigation
+                    </button>
+                    <button id="sidebar-tab-toc" class="sidebar-tab" role="tab" aria-selected="false" aria-controls="sidebar-panel-toc">
+                        Contents
+                    </button>
+                </div>
+                <div id="sidebar-panel-nav" class="sidebar-panel active" role="tabpanel" aria-labelledby="sidebar-tab-nav" data-attribute="sidebar-nav" data-replace>
+                    ${navIndexHtml}
+                </div>
+                <div id="sidebar-panel-toc" class="sidebar-panel" role="tabpanel" aria-labelledby="sidebar-tab-toc" hidden>
+                    <nav id="sidebar-toc" aria-label="Table of contents">
+                        <!-- TOC generated client-side from page headings -->
+                    </nav>
+                </div>
+            </div>
+        </aside>
+    `
+}
+
+/** Build sidebar navigation from a sidebar.json override file
+ * @param {Array<object>} items Array of sidebar items from sidebar.json
+ * @param {string} currentPath The current page path for highlighting
+ * @returns {string} HTML for the sidebar navigation
+ */
+function buildSidebarFromJson(items, currentPath) {
+    if (!items || !Array.isArray(items) || items.length === 0) return ''
+
+    let html = '<ul>'
+    for (const item of items) {
+        const hasChildren = item.children && Array.isArray(item.children) && item.children.length > 0
+        const isCurrentPage = currentPath === item.path
+        const activeClass = isCurrentPage ? ' class="sidebar-active"' : ''
+        const titleAttr = item.description ? ` title="${item.description.replace(/"/g, '&quot;')}"` : ''
+        const title = item.shortTitle || item.title || item.path
+
+        if (hasChildren) {
+            const childHtml = buildSidebarFromJson(item.children, currentPath)
+            html += `<li>
+                <details data-path="${item.path}">
+                    <summary${activeClass}${titleAttr}><a href="${item.path}">${title}</a></summary>
+                    ${childHtml}
+                </details>
+            </li>`
+        } else {
+            html += `<li${activeClass}><a href="${item.path}"${titleAttr}>${title}</a></li>`
+        }
+    }
+    html += '</ul>'
+    return html
 }
 
 // #endregion -- %%...%% specials processing -- //
@@ -1107,6 +1330,7 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
             ...node.globalAttributes || {},
             ...parsed.attributes || {},
             title: parsed.attributes?.title || derivedTitle,
+            shortTitle: parsed.attributes?.shortTitle || '',
             description: parsed.attributes?.description || '',
             // Store plain text (strip markdown) for searching
             // body: parsed.body.replace(/[#*`\[\]()]/g, '').toLowerCase() || '',
@@ -1274,8 +1498,8 @@ async function handler(req, res, next) {
 function htmlTemplate(node, attributes = {}) {
     const log = uib.RED.log
     // TODO consider caching the page-template content for this instance for efficiency - but think about easy updates, how?
-    node.pageTemplate = readConfigFile(node, 'page-template.html') || ''
-    node.globalAttributes = readConfigFile(node, 'global-attributes.json') || {}
+    node.pageTemplate = readConfigFile(node, 'page-template.html', false) || ''
+    node.globalAttributes = readConfigFile(node, 'global-attributes.json', false) || {}
     attributes = { ...node.globalAttributes, ...attributes, }
     attributes.url = node.url
     // add the markdown body
@@ -1336,6 +1560,7 @@ function processTemplates(text, node, attributes = {}, calledFrom = '') {
         'url': () => attributes.url,
         'nav': createNav,
         'search-results': searchResultsWrapper,
+        'sidebar': createSidebar,
         // 'body': bodyWrapper,
         'body': () => attributes.body || '<div>No content</div>',
         // Return an index list of pages from the current page level
@@ -1403,9 +1628,10 @@ function processTemplates(text, node, attributes = {}, calledFrom = '') {
 /** Read a configuration file from configFolder or fallback to package templates folder
  * @param {runtimeNode & uibMwNode} node Instance `this` context
  * @param {string} fileName The name of the file to read
+ * @param {boolean} [optional] If true, will not log a warning if the file is not found or readable
  * @returns {string|null} The file contents or null if not found or not readable
  */
-function readConfigFile(node, fileName) {
+function readConfigFile(node, fileName, optional = false) {
     const log = uib.RED.log
     let content = null
 
@@ -1430,7 +1656,9 @@ function readConfigFile(node, fileName) {
             content = readFileSync(templatesPath, 'utf8')
             log.trace(`🌐[uib-markweb:readConfigFile] Read file from templates folder: "${templatesPath}"`)
         } catch (err) {
-            log.warn(`🌐⚠️[uib-markweb:readConfigFile] File not found or not readable in either configFolder or templates: "${fileName}"`)
+            if (optional === false) {
+                log.warn(`🌐⚠️[uib-markweb:readConfigFile] File not found or not readable in templates folder: "${templatesPath}". ${err.message}`)
+            }
         }
     }
 

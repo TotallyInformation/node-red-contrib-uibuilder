@@ -141,10 +141,18 @@ class ShowMeta extends HTMLElement {
             </article>
             <style>
                 .show-meta {
+                    font-size: 0.7em;
+                    padding: 0 var(--border-pad);
+
+                    h2 {
+                        padding-bottom: 0;
+                        margin-bottom: 0;
+                    }
+
                     dl {
                         display: grid;
                         grid-template-columns: max-content 1fr;
-                        gap: 0.5rem 1rem;
+                        gap: 0rem 1rem;
                     }
 
                     dt {

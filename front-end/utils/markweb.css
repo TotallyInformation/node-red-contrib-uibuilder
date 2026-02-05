@@ -4,7 +4,8 @@
 
 /* #region CSS Custom Properties for Menu */
 :root {
-    --menu-bg: var(--surface3);
+    --brand-hue: 201;
+    --menu-bg: hsl(201, 18%, 15%); /*var(--surface3);*/
     --menu-bg-hover: hsl(210, 100%, 95%);
     --menu-bg-active: hsl(210, 100%, 90%);
     --menu-bg-parent-active-1: hsl(210, 80%, 94%);
@@ -12,7 +13,7 @@
     --menu-bg-parent-active-3: hsl(210, 40%, 97%);
     --menu-text: var(--text1);
     --menu-text-hover: hsl(210, 100%, 40%);
-    --menu-border: none; /* hsl(220, 15%, 85%) */
+    --menu-border: hsl(220, 15%, 85%);
     --menu-shadow: hsla(220, 20%, 20%, 0.15);
     --menu-transition: 0.2s ease;
     --menu-item-padding: 0.75rem 1rem;
@@ -22,11 +23,9 @@
 }
 /* #endregion CSS Custom Properties for Menu */
 
-/* Prevent horizontal scrollbar from content overflow */
-/* html, body {
-    overflow-x: hidden;
-    max-width: 100%;
-} */
+html {
+    background-color: hsl(201, 18%, 19%);
+}
 
 /* #region para Styles */
 div[data-attribute="body"] {
@@ -40,10 +39,11 @@ div[data-attribute="body"] {
 nav.horizontal {
     position: sticky;
     top: 0;
-    z-index: var(--menu-z-index);
+    border-radius: 0;
     background: var(--menu-bg);
-    border-bottom: 1px solid var(--menu-border);
-    transition: var(--menu-transition);
+    /* z-index: var(--menu-z-index); */
+    /* border-bottom: 1px solid var(--menu-border); */
+    /* transition: var(--menu-transition); */
 
     ul {
         display: flex;
@@ -214,14 +214,8 @@ nav.horizontal.collapsed.open {
 
 /* #endregion Base Menu Styles */
 
-/* #region Search Styles */
-#search-form { 
-    position: relative;
-    margin-left: auto;
-    padding: 0.5rem;
-}
-#search-input { padding: 0.5rem; border: 1px solid hsl(0, 0%, 80%); border-radius: 0.25rem; }
-#search-results {
+/* #region --- Search Styles in <main> --- */
+main #search-results {
     /* position: absolute; */
     /* top: 100%; */
     /* left: 0; */
@@ -233,83 +227,82 @@ nav.horizontal.collapsed.open {
     overflow-y: auto;
     /* z-index: calc(var(--menu-z-index) + 1); */
     /* box-shadow: 0 4px 6px hsla(0, 0%, 0%, 0.1); */
-}
-#search-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0.75rem;
-    /* background: hsl(210, 20%, 95%); */
-    border-bottom: 1px solid var(--surface3);
-    font-weight: 500;
 
-    span:first-child {
-        display: inline-block;
-        font-size: 0.9rem;
+    #search-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        /* background: hsl(210, 20%, 95%); */
+        border-bottom: 1px solid var(--surface3);
+        font-weight: 500;
+
+        span:first-child {
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+        .search-close {
+            display: inline-block;
+            cursor: pointer;
+            margin-inline-start: 1px;
+            margin-inline-end: 3px;
+            -webkit-user-modify: read-only !important;
+            user-select: none !important;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            padding: 0.25rem 0.5rem;
+            font-size: 1.25rem;
+            line-height: 1;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        .search-close:hover,
+        .search-close:focus {
+            background: hsl(0, 0%, 90%);
+            color: hsl(0, 0%, 20%);
+        }
     }
-    .search-close {
-        display: inline-block;
-        cursor: pointer;
-        margin-inline-start: 1px;
-        margin-inline-end: 3px;
-        -webkit-user-modify: read-only !important;
-        user-select: none !important;
-        background: transparent;
-        border: none;
-        box-shadow: none;
-        padding: 0.25rem 0.5rem;
-        font-size: 1.25rem;
-        line-height: 1;
-        transition: background-color 0.15s ease, color 0.15s ease;
-    }
-    .search-close:hover,
-    .search-close:focus {
-        background: hsl(0, 0%, 90%);
-        color: hsl(0, 0%, 20%);
+
+    #search-details {
+        a {
+            display: block;
+            padding: 0.75rem;
+            text-decoration: none;
+            border-bottom: 1px solid hsl(0, 0%, 90%);
+        }
+        a:hover { background: hsl(210, 50%, 15%); }
+        a:last-child { border-bottom: none; }
+        .no-results { padding: 0.75rem; color: hsl(0, 0%, 50%); }
+
+        /* Highlight search result matching current page */
+        a.search-result-active {
+            /* background: hsl(210, 60%, 92%); */
+            border-left: 3px solid hsl(210, 100%, 45%);
+            padding-left: calc(0.75rem - 3px);
+        }
+        a.search-result-active:hover {
+            background: hsl(210, 60%, 85%);
+        }
+        a.search-result-active strong {
+            color: hsl(210, 100%, 30%);
+        }
     }
 }
-
-#search-details {
-    a {
-        display: block;
-        padding: 0.75rem;
-        text-decoration: none;
-        border-bottom: 1px solid hsl(0, 0%, 90%);
-    }
-    a:hover { background: hsl(210, 50%, 15%); }
-    a:last-child { border-bottom: none; }
-    strong { display: block; color: hsl(210, 100%, 40%); }
-    small { color: hsl(0, 0%, 50%); font-size: 0.85em; }
-    .no-results { padding: 0.75rem; color: hsl(0, 0%, 50%); }
-
-    /* Highlight search result matching current page */
-    a.search-result-active {
-        background: hsl(210, 60%, 92%);
-        border-left: 3px solid hsl(210, 100%, 45%);
-        padding-left: calc(0.75rem - 3px);
-    }
-    a.search-result-active:hover {
-        background: hsl(210, 60%, 85%);
-    }
-    a.search-result-active strong {
-        color: hsl(210, 100%, 30%);
-    }
-}
-/* #endregion Search Styles */
+/* #endregion --- Search Styles in <main> --- */
 
 /* #region Mobile/Responsive Menu Styles */
 @media (max-width: 768px) {
     /* Search form in mobile menu */
-    #search-form {
+    /* #search-form {
         order: -1;
         width: 100%;
         padding: 0.75rem;
         border-bottom: 1px solid var(--menu-border);
-    }
+    } */
 
-    #search-input {
+    /* #search-input {
         width: 100%;
-    }
+    } */
 }
 
 /* Touch device optimizations */
@@ -443,27 +436,246 @@ h2, h3, h4, h5, h6 {
     }
 }
 
-/* Heading level tooltip on hover (CSS-only) */
-/* h2::after, h3::after, h4::after, h5::after, h6::after {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.6em;
-    font-weight: normal;
-    padding: 0.2em 0.5em;
-    background-color: var(--surface4);
-    color: var(--text2);
-    border-radius: 0.25em;
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-    pointer-events: none;
-} */
-/* h2:hover::after, h3:hover::after, h4:hover::after, h5:hover::after, h6:hover::after {
-    opacity: 0.8;
+/* #region Sidebar Styles */
+:root {
+    /* The layout container */
+    --container-max-width: 100em;
+    --container-col-gap: 1rem;
+    --container-row-gap: 1rem;
+
+    /* The Sidebar container */
+    --sidebar-min-width: 5em;
+    --sidebar-max-width: 15em;
 }
-h2::after { content: "H2"; }
-h3::after { content: "H3"; }
-h4::after { content: "H4"; }
-h5::after { content: "H5"; }
-h6::after { content: "H6"; } */
+
+body {
+    margin:0;
+}
+
+#markweb {
+    width: 100%;
+    max-width: var(--container-max-width);
+    margin:0;
+    /* padding: 0; */
+    display: grid;
+    gap: 0;
+    height: 100dvh;
+    overflow: hidden;
+    /* border: 1px solid red; */
+
+    /* 3 cols x 1 row layout. Sidebar constrained min/max, main column takes remaining space */
+    grid-template-columns:
+        minmax(var(--sidebar-min-width), var(--sidebar-max-width))
+        5px
+        1fr;
+    grid-template-areas:
+        "sidebar drag main";
+    justify-items: stretch;
+    transition: grid-template-columns 0.3s ease;
+
+    /* Hide the sidebar column when the toggle input is checked */
+    &:has(#sidebar-toggle input:checked) {
+        grid-template-columns: 0px 5px 1fr;
+
+        #sidebar {
+            overflow: hidden;
+            opacity: 0;
+        }
+    }
+}
+
+main {
+    /* Where you put your content */
+    grid-area: main;
+    overflow-y: auto;
+    min-height: 0;
+    margin-left: 1.5em;
+    padding-right: 1.5em;
+}
+
+header {
+    /* Headings, nav, etc */
+    grid-area: header;
+}
+
+footer {
+    /* at the bottom, (c), dates, etc */
+    grid-area: footer;
+    /* margin-top: 0; */
+}
+
+/* Sidebar container */
+#sidebar {
+    grid-area: sidebar;
+    overflow-y: auto;
+    min-height: 0;
+    margin-left: 1em;
+    margin-top: 0.5em;
+    padding-right: 0.5em;
+    transition: opacity 0.3s ease;
+
+    /* Sidebar tab selectors (buttons) */
+    .sidebar-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--sidebar-border);
+        flex-shrink: 0;
+        margin-bottom: 1em;
+    }
+    .sidebar-tab {
+        flex: 1;
+        padding: 0.75rem 0.5rem;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        /* font-size: 0.875rem; */
+        /* transition: background 0.2s ease, border-color 0.2s ease; */
+    }
+    .sidebar-tab:hover {
+        background: var(--sidebar-hover-bg);
+    }
+    .sidebar-tab.active, .sidebar-tab[aria-selected="true"] {
+        border-bottom-color: var(--sidebar-active-border);
+        background: var(--sidebar-hover-bg);
+    }
+
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+
+        ul {
+            margin-left: 1em;
+        }
+    }
+    li {
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        summary {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: bolder;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+    }
+
+    #search-form {
+        width: 100%;
+        margin: 0;
+        padding: 5px;
+        border: none;
+    }
+    #search-header {
+        padding: 0 0.3em;
+        border: none;
+
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        span:first-child {
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+        .search-close {
+            -webkit-user-modify: read-only !important;
+            user-select: none !important;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            padding: 0.25rem 0.5rem;
+            font-size: 1.25rem;
+            line-height: 1;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        /* .search-close:hover,
+        .search-close:focus {
+            background: hsl(0, 0%, 90%);
+            color: hsl(0, 0%, 20%);
+        } */
+    }
+
+    .search-result { /* a */
+        display: block;
+        padding: 0.3em;
+        color: inherit;
+        line-height: 1;
+        text-decoration: none;
+        border-bottom: 1px solid hsl(0, 0%, 90%);
+        border-left: 3px solid transparent;
+
+        strong {
+            display: block;
+            font-size: 0.8em;
+        }
+        small {
+            font-size: 0.7em;
+        }
+    }
+    .search-result-active {
+        border-left: 3px solid hsl(210, 100%, 45%);
+    }
+
+    article {
+        margin: 0;
+        border: none;
+        padding: 0;
+        border-radius: 0;
+    }
+}
+
+#sidebar-toggle {
+    position: absolute;
+    background: hsl(201, 18%, 15%);
+    top: 0.3em;
+    width: 1rem;
+    height: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+
+    input {
+       display: none;
+    }
+
+    span {
+        height: 3px;
+        width: 100%;
+        background: var(--text3);
+        border-radius: 2px;
+        transition: transform 0.3s ease, opacity 0.2s ease;
+    }
+
+    /* input:checked ~ span:nth-child(2) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    input:checked ~ span:nth-child(3) {
+        opacity: 0;
+    }
+
+    input:checked ~ span:nth-child(4) {
+        transform: rotate(-45deg) translate(6px, -6px);
+    } */
+}
+
+/* Resizer handle: placed in the grid area between sidebar and main */
+#sidebar-resizer {
+    position: relative;
+    grid-area: drag;
+    /* cursor: ew-resize; */
+    cursor: col-resize;
+    background: hsl(201, 18%, 10%);
+    user-select: none;
+}

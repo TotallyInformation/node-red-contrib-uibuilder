@@ -3,7 +3,7 @@ title: uib-markweb - Dynamic web sites using Markdown
 description: |
   The `uib-markweb` node allows you to create dynamic web sites using Markdown files.
 created: 2026-01-09 15:10:14
-updated: 2026-02-02 20:13:30
+updated: 2026-02-05 16:46:01
 status: Release
 since: v7.6.0
 ---
@@ -93,7 +93,92 @@ Attributes:
 
 #### Search results placeholder (`%%search-results%%`)
 
-* `%%search-results%%` - Placeholder for search results. Currently has no attributes.
+`%%search-results [attributes]%%` - Placeholder for search results.
+
+Attributes:
+
+* `head` - The header text to show above the search results. Default is "Search results for `<span id="search-query">N/A</span>" (<span id="search-count">N/A</span>)`. If set to `short`, it will just show `<span id="search-count">N/A</span> results`.
+
+Search results are sorted by relevance to the search query. The score is available as a tooltip. Scoring is as follows:
+
+* +10 points for a match in the title.
+* +7 points for a match in the tags.
+* +5 points for a match in the description.
+* +1 point for a match in the body text.
+
+Beneath the page title in the search result entry, a snippet of the top-scoring matching text is shown.
+
+If one of the search results is the current page, it is highlighted.
+
+Navigating to any of the search results retains the search query and results so that the user can easily navigate to the next result if desired.
+
+Only one `%%search-results%%` directive is supported per page. It should be in the HTML wrapper template, rather than the Markdown files. If using the `%%sidebar%%` directive, the search results are automatically included in the sidebar. So this directive is really only needed when using a horizontal navigation menu in the page main header.
+
+#### Sidebar (`%%sidebar%%`)
+
+`%%sidebar [attributes]%%` - Generates a sidebar with navigation index and table of contents. The sidebar includes two tabs: one for the navigation index (generated from the page structure) and one for the page's table of contents (generated from page headings).
+
+Features:
+
+* **Navigation tab** - Shows a hierarchical navigation index of the site. Uses `%%index%%` internally to generate the list.
+* **Table of contents tab** - Auto-generated from page headings (h2-h6). Updates dynamically when navigating.
+* **Collapsible sections** - Uses `<details>`/`<summary>` elements. Collapsed/expanded state is remembered per user in localStorage.
+* **Current page highlighting** - The current page is visually highlighted in the navigation.
+* **Resizable** - The sidebar can be resized by dragging its edge. Width is remembered in localStorage.
+* **Toggle open/closed** - A toggle button allows the sidebar to be collapsed. State is remembered in localStorage.
+* **Search box** - Optional search box above the tabs, with search results displayed below it.
+
+Attributes:
+
+* `search` - Whether to include the search box: `true` or `false` (default: `true`).
+* `open` - Whether the sidebar starts open: `true` or `false` (default: `true`). User preference in localStorage takes precedence.
+* `width` - Default sidebar width (default: `20em`). User preference in localStorage takes precedence.
+* `position` - Sidebar position: `left` or `right` (default: `left`).
+* `start` - Starting depth level for navigation index (default: `0`).
+* `end` - Ending depth level for navigation index (default: `5`).
+
+Example usage:
+
+```html
+%%sidebar [search=true, open=true, width=20em, start=0, end=3, position=left]%%
+```
+
+**Override with sidebar.json**
+
+You can provide a manual `sidebar.json` file in your config folder to fully override the auto-generated navigation index. The file should contain an array of navigation items:
+
+```json
+[
+    {
+        "title": "Home",
+        "shortTitle": "Home",
+        "description": "Welcome page",
+        "path": "/",
+        "children": []
+    },
+    {
+        "title": "Getting Started",
+        "shortTitle": "Start",
+        "description": "How to get started",
+        "path": "/getting-started/",
+        "children": [
+            {
+                "title": "Installation",
+                "path": "/getting-started/installation"
+            },
+            {
+                "title": "Configuration",
+                "path": "/getting-started/configuration"
+            }
+        ]
+    }
+]
+```
+
+**Front-matter fields for sidebar:**
+
+* `shortTitle` - Used in the sidebar instead of `title` if present. Useful for shorter navigation labels.
+* `description` - Used as the HTML `title` attribute (tooltip) on navigation links.
 
 #### Other directives
 

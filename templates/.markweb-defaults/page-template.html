@@ -23,20 +23,33 @@
     <script type="module" src="../uibuilder/utils/markweb.mjs" data-base-url="%%url%%"></script>
     <!-- You can add your own scripts here -->
 
-</head><body>
+</head><body><div id="markweb">
 
-    <a class="skip-link" href="#main">Skip to main content</a>
-    <header>
-        %%nav [orient=horizontal,start=0,end=3,type=both]%%
-        <h1 data-attribute="title">{{title}}</h1>
-        %%search-results%%
-        <div class="visible-status" data-attribute="status">{{status}}</div>
-    </header>
+    <!-- Adds resuzer column, Wraps sidebar in an aside tag -->
+    <!-- [search=true, open=false, width=15em, start=0, end=5, position=right] -->
+    %%sidebar [search=true, start=0, end=2]%%
 
-    <main id="main">
-        <div data-attribute="body">%%body%%</div>
+    <main><!-- Main content -->
+        <a class="skip-link" href="#main">Skip to main content</a>
+        <header>
+            <!-- Nav not needed if sidebar is used (add/remove double %) -->
+            <!-- nav [orient=horizontal,start=0,end=3,type=both] -->
+            <h1 data-attribute="title">{{title}}</h1>
+            <!-- Results not needed if sidebar is used (add/remove double %) -->
+            <!-- search-results -->
+            <!-- Optional page status display -->
+            <blockquote class="visible-status" data-attribute="status">Status: {{status}}</blockquote>
+            <div data-attribute="description">{{description}}</div>
+        </header>
+
+        <!-- This is where the main content goes. It will be replaced on navigation. -->
+        <section data-attribute="body">%%body%%</section>
+
+        <!-- OPTIONAL show-meta component to display page metadata for debugging -->
+        <!-- <show-meta></show-meta> -->
+
+        <footer><!-- Common page footer -->
+            %%copywrite%% Updated %%date [type=updated]%%. UIBUILDER MarkWeb.
+        </footer>
     </main>
-    <!-- OPTIONAL show-meta component to display page metadata for debugging -->
-    <show-meta></show-meta>
-
-</body></html>
+</div></body></html>
