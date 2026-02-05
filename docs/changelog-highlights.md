@@ -1,6 +1,6 @@
 ---
 created: 2025-12-15 15:00:36
-updated: 2026-02-01 15:11:19
+updated: 2026-02-04 13:27:49
 version: 7.6.0
 ---
 ### Welcome to UIBUILDER v7.6.0
@@ -13,6 +13,9 @@ Enables simple creation of dynamic web sites using Markdown files. It supports n
 
 #### Documentation
 Some usability improvements to the side menu. Including the ability to collapse sections. The expand/collapse state is remembered. The currently shown page is also scrolled into view in the menu.
+
+#### Example flows
+A new example is available in Node-RED's import library called "Built-in Components". It demonstrates the use of the uibuilder web components: `<uib-meta>`, `<uib-var>`, `<apply-template>`, and `<uib-control>`.
 
 #### uib-cache node
 Performance greatly improved to handle rapid influx of messages.

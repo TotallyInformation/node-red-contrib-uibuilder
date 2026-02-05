@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-02-01 14:56:26
+updated: 2026-02-04 13:28:15
 ---
 
 # Changelog
@@ -52,6 +52,12 @@ An optional web component `<show-meta>` is also provided to display the current 
 
 See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 
+### Examples (Node-RED library flows)
+
+* **NEW** Built-in Components
+  
+  Shows how to use the uibuilder client web components: `<uib-meta>`, `<uib-var>`, `<apply-template>`, and `<uib-control>`. These are all included in the main client library and do not need to be loaded separately.
+
 ### Documentation
 
 * The sidebar of documentation page links now scrolls the current page link into view.
@@ -72,6 +78,10 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 ### uibuilder node
 
 * Added a new config variable `instancePath`. This is the first change that will eventually allow uibuilder instances to use a different server folder than `<uibRoot>/<url>`.
+
+### uib-var component
+
+* **FIXED** Not updating when the given variable is zero (0). [Ref](https://discourse.nodered.org/t/passing-data-via-uib-var/100301).
 
 ### `uib-brand.css` front-end styles
 

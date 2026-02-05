@@ -4,18 +4,23 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-02-02 17:50:34
+updated: 2026-02-05 13:37:00
 ---
 
 ## To Fix
 
-None
+None at present.
 
 ## In Progress
 
 ### New node: uib-markweb
 
 A node that creates a website out of a folder of markdown content.
+
+#### To test:
+
+* [ ] sidebar.json
+* [ ] Check that duplicate url's error.
 
 #### Issues:
 
@@ -28,6 +33,8 @@ A node that creates a website out of a folder of markdown content.
 * [x] Make sure index is rebuilt on file changes.
 * [x] Add date/time range filter to `%%index%%`. `from`, `to` and `duration` options.
 * [x] Add `latest` option to `%%index%%` to show most recently updated/created pages.
+
+* [ ] No checks for duplicate urls.
 
 * [ ] Add tag(s)/category/author filter to `%%index%%`.
 * [ ] Add pagination to `%%index%%`.
@@ -47,6 +54,28 @@ A node that creates a website out of a folder of markdown content.
 * [x] On scroll, when nav menu scrolls offscreen, collapse it to a burger menu and keep it visible.
 * [x] Use server fs watch to provide live updates to pages. Send msg to ALL connected clients when a file changes. Clients can then decide what to do (e.g. reload if they are viewing that page).
 * [x] Allow source folder to be outside the userDir folder.
+
+* [x] Sidebar
+  * [x] Uses `%%sidebar%%` placeholder in template.
+  * [x] Uses `%%index%%` internally to generate nav index.
+  * [x] Highlight current page in sidebar.
+  * [x] 2 "tabs" - one for the navigation index and one for the page's table of contents. (Similar to Typora's sidebar). The navigation index must update when the server's index object updates. The TOC must update when the page content changes or navigation happens.
+  * [x] Uses collapsible sections (for both tabs). Remembered per user (localStorage). Using details/summary elements.
+  * [x] Search box above the tabs. Included by default but can be turned off using `%%sidebar [search=false]%%`.
+  * [x] Search results below the search box but above the tabs. Only if searchbox is present.
+  * [x] Allow sidebar to be toggled open/closed. Browser should remember state (localStorage). Default open. Allow override in `%%sidebar [open=false]%%`.
+  * [x] Allow sidebar width to be resized by user by making the border draggable. Browser should remember state (localStorage). Default width 20em. Allow override in `%%sidebar [width=25em]%%`.
+  * [x] Allow selection of start/end depth for the sidebar nav index. E.g. start=2, end=4 would show levels 2, 3 and 4 only. Same syntax as `%%index%%`.
+  * [x] Override of nav index titles (front-matter `title` field) with front-matter `shortTitle` field if present.
+  * [x] Use front-matter `description` field for nav index item HTML `title` attribute so that the description shows as a tooltip.
+  * [x] Allow full override of index content with manual `sidebar.json` file in config folder.
+  * [x] Sidebar must be full height of viewport and scroll independently of main content.
+
+  * [ ] Move sidebar HTML to a template file.
+  * [ ] ??? Allow sidebar to be docked left/right. Browser should remember state (localStorage). Default left. Allow override in `%%sidebar [position=right]%%`.
+  
+* [ ] Additional templates
+  * [ ] Page footer
 
 * [-] Auto-menu generation.
   * [x] Horizontal
