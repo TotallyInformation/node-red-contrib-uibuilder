@@ -1,4 +1,6 @@
 /* eslint-disable jsdoc/no-undefined-types */
+/* eslint-disable n/no-unsupported-features/node-builtins */
+// ^ This file is browser code, not Node.js - localStorage is a browser API
 /** The uibuilder.pageData object is set on load and when navigating
  * You can use it to do your own processing if desired
  */
@@ -7,6 +9,8 @@ uibuilder.onChange('pageData', (newPageData) => {
     console.log(`uibuilder.pageData has changed (${newPageData.from}): `, newPageData)
     pageData = newPageData
     // @ts-ignore If <show-meta> component is present, update its metadata
+    // Query fresh each time since the element may be recreated during navigation
+    const elShowMeta = document.querySelector('show-meta')
     if (elShowMeta) elShowMeta.metadata = pageData || {}
 })
 
@@ -21,14 +25,13 @@ if (!baseUrl) {
 console.info('Base URL:', baseUrl)
 
 // Get references to commonly used elements
-// const elContent = document.getElementById('content')
 const elContent = document.querySelector('[data-attribute="body"]')
 const elSearchInput = /** @type {HTMLInputElement} */ (document.getElementById('search-input'))
 const elSearchResults = document.getElementById('search-results')
 const elSearchQuery = document.getElementById('search-query')
 const elSearchCount = document.getElementById('search-count')
 const elSearchDetails = document.getElementById('search-details')
-const elShowMeta = document.querySelector('show-meta')
+// Note: elShowMeta is NOT cached here because it may be recreated during navigation
 
 // #region --- Utility Functions ---
 // Normalize: remove trailing slashes, .md extension, leading slashes, and double slashes
@@ -53,6 +56,384 @@ function escapeHtml(text) {
     return div.innerHTML
 }
 // #endregion --- Utility Functions ---
+
+// #region --- Sidebar Functionality ---
+
+/** Sidebar controller class - handles toggle, resize, tabs, TOC generation, and state persistence */
+class SidebarController {
+    isResizing = false
+
+    constructor() {
+        /** @type {HTMLElement|null} */
+        this.elRoot = document.getElementById('markweb')
+        if (!this.elRoot) return
+        /** @type {HTMLElement|null} */
+        this.sidebar = document.getElementById('sidebar')
+        if (!this.sidebar) return
+
+        /** @type {HTMLButtonElement|null} */
+        this.elToggle = /** @type {HTMLButtonElement} */ (document.getElementById('sidebar-toggle'))
+        /** @type {HTMLInputElement|null} */
+        this.toggleInput = this.elToggle.getElementsByTagName('input')[0]
+        /** @type {HTMLElement|null} */
+        this.resizer = document.getElementById('sidebar-resizer')
+        /** @type {HTMLElement|null} */
+        this.navTab = document.getElementById('sidebar-tab-nav')
+        /** @type {HTMLElement|null} */
+        this.tocTab = document.getElementById('sidebar-tab-toc')
+        /** @type {HTMLElement|null} */
+        this.navPanel = document.getElementById('sidebar-panel-nav')
+        /** @type {HTMLElement|null} */
+        this.tocPanel = document.getElementById('sidebar-panel-toc')
+        /** @type {HTMLElement|null} */
+        this.tocContainer = document.getElementById('sidebar-toc')
+        /** @type {HTMLInputElement|null} */
+        this.searchInput = /** @type {HTMLInputElement} */ (document.getElementById('sidebar-search-input'))
+        /** @type {HTMLElement|null} */
+        this.searchResults = document.getElementById('sidebar-search-results')
+
+        this.storageKeyOpen = 'uib-sidebar-open'
+        this.storageKeyWidth = 'uib-sidebar-width'
+        this.storageKeyCollapsed = 'uib-sidebar-collapsed'
+
+        this.init()
+    }
+
+    init() {
+        this.restoreState()
+        this.setupToggle()
+        this.setupResizer()
+        this.setupTabs()
+        this.setupSearch()
+        this.generateTOC()
+        this.restoreCollapsedStates()
+        this.highlightCurrentPage()
+    }
+
+    /** Restore sidebar open/closed and width state from localStorage */
+    restoreState() {
+        // Restore open state or default to open if not set
+        this.openClose(localStorage.getItem(this.storageKeyOpen) ?? 'true', true)
+
+        // Restore width
+        // const savedWidth = localStorage.getItem(this.storageKeyWidth)
+        // if (savedWidth) {
+        //     this.sidebar.style.setProperty('--sidebar-width', savedWidth)
+        // }
+    }
+
+    /** Setup toggle button event */
+    setupToggle() {
+        if (!this.elToggle) return
+
+        this.toggleInput
+            .addEventListener('click', (evt) => {
+                this.openClose(!evt.target.checked, false)
+            })
+    }
+
+    openClose(open, changeInput = false) {
+        if (!this.sidebar || !this.elToggle) return
+
+        if (open === true || open === 'true') {
+            this.sidebar.classList.remove('closed')
+            this.sidebar.dataset.open = 'true'
+            this.elToggle.setAttribute('aria-expanded', 'true')
+            localStorage.setItem(this.storageKeyOpen, 'true')
+            if (changeInput) this.toggleInput.checked = false
+        } else {
+            this.sidebar.classList.add('closed')
+            this.sidebar.dataset.open = 'false'
+            this.elToggle.setAttribute('aria-expanded', 'false')
+            localStorage.setItem(this.storageKeyOpen, 'false')
+            if (changeInput) this.toggleInput.checked = true
+        }
+    }
+
+    /** Setup resizer drag functionality */
+    setupResizer() {
+        if (!this.resizer) return
+
+        this.resizer.addEventListener('mousedown', (e) => {
+            // Don't start resize if clicking on the toggle
+            if (e.target.closest('label') || e.target.closest('input')) {
+                return
+            }
+
+            this.isResizing = true
+            document.body.style.cursor = 'col-resize'
+            document.body.style.userSelect = 'none'
+        })
+
+        document.addEventListener('mousemove', (e) => {
+            if (!this.isResizing) return
+
+            // Calculate new width based on mouse position
+            const newWidth = e.clientX
+
+            // Set min/max constraints
+            const minWidth = 0
+            const maxWidth = 9999
+
+            if (newWidth >= minWidth && newWidth <= maxWidth) {
+                this.elRoot.style.setProperty('--sidebar-min-width', `${newWidth}px`)
+                this.elRoot.style.setProperty('--sidebar-max-width', `${newWidth}px`)
+            }
+        })
+
+        document.addEventListener('mouseup', () => {
+            if (this.isResizing) {
+                this.isResizing = false
+                document.body.style.cursor = ''
+                document.body.style.userSelect = ''
+            }
+        })
+    }
+
+    /** Setup tab switching */
+    setupTabs() {
+        if (!this.navTab || !this.tocTab) return
+
+        const switchTab = (activeTab, activePanel, inactiveTab, inactivePanel) => {
+            activeTab.classList.add('active')
+            activeTab.setAttribute('aria-selected', 'true')
+            activePanel.hidden = false
+            activePanel.classList.add('active')
+
+            inactiveTab.classList.remove('active')
+            inactiveTab.setAttribute('aria-selected', 'false')
+            inactivePanel.hidden = true
+            inactivePanel.classList.remove('active')
+        }
+
+        this.navTab.addEventListener('click', () => {
+            switchTab(this.navTab, this.navPanel, this.tocTab, this.tocPanel)
+        })
+
+        this.tocTab.addEventListener('click', () => {
+            switchTab(this.tocTab, this.tocPanel, this.navTab, this.navPanel)
+        })
+    }
+
+    /** Setup sidebar search functionality */
+    setupSearch() {
+        if (!this.searchInput || !this.searchResults) return
+
+        let searchTimeout = null
+
+        this.searchInput.addEventListener('input', (e) => {
+            if (searchTimeout) clearTimeout(searchTimeout)
+            const query = /** @type {HTMLInputElement} */ (e.target).value.trim()
+
+            if (query.length < 2) {
+                this.searchResults.hidden = true
+                return
+            }
+
+            // Debounce search
+            searchTimeout = setTimeout(() => {
+                this.searchResults.innerHTML = '<div style="padding: 0.5rem; color: var(--text3);">Searching...</div>'
+                this.searchResults.hidden = false
+                // Send search request to server
+                uibuilder.sendCtrl({
+                    uibuilderCtrl: 'internal',
+                    controlType: 'search',
+                    query: query,
+                    source: 'sidebar',
+                })
+            }, 300)
+        })
+    }
+
+    /** Display sidebar search results
+     * @param {Array<{ title: string, path: string }>} results Search results
+     */
+    displaySearchResults(results) {
+        if (!this.searchResults) return
+
+        if (!results || results.length === 0) {
+            this.searchResults.innerHTML = '<div style="padding: 0.5rem; color: var(--text3);">No results found</div>'
+            return
+        }
+
+        let html = ''
+        results.forEach((item) => {
+            html += `<a href="${escapeHtml(item.path)}">${escapeHtml(item.title)}</a>`
+        })
+        this.searchResults.innerHTML = html
+    }
+
+    /** Generate table of contents from page headings with collapsible sections */
+    generateTOC() {
+        if (!this.tocContainer) return
+
+        const contentEl = document.querySelector('[data-attribute="body"]')
+        if (!contentEl) return
+
+        const headings = contentEl.querySelectorAll('h2, h3, h4, h5, h6')
+        if (headings.length === 0) {
+            this.tocContainer.innerHTML = '<p style="padding: 0.5rem; color: var(--text3); font-size: 0.875rem;">No headings found</p>'
+            return
+        }
+
+        // Build a hierarchical structure from flat headings list
+        const getLevel = tag => parseInt(tag.charAt(1), 10)
+
+        // Create a tree structure
+        const root = { children: [], level: 1, }
+        const stack = [root]
+
+        headings.forEach((heading) => {
+            const id = heading.id || heading.textContent.toLowerCase().replace(/\s+/g, '-')
+                .replace(/[^\w-]/g, '')
+            if (!heading.id) heading.id = id
+
+            const level = getLevel(heading.tagName)
+            const node = {
+                id,
+                text: heading.textContent,
+                level,
+                children: [],
+            }
+
+            // Pop stack until we find a parent with lower level
+            while (stack.length > 1 && stack[stack.length - 1].level >= level) {
+                stack.pop()
+            }
+
+            // Add to current parent
+            stack[stack.length - 1].children.push(node)
+            stack.push(node)
+        })
+
+        // Render the tree with details/summary for nodes with children
+        const renderTree = (nodes) => {
+            if (!nodes || nodes.length === 0) return ''
+
+            let html = '<ul>'
+            nodes.forEach((node) => {
+                const hasChildren = node.children && node.children.length > 0
+                const levelClass = `toc-h${node.level}`
+
+                if (hasChildren) {
+                    html += `<li class="${levelClass}">
+                        <details open data-toc-id="${node.id}">
+                            <summary><a href="#${node.id}">${escapeHtml(node.text)}</a></summary>
+                            ${renderTree(node.children)}
+                        </details>
+                    </li>`
+                } else {
+                    html += `<li class="${levelClass}"><a href="#${node.id}">${escapeHtml(node.text)}</a></li>`
+                }
+            })
+            html += '</ul>'
+            return html
+        }
+
+        this.tocContainer.innerHTML = renderTree(root.children)
+    }
+
+    /** Restore collapsed state of details elements from localStorage */
+    restoreCollapsedStates() {
+        const saved = localStorage.getItem(this.storageKeyCollapsed)
+        if (!saved) return
+
+        try {
+            const collapsedPaths = JSON.parse(saved)
+            if (!Array.isArray(collapsedPaths)) return
+
+            const details = this.sidebar.querySelectorAll('details[data-path]')
+            details.forEach((detail) => {
+                const path = /** @type {HTMLDetailsElement} */ (detail).dataset.path
+                // Open all by default, close those in the saved collapsed list
+                if (collapsedPaths.includes(path)) {
+                    detail.removeAttribute('open')
+                } else {
+                    detail.setAttribute('open', '')
+                }
+            })
+        } catch (e) {
+            // Ignore parse errors
+        }
+
+        // Listen for toggle events to save state
+        this.sidebar.addEventListener('toggle', (e) => {
+            const target = /** @type {HTMLElement} */ (e.target)
+            if (target.tagName !== 'DETAILS') return
+            this.saveCollapsedState()
+        }, true)
+    }
+
+    /** Save collapsed state of details elements to localStorage */
+    saveCollapsedState() {
+        const details = this.sidebar.querySelectorAll('details[data-path]')
+        const collapsedPaths = []
+        details.forEach((detail) => {
+            if (!detail.hasAttribute('open')) {
+                collapsedPaths.push(/** @type {HTMLDetailsElement} */ (detail).dataset.path)
+            }
+        })
+        localStorage.setItem(this.storageKeyCollapsed, JSON.stringify(collapsedPaths))
+    }
+
+    /** Highlight current page in sidebar navigation */
+    highlightCurrentPage() {
+        let currentPath = window.location.pathname
+        if (currentPath.startsWith(baseUrl)) {
+            currentPath = currentPath.slice(baseUrl.length)
+        }
+        currentPath = normalizePath(currentPath)
+
+        // Remove existing highlights
+        this.sidebar.querySelectorAll('.sidebar-active').forEach((el) => {
+            el.classList.remove('sidebar-active')
+        })
+
+        // Find and highlight current page link
+        const links = this.sidebar.querySelectorAll('.sidebar-panel a[href]')
+        links.forEach((link) => {
+            const href = link.getAttribute('href')
+            if (normalizePath(href) === currentPath) {
+                // Check if link is inside a summary
+                const summary = link.closest('summary')
+                if (summary) {
+                    summary.classList.add('sidebar-active')
+                } else {
+                    link.closest('li')?.classList.add('sidebar-active')
+                }
+                // Expand parent details elements
+                let parent = link.closest('details')
+                while (parent) {
+                    parent.setAttribute('open', '')
+                    parent = parent.parentElement?.closest('details')
+                }
+            }
+        })
+    }
+
+    /** Update sidebar after navigation
+     * @param {object} data Page data from navigation
+     */
+    update(data) {
+        this.generateTOC()
+        this.highlightCurrentPage()
+    }
+}
+
+// Initialize sidebar controller
+let sidebarController = null
+const initSidebar = () => {
+    sidebarController = new SidebarController()
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSidebar)
+} else {
+    initSidebar()
+}
+
+// #endregion --- Sidebar Functionality ---
 
 // TODO: Future feature
 // #region --- Checkbox Event Delegation ---
@@ -187,12 +568,9 @@ const navBurgerMouseLeave = () => {
 /** Initialise the navigation behaviour */
 const navHorizontalInit = () => {
     nav = document.querySelector('nav.horizontal')
-    header = document.querySelector('header')
+    if (!nav) return
 
-    if (!nav) {
-        console.warn('[markweb-nav] No nav.horizontal element found')
-        return
-    }
+    header = document.querySelector('header')
 
     // Create and insert burger button after nav
     burger = navCreateBurger()
@@ -641,9 +1019,9 @@ if (elSearchResults) {
  * @param {string} query The search query
  */
 function doResults(data, query) {
-    elSearchQuery.textContent = escapeHtml(query)
+    if (elSearchQuery) elSearchQuery.textContent = escapeHtml(query)
     // @ts-ignore
-    elSearchCount.textContent = data.length
+    if (elSearchCount) elSearchCount.textContent = data.length
     if (data.length === 0) {
         elSearchDetails.innerHTML = `<p class="no-results">No results found for "${escapeHtml(query)}"</p>`
         elSearchResults.hidden = false
@@ -670,13 +1048,12 @@ function doResults(data, query) {
         html += `
             <a class="search-result${activeClass}" href="${escapeHtml(item.path)}" ${scoreTooltip}>
                 <strong>${escapeHtml(item.title)}</strong>
-                <small>${escapeHtml(item.path)}</small>
                 <small>${escapeHtml(item.snippet)}</small>
             </a>
         `
     })
-    elSearchDetails.innerHTML = html
-    elSearchResults.hidden = false
+    if (elSearchDetails) elSearchDetails.innerHTML = html
+    if (elSearchResults) elSearchResults.hidden = false
 }
 
 /** Update the uibuilder pageData store
@@ -722,10 +1099,10 @@ elSearchInput.addEventListener('input', (e) => {
     }
     // Debounce search request inputs
     searchTimeout = setTimeout(async () => {
-        elSearchQuery.textContent = escapeHtml(query)
-        elSearchCount.textContent = 'N/A'
-        elSearchDetails.innerHTML = '<p class="no-results">Searching...</p>'
-        elSearchResults.hidden = false
+        if (elSearchQuery) elSearchQuery.textContent = escapeHtml(query)
+        if (elSearchCount) elSearchCount.textContent = 'N/A'
+        if (elSearchDetails) elSearchDetails.innerHTML = '<p class="no-results">Searching...</p>'
+        if (elSearchResults) elSearchResults.hidden = false
         console.log(`Requesting search for query: "${query}"`)
         uibuilder.sendCtrl({ uibuilderCtrl: 'internal', controlType: 'search', query: query, })
     }, 300)
@@ -765,14 +1142,26 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         case '_search-results': {
             console.log('Search results received from server:', ctrlMsg)
             if (ctrlMsg.error) {
-                elSearchQuery.textContent = escapeHtml(ctrlMsg.query)
-                elSearchCount.textContent = 'N/A'
-                elSearchDetails.innerHTML = '<p class="no-results">Search error: ' + escapeHtml(ctrlMsg.error) + '</p>'
-                elSearchResults.hidden = false
+                // Handle error for main search
+                if (elSearchQuery) elSearchQuery.textContent = escapeHtml(ctrlMsg.query)
+                if (elSearchCount) elSearchCount.textContent = 'N/A'
+                if (elSearchDetails) elSearchDetails.innerHTML = '<p class="no-results">Search error: ' + escapeHtml(ctrlMsg.error) + '</p>'
+                if (elSearchResults) elSearchResults.hidden = false
+                // Handle error for sidebar search
+                if (sidebarController && ctrlMsg.source === 'sidebar') {
+                    sidebarController.displaySearchResults([])
+                }
                 return
             }
             const data = ctrlMsg.results ?? []
-            doResults(data, ctrlMsg.query)
+
+            // Route to sidebar search if source is sidebar
+            if (ctrlMsg.source === 'sidebar' && sidebarController) {
+                sidebarController.displaySearchResults(data)
+            } else {
+                // Default: main search results
+                doResults(data, ctrlMsg.query)
+            }
             console.log(`Displayed ${data.length} search results for query "${ctrlMsg.query}"`, data)
 
             break
@@ -858,6 +1247,11 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
             // Update search result highlighting to reflect current page
             updateSearchResultHighlight()
+
+            // Update sidebar TOC and current page highlight
+            if (sidebarController) {
+                sidebarController.update(data)
+            }
 
             break
         }
