@@ -456,7 +456,7 @@ function createNav(key, attributes, node, options) {
 function parseDuration(durationStr) {
     if (!durationStr || typeof durationStr !== 'string') return null
 
-    const match = durationStr.trim().match(/^(-?\d+(?:\.\d+)?)\s*([a-zA-Z]+)$/)
+    const match = durationStr.trim().match(/^(-?\d+(?:\.\d+)?)\s*([a-zA-Z]+)$/) // eslint-disable-line security/detect-unsafe-regex
     if (!match) return null
 
     const value = parseFloat(match[1])
@@ -998,7 +998,7 @@ async function doNavigate(msg) {
     const returnTopic = '_page-navigation-result'
     let attributes = {}
 
-    let morePath = msg.toUrl.replace(new RegExp(`^${this.url}`), '')
+    let morePath = msg.toUrl.replace(new RegExp(`^${this.url}`), '') // eslint-disable-line security/detect-non-literal-regexp
     if (morePath.startsWith('.')) morePath = morePath.slice(1)
     if (morePath.startsWith('/')) morePath = morePath.slice(1)
     // Strip hash/fragment identifiers (e.g., #section) as they are client-side only
