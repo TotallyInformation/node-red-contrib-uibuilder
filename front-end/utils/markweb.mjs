@@ -6,7 +6,7 @@
  */
 let pageData
 uibuilder.onChange('pageData', (newPageData) => {
-    console.log(`uibuilder.pageData has changed (${newPageData.from}): `, newPageData)
+    console.log(`uibuilder.pageData has changed (From: ${newPageData.from}): `, newPageData)
     pageData = newPageData
     // @ts-ignore If <show-meta> component is present, update its metadata
     // Query fresh each time since the element may be recreated during navigation
@@ -1010,8 +1010,6 @@ if (elSearchResults) {
             elSearchInput.focus()
         })
     })
-} else {
-    console.warn('⚠️ Search results element not found.')
 }
 
 /** Process and display search results
@@ -1089,7 +1087,7 @@ function updateSearchResultHighlight() {
 /** Handle input event on search input - ask server for search results
  * Sends an "internal" control message to uibuilder to request search
  */
-elSearchInput.addEventListener('input', (e) => {
+if (elSearchInput) elSearchInput.addEventListener('input', (e) => {
     if (searchTimeout) clearTimeout(searchTimeout)
     // @ts-ignore
     const query = e.target.value.trim()
