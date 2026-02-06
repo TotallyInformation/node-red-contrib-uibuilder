@@ -23,7 +23,7 @@
     "express": "^4.17.1",
     "fast-glob": "^3.2.7",
     "fs-extra": "^11.1.0",
-    "jsdom": "^27.2.0",
+    "jsdom": "^28.0.0",
     "socket.io": "^4.3.2"
   },
   "devDependencies": {
@@ -51,7 +51,7 @@
     "eslint-plugin-promise": "7.*",
     "eslint-plugin-security": "^3.0.1",
     "execa": "^5",
-    "globals": "^16",
+    "globals": "^17",
     "gulp": "^5",
     "gulp-clean-css": "^4",
     "gulp-esbuild": "^0.14",
