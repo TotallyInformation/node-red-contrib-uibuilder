@@ -49,6 +49,7 @@
     "eslint-plugin-jsdoc": "62.*",
     "eslint-plugin-n": "17.*",
     "eslint-plugin-promise": "7.*",
+    "eslint-plugin-security": "^3.0.1",
     "execa": "^5",
     "globals": "^16",
     "gulp": "^5",

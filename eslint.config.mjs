@@ -20,7 +20,9 @@ import globals from 'globals' // https://www.npmjs.com/package/globals
 import pluginImport from 'eslint-plugin-import' // https://www.npmjs.com/package/eslint-plugin-import
 import pluginPromise from 'eslint-plugin-promise' // https://www.npmjs.com/package/eslint-plugin-promise
 import jsdoc from 'eslint-plugin-jsdoc'// https://github.com/gajus/eslint-plugin-jsdoc
+// import sonarjs from 'eslint-plugin-sonarjs' // https://www.npmjs.com/package/eslint-plugin-sonarjs, for code quality and security issues
 import node from 'eslint-plugin-n' // https://www.npmjs.com/package/eslint-plugin-n, node.js only
+import pluginSecurity from 'eslint-plugin-security' // https://www.npmjs.com/package/eslint-plugin-security, node.js only
 import stylistic from '@stylistic/eslint-plugin' // https://eslint.style
 import js from '@eslint/js'
 
@@ -217,6 +219,8 @@ export default defineConfig([
             'jsdoc': jsdoc,
             '@stylistic': stylistic,
             'n': node, // <= n/node
+            'pluginSecurity': pluginSecurity, // <= eslint-plugin-security for Node.js security best practices
+            // 'sonarjs': sonarjs, // <= eslint-plugin-sonarjs for code quality and security issues
         },
         extends: [
             js.configs.recommended,
@@ -224,6 +228,8 @@ export default defineConfig([
             stylistic.configs.recommended,
             pluginPromise.configs['flat/recommended'],
             node.configs['flat/recommended-script'], // <= script/commonjs
+            pluginSecurity.configs.recommended,
+            // sonarjs.configs.recommended
         ],
         settings: {
             jsdoc: { mode: 'jsdoc', },
@@ -235,6 +241,7 @@ export default defineConfig([
             ...jsdocRules,
             ...stylisticRules,
             ...generalRules,
+            'security/detect-object-injection': 'off', // Common in Node-RED for dynamic property access, but can be a security risk if used with untrusted input
         },
     },
 
@@ -260,6 +267,7 @@ export default defineConfig([
             'jsdoc': jsdoc,
             '@stylistic': stylistic,
             'n': node, // <= n/node
+            'pluginSecurity': pluginSecurity, // <= eslint-plugin-security for Node.js security best practices
         },
         extends: [
             js.configs.recommended,
@@ -268,6 +276,7 @@ export default defineConfig([
             pluginPromise.configs['flat/recommended'],
             pluginImport.flatConfigs.recommended,
             node.configs['flat/recommended-module'], // <= module/ESM
+            pluginSecurity.configs.recommended,
         ],
         settings: {
             jsdoc: { mode: 'jsdoc', },
@@ -282,6 +291,7 @@ export default defineConfig([
             'n/no-unsupported-features/es-syntax': 'off', // Allow all modern ESM features
             'n/no-missing-import': 'error',
             'n/no-process-exit': 'warn',
+            'security/detect-object-injection': 'off', // Common in Node-RED for dynamic property access, but can be a security risk if used with untrusted input
         },
     },
 ])
