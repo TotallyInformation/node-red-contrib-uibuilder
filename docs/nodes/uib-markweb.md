@@ -3,12 +3,12 @@ title: uib-markweb - Dynamic web sites using Markdown
 description: |
   The `uib-markweb` node allows you to create dynamic web sites using Markdown files.
 created: 2026-01-09 15:10:14
-updated: 2026-02-05 16:46:01
+updated: 2026-02-06 18:28:43
 status: Release
 since: v7.6.0
 ---
 
-## Configuration
+## Configuration (Node-RED Editor)
 
 * **URL**: The URL to use for this web site.
 * **Folder**: The folder where your Markdown files are stored. The folder must already exist.
@@ -19,7 +19,7 @@ since: v7.6.0
 >
 > Any folder not containing an `index.md` file is ignored. This file is used as the landing page for a folder.
 
-## Special directives and variables
+## Special processing directives and variables
 
 These allow you to add dynamic content and functionality to your pages using simple tags.
 
@@ -124,23 +124,28 @@ Features:
 * **Table of contents tab** - Auto-generated from page headings (h2-h6). Updates dynamically when navigating.
 * **Collapsible sections** - Uses `<details>`/`<summary>` elements. Collapsed/expanded state is remembered per user in localStorage.
 * **Current page highlighting** - The current page is visually highlighted in the navigation.
-* **Resizable** - The sidebar can be resized by dragging its edge. Width is remembered in localStorage.
+* **Resizable** - The sidebar can be resized by dragging its edge. Width resets on page reload.
 * **Toggle open/closed** - A toggle button allows the sidebar to be collapsed. State is remembered in localStorage.
 * **Search box** - Optional search box above the tabs, with search results displayed below it.
+
+Styling:
+
+The sidebar is styled using CSS variables for easy customization. As of UIBUILDER v7.6.0, the UIBUILDER brand CSS is used and partially overridden, however, only dark mode is currently properly configured.
+
+* `--sidebar-min-width: 5em;`, `--sidebar-max-width: 15em;` - these control the default sidebar width. They allow the sidebar to automatically adjust to different screen sizes while maintaining usability.
+* `--sidebar-border-color: var(--text3);` - `--text3` is a standard uibuilder color variable that adapts to light/dark themes.
 
 Attributes:
 
 * `search` - Whether to include the search box: `true` or `false` (default: `true`).
-* `open` - Whether the sidebar starts open: `true` or `false` (default: `true`). User preference in localStorage takes precedence.
-* `width` - Default sidebar width (default: `20em`). User preference in localStorage takes precedence.
-* `position` - Sidebar position: `left` or `right` (default: `left`).
+* `width` - Set the sidebar width (default is set by stylesheet at `5em` to `20em`). Do not forget to include the CSS length unit (e.g., `20em`, `300px`, `25%`, etc.). If not specified, the CSS default is used. This sets both the `--sidebar-max-width` and `--sidebar-min-width` CSS variables to the same value to effectively fix the width. The sidebar is still resizable by dragging, but will reset to this width on page reload.
 * `start` - Starting depth level for navigation index (default: `0`).
-* `end` - Ending depth level for navigation index (default: `5`).
+* `end` - Ending depth level for navigation index (default: `3` = 4 levels).
 
 Example usage:
 
 ```html
-%%sidebar [search=true, open=true, width=20em, start=0, end=3, position=left]%%
+%%sidebar [search=true, width=20em, start=0, end=3]%%
 ```
 
 **Override with sidebar.json**
@@ -309,6 +314,9 @@ On Node-RED startup, the node checks for the presence of the following files in 
 
 The HTML wrapper template is stored in the `page-template.html` file in the `configFolder`. If not found there, a default version from the package `templates/.markweb-defaults/` folder is used.
 
+> [!NOTE]
+> See [Default Template](#default-page-template) below for the default template and styling details.
+
 This template is used to wrap the rendered HTML content from the markdown files. It can include `{{...}}` variable replacements and `%%...%%` directives as described above.
 
 Requirements (see the default template for details):
@@ -469,7 +477,78 @@ These may or may not be implemented in future releases depending on demand and c
 
 ## Default page template
 
-### Default layout with top navigation bar
+### Default styling
+
+The default template first loads the standard UIBUILDER brand CSS. It then loads a `markweb.css` stylesheet which contains the default styling overrides for the default template. If you prefer, you can, of course, replace these styles with your own custom styles by loading a different stylesheet in the template.
+
+Both the UIBUILDER and the `markweb` styles make extensive use of CSS variables for easy customization without needing to change the stylesheet necessarily.
+
+> [!NOTE]
+> As of UIBUILDER v7.6.0, the `markweb` stylesheet only configured correctly for dark mode.
+
+### Default layout with sidebar
+
+This layout uses a vertical navigation menu in a sidebar on the left, with the page content on the right. The sidebar includes the search box and tabs for navigation and page table of contents. Search results appear in the sidebar below the search input. The sidebar scrolls independently of the main content and can be hidden or resized.
+
+```html
+<!DOCTYPE html>
+<!-- Everything like %%...%% and {{...}} gets replaced on first page load if attributes available.
+  -- Everything that has a data-attribute="...." gets updated when navigating via SPA.
+  -- % %body% % is where the main content goes. If you don't include it, you get no content!
+  -- <base> is REQUIRED for SPA navigation to work properly.
+  -->
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <base href="%%url%%/">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" data-attribute="description" content="{{description}}">
+    <title data-attribute="title">{{title}}</title>
+    <link rel="icon" href="../uibuilder/images/node-blue.ico">
+
+    <link type="text/css" rel="stylesheet" href="../uibuilder/uib-brand.min.css" media="all">
+    <link type="text/css" rel="stylesheet" href="../uibuilder/utils/markweb.css" media="all">
+    <!-- You can add your own stylesheets here -->
+
+    <script type="module" src="../uibuilder/uibuilder.esm.min.js?logLevel=1"></script>
+    <!-- OPTIONAL show-meta component to display page metadata for debugging -->
+    <script type="module" src="../uibuilder/utils/show-meta.mjs"></script>
+    <!-- Base URL is REQUIRED by the module! The uibuilder client lib is loaded by this module -->
+    <script type="module" src="../uibuilder/utils/markweb.mjs" data-base-url="%%url%%"></script>
+    <!-- You can add your own scripts here -->
+
+</head><body><div id="markweb">
+
+    <!-- Adds resuzer column, Wraps sidebar in an aside tag -->
+    %%sidebar%%
+
+    <main><!-- Main content -->
+        <a class="skip-link" href="#main">Skip to main content</a>
+        <header>
+            <!-- Nav not needed if sidebar is used (add/remove double %) -->
+            <h1 data-attribute="title">{{title}}</h1>
+            <!-- Results not needed if sidebar is used (add/remove double %) -->
+            <!-- search-results -->
+            <!-- Optional page status display -->
+            <blockquote class="visible-status" data-attribute="status">Status: {{status}}</blockquote>
+            <div data-attribute="description">{{description}}</div>
+        </header>
+
+        <!-- This is where the main content goes. It will be replaced on navigation. -->
+        <section data-attribute="body">%%body%%</section>
+
+        <!-- OPTIONAL show-meta component to display page metadata for debugging -->
+        <!-- <show-meta></show-meta> -->
+
+        <footer><!-- Common page footer -->
+            %%copywrite%% Updated %%date [type=updated]%%. UIBUILDER MarkWeb.
+        </footer>
+    </main>
+</div></body></html>
+```
+
+### Alternate layout with top navigation bar
+
+Given as an example of how you can use the directives and variables to create a different layout. This layout uses a horizontal navigation menu in the header, search results appear below the visible title heading.
 
 ```html
 <!DOCTYPE html>
@@ -512,7 +591,3 @@ These may or may not be implemented in future releases depending on demand and c
 </body></html>
 
 ```
-
-### Alternate layout with Docsify-style sidebar
-
-TBC
