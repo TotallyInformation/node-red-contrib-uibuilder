@@ -758,12 +758,9 @@ function createSidebar(key, attributes, node, options) {
     if (!options) options = {}
 
     // Parse options with defaults
-    const showSearch = options.search !== 'false'
-    const isOpen = options.open !== 'false'
-    const width = options.width || '20em'
-    const position = options.position || 'left'
+    const showSearch = options.search !== 'false' // default=true
     const start = 'start' in options ? Number(options.start) : 0
-    const end = 'end' in options ? Number(options.end) : 5
+    const end = 'end' in options ? Number(options.end) : 3 // 4 levels
 
     // Check for sidebar.json override in config folder (don't warn if not found)
     const sidebarOverride = readConfigFile(node, 'sidebar.json', true)
@@ -840,7 +837,7 @@ function createSidebar(key, attributes, node, options) {
     }
 
     // Generate data attributes for client-side use
-    const dataAttrs = `data-attribute="sidebar" data-width="${width}" data-position="${position}" data-open="${isOpen}"`
+    const dataAttrs = `data-attribute="sidebar"`
 
     // Build the search box & results HTML if enabled
     const searchBoxHtml = showSearch
@@ -859,12 +856,12 @@ function createSidebar(key, attributes, node, options) {
     // Build the complete sidebar HTML
     return /* html */`
         <div id="sidebar-resizer" title="Resize sidebar">
-            <label id="sidebar-toggle" class="sidebar-toggle" title="Toggle sidebar" aria-expanded="${isOpen}">
+            <label id="sidebar-toggle" class="sidebar-toggle" title="Toggle sidebar">
                 <input type='checkbox'>
                 <span></span><span></span><span></span>
             </label>
         </div>
-        <aside id="sidebar" ${dataAttrs} aria-label="Page navigation sidebar">
+        <aside id="sidebar" ${dataAttrs} aria-label="Page sidebar">
             <div class="sidebar-content">
                 ${searchBoxHtml}
                 <div class="sidebar-tabs" role="tablist">
