@@ -304,6 +304,11 @@ main {
             color: hsl(0, 0%, 20%);
         } */
     }
+    #sidebar-toc {
+        background-color: inherit;
+        border-radius: 0;
+        box-shadow: none;
+    }
 
     .search-result { /* a */
         display: block;
