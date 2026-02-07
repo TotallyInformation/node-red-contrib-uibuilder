@@ -1,7 +1,7 @@
 /* eslint-disable jsdoc/valid-types */
 /** Manage uibuilder server files
  *
- * Copyright (c) 2023-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -131,7 +131,7 @@ class UibFs {
     async walk(dir, ftype, level = 0) {
         let files
         try {
-            files = await fs.readdir(dir)
+            files = await fs.readdir(dir) // eslint-disable-line security/detect-non-literal-fs-filename
         } catch (err) {
             console.error(`🌐🛑[UibFs:walk] Error reading directory '${dir}': ${err.message}`)
             return []
@@ -143,7 +143,7 @@ class UibFs {
                 const filePath = join(dir, file)
                 let stats
                 try {
-                    stats = await fs.stat(filePath)
+                    stats = await fs.stat(filePath) // eslint-disable-line security/detect-non-literal-fs-filename
                 } catch (err) {
                     console.error(`🌐🛑[UibFs:walk] Error stating file '${filePath}': ${err.message}`)
                 }
@@ -213,7 +213,7 @@ class UibFs {
 
         let stat
         try {
-            const fstat = await fs.stat(fname)
+            const fstat = await fs.stat(fname) // eslint-disable-line security/detect-non-literal-fs-filename
             stat = {
                 created: fstat.birthtime,
                 modified: fstat.mtime,
@@ -289,7 +289,7 @@ class UibFs {
      * @returns {Promise<string>} The text contents of the file.
      */
     async getTemplateFile(template, fName) {
-        return await fs.readFile( join(__dirname, '..', '..', 'templates', template, fName), 'utf8')
+        return await fs.readFile( join(__dirname, '..', '..', 'templates', template, fName), 'utf8') // eslint-disable-line security/detect-non-literal-fs-filename
     }
 
     async getUibInstanceRootFolders() {
@@ -558,7 +558,7 @@ class UibFs {
             // If createFolder flag set, attempt to create the folder
             if (createFolder === true) {
                 try {
-                    await fs.mkdir(fullFolder, { recursive: true, }) // Add mode?
+                    await fs.mkdir(fullFolder, { recursive: true, }) // eslint-disable-line security/detect-non-literal-fs-filename, security/detect-non-literal-fs-filename
                 } catch (err) {
                     throw new Error(`Cannot create folder. ${err.message} [UibFs:writeInstanceFile]`, err)
                 }
@@ -571,7 +571,7 @@ class UibFs {
 
         try {
             // https://nodejs.org/docs/latest-v14.x/api/fs.html#fs_fspromises_writefile_file_data_options
-            await fs.writeFile(fullname, data)
+            await fs.writeFile(fullname, data) // eslint-disable-line security/detect-non-literal-fs-filename
             // await fs.outputFile(fullname, data)
         } catch (err) {
             throw new Error(`File write FAIL. ${err.message} [UibFs:writeInstanceFile]`, err)
@@ -660,7 +660,7 @@ class UibFs {
     /** Synchronous Folder or File copy - Will THROW on error
      * @param {Array<string>|string} src Source. Single string or array of strings that will be `join`d
      * @param {Array<string>|string} dest Destination. Single string or array of strings that will be `join`d
-     * @param {import('node:fs').CopySyncOptions} [opts] Optional.
+     * @param {import('node:fs').CopySyncOptions} [opts] Optional. node:fs copy options
      */
     copySync(src, dest, opts) {
         if (opts === undefined) {
@@ -717,7 +717,7 @@ class UibFs {
      */
     existsSync() {
         const p = join(...arguments)
-        return existsSync(p)
+        return existsSync(p) // eslint-disable-line security/detect-non-literal-fs-filename
     }
 
     /** Return a list of files matching the glob specification
@@ -737,7 +737,7 @@ class UibFs {
      * @returns {string|undefined} Returns undefined unless recursive is set in which case the 1st created path is returned
      */
     mkdirSync(path, options) {
-        return mkdirSync(path, options)
+        return mkdirSync(path, options) // eslint-disable-line security/detect-non-literal-fs-filename
     }
 
     readdirSync = readdirSync
@@ -749,7 +749,7 @@ class UibFs {
      */
     readJSONSync(file) {
         try {
-            return JSON.parse(readFileSync(file, 'utf8'))
+            return JSON.parse(readFileSync(file, 'utf8')) // eslint-disable-line security/detect-non-literal-fs-filename
         } catch (e) {
             e.message = `${file}: ${e.message} [UibFs:readJSONSync]`
             throw e
