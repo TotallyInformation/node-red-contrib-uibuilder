@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-regexp */
 // @ts-nocheck
 /* eslint-disable jsdoc/valid-types */
 /** Send a dynamic UI config to the uibuilder front-end library.
@@ -35,14 +36,12 @@ if (!globalThis._uibuilder_.markweb.indexes) globalThis._uibuilder_.markweb.inde
 
 const { basename, join, isAbsolute, parse, relative, resolve, sep, } = require('path')
 const express = require('express')
-// ! TODO Move to fs.cjs
-
 const {
-    accessSync, existsSync, fgSync,
+    accessSync, copySync, existsSync, fgSync,
     readdirSync, readFile, readFileSync,
     stat, watch,
 } = require('../libs/fs.cjs')
-const { urlJoin, } = require('../libs/tilib.cjs')
+const { urlJoin, formatDateIntl, } = require('../libs/tilib.cjs')
 const { setNodeStatus, } = require('../libs/uiblib.cjs') // Utility library for uibuilder
 const sockets = require('../libs/socket.cjs')
 const web = require('../libs/web.cjs')
@@ -55,7 +54,7 @@ const { serialize, } = require('v8')
 const { mdParse, fm, } = require('@totallyinformation/uib-md-utils') // eslint-disable-line n/no-extraneous-require
 const { chokidar, } = require('@totallyinformation/uib-fs-utils') // eslint-disable-line n/no-extraneous-require
 
-/** Object tree of folders and files
+/** Object tree of folders and files (typedef)
  * @typedef {object} FolderTree
  * @property {string} name - Name of the folder or file
  * @property {string} type - 'folder' or 'file'
@@ -63,6 +62,7 @@ const { chokidar, } = require('@totallyinformation/uib-fs-utils') // eslint-disa
  * @property {FolderTree[]} [children] - Children if folder
  */
 
+// ! TODO Move to fs lib
 /** walkFolderStructure - Recursively walks a folder structure and returns a nested object representing folders and files.
  * Folders are only included if they contain an index.md file. Any folder or file starting with _ or . is ignored.
  * @param {string} dirPath - The root directory to start walking from
@@ -124,9 +124,6 @@ const walkFolderStructure = async (dirPath, _startPath, _level = 0) => {
     return node
 }
 
-// Export for use elsewhere
-// module.exports.walkFolderStructure = walkFolderStructure
-
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
  */
@@ -135,6 +132,8 @@ const mod = {
     // evaluateNodeProperty: undefined,
     /** @type {string} Custom Node Name - has to match with html file and package.json `red` section */
     nodeName: 'uib-markweb',
+    /** @type {string} Path to the default configuration folder */
+    defaultConfigPath: join(__dirname, '..', '..', 'templates', '.markweb-defaults'),
 }
 
 // #endregion ----- Module level variables ---- //
@@ -178,13 +177,11 @@ function nodeInstance(config) {
     this.source = config.source ?? ''
     this.url = config.url ?? 'markweb'
     this.name = config.name ?? ''
-    this.configFolder = config.configFolder ?? '_config'
+    this.configFolder = config.configFolder ?? ''
     this.sourceFolder = '' // Used in web.instanceSetup(), should be ''
 
     // Make sure the url is valid & prefix with nodeRoot if needed
     this.url = urlJoin(uib.nodeRoot, this.url.trim())
-
-    this.configFolder = this.configFolder.trim()
 
     // source folder cannot be null/blank
     this.source = this.source.trim()
@@ -192,7 +189,6 @@ function nodeInstance(config) {
         this.error('🌐🛑[uibuilder:uib-markweb] Source folder cannot be blank. Please set a valid source folder in the node configuration.')
         return
     }
-
     // if source folder is a relative path, make it relative to userDir
     if (isAbsolute(this.source)) {
         this.instanceFolder = this.source
@@ -208,13 +204,9 @@ function nodeInstance(config) {
     }
 
     // if config folder is a relative path, make it relative to userDir
-    if (!isAbsolute(this.configFolder)) {
-        this.configFolder = join(RED.settings.userDir, this.configFolder)
-    }
-    // Check if configFolder exists and is readable? Config will use defaults if not
-    if (processConfig.bind(this) === false) {
-        log.warn(`🌐⚠️[uib-markweb:nodeInstance:${this.url}] Config folder is not accessible, using defaults. "${this.configFolder}"`)
-    }
+    this.configFolder = this.configFolder.trim()
+    // Check if configFolder exists and is readable - set watcher. Config will use default fldr if not
+    processConfig(this)
 
     // Holder for search indexes - Map
     this.index = new Map()
@@ -229,9 +221,6 @@ function nodeInstance(config) {
         })
     // File/folder change watch (sets this.watcher so it can be cancelled), also notifies connected clients
     setupFileWatcher(this)
-
-    // Config folder watcher (sets this.configWatcher so it can be cancelled)
-    setupConfigWatcher(this)
 
     // Set up web services for this instance (static folders, middleware, etc)
     web.instanceSetup(this, `${this.url}/:morePath(*)?`, handler.bind(this), { searchHandler: searchHandler.bind(this), })
@@ -369,6 +358,43 @@ function internalControlMsgHooks(node, log) {
 }
 
 // #region -- %%...%% specials processing (see processTemplates for calls) -- //
+
+/** Render a date placeholder with optional formatting and frontmatter date types
+ * @param {'date'} key The special key being processed
+ * @param {object} attributes The current pages attributes
+ * @param {runtimeNode & uibMwNode} node The current node instance
+ * @param {object} [options] Optional options passed to the %%date [options]%% instruction
+ * @param {string} [options.type] Type of date to show: 'now' (default), 'created', 'updated', or any frontmatter date field
+ * @param {string} [options.format] Date format string (default: 'YYYY-MM-DD'). Uses standard tokens. Underscore translates to space
+ * @returns {string} Formatted date string
+ */
+function renderDate(key, attributes, node, options) {
+    if (!options) options = {}
+
+    const type = options.type || 'now'
+    const format = options.format || 'YYYY-MM-DD'
+
+    let date
+    if (type === 'now') {
+        // Use current date/time
+        date = new Date()
+    } else {
+        // Try to get date from frontmatter attributes
+        const dateValue = attributes[type]
+        if (!dateValue) {
+            // Date field not found in frontmatter
+            return `[${type} date not found]`
+        }
+        date = new Date(dateValue)
+        if (isNaN(date.getTime())) {
+            // Invalid date value
+            return `[Invalid ${type} date: ${dateValue}]`
+        }
+    }
+
+    return formatDateIntl(date, format)
+}
+
 /** Wrap body content in a div#content & convert markdown to html
  * @param {'body'} key The special key being processed
  * @param {object} attributes The current pages attributes
@@ -917,6 +943,27 @@ function buildSidebarFromJson(items, currentPath) {
     return html
 }
 
+/** Render copyright information from template
+ * @param {'copyright'} key The special key being processed
+ * @param {object} attributes The current pages attributes
+ * @param {runtimeNode & uibMwNode} node The current node instance
+ * @param {object} [options] Optional options (not used for copyright)
+ * @returns {string} Formatted copyright HTML
+ */
+function renderCopyright(key, attributes, node, options) {
+    // Read the copyright template file (with fallback to default)
+    const template = readConfigFile(node, 'copyright-template.html', true)
+
+    if (!template) {
+        // If no template found, return a basic fallback
+        return 'Copyright © All rights reserved.'
+    }
+
+    // Process the template to replace any nested directives and variables
+    // This allows the template to use %%date%% and {{author}} etc.
+    return processTemplates(template, node, attributes, 'renderCopyright')
+}
+
 // #endregion -- %%...%% specials processing -- //
 
 /** Build search & nav indexes from all markdown files asynchronously & notifies connected clients
@@ -941,7 +988,6 @@ async function buildIndexes(node) {
         log.error(`🌐🛑[uib-markweb:buildSearchIndex:${url}] Error reading markdown files from source folder "${indexFolder}": ${e.message}`)
         files = []
     }
-    log.info(`🌐[uib-markweb:buildSearchIndex:${url}] Building search index. sourcePath="${indexFolder}". Found ${files.length} markdown files.`)
 
     // Process all files in parallel
     const results = await Promise.allSettled(
@@ -963,28 +1009,28 @@ async function buildIndexes(node) {
     // ! TEMPORARY - for debugging convenience
     globalThis._uibuilder_.markweb.indexes[url] = node.index
 
-    log.info(`🌐[uib-markweb:buildSearchIndex:${url}] Finished index. sourcePath="${instanceFolder}", duration=${Math.round(performance.now() - strt)}ms, Size=${(serialize(node.index).byteLength / 1024).toFixed(0)}kb`)
+    log.info(`🌐[uib-markweb:buildSearchIndex:${url}] Indexed "${instanceFolder}" in ${Math.round(performance.now() - strt)}ms. ${files.length} files, ${(serialize(node.index).byteLength / 1024).toFixed(0)}kb`)
 }
 
 /** Build a list of navigable pages from all markdown files in the source folder
  * @param {string} sourcePath Source folder path
  * @returns {Array<{path: string, title: string, file: string}>} Array of navigation items
  */
-function buildNavigationIndex(sourcePath) {
-    try {
-        const files = fgSync(`${sourcePath.replace(/\\/g, '/')}/**/*.md`)
-        return files.map((file) => {
-            const relativePath = relative(sourcePath, file).replace(/\\/g, '/')
-            const urlPath = relativePath.replace(/\.md$/, '')
-            const title = basename(file, '.md')
-                .replace(/-/g, ' ')
-                .replace(/\b\w/g, c => c.toUpperCase())
-            return { path: urlPath, title, file: relativePath, }
-        })
-    } catch (e) {
-        return []
-    }
-}
+// function buildNavigationIndex(sourcePath) {
+//     try {
+//         const files = fgSync(`${sourcePath.replace(/\\/g, '/')}/**/*.md`)
+//         return files.map((file) => {
+//             const relativePath = relative(sourcePath, file).replace(/\\/g, '/')
+//             const urlPath = relativePath.replace(/\.md$/, '')
+//             const title = basename(file, '.md')
+//                 .replace(/-/g, ' ')
+//                 .replace(/\b\w/g, c => c.toUpperCase())
+//             return { path: urlPath, title, file: relativePath, }
+//         })
+//     } catch (e) {
+//         return []
+//     }
+// }
 
 /** Handle a navigation socket request
  * @param {object} msg A control message with at least { toUrl: string }
@@ -995,7 +1041,7 @@ async function doNavigate(msg) {
     const returnTopic = '_page-navigation-result'
     let attributes = {}
 
-    let morePath = msg.toUrl.replace(new RegExp(`^${this.url}`), '') // eslint-disable-line security/detect-non-literal-regexp
+    let morePath = msg.toUrl.replace(new RegExp(`^${this.url}`), '')
     if (morePath.startsWith('.')) morePath = morePath.slice(1)
     if (morePath.startsWith('/')) morePath = morePath.slice(1)
     // Strip hash/fragment identifiers (e.g., #section) as they are client-side only
@@ -1063,13 +1109,14 @@ async function doNavigate(msg) {
         accessSync( fullPath, 'r' )
         log.trace(`🌐[uib-markweb:nodeInstance:navigate] Source file is accessible: "${fullPath}"`)
     } catch (err) {
+        // const file404 = readConfigFile(this, '404-template.md', false)
         log.error(`🌐🛑[uib-markweb:nodeInstance:navigate] Source file "${fullPath}" not accessible: ${err.message}`)
         // @ts-ignore
         attributes = {
-            error: 'Page not found',
+            error: 'Page not accessible or not found',
             title: 'Error',
-            description: `The requested page does not exist.`,
-            body: `<h1>Page Not Found</h1><p>The requested page does not exist.</p>`,
+            description: `The requested page does not exist or cannot be read.`,
+            body: `<h1>Page Not Found</h1><p>The requested page does not exist or cannot be read.</p>`,
             from: 'navigate',
         }
         this.sendToFe({
@@ -1520,27 +1567,42 @@ function htmlTemplate(node, attributes = {}) {
 }
 
 /** Check if this.configFolder exists and is readable
+ * @param {runtimeNode & uibMwNode} node Instance `this` context
  * @returns {boolean|null} True if configFolder exists and is readable, false if not, null if not set
- * @this {runtimeNode & uibMwNode}
  */
-function processConfig() {
+function processConfig(node) {
     const RED = uib.RED
     const log = RED.log
     let ans = null
-    if (this.configFolder) {
+
+    if (node.configFolder && node.configFolder.length > 0) {
         // if configFolder is a relative path, make it relative to userDir
-        if (!isAbsolute(this.configFolder)) {
-            this.configFolder = join(RED.settings.userDir, this.configFolder)
+        if (!isAbsolute(node.configFolder)) {
+            node.configFolder = join(RED.settings.userDir, node.configFolder)
         }
+        // Check if configFolder exists and is readable? Config will use defaults if not
         try {
-            accessSync( this.configFolder, 'r' )
+            accessSync( node.configFolder, 'r' )
             ans = true
-            // log.trace(`🌐[uib-markweb:processConfig] Config folder is accessible. "${this.configFolder}"`)
+            // log.trace(`🌐[uib-markweb:processConfig] Config folder is accessible. "${node.configFolder}"`)
         } catch (err) {
             ans = false
-            // log.warn(`🌐⚠️[uib-markweb:processConfig] Config folder is not accessible, using defaults. "${this.configFolder}" - ${err.message}`)
+            log.warn(`🌐⚠️[uib-markweb:processConfig:${node.url}] Config folder is not accessible, using defaults. "${node.configFolder}"`)
         }
+    } else {
+        ans = false
     }
+    // For some reason, either configFolder not set or not accessible, fall back to default
+    if (ans === true) {
+        // If configFolder is valid, copy default config files but do not overwrite
+        try {
+            copySync(mod.defaultConfigPath, node.configFolder)
+        } catch (e) { /* ignore errors */ }
+    } else {
+        node.configFolder = mod.defaultConfigPath
+    }
+    // Config folder watcher (sets this.configWatcher so it can be cancelled)
+    setupConfigWatcher(node)
     return ans
 }
 
@@ -1562,6 +1624,8 @@ function processTemplates(text, node, attributes = {}, calledFrom = '') {
         'body': () => attributes.body || '<div>No content</div>',
         // Return an index list of pages from the current page level
         'index': indexListing,
+        'date': renderDate,
+        'copyright': renderCopyright,
     }
 
     // Protect backtick-wrapped patterns from processing (e.g., `%%nav%%` or `{{title}}`)
@@ -1647,7 +1711,7 @@ function readConfigFile(node, fileName, optional = false) {
 
     if (content === null) {
         // Fallback to templates/.markweb-defaults folder in the package
-        const templatesPath = join(__dirname, '..', '..', 'templates', '.markweb-defaults', fileName)
+        const templatesPath = join(mod.defaultConfigPath, fileName)
         try {
             accessSync(templatesPath, 'r')
             content = readFileSync(templatesPath, 'utf8')
@@ -1782,13 +1846,13 @@ function setupConfigWatcher(node) {
     const instanceUrl = node.url
     let notifyTimeout = null
     const debounceMs = 500 // Debounce rapid changes
+    const isDefault = configPath === mod.defaultConfigPath
 
     // Skip if configFolder is not set or not accessible
     if (!configPath) {
         log.trace(`🌐[uib-markweb:setupConfigWatcher:${instanceUrl}] No config folder set, skipping config watcher`)
         return
     }
-
     try {
         accessSync(configPath, 'r')
     } catch (err) {
@@ -1805,7 +1869,7 @@ function setupConfigWatcher(node) {
         })
 
         configWatcher.on('ready', () => {
-            log.info(`🌐[uib-markweb:setupConfigWatcher:${instanceUrl}] Config watcher started for: ${configPath}`)
+            if (!isDefault) log.info(`🌐[uib-markweb:setupConfigWatcher:${instanceUrl}] Config watcher started for: ${configPath}`)
         })
 
         configWatcher.on('all', (eventType, filename) => {
