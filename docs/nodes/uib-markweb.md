@@ -3,7 +3,7 @@ title: uib-markweb - Dynamic web sites using Markdown
 description: |
   The `uib-markweb` node allows you to create dynamic web sites using Markdown files.
 created: 2026-01-09 15:10:14
-updated: 2026-02-06 18:28:43
+updated: 2026-02-07 16:08:26
 status: Release
 since: v7.6.0
 ---
@@ -36,15 +36,28 @@ While these are initially processed server-side so that only HTML is passed over
 
 These provide more complex processing than simple variable replacement. They are enclosed in `%%...%%` tags. Attributes are generally optional and are specified inside square brackets `[...]` as comma-separated `attribute=value` pairs.
 
-#### Navigation menu (`%%nav%%`)
+#### Copyright placeholder (`%%copyright%%`)
 
-`%%nav [attributes]%%` - Generates a navigation menu based on the folder structure. Attributes can be used to control depth, type (files/folders/both), orientation (horizontal/vertical), etc.
+`%%copyright%%` - Placeholder for copyright information.
 
-`nav` uses the `%%index%%` directive internally to build the menu structure. So it accepts the same attributes as `index`, plus:
+By default, it uses:
+
+```html
+Copyright © %%date [type=updated, format=YYYY]%% {{author}}. Updated %%date [type=updated, format=D_MMM_YYYY]%%
+```
+
+This is stored in the file `copyright-template.html` in the `templates/.markweb-defaults/` folder.
+
+This directive has no attributes of its own. Alternative configurations use a custom template file (e.g., `copyright-template.html`) in the `configFolder` that defines how the copyright information should be displayed. The template can use other directives and variables to customize the output.
+
+#### Date placeholder (`%%date%%`)
+
+`%%date [attributes]%%` - Placeholder for a date. By default, it shows the current date. Attributes can be used to specify a different date and/or formatting.
 
 Attributes:
 
-* `orient` - The orientation of the menu: `horizontal` ~~or `vertical`~~ (default: `horizontal`). As of v7.6.0, only `horizontal` is implemented. You can use `%%index%%` to build vertical lists.
+* `type` - The type of date to show: Either a date from frontmatter (e.g. `created`, or `updated`), or `now` (default: `now`).
+* `format` - The date format string (default: `YYYY-MM-DD`). Uses standard date formatting tokens. `_` is translated to a space.
 
 #### Index list of files/folders (`%%index%%`)
 
@@ -90,6 +103,16 @@ Attributes:
 * `sort` - The sorting order: `name`, `date`, or `custom` (default: `name`).
 * `order` - The sorting direction: `asc` or `desc` (default: `asc`).
 * `exclude` - Comma-separated list of file or folder names to exclude (default: none).
+
+#### Navigation menu (`%%nav%%`)
+
+`%%nav [attributes]%%` - Generates a navigation menu based on the folder structure. Attributes can be used to control depth, type (files/folders/both), orientation (horizontal/vertical), etc.
+
+`nav` uses the `%%index%%` directive internally to build the menu structure. So it accepts the same attributes as `index`, plus:
+
+Attributes:
+
+* `orient` - The orientation of the menu: `horizontal` ~~or `vertical`~~ (default: `horizontal`). As of v7.6.0, only `horizontal` is implemented. You can use `%%index%%` to build vertical lists.
 
 #### Search results placeholder (`%%search-results%%`)
 
