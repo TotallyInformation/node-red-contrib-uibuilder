@@ -6,10 +6,13 @@
 
 // RED._debug({topic: 'RED.settings', payload:RED.settings})
 
-const uibuilder = window['uibuilder']
+// @ts-ignore
+const uibuilder = window['uibuilder'] // eslint-disable-line no-redeclare
+// @ts-ignore
 const log = uibuilder.log
 
 /** Module name must match this nodes html file @constant {string} moduleName */
+// @ts-ignore
 const moduleName = 'uib-markweb'
 
 /** Validate presence of required/optional marked libraries
@@ -41,6 +44,7 @@ RED.nodes.registerType(moduleName, {
     defaults: {
         source: { value: '', required: true, },
         url: { value: 'markweb', required: true, },
+        configFolder: { value: '', },
         name: { value: '', },
         // Dummy property to allow checking of required libraries
         markedAvailable: { value: false, validate: validateLibs, },
