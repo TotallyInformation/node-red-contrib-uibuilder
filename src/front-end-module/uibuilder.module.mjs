@@ -1570,6 +1570,7 @@ export const Uib = class Uib {
         })
     }
 
+    // TODO: Needs to correctly process deep variable properties (ref <uib-var> component)
     /** Process a uib-var attribute by evaluating the variable reference and applying it to the element
      *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
      * @param {HTMLElement} el The element to process

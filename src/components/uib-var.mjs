@@ -65,7 +65,9 @@ import TiBaseComponent from './ti-base-component.mjs'
   * @attr {string} name - Optional. HTML name attribute. Included in output _meta prop.
 
  * Other watched attributes:
-  * None
+  * @attr {string} data-before - Optional. Text to show before the variable value.
+  * @attr {string} data-after - Optional. Text to show after the variable value.
+  * @attr {string} filter - Optional. A function name which will be applied to the variable value before display. Can include arguments in parentheses (e.g. `myFilter(1, 'abc')`). The function can be a global function or a function on the uibuilder client instance (e.g. `uibuilder.get`).
 
  * PROPS FROM BASE: (see TiBaseComponent)
  * OTHER STANDARD PROPS:
@@ -81,6 +83,7 @@ import TiBaseComponent from './ti-base-component.mjs'
   * <uib-var name="var02" variable="msg.payload"></uib-var>
   * <uib-var name="var03" variable="msg.payload" type="json"></uib-var>
   * <uib-var name="var04" variable="msg.payload" filter="uibuilder.get('msg.payload')"></uib-var>
+  * <uib-var name="var04" variable="msg.payload" data-before="Status: " data-after=". "></uib-var>
 
  * @see https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/custom-components?id=uib-var
 
@@ -88,7 +91,7 @@ import TiBaseComponent from './ti-base-component.mjs'
  */
 class UibVar extends TiBaseComponent {
     /** Component version */
-    static componentVersion = '2026-02-04'
+    static componentVersion = '2026-02-15'
 
     /** Makes HTML attribute change watched
      * @returns {Array<string>} List of all of the html attribs (props) listened to
@@ -399,7 +402,13 @@ class UibVar extends TiBaseComponent {
                 break
             }
 
-            case 'plain':
+            case 'plain': {
+                // get the plain text version of the value by using DOM conversion
+                const div = document.createElement('div')
+                div.innerHTML = val
+                out = div.textContent
+                // NB: Deliberately fall through to html/default
+            }
             case 'html':
             default: {
                 const t = typeof val
@@ -412,6 +421,10 @@ class UibVar extends TiBaseComponent {
                 break
             }
         }
+
+        // Add before and after text if specified
+        if (this.dataset.before) out = `${this.dataset.before}${out}`
+        if (this.dataset.after) out = `${out}${this.dataset.after}`
 
         // if (this.uib) this.shadow.innerHTML = this.uibuilder.sanitiseHTML(out)
         // else this.shadow.innerHTML = out

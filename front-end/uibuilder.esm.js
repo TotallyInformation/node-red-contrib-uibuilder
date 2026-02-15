@@ -5664,7 +5664,11 @@ var UibVar = class extends ti_base_component_default {
         out += "</ul>";
         break;
       }
-      case "plain":
+      case "plain": {
+        const div = document.createElement("div");
+        div.innerHTML = val;
+        out = div.textContent;
+      }
       case "html":
       default: {
         const t = typeof val;
@@ -5677,6 +5681,8 @@ var UibVar = class extends ti_base_component_default {
         break;
       }
     }
+    if (this.dataset.before) out = "".concat(this.dataset.before).concat(out);
+    if (this.dataset.after) out = "".concat(out).concat(this.dataset.after);
     if (this.uib) this.innerHTML = this.uibuilder.sanitiseHTML(out);
     else this.innerHTML = out;
   }
@@ -5711,7 +5717,7 @@ _varCb = new WeakMap();
 _topic = new WeakMap();
 _topicCb = new WeakMap();
 /** Component version */
-__publicField(UibVar, "componentVersion", "2026-02-04");
+__publicField(UibVar, "componentVersion", "2026-02-15");
 var uib_var_default = UibVar;
 window["UibVar"] = UibVar;
 
@@ -8241,6 +8247,7 @@ var Uib = (_a2 = class {
       if (Object.prototype.hasOwnProperty.call(msg, "payload")) this.replaceSlot(el, msg.payload);
     });
   }
+  // TODO: Needs to correctly process deep variable properties (ref <uib-var> component)
   /** Process a uib-var attribute by evaluating the variable reference and applying it to the element
    *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
    * @param {HTMLElement} el The element to process
