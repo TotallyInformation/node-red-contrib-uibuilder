@@ -1,6 +1,6 @@
 ---
 created: 2025-12-15 15:00:36
-updated: 2026-02-04 13:27:49
+updated: 2026-02-14 21:08:44
 version: 7.6.0
 ---
 ### Welcome to UIBUILDER v7.6.0
@@ -15,7 +15,7 @@ Enables simple creation of dynamic web sites using Markdown files. It supports n
 Some usability improvements to the side menu. Including the ability to collapse sections. The expand/collapse state is remembered. The currently shown page is also scrolled into view in the menu.
 
 #### Example flows
-A new example is available in Node-RED's import library called "Built-in Components". It demonstrates the use of the uibuilder web components: `<uib-meta>`, `<uib-var>`, `<apply-template>`, and `<uib-control>`.
+Two new example flows. "Built-in Web Components" and "Easy UI Updates".
 
 #### uib-cache node
 Performance greatly improved to handle rapid influx of messages.
@@ -29,6 +29,8 @@ New function `asyncSend` allows you to send a message to the server and wait for
 Incoming messages now have a `_receivedHRtime` property added. This is a high-resolution timestamp. It can be used to measure message transit times accurately.
 
 Thanks to Firefox stupidity around cookies, the front-end client library now fetches the HTTP headers on initial load to get the namespace and Node-RED web root. Has to be done asynchronously, the `start()` function is now not called until headers available. This delays uibuilder startup very slightly but is far more reliable.
+
+There is now a new `uib-var` custom HTML attribute. Complements the existing `uib-topic` attribute.
 
 #### Other
 Various bug fixes, performance improvements and security enhancements as always.

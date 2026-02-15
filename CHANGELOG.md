@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-02-04 13:28:15
+updated: 2026-02-14 21:08:58
 ---
 
 # Changelog
@@ -33,7 +33,11 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * In the Node-RED Editor, a popover is now shown after a UIBUILDER update. It contains highlights of the changes in the new version. It will only be shown once per version update.
 
-* **NEW NODE** `uib-markweb` - Enables simple creation of dynamic web sites using Markdown files. It supports navigation menus, search, front-matter placeholders, custom templates and much more
+* **NEW NODE** `uib-markweb` - Enables simple creation of dynamic web sites using Markdown files. It supports navigation menus, search, front-matter placeholders, custom templates and much more.
+
+* Two new example flows. "Built-in Web Components" and "Easy UI Updates".
+
+* Mermaid diagrams are now supported in UIBUILDER's documentation. With the first example being for the new `uib-markweb` node's page.
 
 ### New node: uib-markweb
 
@@ -43,10 +47,9 @@ The node will serve the markdown files as HTML pages using Single-Page Applicati
 
 The Markdown conversion is done on Node-RED startup and re-done when a source page changes. So loading and navigation from the browser remains very fast.
 
-It supports YAML front-matter in the markdown files. All front-matter attributes are available as placeholders in the page template and in the markdown using `{{attributeName}}` tags. Special instructions are also available to create navigation menus, index listings, search results, etc. These use `%%...%%` syntax.
+It supports YAML front-matter in the markdown files. All front-matter attributes are available as placeholders in the page template and in the markdown using `{{attributeName}}` tags. Special instructions (directives) are also available to create navigation menus, index listings, search results, etc. These use `%%...%%` syntax.
 
 CommonMark and GitHub Flavored Markdown (GFM) are supported. Syntax highlighting for code blocks is also included. Some additional extensions are also supported such as custom attributes.
-
 
 An optional web component `<show-meta>` is also provided to display the current page's metadata (front-matter attributes). This is useful for debugging and development.
 
@@ -54,9 +57,13 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 
 ### Examples (Node-RED library flows)
 
-* **NEW** Built-in Components
+* **NEW** Built-in Web Components
   
   Shows how to use the uibuilder client web components: `<uib-meta>`, `<uib-var>`, `<apply-template>`, and `<uib-control>`. These are all included in the main client library and do not need to be loaded separately.
+
+* **NEW** Easy UI Updates
+
+  Illustrates the use of the different ways to update the UI from Node-RED or your own front-end JavaScript. Includes examples of using the (new) `uib-var` and (existing) `uib-topic` custom HTML attributes, and the existing `<uib-var>` web component.
 
 ### Documentation
 
@@ -66,6 +73,7 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 * Each page now automatically shows `status` and/or `since` front-matter.
 * **Fixed** [Issue #575](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/575) - Broken CSS loads.
 * Improvements to developer detailed documentation including details on the uibuilder/uib-markweb instance setup. Should make things a lot easier if other developers want to take part in the future.
+* Mermaid diagrams are now supported. With the first example being for the new `uib-markweb` node's page.
 
 ### uib-cache node
 
@@ -103,6 +111,8 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 
 * **NEW** `httpHeaders` property added. This contains the HTTP headers received when the front-end client first connects to the server. This can be useful for debugging and for advanced use cases such as authentication and user tracking. Async so issues a custom event when ready. The `start()` function is now not called until they are ready because the headers are the most reliable way to get the namespace and Node-RED web root (stupid Firefox refuses to read the cookies!).
 
+* Tidied up unnecessary async processing in the DOM Mutation Observer. Giving a minor performance boost.
+
 ### Development changes
 
 * **NEW** npm script `bugfix-worktree` - creates a new git worktree for bugfix branches. This enables work on a bug fix in a separate directory while keeping the current dev branch work intact. Both directories can be open simultaneously without needing to stash changes or switch branches. When done with the bug fix, commit, push, create a PR, and then remove the worktree.
@@ -125,9 +135,14 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
   * Made `instanceSetup` more flexible by adding `routeSpec` and `handler` (function) arguments. This allows different types of routes to be added for an instance, e.g. static file serving, dynamic routing, markdown rendering, etc.
   * Also in `instanceSetup`, reduced the number of routes added to an insance if the node is not a uibuilder node. Allows for simpler nodes such as `uib-markweb`.
 
+* `nodes/libs/tilib.cjs`
+  * Added `formatDateIntl` function. This formats a date using the Intl API with a given format string and locale. Underscores in the format string are replaced with spaces. Formate uses standard date/time formatting tokens such as `YYYY`, `MM`, `DD`, `HH`, `mm`, `ss`, etc.
+
 * Security related fixes
   * `syntaxHighlight` function in `tilib.cjs` - limited the size of JSON strings to 10k characters to prevent potential denial-of-service attacks via extremely large JSON payloads.
   * `admin-api-v2.cjs` and `admin-api-v3.cjs` - ensured that parameters expected to be strings are not arrays. This prevents potential injection attacks via array parameters.
+
+* Updated ESLINT - now includes `eslint-plugin-security` to catch potential security issues in the code. Also updated the ESLINT configuration to reflect the new plugin and added some additional rules for better code quality and security.
 
 ## v7.5.0
 
