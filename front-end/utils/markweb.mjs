@@ -1207,6 +1207,9 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         }
 
         case '_page-navigation-result': {
+            // What is the current page url?
+            const currentPageUrl = window.location.pathname
+
             if (ctrlMsg.error) {
                 // TODO Handle not found
                 console.error('Error during page navigation:', ctrlMsg.error)
@@ -1215,12 +1218,12 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             const data = updatePageData(ctrlMsg.attributes ?? {}, { from: '_page-navigation-result', initialPath: '', topic: ctrlMsg.topic, hashFragment: ctrlMsg.hashFragment, })
             console.log(
                 `Page change from ${ctrlMsg.from} (${data.from}):`,
-                ` New url: ${data.toUrl}.`,
+                ` Old url: ${currentPageUrl}, New url: ${data.toUrl}.`,
                 ctrlMsg
             )
             // TODO: Sanitize data.body for safety
             // TODO: Should {{...}} replacements be done here? Instead of on server?
-            if (elContent) elContent.innerHTML = data.body || '<p>No content</p>'
+            if (elContent) elContent.innerHTML = data.content || '<p>No content</p>'
             else console.error('Content element not found to update page content.')
 
             // Remove trailing slash from baseUrl and include hash fragment if present
