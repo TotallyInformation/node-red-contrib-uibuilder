@@ -25,7 +25,6 @@ declare module 'uibuilder' {
         #managedVars: { [key: string]: string };
         #showStatus: { [key: string]: { var: string; label: string; description: string } };
         #uiObservers: { [key: string]: any };
-        uibAttribs: string[];
         #uibAttrSel: string;
 
         clientId: string;

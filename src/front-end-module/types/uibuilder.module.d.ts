@@ -144,8 +144,6 @@ export class Uib {
     currentTransport?: string
     /** Last msg received from global Socket.IO namespace */
     globalMsg?: any
-    /** List of uib specific attributes that will be watched and processed dynamically */
-    uibAttribs: string[]
     /** The URL fragment identifier for the current uib instance */
     url?: string
 
@@ -243,6 +241,14 @@ export class Uib {
      * @returns The intersection of the 2 arrays (may be an empty array)
      */
     arrayIntersect<T>(a1: T[], a2: T[]): T[]
+
+    /**
+     * Check if an attribute name is a uibuilder-specific attribute.
+     * Matches names starting with 'uib-', 'data-uib-', or ':'.
+     * @param name The attribute name to check
+     * @returns True if the attribute name is a uib attribute
+     */
+    isUibAttribute(name: string): boolean
 
     /**
      * Copies a uibuilder variable to the browser clipboard
