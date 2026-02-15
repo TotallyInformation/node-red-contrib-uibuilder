@@ -26,6 +26,7 @@ const componentVersion = '1.0.0'
 class ShowMeta extends HTMLElement {
     /** @type {object} Internal metadata storage */
     #metadata = {}
+    #pageDataChangeHandler = null
 
     /** Component constructor */
     constructor() {
@@ -35,7 +36,22 @@ class ShowMeta extends HTMLElement {
 
     /** Called when element is added to the DOM */
     connectedCallback() {
-        this.#render()
+        // NB: pageData is typically not yet ready here, setting this.metadata re-renders if needed
+        // this.metadata = uibuilder.get('pageData')?.metadata || {}
+
+        // Watch for changes to the metadata object and re-render when it changes
+        this.#pageDataChangeHandler = uibuilder.onChange('pageData', (newPageData) => {
+            // console.log(`🪲[show-meta] uibuilder.pageData has changed (From: ${newPageData.from}): `, newPageData)
+            this.metadata = newPageData ?? {}
+        })
+    }
+
+    /** Called when element is removed from the DOM */
+    disconnectedCallback() {
+        if (this.#pageDataChangeHandler) {
+            uibuilder.cancelChange('pageData', this.#pageDataChangeHandler)
+        }
+        this.#pageDataChangeHandler = null
     }
 
     /** Get the current metadata object
