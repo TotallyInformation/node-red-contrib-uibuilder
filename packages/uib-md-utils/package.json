@@ -21,10 +21,7 @@
         "markdown-it-anchor": "^9.2.0",
         "markdown-it-attrs": "^4.3.1",
         "markdown-it-github-alerts": "^1.0.1",
-        "markdown-it-obsidian-callouts": "^0.3.3",
-        "marked": "^17",
-        "marked-alert": "^2.1.2",
-        "shiki": "^3.21.0"
+        "mermaid": "^11.12.2"
     },
     "engines": {
         "node": ">=18.5"

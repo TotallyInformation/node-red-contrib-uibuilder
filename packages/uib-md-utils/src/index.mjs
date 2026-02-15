@@ -21,8 +21,15 @@ import attrs from 'markdown-it-attrs'
 // https://www.npmjs.com/package/markdown-it-anchor
 import anchor from 'markdown-it-anchor'
 
+// Private mermaid plugin
+// import { markdownItMermaidServer, renderMarkdownAsync } from './pluginMermaid.mjs'
+
 // Private version of task lists
 import { taskLists } from './tasklist.mjs'
+// Private %%...%% directive plugin
+import { directivePlugin } from './directivePlugin.mjs'
+// Private {{varname [arg1=value1, arg2=value2]}} variables plugin
+import { fmVariablesPlugin } from './fmVariablesPlugin.mjs'
 
 const md = markdownit({
     html: true,
@@ -44,34 +51,24 @@ const md = markdownit({
     },
 })
 
-const parser = md
+md
+    // .use(markdownItMermaidServer)
     .use(attrs)
-    .use(anchor, {
-        permalink: anchor.permalink.headerLink(),
-        // permalink: anchor.permalink.linkAfterHeader({
-        //     style: 'visually-hidden',
-        //     assistiveText: title => `Permalink to “${title}”`,
-        //     visuallyHiddenClass: 'visually-hidden',
-        //     wrapper: ['<div class="wrapper">', '</div>'],
-        // }),
-        // permalink: anchor.permalink.linkInsideHeader({
-        //     symbol: ' 🔗',
-        //     placement: 'after',
-        // }),
-    })
+    .use(anchor, { permalink: anchor.permalink.headerLink(), })
     // .use(mdItObsidianCallouts)
     .use(MarkdownItGitHubAlerts)
-    .use(
-        taskLists,
-        {
-            enabled: false,
-            label: true,
-        }
-    )
+    .use(taskLists, { enabled: false, label: true, })
+    // NB: directivePlugin and fmVariablesPlugin are loaded in customNode.js
+    // so their handlers can access the node instance, index, and page attributes
 
+// Use this to render markdown to HTML
 const mdParse = md.render.bind(md)
 
 export {
     fm,
+    md,
     mdParse,
+    directivePlugin,
+    fmVariablesPlugin,
+    // mermaid,
 }
