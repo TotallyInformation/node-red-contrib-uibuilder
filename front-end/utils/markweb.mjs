@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable n/no-unsupported-features/node-builtins */
 // ^ This file is browser code, not Node.js - localStorage is a browser API
@@ -8,10 +9,7 @@ let pageData
 uibuilder.onChange('pageData', (newPageData) => {
     console.log(`uibuilder.pageData has changed (From: ${newPageData.from}): `, newPageData)
     pageData = newPageData
-    // @ts-ignore If <show-meta> component is present, update its metadata
-    // Query fresh each time since the element may be recreated during navigation
-    const elShowMeta = document.querySelector('show-meta')
-    if (elShowMeta) elShowMeta.metadata = pageData || {}
+    // NB: <show-meta> elements will update themselves
 })
 
 const log = uibuilder.log
@@ -25,7 +23,7 @@ if (!baseUrl) {
 console.info('Base URL:', baseUrl)
 
 // Get references to commonly used elements
-const elContent = document.querySelector('[data-attribute="body"]')
+const elContent = document.querySelector('[data-fmvar="content"]')
 const elSearchInput = /** @type {HTMLInputElement} */ (document.getElementById('search-input'))
 const elSearchResults = document.getElementById('search-results')
 const elSearchQuery = document.getElementById('search-query')
@@ -34,6 +32,17 @@ const elSearchDetails = document.getElementById('search-details')
 // Note: elShowMeta is NOT cached here because it may be recreated during navigation
 
 // #region --- Utility Functions ---
+
+/** Escape HTML to prevent XSS - returns escaped text (HTML removed)
+ * @param {string} text Input text
+ * @returns {string} Escaped text
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div')
+    div.textContent = text
+    return div.innerHTML
+}
+
 // Normalize: remove trailing slashes, .md extension, leading slashes, and double slashes
 const normalizePath = (p) => {
     if (!p) return ''
@@ -46,15 +55,18 @@ const normalizePath = (p) => {
         .toLowerCase()
 }
 
-/** Escape HTML to prevent XSS - returns escaped text (HTML removed)
- * @param {string} text Input text
- * @returns {string} Escaped text
+/** Update the uibuilder pageData store
+ * @param {object} attributes The page attributes to set
+ * @param {object} additionalInfo Any additional info to merge into pageData (e.g. search query)
+ * @returns {object} The updated pageData object
  */
-function escapeHtml(text) {
-    const div = document.createElement('div')
-    div.textContent = text
-    return div.innerHTML
+function updatePageData(attributes, additionalInfo = {}) {
+    const pgData = { ...additionalInfo, ...attributes, }
+    // if (!pgData.url) pgData.url = `${pgData.path}${pgData.toUrl}`
+    uibuilder.set('pageData', pgData )
+    return pgData
 }
+
 // #endregion --- Utility Functions ---
 
 // #region --- Sidebar Functionality ---
@@ -267,7 +279,7 @@ class SidebarController {
     generateTOC() {
         if (!this.tocContainer) return
 
-        const contentEl = document.querySelector('[data-attribute="body"]')
+        const contentEl = document.querySelector('[data-fmvar="body"]')
         if (!contentEl) return
 
         const headings = contentEl.querySelectorAll('h2, h3, h4, h5, h6')
@@ -855,11 +867,16 @@ function postDataUpdate(data) {
     // const toUrl = data.toUrl || window.location.href
     const toUrl = data.path
 
-    // Update elements with data-attribute based on response data
-    document.querySelectorAll('[data-attribute]').forEach((el) => {
-        const attr = el.getAttribute('data-attribute')
-        if (attr === 'body') return // Skip body as it is handled separately
-        if (attr && data[attr] !== undefined) {
+    // Update elements with data-fmvar based on response data
+    document.querySelectorAll('[data-fmvar]').forEach((el) => {
+        // const attr = el.getAttribute('data-fmvar')
+        if (el.dataset.fmvar === undefined) return
+        const fmvar = el.dataset.fmvar
+        // Skip body as it is handled separately
+        if (fmvar === 'body') return
+        // Look for the var in the data - if it exists, update the element
+        if (data[fmvar] !== undefined) {
+            // Optional marker to denote meta tags that should update their 'content' attribute instead of innerHTML/textContent
             const isContent = !!el.hasAttribute('content')
             // If el has attribute 'data-replace', switch el to be el's parent element
             if (el.hasAttribute('data-replace')) {
@@ -870,11 +887,12 @@ function postDataUpdate(data) {
             }
             // Handle meta tags
             if (isContent) {
-                el.setAttribute('content', data[attr])
+                el.setAttribute('content', data[fmvar])
             } else {
+                // ! TODO: Consider whether we want to use textContent or innerHTML here - if the data can contain HTML, we need innerHTML, but this opens up XSS risks if the data is not sanitized. For now, we'll assume the server sends safe HTML in the data.
                 // Everything else
-                // el.textContent = data[attr]
-                el.innerHTML = data[attr]
+                // el.textContent = data[fmvar]
+                el.innerHTML = data[fmvar]
             }
         }
     })
@@ -907,7 +925,7 @@ async function navigate(toUrl, addToHistory = true) {
     }
     // #endregion --- Normalize toUrl ---
 
-    console.log(`Navigating to: "${toUrl}"`, hashFragment ? `(hash: ${hashFragment})` : '', baseUrl, window.location.origin)
+    console.log(`Navigating to: "${uibuilder.urlJoin(window.location.origin, baseUrl, toUrl, hashFragment ? `(hash: ${hashFragment})` : '')}"` )
 
     // Ask server for new page content via uibuilder control message (see onChange handler below)
     // Pass hashFragment so client can scroll to it after content loads
@@ -1054,13 +1072,6 @@ function doResults(data, query) {
     if (elSearchResults) elSearchResults.hidden = false
 }
 
-/** Update the uibuilder pageData store
- * @param {object} attributes The page attributes to set
- */
-function updatePageData(attributes) {
-    uibuilder.set('pageData', attributes )
-}
-
 /** Update search result highlighting based on current page */
 function updateSearchResultHighlight() {
     if (elSearchResults.hidden) return
@@ -1133,7 +1144,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         // From initial page data request only. No body in this since we already have it
         case '_page-metadata': {
             console.log('Initial page metadata received from server:', ctrlMsg)
-            updatePageData(ctrlMsg.attributes)
+            updatePageData(ctrlMsg.attributes, { from: '_page-metadata', initialPath: ctrlMsg.initialPath, topic: ctrlMsg.topic, })
             break
         }
 
@@ -1165,6 +1176,8 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             break
         }
 
+        // Received when server detects an index change (e.g. file added/removed)
+        // Used to trigger updates of any indexListings via use of `uib-topic="_indexes-changed"`
         case '_indexes-changed': {
             console.log('Indexes changed on server.', ctrlMsg)
             break
@@ -1194,22 +1207,21 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         }
 
         case '_page-navigation-result': {
-            console.log(
-                `Page change from ${ctrlMsg.from} (${ctrlMsg.attributes.from}):`,
-                ` New url: ${ctrlMsg.attributes.toUrl}.`,
-                ctrlMsg
-            )
             if (ctrlMsg.error) {
                 // TODO Handle not found
+                console.error('Error during page navigation:', ctrlMsg.error)
                 return
             }
-            const data = ctrlMsg.attributes ?? []
-            updatePageData(data)
+            const data = updatePageData(ctrlMsg.attributes ?? {}, { from: '_page-navigation-result', initialPath: '', topic: ctrlMsg.topic, hashFragment: ctrlMsg.hashFragment, })
+            console.log(
+                `Page change from ${ctrlMsg.from} (${data.from}):`,
+                ` New url: ${data.toUrl}.`,
+                ctrlMsg
+            )
             // TODO: Sanitize data.body for safety
             // TODO: Should {{...}} replacements be done here? Instead of on server?
             if (elContent) elContent.innerHTML = data.body || '<p>No content</p>'
-
-            postDataUpdate(data)
+            else console.error('Content element not found to update page content.')
 
             // Remove trailing slash from baseUrl and include hash fragment if present
             const hashFragment = ctrlMsg.hashFragment || ''
@@ -1235,6 +1247,9 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                         }
                     }, 100)
                 })
+            } else {
+                // Scroll to top on page navigation if no hash fragment
+                window.scrollTo({ top: 0, behavior: 'smooth', })
             }
 
             // Reset the popstate flag after processing
