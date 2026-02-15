@@ -1,6 +1,8 @@
 // @ts-nocheck
 'use strict'
 
+mermaid.initialize({ startOnLoad: false, theme: 'dark', }) // eslint-disable-line no-undef
+
 window.$docsify = {
     loadSidebar: '.config/sidebar.md',
     name: 'UIBUILDER Documentation v7',
@@ -54,6 +56,9 @@ window.$docsify = {
         target: 'h2, h3',
         ignoreHeaders: ['<!-- {docsify-ignore} -->', '<!-- {docsify-ignore-all} -->'],
     },
+    mermaidConfig: {
+        querySelector: '.mermaid',
+    },
 
     plugins: [
         // Tips plugin - displays random or specific tips from tips folder
@@ -69,6 +74,7 @@ window.$docsify = {
                 'Front-end templates.md',
                 'Messages to the UI are automatically filtered.md',
                 'No-code output is low-code.md',
+                'Offline clients.md',
                 'Send messages to Node-RED from the browser.md',
                 'Send to UI from a function node.md',
                 'uibuilder node outputs.md',
