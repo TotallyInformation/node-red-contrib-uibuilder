@@ -1,7 +1,8 @@
+/* eslint-disable jsdoc/valid-types */
 /* eslint-disable jsdoc/check-param-names */
 /* eslint-disable @stylistic/no-multi-spaces */
 // @ts-nocheck
-/**
+/** This is the source main file for the uibuilder client library
  * @kind module
  * @module uibuilder
  * @description The client-side Front-End JavaScript for uibuilder in HTML Module form
@@ -397,9 +398,10 @@ export const Uib = class Uib {
     // Track ui observers (see uiWatch)
     #uiObservers = {}
 
-    // List of uib specific attributes that will be watched and processed dynamically
-    uibAttribs = ['uib-topic', 'data-uib-topic']
-    #uibAttrSel = `[${this.uibAttribs.join('], [')}]`
+    // CSS selector for querySelectorAll to find elements with known uib attributes.
+    // NOTE: CSS cannot match attribute name prefixes, so this covers known names.
+    //       _uibAttrScanOne handles any uib-prefixed attributes found on matched elements.
+    #uibAttrSel = '[uib-topic], [data-uib-topic], [uib-var], [data-uib-var]'
 
     //#endregion
 
@@ -857,6 +859,15 @@ export const Uib = class Uib {
         return a1.filter(uName => a2.includes(uName))
     }
 
+    /** Check if an attribute name is a uibuilder-specific attribute.
+     * Matches names starting with 'uib-', 'data-uib-', or ':'.
+     * @param {string} name The attribute name to check
+     * @returns {boolean} True if the attribute name is a uib attribute
+     */
+    isUibAttribute(name) {
+        return name.startsWith('uib-') || name.startsWith('data-uib-') || name.startsWith(':')
+    }
+
     /** Copies a uibuilder variable to the browser clipboard
      * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
      */
@@ -997,12 +1008,18 @@ export const Uib = class Uib {
         return window.location
     }
 
+    /** Create and return a randomised UUID 
+     * Uses the browsers crypto library if available (newer browsers)
+     * or something based on the timestamp and a random number
+     * @returns {string} The UUID
+     */
     randomUUID() {
         return (typeof crypto !== 'undefined' && crypto.randomUUID)
             ? crypto.randomUUID()
             : `${Date.now()}-${Math.random().toString(36)
                 .substring(2, 11)}`
     }
+
     /** Wrap a provided variable in a proxy object so that it can be used reactively
      * @param {*} srcvar The source variable to wrap
      * @returns {Proxy} A proxy object that can be used reactively
@@ -1455,50 +1472,55 @@ export const Uib = class Uib {
 
     /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
      * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
-     *          as possible. Async so that calling function does not need to wait.
+     *          as possible.
      * Observer is set up in the start() function
      * @param {MutationRecord[]} mutations Array of Mutation Records
      * @private
      */
-    async _uibAttribObserver(mutations/* , observer */) {
-        mutations.forEach( async (m) => { // async so process does not wait
-            log('trace', 'uibuilder:_uibAttribObserver', 'Mutations ', m)()
-            // ! wrong - Deal with attribute changes
-            if (m.attributeName && (m.attributeName.startsWith('uib') || m.attributeName.startsWith('data-uib'))) {
+    _uibAttribObserver(mutations/* , observer */) {
+        const mlen = mutations.length
+        for (let i = 0; i < mlen; i++) {
+            const m = mutations[i]
+            // log('trace', 'uibuilder:_uibAttribObserver', 'Mutations ', m)()
+            // Deal with attribute changes
+            if (m.attributeName && this.isUibAttribute(m.attributeName)) {
                 // log(0, 'attribute mutation', m.attributeName, m.target.getAttribute(m.attributeName), m.oldValue, m )()
                 this._uibAttrScanOne(m.target)
             } else if (m.addedNodes.length > 0) {
                 // And deal with newly added elements (e.g. from route change)
-                // Check for added nodes with uib attribs
-                m.addedNodes.forEach( async (n) => { // async so process does not wait
-                    // Attributes are a map and we need an array
-                    let aNames = []
-                    try { // Nodes might not always have attributes
-                        aNames = [...n.attributes]
-                    } catch (e) {}
-                    // ! wrong - Get any added elements that have uib attribs
-                    const intersect = this.arrayIntersect(this.uibAttribs, aNames)
-                    // Process them
-                    intersect.forEach( async (el) => {
-                        this._uibAttrScanOne(el)
-                    })
-                    // And get any children of the added elements that have uib attribs (a node might not have querySelectorAll method)
-                    let uibChildren = []
-                    // ! wrong
-                    if (n.querySelectorAll) uibChildren = n.querySelectorAll(this.#uibAttrSel)
-                    // Process them
-                    uibChildren.forEach( async (el) => {
-                        this._uibAttrScanOne(el)
-                    })
-                })
+                const nlen = m.addedNodes.length
+                for (let i = 0; i < nlen; i++) {
+                    const n = m.addedNodes[i]
+                    // Check if the added node itself has uib attributes
+                    try {
+                        if (n.attributes && [...n.attributes].some(a => this.isUibAttribute(a.name))) {
+                            this._uibAttrScanOne(n)
+                        }
+                    } catch (e) {} // Nodes might not always have attributes
+                    // And get any children of the added element that have uib attribs
+                    // WARNING: This only selects KNOWN attribute names, not all prefixes.
+                    if (n.querySelectorAll) {
+                        const elToCheck = n.querySelectorAll(this.#uibAttrSel)
+                        const len = elToCheck.length
+                        for (let i = 0; i < len; i++) {
+                            this._uibAttrScanOne(elToCheck[i])
+                        }
+                    }
+                }
             }
-        })
+        }
     }
 
+    /** Process a uib-topic attribute by setting up a topic listener and applying received msgs to the element
+     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
+     * @param {HTMLElement} el The element to process
+     * @param {string} topic The msg topic string to watch for
+     * @private
+     */
     _processUibTopic(el, topic) {
         // Create a topic listener
         this.onTopic(topic, (msg) => {
-            log('trace', 'uibuilder:_uibAttrScanOne', `Msg with topic "${topic}" received. msg content: `, msg)()
+            // log('trace', 'uibuilder:_uibAttrScanOne', `Msg with topic "${topic}" received. msg content: `, msg)()
             msg._uib_processed_by = '_uibAttrScanOne' // record that this has already been processed
 
             // Process msg.attributes
@@ -1548,23 +1570,79 @@ export const Uib = class Uib {
         })
     }
 
+    /** Process a uib-var attribute by evaluating the variable reference and applying it to the element
+     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
+     * @param {HTMLElement} el The element to process
+     * @param {string} varName The variable name to watch for
+     * @private
+     */
+    _processUibVar(el, varName) {
+        // Create a uibuilder managed variable watcher
+        this.onChange(varName, (value) => {
+            // log('trace', 'uibuilder:_processUibVar', `Variable "${varName}" changed. New value: `, value)()
+            if (typeof value !== 'object') {
+                value = {
+                    payload: value,
+                }
+            }
+            if (Object.prototype.hasOwnProperty.call(value, 'payload')) this.replaceSlot(el, value.payload)
+        })
+    }
+
+    // ! EXPERIMENTAL
+    /** Process a uib-bind:* attribute by evaluating the bind value and applying it to the element as the named attribute
+     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
+     * @param {HTMLElement} el The element to process
+     * @param {string} bindName The name of the attribute to bind
+     * @param {string} bindValue The value to bind to the attribute
+     * @private
+     */
+    _processUibBind(el, bindName, bindValue) {
+        // log('print', 'uibuilder:_uibAttrScanOne', 'Processing uib-bind:', bindName, 'for element:', el)()
+        // treat the attribute value as a javascript function, run the function safely
+        let value = bindValue
+        try {
+            value = (new Function(`return (${bindValue})`))()
+            log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 1 uib-bind attribute:', bindName, 'with value:', value)()
+        } catch (e) {
+            log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 1 uib-bind attribute:', bindName, 'with value:', value)()
+            try {
+                console.log(globalThis)
+                value = globalThis[bindValue] ?? bindValue
+                // value = (new Function(`return (window.${attr.value})`))()
+                log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 2 uib-bind attribute:', bindName, 'with value:', value)()
+            } catch (e) {
+                log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 2 uib-bind attribute:', bindName, 'with value:', value)()
+            }
+        }
+
+        // set the attribute names by bindName to the value of the attribute
+        if (bindName && value) {
+            // Set the attribute to the value of the bindName
+            el.setAttribute(bindName, value)
+            // If the bindName is 'value', then also set the value of the element
+            if (bindName === 'value') el.value = value
+        } else {
+            log('warn', 'uibuilder:_uibAttrScanOne', 'Invalid uib-bind attribute:', bindName, 'with value:', value, 'for element:', el)()
+        }
+    }
+
     /** Check a single HTML element for uib attributes and add auto-processors as needed.
-     * Async so that calling function does not need to wait.
-     * Understands only uib-topic at present. Msgs received on the topic can have:
+     * Understands uib-prefixed attributes (e.g. uib-topic, uib-var, uib-bind:*, etc). Msgs received on the topic can have:
      *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
      *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
      * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
      * @private
      */
-    async _uibAttrScanOne(el) {
-        log('trace', 'uibuilder:_uibAttrScanOne', 'Setting up auto-processor for: ', el)()
-        // Get all of the elements attributes that start with uib- or data-uib- or :
+    _uibAttrScanOne(el) {
+        // log('trace', 'uibuilder:_uibAttrScanOne', 'Setting up auto-processor for: ', el)()
+        // If the element doesn't exist any more or has no attributes - ignore
         if (!el || !el.attributes) {
             // log('warn', 'uibuilder:_uibAttrScanOne', 'No element or no attributes found. Skipping.', el)()
             return
         }
-        // Get the attributes that start with uib- or data-uib-
-        let uibAttribs = [...el.attributes].filter(attr => attr.name.startsWith('uib-') || attr.name.startsWith('data-uib-') || attr.name.startsWith(':'))
+        // Get all of the element's attributes that are uib-specific
+        let uibAttribs = [...el.attributes].filter(attr => this.isUibAttribute(attr.name))
         // If no uib attributes, then skip
         if (uibAttribs.length === 0) {
             // log('trace', 'uibuilder:_uibAttrScanOne', 'No uib attributes found. Skipping.', el)()
@@ -1573,61 +1651,41 @@ export const Uib = class Uib {
         // Remove duplicates
         uibAttribs = [...new Set(uibAttribs)]
 
-        uibAttribs.forEach((attr) => {
+        // Process all of the found attributes
+        const alen = uibAttribs.length
+        for (let i = 0; i < alen; i++) {
+            const attr = uibAttribs[i]
             if (attr?.name === 'uib-topic' || attr?.name === 'data-uib-topic') this._processUibTopic(el, attr.value)
-            // Check for uib-bind:* attributes
+            else if (attr?.name === 'uib-var' || attr?.name === 'data-uib-var') this._processUibVar(el, attr.value)
+            // ! EXPERIMENTAL Check for uib-bind:* attributes
             else if (attr?.name.startsWith('uib-bind:') || attr?.name.startsWith('data-uib-bind:') || attr?.name.startsWith(':')) {
                 // Get the bind name
                 const bindName = attr.name.replace(/^(uib-bind:|data-uib-bind:|:)/, '')
-                // log('print', 'uibuilder:_uibAttrScanOne', 'Processing uib-bind:', bindName, 'for element:', el)()
-                // treat the attribute value as a javascript function, run the function safely
-                let value = attr.value
-                try {
-                    value = (new Function(`return (${attr.value})`))()
-                    log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 1 uib-bind attribute:', bindName, 'with value:', value)()
-                } catch (e) {
-                    log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 1 uib-bind attribute:', bindName, 'with value:', value)()
-                    try {
-                        console.log(globalThis)
-                        value = globalThis[attr.value] ?? attr.value
-                        // value = (new Function(`return (window.${attr.value})`))()
-                        log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 2 uib-bind attribute:', bindName, 'with value:', value)()
-                    } catch (e) {
-                        log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 2 uib-bind attribute:', bindName, 'with value:', value)()
-                    }
-                }
-
-                // set the attribute names by bindName to the value of the attribute
-                if (bindName && value) {
-                    // Set the attribute to the value of the bindName
-                    el.setAttribute(bindName, value)
-                    // If the bindName is 'value', then also set the value of the element
-                    if (bindName === 'value') el.value = value
-                } else {
-                    log('warn', 'uibuilder:_uibAttrScanOne', 'Invalid uib-bind attribute:', attr.name, 'with value:', value, 'for element:', el)()
-                }
+                this._processUibBind(el, bindName, attr.value)
             }
-        })
+        }
     }
 
     /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
-     * Async so that calling function does not need to wait.
+     * WARNING: Can only check for KNOWN attrib names, not all as per the main processing.
      * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
      * @private
      */
-    async _uibAttrScanAll(parentEl) {
+    _uibAttrScanAll(parentEl) {
         if (!Array.isArray(parentEl)) parentEl = [parentEl]
-        parentEl.forEach( async (p) => { // async so process does not wait
-            // ! wrong
+        const len = parentEl.length
+        for (let i = 0; i < len; i++) {
+            const p = parentEl[i]
+            // ! WARNING: Only selects KNOWN attribute names, not all
             const uibChildren = p.querySelectorAll(this.#uibAttrSel)
             // log('trace', 'uibuilder:_uibAttrScanAll:forEach:children', 'p, uibChildren: ', p, uibChildren)()
             if (uibChildren.length > 0) {
                 // console.log('existing elements uib attrib', uibChildren)
-                uibChildren.forEach( (el) => {
-                    this._uibAttrScanOne(el) // async so process does not wait
+                uibChildren.forEach((el) => {
+                    this._uibAttrScanOne(el)
                 })
             }
-        })
+        }
     }
 
     /** Given a FileList array, send each file to Node-RED and return file metadata
@@ -3024,7 +3082,7 @@ export const Uib = class Uib {
     /** Get HTTP headers that were sent with the page request
      * Uses a web worker to fetch headers from the server.
      * @param {string} [headerName] Optional specific header name to retrieve (case-insensitive)
-     * @returns {Promise<Object|string|null>} Promise resolving to all headers object, a specific header value, or null
+     * @returns {Promise<object|string|null>} Promise resolving to all headers object, a specific header value, or null
      * @example
      * // Get all headers
      * const allHeaders = await uibuilder.headers()
@@ -3529,7 +3587,8 @@ export const Uib = class Uib {
             subtree: true,
             attributes: true,
             attributeOldValue: true,
-            attributeFilter: this.uibAttribs,
+            // No attributeFilter - the callback uses isUibAttribute() to filter by prefix,
+            // which is more flexible than an explicit list of attribute names.
             childList: true,
         })
 
