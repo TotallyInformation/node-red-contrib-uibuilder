@@ -2,11 +2,17 @@
 title: uib-markweb - Dynamic web sites using Markdown
 description: |
   The `uib-markweb` node allows you to create dynamic web sites using Markdown files.
+  You simply define a source folder containing your Markdown files. An HTML template is used to create the overall layout.
 created: 2026-01-09 15:10:14
-updated: 2026-02-07 16:08:26
+updated: 2026-02-13 16:19:31
 status: Release
 since: v7.6.0
 ---
+
+> [!TIP]
+> Because `uib-markweb` is built on top of uibuilder, you can use uibuilder's existing features to send messages from Node-RED to the front-end to further update the page dynamically as needed.
+>
+> Connected clients automatically receive page updates when the underlying markdown files change on the server. The client then automatically requests the updated page data and updates the display accordingly. This also allows you to do custom front-end processing of the updated data if desired.
 
 ## Configuration (Node-RED Editor)
 
@@ -26,11 +32,6 @@ These allow you to add dynamic content and functionality to your pages using sim
 They are mostly available both in the HTML wrapper template and in the Markdown files. Though some will only work in one or the other.
 
 While these are initially processed server-side so that only HTML is passed over to the browser clients, the special front-end client library has processes to further update them dynamically as updates are sent from the server (using internal control messages). This is controlled by a couple of HMTL data attributes added to the rendered HTML.
-
-> [!TIP]
-> Because `uib-markweb` is built on top of uibuilder, you can use uibuilder's existing features to send messages from Node-RED to the front-end to further update the page dynamically as needed.
->
-> Connected clients automatically receive page updates when the underlying markdown files change on the server. The client then automatically requests the updated page data and updates the display accordingly. This also allows you to do custom front-end processing of the updated data if desired.
 
 ### Directives
 
@@ -98,6 +99,7 @@ Attributes:
   * `%%index[latest=3, start=0, end=2]%%` - 3 most recent pages at depth 0-2.
   * `%%index[latest=10, from=2025-01-01]%%` - 10 most recent since Jan 2025.
   
+
 *Not yet implemented*:
 
 * `sort` - The sorting order: `name`, `date`, or `custom` (default: `name`).
@@ -225,7 +227,28 @@ You can provide a manual `sidebar.json` file in your config folder to fully over
 
 These provide simple variable replacement from front-matter and global/system fields. They are enclosed in `{{...}}` tags.
 
-All front-matter fields from the Markdown files can be used as variables. Some common ones are listed here.
+All front-matter fields from the Markdown files can be used as variables. Some common ones are listed below.
+
+> [!NOTE]
+> All `{{...}}` variables in Markdown are automatically wrapped in a `<span>` with a `data-fmvar="varName"` attribute for dynamic updates to work correctly.
+>
+> When specifying variables in the HTML wrapper template, you need to manually add `data-fmvar="varName"` for the variable replacements to work and be dynamically updatable.
+>
+> So you can use CSS to style them as needed. In the HTML wrapper template, you need to use `data-attribute="varName"` for the variable replacements to work and be dynamically updatable.
+
+### Available standard arguments
+
+Some standard arguments are available for use in `{{...}}` variable tags. They are specified as `[attribute=value,...]` inside the tags. For example, `{{title [prefix="Page title: "]}}` would add a "Page title: " prefix before the title variable.
+
+* `prefix` - A string to prefix the variable value with.
+
+#### Yet to be implemented
+
+* `suffix` - A string to suffix the variable value with.
+* `default` - A default value to use if the variable is not defined or is empty. If not set, it defaults to `[Unknown variable: varName]` where `varName` is the name of the variable only for undefined variables. For empty variables, the default is an empty string unless `default` is set to something else.
+* `dp` - A number formatting string to format the variable value if it is a number to a fixed number of decimal places. E.g., `dp=2` for 2 decimal places. If the value is not a number, this argument is ignored.
+
+### Standard metadata variables
 
 If not provided in the front-matter, the following default fields are always available, generated from the filing system information of the source Markdown files:
 
@@ -244,6 +267,8 @@ From system data and not overridable by front-matter:
 Provided by the default global config file but overridable by front-matter. Additional ones may be added in your own `global-attributes.json` file:
 
 * `status` - The status of the page. E.g., `draft`, `published`, etc. *Default is `draft`.*
+
+### Other common metadata variables
 
 Other commonly used front-matter fields you may wish to include in your Markdown files:
 
@@ -274,21 +299,137 @@ To load the component, include the following script tag in your HTML wrapper tem
 
 ### File/folder changes
 
-The node watches the source folder for changes to files and folders. When a change is detected, the navigation and search indexes are rebuilt automatically. All connected clients are notified when the index is rebuilt and what changes occurred.
+#### Back-end
 
-If a connected client is currently viewing a page that has changed, it requests a resend of the page data to update the display.
+The node watches the source folder for changes to files and folders. When a change is detected, the navigation and search indexes are rebuilt automatically. All connected clients are notified when the index is rebuilt and what changes occurred.
 
 > [!NOTE]
 > The file watcher only goes up to 9 folder levels deep to avoid performance issues.
 >
 > Sensibly, you should avoid going more than 3-4 levels deep in your folder structure for usability reasons.
 
-After a file/folder change is detected, there is a debounce period (**default 1 second**) to allow for multiple rapid changes to be grouped together before rebuilding the indexes. Clients recieve a "_indexes-change" message followed by a "_file-change" message containing the list of changes detected (in `msg.changes`).
+After a file/folder change is detected, there is a debounce period (**default 1 second**) to allow for multiple rapid changes to be grouped together before rebuilding the indexes. Clients recieve a `_indexes-change` control message (no other data) followed by a `_source-change` control message containing the list of changes detected (in `msg.changes`).
+
+#### Front-end
+
+When a connected client receives an `_indexes-change` control message, it logs a message to the console but does nothing else currently.
+
+When a connected client receives a `_source-change` control message, it checks if the currently viewed page is affected by any of the changes. If so, it requests a resend of the page data from the server to update the display (using the client's `navigate` function) without updating the browser history cache. That triggers a `navigate` control message back to Node-RED which, in turn, triggers a `_page-navigation-result` control message back to the client with the updated page data and rendered HTML content. The client then updates the page display accordingly.
+
+```mermaid
+---
+title: When a source page or template changes
+config:
+  theme: base
+  themeVariables:
+    primaryColor: 'hsl(182, 57%, 11%)'
+    primaryTextColor: 'hsl(55, 19%, 87%)'
+    primaryBorderColor: 'hsl(182, 19%, 42%)'
+    lineColor: 'hsl(40, 94%, 57%)'
+    secondaryColor: 'hsl(120, 100%, 19%)'
+    tertiaryColor: 'hsl(304, 78%, 56%)'
+---
+sequenceDiagram
+  box hsla(0, 33%, 19%, 0.50) Node-RED Server
+    participant uib-markweb
+  end
+  box hsla(210, 50%, 26%, 0.50) Client Browser
+    participant Client
+    participant navigate()
+    participant Page Updates
+  end
+
+  uib-markweb->>+Client: Ctrl: _source-change
+  Client->>+navigate(): toUrl
+  navigate()->>+uib-markweb: Ctrl: navigate
+  uib-markweb->>Client: Ctrl: _page-navigation-result
+  Client->>+Page Updates: ctrlMsg.attributes
+
+```
+
+```mermaid
+---
+title: Client Receives _page-navigation-result Control Msg
+displayMode: compact
+config:
+  themeCSS: '.messageText:nth-of-type(3), .messageText:nth-of-type(4) {transform: translate(6em, 2em);};'
+  layout: elk
+  theme: base
+  themeVariables:
+    primaryColor: 'hsl(182, 57%, 11%)'
+    primaryTextColor: 'hsl(55, 19%, 87%)'
+    primaryBorderColor: 'hsl(182, 19%, 42%)'
+    lineColor: 'hsl(40, 94%, 57%)'
+    secondaryColor: 'hsl(120, 100%, 19%)'
+    tertiaryColor: 'hsl(304, 78%, 56%)'
+---
+sequenceDiagram
+  %%box rgba(66,33,33,0.5) Node-RED Server
+  %%  participant uib-markweb
+  %%end
+  box hsla(210, 50%, 26%, 0.50) Client Browser
+    participant _page-navigation-result
+    participant updatePageData()
+    participant updateSearchResultHighlight()
+  end
+
+  _page-navigation-result->>+updatePageData(): data
+  updatePageData()-->>+_page-navigation-result:
+  _page-navigation-result->>+_page-navigation-result: innerHTML
+  _page-navigation-result->>+_page-navigation-result: handle hash
+  _page-navigation-result->>+updateSearchResultHighlight():
+
+```
+
+```mermaid
+---
+title: Initial Page Load
+displayMode: compact
+config:
+  theme: base
+  themeVariables:
+    primaryColor: 'hsl(182, 57%, 11%)'
+    primaryTextColor: 'hsl(55, 19%, 87%)'
+    primaryBorderColor: 'hsl(182, 19%, 42%)'
+    lineColor: 'hsl(40, 94%, 57%)'
+    secondaryColor: 'hsl(120, 100%, 19%)'
+    tertiaryColor: 'hsl(304, 78%, 56%)'
+---
+sequenceDiagram
+  box rgba(66,33,33,0.5) Node-RED Server
+    participant htmlTemplate()
+    participant getMarkdownFile()
+    participant uib-markweb
+  end
+  box rgba(33,66,99,0.5) Client Browser
+    participant Client
+    participant navHorizontalInit()
+    participant SIO-client-connect
+    participant updatePageData()
+  end
+
+  Client->>+uib-markweb: HTTP GET
+  uib-markweb->>+getMarkdownFile(): 
+  uib-markweb->>+htmlTemplate(): 
+  uib-markweb->>+Client: HTTP Response
+  Client->>+navHorizontalInit(): 
+  Client->>+SIO-client-connect: 
+  SIO-client-connect-->>+Client:
+  Client->>+uib-markweb: Ctrl: getMetaData
+  uib-markweb->>+Client: _page-metadata
+  Client->>+updatePageData(): 
+
+```
+
+> [!NOTE]
+> When processing a file-change, the main Markdown content is rendered to HTML **on the server**. So all fm variables and directives are processed server-side.
+>
+> **However**, the page template is only processed server-side on the initial page load. On subsequent SPA navigations and updates, the client library has to process the page template variables itself. 
 
 > [!TIP]
 > Connected clients will only recieve updates after the 1 second debounce period. If you make multiple changes within that period, they will be grouped together into a single update.
 
-> [!NOTE]
+> [!WARNING]
 > File/folder _renames_ appear as a deletion and an addition. This may happen in any order depending on how the OS reports the changes.
 
 ### URLs & URL mapping
