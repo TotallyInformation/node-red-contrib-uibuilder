@@ -51,7 +51,7 @@ const uib = require('../libs/uibGlobalConfig.cjs')
 const { serialize, } = require('v8')
 
 // Import my utility packages using npm workspaces
-const { mdParse, fm, } = require('@totallyinformation/uib-md-utils') // eslint-disable-line n/no-extraneous-require
+const { md, mdParse, directivePlugin, fmVariablesPlugin, fm, mermaid, } = require('@totallyinformation/uib-md-utils') // eslint-disable-line n/no-extraneous-require
 const { chokidar, } = require('@totallyinformation/uib-fs-utils') // eslint-disable-line n/no-extraneous-require
 
 /** Object tree of folders and files (typedef)
@@ -208,10 +208,9 @@ function nodeInstance(config) {
     // Check if configFolder exists and is readable - set watcher. Config will use default fldr if not
     processConfig(this)
 
-    // Holder for search indexes - Map
+    // Holder for page index - Map
     this.index = new Map()
-
-    // Build search index asynchronously
+    // Build page index asynchronously
     buildIndexes(this)
         .then(() => {
             return true
@@ -224,15 +223,16 @@ function nodeInstance(config) {
 
     // Set up web services for this instance (static folders, middleware, etc)
     web.instanceSetup(this, `${this.url}/:morePath(*)?`, handler.bind(this), { searchHandler: searchHandler.bind(this), })
-
     // Socket.IO instance configuration. Each deployed instance has it's own namespace
     sockets.addNS(this) // NB: Namespace is set from url
-
     // Save a reference to sendToFe to allow this and other nodes referencing this to send direct to clients
     this.sendToFe = sockets.sendToFe.bind(sockets)
 
     // Define internal control messages and processing
     this.internalControls = internalControlMsgHooks(this, log)
+
+    // Extend Markdown-IT with %%...%% directive & {{...}} variable processing
+    mdExtension(this)
 
     // Clean up watchers on node close
     this.on('close', async () => {
@@ -395,28 +395,28 @@ function renderDate(key, attributes, node, options) {
     return formatDateIntl(date, format)
 }
 
-/** Wrap body content in a div#content & convert markdown to html
- * @param {'body'} key The special key being processed
+/** Wrap main content in a div#content & convert markdown to html
+ * @param {'content'} key The special key being processed
  * @param {object} attributes The current pages attributes
  * @param {runtimeNode & uibMwNode} node The current node instance
  * @param {object} [options] Optional options passed to the %%nav [options]%% instruction. Applied as html attributes to the wrapper div
- * @returns {string} Wrapped body content as an html string
+ * @returns {string} Wrapped content as an html string
  */
-function bodyWrapper(key, attributes, node, options) {
-    console.log('🌐[bodyWrapper] options=', options)
-    let attrs = ''
-    if (options) {
-        attrs = Object.entries(options)
-            .map(([k, v]) => `${k}="${v}"`)
-            .join(' ')
-    }
-    let html = ''
-    try {
-        html = mdParse(attributes.body)
-    } catch (e) { /* ignore errors */ }
-    return `<div id="content" ${attrs} data-attribute="body">${html || ''}</div>`
-    // return `<div id="content" ${attrs} data-attribute="body">{{body}}</div>`
-}
+// function bodyWrapper(key, attributes, node, options) {
+//     console.log('🌐[bodyWrapper] options=', options)
+//     let attrs = ''
+//     if (options) {
+//         attrs = Object.entries(options)
+//             .map(([k, v]) => `${k}="${v}"`)
+//             .join(' ')
+//     }
+//     let html = ''
+//     try {
+//         html = mdParse(attributes.content, attributes)
+//     } catch (e) { /* ignore errors */ }
+//     return `<div id="content" ${attrs} data-directive="body">${html || ''}</div>`
+//     // return `<div id="content" ${attrs} data-directive="body">{{body}}</div>`
+// }
 
 /** Create navigation menu HTML and return it
  * @param {'nav'} key The special key being processed
@@ -466,7 +466,7 @@ function createNav(key, attributes, node, options) {
         </search>
     `
     return `
-    <nav data-attribute="nav" data-replace aria-label="Main menu" class="${options?.orient || 'horizontal'}" role="navigation">
+    <nav data-directive="nav" data-replace aria-label="Main menu" class="${options?.orient || 'horizontal'}" role="navigation">
         ${links}
         ${searchBox}
     </nav>
@@ -557,25 +557,31 @@ function indexListing(key, attributes, node, options) {
     const hasExplicitEnd = 'end' in options || 'depth' in options
     const hasExplicitDateRange = 'from' in options || 'to' in options || 'duration' in options
 
-    if (hasExplicitStart) options.start = Number(options.start)
-    else if (hasLatest) {
+    if (hasExplicitStart) {
+        options.start = Number(options.start)
+    } else if (hasLatest) {
         // When latest is specified without explicit start, use depth 0 (root)
         options.start = 0
     } else {
         // No start given so assume current level
-        options.start = attributes.depth
+        options.start = Number(attributes.depth)
         currentStart = true
     }
 
-    if ('depth' in options) options.end = Number(options.depth)
+    // if ('depth' in options) options.end = Number(options.depth)
 
-    if ('end' in options) options.end = Number(options.end)
-    else if (options.depth) options.end = options.start + options.depth
-    else if (hasLatest) {
+    if ('end' in options) {
+        options.end = Number(options.end)
+    } else if (options.depth) {
+        options.end = Number(options.start) + Number(options.depth)
+    } else if (hasLatest) {
         // When latest is specified without explicit end, use max depth
-        options.end = 99
-    } else if (currentStart) options.end = attributes.depth
-    else options.end = 5 // Max depth default
+        options.end = 5
+    } else if (currentStart) {
+        options.end = Number(attributes.depth)
+    } else {
+        options.end = 5 // Max depth default
+    }
 
     if (!('type' in options)) {
         // type can be 'files', 'folders', or 'both'
@@ -641,66 +647,70 @@ function indexListing(key, attributes, node, options) {
         }
     }
 
-    const filtered = filteredIndex(currentStart, attributes, options, node)
-    // console.log('  >>🌐[indexListing] ', { key, options, attributes, filtered, })
+    const tree = createTree(currentStart, attributes, options, node)
+    // const filtered = filteredIndex(currentStart, attributes, options, node)
+    // // console.log('  >>🌐[indexListing] ', { key, options, attributes, filtered, })
 
-    // Build a hierarchical tree structure from the filtered paths
-    const tree = new Map()
+    // // Build a hierarchical tree structure from the filtered paths
+    // const tree = new Map()
 
-    for (const [path, doc] of filtered) {
-        // If no start given, and path matches current page, skip it
-        if (currentStart && path === attributes.path) continue
+    // for (const [path, doc] of filtered) {
+    //     // If no start given, and path matches current page, skip it
+    //     if (currentStart && path === attributes.path) continue
 
-        // Determine title
-        let title = doc.title
-        if (doc.path === '/') title = 'Home'
-        else if (doc.type === 'folder' && (!title || title === 'index')) {
-            // Get the last segment of the path as title and convert to title case
-            const segments = doc.path.replace(/\/$/, '').split('/').filter(Boolean) // eslint-disable-line @stylistic/newline-per-chained-call
-            const rawTitle = segments[segments.length - 1] || doc.path.slice(1, -1)
-            title = rawTitle.replace(/[_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-        }
+    //     // Determine title
+    //     let title = doc.title
+    //     if (doc.path === '/') title = 'Home'
+    //     else if (doc.type === 'folder' && (!title || title === 'index')) {
+    //         // Get the last segment of the path as title and convert to title case
+    //         const segments = doc.path.replace(/\/$/, '').split('/').filter(Boolean) // eslint-disable-line @stylistic/newline-per-chained-call
+    //         const rawTitle = segments[segments.length - 1] || doc.path.slice(1, -1)
+    //         title = rawTitle.replace(/[_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    //     }
 
-        // Split path into segments (remove empty strings from leading/trailing slashes)
-        const segments = path
-            .replace(/\/$/, '')
-            .split('/')
-            .filter(Boolean)
-        if (segments.length === 0) {
-            // Root path
-            if (!tree.has('/')) {
-                tree.set('/', { path: '/', title, children: new Map(), })
-            }
-            continue
-        }
+    //     // Split path into segments (remove empty strings from leading/trailing slashes)
+    //     const segments = path
+    //         .replace(/\/$/, '')
+    //         .split('/')
+    //         .filter(Boolean)
+    //     if (segments.length === 0) {
+    //         // Root path
+    //         if (!tree.has('/')) {
+    //             tree.set('/', { path: '/', title, children: new Map(), })
+    //         }
+    //         continue
+    //     }
 
-        // Navigate/create tree structure
-        let current = tree
-        for (let i = 0; i < segments.length; i++) {
-            const segment = segments[i]
-            const isLast = i === segments.length - 1
+    //     // Navigate/create tree structure
+    //     let current = tree
+    //     for (let i = 0; i < segments.length; i++) {
+    //         const segment = segments[i]
+    //         const isLast = i === segments.length - 1
 
-            if (!current.has(segment)) {
-                current.set(segment, {
-                    path: isLast ? path : '/' + segments.slice(0, i + 1).join('/') + '/',
-                    title: isLast ? title : segment,
-                    children: new Map(),
-                })
-            } else if (isLast) {
-                // Update with actual doc info if this is the final segment
-                const node = current.get(segment)
-                node.path = path
-                node.title = title
-            }
-            current = current.get(segment).children
-        }
-    }
+    //         if (!current.has(segment)) {
+    //             current.set(segment, {
+    //                 path: isLast ? path : '/' + segments.slice(0, i + 1).join('/') + '/',
+    //                 title: isLast ? title : segment,
+    //                 children: new Map(),
+    //             })
+    //         } else if (isLast) {
+    //             // Update with actual doc info if this is the final segment
+    //             const node = current.get(segment)
+    //             node.path = path
+    //             node.title = title
+    //         }
+    //         current = current.get(segment).children
+    //     }
+    // }
+    // console.log(`  >>🌐[indexListing] TREE for ${attributes.path}`, node.isIndexing, { options, tree, })
 
     // If start and end levels are the same, omit folder (index) entries
     const sameLevel = options.start === options.end
 
     // Recursive function to render the tree structure as HTML
-    return renderTree(tree, sameLevel, options.nav)
+    const out = renderTree(tree, options, sameLevel, options.nav)
+    // console.log('  >>🌐[indexListing] OUT', { out, })
+    return out
 }
 
 /** Create search results wrapper HTML
@@ -764,6 +774,61 @@ function renderSidebarTree(map, options, _level = 0) {
     return html
 }
 
+function createTree(currentStart, attributes, indexOptions, node) {
+    const filtered = filteredIndex(currentStart, attributes, indexOptions, node)
+    // Build hierarchical tree from filtered index (similar to indexListing)
+    const tree = new Map()
+    for (const [path, doc] of filtered) {
+        // Determine title - prefer shortTitle over title
+        let title = doc.shortTitle || doc.title
+        if (doc.path === '/') title = 'Home'
+        else if (doc.type === 'folder' && (!title || title === 'index')) {
+            const segments = doc.path.replace(/\/$/, '').split('/')
+                .filter(Boolean)
+            const rawTitle = segments[segments.length - 1] || doc.path.slice(1, -1)
+            title = rawTitle.replace(/[_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+        }
+        // Split path into segments
+        const segments = path
+            .replace(/\/$/, '')
+            .split('/')
+            .filter(Boolean)
+        if (segments.length === 0) {
+            if (!tree.has('/')) {
+                tree.set('/', {
+                    path: '/',
+                    title,
+                    description: doc.description || '',
+                    children: new Map(),
+                })
+            }
+            continue
+        }
+        // Navigate/create tree structure
+        let current = tree
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i]
+            const isLast = i === segments.length - 1
+
+            if (!current.has(segment)) {
+                current.set(segment, {
+                    path: isLast ? path : '/' + segments.slice(0, i + 1).join('/') + '/',
+                    title: isLast ? title : segment,
+                    description: isLast ? (doc.description || '') : '',
+                    children: new Map(),
+                })
+            } else if (isLast) {
+                const nodeEntry = current.get(segment)
+                nodeEntry.path = path
+                nodeEntry.title = title
+                nodeEntry.description = doc.description || ''
+            }
+            current = current.get(segment).children
+        }
+    }
+    return tree
+}
+
 /** Create sidebar HTML with navigation index, TOC, and search
  * @param {'sidebar'} key The special key being processed
  * @param {object} attributes The current pages attributes
@@ -791,79 +856,28 @@ function createSidebar(key, attributes, node, options) {
     // Check for sidebar.json override in config folder (don't warn if not found)
     const sidebarOverride = readConfigFile(node, 'sidebar.json', true)
 
-    // Build the navigation index using filtered index
-    const indexOptions = {
-        start,
-        end,
-        type: 'both',
-        sidebar: true,
-    }
-
-    const filtered = filteredIndex(false, attributes, indexOptions, node)
-
-    // Build hierarchical tree from filtered index (similar to indexListing)
-    const tree = new Map()
-    for (const [path, doc] of filtered) {
-        // Determine title - prefer shortTitle over title
-        let title = doc.shortTitle || doc.title
-        if (doc.path === '/') title = 'Home'
-        else if (doc.type === 'folder' && (!title || title === 'index')) {
-            const segments = doc.path.replace(/\/$/, '').split('/')
-                .filter(Boolean)
-            const rawTitle = segments[segments.length - 1] || doc.path.slice(1, -1)
-            title = rawTitle.replace(/[_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-        }
-
-        // Split path into segments
-        const segments = path.replace(/\/$/, '').split('/')
-            .filter(Boolean)
-        if (segments.length === 0) {
-            if (!tree.has('/')) {
-                tree.set('/', {
-                    path: '/',
-                    title,
-                    description: doc.description || '',
-                    children: new Map(),
-                })
-            }
-            continue
-        }
-
-        // Navigate/create tree structure
-        let current = tree
-        for (let i = 0; i < segments.length; i++) {
-            const segment = segments[i]
-            const isLast = i === segments.length - 1
-
-            if (!current.has(segment)) {
-                current.set(segment, {
-                    path: isLast ? path : '/' + segments.slice(0, i + 1).join('/') + '/',
-                    title: isLast ? title : segment,
-                    description: isLast ? (doc.description || '') : '',
-                    children: new Map(),
-                })
-            } else if (isLast) {
-                const nodeEntry = current.get(segment)
-                nodeEntry.path = path
-                nodeEntry.title = title
-                nodeEntry.description = doc.description || ''
-            }
-            current = current.get(segment).children
-        }
-    }
-
     // If we have a sidebar override, use it instead
     let navIndexHtml
     if (sidebarOverride && Array.isArray(sidebarOverride)) {
         // Build tree from sidebar.json structure
         navIndexHtml = buildSidebarFromJson(sidebarOverride, attributes.path)
     } else {
+        // Build the navigation index using filtered index
+        const indexOptions = {
+            start,
+            end,
+            type: 'both',
+            sidebar: true,
+            id: 'sidebar-nav',
+            title: 'Sidebar navigation index',
+        }
+        const tree = createTree(false, attributes, indexOptions, node)
         // Render the tree with collapsible sections
         navIndexHtml = renderSidebarTree(tree, { currentPath: attributes.path, })
     }
 
     // Generate data attributes for client-side use
-    const dataAttrs = `data-attribute="sidebar"`
+    const dataAttrs = `data-directive="sidebar"`
 
     // Build the search box & results HTML if enabled
     const searchBoxHtml = showSearch
@@ -898,7 +912,7 @@ function createSidebar(key, attributes, node, options) {
                         Contents
                     </button>
                 </div>
-                <div id="sidebar-panel-nav" class="sidebar-panel active" role="tabpanel" aria-labelledby="sidebar-tab-nav" data-attribute="sidebar-nav" data-replace>
+                <div id="sidebar-panel-nav" class="sidebar-panel active" role="tabpanel" aria-labelledby="sidebar-tab-nav" data-directive="sidebar-nav" data-replace>
                     ${navIndexHtml}
                 </div>
                 <div id="sidebar-panel-toc" class="sidebar-panel" role="tabpanel" aria-labelledby="sidebar-tab-toc" hidden>
@@ -964,12 +978,64 @@ function renderCopyright(key, attributes, node, options) {
     return processTemplates(template, node, attributes, 'renderCopyright')
 }
 
+/** Add more markdown-it extensions along with their handlers
+ * Has to be done here so that the handlers can pick up page attributes and node content.
+ * "Standard" markdown-it extensions (e.g., footnotes, task lists) are added in uib-md-utils
+ *   as they don't need access to page attributes.
+ * NOTE: Handlers receive:
+ *       args: `[argname=value, ...]` arguments object
+ *       env: The page attributes, AKA the page's frontmatter variables
+ * @param {runtimeNode & uibMwNode} node The current node instance
+ */
+function mdExtension(node) {
+    /** Handler functions for each specific directive */
+    const directiveHandlers = {
+        // 'date': renderDate,
+        // 'nav': createNav,
+        // 'offset': parseDuration,
+        // Return an index list of pages from the current page level
+        index: (args, env) => {
+            const il = indexListing('index', env, node, args)
+            // console.log('🌐[mdExtension:index] ', {il, args, env})
+            return il
+        },
+        // 'url': () => attributes.url,
+        // 'search-results': searchResultsWrapper,
+        // 'sidebar': createSidebar,
+        // 'content': bodyWrapper,
+        // 'content': () => attributes.content || '<div>No content</div>',
+        // 'copyright': renderCopyright,
+    }
+    /** Convert {{varname}} to HTML spans with the variable value from frontmatter attributes
+     * This allows using frontmatter variables anywhere in markdown content AND in Templates
+     * @param {object} args The [args] object passed from the markdown content
+     * @param {object} env The page attributes, AKA the page's frontmatter variables
+     * @returns {string} The rendered HTML for the fm variable
+     */
+    const fmVariablesHandler = (args, env) => {
+        const varName = args.varName
+        let value = env[varName]
+        if (value === undefined) {
+            value = `[Unknown variable: ${varName}]`
+        }
+        // process standard args
+        let before = ''
+        if (args.before) before = args.before
+        else if (args.prefix) before = args.prefix
+        let after = ''
+        if (args.after) after = args.after
+        return /* html */`<span data-fmvar="${varName}">${before}${value}${after}</span>`
+    }
+    // Extend markdown-it with these plugins
+    md
+        .use(directivePlugin, directiveHandlers)
+        .use(fmVariablesPlugin, fmVariablesHandler)
+}
+
 // #endregion -- %%...%% specials processing -- //
 
 /** Build search & nav indexes from all markdown files asynchronously & notifies connected clients
  * @param {runtimeNode & uibMwNode} node Instance `this` context
- * param {string} sourcePath The source folder path
- * param {string} instanceUrl The instance URL (used as index key)
  * @returns {Promise<void>}
  */
 async function buildIndexes(node) {
@@ -981,15 +1047,21 @@ async function buildIndexes(node) {
     const index = node.index
     const indexFolder = instanceFolder.replace(/\\/g, '/')
 
+    node.isIndexing = true
+
+    // TODO: Use async fg
     let files
     try {
         files = fgSync(`${indexFolder}/**/*.md`)
     } catch (e) {
-        log.error(`🌐🛑[uib-markweb:buildSearchIndex:${url}] Error reading markdown files from source folder "${indexFolder}": ${e.message}`)
+        log.error(`🌐🛑[uib-markweb:buildIndex:${url}] Error reading markdown files from source folder "${indexFolder}": ${e.message}`)
         files = []
     }
 
-    // Process all files in parallel
+    node.isIndexing = false
+
+    // Process all files in parallel - updates index if needed
+    // ! WARNING: While this is fast, it adds index entries in a semi-random order !
     const results = await Promise.allSettled(
         files.map(file => getMarkdownFile(node, file))
     )
@@ -997,7 +1069,7 @@ async function buildIndexes(node) {
     // Log any errors
     results.forEach((result, index) => {
         if (result.status === 'rejected') {
-            log.error(`🌐🛑[uib-markweb:buildSearchIndex:${url}] Skipping file "${files[index]}" due to error: ${result.reason.message}`)
+            log.error(`🌐🛑[uib-markweb:buildIndex:${url}] Skipping file "${files[index]}" due to error: ${result.reason.message}`)
         }
     })
 
@@ -1009,7 +1081,7 @@ async function buildIndexes(node) {
     // ! TEMPORARY - for debugging convenience
     globalThis._uibuilder_.markweb.indexes[url] = node.index
 
-    log.info(`🌐[uib-markweb:buildSearchIndex:${url}] Indexed "${instanceFolder}" in ${Math.round(performance.now() - strt)}ms. ${files.length} files, ${(serialize(node.index).byteLength / 1024).toFixed(0)}kb`)
+    log.info(`🌐[uib-markweb:buildIndex:${url}] Indexed "${instanceFolder}" in ${Math.round(performance.now() - strt)}ms. ${files.length} files, ${(serialize(node.index).byteLength / 1024).toFixed(0)}kb`)
 }
 
 /** Build a list of navigable pages from all markdown files in the source folder
@@ -1032,6 +1104,117 @@ async function buildIndexes(node) {
 //     }
 // }
 
+/** Check if the requested path is valid and does not violate security rules (e.g., no access to files/folders starting with _ or ., no path traversal)
+ * @param {runtimeNode & uibMwNode} node The node instance
+ * @param {string} morePath Everything in the URI after the main path
+ * @param {object} attributes Page attributes to send back to the browser
+ * @param {string} returnTopic Message topic to send back tot he browser
+ * @param {object} msg Received message object, used to retreive the socket id
+ * @param {string} from What fn name called this fn, used for messages
+ * @param {import('express').Response} [res] ExpressJS Result object. If used, previous 3 params are ignored
+ * @param {boolean} [isAjax] Whether this request is an AJAX request (only used if res is provided) to determine response format
+ * @returns {{fullPath:string, parsedPath:import('path').ParsedPath}|null} The full and corrected actual paths to be processed
+ */
+function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isAjax) {
+    const log = uib.RED.log
+
+    // Check if folder or file name starts with _ or . and deny access
+    if (morePath.split(sep).some(part => part.startsWith('_') || part.startsWith('.'))) {
+        log.error(`🌐🛑[uib-markweb:nodeInstance:${from}] Access denied to folder/file "${morePath}" because it is in a folder or file starting with "_" or "."`)
+        if (res) {
+            res.status(403).send(`<p>Folders or files starting with "_" or "." are not accessible.</p>`)
+        } else {
+            // @ts-ignore
+            attributes = {
+                error: true,
+                title: 'Error',
+                description: `Access denied to folder/file "${morePath}" because it is in a folder or file starting with "_" or "."`,
+                content: `<h1>Error</h1><p>Access denied to folder/file "${morePath}" because it is in a folder or file starting with "_" or "."</pre>`,
+                from: from,
+            }
+            this.sendToFe({
+                topic: returnTopic,
+                attributes: attributes,
+                _socketId: msg._socketId,
+            }, node, uib.ioChannels.control)
+        }
+        return null
+    }
+    // Normalize morePath to prevent path traversal attacks
+    let fullPath = join(node.instanceFolder, morePath)
+    // Security: Prevent path traversal
+    if (!fullPath.startsWith(node.instanceFolder)) {
+        log.error(`🌐🛑[uib-markweb:nodeInstance:${from}] Access denied to "${fullPath}" because it is outside "${node.instanceFolder}"`)
+        if (res) {
+            res.status(403).send(`Access denied`)
+        } else {
+            // @ts-ignore
+            attributes = {
+                error: true,
+                title: 'Error',
+                description: `Access denied to "${fullPath}" because it is outside "${node.instanceFolder}"`,
+                content: `<h1>Error</h1><p>Access denied to "${fullPath}" because it is outside "${node.instanceFolder}"</pre>`,
+                from: from,
+            }
+            this.sendToFe({
+                topic: returnTopic,
+                attributes: attributes,
+                _socketId: msg._socketId,
+            }, node, uib.ioChannels.control)
+        }
+        return null
+    }
+
+    // If morePath has no extension, first check if it is a valid folder
+    let parsedPath = parse(morePath)
+    if (!parsedPath.ext) {
+        if (existsSync(fullPath)) {
+            // The folder exists, we assume the index file needed
+            morePath = join(morePath, 'index.md')
+            fullPath = join(node.instanceFolder, morePath)
+        } else {
+            // Not a folder, so add .md extension
+            morePath += '.md'
+            fullPath = join(node.instanceFolder, morePath)
+        }
+        parsedPath = parse(morePath)
+    }
+
+    // Now check that the file exists, return an error if not
+    try {
+        accessSync( fullPath, 'r' )
+        log.trace(`🌐[uib-markweb:nodeInstance:${from}] Source file is accessible: "${fullPath}"`)
+    } catch (err) {
+        // const file404 = readConfigFile(this, '404-template.md', false)
+        log.error(`🌐🛑[uib-markweb:nodeInstance:${from}] Source file "${fullPath}" not accessible: ${err.message}`)
+        if (res) {
+            if (isAjax) {
+                res.status(404).json({ error: 'Page not found', content: '<h1>Page Not Found</h1><p>The requested page does not exist.</p>', })
+            } else {
+                // const nav = buildNavigation()
+                res.status(404).send(htmlTemplate(node, { content: '<h1>Page Not Found</h1><p>The requested page does not exist.</p>', }))
+            }
+        } else {
+            // @ts-ignore
+            attributes = {
+                error: 'Page not accessible or not found',
+                title: 'Error',
+                description: `The requested page does not exist or cannot be read.`,
+                content: `<h1>Page Not Found</h1><p>The requested page does not exist or cannot be read.</p>`,
+                from: from,
+            }
+            node.sendToFe({
+                topic: returnTopic,
+                attributes: attributes,
+                _socketId: msg._socketId,
+            }, node, uib.ioChannels.control)
+        }
+        return null
+    }
+
+    return { fullPath, parsedPath, }
+}
+
 /** Handle a navigation socket request
  * @param {object} msg A control message with at least { toUrl: string }
  * @this {runtimeNode & uibMwNode}
@@ -1050,89 +1233,15 @@ async function doNavigate(msg) {
         // Ignore for now
         return
     }
-    // Check if folder or file name starts with _ or . and deny access
-    if (morePath.split(sep).some(part => part.startsWith('_') || part.startsWith('.'))) {
-        log.error(`🌐🛑[uib-markweb:nodeInstance:navigate] Access denied to folder/file "${morePath}" because it is in a folder or file starting with "_" or "."`)
-        // @ts-ignore
-        attributes = {
-            error: true,
-            title: 'Error',
-            description: `Access denied to folder/file "${morePath}" because it is in a folder or file starting with "_" or "."`,
-            body: `<h1>Error</h1><p>Access denied to folder/file "${morePath}" because it is in a folder or file starting with "_" or "."</pre>`,
-            from: 'navigate',
-        }
-        this.sendToFe({
-            topic: returnTopic,
-            attributes: attributes,
-            _socketId: msg._socketId,
-        }, this, uib.ioChannels.control)
-        return
-    }
 
-    let fullPath = join(this.instanceFolder, morePath)
-    // Security: Prevent path traversal
-    if (!fullPath.startsWith(this.instanceFolder)) {
-        log.error(`🌐🛑[uib-markweb:nodeInstance:navigate] Access denied to "${fullPath}" because it is outside "${this.instanceFolder}"`)
-        // @ts-ignore
-        attributes = {
-            error: true,
-            title: 'Error',
-            description: `Access denied to "${fullPath}" because it is outside "${this.instanceFolder}"`,
-            body: `<h1>Error</h1><p>Access denied to "${fullPath}" because it is outside "${this.instanceFolder}"</pre>`,
-            from: 'navigate',
-        }
-        this.sendToFe({
-            topic: returnTopic,
-            attributes: attributes,
-            _socketId: msg._socketId,
-        }, this, uib.ioChannels.control)
-        return
-    }
+    const paths = checkNames(this, morePath, attributes, returnTopic, msg, 'doNavigate', null, null)
+    if (!paths) return // nothing more to do
+    const { fullPath, parsedPath, } = paths
 
-    // If morePath has no extension, first check if it is a valid folder
-    let parsedPath = parse(morePath)
-    if (!parsedPath.ext) {
-        if (existsSync(fullPath)) {
-            // The folder exists, we assume the index file needed
-            morePath = join(morePath, 'index.md')
-            fullPath = join(this.instanceFolder, morePath)
-        } else {
-            // Not a folder, so add .md extension
-            morePath += '.md'
-            fullPath = join(this.instanceFolder, morePath)
-        }
-        parsedPath = parse(morePath)
-    }
-
-    // Now check that the file exists, return an error if not
-    try {
-        accessSync( fullPath, 'r' )
-        log.trace(`🌐[uib-markweb:nodeInstance:navigate] Source file is accessible: "${fullPath}"`)
-    } catch (err) {
-        // const file404 = readConfigFile(this, '404-template.md', false)
-        log.error(`🌐🛑[uib-markweb:nodeInstance:navigate] Source file "${fullPath}" not accessible: ${err.message}`)
-        // @ts-ignore
-        attributes = {
-            error: 'Page not accessible or not found',
-            title: 'Error',
-            description: `The requested page does not exist or cannot be read.`,
-            body: `<h1>Page Not Found</h1><p>The requested page does not exist or cannot be read.</p>`,
-            from: 'navigate',
-        }
-        this.sendToFe({
-            topic: returnTopic,
-            attributes: attributes,
-            _socketId: msg._socketId,
-        }, this, uib.ioChannels.control)
-        return
-    }
-
+    // Handle markdown files
     if (parsedPath.ext === '.md') {
         // processTemplates(node.pageTemplate, attributes)
-        attributes = await getMarkdownFile(this, fullPath, morePath, parsedPath)
-        attributes.body = mdParse(processTemplates(attributes.body, this, attributes, 'doNavigate-body'))
-        attributes.from = 'navigate'
-        attributes.toUrl = urlJoin(morePath) // Normalise
+        attributes = await getMarkdownFile(this, fullPath, morePath, parsedPath, 'doNavigate')
         this.sendToFe({
             topic: returnTopic,
             attributes: attributes,
@@ -1230,8 +1339,12 @@ function doSearch(index, query) {
  * @returns {Array} Filtered index entries
  */
 function filteredIndex(currentStart, attributes, options, node) {
-    let filtered = [...node.index].filter(
-        ([key, value]) => {
+    const sorted = [...node.index]
+        .sort((a, b) => a[1].path.localeCompare(b[1].path))
+    // let filtered = [...node.index]
+    //     .sort((a, b) => a[1].path.localeCompare(b[1].path))
+    let filtered = sorted
+        .filter( ([key, value]) => {
             // Depth filtering
             if (value.depth < options.start || value.depth > options.end) return false
             // Path prefix filtering
@@ -1254,8 +1367,8 @@ function filteredIndex(currentStart, attributes, options, node) {
             }
 
             return true
-        }
-    )
+        })
+    // console.log(`  >>🌐[filteredIndex] Filtering index for ${attributes.path} with options`, { filtered, sorted, options, })
 
     // If latest option specified, sort by date descending and limit results
     if (options.latest) {
@@ -1282,17 +1395,18 @@ function filteredIndex(currentStart, attributes, options, node) {
  * param {string} fullPath Full path to the markdown file
  * @param {string} [morePath] Relative path or additional path info
  * @param {object} [parsedPath] Parsed path object
+ * @param {string} [from] The name of the calling function for logging purposes
  * @returns {Promise<object>} Parsed attributes and HTML body
  */
-async function getMarkdownFile(node, file, morePath, parsedPath) {
+async function getMarkdownFile(node, file, morePath, parsedPath, from) {
     // fullPath, morePath, parsedPath
     const log = uib.RED.log
     const userDir = uib.RED.settings.userDir
-    log.trace(`🌐[uib-markweb:getMarkdownFile:${node.url}] Request for markdown file, source="${node.source}", file="${file}"`)
+    log.trace(`🌐[uib-markweb:getMarkdownFile:${node.url}] Request for markdown file from ${from}, source="${node.source}", file="${file}"`)
 
     const index = node.index
 
-    // check if urlPath already exists in searchIndex
+    // check if urlPath already exists in the page index
     // get the actual filename without the path
     const filename = basename(file)
     // Skip files starting with _ or .
@@ -1302,10 +1416,10 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
 
     const relativePath = relative(join(userDir, node.source), file)
         .replace(/\\/g, '/')
-    // Replace trailing .md and training index
+    // Replace trailing .md and whole `index` filename with empty string to get the URL path
     const urlPath = '/' + relativePath
         .replace(/\.md$/, '')
-        .replace(/index$/, '')
+        .replace(/\/index$/, '/')
 
     // console.group(`>>🌐[uib-markweb:getMarkdownFile:${node.url}] Processing markdown file:`)
     // console.log(`File: ${file}`)
@@ -1320,7 +1434,7 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
     } catch (e) { /* ignore errors */ }
 
     let attributes = {}
-    // check if urlPath already exists in searchIndex
+    // check if urlPath already exists in the page index and if the file has not been modified since last indexed (using fsMtimeMs)
     let needToUpd = true
     if (index.has(urlPath)) {
         // Check if existing entry has the same last updated timestamp as the actual file
@@ -1342,7 +1456,7 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
                 error: true,
                 title: 'Error',
                 description: `Error reading markdown file "${file}"`,
-                body: `<h1>Error</h1><p>There was an error reading the requested markdown file.</p><pre>${err.message}</pre>`,
+                content: `<h1>Error</h1><p>There was an error reading the requested markdown file.</p><pre>${err.message}</pre>`,
             }
         }
         let parsed = { }
@@ -1354,7 +1468,7 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
                 error: true,
                 title: 'Error',
                 description: `Error parsing front-matter in markdown file "${file}"`,
-                body: `<h1>Error</h1><p>There was an error parsing the front-matter in the requested markdown file.</p><pre>${err.message}</pre>`,
+                content: `<h1>Error</h1><p>There was an error parsing the front-matter in the requested markdown file.</p><pre>${err.message}</pre>`,
             }
         }
 
@@ -1376,11 +1490,9 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
             title: parsed.attributes?.title || derivedTitle,
             shortTitle: parsed.attributes?.shortTitle || '',
             description: parsed.attributes?.description || '',
-            // Store plain text (strip markdown) for searching
-            // body: parsed.body.replace(/[#*`\[\]()]/g, '').toLowerCase() || '',
-            body: parsed.body || '',
-            // Store plain text content for search indexing (strip markdown syntax)
-            content: parsed.body?.replace(/[#*`\[\]()!<>]/g, ' ').replace(/\s+/g, ' ').trim() || '', // eslint-disable-line @stylistic/newline-per-chained-call
+            // Store plain text for searching
+            // ! DO NOT Convert MD to HTML here - we want the raw markdown content in the index for searching, and we can convert to HTML on the fly when rendering pages. Also, converting here would mean we lose the original markdown formatting in the index, which could be useful for other purposes (e.g., generating excerpts, showing raw markdown in search results, etc).
+            content: parsed.body || '',
             tags: parsed.attributes?.tags || [],
             category: parsed.attributes?.category || '',
             author: parsed.attributes?.author || '',
@@ -1399,9 +1511,10 @@ async function getMarkdownFile(node, file, morePath, parsedPath) {
             depth: urlPath.split('/').length - 2,
             // Full relative URL (use relativePath which already contains the correct path)
             toUrl: urlJoin('/', relativePath),
+            from: from,
             // other: [morePath, parsedPath],
         }
-        // attributes.htmlbody = processTemplates(attributes.body, attributes)
+        // Update the index for this path with the new attributes
         index.set(urlPath, attributes)
     }
     // console.log(`  >>🌐 Indexing file: ${urlPath}, ${relativePath}, ${file}`)
@@ -1447,61 +1560,23 @@ async function handler(req, res, next) {
 
     // Differentiate between ajax and normal requests
     const isAjax = req.headers['x-requested-with'] === 'XMLHttpRequest'
+    // Strip hash/fragment identifiers (e.g., #section) as they are client-side only
+    if (morePath.includes('#')) morePath = morePath.split('#')[0]
+
     // Handle a search request
     // Get route extended parameter if present
     if (morePath === '.search' || morePath === '_search') {
         searchHandler.bind(this)(req, res)
         return
     }
-    // Check if folder or file name starts with _ or . and deny access
-    if (morePath.split(sep).some(part => part.startsWith('_') || part.startsWith('.'))) {
-        log.error(`🌐🛑[uib-markweb:handler] Access denied to folder/file "${morePath}" because it is in a folder or file starting with "_" or "."`)
-        res.status(403).send(`<p>Folders or files starting with "_" or "." are not accessible.</p>`)
-        return
-    }
-    // Normalize morePath to prevent path traversal attacks
-    let fullPath = join(this.instanceFolder, morePath)
-    // Security: Prevent path traversal
-    if (!fullPath.startsWith(this.instanceFolder)) {
-        log.error(`🌐🛑[uib-markweb:handler] Access denied to "${fullPath}" because it is outside "${this.instanceFolder}"`)
-        res.status(403).send(`Access denied`)
-        return
-    }
-    // If morePath has no extension, first check if it is a valid folder
-    let parsedPath = parse(morePath)
-    if (!parsedPath.ext) {
-        if (existsSync(fullPath)) {
-            // The folder exists, we assume the index file needed
-            morePath = join(morePath, 'index.md')
-            fullPath = join(this.instanceFolder, morePath)
-        } else {
-            // Not a folder, so add .md extension
-            morePath += '.md'
-            fullPath = join(this.instanceFolder, morePath)
-        }
-        parsedPath = parse(morePath)
-    }
-    // Now check that the file exists, return an error if not
-    try {
-        accessSync( fullPath, 'r' )
-        log.trace(`🌐[uib-markweb:handler] Source file is accessible: "${fullPath}"`)
-    } catch (err) {
-        log.error(`🌐🛑[uib-markweb:handler] Source file "${fullPath}" not accessible: ${err.message}`)
-        if (isAjax) {
-            res.status(404).json({ error: 'Page not found', body: '<h1>Page Not Found</h1><p>The requested page does not exist.</p>', })
-        } else {
-            // const nav = buildNavigation()
-            res.status(404).send(htmlTemplate(this, { body: '<h1>Page Not Found</h1><p>The requested page does not exist.</p>', }))
-        }
-        return
-    }
+
+    const paths = checkNames(this, morePath, null, null, null, 'handler', res, isAjax)
+    if (paths === null) return // nothing more to do
+    const { fullPath, parsedPath, } = paths
 
     // Handle markdown files
     if (parsedPath.ext === '.md') {
-        const attributes = await getMarkdownFile(this, fullPath, morePath, parsedPath)
-        attributes.body = mdParse(processTemplates(attributes.body, this, attributes, 'handler-body'))
-        attributes.from = 'handler'
-        attributes.toUrl = morePath
+        const attributes = await getMarkdownFile(this, fullPath, morePath, parsedPath, 'handler')
         attributes.reqType = isAjax ? 'ajax' : 'get'
         if (isAjax) {
             // Return JSON for SPA navigation
@@ -1510,22 +1585,6 @@ async function handler(req, res, next) {
             // Return full page for initial load / direct access
             const html = htmlTemplate(this, attributes)
             res.send(html)
-            // // Send pageData to FE via socket.io after a short delay to allow FE to set up
-            // setTimeout(() => {
-            //     // console.log('🌐[uib-markweb:handler] Sending pageData to FE via socket.io')
-            //     const data = { ...attributes, }
-            //     delete data.body // We don't want this in the front-end
-            //     const headers = res.getHeaders()
-            //     // Get the client to set the pageData managed prop
-            //     // No socket id available on first page load so use clientId if available
-            //     this.sendToFe({
-            //         topic: '_setMetaData',
-            //         attributes: data,
-            //         _uib: {
-            //             clientId: headers['uibuilder-client-id'] || undefined,
-            //         },
-            //     }, this, uib.ioChannels.control)
-            // }, 500)
         }
     } else {
         // Not a markdown file, serve static
@@ -1547,13 +1606,13 @@ function htmlTemplate(node, attributes = {}) {
     attributes = { ...node.globalAttributes, ...attributes, }
     attributes.url = node.url
     // add the markdown body
-    // if (!attributes.body) {
-    //     attributes.body = '## Error: No content (htmlTemplate)\n\nThe requested page has no content.'
+    // if (!attributes.content) {
+    //     attributes.content = '## Error: No content (htmlTemplate)\n\nThe requested page has no content.'
     // } else {
     //     try {
-    //         // attributes.body = marked(processTemplates(attributes.body, attributes))
-    //         attributes.body = processTemplates(attributes.body, attributes) || '<h2>Error: (htmlTemplate)</h2><div>processTemplates produced no output.</div>'
-    //         // attributes.body = mdParse(attributes.body)
+    //         // attributes.content = marked(processTemplates(attributes.content, attributes))
+    //         attributes.content = processTemplates(attributes.content, attributes) || '<h2>Error: (htmlTemplate)</h2><div>processTemplates produced no output.</div>'
+    //         // attributes.content = mdParse(attributes.content)
     //         // console.log('>> GOOD ATTRIBUTES >> ', attributes)
     //     } catch (err) {
     //         log.error(`🌐🛑[uib-markweb:htmlTemplate] Error converting markdown to HTML: ${err.message}`)
@@ -1607,21 +1666,21 @@ function processConfig(node) {
 }
 
 /** Replace %%...% and {{...}}
- * @param {string} text Text to process
+ * @param {string} htmlText HTML string to process
  * @param {runtimeNode & uibMwNode} node The current node instance
  * @param {object} [attributes] Attributes to use for replacements
  * @param {string} [calledFrom] Optional string indicating where this function was called from (for logging)
  * @returns {string} Processed text
  */
-function processTemplates(text, node, attributes = {}, calledFrom = '') {
+function processTemplates(htmlText, node, attributes = {}, calledFrom = '') {
     // Supported %%...%% special directives and their callback. The function is called with (key, attributes, node, options)
     const specials = {
         'url': () => attributes.url,
         'nav': createNav,
         'search-results': searchResultsWrapper,
         'sidebar': createSidebar,
-        // 'body': bodyWrapper,
-        'body': () => attributes.body || '<div>No content</div>',
+        // 'content': bodyWrapper,
+        'content': () => mdParse(attributes.content, attributes) || '<div>No content</div>',
         // Return an index list of pages from the current page level
         'index': indexListing,
         'date': renderDate,
@@ -1636,11 +1695,11 @@ function processTemplates(text, node, attributes = {}, calledFrom = '') {
         return placeholder
     }
     // Protect markdown backtick-wrapped patterns
-    text = text.replace(/`(%%[^%]+%%|\{\{[^}]+\}\})`/g, protectPattern)
+    htmlText = htmlText.replace(/`(%%[^%]+%%|\{\{[^}]+\}\})`/g, protectPattern)
 
     // %%...%% specials
     const foundKeys = { specials: [], attributes: [], }
-    text = text.replace(/%%([^%]+)%%/g, (match, key1, key2) => {
+    htmlText = htmlText.replace(/%%([^%]+)%%/g, (match, key1, key2) => {
         let key = (key1 || key2).trim()
         // If key contains `[...]`, save the contents & remove from key
         const bracketIndex = key.indexOf('[')
@@ -1668,22 +1727,33 @@ function processTemplates(text, node, attributes = {}, calledFrom = '') {
     })
 
     // Protect HTML <code> wrapped patterns (after %%body%% inserts content with <code> tags)
-    text = text.replace(/<code>(%%[^%]+%%|\{\{[^}]+\}\})<\/code>/gi, protectPattern)
+    htmlText = htmlText.replace(/<code>(%%[^%]+%%|\{\{[^}]+\}\})<\/code>/gi, protectPattern)
 
     // {{...}} attributes
-    text = text.replace(/\{\{([^}]+)\}\}/g, (match, key1, key2) => {
+    htmlText = htmlText.replace(/\{\{([^}]+)\}\}/g, (match, key1, key2) => {
         const key = (key1 || key2).trim()
         foundKeys.attributes.push(key)
-        return attributes[key] !== undefined ? attributes[key] : match
+        let value = attributes[key] !== undefined ? attributes[key] : match
+        // If the value is an object or array, convert to JSON string
+        if (typeof value === 'object') {
+            try {
+                value = JSON.stringify(value)
+            } catch (e) {
+                value = String(value)
+            }
+        }
+        // If key is "content", replace with html conversion
+        if (value && key === 'content') value = mdParse(value, attributes)
+        return value
     })
 
     // Restore protected patterns (backtick-wrapped %%...%% or {{...}})
     protectedPatterns.forEach((pattern, index) => {
-        text = text.replace(`__PROTECTED_${index}__`, pattern)
+        htmlText = htmlText.replace(`__PROTECTED_${index}__`, pattern)
     })
 
     // console.log(`>>🌐[processTemplates] (${calledFrom}) foundKeys=`, foundKeys)
-    return text
+    return htmlText
 }
 
 /** Read a configuration file from configFolder or fallback to package templates folder
@@ -1744,17 +1814,33 @@ function readConfigFile(node, fileName, optional = false) {
  * @param {number} [_level] Current recursion level (internal use)
  * @returns {string} Nested HTML unordered lists
  */
-function renderTree(map, sameLevel = false, nav = false, _level = 0) {
+function renderTree(map, options, sameLevel = false, nav = false, _level = 0) {
     // Nothing to do
-    if (map.size === 0) return ''
+    // if (map.size === 0) return ''
     // If not a nav menu, we need extra attributes so that the front-end can reflect changes
     let hOpts = ''
-    if (_level === 0) hOpts = nav ? '' : 'data-attribute="index" data-replace'
+    if (_level === 0) {
+        if (nav) {
+            hOpts = ''
+        } else {
+            hOpts = 'data-directive="index" data-replace'
+            if (options) {
+                // hOpts += ` data-options='${JSON.stringify(options)}'`
+                for (const [k, v] of Object.entries(options)) {
+                    if (k === 'id' || k === 'class' || k === 'style' || k === 'title') {
+                        hOpts += ` ${k}="${v}"`
+                    } else {
+                        hOpts += ` data-${k}="${v}"`
+                    }
+                }
+            }
+        }
+    }
 
     let html = `<ul ${hOpts}>`
     for (const [, entry] of map) {
         // Ignore samelevel in recursive calls
-        const childHtml = renderTree(entry.children, false, nav, _level++)
+        const childHtml = renderTree(entry.children, null, false, nav, _level++)
         // If same level, skip folder entries (show only files)
         if (sameLevel && entry.path.endsWith('/')) {
             // Still include children if any
@@ -1764,6 +1850,7 @@ function renderTree(map, sameLevel = false, nav = false, _level = 0) {
         html += `<li><a href="${entry.path}">${entry.title}</a>${childHtml}</li>`
     }
     html += '</ul>'
+    // console.log(`>>🌐[renderTree] Rendered tree (sameLevel=${sameLevel}, nav=${nav}):`, html)
     return html
 }
 
