@@ -8,8 +8,8 @@
     <meta charset="UTF-8">
     <base href="%%url%%/">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" data-attribute="description" content="{{description}}">
-    <title data-attribute="title">{{title}}</title>
+    <meta name="description" data-fmvar="description" content="{{description}}">
+    <title data-directive="title">{{title}}</title>
     <link rel="icon" href="../uibuilder/images/node-blue.ico">
 
     <link type="text/css" rel="stylesheet" href="../uibuilder/uib-brand.min.css" media="all">
@@ -32,16 +32,19 @@
         <a class="skip-link" href="#main">Skip to main content</a>
         <header>
             <!-- Nav not needed if sidebar is used (add/remove double %) -->
-            <h1 data-attribute="title">{{title}}</h1>
+            <h1 data-fmvar="title">{{title}}</h1>
             <!-- Results not needed if sidebar is used (add/remove double %) -->
             <!-- search-results -->
             <!-- Optional page status display -->
-            <blockquote class="visible-status" data-attribute="status">Status: {{status}}</blockquote>
-            <div data-attribute="description">{{description}}</div>
+            <blockquote class="visible-status" data-fmvar="status">
+                {{status [before="Status: ", after=". "]}}
+                {{since [before="Since: ", after=". "]}}
+            </blockquote>
+            <div data-fmvar="description">{{description}}</div>
         </header>
 
         <!-- This is where the main content goes. It will be replaced on navigation. -->
-        <section data-attribute="body">%%body%%</section>
+        <section data-fmvar="content">{{content}}</section>
 
         <!-- OPTIONAL show-meta component to display page metadata for debugging -->
         <!-- <show-meta></show-meta> -->
