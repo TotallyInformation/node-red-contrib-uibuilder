@@ -3,7 +3,8 @@ title: Custom web components
 description: |
   Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2026-02-02 15:58:45
+updated: 2026-02-14 18:49:04
+since: v6.6.0
 ---
 
 The following custom web components are built into UIBUILDER:
@@ -201,7 +202,7 @@ This approach is especially useful to be able to display MQTT topic values in yo
 
 #### variable :id=uib-var-variable
 
-Displays the *value* of the given variable name in your web page and *dynamically updates* as long as the variable is changed using `uibuilder.set()`; or from Node-RED using the appropriate uib set command, e.g. `msg = {"command":"set","prop":"myVar","value":"42"}`. By default, the tag inserts the variable value inline with other text. Class and Style attributes can be added as for any other HTML.
+Displays the *value* of the given variable name in your web page and *dynamically updates* as long as the variable is changed using `uibuilder.set()`; or from Node-RED using the appropriate uib set command, e.g. `msg = {"_uib":{"command":"set","prop":"myVar","value":"42"}}`. By default, the tag inserts the variable value inline with other text. Class and Style attributes can be added as for any other HTML.
 
 > Cannot be used in conjunction with the `topic` attribute.
 
