@@ -1,0 +1,22 @@
+[
+    {
+        "id": "27fb63a4feb50d27",
+        "type": "template",
+        "z": "9a441642d682bedd",
+        "g": "b0603345b3ca1c09",
+        "name": "index.js",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "javascript",
+        "syntax": "plain",
+        "template": "// Give VS Code IntelliSense for uibuilder\n// (not part of the code, just for type checking and auto-completion)\n/// <reference path=\"../types/uibuilder.d.ts\" />\n\n// Listen for incoming messages from Node-RED and action\n// This sets up a listener function. So you can set it up before\n// other things if you want.\nuibuilder.onChange('msg', (msg) => {\n    // For example #3, we listen for a msg with `msg.deeper` and update the variable `setByJavaScript` with the value of `msg.deeper`.\n    if (msg.deeper) {\n        console.log('Received msg.deeper from Node-RED. Updating setByJavaScript.deep.deeper:', msg)\n        // We can update this either way:\n        // uibuilder.set('setByJavaScript', { deep: { deeper: msg.deeper } })\n        uibuilder.set('setByJavaScript.deep.deeper', msg.deeper)\n    }\n})\n\n// Create a uibuilder managed variable. We use this in the\n// HTML for example #3. We don't have to do this of course\n// It is fine for the variable to be undefined until we set it,\n// but this way we can give it an initial value and structure.\n//\n// If we don't use a delay as in the code below, this default\n// will likely never be seen in the page. Try this out by \n// stopping the update from Node-RED.\nuibuilder.set('setByJavaScript', {\n    deep: {\n        deeper: 'This is the initial value of the variable setByJavaScript. It will be updated by a remote command from Node-RED.',\n    },\n})\n\n// Page startup needs a bit of time to set up the custom web components.\n// So we are delaying by a few ms. Alternatively,\n// you could create a listener for the `uib-var:ready` event and run the set\n// command in that. But, in practice, a short delay is usually sufficient.\nsetTimeout(() => {\n    uibuilder.set('setByJavaScript2', {\n        text: 'This variable is set by JavaScript after a delay of 10ms.',\n        text2: 'Because of how JS works, it needs time to start before running this.',\n        text3: 'It is not updated by a remote command from Node-RED.',\n        text4: 'But, of course, it could come from Node-RED if we wanted it to.',\n        obj: {\n            nested: true,\n            number: Math.random() * 100,\n            int: 42,\n            today: new Date(),\n        },\n    })    \n}, 10);\n",
+        "output": "str",
+        "x": 340,
+        "y": 260,
+        "wires": [
+            [
+                "f31faa59a1a0c499"
+            ]
+        ]
+    }
+]
