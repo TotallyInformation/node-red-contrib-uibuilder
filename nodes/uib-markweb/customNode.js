@@ -332,28 +332,29 @@ function internalControlMsgHooks(node, log) {
          */
         navigate: doNavigate.bind(node),
 
+        // ! NO LONGER NEEDED
         /** Internal control hook to get page metadata
          * @param {object} msg A control message with at least { initialPath: string }
          */
-        getMetadata: (msg) => {
-            const index = node.index
-            // Strip hash/fragment identifiers (e.g., #section) as they are client-side only
-            let lookupPath = msg.initialPath
-            if (lookupPath && lookupPath.includes('#')) lookupPath = lookupPath.split('#')[0]
-            // console.log(`🌐[uib-markweb:nodeInstance] Internal get-metadata control message received for instance URL "${node.url}": "${msg.initialPath}"`, index.has(lookupPath), index)
-            const attributes = index.get(lookupPath)
-            const data = { ...attributes, }
-            delete data.body // We don't want this in the front-end
+        // getMetadata: (msg) => {
+        //     const index = node.index
+        //     // Strip hash/fragment identifiers (e.g., #section) as they are client-side only
+        //     let lookupPath = msg.initialPath
+        //     if (lookupPath && lookupPath.includes('#')) lookupPath = lookupPath.split('#')[0]
+        //     // console.log(`🌐[uib-markweb:nodeInstance] Internal get-metadata control message received for instance URL "${node.url}": "${msg.initialPath}"`, index.has(lookupPath), index)
+        //     const attributes = index.get(lookupPath)
+        //     const data = { ...attributes, }
+        //     data.content = mdParse(attributes.content || '', attributes) // Pre-render markdown content to HTML for display in metadata panel
 
-            // Get the client to set the pageData managed prop
-            node.sendToFe({
-                topic: '_page-metadata',
-                initialPath: msg.initialPath,
-                attributes: data,
-                // attributes: data,
-                _socketId: msg._socketId, // Ensure response goes to requesting client only
-            }, node, uib.ioChannels.control)
-        },
+        //     // Get the client to set the pageData managed prop
+        //     node.sendToFe({
+        //         topic: '_page-metadata',
+        //         initialPath: msg.initialPath,
+        //         attributes: data,
+        //         // attributes: data,
+        //         _socketId: msg._socketId, // Ensure response goes to requesting client only
+        //     }, node, uib.ioChannels.control)
+        // },
     }
 }
 
@@ -1242,6 +1243,7 @@ async function doNavigate(msg) {
     if (parsedPath.ext === '.md') {
         // processTemplates(node.pageTemplate, attributes)
         attributes = await getMarkdownFile(this, fullPath, morePath, parsedPath, 'doNavigate')
+        attributes.content = mdParse(attributes.content || '', attributes) // Pre-render markdown content to HTML for display in metadata panel
         this.sendToFe({
             topic: returnTopic,
             attributes: attributes,
@@ -1625,6 +1627,28 @@ function htmlTemplate(node, attributes = {}) {
     return html
 }
 
+/** Render a prescript block that safely assigns page attributes to window.pageData at load time
+ * Uses base64 encoding to prevent processTemplates from matching {{...}} or %%...%%
+ * patterns inside the serialized JSON, and to avoid <script> tag injection issues.
+ * @param {'prescript'} key The special key being processed
+ * @param {object} attributes The current pages attributes
+ * @param {runtimeNode & uibMwNode} node The current node instance
+ * @param {object} [options] Optional options (not used)
+ * @returns {string} JavaScript code to embed in a script tag
+ */
+function renderPrescript(key, attributes, node, options) {
+    // Base64 encode the JSON to avoid:
+    //   1. processTemplates replacing {{...}} / %%...%% patterns found inside the JSON
+    //   2. </script> or other HTML-breaking sequences in the content
+    const b64 = Buffer.from(JSON.stringify(attributes)).toString('base64')
+    const content = Buffer.from(mdParse(attributes.content, attributes)).toString('base64')
+    return `<script>
+    window.baseUrl = '${node.url}';
+    window.pageData = JSON.parse(atob('${b64}'));
+    window.pageData.content = atob('${content}');
+</script>`
+}
+
 /** Check if this.configFolder exists and is readable
  * @param {runtimeNode & uibMwNode} node Instance `this` context
  * @returns {boolean|null} True if configFolder exists and is readable, false if not, null if not set
@@ -1685,6 +1709,8 @@ function processTemplates(htmlText, node, attributes = {}, calledFrom = '') {
         'index': indexListing,
         'date': renderDate,
         'copyright': renderCopyright,
+        // Adds a script tag to create window.pageData BEFORE uibuilder and markweb libraries load
+        'prescript': renderPrescript,
     }
 
     // Protect backtick-wrapped patterns from processing (e.g., `%%nav%%` or `{{title}}`)
