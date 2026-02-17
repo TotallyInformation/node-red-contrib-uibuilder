@@ -162,6 +162,14 @@
       // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
       __publicField(this, "sanitiseExtraTags", ["uib-var"]);
       __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
+      /** DOMPurify custom element handling options - allows all valid custom elements (hyphenated tags)
+       * @type {{tagNameCheck: RegExp, attributeNameCheck: RegExp, allowCustomizedBuiltInElements: boolean}}
+       */
+      __publicField(this, "sanitiseCustomElementHandling", {
+        tagNameCheck: /^[a-z][a-z0-9]*-[a-z0-9-]*$/,
+        attributeNameCheck: /^[a-z_][\w.-]*$/i,
+        allowCustomizedBuiltInElements: false
+      });
       /** Optional Markdown-IT Plugins */
       __publicField(this, "ui_md_plugins");
       if (win) _a.win = win;
@@ -1171,7 +1179,11 @@
      */
     sanitiseHTML(html) {
       if (!_a.win["DOMPurify"]) return html;
-      return _a.win["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
+      return _a.win["DOMPurify"].sanitize(html, {
+        ADD_TAGS: this.sanitiseExtraTags,
+        ADD_ATTR: this.sanitiseExtraAttribs,
+        CUSTOM_ELEMENT_HANDLING: this.sanitiseCustomElementHandling
+      });
     }
     // TODO - Allow notify to sit in corners rather than take over the screen
     /** Show a pop-over "toast" dialog or a modal alert
@@ -5490,6 +5502,7 @@
       }
       if (__privateGet(this, _varCb)) this.uibuilder.cancelChange(varName, __privateGet(this, _varCb));
       if (!varName) return;
+      this._varChange(this.uibuilder.get(varName));
       __privateSet(this, _varCb, this.uibuilder.onChange(varName, this._varChange.bind(this)));
     }
     /** Get the watched uibuilder variable name
@@ -7166,7 +7179,7 @@
       // CSS selector for querySelectorAll to find elements with known uib attributes.
       // NOTE: CSS cannot match attribute name prefixes, so this covers known names.
       //       _uibAttrScanOne handles any uib-prefixed attributes found on matched elements.
-      __privateAdd(this, _uibAttrSel, "[uib-topic], [data-uib-topic], [uib-var], [data-uib-var]");
+      __privateAdd(this, _uibAttrSel, "[uib-topic], [data-uib-topic], [uib-var], [data-uib-var], [uib-if], [data-uib-if]");
       //#endregion
       // #region public class vars
       // TODO Move to proper getters
@@ -7381,16 +7394,6 @@
         }
       } catch (e) {
       }
-      this._uibAttrScanAll(document);
-      const observer = new MutationObserver(this._uibAttribObserver.bind(this));
-      observer.observe(document, {
-        subtree: true,
-        attributes: true,
-        attributeOldValue: true,
-        // No attributeFilter - the callback uses isUibAttribute() to filter by prefix,
-        // which is more flexible than an explicit list of attribute names.
-        childList: true
-      });
       this._watchHashChanges();
       this.onChange("msg", (msg) => {
         if (__privateGet(this, _isShowMsg) === true) {
@@ -7580,10 +7583,11 @@
       document.removeEventListener("uibuilder:propertyChanged", __privateGet(this, _propChangeCallbacks)[prop][cbRef]);
       delete __privateGet(this, _propChangeCallbacks)[prop][cbRef];
     }
-    /** Register a change callback for a specific msg.topic
+    /** Register a change callback for a specific msg.topic (works for std and ctrl msgs)
      * Similar to onChange but more convenient if needing to differentiate by msg.topic.
      * @example let otRef = uibuilder.onTopic('mytopic', function(){ console.log('Received a msg with msg.topic=`mytopic`. msg: ', this) })
      * To cancel a change listener: uibuilder.cancelTopic('mytopic', otRef)
+     * Since v7.6, added ctrl msgs so that <uib-var> and uib-topic in HTML can process control as well as standard msgs
      *
      * @param {string} topic The msg.topic we want to listen for
      * @param {Function} callback The function that will run when an appropriate msg is received. `this` inside the callback as well as the cb's single argument is the received msg.
@@ -7600,11 +7604,12 @@
         }
       };
       document.addEventListener("uibuilder:stdMsgReceived", msgRecvdEvtCallback);
+      document.addEventListener("uibuilder:ctrlMsgReceived", msgRecvdEvtCallback);
       return nextCbRef;
     }
     cancelTopic(topic, cbRef) {
       document.removeEventListener("uibuilder:stdMsgReceived", __privateGet(this, _msgRecvdByTopicCallbacks)[topic][cbRef]);
-      delete __privateGet(this, _msgRecvdByTopicCallbacks)[topic][cbRef];
+      document.removeEventListener("uibuilder:ctrlMsgReceived", __privateGet(this, _msgRecvdByTopicCallbacks)[topic][cbRef]);
     }
     /** Trigger event listener for a given property
      * Called when uibuilder.set is used
@@ -7802,7 +7807,7 @@
       if (url2) window.location.href = url2;
       return window.location;
     }
-    /** Create and return a randomised UUID 
+    /** Create and return a randomised UUID
      * Uses the browsers crypto library if available (newer browsers)
      * or something based on the timestamp and a random number
      * @returns {string} The UUID
@@ -8247,25 +8252,141 @@
             else if (hasChecked) el.value = this.truthy(msg.checked, false);
           }
         }
-        if (Object.prototype.hasOwnProperty.call(msg, "payload")) this.replaceSlot(el, msg.payload);
+        if (el.hasAttribute("content")) {
+          if (Object.prototype.hasOwnProperty.call(msg, "payload")) el.setAttribute("content", msg.payload);
+        } else {
+          if (Object.prototype.hasOwnProperty.call(msg, "payload")) this.replaceSlot(el, msg.payload);
+        }
       });
     }
-    // TODO: Needs to correctly process deep variable properties (ref <uib-var> component)
-    /** Process a uib-var attribute by evaluating the variable reference and applying it to the element
-     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
-     * @param {HTMLElement} el The element to process
-     * @param {string} varName The variable name to watch for
+    /** Resolve a dotted/bracketed property path on an object
+     * e.g. resolveNestedPath(obj, 'a.b["c"]') => obj.a.b.c
+     * @param {object} obj The object to resolve from
+     * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
+     * @returns {*} The resolved value, or undefined if not found
      * @private
      */
-    _processUibVar(el, varName) {
-      this.onChange(varName, (value2) => {
+    _resolveNestedPath(obj, path) {
+      if (!obj || !path) return void 0;
+      const keys = path.replace(/\[["']?/g, ".").replace(/["']?\]/g, "").split(".").filter(Boolean);
+      let current = obj;
+      for (const key of keys) {
+        if (current == null) return void 0;
+        current = current[key];
+      }
+      return current;
+    }
+    /** Process a uib-var attribute by evaluating the variable reference and applying it to the element
+     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc).
+     *  Supports deep property paths such as "myvar.aprop" or "myvar['bprop']".
+     * @param {HTMLElement} el The element to process
+     * @param {string} varName The variable name (optionally with property path) to watch for
+     * @private
+     */
+    async _processUibVar(el, varName) {
+      const doVar = (value2) => {
         if (typeof value2 !== "object") {
           value2 = {
             payload: value2
           };
         }
-        if (Object.prototype.hasOwnProperty.call(value2, "payload")) this.replaceSlot(el, value2.payload);
+        if (Object.prototype.hasOwnProperty.call(value2, "payload")) {
+          if (el.hasAttribute("content")) {
+            el.setAttribute("content", value2.payload);
+          } else if (el.hasAttribute("rel")) {
+            el.setAttribute("href", value2.payload);
+          } else {
+            this.replaceSlot(el, value2.payload);
+          }
+        }
+      };
+      const dotIdx = varName.indexOf(".");
+      const bracketIdx = varName.indexOf("[");
+      let sepIdx = -1;
+      if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx);
+      else if (dotIdx >= 0) sepIdx = dotIdx;
+      else if (bracketIdx >= 0) sepIdx = bracketIdx;
+      const hasSubPath = sepIdx > 0;
+      const rootProp = hasSubPath ? varName.substring(0, sepIdx) : varName;
+      this.onChange(rootProp, (rootValue) => {
+        if (hasSubPath) {
+          const nestedValue = this._resolveNestedPath(this, varName);
+          doVar(nestedValue);
+        } else {
+          doVar(rootValue);
+        }
       });
+      doVar(await this.evaluateWithRetry(varName, this, {}));
+    }
+    // ! EXPERIMENTAL - not fully working. Is not reactive.
+    /** Process a uib-if attribute by safely evaluating a JavaScript expression that returns true/false.
+     * If true (the default), the element's content is visible. If false, the content is hidden.
+     * Uses display style rather than removing content so the element can be shown again later.
+     * The expression can reference uibuilder managed variables (e.g. pageData.status) directly
+     * as well as global/window variables.
+     * @param {HTMLElement} el The element to process
+     * @param {string} expr The JavaScript expression to evaluate
+     * @private
+     */
+    async _processUibIf(el, expr) {
+      const result = await this.evaluateWithRetry(expr, this, {});
+      el.style.display = result ? "" : "none";
+    }
+    /**
+     * Creates a safe evaluator function for template expressions
+     * @param {string} expression - The expression to evaluate (e.g., "pageData.status || pageData.since")
+     * @param {Object} context - The context object containing variables (e.g., { pageData })
+     * @param {Object} options - Configuration options
+     * @returns {Promise<boolean>} - Resolves to true/false
+     */
+    async evaluateWithRetry(expression, context, options = {}) {
+      const {
+        maxRetries = 3,
+        retryDelay = 300,
+        defaultValue = false
+      } = options;
+      const evaluator = this.createSafeEvaluator(expression);
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          const result = evaluator(context);
+          if (result !== void 0 && result !== null) {
+            return result;
+          }
+          if (attempt === maxRetries) {
+            return defaultValue;
+          }
+          await this.sleep(retryDelay);
+        } catch (error) {
+          console.warn("Evaluation attempt ".concat(attempt + 1, " failed:"), error.message);
+          if (attempt === maxRetries) {
+            return defaultValue;
+          }
+          await this.sleep(retryDelay);
+        }
+      }
+      return defaultValue;
+    }
+    /**
+     * Creates a sandboxed evaluator function
+     * @param {string} expression - The expression to evaluate
+     * @returns {Function} - Evaluator function
+     */
+    createSafeEvaluator(expression) {
+      if (typeof expression !== "string" || expression.trim() === "") {
+        throw new Error("Expression must be a non-empty string");
+      }
+      try {
+        return new Function("context", "\n                // 'use strict';\n                with (context) {\n                    return (".concat(expression, ");\n                }\n            "));
+      } catch (error) {
+        console.error("Failed to create evaluator:", error);
+        return () => false;
+      }
+    }
+    /**
+     * Sleep utility
+     */
+    sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
     }
     // ! EXPERIMENTAL
     /** Process a uib-bind:* attribute by evaluating the bind value and applying it to the element as the named attribute
@@ -8299,7 +8420,7 @@
       }
     }
     /** Check a single HTML element for uib attributes and add auto-processors as needed.
-     * Understands uib-prefixed attributes (e.g. uib-topic, uib-var, uib-bind:*, etc). Msgs received on the topic can have:
+     * Understands uib-prefixed attributes (e.g. uib-topic, uib-var, uib-bind:*, uib-if, etc). Msgs received on the topic can have:
      *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
      *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
      * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
@@ -8319,6 +8440,7 @@
         const attr = uibAttribs[i];
         if ((attr == null ? void 0 : attr.name) === "uib-topic" || (attr == null ? void 0 : attr.name) === "data-uib-topic") this._processUibTopic(el, attr.value);
         else if ((attr == null ? void 0 : attr.name) === "uib-var" || (attr == null ? void 0 : attr.name) === "data-uib-var") this._processUibVar(el, attr.value);
+        else if ((attr == null ? void 0 : attr.name) === "uib-if" || (attr == null ? void 0 : attr.name) === "data-uib-if") this._processUibIf(el, attr.value);
         else if ((attr == null ? void 0 : attr.name.startsWith("uib-bind:")) || (attr == null ? void 0 : attr.name.startsWith("data-uib-bind:")) || (attr == null ? void 0 : attr.name.startsWith(":"))) {
           const bindName = attr.name.replace(/^(uib-bind:|data-uib-bind:|:)/, "");
           this._processUibBind(el, bindName, attr.value);
@@ -8803,6 +8925,7 @@
      * @private
      */
     _ctrlMsgFromServer(receivedCtrlMsg) {
+      this._dispatchCustomEvent("uibuilder:ctrlMsgReceived", receivedCtrlMsg);
       const ts = performance.now();
       if (receivedCtrlMsg === null) {
         receivedCtrlMsg = {};
@@ -9655,7 +9778,6 @@
       if (this.started === true) {
         log("info", "Uib:start", "Start function already called. Resetting Socket.IO and msg handler.")();
       }
-      if (!document.cookie) log("error", "uibuilder:start", "No cookies! There should be some, is this stupid Firefox?")();
       document.cookie.split(";").forEach((c) => {
         const splitC = c.split("=");
         this.cookies[splitC[0].trim()] = splitC[1];
@@ -9682,6 +9804,19 @@
       this.set("pageName", window.location.pathname.replace("".concat(this.ioNamespace, "/"), ""));
       if (this.pageName.endsWith("/")) this.set("pageName", "".concat(this.pageName, "index.html"));
       if (this.pageName === "") this.set("pageName", "index.html");
+      setTimeout(() => {
+        this._uibAttrScanAll(document);
+        const observer = new MutationObserver(this._uibAttribObserver.bind(this));
+        observer.observe(document, {
+          subtree: true,
+          attributes: true,
+          attributeOldValue: true,
+          // No attributeFilter - the callback uses isUibAttribute() to filter by prefix,
+          // which is more flexible than an explicit list of attribute names.
+          childList: true
+        });
+        perf.set("observing", performance.now());
+      }, 5);
       log("log", "Uib:start", "Cookies: ", this.cookies, "\nClient ID: ".concat(this.clientId))();
       log("trace", "Uib:start", "ioNamespace: ", this.ioNamespace, "\nioPath: ".concat(this.ioPath))();
       if (options) {
@@ -9721,7 +9856,6 @@
       }
       this._dispatchCustomEvent("uibuilder:startComplete");
       perf.set("start finished", performance.now());
-      console.log("Performance: ", perf);
     }
     // #endregion -------- ------------ -------- //
   }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _uniqueElID = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), _uibAttrSel = new WeakMap(), // #region --- Static variables ---
@@ -9791,6 +9925,8 @@
     customElements.define("uib-meta", uib_meta_default);
     customElements.define("apply-template", apply_template_default);
     customElements.define("uib-control", uib_control_default);
+    perf.set("all done", performance.now());
+    console.log("Performance: ", perf);
   });
 })();
 /**

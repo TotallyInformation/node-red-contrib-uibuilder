@@ -401,7 +401,7 @@ export const Uib = class Uib {
     // CSS selector for querySelectorAll to find elements with known uib attributes.
     // NOTE: CSS cannot match attribute name prefixes, so this covers known names.
     //       _uibAttrScanOne handles any uib-prefixed attributes found on matched elements.
-    #uibAttrSel = '[uib-topic], [data-uib-topic], [uib-var], [data-uib-var]'
+    #uibAttrSel = '[uib-topic], [data-uib-topic], [uib-var], [data-uib-var], [uib-if], [data-uib-if]'
 
     //#endregion
 
@@ -746,10 +746,11 @@ export const Uib = class Uib {
         // this.#propChangeCallbacks[topic]._nextRef-- // Don't bother, let the ref# increase
     }
 
-    /** Register a change callback for a specific msg.topic
+    /** Register a change callback for a specific msg.topic (works for std and ctrl msgs)
      * Similar to onChange but more convenient if needing to differentiate by msg.topic.
      * @example let otRef = uibuilder.onTopic('mytopic', function(){ console.log('Received a msg with msg.topic=`mytopic`. msg: ', this) })
      * To cancel a change listener: uibuilder.cancelTopic('mytopic', otRef)
+     * Since v7.6, added ctrl msgs so that <uib-var> and uib-topic in HTML can process control as well as standard msgs
      *
      * @param {string} topic The msg.topic we want to listen for
      * @param {Function} callback The function that will run when an appropriate msg is received. `this` inside the callback as well as the cb's single argument is the received msg.
@@ -773,13 +774,14 @@ export const Uib = class Uib {
         }
 
         document.addEventListener('uibuilder:stdMsgReceived', msgRecvdEvtCallback)
+        document.addEventListener('uibuilder:ctrlMsgReceived', msgRecvdEvtCallback)
 
         return nextCbRef
     }
 
     cancelTopic(topic, cbRef) {
         document.removeEventListener('uibuilder:stdMsgReceived', this.#msgRecvdByTopicCallbacks[topic][cbRef])
-        delete this.#msgRecvdByTopicCallbacks[topic][cbRef]
+        document.removeEventListener('uibuilder:ctrlMsgReceived', this.#msgRecvdByTopicCallbacks[topic][cbRef])
         // this.#msgRecvdCallbacks[topic]._nextRef-- // Don't bother, let the ref# increase
     }
 
@@ -1008,7 +1010,7 @@ export const Uib = class Uib {
         return window.location
     }
 
-    /** Create and return a randomised UUID 
+    /** Create and return a randomised UUID
      * Uses the browsers crypto library if available (newer browsers)
      * or something based on the timestamp and a random number
      * @returns {string} The UUID
@@ -1565,29 +1567,224 @@ export const Uib = class Uib {
 
             // TODO (MAYBE) Process msg.classes and msg.styles. msg.props (for non-string data)?
 
-            // Process msg.payload (applied as slot HTML) - NB: Will process <script> & <style>
-            if (Object.prototype.hasOwnProperty.call(msg, 'payload')) this.replaceSlot(el, msg.payload)
+            // If el has a `content` attrib, we must apply as text not html
+            if (el.hasAttribute('content')) {
+                if (Object.prototype.hasOwnProperty.call(msg, 'payload')) el.setAttribute('content', msg.payload)
+            } else {
+                // Process msg.payload (applied as slot HTML) - NB: Will process <script> & <style>
+                if (Object.prototype.hasOwnProperty.call(msg, 'payload')) this.replaceSlot(el, msg.payload)
+            }
         })
     }
 
-    // TODO: Needs to correctly process deep variable properties (ref <uib-var> component)
-    /** Process a uib-var attribute by evaluating the variable reference and applying it to the element
-     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
-     * @param {HTMLElement} el The element to process
-     * @param {string} varName The variable name to watch for
+    /** Resolve a dotted/bracketed property path on an object
+     * e.g. resolveNestedPath(obj, 'a.b["c"]') => obj.a.b.c
+     * @param {object} obj The object to resolve from
+     * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
+     * @returns {*} The resolved value, or undefined if not found
      * @private
      */
-    _processUibVar(el, varName) {
-        // Create a uibuilder managed variable watcher
-        this.onChange(varName, (value) => {
+    _resolveNestedPath(obj, path) {
+        if (!obj || !path) return undefined
+        // Split on dots and bracket notation, filter out empty segments
+        const keys = path.replace(/\[["']?/g, '.').replace(/["']?\]/g, '').split('.').filter(Boolean)
+        let current = obj
+        for (const key of keys) {
+            if (current == null) return undefined
+            current = current[key]
+        }
+        return current
+    }
+
+    /** Process a uib-var attribute by evaluating the variable reference and applying it to the element
+     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc).
+     *  Supports deep property paths such as "myvar.aprop" or "myvar['bprop']".
+     * @param {HTMLElement} el The element to process
+     * @param {string} varName The variable name (optionally with property path) to watch for
+     * @private
+     */
+    async _processUibVar(el, varName) {
+        const doVar = (value) => {
+            // console.log(`🪲[uibuilder:_processUibVar] Variable "${varName}" changed. New value:`, value)
             // log('trace', 'uibuilder:_processUibVar', `Variable "${varName}" changed. New value: `, value)()
             if (typeof value !== 'object') {
                 value = {
                     payload: value,
                 }
             }
-            if (Object.prototype.hasOwnProperty.call(value, 'payload')) this.replaceSlot(el, value.payload)
+            // Deal with different element types:
+            if (Object.prototype.hasOwnProperty.call(value, 'payload')) {
+                if (el.hasAttribute('content')) {
+                    // If el has a `content` attrib, we must apply as text not html
+                    el.setAttribute('content', value.payload)
+                } else if (el.hasAttribute('rel')) {
+                    // If it has a `rel` attribute, we have to set the `href`
+                    el.setAttribute('href', value.payload)
+                } else {
+                    // Otherwise, we replace the innerHTML
+                    this.replaceSlot(el, value.payload)
+                }
+            }
+        }
+
+        // Determine the root property and any nested sub-path
+        // e.g. "myvar.aprop" => rootProp="myvar", subPath="aprop"
+        // e.g. "myvar['bprop'].x" => rootProp="myvar", subPath="'bprop'].x"
+        const dotIdx = varName.indexOf('.')
+        const bracketIdx = varName.indexOf('[')
+        // Find the earliest separator
+        let sepIdx = -1
+        if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx)
+        else if (dotIdx >= 0) sepIdx = dotIdx
+        else if (bracketIdx >= 0) sepIdx = bracketIdx
+
+        const hasSubPath = sepIdx > 0
+        const rootProp = hasSubPath ? varName.substring(0, sepIdx) : varName
+
+        // Create a uibuilder managed variable watcher on the root property
+        // When the root property changes, resolve the full nested path to get the value
+        this.onChange(rootProp, (rootValue) => {
+            if (hasSubPath) {
+                // Resolve the nested value from the updated root object
+                const nestedValue = this._resolveNestedPath(this, varName)
+                doVar(nestedValue)
+            } else {
+                doVar(rootValue)
+            }
         })
+        // and do it now
+        doVar(await this.evaluateWithRetry(varName, this, {}))
+    }
+
+    // ! EXPERIMENTAL - not fully working. Is not reactive.
+    /** Process a uib-if attribute by safely evaluating a JavaScript expression that returns true/false.
+     * If true (the default), the element's content is visible. If false, the content is hidden.
+     * Uses display style rather than removing content so the element can be shown again later.
+     * The expression can reference uibuilder managed variables (e.g. pageData.status) directly
+     * as well as global/window variables.
+     * @param {HTMLElement} el The element to process
+     * @param {string} expr The JavaScript expression to evaluate
+     * @private
+     */
+    async _processUibIf(el, expr) {
+        // /** Evaluate the expression using current managed variables and apply visibility
+        //  * @private
+        //  */
+        // const evaluate = () => {
+        //     // Skip if element has been removed from DOM
+        //     if (!el.isConnected) return
+        //     let result = true
+        //     try {
+        //         // Inject user-set managed variables as local parameters so they can be
+        //         // referenced directly in expressions (e.g. `pageData.status || pageData.since`).
+        //         // Only include names that are valid JS identifiers.
+        //         const varNames = Object.keys(this.#managedVars).filter(name => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name))
+        //         const varValues = varNames.map(name => this[name])
+        //         // Also expose the uibuilder instance itself
+        //         varNames.push('uibuilder')
+        //         varValues.push(this)
+        //         result = (new Function(...varNames, `return (${expr})`))(...varValues)
+        //         console.log(`🪲[uibuilder:_processUibIf] Evaluated expression "${expr}" with result:`, result)
+        //     } catch (e) {
+        //         log('warn', 'uibuilder:_processUibIf', `Failed to evaluate uib-if expression "${expr}". Defaulting to true.`, e.message)()
+        //     }
+        //     // Coerce to boolean, default to true for non-boolean returns
+        //     if (typeof result !== 'boolean') result = this.truthy(result, true)
+        //     el.style.display = result ? '' : 'none'
+        // }
+        // // Evaluate immediately with whatever vars are available now
+        // setTimeout(() => {
+        //     evaluate()
+        // }, 300)
+        // // Re-evaluate whenever any managed variable changes (handles timing/late-set vars)
+        // document.addEventListener('uibuilder:propertyChanged', evaluate)
+        // const result = await this.evaluateWithRetry(expr, this, {})
+        const result = await this.evaluateWithRetry(expr, this, {})
+        // console.log(`🪲[uibuilder:_processUibIf] Final result for expression "${expr}":`, result)
+        el.style.display = result ? '' : 'none'
+    }
+
+    /**
+     * Creates a safe evaluator function for template expressions
+     * @param {string} expression - The expression to evaluate (e.g., "pageData.status || pageData.since")
+     * @param {Object} context - The context object containing variables (e.g., { pageData })
+     * @param {Object} options - Configuration options
+     * @returns {Promise<boolean>} - Resolves to true/false
+     */
+    async evaluateWithRetry(expression, context, options = {}) {
+        const {
+            maxRetries = 3,
+            retryDelay = 300,
+            defaultValue = false,
+        } = options
+
+        // Create a safe evaluation function
+        const evaluator = this.createSafeEvaluator(expression)
+
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const result = evaluator(context)
+                // console.log(`🪲[uibuilder:evaluateWithRetry] Attempt ${attempt + 1} for expression "${expression}" with result:`, result)
+
+                // Convert to boolean and check if we got a meaningful result
+                // (not undefined/null on first attempts)
+                if (result !== undefined && result !== null) {
+                    // return Boolean(result)
+                    return result
+                }
+
+                // If this was the last attempt, return default
+                if (attempt === maxRetries) {
+                    return defaultValue
+                }
+
+                // Wait before retry
+                await this.sleep(retryDelay)
+            } catch (error) {
+                console.warn(`Evaluation attempt ${attempt + 1} failed:`, error.message)
+
+                if (attempt === maxRetries) {
+                    return defaultValue
+                }
+
+                await this.sleep(retryDelay)
+            }
+        }
+
+        return defaultValue
+    }
+
+    /**
+     * Creates a sandboxed evaluator function
+     * @param {string} expression - The expression to evaluate
+     * @returns {Function} - Evaluator function
+     */
+    createSafeEvaluator(expression) {
+        // Validate the expression (basic security check)
+        if (typeof expression !== 'string' || expression.trim() === '') {
+            throw new Error('Expression must be a non-empty string')
+        }
+
+        // Create function with explicit parameter to avoid global scope access
+        // The context will be passed as an argument, making available variables explicit
+        try {
+            return new Function('context', `
+                // 'use strict';
+                with (context) {
+                    return (${expression});
+                }
+            `)
+        } catch (error) {
+            console.error('Failed to create evaluator:', error)
+            return () => false // Return safe default function
+        }
+    }
+
+    /**
+     * Sleep utility
+     */
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms))
     }
 
     // ! EXPERIMENTAL
@@ -1629,7 +1826,7 @@ export const Uib = class Uib {
     }
 
     /** Check a single HTML element for uib attributes and add auto-processors as needed.
-     * Understands uib-prefixed attributes (e.g. uib-topic, uib-var, uib-bind:*, etc). Msgs received on the topic can have:
+     * Understands uib-prefixed attributes (e.g. uib-topic, uib-var, uib-bind:*, uib-if, etc). Msgs received on the topic can have:
      *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
      *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
      * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
@@ -1658,6 +1855,7 @@ export const Uib = class Uib {
             const attr = uibAttribs[i]
             if (attr?.name === 'uib-topic' || attr?.name === 'data-uib-topic') this._processUibTopic(el, attr.value)
             else if (attr?.name === 'uib-var' || attr?.name === 'data-uib-var') this._processUibVar(el, attr.value)
+            else if (attr?.name === 'uib-if' || attr?.name === 'data-uib-if') this._processUibIf(el, attr.value)
             // ! EXPERIMENTAL Check for uib-bind:* attributes
             else if (attr?.name.startsWith('uib-bind:') || attr?.name.startsWith('data-uib-bind:') || attr?.name.startsWith(':')) {
                 // Get the bind name
@@ -2248,6 +2446,8 @@ export const Uib = class Uib {
      * @private
      */
     _ctrlMsgFromServer(receivedCtrlMsg) {
+        this._dispatchCustomEvent('uibuilder:ctrlMsgReceived', receivedCtrlMsg)
+
         // track received high-res timestamp
         const ts = performance.now()
 
@@ -3580,19 +3780,6 @@ export const Uib = class Uib {
             }
         } catch (e) {}
 
-        // Initial scan for uib-* attributes & add suitable change processors
-        this._uibAttrScanAll(document)
-        // Observer to watch for new/changed elements & add suitable change processors
-        const observer = new MutationObserver(this._uibAttribObserver.bind(this))
-        observer.observe(document, {
-            subtree: true,
-            attributes: true,
-            attributeOldValue: true,
-            // No attributeFilter - the callback uses isUibAttribute() to filter by prefix,
-            // which is more flexible than an explicit list of attribute names.
-            childList: true,
-        })
-
         // Watch for URL hash changes in case using a front-end router. Updates watched var `urlHash` and socket.io `auth.urlHash`
         this._watchHashChanges()
 
@@ -3628,7 +3815,7 @@ export const Uib = class Uib {
             log('info', 'Uib:start', 'Start function already called. Resetting Socket.IO and msg handler.')()
         }
 
-        if (!document.cookie) log('error', 'uibuilder:start', 'No cookies! There should be some, is this stupid Firefox?')()
+        // if (!document.cookie) log('error', 'uibuilder:start', 'No cookies! There should be some, is this stupid Firefox?')()
         document.cookie.split(';').forEach((c) => {
             const splitC = c.split('=')
             this.cookies[splitC[0].trim()] = splitC[1]
@@ -3661,12 +3848,28 @@ export const Uib = class Uib {
         this.set('ioPath', this.urlJoin(this.httpNodeRoot, Uib._meta.displayName, 'vendor', 'socket.io'))
         log('trace', 'Uib:constructor', `ioPath: "${this.ioPath}"`)()
 
-        //#endregion
-
         // Work out pageName
         this.set('pageName', window.location.pathname.replace(`${this.ioNamespace}/`, ''))
         if ( this.pageName.endsWith('/') ) this.set('pageName', `${this.pageName}index.html`)
         if ( this.pageName === '' ) this.set('pageName', 'index.html')
+
+        // Delay DOM monitoring by 5ms which is enough for a following script to set some values
+        // but not enough to be visible
+        setTimeout(() => {
+            // Initial scan for uib-* attributes & add suitable change processors
+            this._uibAttrScanAll(document)
+            // Observer to watch for new/changed elements & add suitable change processors
+            const observer = new MutationObserver(this._uibAttribObserver.bind(this))
+            observer.observe(document, {
+                subtree: true,
+                attributes: true,
+                attributeOldValue: true,
+                // No attributeFilter - the callback uses isUibAttribute() to filter by prefix,
+                // which is more flexible than an explicit list of attribute names.
+                childList: true,
+            })
+            perf.set('observing', performance.now())
+        }, 5)
 
         log('log', 'Uib:start', 'Cookies: ', this.cookies, `\nClient ID: ${this.clientId}`)()
         log('trace', 'Uib:start', 'ioNamespace: ', this.ioNamespace, `\nioPath: ${this.ioPath}`)()
@@ -3723,7 +3926,7 @@ export const Uib = class Uib {
 
         this._dispatchCustomEvent('uibuilder:startComplete')
         perf.set('start finished', performance.now())
-        console.log('Performance: ', perf)
+        // console.log('Performance: ', perf)
     }
 
     // #endregion -------- ------------ -------- //
@@ -3827,6 +4030,9 @@ document.addEventListener('uibuilder:httpHeadersReady', () => {
     customElements.define('uib-meta', UibMeta)
     customElements.define('apply-template', ApplyTemplate)
     customElements.define('uib-control', UibControl)
+
+    perf.set('all done', performance.now())
+    console.log('Performance: ', perf)
 })
 
 // #endregion --- Wrap up ---
