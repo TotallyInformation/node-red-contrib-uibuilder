@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- Everything like %%...%% and {{...}} gets replaced on first page load if attributes available.
-  -- Everything that has a data-attribute="...." gets updated when navigating via SPA.
+  -- Everything that has a data-fmvar="...." gets updated when navigating via SPA.
   -- % %body% % is where the main content goes. If you don't include it, you get no content!
   -- <base> is REQUIRED for SPA navigation to work properly.
   -->
@@ -8,20 +8,24 @@
     <meta charset="UTF-8">
     <base href="%%url%%/">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" data-fmvar="description" content="{{description}}">
-    <title data-directive="title">{{title}}</title>
-    <link rel="icon" href="../uibuilder/images/node-blue.ico">
+    <meta name="description" uib-var="pageData.description" content="No description for this page.">
+    <title uib-var="pageData.title">No title</title>
+    <link rel="icon" uib-var="pageData.icon" href="../uibuilder/images/node-blue.ico">
 
     <link type="text/css" rel="stylesheet" href="../uibuilder/uib-brand.min.css" media="all">
     <link type="text/css" rel="stylesheet" href="../uibuilder/utils/markweb.css" media="all">
     <!-- You can add your own stylesheets here -->
 
+    <!-- REQUIRED: Sets window.pageData at load time -->
+    %%prescript%%
+    <!-- REQUIRED: uibuilder client library (optional logLevel)-->
     <script type="module" src="../uibuilder/uibuilder.esm.min.js?logLevel=1"></script>
     <!-- OPTIONAL show-meta component to display page metadata for debugging -->
     <script type="module" src="../uibuilder/utils/show-meta.mjs"></script>
     <!-- Base URL is REQUIRED by the module! The uibuilder client lib is loaded by this module -->
-    <script type="module" src="../uibuilder/utils/markweb.mjs" data-base-url="%%url%%"></script>
-    <!-- You can add your own scripts here -->
+    <!-- <script type="module" src="../uibuilder/utils/markweb.mjs" data-base-url="%%url%%"></script> -->
+    <script type="module" src="../uibuilder/utils/markweb.mjs"></script>
+    <!-- You can add your own scripts after here -->
 
 </head><body><div id="markweb">
 
@@ -32,19 +36,20 @@
         <a class="skip-link" href="#main">Skip to main content</a>
         <header>
             <!-- Nav not needed if sidebar is used (add/remove double %) -->
-            <h1 data-fmvar="title">{{title}}</h1>
+            <h1><uib-var variable="pageData.title">No Title</uib-var></h1>
+            
             <!-- Results not needed if sidebar is used (add/remove double %) -->
             <!-- search-results -->
             <!-- Optional page status display -->
-            <blockquote class="visible-status" data-fmvar="status">
-                {{status [before="Status: ", after=". "]}}
-                {{since [before="Since: ", after=". "]}}
+            <blockquote class="visible-status" uib-if="pageData.status !== undefined || pageData.since !== undefined">
+                <uib-var variable="pageData.status" data-before="Status: " data-after=". "></uib-var>
+                <uib-var variable="pageData.since" data-before="Since: " data-after=". "></uib-var>
             </blockquote>
-            <div data-fmvar="description">{{description}}</div>
+            <div uib-var="pageData.description">No Description for this page.</div>
         </header>
 
         <!-- This is where the main content goes. It will be replaced on navigation. -->
-        <section data-fmvar="content">{{content}}</section>
+        <section><uib-var variable="pageData.content" type="html">No content</uib-var></section>
 
         <!-- OPTIONAL show-meta component to display page metadata for debugging -->
         <!-- <show-meta></show-meta> -->
