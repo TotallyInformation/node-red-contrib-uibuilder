@@ -2,25 +2,27 @@
 /* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable n/no-unsupported-features/node-builtins */
 // ^ This file is browser code, not Node.js - localStorage is a browser API
+
 /** The uibuilder.pageData object is set on load and when navigating
  * You can use it to do your own processing if desired
+ * window.pageData is passed in the initial page load, we use that
+ *   to drive the initial set.
+ * On navigation or server page update notifications, we get the updated
+ *   page data from the server in a control msg.
+ * The updatePageData() fn is used for further updates of the managed
+ *   variable to ensure consistency.
  */
-let pageData
-uibuilder.onChange('pageData', (newPageData) => {
-    console.log(`uibuilder.pageData has changed (From: ${newPageData.from}): `, newPageData)
-    pageData = newPageData
-    // NB: <show-meta> elements will update themselves
-})
+let pageData = window.pageData
+uibuilder.set('pageData', pageData)
 
+// The uibuilder log display is controlled by the uibuilder.logLevel variable
 const log = uibuilder.log
 
 // The base URL must be specified via a <base> tag in the document head
-// It is used to resolve relative links for SPA navigation
-const baseUrl = document.querySelector('base')?.getAttribute('href') || null
-if (!baseUrl) {
-    log('error', 'SETUP', 'No <base> tag found in document head. SPA navigation may not work correctly.')
-}
-console.info('Base URL:', baseUrl)
+// It is used to resolve relative links for SPA navigation.
+// It is also set on page load as window.baseUrl. It does not change.
+const baseUrl = window.baseUrl
+console.info('Base URL:', baseUrl, pageData)
 
 // Get references to commonly used elements
 const elContent = document.querySelector('[data-fmvar="content"]')
@@ -56,14 +58,18 @@ const normalizePath = (p) => {
 }
 
 /** Update the uibuilder pageData store
+ * Also reflect back to window.pageData and the local pageData object for consistency. Log the change
  * @param {object} attributes The page attributes to set
  * @param {object} additionalInfo Any additional info to merge into pageData (e.g. search query)
  * @returns {object} The updated pageData object
  */
 function updatePageData(attributes, additionalInfo = {}) {
     const pgData = { ...additionalInfo, ...attributes, }
-    // if (!pgData.url) pgData.url = `${pgData.path}${pgData.toUrl}`
     uibuilder.set('pageData', pgData )
+    window.pageData = pgData
+    pageData = pgData
+    console.log(`uibuilder.pageData has changed (From: ${pgData.from}): `, pgData)
+    // NB: <show-meta> elements will update themselves
     return pgData
 }
 
@@ -1127,26 +1133,14 @@ if (elSearchInput) elSearchInput.addEventListener('input', (e) => {
 
 /** Watch for search or navigation response from server & show results */
 uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
-    // console.log('Control message received:', ctrlMsg)
-
-    // UIBUILDER sends this on initial connect, use to request initial page metadata
-    if (ctrlMsg.uibuilderCtrl === 'client connect') {
-        console.log('Client connected to server, requesting initial page data.', initialPath)
-        uibuilder.sendCtrl({
-            uibuilderCtrl: 'internal',
-            controlType: 'getMetadata',
-            initialPath: initialPath.replace(baseUrl, '/') || '/',
-        })
-        return
-    }
-
     switch (ctrlMsg.topic) {
+        // ! NO LONGER REQUIRED
         // From initial page data request only. No body in this since we already have it
-        case '_page-metadata': {
-            console.log('Initial page metadata received from server:', ctrlMsg)
-            updatePageData(ctrlMsg.attributes, { from: '_page-metadata', initialPath: ctrlMsg.initialPath, topic: ctrlMsg.topic, })
-            break
-        }
+        // case '_page-metadata': {
+        //     console.log('Initial page metadata received from server:', ctrlMsg)
+        //     updatePageData(ctrlMsg.attributes, { from: '_page-metadata', initialPath: ctrlMsg.initialPath, topic: ctrlMsg.topic, })
+        //     break
+        // }
 
         case '_search-results': {
             console.log('Search results received from server:', ctrlMsg)
@@ -1223,8 +1217,8 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             )
             // TODO: Sanitize data.body for safety
             // TODO: Should {{...}} replacements be done here? Instead of on server?
-            if (elContent) elContent.innerHTML = data.content || '<p>No content</p>'
-            else console.error('Content element not found to update page content.')
+            // if (elContent) elContent.innerHTML = data.content || '<p>No content</p>'
+            // else console.error('Content element not found to update page content.')
 
             // Remove trailing slash from baseUrl and include hash fragment if present
             const hashFragment = ctrlMsg.hashFragment || ''
