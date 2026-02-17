@@ -36,14 +36,20 @@ class ShowMeta extends HTMLElement {
 
     /** Called when element is added to the DOM */
     connectedCallback() {
-        // NB: pageData is typically not yet ready here, setting this.metadata re-renders if needed
-        // this.metadata = uibuilder.get('pageData')?.metadata || {}
-
-        // Watch for changes to the metadata object and re-render when it changes
+        // Watch for future changes to the metadata object and re-render when it changes
         this.#pageDataChangeHandler = uibuilder.onChange('pageData', (newPageData) => {
             // console.log(`🪲[show-meta] uibuilder.pageData has changed (From: ${newPageData.from}): `, newPageData)
             this.metadata = newPageData ?? {}
         })
+
+        // Also render immediately with current pageData if available.
+        // This handles the case where <show-meta> is inserted into the DOM
+        // AFTER pageData was already set (e.g. via innerHTML from uib-var),
+        // meaning the onChange listener above missed the initial change event.
+        const currentPageData = uibuilder.get('pageData')
+        if (currentPageData) {
+            this.metadata = currentPageData
+        }
     }
 
     /** Called when element is removed from the DOM */
