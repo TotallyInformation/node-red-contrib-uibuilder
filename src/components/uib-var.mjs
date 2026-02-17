@@ -1,3 +1,6 @@
+/* eslint-disable jsdoc/check-tag-names */
+/* eslint-disable jsdoc/valid-types */
+// @ts-nocheck
 /** A zero dependency web component that will display a managed uibuilder variable.
  *
  * Version: See component version
@@ -154,8 +157,8 @@ class UibVar extends TiBaseComponent {
 
         if (!varName) return
 
-        // NB: We don't show an initial current value when the variable name is set.
-        //     We wait for the value of the variable to change then show.
+        // Set the initial value immediately - this handles the case where the variable was already set before this component was connected to the DOM
+        this._varChange(this.uibuilder.get(varName))
 
         // Watch for changes in the variable (could use `uibuilder:propertyChanged:${prop}` event instead)
         this.#varCb = this.uibuilder.onChange(varName, this._varChange.bind(this))
@@ -206,7 +209,7 @@ class UibVar extends TiBaseComponent {
         if (this.#topicCb) {
             this.uibuilder.cancelTopic(this.#topic, this.#topicCb)
 
-            Object.keys(this.#topicCb).forEach( topic => {
+            Object.keys(this.#topicCb).forEach( (topic) => {
                 this.uibuilder.cancelTopic(topic, this.#topicCb[topic])
             })
         }
@@ -285,7 +288,7 @@ class UibVar extends TiBaseComponent {
                             let y = x.replace(/^["'`]/, '').replace(/["'`]$/, '')
                             // Attempt very limited parse in case it is valid object/array
                             try {
-                                y = new Function(`return ${y}`)() // eslint-disable-line no-new-func
+                                y = new Function(`return ${y}`)()
                             } catch (e) {}
                             return y
                         }
@@ -304,7 +307,7 @@ class UibVar extends TiBaseComponent {
         }
 
         // Keep at end. Let everyone know that an attribute has changed for this instance of the component
-        this._event('attribChanged', { attribute: attrib, newVal: newVal, oldVal: oldVal })
+        this._event('attribChanged', { attribute: attrib, newVal: newVal, oldVal: oldVal, })
     } // --- end of attributeChangedCallback --- //
 
     /** Process watched uibuilder variable value change
@@ -395,7 +398,7 @@ class UibVar extends TiBaseComponent {
                 if (!Array.isArray(val)) val = [val]
                 // console.log('🔦 val ⟫', val)
                 out = '<ul>'
-                val.forEach( li => {
+                val.forEach( (li) => {
                     out += `<li>${li}</li>`
                 })
                 out += '</ul>'
@@ -445,7 +448,7 @@ class UibVar extends TiBaseComponent {
             let globalFn = globalThis[splitFilter[0]]
             if (globalFn && splitFilter.length > 1) {
                 const parts = [splitFilter.pop()]
-                parts.forEach( part => {
+                parts.forEach( (part) => {
                     globalFn = globalFn[part]
                 } )
             }
