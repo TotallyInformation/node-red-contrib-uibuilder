@@ -668,3 +668,7 @@ blockquote, .markdown-alert {
         top: 0;
     }
 }
+
+.visible-status {
+    display: none;
+}
