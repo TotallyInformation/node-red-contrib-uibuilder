@@ -61308,10 +61308,10 @@ function fmVariablesPlugin(md2, handler) {
         return handler(args, env);
       } catch (err) {
         console.error(`Error executing variable handler '${args.varName}': ${err.message}`, err);
-        return `<span class="variable-error" data-attribute="${args.varName}">Error in variable: ${args.varName}</span><p>${err.message}</p>`;
+        return `<fm-var class="fm-${args.varName} variable-error" data-fmvar="${args.varName}">Error in variable: ${args.varName}</fm-var><p>${err.message}</p>`;
       }
     }
-    return `<span class="variable-unknown" data-attribute="${args.varName}">${md2.utils.escapeHtml(raw)}</span>`;
+    return `<fm-var class="fm-${args.varName} variable-unknown" data-fmvar="${args.varName}">Unknown variable: ${args.varName}</fm-var>`;
   }
   md2.inline.ruler.before("escape", "fmVariables", fmVariablesRule);
   md2.renderer.rules.fmVariables = renderFmVariables;
