@@ -11,8 +11,12 @@ since: v7.6.0
 
 > [!TIP]
 > Because `uib-markweb` is built on top of uibuilder, you can use uibuilder's existing features to send messages from Node-RED to the front-end to further update the page dynamically as needed.
+
+> [!NOTE]
 >
 > Connected clients automatically receive page updates when the underlying markdown files change on the server. The client then automatically requests the updated page data and updates the display accordingly. This also allows you to do custom front-end processing of the updated data if desired.
+>
+> A uibuilder managed variable called `pageData` holds all of the current page metadata **and** the HTML page content (in `pageData.content`). The content is rendered to HTML on the Node-RED server, not in the client. This currently happens on each request, future updates are likely to add content caching for performance improvement when large numbers of clients are connected.
 
 ## Configuration (Node-RED Editor)
 
@@ -34,6 +38,10 @@ They are mostly available both in the HTML wrapper template and in the Markdown 
 While these are initially processed server-side so that only HTML is passed over to the browser clients, the special front-end client library has processes to further update them dynamically as updates are sent from the server (using internal control messages). This is controlled by a couple of HMTL data attributes added to the rendered HTML.
 
 ### Directives
+
+> [!NOTE]
+>
+> Some of the directives are already being phased out due to improvements in UIBUILDER's reactive client features.
 
 These provide more complex processing than simple variable replacement. They are enclosed in `%%...%%` tags. Attributes are generally optional and are specified inside square brackets `[...]` as comma-separated `attribute=value` pairs.
 
@@ -212,15 +220,8 @@ You can provide a manual `sidebar.json` file in your config folder to fully over
 
 #### Other directives
 
-* `%%body%%` - Placeholder for the main content of the page. No attributes.
-  
-  > [!NOTE]
-  > Note that the `body` directive is required in the HTML wrapper template to display the page content. It must be contained in a parent HTML element with a `data-attribute="body"` attribute for dynamic updates to work correctly.
-  >
-  > Should really only be used in the HTML wrapper template, not in Markdown files.
-
 * `%%url%%` - The base URL of the web site. No attributes.
-
+  
 * `%%...%%` - Other directives may be added in the future.
 
 ### Variables
@@ -230,31 +231,51 @@ These provide simple variable replacement from front-matter and global/system fi
 All front-matter fields from the Markdown files can be used as variables. Some common ones are listed below.
 
 > [!NOTE]
-> All `{{...}}` variables in Markdown are automatically wrapped in a `<span>` with a `data-fmvar="varName"` attribute for dynamic updates to work correctly.
+> All `{{...}}` variables in Markdown are automatically wrapped in an `<fm-var class="fm-..." data-fmvar="...">`  dummy web component once rendered to HTML so that front-end code can update them. Browsers treat dummy components as null displays but can still be styled.
 >
-> When specifying variables in the HTML wrapper template, you need to manually add `data-fmvar="varName"` for the variable replacements to work and be dynamically updatable.
+> Any variable render errors are wrapped in `<fm-var class="fm-... variable-error" data-fmvar="...">` or `<fm-var class="fm-... variable-unknown" data-fmvar="...">` with helpful rendered content indicating the error
 >
-> So you can use CSS to style them as needed. In the HTML wrapper template, you need to use `data-attribute="varName"` for the variable replacements to work and be dynamically updatable.
+> You can therefore use CSS to style substituted variable values as needed. You can also use your own custom front-end code to manipulate the content if you desire.
 
-### Available standard arguments
+> [!NOTE]
+>
+> When specifying variables in the HTML wrapper template, you need to use either `<uib-var variable="...">`  or some other HTML wrapper with a `uib-var="..."` attribute so that the variable replacements are dynamically updatable.
 
-Some standard arguments are available for use in `{{...}}` variable tags. They are specified as `[attribute=value,...]` inside the tags. For example, `{{title [prefix="Page title: "]}}` would add a "Page title: " prefix before the title variable.
+### Enhancing the variable display
 
-* `prefix` - A string to prefix the variable value with.
+> TBC
 
-#### Yet to be implemented
+#### Using CSS
 
-* `suffix` - A string to suffix the variable value with.
-* `default` - A default value to use if the variable is not defined or is empty. If not set, it defaults to `[Unknown variable: varName]` where `varName` is the name of the variable only for undefined variables. For empty variables, the default is an empty string unless `default` is set to something else.
-* `dp` - A number formatting string to format the variable value if it is a number to a fixed number of decimal places. E.g., `dp=2` for 2 decimal places. If the value is not a number, this argument is ignored.
+> For both the template HTML (but only if in the `<body>` section) and in Markdown.
+
+(( Styling, before/after content ))
+
+#### Using the `<uib-var>` `before` and `after` attributes
+
+> Only for variables rendered in template HTML within the `<body>` section
+
+The `before` and `after` HTML attributes can be added to the `<uib-var>` component tag. Both allow HTML content even if the tag's `type` attribute is not `html`.
+
+#### Using the `<uib-var>` `filter` attribute
+
+> Only for variables rendered in template HTML within the `<body>` section
+
+(( uibuilder std filter fns, example flow ))
+
+> [!NOTE]
+>
+> Unlike variable names in `<uib-var>` and `uib-var`, filter functions are searched for in the `window` global namespace (scope), first. Only if they are not found there will the `uibuilder` namespace be searched. This means that uibuilder built-in functions can be accessed _either_ with or without the `uibuilder.` prefix.
 
 ### Standard metadata variables
 
 If not provided in the front-matter, the following default fields are always available, generated from the filing system information of the source Markdown files:
 
-* `title` - The title of the page.
+* `title` - The title of the page. The default template shows this both as the `<h1>` visible title and the page `<title>` tag which changes the title in the browser's tab.
 * `created` - The creation date of the page.
 * `updated` - The last updated date of the page.
+* `status` - The status of the page. E.g., `draft`, `published`, etc.
+* `since` - Typically a date or version string that shows when the information on the current page was first introduced. Most useful for technical documentation pages.
 
 From system data and not overridable by front-matter:
 
@@ -264,9 +285,9 @@ From system data and not overridable by front-matter:
 * `fsMtimeMs` - The last modified time of the source file in milliseconds since epoch. (Used internally checking for file updates).
 * `type` - The type of page: `file` or `folder`.
 
-Provided by the default global config file but overridable by front-matter. Additional ones may be added in your own `global-attributes.json` file:
-
-* `status` - The status of the page. E.g., `draft`, `published`, etc. *Default is `draft`.*
+> [!TIP]
+>
+> You can use the global template to provide automatic defaults for frontmatter variables.
 
 ### Other common metadata variables
 
@@ -276,6 +297,8 @@ Other commonly used front-matter fields you may wish to include in your Markdown
 * `author` - The author of the page.
 * `tags` - The list of tags of the page.
 * `category` - The category of the page.
+
+* `favicon` - Overrides the page's favicon that appears in the browser tab.
 
 * Possible future globals:
 
@@ -287,7 +310,7 @@ Other commonly used front-matter fields you may wish to include in your Markdown
 
 ### show-meta
 
-The optional `<show-meta></show-meta>` web component can be included in your HTML wrapper template to display the current page's metadata for debugging purposes. It shows all front-matter attributes and global/system attributes in a formatted table.
+The optional `<show-meta></show-meta>` web component can be included in your HTML wrapper template or in your Markdown to display the current page's metadata for debugging purposes. It shows all front-matter attributes and global/system attributes in a formatted table.
 
 To load the component, include the following script tag in your HTML wrapper template's `<head>` section _before_ the `markweb.mjs` script tag:
 
@@ -424,10 +447,10 @@ sequenceDiagram
 > [!NOTE]
 > When processing a file-change, the main Markdown content is rendered to HTML **on the server**. So all fm variables and directives are processed server-side.
 >
-> **However**, the page template is only processed server-side on the initial page load. On subsequent SPA navigations and updates, the client library has to process the page template variables itself. 
+> Variables are referenced in the template HTML using standard uibuilder reactive web components or HMTL attributes and so are automatically updated upon receipt of the new page data. 
 
 > [!TIP]
-> Connected clients will only recieve updates after the 1 second debounce period. If you make multiple changes within that period, they will be grouped together into a single update.
+> Connected clients will only receive updates after the 1 second debounce period. If you make multiple changes within that period, they will be grouped together into a single update.
 
 > [!WARNING]
 > File/folder _renames_ appear as a deletion and an addition. This may happen in any order depending on how the OS reports the changes.
@@ -481,17 +504,16 @@ The HTML wrapper template is stored in the `page-template.html` file in the `con
 > [!NOTE]
 > See [Default Template](#default-page-template) below for the default template and styling details.
 
-This template is used to wrap the rendered HTML content from the markdown files. It can include `{{...}}` variable replacements and `%%...%%` directives as described above.
+This template is used to wrap the rendered HTML content from the markdown files. Variables are referenced in the template HTML using standard uibuilder reactive web components (`<uib-var>`) or HTML reactive attributes (`uib-var`) and so are automatically updated upon receipt of the new page data. 
 
 Requirements (see the default template for details):
 
 * Any scripts should be treated as ES Modules.
-* Must include a `%%body%%` directive to indicate where the main content should be inserted.
-* The body must be wrapped in an HTML element with a `data-attribute="body"` attribute for dynamic updates to work correctly.
+* Must include `<uib-var variable="pageData.content" type="html">No content</uib-var>` to indicate where the main content should be inserted.
 * Must include a `<base href="%%url%%/">` tag in the `<head>` section for proper SPA navigation.
-* Must include the ESM version of the uibuilder client library and the `markweb.mjs` front-end processing library.
-* The `markweb.mjs` script tag must include a `data-base-url="%%url%%"` attribute to specify the base URL of the site.
-* The uibuilder client library script tag must be before the `markweb.mjs` script tag. It may include `?logLevel=1` (or some other level) on the URL to set the client debugging log level if desired.
+* Must include a `%%prescript%%` before the line that loads the uibuilder client library. This silently inserts a pre-script that sets `window.pageData` to the loaded page's metadata so that it can be processed early in the page display lifecycle.
+* Must include the ESM version of the uibuilder client library. It may include `?logLevel=1` (or some other level) on the URL to set the uibuilder client debugging log level if desired.
+* Must include the `markweb.mjs` front-end processing library _after_ uibuilder client library.
 
 > [!TIP]
 > To get the default template back, simply rename your existing `page-template.html` file in the `configFolder` and restart Node-RED. The default version will be copied back into place. You may wish to keep a copy of it to hand for reference.
@@ -520,12 +542,14 @@ When a client uses a link to navigate to a different "page", the node retrieves 
 
 Client updates are controlled by updating HTML elements with specific `data-attribute="..."` attributes so that only the necessary parts of the page are updated without a full page reload. The `data-attribute` values correspond to front-matter attributes and special placeholders like `body` for the main content.
 
+> [!NOTE]
+>
+> The index cache stores the Markdown for each page, this is included for searching, The Markdown is rendered to HTML just before sending the page data to the requesting client.
+
 > [!TIP]
-> Use the `data-attribute` attributes in your _HTML wrapper template_ to control which parts of the page get updated during navigation & page updates. These are required as well as the `{{...}}` tags otherwise, the tags will only be processed on the initial page load.
+> When using `{{...}}` tags in your _Markdown files_, the rendered content is silently wrapped in `<uib-var variable="...">....</uib-var>` tags. This enables you to both easily style any of the content by variable name as well as use custom front-end JavaScript code to further change them if desired.
 >
-> When using `{{...}}` tags in your _Markdown files_, you don't need to worry about `data-attribute` attributes.
->
-> `%%...%%` special processing directives automatically add the necessary `data-attribute` attributes to their rendered HTML elements.
+> `%%...%%` special processing directives automatically add the necessary wrappers to their rendered HTML elements.
 
 ## Dependencies
 
