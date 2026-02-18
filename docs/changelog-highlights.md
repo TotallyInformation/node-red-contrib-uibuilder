@@ -24,13 +24,17 @@ Performance greatly improved to handle rapid influx of messages.
 New `.visually-hidden` class added to support accessibility best practices.
 
 #### Front-end client library
-New function `asyncSend` allows you to send a message to the server and wait for a response. It returns a promise that resolves with the response message. This is useful for request/response patterns where you need to get data from the server before proceeding.
+New function `uibuilder.asyncSend()` allows you to send a message to the server and wait for a response. It returns a promise that resolves with the response message. This is useful for request/response patterns where you need to get data from the server before proceeding.
 
-Incoming messages now have a `_receivedHRtime` property added. This is a high-resolution timestamp. It can be used to measure message transit times accurately.
+`uibuilder.onTopic()` now processes _**control messages**_ as well as standard ones. Added so that the `<uib-var topic="...">` component and `uib-topic` attribute can listen for control messages.
+
+All incoming messages now have a `_receivedHRtime` property added. This is a high-resolution timestamp. It can be used to measure message transit times accurately.
 
 Thanks to Firefox stupidity around cookies, the front-end client library now fetches the HTTP headers on initial load to get the namespace and Node-RED web root. Has to be done asynchronously, the `start()` function is now not called until headers available. This delays uibuilder startup very slightly but is far more reliable.
 
-There is now a new `uib-var` custom HTML attribute. Complements the existing `uib-topic` attribute.
+`<uib-var>` component now recognizes `data-before` and `data-after` attributes. These allow you to specify text to show before and after the variable value. This is useful for adding units, labels, or other contextual information around the variable value without needing extra HTML elements.
+
+There is now a new `uib-var` custom HTML attribute. Complements the existing `uib-topic` attribute. _Currently only supports direct var names_, not var properties (e.g. `myvar`, not `myvar.prop`). Will be enhanced later. May be of use on HTML elements that don't allow HMTL content.
 
 #### Other
 Various bug fixes, performance improvements and security enhancements as always.

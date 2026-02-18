@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-02-14 21:08:58
+updated: 2026-02-17 15:33:17
 ---
 
 # Changelog
@@ -36,6 +36,18 @@ Please see the roadmap in the docs for the backlog of future planned development
 * **NEW NODE** `uib-markweb` - Enables simple creation of dynamic web sites using Markdown files. It supports navigation menus, search, front-matter placeholders, custom templates and much more.
 
 * Two new example flows. "Built-in Web Components" and "Easy UI Updates".
+
+#### Front-end
+
+* Updated `uibuilder.onTopic()` to process _**control messages**_ as well as standard ones. Added so that the `<uib-var topic="...">` component and `uib-topic` attribute can listen for control messages.
+
+* `<uib-var>` component now recognizes `data-before` and `data-after` attributes. Useful for adding units, labels, or other contextual information around the variable value without needing extra HTML elements.
+
+* New `uib-var` custom HTML attribute added. Mostly of use for `<meta>`, `<title>`, `<link>` elementts in the `<head>` HMTL section.
+
+* If DOMPurify is used, it is now configured to allow custom web components, since uibuilder now makes more extensive use of them.
+
+#### Documentation
 
 * Mermaid diagrams are now supported in UIBUILDER's documentation. With the first example being for the new `uib-markweb` node's page.
 
@@ -107,11 +119,24 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 
 * **NEW** Added the `_receivedHRtime` property to messages received from the Node-RED server. This is a high-resolution timestamp (in milliseconds) of when the message was received. It can be used to measure latency and performance. It uses the [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) method which provides sub-millisecond accuracy. The value is the elapsed time since page navigation started.
 
-* Added `instanceFolder` to uibuilder node settings. This to bring it into line with the new uib-markweb node, in the future, allow instance root folders to be specified anywhere.
+* **NEW** Added `instanceFolder` to uibuilder node settings. This to bring it into line with the new uib-markweb node, in the future, allow instance root folders to be specified anywhere.
 
 * **NEW** `httpHeaders` property added. This contains the HTTP headers received when the front-end client first connects to the server. This can be useful for debugging and for advanced use cases such as authentication and user tracking. Async so issues a custom event when ready. The `start()` function is now not called until they are ready because the headers are the most reliable way to get the namespace and Node-RED web root (stupid Firefox refuses to read the cookies!).
 
+* `<uib-var>` component now recognizes `data-before` and `data-after` attributes. These allow you to specify text to show before and after the variable value. This is useful for adding units, labels, or other contextual information around the variable value without needing extra HTML elements.
+
+* **NEW** Custom HTML attribute `uib-var` added. Similar to the component above but much simpler processing. However, it allows you to control _any_ HTML element.
+  
+  > NOTE: Does not (yet) support any of the extended HTML attributes that `<uib-var>` supports.
+  >
+  > May be of most use on HTML elements that don't allow HMTL content.
+
+* Updated `uibuilder.onTopic()` to process _**control messages**_ as well as standard ones. Added so that the `<uib-var topic="...">` component and `uib-topic` attribute can listen for control messages.
+
+* If DOMPurify is used, it is now configured to allow custom web components, since uibuilder now makes more extensive use of them.
+
 * Tidied up unnecessary async processing in the DOM Mutation Observer. Giving a minor performance boost.
+* Delayed startup of DOM observing so that scripts loaded after the client library have time to set initial values.
 
 ### Development changes
 

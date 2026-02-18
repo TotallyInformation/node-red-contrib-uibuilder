@@ -4,12 +4,14 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-02-14 12:53:48
+updated: 2026-02-17 21:20:59
 ---
 
 ## To Fix
 
 * [ ] Copy/paste of a uibuilder node is not resetting the edit link.
+* [ ] uibuilder.set with a deep object.prop path is not doing what is expected. Creating a new var? Needs to update the prop of the original or, if needed, create the path silently.
+* [ ] `uib-var` attribute process is not dealing correctly with deep object.prop paths. 
 
 ## In Progress
 
@@ -19,11 +21,7 @@ A node that creates a website out of a folder of markdown content.
 
 #### Refactoring:
 
-* Add `uib-var` dynamic attribute to uibuilder client lib.
-* Allow `uib-topic` to react to control messages as well as standard ones.
-
-* Use `uib-var` or `uib-topic`in HTML templates instead of `%%...%%` or `{{...}}` for dynamic content. This would allow the content to be reactive and update without needing to re-render the whole page. It would also allow for more complex interactions, such as showing/hiding elements based on variable values, etc.
-* For `%%index%%` and `{{...}}` in Markdown, add a wrapper HTML element with the appropriate `uib-var` or `uib-topic` attribute so that the content will update reactively when the underlying data changes.
+* Change the custom `{{...}}` md plugin to wrap the content in `<fm-var class="fm-...">` dummy component. (reactivity not wanted here).
 
 * New server-side indexListing function. With the following requirements:
   * Ignore any other similar functions in `customNode.js` since this is a new function that is not related to the existing `%%index%%` placeholder processing.
@@ -81,14 +79,9 @@ A node that creates a website out of a folder of markdown content.
 * [ ] Need to stop `%%...%%` and `{{...}}` from being processed in code blocks.
 * [ ] Code blocks going too wide. Restrict width.
 * [ ] No checks for duplicate urls.
-* [ ] Nave collapse state is not remembered.
+* [ ] Sidebar collapse state is not remembered.
 * [ ] Nav menus do not update when the index updates. They only update on page load. Need to add a message from the server to the client when the index updates so that the client can then update the nav menu if it is open.
 * [ ] Sidebar should move to UNDER the main content if the page width is too narrow. In that case, the drag bar and toggle are not needed. Consider collapsing to a burger menu instead?
-
-* [ ] Add tag(s)/category/author filter to `%%index%%`.
-* [ ] Add pagination to `%%index%%`.
-* [ ] Add sorting options to `%%index%%` (e.g. by created date, updated date, title, etc.).
-* [ ] Add template support to `%%index%%` to allow custom formatting of each entry.
 
 * [ ] Allow for missing index.md file. (list top-level folders and pages). Needed for Astro/Obsidian content.
 * [ ] Cache the default config folder files to avoid re-reading on every page load.
@@ -103,6 +96,7 @@ A node that creates a website out of a folder of markdown content.
 * [x] On scroll, when nav menu scrolls offscreen, collapse it to a burger menu and keep it visible.
 * [x] Use server fs watch to provide live updates to pages. Send msg to ALL connected clients when a file changes. Clients can then decide what to do (e.g. reload if they are viewing that page).
 * [x] Allow source folder to be outside the userDir folder.
+* [x] Page icon overrides. Allow front-matter `favicon` field to specify an icon for the page that overrides the default favicon.
 
 * [x] Sidebar
   * [x] Uses `%%sidebar%%` placeholder in template.
@@ -132,7 +126,6 @@ A node that creates a website out of a folder of markdown content.
   * [x] Horizontal
   * [ ] Vertical options.
 
-* [ ] Page icon overrides. Allow front-matter `favicon` field to specify an icon for the page that overrides the default favicon.
 * [ ] Improve HTML styling.
 * [ ] Page aliases. Allow front-matter `alias` field to specify alternative url paths for a page. Also have a master map.
 * [ ] Add manual index-rebuild button to Editor.
@@ -334,6 +327,7 @@ A node that creates a website out of a folder of markdown content.
 
 ## Consider
 
+* Consider adding a `data-initVars` attribute to the client script load. This would automatically take `window.xxxx` variables and `set` them as uibuilder variables as early as possible. This would allow early setting of these variables for use in the client's reactive features. Would also need to be specified as a query parameter on the script src for processing in ESM.
 * Move FS processing to use more streams. [Ref](https://blog.gaborkoos.com/posts/2026-01-06-Backpressure-in-JavaScript-the-Hidden-Force-Behind-Streams-Fetch-and-Async-Code/).
 * Move table handling to use older HTMLTableElement API. [ref1](https://christianheilmann.com/2025/10/08/abandonware-of-the-web-do-you-know-that-there-is-an-html-tables-api/), [ref2](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableElement)
 * ~~Auto-~~ Add a button to the uibuilder node's config panel to generate a manifest web endpoint that delivers a manifest file for the current uibuilder instance. This would allow clients to have a faster startup. [ref](https://discourse.nodered.org/t/add-pwa-feature-to-uibuilder/97807/2)
