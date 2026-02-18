@@ -669,6 +669,13 @@ blockquote, .markdown-alert {
     }
 }
 
+/* Visible status blockquote styling - defaults to hidden */
 .visible-status {
     display: none;
+}
+
+/* Unknown frontmatter variable styling {{unknown}} */
+.variable-unknown {
+    color: hsl(0, 100%, 70%);
+    font-style: italic;
 }
