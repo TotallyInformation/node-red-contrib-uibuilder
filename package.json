@@ -6,12 +6,13 @@
     "packages/*"
   ],
   "scripts": {
-    "preinstall": "node ./bin/uibpreinstalljs",
+    "buildDocBundle": "node ./src/doc-bundle/build.mjs",
+    "code:main": "code --new-window ./_workspaces/uibuilder-main.code-workspace",
+    "code:core-docs": "code --new-window ./_workspaces/uibuilder-core-docs.code-workspace",
     "watch": "gulp watch",
     "listbin": "ls ./node_modules/bin",
     "docs": "docsify serve ./docs",
     "edit-docs": "%LOCALAPPDATA%/Programs/Typora/Typora.exe ./",
-    "buildDocBundle": "node ./src/doc-bundle/build.mjs",
     "buildSidebar": "node ./bin/docsify-auto-sidebar.js",
     "buildUibMdUtils": "npm run build --workspace=@totallyinformation/uib-md-utils",
     "graph": "madge --image ./docs/dev/runtime-deps.svg ./nodes",
