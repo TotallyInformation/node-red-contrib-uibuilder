@@ -1016,8 +1016,10 @@ function mdExtension(node) {
     const fmVariablesHandler = (args, env) => {
         const varName = args.varName
         let value = env[varName]
+        let errClass = ''
         if (value === undefined) {
-            value = `[Unknown variable: ${varName}]`
+            value = `[Unknown variable: "${varName}"]`
+            errClass = ' variable-unknown'
         }
         // process standard args
         let before = ''
@@ -1025,7 +1027,8 @@ function mdExtension(node) {
         else if (args.prefix) before = args.prefix
         let after = ''
         if (args.after) after = args.after
-        return /* html */`<span data-fmvar="${varName}">${before}${value}${after}</span>`
+        // Wrap in dummy element with data attribute for client-side processing
+        return /* html */`<fm-var class="fm-${varName}${errClass}" data-fmvar="${varName}">${before}${value}${after}</fm-var>`
     }
     // Extend markdown-it with these plugins
     md
