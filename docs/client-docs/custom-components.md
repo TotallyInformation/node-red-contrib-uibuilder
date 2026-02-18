@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2026-02-14 18:49:04
+updated: 2026-02-17 14:07:39
 since: v6.6.0
 ---
 
@@ -123,7 +123,7 @@ Technically, the content of the template is ["adopted"](https://developer.mozill
 </body></html>
 ```
 
-## Built-in: `<uib-meta>` :id=uib-meta
+## Built-in: `<uib-meta>` (since v7.6) :id=uib-meta
 
 Display metadata information about the containing page.
 
@@ -173,18 +173,24 @@ For size output:
   <uib-meta type="both" format="d"></uib-meta><br>
   <uib-meta type="size" format="k"></uib-meta><br>
 </div>
- ```
+```
 
-## Built-in: `<uib-var>` :id=uib-var
+## Built-in: `<uib-var>` (since v6.6) :id=uib-var
 
 Include easily updated output on a web page.
 
 This component provides another way to make it easy to include dynamic data in your web UI and to update it. It is roughly equivalent to the "mustache" style brackets found in many front-end frameworks (<code>&#123;{myvariable}}</code>). However, unlike those, `<uib-var>` is 100% standard HTML. The component reference is replaced in the web page by a uibuilder managed variable value, msg topic payload, or the returned value of a filter function - depending on the attributes provided.
 
-Included in your page using the `<uib-var>`, see the examples below on how to include this in your HTML. You can also use the no-code `uib-tag` node to add it to your HTML. 
+Include in your page using `<uib-var></uib-var>`, see the examples below on how to include this in your HTML. You can also use the no-code `uib-tag` node to add it to your HTML from Node-RED.
 
-There is no need to separately load the component, that is done automatically by the uibuilder client library.
+There is no need to separately load the component library, that is done automatically by the uibuilder client library.
 
+> [!TIP]
+> Any HTML output is passed to uibuilder's sanitisation function. If the DOMPurify library has been loaded before the uibuilder client library, the output will also be sanitised by DOMPurify. This means that you can include HTML in your variable values and it will be rendered as HTML but it will be sanitised to prevent XSS and other malicious content. If you want to include HTML in your variable values, it is recommended to load DOMPurify for added security.
+
+> [!NOTE]
+>
+> This can only be used with HTML elements that allow other HTML tags inside their content slot. For example, you cannot use it with `<link>` or `<meta>` elements. For those, see the documentation for the [`uib-var` custom attribute]()
 
 ### Attributes :id=uib-var-attribs
 
@@ -206,11 +212,18 @@ Displays the *value* of the given variable name in your web page and *dynamicall
 
 > Cannot be used in conjunction with the `topic` attribute.
 
+> [!CAUTION]
+>
+> Variables are found by the component _in the `uibuilder` namespace (scope)_, not in the global `window` namespace. They must have been set as uibuilder managed variables, either by the uibuilder client library, or manually using the `uibuilder.set('varName', varValue)` function. This means that you should not prefix the variable with `uibuilder.`.
+
+> [!TIP]
+> You can use deep property names with the `variable` attribute. For example, `variable="myVar.propName"` will display the value of `myVar.propName` and update when that value changes.
+
 #### filter :id=uib-var-filter
 
-Takes a string representation of a function to run before display. It can be used on its own or in conjunction with either the `variable` or `topic` attributes.
+Takes a string representation of a function name that will be run before display. It can be used on its own or in conjunction with either the `variable` or `topic` attributes.
 
-When used with the `variable` or `topic` attributes, the function will be passed the corresponding value as its first parameter. Any additional parameters provided on this attribute will be merged _after_ the value.
+When used with the `variable` or `topic` attributes, the value of the variable or the `msg.payload` of the topic message will be passed to the function as its <u>first</u> parameter. Any additional parameters provided on this attribute will be merged _after_ the value.
 
 The function must be accessible from the global `window` environment and return valid text or HTML which will be used as the displayed content.
 
@@ -223,27 +236,41 @@ If the function name is not found in the global window context, the `uibuilder` 
 Generally, it will be best to define your own function. Further standard filters may be added in future releases of UIBUILDER. Until then, a list of standard filters included in the uibuilder is provided [lower-down](#useful-filter-functions).
 
 > [!NOTE]
+>
+> Filter functions are (unlike variable names) searched for in the `window` global namespace (scope), first. Only if they are not found there will the `uibuilder` namespace be searched.
+>
 > If having problems getting your filter functions recognised, try adding them earlier in the HTML.
 >
 > Notably, **before** the uibuilder client library is loaded.
-> 
-> For example, defining the `lang` filter:
+>
+> For example, defining `lang` and `yen` filters:
 > ```html
-  <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->
-  <script>
-    // Some filter functions
-    globalThis.lang = () => navigator.language
-    globalThis.yen = (v) => uibuilder.formatNumber( v, 2, 'ja-JP', { style: 'currency', currency: 'JPY' } )
-  </script>
-  <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
-  <script defer src="./index.js"></script>
-  <!-- #endregion -->
-> ```
+><script>
+> // Some filter functions (use globalThis. or window.)
+> globalThis.lang = () => navigator.language
+> globalThis.yen = (v) =>
+>   uibuilder.formatNumber( v, 2, 'ja-JP', 
+      { style: 'currency', currency: 'JPY' }
+    )
+    </script>
+    
+    <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+    <script defer src="./index.js"></script>
+    ```
+    
+    And using them in your page:
+    
+    ```html
+    <uib-var topic="mytopic" filter="yen"></uib-var>
+    <uib-var filter="lang" before="You are using the language: "></uib-var>
+    ```
+    
+    
 
 #### undefined :id=uib-var-undefined
 
-If present or set to `on`, or `true`, the component will show even if the variable is undefined. 
-  
+If present or set to `on`, or `true`, the component will show the text "undefined" if the variable is undefined. 
+
 If not present or set to anything else, an undefined variable will show the _slot content_ (anything put between the open and close tag). This lets you have an initial value showing that is replaced as soon as the variable is actually set.
 
 #### report :id=uib-var-report
@@ -252,11 +279,22 @@ If present or set to `on`, or `true`, the component will return a standard messa
 
 #### type :id=uib-var-type
 
-Must be one of 'plain', 'html', 'markdown', or 'object'. `plain` and `html` simply insert the variable as-is. `markdown` allows the insertion of Markdown as long as the Markdown-IT library is loaded (it will also sanitise the resulting HTML if the DOMPurify library is loaded). `object` does some basic formatting to allow object or array variables to be more easily read.
+Must be one of:
 
+* `plain` - Strips any embedded HTML for safety. Arrays and objects are "stringified" to plain text.
+* `html` - Allows HTML to be rendered. Arrays and objects are "stringified" to plain text.
+* `markdown` - Allows the insertion of Markdown as long as the Markdown-IT library is loaded.
+* `table` - Input is passed to uibuilder's buildHtmlTable function to attempt to build an HTML table. Input should be an array of objects or an object of objects. The property names in the first entry in the outer array/object will be assumed to be the table column headings.
+* `list`/`array` - Input should be an array. If it isn't, it is converted to an array with a single entry. The output is a simple HTML bulleted list of the array entries. Entries can contain HTML.
+* `json`/`object` - Input is passed through uibuilder's `syntaxHighlight` function to attempt to format it as a pretty-printed JSON string. Input should be something that is valid JSON or a JavaScript object or array.
 
-This works with Markdown via the `uib-element` node as well and even works if DOMPurify is loaded as overrides to its filters are provided.
+Final output is passed to uibuilder's sanitise function so if the DOMPurify library is loaded, the output is santized by it.
 
+#### data-before and data-after (since v7.6) :id=uib-var-data-before-after
+
+These attributes allow you to specify text to show before and after the variable value. This is useful for adding units, labels, or other contextual information around the variable value without needing extra HTML elements.
+
+HTML content in these attributes will be rendered.
 
 ### Styling
 
