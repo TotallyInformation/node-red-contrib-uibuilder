@@ -282,6 +282,10 @@ The `autoload` option tells the client to attempt to automatically reload the va
 > [!WARNING]
 > `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is closed.
 
+> [!TIP]
+>
+> Because this remote command sets UIBUILDER managed variables, you can use it for reactive visual changes in combination with the [`<uib-var>`](client-docs/custom-components#uib-var) web component and the custom reactive HMTL attribute [`uib-var`](client-docs/reactive#uib-var).
+
 ### Turn on/off visible last message from Node-RED :id=showMsg
 
 ```json
