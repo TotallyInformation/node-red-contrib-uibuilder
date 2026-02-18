@@ -91,6 +91,7 @@ function fmVariablesPlugin(md, handler) {
     }
 
     /** Renderer for variable tokens
+     * NB: Errors are wrapped in a dummy component, <fm-var class="variable-error">, so that they can be easily styled.
      * @param {Array} tokens - Token array
      * @param {number} idx - Current token index
      * @param {object} options - Options
@@ -108,12 +109,12 @@ function fmVariablesPlugin(md, handler) {
                 return handler(args, env)
             } catch (err) {
                 console.error(`Error executing variable handler '${args.varName}': ${err.message}`, err)
-                return `<span class="variable-error" data-attribute="${args.varName}">Error in variable: ${args.varName}</span><p>${err.message}</p>`
+                return `<fm-var class="fm-${args.varName} variable-error" data-fmvar="${args.varName}">Error in variable: ${args.varName}</fm-var><p>${err.message}</p>`
             }
         }
 
         // No handler found, return as-is or error
-        return `<span class="variable-unknown" data-attribute="${args.varName}">${md.utils.escapeHtml(raw)}</span>`
+        return `<fm-var class="fm-${args.varName} variable-unknown" data-fmvar="${args.varName}">Unknown variable: ${args.varName}</fm-var>`
     }
 
     // Register the inline rule
