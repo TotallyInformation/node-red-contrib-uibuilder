@@ -25,7 +25,7 @@
     "@eslint/js": "^9.20.0",
     "@stylistic/eslint-plugin": "^5.2.2",
     "@types/express": "^4.17.13",
-    "@types/jquery": "^3.5.25",
+    "@types/jquery": "^4.0.0",
     "@types/jqueryui": "^1.12.19",
     "@types/node": "^18.19.24",
     "@types/node-red": "*",
