@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "uib built-in component tests",
         "disabled": false,
-        "info": "These excercise the W3C Web Components that\r\nare built-into the uibuilder front-end client\r\nlibrary.",
+        "info": "These exercise the W3C Web Components that\r\nare built-into the uibuilder front-end client\r\nlibrary.",
         "env": []
     },
     {
@@ -26,8 +26,8 @@
             "ef76e41b57595a9a",
             "5c626a885382f55a"
         ],
-        "x": 654,
-        "y": 139,
+        "x": 594,
+        "y": 259,
         "w": 342,
         "h": 162
     },
@@ -49,15 +49,12 @@
             "16de59b7827eaa4d",
             "6b182e8b1e26ec14",
             "25512c21a6032ebb",
-            "4e0ffbbf6939cc3f",
-            "b38855ec3e778366",
-            "7a0a7dae925307c0",
-            "022c30d7b5873cba"
+            "4e0ffbbf6939cc3f"
         ],
-        "x": 54,
-        "y": 119,
+        "x": 14,
+        "y": 259,
         "w": 562,
-        "h": 242
+        "h": 122
     },
     {
         "id": "d9e0f85c3d5b0baf",
@@ -65,7 +62,7 @@
         "z": "572f9e0cd4d81a75",
         "name": "Setup - run this first to set up the page and style - only needs to run once",
         "style": {
-            "fill": "#ffffff",
+            "fill": "#ffefbf",
             "fill-opacity": "0.31",
             "label": true,
             "color": "#000000"
@@ -80,19 +77,38 @@
             "21fb6a42e0b4a9b9",
             "f76c3186d24ed61f"
         ],
-        "x": 54,
-        "y": 379,
+        "x": 14,
+        "y": 79,
         "w": 792,
         "h": 162
+    },
+    {
+        "id": "484fa0de73c8d679",
+        "type": "group",
+        "z": "572f9e0cd4d81a75",
+        "name": "2️⃣ Send a msg, <uib-var> watches the msg var but with deep properties",
+        "style": {
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "b38855ec3e778366",
+            "022c30d7b5873cba",
+            "7a0a7dae925307c0"
+        ],
+        "x": 14,
+        "y": 399,
+        "w": 458,
+        "h": 122
     },
     {
         "id": "a3772dcb733aadcc",
         "type": "comment",
         "z": "572f9e0cd4d81a75",
-        "name": "Example updated: 2026-02-04 \\n Tested using UIBUILDER v7.6.0",
+        "name": "Example updated: 2026-02-19 \\n Tested using UIBUILDER v7.6.0",
         "info": "",
-        "x": 770,
-        "y": 60,
+        "x": 730,
+        "y": 40,
         "wires": []
     },
     {
@@ -101,8 +117,8 @@
         "z": "572f9e0cd4d81a75",
         "name": "Tests the different Web Components built into the uibuilder client library \\n <uib-meta>, <uib-var>, <apply-template>, <uib-control>",
         "info": "",
-        "x": 310,
-        "y": 60,
+        "x": 270,
+        "y": 40,
         "wires": []
     },
     {
@@ -119,8 +135,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "counter",
-        "x": 555,
-        "y": 160,
+        "x": 515,
+        "y": 300,
         "wires": [],
         "l": false
     },
@@ -146,8 +162,8 @@
         "topic": "uib-quick-start",
         "payload": "",
         "payloadType": "date",
-        "x": 170,
-        "y": 200,
+        "x": 130,
+        "y": 340,
         "wires": [
             [
                 "6b182e8b1e26ec14"
@@ -176,9 +192,9 @@
         "showMsgUib": true,
         "title": "",
         "descr": "",
-        "editurl": "vscode://file/src/uibRoot/test-uib-components/?windowId=_blank",
-        "x": 400,
-        "y": 180,
+        "editurl": "vscodium://file/src/uibRoot/test-uib-components/?windowId=_blank",
+        "x": 360,
+        "y": 320,
         "wires": [
             [
                 "e01c506ef84dd24b"
@@ -194,7 +210,7 @@
         "z": "572f9e0cd4d81a75",
         "g": "23729ad8a71e4cbb",
         "name": "uib Control Output",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": true,
@@ -202,8 +218,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "counter",
-        "x": 555,
-        "y": 200,
+        "x": 515,
+        "y": 340,
         "wires": [],
         "l": false
     },
@@ -225,8 +241,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 790,
-        "y": 180,
+        "x": 730,
+        "y": 300,
         "wires": [
             [
                 "5c626a885382f55a"
@@ -251,8 +267,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 820,
-        "y": 220,
+        "x": 760,
+        "y": 340,
         "wires": [
             [
                 "5c626a885382f55a"
@@ -281,8 +297,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "reload",
-        "x": 830,
-        "y": 260,
+        "x": 770,
+        "y": 380,
         "wires": [
             [
                 "5c626a885382f55a"
@@ -300,8 +316,8 @@
             "5c626a885382f55a",
             "7a0a7dae925307c0"
         ],
-        "x": 225,
-        "y": 160,
+        "x": 185,
+        "y": 300,
         "wires": [
             [
                 "6b182e8b1e26ec14"
@@ -318,8 +334,8 @@
         "links": [
             "4e0ffbbf6939cc3f"
         ],
-        "x": 955,
-        "y": 220,
+        "x": 895,
+        "y": 340,
         "wires": []
     },
     {
@@ -332,10 +348,10 @@
         "fieldType": "msg",
         "format": "html",
         "syntax": "mustache",
-        "template": "<!doctype html>\n<html lang=\"en\">\n\n<head>\n\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <link rel=\"icon\" href=\"../uibuilder/images/node-blue.ico\">\n\n    <title>UIBUILDER built-in client component tests - Node-RED uibuilder</title>\n    <meta name=\"description\" content=\"Node-RED uibuilder - Client component tests\">\n\n    <!-- Your own CSS (defaults to loading uibuilders css)-->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\"></script>\n    <script defer src=\"./index.js\"></script>\n    <!-- #endregion -->\n\n</head>\n\n<body>\n\n    <header class=\"header\">\n        <h1 class=\"with-subtitle\">UIBUILDER built-in client component tests</h1>\n        <div role=\"doc-subtitle\">Using the uibuilder IIFE library.</div>\n    </header>\n\n    <div id=\"more\"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>\n\n    <main>\n        <p>\n            These web components are built into the uibuilder front-end client library.\n        </p>\n        <article>\n            <h2><code>&lt;uib-meta&gt;</code></h2>\n            <p>\n                Display some information about the current page.\n            </p>\n            <div>\n                <uib-meta type=\"created\" format=\"t\"></uib-meta><br>\n                <uib-meta format=\"d\"></uib-meta><br>\n                <uib-meta type=\"updated\" format=\"dt\"></uib-meta><br>\n                <uib-meta type=\"crup\" format=\"d\"></uib-meta><br>\n                <uib-meta type=\"size\" format=\"k\"></uib-meta><br>\n            </div>\n        </article>\n\n        <article>\n            <h2><code>&lt;uib-var&gt;</code></h2>\n            <p>\n                Takes a uibuilder managed variable and displays its value. See the \"Simple UI Updates\" flow example for\n                more.\n            </p>\n            <p>\n                Random # from JavaScript:\n                <uib-var\n                    variable=\"myrandom\"\n                    filter=\"uibuilder.formatNumber(2)\"\n                    style=\"background-color: var(--success);\"\n                >\n                    [No Value]\n                </uib-var>\n                (every 5 seconds, filtered to 2DP)\n            </p>\n            <p>\n                Manual from Node-RED (deep msg object):\n                <uib-var\n                    variable=\"msg.plc_vfd.fault_code\"\n                    filter=\"uibuilder.formatNumber(2)\"\n                    style=\"background-color: var(--warning);\"\n                >\n                    [No Value]\n                </uib-var>\n            </p>\n        </article>\n\n        <article>\n            <template id=\"mytemplate\" aria-label=\"Hidden template used by the component\">\n                <div\n                    style=\"border: 2px solid var(--info); padding: 0.5em; margin: 0.5em 0; background-color: darkblue;\">\n                    <h3>Template Content</h3>\n                    <p>\n                        This content comes from a hidden template. See the HTML source code\n                        to see it. Template elements are not shown on the page but can be used,\n                        cloned and added to the page using JavaScript. This component means that\n                        you don't need to write any JavaScript.\n                    </p>\n                    <slot></slot>\n            </template>\n            <h2><code>&lt;apply-template&gt;</code></h2>\n            <p>\n                Applies (clones) HTML <code>&lt;template&gt;</code> content elsewhere on the page.\n            </p>\n            <apply-template template-id=\"mytemplate\">This text is in the main HTML and transcoded into the template's\n                <code>&lt;slot&gt;</code> element if present.</apply-template>\n        </article>\n\n        <article>\n            <h2><code>&lt;uib-control&gt;</code></h2>\n            <p>\n                A controller component that lets you change uibuilder's front end styling dynamically.\n            </p>\n            <p>\n                You can put the <code>&lt;uib-control&gt;</code> element anywhere in your HTML body. It actually floats\n                over other content.\n                By default it will sit at the top-right of the page. But its position is controlable by setting some CSS\n                variables.\n            </p>\n            <uib-control></uib-control>\n        </article>\n    </main>\n\n</body>\n\n</html>",
+        "template": "<!doctype html>\n<html lang=\"en\"><head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <link rel=\"icon\" href=\"../uibuilder/images/node-blue.ico\">\n\n    <title>UIBUILDER built-in client component tests - Node-RED uibuilder</title>\n    <meta name=\"description\" content=\"Node-RED uibuilder - Client component tests\">\n\n    <!-- Your own CSS (defaults to loading uibuilders css)-->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\"></script>\n    <script defer src=\"./index.js\"></script>\n    <!-- #endregion -->\n</head><body>\n    <header class=\"header\">\n        <h1 class=\"with-subtitle\">Testing built-in UIBUILDER client components</h1>\n        <div role=\"doc-subtitle\">Using the uibuilder IIFE library.</div>\n    </header>\n\n    <main>\n        <div id=\"more\"><!-- '#more' is used as a parent for dynamic HTML content in examples --></div>\n\n        <p>\n            These web components are built into the uibuilder front-end client library.\n            So you don't have to load anything in your HTML other than the uibuilder client library.\n        </p>\n\n        <article>\n            <h2><code>&lt;uib-meta&gt;</code></h2>\n            <p>\n                Display some information about the current page.\n            </p>\n            <div>\n                <uib-meta type=\"created\" format=\"t\"></uib-meta><br>\n                <uib-meta format=\"d\"></uib-meta><br>\n                <uib-meta type=\"updated\" format=\"dt\"></uib-meta><br>\n                <uib-meta type=\"crup\" format=\"d\"></uib-meta><br>\n                <uib-meta type=\"size\" format=\"k\"></uib-meta><br>\n            </div>\n        </article>\n\n        <article>\n            <h2><code>&lt;uib-var&gt;</code></h2>\n            <p>\n                Takes a uibuilder managed variable and displays its value. Alternatively, it takes a message topic.\n                See the \"Simple UI Updates\" flow example for more.\n            </p>\n            <blockquote>\n                Remember: variable names must be uibuilder managed variables (uibuilder scope).\n                Filter functions can be in the uibuilder or global (<code>window</code>) scopes.\n            </blockquote>\n\n            <p>\n                1️⃣ Random # from JavaScript (every 5 seconds, filtered to 2DP):\n                <b><uib-var\n                    variable=\"myrandom\"\n                    filter=\"uibuilder.formatNumber(2)\"\n                    style=\"background-color: var(--success);\"\n                >\n                    [No Value]\n                </uib-var></b>\n            <pre>   <code>&lt;uib-var variable=\"myrandom\" filter=\"uibuilder.formatNumber(2)\">&lt;/uib-var></code></pre>\n            </p>\n\n            <p>\n                2️⃣ Message from Node-RED (via the <code>msg</code> variable, deep msg object\n                <code>msg.plc_vfd.fault_code</code>):\n                <uib-var variable=\"msg.plc_vfd.fault_code\" filter=\"formatNumber(3)\"\n                    style=\"background-color: var(--warning); font-weight: bold;\">\n                    [No Value]\n                </uib-var>\n            <pre>   <code>&lt;uib-var variable=\"msg.plc_vfd.fault_code\" filter=\"formatNumber(2)\">&lt;/uib-var></code></pre>\n            </p>\n\n            <p>\n                3️⃣ Automatic (from JavaScript) formatted date:\n                <b><uib-var variable=\"mydate\" filter=\"uibuilder.formatDate(null, 'ja-JP')\">\n                    [No Value]\n                </uib-var></b>\n            <pre>   <code>&lt;uib-var variable=\"mydate\" filter=\"formatDate(null, 'ja-JP')\">&lt;/uib-var></code></pre>\n            </p>\n\n            <p>\n                4️⃣ Automatic (from client library) client library version:\n                <b><uib-var variable=\"version\"></uib-var></b>\n            <pre>   <code>&lt;uib-var variable=\"version\">&lt;/uib-var></code></pre>\n            </p>\n\n            <p>\n                5️⃣ Automatic (from JavaScript) custom filter fn & html:\n                <b><uib-var variable=\"myvar\" filter=\"myfilterfn\" type=\"html\">[No msg]</uib-var></b>\n            <pre>   <code>&lt;uib-var variable=\"myvar\" filter=\"myfilterfn\" type=\"html\">&lt;/uib-var></code></pre>\n            </p>\n\n            <p>\n                6️⃣ Automatic (from client library) last message from Node-RED, object formatted:\n                <uib-var variable=\"msg\" type=\"object\">[No msg]</uib-var>\n            <pre>   <code>&lt;uib-var variable=\"msg\" type=\"object\">&lt;/uib-var></code></pre>\n            </p>\n        </article>\n\n        <article>\n            <template id=\"mytemplate\" aria-label=\"Hidden template used by the component\">\n                <div\n                    style=\"border: 2px solid var(--info); padding: 0.5em; margin: 0.5em 0; background-color: darkblue;\">\n                    <h3>Template Content</h3>\n                    <p>\n                        This content comes from a hidden template. See the HTML source code\n                        to see it. Template elements are not shown on the page but can be used,\n                        cloned and added to the page using JavaScript. This component means that\n                        you don't need to write any JavaScript.\n                    </p>\n                    <slot></slot>\n                </div>\n            </template>\n            <h2><code>&lt;apply-template&gt;</code></h2>\n            <p>\n                Applies (clones) HTML <code>&lt;template&gt;</code> content elsewhere on the page.\n            </p>\n            <apply-template template-id=\"mytemplate\">This text is in the main HTML and transcoded into the template's\n                <code>&lt;slot&gt;</code> element if present.</apply-template>\n        </article>\n\n        <article>\n            <h2><code>&lt;uib-control&gt;</code></h2>\n            <p>\n                A controller component that lets you change uibuilder's front end styling dynamically.\n            </p>\n            <blockquote>\n                Click the small box in the top-right of this page.\n            </blockquote>\n            <p>\n                You can put the <code>&lt;uib-control&gt;</code> element anywhere in your HTML body. It actually floats\n                over other content.\n                By default it will sit at the top-right of the page. But its position is controlable by setting some CSS\n                variables.\n            </p>\n            <uib-control></uib-control>\n        </article>\n    </main>\n</body></html>\n",
         "output": "str",
-        "x": 450,
-        "y": 420,
+        "x": 410,
+        "y": 120,
         "wires": [
             [
                 "87375d6a82f2d2e3"
@@ -359,8 +375,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "setup all FE files",
-        "x": 115,
-        "y": 420,
+        "x": 75,
+        "y": 120,
         "wires": [
             [
                 "57c5d19d09b3c04d",
@@ -390,8 +406,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 270,
-        "y": 420,
+        "x": 230,
+        "y": 120,
         "wires": [
             [
                 "caf9339b031a5af8"
@@ -414,8 +430,8 @@
         "mode": 438,
         "name": "",
         "topic": "",
-        "x": 720,
-        "y": 420,
+        "x": 680,
+        "y": 120,
         "wires": []
     },
     {
@@ -438,8 +454,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 260,
-        "y": 460,
+        "x": 220,
+        "y": 160,
         "wires": [
             [
                 "f76c3186d24ed61f"
@@ -456,10 +472,10 @@
         "fieldType": "msg",
         "format": "css",
         "syntax": "plain",
-        "template": "/* Load defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-brand.min.css`\n * This version auto-adjusts for light/dark browser settings.\n */\n@import url(\"../uibuilder/uib-brand.min.css\");\n",
+        "template": "/* Load defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-brand.min.css`\n * This version auto-adjusts for light/dark browser settings.\n */\n@import url(\"../uibuilder/uib-brand.min.css\");\n\n/* Make the code examples stand out */\npre {\n    background-color: hsl(120, 50%, 7%);\n    color: hsl(0, 0%, 100%);\n    padding-block: 1em 1em;\n}\n",
         "output": "str",
-        "x": 460,
-        "y": 500,
+        "x": 420,
+        "y": 200,
         "wires": [
             [
                 "87375d6a82f2d2e3"
@@ -486,8 +502,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 260,
-        "y": 500,
+        "x": 220,
+        "y": 200,
         "wires": [
             [
                 "31e2d94817a14850"
@@ -504,10 +520,10 @@
         "fieldType": "msg",
         "format": "javascript",
         "syntax": "plain",
-        "template": "let counter = 0\n// Set the myrandom managed variable every few seconds\nconst myInterval = setInterval(() => {\n    counter++\n    uibuilder.set('myrandom', Math.random())\n    if (counter >= 100) {\n        clearInterval(myInterval)\n    }\n}, 5000)\n",
+        "template": "// Our custom filter function has to be in the global (window) scope\nwindow.myfilterfn = (value) => {\n    return `This is your special value: <span style=\"color: pink;background: black;\">${value}</span>, isn't it great! 😃`\n}\n\nlet counter = 0\n\n/** Note how all variables are uibuilder managed (uibuilder.set()) */\n\n// Set the myrandom managed variable every few seconds\nconst myInterval = setInterval(() => {\n    counter++\n    uibuilder.set('myrandom', Math.random())\n    if (counter >= 100) {\n        clearInterval(myInterval)\n    }\n}, 5000)\n\nuibuilder.set('mydate', Date.now())\nuibuilder.set('myvar', 'Hello <u>World</u>')\n",
         "output": "str",
-        "x": 460,
-        "y": 460,
+        "x": 420,
+        "y": 160,
         "wires": [
             [
                 "87375d6a82f2d2e3"
@@ -518,7 +534,7 @@
         "id": "b38855ec3e778366",
         "type": "inject",
         "z": "572f9e0cd4d81a75",
-        "g": "23729ad8a71e4cbb",
+        "g": "484fa0de73c8d679",
         "name": "Deep msg object",
         "props": [
             {
@@ -536,8 +552,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "uib-var-deep-object",
-        "x": 180,
-        "y": 280,
+        "x": 140,
+        "y": 440,
         "wires": [
             [
                 "7a0a7dae925307c0"
@@ -545,24 +561,10 @@
         ]
     },
     {
-        "id": "7a0a7dae925307c0",
-        "type": "link out",
-        "z": "572f9e0cd4d81a75",
-        "g": "23729ad8a71e4cbb",
-        "name": "uib ctrls out",
-        "mode": "link",
-        "links": [
-            "4e0ffbbf6939cc3f"
-        ],
-        "x": 435,
-        "y": 280,
-        "wires": []
-    },
-    {
         "id": "022c30d7b5873cba",
         "type": "inject",
         "z": "572f9e0cd4d81a75",
-        "g": "23729ad8a71e4cbb",
+        "g": "484fa0de73c8d679",
         "name": "Deep msg object",
         "props": [
             {
@@ -580,8 +582,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "uib-var-deep-object-zero",
-        "x": 180,
-        "y": 320,
+        "x": 140,
+        "y": 480,
         "wires": [
             [
                 "7a0a7dae925307c0"
@@ -589,7 +591,21 @@
         ]
     },
     {
-        "id": "d4607c3a750b9974",
+        "id": "7a0a7dae925307c0",
+        "type": "link out",
+        "z": "572f9e0cd4d81a75",
+        "g": "484fa0de73c8d679",
+        "name": "uib ctrls out",
+        "mode": "link",
+        "links": [
+            "4e0ffbbf6939cc3f"
+        ],
+        "x": 395,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "2001fa7529c00f3c",
         "type": "global-config",
         "env": [],
         "modules": {
