@@ -201,7 +201,7 @@ export default defineConfig([
     {
         // files: nodeCJS,
         files: ['**/*.{js,cjs}'],
-        ignores: ['resources/*.*', 'src/front-end-modules/**/*.*', 'src/components/**/*.*'],
+        ignores: ['resources/**/*.*', 'src/front-end-modules/**/*.*', 'src/components/**/*.*'],
         languageOptions: {
             sourceType: 'commonjs',
             // Will be overridden by the n plugin which detects the correct node.js version from package.json
@@ -249,7 +249,7 @@ export default defineConfig([
     {
         // files: nodeMJS,
         files: ['**/*.mjs'],
-        ignores: ['resources/*.{js,cjs,mjs}', 'src/front-end-module/**/*.*', 'src/components/**/*.*'],
+        ignores: ['resources/**/*.*', 'src/front-end-module/**/*.*', 'src/components/**/*.*'],
         languageOptions: {
             sourceType: 'module',
             // Will be overridden by the n plugin which detects the correct node.js version from package.json
