@@ -21,9 +21,21 @@
         "target": "es2022",
         "noEmit": true,
         "typeRoots": [
-            ".",
             "./types",
             "./node_modules/@types"
         ]
-    }
+    },
+    "exclude": [
+        "_workspaces",
+        "bin",
+        "docs",
+        "examples",
+        "front-end",
+        "node_modules",
+        "packages",
+        "resources",
+        "templates",
+        "tests",
+        "types"
+    ]
 }
