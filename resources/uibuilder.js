@@ -1,6 +1,4 @@
-/* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable @stylistic/newline-per-chained-call */
-// @ts-nocheck
 // Now loading as a module so no need to further Isolate this code
 
 // #region --------- module variables for the panel --------- //
@@ -912,16 +910,29 @@ function saveFile() {
 } // ---- End of saveFile ---- //
 
 /** Create the wrapping HTML string that provides a link to open the instance folder in vscode
+ * Since v7.6.0, we try to update the existing link if the url changes rather than creating a new one each time
  * @param {object} node A reference to the panel's `this` object
  * @returns {{pre,post,url,icon}} Prefix and postfix for link + vscode url scheme & icon
  */
 function vscodeLink(node) {
-    if (!node.editurl) {
-        let root = RED.settings.uibuilderRootFolder
-        if ( !root.startsWith('/') ) root = '/' + root
-        if (node.url) {
-            if (uibuilder.localHost) node.editurl = `vscode://file${root}/${node.url}/?windowId=_blank`
-            else node.editurl = `vscode://vscode-remote/ssh-remote+${uibuilder.nrServer}${root}/${node.url}/?windowId=_blank`
+    if (!node.url) return '' // We can only create a link if we have a url to link to
+
+    let root = RED.settings.uibuilderRootFolder
+    if ( !root.startsWith('/') ) root = '/' + root
+
+    let editurl
+    if (uibuilder.localHost) editurl = `vscode://file${root}/${node.url}/?windowId=_blank`
+    else editurl = `vscode://vscode-remote/ssh-remote+${uibuilder.nrServer}${root}/${node.url}/?windowId=_blank`
+
+    if (node.oldUrl === undefined) { // Must be new
+        node.editurl = editurl
+    } else {
+        // Try to find the old url string in the existing editurl and update if found
+        if (node.editurl.includes(node.oldUrl)) {
+            node.editurl = node.editurl.replace(node.oldUrl, node.url)
+        } else {
+            // Otherwise just create a new one
+            node.editurl = editurl
         }
     }
 
