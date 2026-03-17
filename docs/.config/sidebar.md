@@ -38,7 +38,7 @@
   * [`uib-update`](nodes/uib-update.md "no-code update of any existing HTML page element")
   * [`uibuilder`](nodes/uibuilder.md "The main node")
   * [Function node enhancements](nodes/function-node.md)
-* The front-end client
+* The front-end
   * *[Introduction](client-docs/readme.md)*
   * [Controlling from Node-RED](client-docs/control-from-node-red.md)
   * [Custom Components](client-docs/custom-components.md "AKA 'Widgets', built-in and external elements to incorporate in your UI")
@@ -52,7 +52,7 @@
   * [uib-brand Style Sheet](client-docs/uib-brand-css.md "How to use the UIBUILDER standard style sheet uib-brand.css")
   * [Using Markdown](client-docs/markdown.md "How to render Markdown in UIBUILDER pages")
   * [Variables](client-docs/variables.md)
-* Zero-code element types
+* Zero-code elements
   * [Forms](elements/forms.md)
   * [Headings, text boxes, etc.](elements/other.md)
   * [HTML](elements/html.md)
