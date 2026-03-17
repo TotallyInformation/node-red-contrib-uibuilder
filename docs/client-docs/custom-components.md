@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2026-02-17 14:07:39
+updated: 2026-03-17 16:22:54
 since: v6.6.0
 ---
 
@@ -190,7 +190,10 @@ There is no need to separately load the component library, that is done automati
 
 > [!NOTE]
 >
-> This can only be used with HTML elements that allow other HTML tags inside their content slot. For example, you cannot use it with `<link>` or `<meta>` elements. For those, see the documentation for the [`uib-var` custom attribute]()
+> This can only be used with HTML elements that allow other HTML tags inside their content slot. This also means that it can only be used inside the `<body>` of your page, not in the `<head>`.
+> 
+> For example, you cannot use it with `<link>` or `<meta>` elements. For those, use the [`uib-var` custom attribute](client-docs/reactive#uib-var) instead.
+
 
 ### Attributes :id=uib-var-attribs
 
@@ -315,7 +318,7 @@ Formats a number to a given locale and optionally, a set number of decimal place
 
 Example, formatting to 2dp using the Japanese locale: 
 ```html
-<uib-var topic="mynumber" filter="uibuilder.formatNumber(2, 'ja-JP')"></uib-var>
+<uib-var variable="mynumber" filter="uibuilder.formatNumber(2, 'ja-JP')"></uib-var>
 ```
 
 Note that the value is passed automatically so the first provided argument is the number of decimal places.
@@ -330,7 +333,7 @@ See details in the [client functions doc](client-docs/functions#formatNumber).
 
 Example:
 ```html
-<uib-var topic="mydate" filter="formatDate('iso', 'en-GB')"></uib-var>
+<uib-var variabl="mydate" filter="formatDate('iso', 'en-GB')"></uib-var>
 ```
 
 #### Other pre-defined filters

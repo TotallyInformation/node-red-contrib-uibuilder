@@ -3,7 +3,7 @@ title: Reactivity - dynamic HTML attributes
 description: |
   UIBUILDER introduces various reactive attributes to HTML that make it easier to create dynamic web pages using data from Node-RED with minimal code.
 created: 2025-06-14 12:53:20
-updated: 2026-02-17 20:45:48
+updated: 2026-03-17 16:28:16
 since: v7.5.0
 author: Julian Knight (Totally Information)
 ---
@@ -15,7 +15,7 @@ Front-end reactive attributes are like a very simplified version of VueJS, REACT
 >
 > In particular, they are not optimised for extremely large applications (with many thousands of reactive elements). For those, you should consider using a full framework such as VueJS, REACT, Svelte, etc. However, for most UI's you are likely to create with Node-RED, the reactive attributes should be more than sufficiently performant and easy to use.
 >
-> The reactive attributes should work on virtually all HTML elements, including those in the `<head>` section. This is unlike the `<uib-var>` web component which will only work inside HTML elements that allow other elements inside.
+> The reactive attributes should work on virtually all HTML elements, including those in the `<head>` section. This is unlike the [`<uib-var>` web component](client-docs/custom-components#uib-var) which will only work inside HTML elements that allow other elements inside.
 
 > [!TIP]
 > See [Easy UI Updates](/using/easy-ui-updates.md) for more ideas on how to update your UI dynamically from Node-RED using UIBUILDER.
@@ -27,7 +27,7 @@ The following attributes are available to make HTML elements reactive. They can 
 | Attribute | Description |
 |-----------|-------------|
 | [`uib-topic`](#uib-topic) | This attribute enables very easy updates of any HTML element by creating a background listener for Node-RED messages having a matching `msg.topic`.  |
-| `uib-var` | This is somewhat similar to the [`<uib-var>` web component](client-docs/custom-components#uib-var) . It allows you to specify any uibuilder-managed variable name with or without properties. |
+| [`uib-var`](#uib-var) | This is somewhat similar to the [`<uib-var>` web component](client-docs/custom-components#uib-var) . It allows you to specify any uibuilder-managed variable name with or without properties. |
 
 ## uib-topic (since v7.5) :id=uib-topic
 
@@ -71,10 +71,12 @@ Include a `msg.attributes` property to automatically update the elements attribu
 > [!CAUTION]
 >
 > Variables referenced in this attribute **must** be UIBUILDER-managed. e.g. set with `uibuilder.set('varName', value)`.  Managed variables can also be set remotely from Node-RED (see [Controlling from Node-RED](client-docs/control-from-node-red)), however, note the potential delay in receiving remote updates as the variable might not be set when the page loads and so users may get a flash of the default content.
+>
+> If the client fails to find the variable when processing the attribute, it will log a warning to the console and try again after a short delay. This is to allow for the variable to be set after the page loads, which is common when variables are set remotely from Node-RED. If the variable is still not found after several attempts, it will give up and log an error to the console.
 
 > [!TIP]
 >
-> The `uib-var` attribute is not as powerful as the `<uib-var>` web component. However, unlike the component, this attribute can be used pretty much anywhere in your HTML, including tags in the `<head>` section such as `<title>`,  `<meta>` and `<link>`.
+> The `uib-var` attribute is not as powerful as the [`<uib-var>` web component](client-docs/custom-components#uib-var). However, unlike the component, this attribute can be used pretty much anywhere in your HTML, including tags in the `<head>` section such as `<title>`,  `<meta>` and `<link>`.
 
 ### Supported Variable Properties
 
