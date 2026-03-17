@@ -4,7 +4,6 @@
  *       Remove shadows for dark mode.
  *
  * 1em ~= 16px
- * 
  * Recommended @media breakpoints:
  * Tablet:        48em @ 16pt   = 768px
  * Tablet Wide:   62em @ 16pt   = 992px
@@ -13,13 +12,13 @@
  * Mobile Medium: 37.5em @ 16pt = 600px
  * Mobile Large:  48em @ 16pt   = 768px
  *
- * 
  * https://css-tricks.com/a-complete-guide-to-custom-properties/ for details on using custom css properties
  * https://una.im/css-color-theming/ for more on color theory calculations
  * https://web.dev/building-a-color-scheme/ is the basis for this style
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
+ * NB: The version is updated automatically by the build process to the current date - see gulpfile.js
  * @version: 2026-03-17
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
@@ -364,7 +363,7 @@
     --form-border: 1px solid var(--text3);
     /* #endregion --- --- */
 
-    /* #region ---- Z-Indexes ---- */
+    /* #region ---- Z-Indexes (since 2026-03-16 uib v7.6.0) ---- */
     --z-nav-h: 980; /* Horizontal navigation menu */
     --z-toaster: 992; /* Toast container */
     --z-toast: 990; /* Individual toast - inside toaster only if modal */
