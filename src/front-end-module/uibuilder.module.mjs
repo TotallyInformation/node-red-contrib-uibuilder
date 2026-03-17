@@ -541,9 +541,38 @@ export const Uib = class Uib {
 
     get meta() { return Uib._meta }
 
+    /** Extract the root property from a nested property path (e.g., 'myvar.aprop' or 'myvar["bprop"]').
+     * @param {string} prop The property name or nested property path
+     * @returns {Object<boolean, string, string|null>} Whether the prop is a nested path,
+     *   the root property name (e.g., 'myvar' from 'myvar.aprop' or 'myvar["bprop"]'),
+     *   and the nested path or null if not a nested path
+     */
+    nestedPath(prop) {
+        const isNestedPath = prop.includes('.') || prop.includes('[')
+        let nestedPath = null
+        let rootProp
+        if (isNestedPath) {
+            const dotIdx = prop.indexOf('.')
+            const bracketIdx = prop.indexOf('[')
+            let sepIdx = -1
+            if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx)
+            else if (dotIdx >= 0) sepIdx = dotIdx
+            else if (bracketIdx >= 0) sepIdx = bracketIdx
+            if (sepIdx > 0) {
+                // Extract the root property and nested path
+                rootProp = prop.substring(0, sepIdx)
+                // For bracket notation, keep the '[' so _setNestedPath can properly strip quotes
+                nestedPath = prop.substring(prop[sepIdx] === '[' ? sepIdx : sepIdx + 1)
+            }
+        }
+        return { isNestedPath, rootProp, nestedPath, }
+    }
+
     /** Function to set uibuilder properties to a new value - works on any property except _* or #*
      * Also triggers any event listeners.
+     * Supports nested property paths (e.g., 'myvar.aprop' or 'myvar["bprop"]').
      * Example: this.set('msg', {topic:'uibuilder', payload:42});
+     * Example: this.set('myvar.nested.prop', 42);
      * @param {string} prop Any uibuilder property who's name does not start with a _ or #
      * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
      * @param {boolean} [store] If true, the variable is also saved to the browser localStorage if possible
@@ -558,36 +587,58 @@ export const Uib = class Uib {
             return `Cannot use set() on protected property "${prop}"`
         }
 
+        // Check if this is a nested property path (contains . or [)
+        const { isNestedPath, rootProp, nestedPath, } = this.nestedPath(prop)
+        // console.log('🪲 is nested?', { prop, isNestedPath, rootProp, nestedPath, })
+
         // Check for an old value
-        const oldVal = this[prop] ?? undefined
+        const oldVal = isNestedPath
+            ? this._resolveNestedPath(this, prop)
+            : (this[prop] ?? undefined)
 
-        // We must add the var to the uibuilder object
-        this[prop] = val
+        if (isNestedPath && nestedPath) {
+            // Ensure root property exists and is an object
+            if (this[rootProp] == null || typeof this[rootProp] !== 'object') {
+                this[rootProp] = {}
+            }
+            // Set the nested property
+            this._setNestedPath(this[rootProp], nestedPath, val)
+            // Keep track of all managed variables (track root property for nested paths)
+            this.#managedVars[rootProp] = rootProp
+        } else {
+            // We must add the var to the uibuilder object
+            this[prop] = val
+            // Keep track of all managed variables (track root property for nested paths)
+            this.#managedVars[prop] = prop
+        }
 
-        // Keep track of all managed variables
-        this.#managedVars[prop] = prop
-
-        // If requested, save to store
-        if (store === true) this.setStore(prop, val, autoload)
+        // If requested, save to store (save the entire root object for nested paths)
+        if (store === true) this.setStore(rootProp, isNestedPath ? this[rootProp] : val, autoload)
 
         log('trace', 'Uib:set', `prop set - prop: ${prop}, val: `, val, ` store: ${store}, autoload: ${autoload}`)()
 
         // Trigger this prop's event callbacks (listeners which are set by this.onChange)
-        // this.emit(prop, val)
+        // Fire event for the root property (since that's what actually changed)
+        const eventProp = isNestedPath ? rootProp : prop
+        const eventVal = this[eventProp] // get the current value of the root property (which will include the nested changes if it's a nested path)
 
         // trigger an event on the prop name, pass both the name and value to the event details
-        this._dispatchCustomEvent('uibuilder:propertyChanged', { prop: prop, value: val, oldValue: oldVal, store: store, autoload: autoload, })
-        this._dispatchCustomEvent(`uibuilder:propertyChanged:${prop}`, { prop: prop, value: val, oldValue: oldVal, store: store, autoload: autoload, })
+        this._dispatchCustomEvent('uibuilder:propertyChanged', { prop: eventProp, value: eventVal, oldValue: oldVal, store: store, autoload: autoload, })
+        this._dispatchCustomEvent(`uibuilder:propertyChanged:${eventProp}`, { prop: eventProp, value: eventVal, oldValue: oldVal, store: store, autoload: autoload, })
 
-        return val
+        // And return the (root) value for good measure
+        return eventVal
     }
 
     /** Function to get the value of a uibuilder property
+     * Supports nested property paths (e.g., 'myvar.aprop' or 'myvar["bprop"]').
      * Example: uibuilder.get('msg')
+     * Example: uibuilder.get('myvar.nested.prop')
      * @param {string} prop The name of the property to get as long as it does not start with a _ or #
      * @returns {*|undefined} The current value of the property
      */
     get(prop) {
+        // Handle special properties first - these are either protected or virtual properties that don't exist directly on the uibuilder object
         if (prop.startsWith('_') || prop.startsWith('#')) {
             log('warn', 'Uib:get', `Cannot use get() on protected property "${prop}"`)()
             return
@@ -595,6 +646,19 @@ export const Uib = class Uib {
         if (prop === 'version') return Uib._meta.version
         if (prop === 'msgsCtrl') return this.msgsCtrlReceived
         if (prop === 'reconnections') return this.connectedNum
+
+        // Extract root property for nested paths
+        const { isNestedPath, rootProp, } = this.nestedPath(prop)
+
+        // Handle nested paths
+        if (isNestedPath) {
+            const value = this._resolveNestedPath(this, prop)
+            if (value === undefined) {
+                log('warn', 'Uib:get', `get() - property "${prop}" is undefined`)()
+            }
+            return value
+        }
+
         if (this[prop] === undefined) {
             log('warn', 'Uib:get', `get() - property "${prop}" is undefined`)()
         }
@@ -1596,8 +1660,8 @@ export const Uib = class Uib {
         if (!obj || !path) return undefined
         // Split on dots and bracket notation, filter out empty segments
         const keys = path
-            .replace(/\[["']?/g, '.')
-            .replace(/["']?\]/g, '')
+            .replace(/\[["'`]?/g, '.')
+            .replace(/["'`]?\]/g, '')
             .split('.')
             .filter(Boolean)
         let current = obj
@@ -1606,6 +1670,40 @@ export const Uib = class Uib {
             current = current[key]
         }
         return current
+    }
+
+    /** Set a value at a dotted/bracketed property path on an object
+     * e.g. _setNestedPath(obj, 'a.b["c"]', value) => obj.a.b.c = value
+     * Creates intermediate objects if they don't exist
+     * @param {object} obj The object to set the value on
+     * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
+     * @param {*} value The value to set
+     * @returns {boolean} True if successful, false otherwise
+     * @private
+     */
+    _setNestedPath(obj, path, value) {
+        if (!obj || !path) return false
+        // Split on dots and bracket notation, filter out empty segments
+        const keys = path
+            .replace(/\[["'`]?/g, '.')
+            .replace(/["'`]?\]/g, '')
+            .split('.')
+            .filter(Boolean)
+
+        // Navigate to the parent of the final key, creating objects as needed
+        let current = obj
+        for (let i = 0; i < keys.length - 1; i++) {
+            const key = keys[i]
+            if (current[key] == null || typeof current[key] !== 'object') {
+                current[key] = {}
+            }
+            current = current[key]
+        }
+
+        // Set the final property
+        const finalKey = keys[keys.length - 1]
+        current[finalKey] = value
+        return true
     }
 
     /** Process a uib-var attribute by evaluating the variable reference and applying it to the element
@@ -3797,6 +3895,8 @@ export const Uib = class Uib {
         // Watch for URL hash changes in case using a front-end router. Updates watched var `urlHash` and socket.io `auth.urlHash`
         this._watchHashChanges()
 
+        // Set dummy msg for consistency
+        this.set('msg', null)
         // Set up msg listener for the optional showMsg
         this.onChange('msg', (msg) => {
             if (this.#isShowMsg === true) {

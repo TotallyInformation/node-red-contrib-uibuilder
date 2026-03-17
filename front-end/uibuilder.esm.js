@@ -7393,6 +7393,7 @@ var Uib = (_a2 = class {
     } catch (e) {
     }
     this._watchHashChanges();
+    this.set("msg", null);
     this.onChange("msg", (msg) => {
       if (__privateGet(this, _isShowMsg) === true) {
         const eMsg = document.getElementById("uib_last_msg");
@@ -7422,9 +7423,35 @@ var Uib = (_a2 = class {
   get meta() {
     return _a2._meta;
   }
+  /** Extract the root property from a nested property path (e.g., 'myvar.aprop' or 'myvar["bprop"]').
+   * @param {string} prop The property name or nested property path
+   * @returns {Object<boolean, string, string|null>} Whether the prop is a nested path,
+   *   the root property name (e.g., 'myvar' from 'myvar.aprop' or 'myvar["bprop"]'),
+   *   and the nested path or null if not a nested path
+   */
+  nestedPath(prop) {
+    const isNestedPath = prop.includes(".") || prop.includes("[");
+    let nestedPath = null;
+    let rootProp;
+    if (isNestedPath) {
+      const dotIdx = prop.indexOf(".");
+      const bracketIdx = prop.indexOf("[");
+      let sepIdx = -1;
+      if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx);
+      else if (dotIdx >= 0) sepIdx = dotIdx;
+      else if (bracketIdx >= 0) sepIdx = bracketIdx;
+      if (sepIdx > 0) {
+        rootProp = prop.substring(0, sepIdx);
+        nestedPath = prop.substring(prop[sepIdx] === "[" ? sepIdx : sepIdx + 1);
+      }
+    }
+    return { isNestedPath, rootProp, nestedPath };
+  }
   /** Function to set uibuilder properties to a new value - works on any property except _* or #*
    * Also triggers any event listeners.
+   * Supports nested property paths (e.g., 'myvar.aprop' or 'myvar["bprop"]').
    * Example: this.set('msg', {topic:'uibuilder', payload:42});
+   * Example: this.set('myvar.nested.prop', 42);
    * @param {string} prop Any uibuilder property who's name does not start with a _ or #
    * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
    * @param {boolean} [store] If true, the variable is also saved to the browser localStorage if possible
@@ -7437,17 +7464,30 @@ var Uib = (_a2 = class {
       log("warn", "Uib:set", 'Cannot use set() on protected property "'.concat(prop, '"'))();
       return 'Cannot use set() on protected property "'.concat(prop, '"');
     }
-    const oldVal = (_a3 = this[prop]) != null ? _a3 : void 0;
-    this[prop] = val;
-    __privateGet(this, _managedVars)[prop] = prop;
-    if (store === true) this.setStore(prop, val, autoload);
+    const { isNestedPath, rootProp, nestedPath } = this.nestedPath(prop);
+    const oldVal = isNestedPath ? this._resolveNestedPath(this, prop) : (_a3 = this[prop]) != null ? _a3 : void 0;
+    if (isNestedPath && nestedPath) {
+      if (this[rootProp] == null || typeof this[rootProp] !== "object") {
+        this[rootProp] = {};
+      }
+      this._setNestedPath(this[rootProp], nestedPath, val);
+      __privateGet(this, _managedVars)[rootProp] = rootProp;
+    } else {
+      this[prop] = val;
+      __privateGet(this, _managedVars)[prop] = prop;
+    }
+    if (store === true) this.setStore(rootProp, isNestedPath ? this[rootProp] : val, autoload);
     log("trace", "Uib:set", "prop set - prop: ".concat(prop, ", val: "), val, " store: ".concat(store, ", autoload: ").concat(autoload))();
-    this._dispatchCustomEvent("uibuilder:propertyChanged", { prop, value: val, oldValue: oldVal, store, autoload });
-    this._dispatchCustomEvent("uibuilder:propertyChanged:".concat(prop), { prop, value: val, oldValue: oldVal, store, autoload });
-    return val;
+    const eventProp = isNestedPath ? rootProp : prop;
+    const eventVal = this[eventProp];
+    this._dispatchCustomEvent("uibuilder:propertyChanged", { prop: eventProp, value: eventVal, oldValue: oldVal, store, autoload });
+    this._dispatchCustomEvent("uibuilder:propertyChanged:".concat(eventProp), { prop: eventProp, value: eventVal, oldValue: oldVal, store, autoload });
+    return eventVal;
   }
   /** Function to get the value of a uibuilder property
+   * Supports nested property paths (e.g., 'myvar.aprop' or 'myvar["bprop"]').
    * Example: uibuilder.get('msg')
+   * Example: uibuilder.get('myvar.nested.prop')
    * @param {string} prop The name of the property to get as long as it does not start with a _ or #
    * @returns {*|undefined} The current value of the property
    */
@@ -7459,6 +7499,14 @@ var Uib = (_a2 = class {
     if (prop === "version") return _a2._meta.version;
     if (prop === "msgsCtrl") return this.msgsCtrlReceived;
     if (prop === "reconnections") return this.connectedNum;
+    const { isNestedPath, rootProp } = this.nestedPath(prop);
+    if (isNestedPath) {
+      const value2 = this._resolveNestedPath(this, prop);
+      if (value2 === void 0) {
+        log("warn", "Uib:get", 'get() - property "'.concat(prop, '" is undefined'))();
+      }
+      return value2;
+    }
     if (this[prop] === void 0) {
       log("warn", "Uib:get", 'get() - property "'.concat(prop, '" is undefined'))();
     }
@@ -8272,13 +8320,37 @@ var Uib = (_a2 = class {
    */
   _resolveNestedPath(obj, path) {
     if (!obj || !path) return void 0;
-    const keys = path.replace(/\[["']?/g, ".").replace(/["']?\]/g, "").split(".").filter(Boolean);
+    const keys = path.replace(/\[["'`]?/g, ".").replace(/["'`]?\]/g, "").split(".").filter(Boolean);
     let current = obj;
     for (const key of keys) {
       if (current == null) return void 0;
       current = current[key];
     }
     return current;
+  }
+  /** Set a value at a dotted/bracketed property path on an object
+   * e.g. _setNestedPath(obj, 'a.b["c"]', value) => obj.a.b.c = value
+   * Creates intermediate objects if they don't exist
+   * @param {object} obj The object to set the value on
+   * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
+   * @param {*} value The value to set
+   * @returns {boolean} True if successful, false otherwise
+   * @private
+   */
+  _setNestedPath(obj, path, value2) {
+    if (!obj || !path) return false;
+    const keys = path.replace(/\[["'`]?/g, ".").replace(/["'`]?\]/g, "").split(".").filter(Boolean);
+    let current = obj;
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i];
+      if (current[key] == null || typeof current[key] !== "object") {
+        current[key] = {};
+      }
+      current = current[key];
+    }
+    const finalKey = keys[keys.length - 1];
+    current[finalKey] = value2;
+    return true;
   }
   /** Process a uib-var attribute by evaluating the variable reference and applying it to the element
    *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc).
