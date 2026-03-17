@@ -542,12 +542,13 @@ export const Uib = class Uib {
     get meta() { return Uib._meta }
 
     /** Extract the root property from a nested property path (e.g., 'myvar.aprop' or 'myvar["bprop"]').
+     * @private
      * @param {string} prop The property name or nested property path
      * @returns {Object<boolean, string, string|null>} Whether the prop is a nested path,
      *   the root property name (e.g., 'myvar' from 'myvar.aprop' or 'myvar["bprop"]'),
      *   and the nested path or null if not a nested path
      */
-    nestedPath(prop) {
+    _nestedPath(prop) {
         const isNestedPath = prop.includes('.') || prop.includes('[')
         let nestedPath = null
         let rootProp
@@ -588,7 +589,7 @@ export const Uib = class Uib {
         }
 
         // Check if this is a nested property path (contains . or [)
-        const { isNestedPath, rootProp, nestedPath, } = this.nestedPath(prop)
+        const { isNestedPath, rootProp, nestedPath, } = this._nestedPath(prop)
         // console.log('🪲 is nested?', { prop, isNestedPath, rootProp, nestedPath, })
 
         // Check for an old value
@@ -648,7 +649,7 @@ export const Uib = class Uib {
         if (prop === 'reconnections') return this.connectedNum
 
         // Extract root property for nested paths
-        const { isNestedPath, rootProp, } = this.nestedPath(prop)
+        const { isNestedPath, rootProp, } = this._nestedPath(prop)
 
         // Handle nested paths
         if (isNestedPath) {

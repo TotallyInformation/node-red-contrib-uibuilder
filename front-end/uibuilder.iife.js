@@ -7427,12 +7427,13 @@
       return _a2._meta;
     }
     /** Extract the root property from a nested property path (e.g., 'myvar.aprop' or 'myvar["bprop"]').
+     * @private
      * @param {string} prop The property name or nested property path
      * @returns {Object<boolean, string, string|null>} Whether the prop is a nested path,
      *   the root property name (e.g., 'myvar' from 'myvar.aprop' or 'myvar["bprop"]'),
      *   and the nested path or null if not a nested path
      */
-    nestedPath(prop) {
+    _nestedPath(prop) {
       const isNestedPath = prop.includes(".") || prop.includes("[");
       let nestedPath = null;
       let rootProp;
@@ -7467,7 +7468,7 @@
         log("warn", "Uib:set", 'Cannot use set() on protected property "'.concat(prop, '"'))();
         return 'Cannot use set() on protected property "'.concat(prop, '"');
       }
-      const { isNestedPath, rootProp, nestedPath } = this.nestedPath(prop);
+      const { isNestedPath, rootProp, nestedPath } = this._nestedPath(prop);
       const oldVal = isNestedPath ? this._resolveNestedPath(this, prop) : (_a3 = this[prop]) != null ? _a3 : void 0;
       if (isNestedPath && nestedPath) {
         if (this[rootProp] == null || typeof this[rootProp] !== "object") {
@@ -7502,7 +7503,7 @@
       if (prop === "version") return _a2._meta.version;
       if (prop === "msgsCtrl") return this.msgsCtrlReceived;
       if (prop === "reconnections") return this.connectedNum;
-      const { isNestedPath, rootProp } = this.nestedPath(prop);
+      const { isNestedPath, rootProp } = this._nestedPath(prop);
       if (isNestedPath) {
         const value2 = this._resolveNestedPath(this, prop);
         if (value2 === void 0) {
