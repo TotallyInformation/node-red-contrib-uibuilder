@@ -918,36 +918,35 @@ function vscodeLink(node) {
     if (!node.url) return '' // We can only create a link if we have a url to link to
 
     let root = RED.settings.uibuilderRootFolder
+    root = root.replace(/\\/, '/') // Ensure root folder uses forward slashes for vscode url scheme
     if ( !root.startsWith('/') ) root = '/' + root
 
     let editurl
     if (uibuilder.localHost) editurl = `vscode://file${root}/${node.url}/?windowId=_blank`
     else editurl = `vscode://vscode-remote/ssh-remote+${uibuilder.nrServer}${root}/${node.url}/?windowId=_blank`
 
-    if (node.oldUrl === undefined) { // Must be new
-        node.editurl = editurl
-    } else {
+    if (node.oldUrl !== undefined) { // Must be new
         // Try to find the old url string in the existing editurl and update if found
         if (node.editurl.includes(node.oldUrl)) {
-            node.editurl = node.editurl.replace(node.oldUrl, node.url)
-        } else {
-            // Otherwise just create a new one
-            node.editurl = editurl
+            editurl = node.editurl.replace(node.oldUrl, node.url)
         }
     }
+    log(`[uibuilder:vscodeLink] Edit link changed?`, { New: editurl, Old: node.editurl, }, { url: node.url, OldUrl: node.oldUrl, })
+    node.editurl = editurl
 
     let pre, post
-    if (node.editurl) {
-        pre = `<a href="${node.editurl}" title="Open in VScode">`
+    if (editurl) {
+        pre = `<a href="${editurl}" title="Open in VScode">`
         post = '</a>'
     } else {
         pre = '<b>'
         post = '</b>'
     }
+
     return {
         pre: pre,
         post: post,
-        url: node.editurl,
+        url: editurl,
         icon: '<img src="resources/node-red-contrib-uibuilder/vscode.svg" style="width:20px" >',
     }
 }
@@ -1570,7 +1569,11 @@ function urlChange(node) {
     node.oldUrl = node.url
 
     const newUrl = /** @type {string} */ ($('#node-input-url').val())
-    log(`[uibuilder:urlChange] URL changed. New="${newUrl}", old="${node.oldUrl}"`)
+    node.url = newUrl
+
+    // Update the IDE edit link (editurl)
+    const vsc = vscodeLink(node)
+    node.editurl = vsc.url
 
     // If the url isn't blank
     if (newUrl) {
@@ -1580,13 +1583,14 @@ function urlChange(node) {
         $('#uib-apps-list').prop('href', `${uibuilder.urlPrefix}uibuilder/apps`)
         // Show this instances details URL
         $('#uibinstanceconf').prop('href', `./uibuilder/instance/${newUrl}?cmd=showinstancesettings`)
+        // update the vscode input value
+        $('#node-input-editurl').val(vsc.url)
     }
 
     // Update the server in use display
     showServerInUse(node)
 
-    // Update the IDE edit link (editurl)
-    vscodeLink(node)
+    log(`🌐[uibuilder:urlChange] URL changed.`, { New: newUrl, Old: node.oldUrl, })
 }
 
 /** Return the correct height of the libraries list
@@ -2437,7 +2441,6 @@ RED.nodes.registerType(moduleName, {
 
         // Remove the recorded instance
         // delete editorInstances[this.id]
-        log('[uib] >> deleting >> isDeployed? ', this.isDeployed, uibuilder.deployedUibInstances[this.id] !== undefined)
 
         // Only warn if the node has been deployed
         if ( this.isDeployed ) {
