@@ -4,12 +4,15 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-02-17 21:20:59
+updated: 2026-02-23 13:33:28
 ---
 
 ## To Fix
 
 * [ ] Copy/paste of a uibuilder node is not resetting the edit link.
+* [ ] Deploy of new uibuilder node:
+  * [ ] Is setting the edit link for the new node. BUT not showing it in the edit panel.
+  * [ ] `🌐⚠️[uibuilder:web:setupInstanceStatic:finances] Cannot show default page, index.html does not exist in D:\src\uibRoot\finances\src.`
 * [ ] uibuilder.set with a deep object.prop path is not doing what is expected. Creating a new var? Needs to update the prop of the original or, if needed, create the path silently.
 * [ ] `uib-var` attribute process is not dealing correctly with deep object.prop paths. 
 
@@ -21,7 +24,7 @@ A node that creates a website out of a folder of markdown content.
 
 #### Refactoring:
 
-* Change the custom `{{...}}` md plugin to wrap the content in `<fm-var class="fm-...">` dummy component. (reactivity not wanted here).
+* [x] Change the custom `{{...}}` md plugin to wrap the content in `<fm-var class="fm-...">` dummy component. (reactivity not wanted here).
 
 * New server-side indexListing function. With the following requirements:
   * Ignore any other similar functions in `customNode.js` since this is a new function that is not related to the existing `%%index%%` placeholder processing.
@@ -75,7 +78,6 @@ A node that creates a website out of a folder of markdown content.
 * [x] Add date/time range filter to `%%index%%`. `from`, `to` and `duration` options.
 * [x] Add `latest` option to `%%index%%` to show most recently updated/created pages.
 
-* [ ] In node runtime, in page errors, attributes.content should be Markdown, not HTML.
 * [ ] Need to stop `%%...%%` and `{{...}}` from being processed in code blocks.
 * [ ] Code blocks going too wide. Restrict width.
 * [ ] No checks for duplicate urls.
@@ -148,7 +150,7 @@ A node that creates a website out of a folder of markdown content.
 
 * [ ] Custom 404 response page. Separate file in config folder with default content if not present.
 * [ ] Ensure non-markdown files are served correctly (e.g. images, pdfs, etc.)
-* [ ] Documentation.
+* [ ] Obsidian Tasks Plugin - enhanced markdown-it plugin allowing wide range of `[?]` syntax.
 * [ ] Remove web router on node close.
 * [ ] Consider allowing URL parameters to be passed as front-matter variables? (but not allwing overwriting of existing front-matter variables).
 

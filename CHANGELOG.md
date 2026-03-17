@@ -97,6 +97,7 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 
 ### uibuilder node
 
+* **FIXED** VScode link not properly updating on node url change.
 * Added a new config variable `instancePath`. This is the first change that will eventually allow uibuilder instances to use a different server folder than `<uibRoot>/<url>`.
 
 ### uib-var component
@@ -108,6 +109,7 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 * **Added** `.visually-hidden` class for elements hidden from sighted users but still accessible to screen readers. Use for skip links, form explanations, and status updates otherwise not needed for sighted users.
 * **FIXED** Misconfigured fieldset border.
 * Tweaks to `blockquote` and `code` styles for better appearance.
+* All z-index values changed to use CSS variables. This allows you to easily change the z-index values in your own CSS if needed.
 
 ### uibuilder client library
 
