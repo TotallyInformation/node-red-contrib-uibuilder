@@ -1,6 +1,6 @@
 ---
 created: 2025-12-15 15:00:36
-updated: 2026-02-14 21:08:44
+updated: 2026-03-17 16:42:35
 version: 7.6.0
 ---
 ### Welcome to UIBUILDER v7.6.0
@@ -34,7 +34,11 @@ Thanks to Firefox stupidity around cookies, the front-end client library now fet
 
 `<uib-var>` component now recognizes `data-before` and `data-after` attributes. These allow you to specify text to show before and after the variable value. This is useful for adding units, labels, or other contextual information around the variable value without needing extra HTML elements.
 
-There is now a new `uib-var` custom HTML attribute. Complements the existing `uib-topic` attribute. _Currently only supports direct var names_, not var properties (e.g. `myvar`, not `myvar.prop`). Will be enhanced later. May be of use on HTML elements that don't allow HMTL content.
+There is now a new `uib-var` custom _reactive_HTML attribute. Complements the existing `uib-topic` attribute. Supports var properties (e.g. `myvar`, or `myvar.prop`). May be of use on HTML elements that don't allow HTML content.
+
+All HTML custom elements and reactive attributes also now support nested object paths. e.g. `<uib-var topic="myvar.myprop">` or `<div uib-var="myvar.myprop.subprop">`. This allows you to directly bind to nested properties of reactive variables without needing to replace the entire variable.
+
+`uibuilder.get()` and `uibuilder.set()` functions now support deep object paths. This allows you to get and set nested properties of reactive variables without needing to replace the entire variable. e.g. `myvar.myprop`, `myvar.myprop.subprop` or `myvar[5]`.
 
 #### Other
 Various bug fixes, performance improvements and security enhancements as always.

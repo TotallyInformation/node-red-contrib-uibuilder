@@ -39,11 +39,15 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 #### Front-end
 
+* `uibuilder.get()` and `uibuilder.set()` functions now support deep object paths. This allows you to get and set nested properties of reactive variables without needing to replace the entire variable. e.g. `myvar.myprop`, `myvar.myprop.subprop` or `myvar[5]`.
+
+* All HTML custom elements and reactive attributes also now support nested object paths. e.g. `<uib-var topic="myvar.myprop">` or `<div uib-var="myvar.myprop.subprop">`. This allows you to directly bind to nested properties of reactive variables without needing to replace the entire variable.
+
 * Updated `uibuilder.onTopic()` to process _**control messages**_ as well as standard ones. Added so that the `<uib-var topic="...">` component and `uib-topic` attribute can listen for control messages.
 
 * `<uib-var>` component now recognizes `data-before` and `data-after` attributes. Useful for adding units, labels, or other contextual information around the variable value without needing extra HTML elements.
 
-* New `uib-var` custom HTML attribute added. Mostly of use for `<meta>`, `<title>`, `<link>` elementts in the `<head>` HMTL section.
+* New `uib-var` custom _reactive_ HTML attribute added. Mostly of use for `<meta>`, `<title>`, `<link>` elementts in the `<head>` HMTL section.
 
 * If DOMPurify is used, it is now configured to allow custom web components, since uibuilder now makes more extensive use of them.
 
@@ -97,6 +101,7 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 
 ### uibuilder node
 
+* **NEW** Function `uibuilder.getCommandList()`. This function returns a list of available commands that can be sent from Node-RED to the front-end client.
 * **FIXED** VScode link not properly updating on node url change.
 * Added a new config variable `instancePath`. This is the first change that will eventually allow uibuilder instances to use a different server folder than `<uibRoot>/<url>`.
 
@@ -127,11 +132,13 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 
 * `<uib-var>` component now recognizes `data-before` and `data-after` attributes. These allow you to specify text to show before and after the variable value. This is useful for adding units, labels, or other contextual information around the variable value without needing extra HTML elements.
 
-* **NEW** Custom HTML attribute `uib-var` added. Similar to the component above but much simpler processing. However, it allows you to control _any_ HTML element.
+* **NEW** Custom *reactive* HTML attribute `uib-var` added. Similar to the component above but much simpler processing. However, it allows you to control _any_ HTML element.
   
-  > NOTE: Does not (yet) support any of the extended HTML attributes that `<uib-var>` supports.
+  > NOTE: Does not (yet) support any of the extended HTML attributes that `<uib-var>` supports such as `data-before`, `data-after` or `filter`.
   >
   > May be of most use on HTML elements that don't allow HMTL content.
+
+* `uibuilder.get()` and `uibuilder.set()` functions now support deep object paths. This allows you to get and set nested properties of reactive variables without needing to replace the entire variable. e.g. `myvar.myprop`, `myvar.myprop.subprop` or `myvar[5]`.
 
 * Updated `uibuilder.onTopic()` to process _**control messages**_ as well as standard ones. Added so that the `<uib-var topic="...">` component and `uib-topic` attribute can listen for control messages.
 

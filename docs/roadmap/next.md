@@ -4,17 +4,13 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-02-23 13:33:28
+updated: 2026-03-17 16:44:21
 ---
 
 ## To Fix
 
-* [ ] Copy/paste of a uibuilder node is not resetting the edit link.
 * [ ] Deploy of new uibuilder node:
-  * [ ] Is setting the edit link for the new node. BUT not showing it in the edit panel.
   * [ ] `🌐⚠️[uibuilder:web:setupInstanceStatic:finances] Cannot show default page, index.html does not exist in D:\src\uibRoot\finances\src.`
-* [ ] uibuilder.set with a deep object.prop path is not doing what is expected. Creating a new var? Needs to update the prop of the original or, if needed, create the path silently.
-* [ ] `uib-var` attribute process is not dealing correctly with deep object.prop paths. 
 
 ## In Progress
 

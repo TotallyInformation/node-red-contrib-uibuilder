@@ -3,7 +3,7 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2025-12-30 11:28:54
+updated: 2026-03-17 16:53:33
 author: Julian Knight (Totally Information)
 ---
 
@@ -68,7 +68,7 @@ Needs to be run against:
 
 ## 03b) Update the client library typescript definitions
 
-These are in `templates\blank\types`. They are updated by asking Copilot _"Update the typescript descripion files in `./templates/blank/types` to match the updated version of `./src/front-end-module/uibuilder.module.mjs`"_.
+These are in `templates\blank\types` AND `src\front-end-module\types`. They are updated by asking Copilot _"Update the typescript descripion files in `./templates/blank/types` and `src\front-end-module\types` to match the updated version of `./src/front-end-module/uibuilder.module.mjs`"_.
 
 ## 03c) Build the uib-md-utils package
 
