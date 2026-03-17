@@ -21,7 +21,8 @@
         "target": "es2022",
         "noEmit": true,
         "typeRoots": [
-            "./node_modules/@types"
+            "./node_modules/@types",
+            "./src/front-end-module/types"
         ]
     },
     "exclude": [
