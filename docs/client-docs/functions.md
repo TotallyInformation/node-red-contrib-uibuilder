@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2026-01-02 13:26:33
+updated: 2026-03-17 13:28:47
 ---
 
 Functions accessible in client-side user code.
@@ -21,6 +21,12 @@ Functions accessible in client-side user code.
 > [!NOTE]
 > Where functions are marked as being accessible as Node-RED command messages, details can be found in [Controling From Node-RED](client-docs/control-from-node-red).
 
+> [!TIP]
+> UIBUILDER includes *Type Definition files* for the client library. If you are using a modern code editor such as Visual Studio Code, you will get auto-completion and inline help for all the functions described in this documentation.
+>
+> The definitions are found in the `types` folder when using the default "Blank" template in the uibuilder node. If you are using a custom template, you can copy the contents of the `types` folder to your custom template folder to get the same functionality. In addition, you may need the `/tsconfig.json` file to get the best results. Although these files relate to TypeScript (which UIBUILDER does not use), they also work with JavaScript.
+>
+> The definitions are periodically updated so if your editor isn't giving you the expected help, check that you have the correct version that matches the version of UIBUILDER.
 
 ## Receiving Messages from Node-RED
 
@@ -994,22 +1000,11 @@ Allows fine control of the communications.
 
 Allows fine control of the communications. Also stops the auto-reconnect timer.
 
-### `formatDate(Date, pattern, locale)` - Format an input date/time to a given pattern and/or locale :id=formatDate
-
 [formatDate](fns/format-date-time.md ':include')
 
-### `formatNumber(value, decimalPlaces, intl, opts)` - Format an input number to a given locale and decimal places :id=formatNumber
+[formatNumber](fns/formatNumber.md ':include')
 
-Takes numeric input and formats it using the JavaScript standard [`INTL` library](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString).
-
-Allows optional setting of the number of decimal places.
-
-The `intl` argument takes the form like `en-GB`, `de-DE` (German), `ja-JP` (Japanese), etc. If not provided, the function takes the browser's current locale using `navigator.language` so that the number defaults to being formatted in the browser's current locale.
-
-The `opts` argument allows passing INTL number formatting options, for example: `{ style: 'currency', currency: 'JPY' }` to get currency formatted as Japanese Yen.
-
-> [!NOTE]
-> This function is compatible with the [`uib-var` web component's `filter` attribute](client-docs/custom-components#filter). e.g. `<uib-var topic="mytopic/#1" filter="uibuilder.formatNumber(2, 'de-DE')">[...]</uib-var>`
+[getCommandList](fns/getCommandList.md ':include')
 
 ### `hasUibRouter` - Returns true if a uibrouter instance is loaded, otherwise returns false :id=hasUibRouter
 

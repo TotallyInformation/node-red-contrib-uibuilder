@@ -1,6 +1,6 @@
 ---
 created: 2026-01-02 13:03:58
-updated: 2026-01-02 13:07:11
+updated: 2026-03-17 12:56:26
 ---
 Those marked with `*` can be triggered with a command message from Node-RED flows. Those marked with `§` are low-code _ui functions and so can be triggered from Node-RED using messages containing [suitable `_ui` properties](client-docs/config-driven-ui).
 
@@ -31,6 +31,7 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`formatDate`](#formatDate) - Outputs a date/time as a formatted string.
 * [`formatNumber`](#formatNumber) - Outputs a number as a formatted string.
 * [`get`](#get)* - Return the value of a managed variable.
+* [`getCommandList`](#getcommandlist) - Return a list of available commands that can be sent from Node-RED to the front-end client.
 * [`getElementAttributes`](#getElementAttributes) - Return object containing attribute-name/value keypairs (or an empty object).
 * [`getElementClasses`](#getElementClasses) - Checks for CSS Classes and return as array if found or undefined if not.
 * [`getElementCustomProps`](#getElementCustomProps) - Return object containing an elements custom property/value pairs.

@@ -1,7 +1,9 @@
 ---
 created: 2026-01-02 13:07:31
-updated: 2026-01-02 13:24:47
+updated: 2026-03-17 13:05:46
 ---
+### `formatDate(Date, pattern, locale)` - Format an input date/time to a given pattern and/or locale :id=formatDate
+
 Takes a JavaScript Date object (or a date string that can be converted to a Date object) and formats it using the JavaScript standard [`INTL` library](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleString).
 
 Only a limited set of format patterns are currently supported. If no pattern is provided, the date is formatted using the given/default locale format.
