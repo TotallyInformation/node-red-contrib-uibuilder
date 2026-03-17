@@ -115,7 +115,7 @@ console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js
 //     })
 // }
 
-/**
+/** todo
  * TODO
  *  - Add text replace to ensure 2021 in (c) blocks is current year
  */
@@ -550,12 +550,17 @@ const lightningcss_options = {
     sourceMap: true, // Default
     targets: targets, // Make sure we don't use too new CSS
 }
+
 /** Pack CSS & limit "new" css options
- * Retains original, creates new .min.css version and .min.css.map
+ * Updates version date, then creates new .min.css version and .min.css.map
  * @param {Function} cb Callback
  */
 function minifyBrandCSS(cb) {
+    const currentDate = new Date().toISOString().split('T')[0]
     src(`${feDest}/uib-brand.css`)
+        .pipe(once())
+        .pipe(greplace(/(^ \* @version: )[\d-]+$/gm, `$1${currentDate}`))
+        .pipe(dest(feDest)) // Write updated version back to source file
         .pipe(sourcemaps.init())
         .pipe(lightningcss(lightningcss_options))
         .pipe(rename('uib-brand.min.css'))
@@ -563,6 +568,7 @@ function minifyBrandCSS(cb) {
         .pipe(dest(feDest))
         .on('end', function() {
             // in case of success
+            console.log(`Updated uib-brand.css version to ${currentDate} and minified`)
             cb()
         })
 }
