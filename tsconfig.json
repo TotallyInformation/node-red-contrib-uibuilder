@@ -7,7 +7,7 @@
         // This compiler run should only output d.ts files
         "emitDeclarationOnly": true,
         // Types should go into this directory.
-        "outDir": "types", // Removing this would place the .d.ts files next to the .js files
+        "outDir": ".", // Removing this would place the .d.ts files next to the .js files
         // go to js file when using IDE functions like "Go to Definition" in VSCode
         "declarationMap": true,
 
@@ -21,7 +21,6 @@
         "target": "es2022",
         "noEmit": true,
         "typeRoots": [
-            "./types",
             "./node_modules/@types"
         ]
     },
@@ -30,6 +29,7 @@
         "bin",
         "docs",
         "examples",
+        "libs",
         "front-end",
         "node_modules",
         "packages",
