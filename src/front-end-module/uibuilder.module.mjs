@@ -670,6 +670,13 @@ export const Uib = class Uib {
         } catch (e) { }
     }
 
+    /** Returns a list of the externally accessible command functions that are available to be called from Node-RED
+     * @returns {string[]} List of externally accessible command functions
+     */
+    getCommandList() {
+        return this.#extCommands
+    }
+
     /** Returns a list of uibuilder properties (variables) that can be watched with onChange
      * @returns {Object<string,string>} List of uibuilder managed variables
      */
@@ -911,6 +918,7 @@ export const Uib = class Uib {
      * @param {string} [locale] Locale code. Defaults to browser locale.
      * @returns {string} Formatted date string
      */
+    // formatDate = formatDate
     formatDate = formatDate
 
     /** Format a number using the INTL standard library - compatible with uib-var filter function
@@ -1587,7 +1595,11 @@ export const Uib = class Uib {
     _resolveNestedPath(obj, path) {
         if (!obj || !path) return undefined
         // Split on dots and bracket notation, filter out empty segments
-        const keys = path.replace(/\[["']?/g, '.').replace(/["']?\]/g, '').split('.').filter(Boolean)
+        const keys = path
+            .replace(/\[["']?/g, '.')
+            .replace(/["']?\]/g, '')
+            .split('.')
+            .filter(Boolean)
         let current = obj
         for (const key of keys) {
             if (current == null) return undefined
@@ -1704,11 +1716,11 @@ export const Uib = class Uib {
         el.style.display = result ? '' : 'none'
     }
 
-    /**
-     * Creates a safe evaluator function for template expressions
+    /** Creates a safe evaluator function for template (string) expressions
+     * - will retry several times if variables are not yet available, and defaults to false if still not successful after retries.
      * @param {string} expression - The expression to evaluate (e.g., "pageData.status || pageData.since")
-     * @param {Object} context - The context object containing variables (e.g., { pageData })
-     * @param {Object} options - Configuration options
+     * @param {object} context - The context object containing variables (e.g., { pageData })
+     * @param {object} options - Configuration options
      * @returns {Promise<boolean>} - Resolves to true/false
      */
     async evaluateWithRetry(expression, context, options = {}) {
@@ -1754,8 +1766,9 @@ export const Uib = class Uib {
         return defaultValue
     }
 
-    /**
-     * Creates a sandboxed evaluator function
+    /** Creates a sandboxed evaluator function for string expressions that can reference properties on a provided context object
+     * - Uses the Function constructor to create a new function with the context passed as an argument, and uses a with() block to allow direct access to context properties.
+     * - Catches and logs any errors during function creation, returning a safe default function that returns false if creation fails.
      * @param {string} expression - The expression to evaluate
      * @returns {Function} - Evaluator function
      */
@@ -1780,8 +1793,9 @@ export const Uib = class Uib {
         }
     }
 
-    /**
-     * Sleep utility
+    /** Promise-based (async) sleep utility
+     * @param {number} ms - Milliseconds to sleep
+     * @returns {Promise<void>} - Resolves after the specified time
      */
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms))
@@ -2528,19 +2542,19 @@ export const Uib = class Uib {
 
         // Is this msg for this pageName?
         if (obj.pageName && obj.pageName !== this.pageName) {
-            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this page')()
+            log('trace', 'Uib:_msgRcvdEvents:_forThis', 'Not for this page')()
             r = false
         }
 
         // Is this msg for this clientId?
         if (obj.clientId && obj.clientId !== this.clientId) {
-            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this clientId')()
+            log('trace', 'Uib:_msgRcvdEvents:_forThis', 'Not for this clientId')()
             r = false
         }
 
         // Is this msg for this tabId?
         if (obj.tabId && obj.tabId !== this.tabId) {
-            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this tabId')()
+            log('trace', 'Uib:_msgRcvdEvents:_forThis', 'Not for this tabId')()
             r = false
         }
 
@@ -2605,7 +2619,7 @@ export const Uib = class Uib {
             this._dispatchCustomEvent('uibuilder:msg:_ui', msg)
             _ui._uiManager(msg)
         }
-    } // --- end of _msgRcvdEvents ---
+    }
 
     /** Internal send fn. Send a standard or control msg back to Node-RED via Socket.IO
      * NR will generally expect the msg to contain a payload topic
