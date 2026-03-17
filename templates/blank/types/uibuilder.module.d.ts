@@ -1,7 +1,7 @@
 /**
  * Type definitions for uibuilder.module.js
  * WCAG 2.2 AA, ESLint v9, Shift-Left security, and project conventions applied.
- * @version 7.5.0
+ * @version 7.6.0
  * @author Julian Knight (Totally Information)
  */
 
@@ -60,7 +60,7 @@ export interface OverlayOptions {
  * @description The client-side Front-End JavaScript for uibuilder in HTML Module form.
  * Provides a number of global objects that can be used in your own JavaScript.
  * See the docs folder `./docs/uibuilder.module.md` for details of how to use this fully.
- * @version 7.5.0
+ * @version 7.6.0
  * @author Julian Knight (Totally Information)
  */
 export class Uib {
@@ -204,6 +204,12 @@ export class Uib {
     removeStore(id: string): void
 
     /**
+     * Returns a list of the externally accessible command functions that are available to be called from Node-RED
+     * @returns List of externally accessible command functions
+     */
+    getCommandList(): string[]
+
+    /**
      * Returns a list of uibuilder properties (variables) that can be watched with onChange
      * @returns List of uibuilder managed variables
      */
@@ -276,6 +282,15 @@ export class Uib {
     elementExists(cssSelector: string, msg?: boolean): boolean
 
     /**
+     * Format a Date using Intl with optional pattern support
+     * @param date Input JS Date, date string, or timestamp
+     * @param pattern Optional pattern string
+     * @param locale Locale code. Defaults to browser locale.
+     * @returns Formatted date string
+     */
+    formatDate(date: Date | string | number, pattern?: string, locale?: string): string
+
+    /**
      * Format a number using the INTL standard library
      * @param value Number to format
      * @param decimalPlaces Number of decimal places to include
@@ -310,6 +325,14 @@ export class Uib {
      * @param args Arguments to log
      */
     log(...args: any[]): void
+
+    /**
+     * Create and return a randomised UUID
+     * Uses the browsers crypto library if available (newer browsers)
+     * or something based on the timestamp and a random number
+     * @returns The UUID
+     */
+    randomUUID(): string
 
     /**
      * Makes a null or non-object into an object. If thing is already an object.
@@ -350,6 +373,31 @@ export class Uib {
      * @returns Rounded number
      */
     round(num: number, decimalPlaces: number): number
+
+    /**
+     * Promise-based (async) sleep utility
+     * @param ms Milliseconds to sleep
+     * @returns Resolves after the specified time
+     */
+    sleep(ms: number): Promise<void>
+
+    /**
+     * Creates a sandboxed evaluator function for string expressions that can reference properties on a provided context object
+     * Uses the Function constructor to create a new function with the context passed as an argument
+     * @param expression The expression to evaluate
+     * @returns Evaluator function
+     */
+    createSafeEvaluator(expression: string): Function
+
+    /**
+     * Safe expression evaluator that will retry several times if variables are not yet available
+     * Defaults to false if still not successful after retries
+     * @param expression The expression to evaluate (e.g., "pageData.status || pageData.since")
+     * @param context The context object containing variables (e.g., { pageData })
+     * @param options Configuration options (maxRetries, retryDelay, defaultValue)
+     * @returns Resolves to the evaluated result or defaultValue
+     */
+    evaluateWithRetry(expression: string, context: object, options?: { maxRetries?: number, retryDelay?: number, defaultValue?: any }): Promise<any>
 
     /**
      * Set the default originator. Set to '' to ignore. Used with uib-sender.
@@ -626,6 +674,20 @@ export class Uib {
      * @param meta Optional metadata to send with the file
      */
     uploadFile(file: File, meta?: object): void
+
+    /**
+     * Send a message to Node-RED and wait for a response asynchronously
+     * Generates a unique correlation ID and waits for a response with matching _asyncResponse
+     * @param msg The message object to send
+     * @param options Optional configuration: timeout (default 60000ms), onSuccess callback, originator
+     * @returns Promise that resolves with the response message or rejects on timeout
+     * @example
+     * const response = await uibuilder.asyncSend(
+     *     { topic: 'query', payload: 'test' },
+     *     { timeout: 30000, onSuccess: (msg) => console.log('Got response:', msg) }
+     * )
+     */
+    asyncSend(msg: object, options?: { timeout?: number, onSuccess?: (msg: object) => void, originator?: string }): Promise<object>
 
     // --- Socket.IO ---
     /**

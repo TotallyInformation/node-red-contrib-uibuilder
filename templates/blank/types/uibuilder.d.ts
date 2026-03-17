@@ -3,7 +3,7 @@
 /**
  * Make the uibuilder instance globally available (from uibuilder.module.d.ts)
  * Also expose the other global helpers and object aliases from uibuilder
- * @version 7.5.0
+ * @version 7.6.0
  * Add the following to the top of any JS file to enable VS Code intellisense
  * for uibuilder (adjust the path as needed):
  *   /// <reference path="../types/uibuilder.d.ts" />
