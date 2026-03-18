@@ -3,7 +3,7 @@ title: Reactivity - dynamic HTML attributes
 description: |
   UIBUILDER introduces various reactive attributes to HTML that make it easier to create dynamic web pages using data from Node-RED with minimal code.
 created: 2025-06-14 12:53:20
-updated: 2026-03-17 16:28:16
+updated: 2026-03-18 14:23:51
 since: v7.5.0
 author: Julian Knight (Totally Information)
 ---

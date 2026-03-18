@@ -3,7 +3,7 @@ title: Reactive - A class to create reactive variables
 description: |
   The `Reactive` class enables the creation and management of reactive variables.
 created: 2025-06-14 16:21:29
-updated: 2025-06-14 16:50:22
+updated: 2026-03-18 13:31:57
 ---
 
 ## Potential Limitations
