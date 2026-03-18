@@ -2872,7 +2872,7 @@ export const Uib = class Uib {
             if (this.topic !== undefined && this.topic !== '') msgToSend.topic = this.topic
             else {
                 // Did the last inbound msg have a topic?
-                if ( Object.prototype.hasOwnProperty.call(this, 'msg') && Object.prototype.hasOwnProperty.call(this.msg, 'topic') ) {
+                if ( Object.prototype.hasOwnProperty.call(this, 'msg') && this.msg !== null && Object.prototype.hasOwnProperty.call(this.msg, 'topic') ) {
                     msgToSend.topic = this.msg.topic
                 }
             }
