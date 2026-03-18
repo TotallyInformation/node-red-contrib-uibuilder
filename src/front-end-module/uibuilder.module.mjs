@@ -933,15 +933,6 @@ export const Uib = class Uib {
         return a1.filter(uName => a2.includes(uName))
     }
 
-    /** Check if an attribute name is a uibuilder-specific attribute.
-     * Matches names starting with 'uib-', 'data-uib-', or ':'.
-     * @param {string} name The attribute name to check
-     * @returns {boolean} True if the attribute name is a uib attribute
-     */
-    isUibAttribute(name) {
-        return name.startsWith('uib-') || name.startsWith('data-uib-') || name.startsWith(':')
-    }
-
     /** Copies a uibuilder variable to the browser clipboard
      * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
      */
@@ -1040,6 +1031,15 @@ export const Uib = class Uib {
         return !!this.uibrouterinstance
     }
 
+    /** Check if an attribute name is a uibuilder-specific attribute.
+     * Matches names starting with 'uib-', 'data-uib-', or ':'.
+     * @param {string} name The attribute name to check
+     * @returns {boolean} True if the attribute name is a uib attribute
+     */
+    isUibAttribute(name) {
+        return name.startsWith('uib-') || name.startsWith('data-uib-') || name.startsWith(':')
+    }
+
     /** Only keep the URL Hash & ignoring query params
      * @param {string} url URL to extract the hash from
      * @returns {string} Just the route id
@@ -1049,8 +1049,22 @@ export const Uib = class Uib {
         return '#' + url.replace(/^.*#(.*)/, '$1').replace(/\?.*$/, '')
     }
 
+    /** Standardised logging function that uses the log level system and can be extended in the future to do more than just log to the console
+     * @param {...*} arguments The arguments to log,
+     *   first argument can optionally be a log level string or number (e.g., 'info', 'warn', 'error', 'debug', 'trace')
+     *   2nd argument can optionally be a source string to identify the source of the log (e.g., 'uibuilder:myFunction')
+     *   Remaining arguments are the data to log, can be multiple and of any type.
+     */
     log() {
         log(...arguments)()
+    }
+
+    /** Output the current call stack to the console */
+    logStack() {
+        const stack = this.stack()
+        stack.shift() // Drop 1st entry as it's always the logStack function itself
+        console.log('%cCall stack:', log.LOG_STYLES.info.css, stack)
+        // log('info', 'Uib:logStack', 'Call stack:', this.stack())()
     }
 
     /** Makes a null or non-object into an object. If thing is already an object.
@@ -1192,6 +1206,101 @@ export const Uib = class Uib {
             }, ms)
         }
     } // ---- End of ping ---- //
+
+    /** Get the current call stack as an array of objects containing file, function, line, column, and raw information.
+     * Sheesh! Sometimes JavaScript is a PAIN. The stack property of an Error object is not yet an official standard
+     * and is implemented differently across browsers. So we have to do a bunch of parsing to try to get a consistent
+     * output across browsers. We will attempt to parse the stack trace in Chromium, Firefox, and Safari formats, and
+     * return an array of objects with the same properties for each line of the stack trace.
+     * @returns {Array<{{file:string,function:string,line:number,column:number,raw:string}}>} Stack array
+     */
+    stack() {
+        /** Map a Chromium stack trace line to an object with function, file, line, and column properties.
+         * @param {string} line Input stack trace line from Chromium, e.g. "    at myFunction (http://example.com/script.js:10:15)"
+         * @param {string} [raw] Optional raw line to include in output if parsing fails. Defaults to the input line.
+         * @returns {object} An object with function, file, line, column, and raw properties extracted from the stack trace line
+         */
+        function _stackMapChromium(line) {
+            // console.log(arguments, arguments.length === 2 ? arguments[1] : '--no raw--')
+            let raw
+            if (arguments.length === 2) {
+                // console.log('Using provided raw line for output: ', arguments[1])
+                raw = arguments[1]
+            } else {
+                // console.log('No raw line provided, using input line for output: ', line)
+                raw = line
+            }
+
+            // Check line for "at <" - if so, there is no function name, so we need to adjust the regex to account for that
+            if (line.includes('at <')) {
+                // No function name case
+                line = line.replace('at <', 'at anonymous (<') + ')' // Replace with a placeholder function name so that the regex can still capture the file, line, and column
+            }
+            const match = line.match(/at\s+(.*)\s+\((.*):(\d+):(\d+)\)/) || line.match(/at\s+(.*):(\d+):(\d+)/)
+            if (match) {
+                return {
+                    function: match[1],
+                    file: match[2],
+                    line: parseInt(match[3], 10),
+                    column: parseInt(match[4], 10),
+                    raw,
+                }
+            }
+            return { raw, }
+        }
+        /** Map a Firefox stack trace line to a Chromium-like format for easier parsing.
+         * @param {string} line Input stack trace line from Firefox, e.g. "myFunction@http://example.com/script.js:10:15"
+         * @returns {object} An object with function, file, line, column, and raw properties extracted from the stack trace line
+         */
+        function _stackMapFirefox(line) {
+            const raw = line
+            line = line
+                .replace(/^@/, 'anonymous@')
+                .replace(/debugger eval code/g, '<anonymous>')
+                .replace(/^(.*)@(.*):(\d+):(\d+)$/, '    at $1 ($2:$3:$4)')
+            return _stackMapChromium(line, raw)
+        }
+        /** Map a Safari stack trace line to a Chromium-like format for easier parsing.
+         * Note that Safari does not include line or column numbers, so these will be set to 0.
+         *      It does not even include the calling script file name :(
+         * @param {string} line Input stack trace line from Safari, e.g. "myFunction@http://example.com/script.js"
+         * @returns {object} An object with function, file (<safari-unknown>), line (0), column (0), and raw properties extracted from the stack trace line
+         */
+        function _stackMapSafari(line) {
+            const raw = line
+            line = line
+                .replace(/^global code@/, 'anonymous@')
+                .replace(/^(.*)@$/, '    at $1 (<safari-unknown>:0:0)')
+            return _stackMapChromium(line, raw)
+        }
+
+        let stack = (new Error()).stack
+        let type = 'unknown'
+        // Is this a Safari browser? Safari has a different stack trace format and doesn't include the "at" keyword, so we need to adjust for that
+        if (stack.includes('at ')) {
+            // Chromium case - we can parse the stack as is, dropping the first 2 lines which are just "Error" and the current function
+            type = 'chromium'
+            stack = stack.split('\n').slice(2)
+            stack = stack.map(_stackMapChromium)
+        } else if (stack.endsWith('@')) {
+            // Safari case - it is cr@p and does not include line or column numbers, so we will just return the raw stack lines as the file and function with line and column as null. We also need to drop the first line which is just "Error"
+            type = 'safari'
+            // console.trace() // Does not trace other than this fn on Safari unlike other browsers.
+            stack = stack.split('\n').slice(1) // Remove the first line
+            stack = stack.map(_stackMapSafari)
+        } else if (stack.includes('@')) {
+            // else is this Firefox? Firefox also has a different format, It uses "@" instead of "at" and doesn't include the column number, so we need to adjust for that as well
+            type = 'firefox'
+            // Firefox case - we will replace "@" with "at" and add a placeholder column number to make it compatible with our regex parsing below
+            stack = stack.split('\n').slice(1, -1) // Remove the first & last lines
+            stack = stack.map(_stackMapFirefox)
+        } else {
+            // Unknown format, return raw stack as a single entry
+            return [{ raw: stack, }]
+        }
+
+        return stack
+    }
 
     /** Convert JSON to Syntax Highlighted HTML
      * @param {object} json A JSON/JavaScript Object

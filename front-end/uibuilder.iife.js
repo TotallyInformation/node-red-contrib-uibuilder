@@ -7734,14 +7734,6 @@
     arrayIntersect(a1, a2) {
       return a1.filter((uName) => a2.includes(uName));
     }
-    /** Check if an attribute name is a uibuilder-specific attribute.
-     * Matches names starting with 'uib-', 'data-uib-', or ':'.
-     * @param {string} name The attribute name to check
-     * @returns {boolean} True if the attribute name is a uib attribute
-     */
-    isUibAttribute(name2) {
-      return name2.startsWith("uib-") || name2.startsWith("data-uib-") || name2.startsWith(":");
-    }
     /** Copies a uibuilder variable to the browser clipboard
      * @param {string} varToCopy The name of the uibuilder variable to copy to the clipboard
      */
@@ -7823,6 +7815,14 @@
     hasUibRouter() {
       return !!this.uibrouterinstance;
     }
+    /** Check if an attribute name is a uibuilder-specific attribute.
+     * Matches names starting with 'uib-', 'data-uib-', or ':'.
+     * @param {string} name The attribute name to check
+     * @returns {boolean} True if the attribute name is a uib attribute
+     */
+    isUibAttribute(name2) {
+      return name2.startsWith("uib-") || name2.startsWith("data-uib-") || name2.startsWith(":");
+    }
     /** Only keep the URL Hash & ignoring query params
      * @param {string} url URL to extract the hash from
      * @returns {string} Just the route id
@@ -7831,8 +7831,20 @@
       if (!url2) return "";
       return "#" + url2.replace(/^.*#(.*)/, "$1").replace(/\?.*$/, "");
     }
+    /** Standardised logging function that uses the log level system and can be extended in the future to do more than just log to the console
+     * @param {...*} arguments The arguments to log,
+     *   first argument can optionally be a log level string or number (e.g., 'info', 'warn', 'error', 'debug', 'trace')
+     *   2nd argument can optionally be a source string to identify the source of the log (e.g., 'uibuilder:myFunction')
+     *   Remaining arguments are the data to log, can be multiple and of any type.
+     */
     log() {
       log(...arguments)();
+    }
+    /** Output the current call stack to the console */
+    logStack() {
+      const stack = this.stack();
+      stack.shift();
+      console.log("%cCall stack:", log.LOG_STYLES.info.css, stack);
     }
     /** Makes a null or non-object into an object. If thing is already an object.
      * If not null, moves "thing" to {payload:thing}
@@ -7962,6 +7974,65 @@
       }
     }
     // ---- End of ping ---- //
+    /** Get the current call stack as an array of objects containing file, function, line, column, and raw information.
+     * Sheesh! Sometimes JavaScript is a PAIN. The stack property of an Error object is not yet an official standard
+     * and is implemented differently across browsers. So we have to do a bunch of parsing to try to get a consistent
+     * output across browsers. We will attempt to parse the stack trace in Chromium, Firefox, and Safari formats, and
+     * return an array of objects with the same properties for each line of the stack trace.
+     * @returns {Array<{{file:string,function:string,line:number,column:number,raw:string}}>} Stack array
+     */
+    stack() {
+      function _stackMapChromium(line) {
+        let raw;
+        if (arguments.length === 2) {
+          raw = arguments[1];
+        } else {
+          raw = line;
+        }
+        if (line.includes("at <")) {
+          line = line.replace("at <", "at anonymous (<") + ")";
+        }
+        const match = line.match(/at\s+(.*)\s+\((.*):(\d+):(\d+)\)/) || line.match(/at\s+(.*):(\d+):(\d+)/);
+        if (match) {
+          return {
+            function: match[1],
+            file: match[2],
+            line: parseInt(match[3], 10),
+            column: parseInt(match[4], 10),
+            raw
+          };
+        }
+        return { raw };
+      }
+      function _stackMapFirefox(line) {
+        const raw = line;
+        line = line.replace(/^@/, "anonymous@").replace(/debugger eval code/g, "<anonymous>").replace(/^(.*)@(.*):(\d+):(\d+)$/, "    at $1 ($2:$3:$4)");
+        return _stackMapChromium(line, raw);
+      }
+      function _stackMapSafari(line) {
+        const raw = line;
+        line = line.replace(/^global code@/, "anonymous@").replace(/^(.*)@$/, "    at $1 (<safari-unknown>:0:0)");
+        return _stackMapChromium(line, raw);
+      }
+      let stack = new Error().stack;
+      let type = "unknown";
+      if (stack.includes("at ")) {
+        type = "chromium";
+        stack = stack.split("\n").slice(2);
+        stack = stack.map(_stackMapChromium);
+      } else if (stack.endsWith("@")) {
+        type = "safari";
+        stack = stack.split("\n").slice(1);
+        stack = stack.map(_stackMapSafari);
+      } else if (stack.includes("@")) {
+        type = "firefox";
+        stack = stack.split("\n").slice(1, -1);
+        stack = stack.map(_stackMapFirefox);
+      } else {
+        return [{ raw: stack }];
+      }
+      return stack;
+    }
     /** Convert JSON to Syntax Highlighted HTML
      * @param {object} json A JSON/JavaScript Object
      * @returns {html} Object reformatted as highlighted HTML
