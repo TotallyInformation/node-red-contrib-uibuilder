@@ -1,6 +1,6 @@
 ---
 created: 2026-01-02 13:03:58
-updated: 2026-03-17 12:56:26
+updated: 2026-03-18 13:44:58
 ---
 Those marked with `*` can be triggered with a command message from Node-RED flows. Those marked with `§` are low-code _ui functions and so can be triggered from Node-RED using messages containing [suitable `_ui` properties](client-docs/config-driven-ui).
 
@@ -52,7 +52,8 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`loadStyleSrc`](#load)§
 * [`loadStyleTxt`](#load)§
 * [`loadui`](#loadui)§
-* [`log`](#log)
+* [`log`](#log) - Logs data to terminal using optional log level.
+* [`logStack`](#logStack) - Logs the stack trace details to the console in a readable format.
 * [`logToServer`](#logToServer)
 * [`makeMeAnObject`](#makeMeAnObject) - Returns the input as an object.
 * [`navigate`](#navigate)* - Forces the browser to change URL.
@@ -81,6 +82,7 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`showMsg`](#showMsg)*
 * [`showOverlay`](#showOverlay)* - Displays an overlay window with customizable content and behavior.
 * [`showStatus`](#showStatus)*
+* [`stack`](#stack) - Returns an array of stack trace details for the current execution point.
 * [`start`](#start)
 * [`syntaxHighlight`](#syntaxHighlight)
 * [`tblAddRow`](#tblAddRow)§ - Add a new row to a table.

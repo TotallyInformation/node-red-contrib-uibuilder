@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2026-03-17 13:28:47
+updated: 2026-03-18 13:46:30
 ---
 
 Functions accessible in client-side user code.
@@ -1023,6 +1023,8 @@ To set the log level to display in your code, use `uibuilder.logLevel = 5` or `u
 
 Future versions of this function after v6.1 will extend it to output to an on-page visible log and/or log back to Node-RED.
 
+[logStack](fns/logStack.md ':include')
+
 ### `makeMeAnObject(thing, property)` - Return a valid object if input is null or a string :id=makeMeAnObject
 
 `property` defaults to "payload" if not supplied. So `uibuilder.makeMeAnObject("mystring")` will output `{payload: "mystring"}`.
@@ -1063,6 +1065,8 @@ trigger the route on the resulting page load.
 Fast but accurate number rounding (https://stackoverflow.com/a/48764436/1309986 solution 2) using the "half away from zero" method (AKA "commercial" rounding), the most common type.
 
 Inputs must be numbers otherwise an error is generated.
+
+[stack](fns/stack.md ':include')
 
 ### `truthy(val, [default])` - Returns true or false or the optional default value depending on the value :id=truthy
 

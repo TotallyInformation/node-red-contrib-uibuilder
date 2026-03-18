@@ -51,6 +51,8 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * If DOMPurify is used, it is now configured to allow custom web components, since uibuilder now makes more extensive use of them.
 
+* New `stack` and `logStack` functions. These can be useful for debugging and understanding the flow of your code especially with complex and deeply nested functions.
+
 #### Documentation
 
 * Mermaid diagrams are now supported in UIBUILDER's documentation. With the first example being for the new `uib-markweb` node's page.
@@ -120,9 +122,13 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 
 * **NEW** Function `formatDate`. This uses the Intl API to format dates according to locale and optional pattern. See the [documentation](./docs/clients/uibuilder-client-library.md#formatdate) for details. Really useful as a filter function and works great with the new `uib-markweb` features.
 
-* **NEW** Function `randomUUID`. This function generates a random UUID (Universally Unique Identifier) using the browser's `crypto.randomUUID()` method if available. If not available, it falls back to a simple implementation that combines the current timestamp and a random string. This can be useful for generating unique IDs for elements, messages, or other purposes in your front-end code.
+* **NEW** Functions
+  
+  * `randomUUID`. This function generates a random UUID (Universally Unique Identifier) using the browser's `crypto.randomUUID()` method if available. If not available, it falls back to a simple implementation that combines the current timestamp and a random string. This can be useful for generating unique IDs for elements, messages, or other purposes in your front-end code.
 
-* **NEW** Function `asyncSend`. This function allows you to send a message to the server and wait for a response. It returns a promise that resolves with the response message. This is useful for request/response patterns where you need to get data from the server before proceeding. [Ref](https://discourse.nodered.org/t/navigation-guards-with-vuerouter-in-uibuilder/100109).
+  * `asyncSend`. This function allows you to send a message to the server and wait for a response. It returns a promise that resolves with the response message. This is useful for request/response patterns where you need to get data from the server before proceeding. [Ref](https://discourse.nodered.org/t/navigation-guards-with-vuerouter-in-uibuilder/100109).
+  
+  * `stack` and `logStack`. These functions allow you to log a stack trace to the console. `stack` returns the stack details, while `logStack` logs the details as a regular console log message. This can be useful for debugging and understanding the flow of your code especially with complex and deeply nested functions.
 
 * **NEW** Added the `_receivedHRtime` property to messages received from the Node-RED server. This is a high-resolution timestamp (in milliseconds) of when the message was received. It can be used to measure latency and performance. It uses the [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) method which provides sub-millisecond accuracy. The value is the elapsed time since page navigation started.
 

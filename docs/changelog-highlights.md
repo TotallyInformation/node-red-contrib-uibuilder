@@ -1,6 +1,6 @@
 ---
 created: 2025-12-15 15:00:36
-updated: 2026-03-17 16:42:35
+updated: 2026-03-18 13:25:18
 version: 7.6.0
 ---
 ### Welcome to UIBUILDER v7.6.0
@@ -39,6 +39,8 @@ There is now a new `uib-var` custom _reactive_HTML attribute. Complements the ex
 All HTML custom elements and reactive attributes also now support nested object paths. e.g. `<uib-var topic="myvar.myprop">` or `<div uib-var="myvar.myprop.subprop">`. This allows you to directly bind to nested properties of reactive variables without needing to replace the entire variable.
 
 `uibuilder.get()` and `uibuilder.set()` functions now support deep object paths. This allows you to get and set nested properties of reactive variables without needing to replace the entire variable. e.g. `myvar.myprop`, `myvar.myprop.subprop` or `myvar[5]`.
+
+New `stack` and `logStack` functions. These can be useful for debugging and understanding the flow of your code especially with complex and deeply nested functions.
 
 #### Other
 Various bug fixes, performance improvements and security enhancements as always.
