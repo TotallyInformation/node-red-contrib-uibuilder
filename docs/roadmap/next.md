@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-03-17 16:44:21
+updated: 2026-03-21 17:27:24
 ---
 
 ## To Fix
@@ -17,6 +17,11 @@ updated: 2026-03-17 16:44:21
 ### New node: uib-markweb
 
 A node that creates a website out of a folder of markdown content.
+
+### In progress
+
+* [ ] Format index listings like the sidebar nav listing.
+* [ ] Moving md formatting tests out of "general.md" into their own files.
 
 #### Refactoring:
 
@@ -59,66 +64,41 @@ A node that creates a website out of a folder of markdown content.
 #### To test:
 
 * [ ] sidebar.json
-* [ ] Check that duplicate url's error.
+* [ ] Check that duplicate node URLs error.
 * [ ] Check menu styles - all needed?
 
 #### Issues:
+* fixed
+  * [x] Notify connected clients when watch is triggered.
+  * [x] Search not finding in other attributes?
+  * [x] Hash link returns are losing the path.
+  * [x] Make sure that `%%search%%` adds a `<search>` element wrapper.
+  * [x] Generate title, created, updated from file details if not in front-matter.
+  * [x] Watcher for config folder.
+  * [x] Make sure index is rebuilt on file changes.
+  * [x] Add date/time range filter to `%%index%%`. `from`, `to` and `duration` options.
+  * [x] Add `latest` option to `%%index%%` to show most recently updated/created pages.
+  * [x] Sidebar collapse state is not remembered.
+  * [x] On index changes, client should simply re-nav to the same page
+  * [x] On client reconnect socket.io, client should also re-nav to the same page. This will ensure that the client always has the latest index and content. It will also ensure that if the client was viewing a page that has been deleted, then it will be taken to the 404 page instead of being stuck on a broken page.
+  * [x] Nav entries no longer need to do anything clever to update when the index changes since the client will simply re-nav to the same page. This will simplify the implementation and avoid potential issues with trying to update the nav entries in place.
+  * [x] Highlight the current page in the index and nav listings.
+  * [x] Index rebuild is not removing pages that have been renamed.
+  * [x] Need to stop `%%...%%` and `{{...}}` from being processed in code blocks.
+  * [x] Code blocks going too wide. Restrict width.
+  * [x] Indexes cannot currently deal with rename or delete events*
+  * [x] Nav menus do not update when the index updates.
+  * [x] Make sure nav is rebuilt on file changes.
 
-* [x] Notify connected clients when watch is triggered.
-* [x] Search not finding in other attributes?
-* [x] Hash link returns are losing the path.
-* [x] Make sure that `%%search%%` adds a `<search>` element wrapper.
-* [x] Generate title, created, updated from file details if not in front-matter.
-* [x] Watcher for config folder.
-* [x] Make sure index is rebuilt on file changes.
-* [x] Add date/time range filter to `%%index%%`. `from`, `to` and `duration` options.
-* [x] Add `latest` option to `%%index%%` to show most recently updated/created pages.
 
-* [ ] Need to stop `%%...%%` and `{{...}}` from being processed in code blocks.
-* [ ] Code blocks going too wide. Restrict width.
-* [ ] No checks for duplicate urls.
-* [ ] Sidebar collapse state is not remembered.
-* [ ] Nav menus do not update when the index updates. They only update on page load. Need to add a message from the server to the client when the index updates so that the client can then update the nav menu if it is open.
+* [ ] No checks for duplicate URLs.
 * [ ] Sidebar should move to UNDER the main content if the page width is too narrow. In that case, the drag bar and toggle are not needed. Consider collapsing to a burger menu instead?
-
 * [ ] Allow for missing index.md file. (list top-level folders and pages). Needed for Astro/Obsidian content.
 * [ ] Cache the default config folder files to avoid re-reading on every page load.
-* [ ] Make sure nav is rebuilt on file changes.
 * [ ] *How to deal with category/tag listing pages?*
-* [ ] *Indexes cannot currently deal with rename or delete events*.
 * [ ] ~~Check if return msgs get clientId, etc.~~ They don't, should they?
 
 #### Wish list:
-
-* [x] Level specifier on nav element to limit depth and start level.
-* [x] On scroll, when nav menu scrolls offscreen, collapse it to a burger menu and keep it visible.
-* [x] Use server fs watch to provide live updates to pages. Send msg to ALL connected clients when a file changes. Clients can then decide what to do (e.g. reload if they are viewing that page).
-* [x] Allow source folder to be outside the userDir folder.
-* [x] Page icon overrides. Allow front-matter `favicon` field to specify an icon for the page that overrides the default favicon.
-
-* [x] Sidebar
-  * [x] Uses `%%sidebar%%` placeholder in template.
-  * [x] Uses `%%index%%` internally to generate nav index.
-  * [x] Highlight current page in sidebar.
-  * [x] 2 "tabs" - one for the navigation index and one for the page's table of contents. (Similar to Typora's sidebar). The navigation index must update when the server's index object updates. The TOC must update when the page content changes or navigation happens.
-  * [x] Uses collapsible sections (for both tabs). Remembered per user (localStorage). Using details/summary elements.
-  * [x] Search box above the tabs. Included by default but can be turned off using `%%sidebar [search=false]%%`.
-  * [x] Search results below the search box but above the tabs. Only if searchbox is present.
-  * [x] Allow sidebar to be toggled open/closed. Browser should remember state (localStorage). Default open. Allow override in `%%sidebar [open=false]%%`.
-  * [x] Allow sidebar width to be resized by user by making the border draggable. Browser should remember state (localStorage). Default width 20em. Allow override in `%%sidebar [width=25em]%%`.
-  * [x] Allow selection of start/end depth for the sidebar nav index. E.g. start=2, end=4 would show levels 2, 3 and 4 only. Same syntax as `%%index%%`.
-  * [x] Override of nav index titles (front-matter `title` field) with front-matter `shortTitle` field if present.
-  * [x] Use front-matter `description` field for nav index item HTML `title` attribute so that the description shows as a tooltip.
-  * [x] Allow full override of index content with manual `sidebar.json` file in config folder.
-  * [x] Sidebar must be full height of viewport and scroll independently of main content.
-  * [x] ~~Allow sidebar to be docked left/right. Browser should remember state (localStorage). Default left. Allow override in `%%sidebar [position=right]%%`.~~ Use CSS to do this instead. Change grid areas.
-
-  * [ ] Add `
-  * [ ] Allow an `edit-link` directive (or web component?) With a link pattern defined in the node's Editor panel. When configured, clicking the link should open the file in an editor. The link should be in the HTML wrapper or sidebar. However, it should also be available to the index listings.
-  * [ ] Move sidebar HTML to a template file.
-  
-* [x] Additional templates
-  * [x] Page footer
 
 * [-] Auto-menu generation.
   * [x] Horizontal
@@ -134,10 +114,6 @@ A node that creates a website out of a folder of markdown content.
   * [ ] If source folder is inaccessible, show a warning, mark the node invalid.
   * [ ] Help panel.
 
-* [ ] Update the navigation index from the watcher. Include metadata (`folder`, `created`, `updated`, `tags`, `category`)
-
-* [x] ~~Add a "recent" page listing. Available as `{{recent}}`. Needs some directives to specify how many, from where (folder, tags, category), etc.~~ Added to `%%index%%` as `latest` option instead.
-
 * [ ] Additional search functionality:
   * [x] Move to realtime comms instead of fetch.
   * [ ] Allow `%%search%%` placeholder in template.
@@ -146,7 +122,7 @@ A node that creates a website out of a folder of markdown content.
 
 * [ ] Custom 404 response page. Separate file in config folder with default content if not present.
 * [ ] Ensure non-markdown files are served correctly (e.g. images, pdfs, etc.)
-* [ ] Obsidian Tasks Plugin - enhanced markdown-it plugin allowing wide range of `[?]` syntax.
+* [ ] Enhanced markdown-it plugin allowing wide range of `[?]` syntax. (ref Obsidian Tasks Plugin)
 * [ ] Remove web router on node close.
 * [ ] Consider allowing URL parameters to be passed as front-matter variables? (but not allwing overwriting of existing front-matter variables).
 
@@ -174,14 +150,46 @@ A node that creates a website out of a folder of markdown content.
   * [ ] ❓Support for Astro routing (e.g. dynamic routes, nested routes, etc.)
 
 * Config:
-  * [ ] Add separate setting for the config folder to allow separation of content and config. Better security.
-    * [ ] Allow for a config folder in/or outside the source folder to hold config files (e.g. HTML wrapper, CSS, etc.)
+  * [x] Add separate setting for the config folder to allow separation of content and config. Better security.
+    * [ ] **TEST** Allow for a config folder in/or outside the source folder to hold config files (e.g. HTML wrapper, CSS, etc.)
   * [ ] Add button on folder inputs to allow creation of the folder.
   * [ ] Show full path and actual full url in the edit panel
   * [ ] Show marked errors/warnings in the edit panel
   * [ ] Show available marked extensions in the edit panel
   * [ ] Allow for a custom 404 "page" fragment in the _config folder
 
+##### Completed
+* [x] Level specifier on nav element to limit depth and start level.
+* [x] On scroll, when nav menu scrolls offscreen, collapse it to a burger menu and keep it visible.
+* [x] Use server fs watch to provide live updates to pages. Send msg to ALL connected clients when a file changes. Clients can then decide what to do (e.g. reload if they are viewing that page).
+* [x] Allow source folder to be outside the userDir folder.
+* [x] Page icon overrides. Allow front-matter `favicon` field to specify an icon for the page that overrides the default favicon.
+* [x] ~~Add a "recent" page listing. Available as `{{recent}}`. Needs some directives to specify how many, from where (folder, tags, category), etc.~~ Added to `%%index%%` as `latest` option instead.
+* [x] Update the navigation index from the watcher. Include metadata (`folder`, `created`, `updated`, `tags`, `category`)
+
+* [x] Sidebar
+  * [x] Uses `%%sidebar%%` placeholder in template.
+  * [x] Uses `%%index%%` internally to generate nav index.
+  * [x] Highlight current page in sidebar.
+  * [x] 2 "tabs" - one for the navigation index and one for the page's table of contents. (Similar to Typora's sidebar). The navigation index must update when the server's index object updates. The TOC must update when the page content changes or navigation happens.
+  * [x] Uses collapsible sections (for both tabs). Remembered per user (localStorage). Using details/summary elements.
+  * [x] Search box above the tabs. Included by default but can be turned off using `%%sidebar [search=false]%%`.
+  * [x] Search results below the search box but above the tabs. Only if searchbox is present.
+  * [x] Allow sidebar to be toggled open/closed. Browser should remember state (localStorage). Default open. Allow override in `%%sidebar [open=false]%%`.
+  * [x] Allow sidebar width to be resized by user by making the border draggable. Browser should remember state (localStorage). Default width 20em. Allow override in `%%sidebar [width=25em]%%`.
+  * [x] Allow selection of start/end depth for the sidebar nav index. E.g. start=2, end=4 would show levels 2, 3 and 4 only. Same syntax as `%%index%%`.
+  * [x] Override of nav index titles (front-matter `title` field) with front-matter `shortTitle` field if present.
+  * [x] Use front-matter `description` field for nav index item HTML `title` attribute so that the description shows as a tooltip.
+  * [x] Allow full override of index content with manual `sidebar.json` file in config folder.
+  * [x] Sidebar must be full height of viewport and scroll independently of main content.
+  * [x] ~~Allow sidebar to be docked left/right. Browser should remember state (localStorage). Default left. Allow override in `%%sidebar [position=right]%%`.~~ Use CSS to do this instead. Change grid areas.
+* [x] Additional templates
+  * [x] Page footer
+
+
+  * [ ] Allow an `edit-link` directive (or web component?) With a link pattern defined in the node's Editor panel. When configured, clicking the link should open the file in an editor. The link should be in the HTML wrapper or sidebar. However, it should also be available to the index listings.
+  * [ ] Move sidebar HTML to a template file.
+  
 
 ### Ongoing work
 
