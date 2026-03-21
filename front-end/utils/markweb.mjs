@@ -99,7 +99,7 @@ class SidebarController {
         this.navTab = document.getElementById('sidebar-tab-nav')
         /** @type {HTMLElement|null} */
         this.tocTab = document.getElementById('sidebar-tab-toc')
-        /** @type {HTMLElement|null} */
+        /** The navigation panel @type {HTMLElement|null} */
         this.navPanel = document.getElementById('sidebar-panel-nav')
         /** @type {HTMLElement|null} */
         this.tocPanel = document.getElementById('sidebar-panel-toc')
@@ -124,8 +124,23 @@ class SidebarController {
         this.setupTabs()
         this.setupSearch()
         this.generateTOC()
+        this.setupScrollSpy()
+        this.observeContentChanges()
         this.restoreCollapsedStates()
         this.highlightCurrentPage()
+    }
+
+    /** Watch the body content element for DOM changes and rebuild the TOC automatically.
+     * This ensures the TOC stays in sync whenever content is reloaded for any reason.
+     */
+    observeContentChanges() {
+        const contentEl = document.querySelector('main section')
+        if (!contentEl) return
+
+        this._contentObserver = new MutationObserver(() => {
+            this.generateTOC()
+        })
+        this._contentObserver.observe(contentEl, { childList: true, subtree: true, })
     }
 
     /** Restore sidebar open/closed and width state from localStorage */
@@ -283,14 +298,12 @@ class SidebarController {
 
     /** Generate table of contents from page headings with collapsible sections */
     generateTOC() {
-        if (!this.tocContainer) return
-
-        const contentEl = document.querySelector('[data-fmvar="body"]')
+        const contentEl = document.querySelector('main section')
         if (!contentEl) return
 
         const headings = contentEl.querySelectorAll('h2, h3, h4, h5, h6')
         if (headings.length === 0) {
-            this.tocContainer.innerHTML = '<p style="padding: 0.5rem; color: var(--text3); font-size: 0.875rem;">No headings found</p>'
+            uibuilder.set('sidebar-toc', '<p style="padding: 0.5rem; color: var(--text3); font-size: 0.875rem;">No headings found</p>')
             return
         }
 
@@ -348,12 +361,75 @@ class SidebarController {
             return html
         }
 
-        this.tocContainer.innerHTML = renderTree(root.children)
+        uibuilder.set('sidebar-toc', renderTree(root.children))
+        this.setupScrollSpy()
+    }
+
+    /** Set up an IntersectionObserver to highlight the TOC entry for the heading currently in view */
+    setupScrollSpy() {
+        // Tear down any previous observer
+        if (this._scrollSpyObserver) {
+            this._scrollSpyObserver.disconnect()
+            this._scrollSpyObserver = null
+        }
+
+        const contentEl = document.querySelector('main section')
+        if (!contentEl) return
+
+        const headings = contentEl.querySelectorAll('h2, h3, h4, h5, h6')
+        if (headings.length === 0) return
+
+        // Use a top-margin offset so headings are considered "active" once near the top of the viewport
+        this._scrollSpyObserver = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.isIntersecting) {
+                    this._highlightTocEntry(entry.target.id)
+                }
+            }
+        }, {
+            rootMargin: '0px 0px -70% 0px',
+            threshold: 0,
+        })
+
+        headings.forEach((heading) => {
+            if (heading.id) this._scrollSpyObserver.observe(heading)
+        })
+    }
+
+    /** Highlight the TOC link that matches the given heading id
+     * @param {string} id The heading element id to highlight
+     */
+    _highlightTocEntry(id) {
+        if (!this.tocContainer) return
+
+        // Remove existing highlight
+        this.tocContainer.querySelectorAll('.toc-active').forEach((el) => {
+            el.classList.remove('toc-active')
+        })
+
+        // Find the matching link and highlight its parent li or summary
+        const link = this.tocContainer.querySelector(`a[href="#${CSS.escape(id)}"]`)
+        if (!link) return
+
+        const summary = link.closest('summary')
+        if (summary) {
+            summary.classList.add('toc-active')
+        } else {
+            link.closest('li')?.classList.add('toc-active')
+        }
     }
 
     /** Restore collapsed state of details elements from localStorage */
     restoreCollapsedStates() {
         const saved = localStorage.getItem(this.storageKeyCollapsed)
+
+        // Listen for toggle events to save state
+        this.sidebar.addEventListener('toggle', (e) => {
+            const target = /** @type {HTMLElement} */ (e.target)
+            if (target.tagName !== 'DETAILS') return
+            this.saveCollapsedState()
+        }, true)
+
         if (!saved) return
 
         try {
@@ -373,13 +449,6 @@ class SidebarController {
         } catch (e) {
             // Ignore parse errors
         }
-
-        // Listen for toggle events to save state
-        this.sidebar.addEventListener('toggle', (e) => {
-            const target = /** @type {HTMLElement} */ (e.target)
-            if (target.tagName !== 'DETAILS') return
-            this.saveCollapsedState()
-        }, true)
     }
 
     /** Save collapsed state of details elements to localStorage */
@@ -1131,17 +1200,30 @@ if (elSearchInput) elSearchInput.addEventListener('input', (e) => {
 // })
 // #endregion --- Search functionality ---
 
+// Create a DOM query for all elements with the "data-directive" attribute, and store the data-directive values in a Set for quick lookup
+
+/** On socket reconnection, reload the current page and request fresh nav indexes */
+document.addEventListener('uibuilder:socket:connected', (evt) => {
+    if (evt.detail?.numConnections > 0) {
+        // console.log('uibuilder socket reconnected, refreshing page and nav indexes.', evt.detail)
+        // Request updated sidebar nav index from server
+        uibuilder.sendCtrl({
+            uibuilderCtrl: 'internal',
+            controlType: 'get-sidebar-nav',
+            currentPath: pageData?.path || window.location.pathname,
+        })
+        // Reload the current page content
+        if (pageData?.toUrl) {
+            navigate(pageData.toUrl, false)
+        } else {
+            window.location.reload()
+        }
+    }
+})
+
 /** Watch for search or navigation response from server & show results */
 uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
     switch (ctrlMsg.topic) {
-        // ! NO LONGER REQUIRED
-        // From initial page data request only. No body in this since we already have it
-        // case '_page-metadata': {
-        //     console.log('Initial page metadata received from server:', ctrlMsg)
-        //     updatePageData(ctrlMsg.attributes, { from: '_page-metadata', initialPath: ctrlMsg.initialPath, topic: ctrlMsg.topic, })
-        //     break
-        // }
-
         case '_search-results': {
             console.log('Search results received from server:', ctrlMsg)
             if (ctrlMsg.error) {
@@ -1174,6 +1256,27 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         // Used to trigger updates of any indexListings via use of `uib-topic="_indexes-changed"`
         case '_indexes-changed': {
             console.log('Indexes changed on server.', ctrlMsg)
+            // Request updated sidebar nav index from server
+            uibuilder.sendCtrl({
+                uibuilderCtrl: 'internal',
+                controlType: 'get-sidebar-nav',
+                currentPath: pageData?.path || window.location.pathname,
+            })
+            // If the current page is affected by the index change, navigate to it again to refresh content
+            navigate(pageData.toUrl, false)
+            break
+        }
+
+        // Received in response to a 'get-sidebar-nav' request
+        case '_sidebar-nav-result': {
+            console.log('Sidebar nav updated from server.', ctrlMsg)
+            if (ctrlMsg.navHtml) {
+                uibuilder.set('sidebar-nav', ctrlMsg.navHtml)
+                // Re-highlight current page in updated nav
+                if (sidebarController) {
+                    sidebarController.highlightCurrentPage()
+                }
+            }
             break
         }
 
@@ -1190,7 +1293,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             break
         }
 
-        // If the server watch fn detects a file/folder change
+        // If the server watch fn detects a file/folder change - reload page if the changed file is the current page
         case '_source-change': {
             console.log('Source changed on server.', { ctrlMsg, pageData, })
             if (ctrlMsg.payload.url === pageData.toUrl) {
@@ -1267,6 +1370,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         }
 
         default: {
+            // console.log('CONTROL MSG FROM SERVER:', ctrlMsg)
             // Ignore other control messages
             break
         }
@@ -1277,3 +1381,12 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 // initMenu()
 // Set initial active state on page load
 // updateActiveNavState()
+
+// EXPERIMENTAL ONLY - probably not needed
+const directiveElements = document.querySelectorAll('[data-directive]')
+const directivesSet = new Set()
+directiveElements.forEach((el) => {
+    const directive = el.getAttribute('data-directive')
+    if (directive) directivesSet.add(directive)
+})
+console.log('>> Directives found in DOM:', directivesSet)
