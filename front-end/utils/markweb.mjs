@@ -22,7 +22,8 @@ const log = uibuilder.log
 // It is used to resolve relative links for SPA navigation.
 // It is also set on page load as window.baseUrl. It does not change.
 const baseUrl = window.baseUrl
-console.info('Base URL:', baseUrl, pageData)
+console.info('Base URL:', baseUrl)
+// console.info('Base URL:', baseUrl, pageData)
 
 // Get references to commonly used elements
 const elContent = document.querySelector('[data-fmvar="content"]')
@@ -68,7 +69,7 @@ function updatePageData(attributes, additionalInfo = {}) {
     uibuilder.set('pageData', pgData )
     window.pageData = pgData
     pageData = pgData
-    console.log(`uibuilder.pageData has changed (From: ${pgData.from}): `, pgData)
+    // console.log(`uibuilder.pageData has changed (From: ${pgData.from}): `, pgData)
     // NB: <show-meta> elements will update themselves
     return pgData
 }
@@ -1000,7 +1001,7 @@ async function navigate(toUrl, addToHistory = true) {
     }
     // #endregion --- Normalize toUrl ---
 
-    console.log(`Navigating to: "${uibuilder.urlJoin(window.location.origin, baseUrl, toUrl, hashFragment ? `(hash: ${hashFragment})` : '')}"` )
+    // console.log(`Navigating to: "${uibuilder.urlJoin(window.location.origin, baseUrl, toUrl, hashFragment ? `(hash: ${hashFragment})` : '')}"` )
 
     // Ask server for new page content via uibuilder control message (see onChange handler below)
     // Pass hashFragment so client can scroll to it after content loads
@@ -1070,7 +1071,7 @@ initialPath = initialPath.replace(window.location.origin, '')
 if (initialPath === baseUrl.replace(/\/$/, '')) {
     initialPath = baseUrl
 }
-console.log('Setting initial history state:', initialPath, { path: initialPath, status: 'initial load', })
+// console.log('Setting initial history state:', initialPath, { path: initialPath, status: 'initial load', })
 history.replaceState({ path: initialPath, status: 'initial load', }, '', initialPath)
 
 // If the page loaded with a hash, scroll to that element after content is ready
@@ -1225,7 +1226,7 @@ document.addEventListener('uibuilder:socket:connected', (evt) => {
 uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
     switch (ctrlMsg.topic) {
         case '_search-results': {
-            console.log('Search results received from server:', ctrlMsg)
+            // console.log('Search results received from server:', ctrlMsg)
             if (ctrlMsg.error) {
                 // Handle error for main search
                 if (elSearchQuery) elSearchQuery.textContent = escapeHtml(ctrlMsg.query)
@@ -1255,7 +1256,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         // Received when server detects an index change (e.g. file added/removed)
         // Used to trigger updates of any indexListings via use of `uib-topic="_indexes-changed"`
         case '_indexes-changed': {
-            console.log('Indexes changed on server.', ctrlMsg)
+            // console.log('Indexes changed on server.', ctrlMsg)
             // Request updated sidebar nav index from server
             uibuilder.sendCtrl({
                 uibuilderCtrl: 'internal',
@@ -1269,7 +1270,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
         // Received in response to a 'get-sidebar-nav' request
         case '_sidebar-nav-result': {
-            console.log('Sidebar nav updated from server.', ctrlMsg)
+            // console.log('Sidebar nav updated from server.', ctrlMsg)
             if (ctrlMsg.navHtml) {
                 uibuilder.set('sidebar-nav', ctrlMsg.navHtml)
                 // Re-highlight current page in updated nav
@@ -1282,7 +1283,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
         // If the server watch fn detects a config file change, reload the current page
         case '_config-change': {
-            console.log('Config file changed on server, reloading current page.', ctrlMsg)
+            // console.log('Config file changed on server, reloading current page.', ctrlMsg)
             // Reload the current page to pick up any config changes
             if (pageData?.toUrl) {
                 navigate(pageData.toUrl, false)
@@ -1295,7 +1296,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
         // If the server watch fn detects a file/folder change - reload page if the changed file is the current page
         case '_source-change': {
-            console.log('Source changed on server.', { ctrlMsg, pageData, })
+            // console.log('Source changed on server.', { ctrlMsg, pageData, })
             if (ctrlMsg.payload.url === pageData.toUrl) {
                 console.log('Current page affected by source change, reloading page content.')
                 navigate(pageData.toUrl, false)
@@ -1313,11 +1314,11 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                 return
             }
             const data = updatePageData(ctrlMsg.attributes ?? {}, { from: '_page-navigation-result', initialPath: '', topic: ctrlMsg.topic, hashFragment: ctrlMsg.hashFragment, })
-            console.log(
-                `Page change from ${ctrlMsg.from} (${data.from}):`,
-                ` Old url: ${currentPageUrl}, New url: ${data.toUrl}.`,
-                ctrlMsg
-            )
+            // console.log(
+            //     `Page change from ${ctrlMsg.from} (${data.from}):`,
+            //     ` Old url: ${currentPageUrl}, New url: ${data.toUrl}.`,
+            //     ctrlMsg
+            // )
             // TODO: Sanitize data.body for safety
             // TODO: Should {{...}} replacements be done here? Instead of on server?
             // if (elContent) elContent.innerHTML = data.content || '<p>No content</p>'
