@@ -119,10 +119,49 @@ function directivePlugin(md, handlers = {}) {
         return `<span class="directive-unknown" data-directive="${fnName}">${md.utils.escapeHtml(raw)}</span>`
     }
 
-    // Register the inline rule
+    /** Block rule to process directives that are the sole content of a paragraph.
+     * This prevents block-level output (e.g. <ul>) from being wrapped in <p> tags.
+     * @param {object} state - Block state
+     * @param {number} startLine - Start line index
+     * @param {number} endLine - End line index
+     * @param {boolean} silent - Silent mode flag
+     * @returns {boolean} Success status
+     */
+    function directiveBlockRule(state, startLine, endLine, silent) {
+        const pos = state.bMarks[startLine] + state.tShift[startLine]
+        const max = state.eMarks[startLine]
+        const line = state.src.slice(pos, max).trim()
+
+        // Must match the entire line as a single directive
+        const match = line.match(/^%%(\w+)\s*(?:\[([^\]]*)\])?\s*%%$/) // eslint-disable-line security/detect-unsafe-regex
+        if (!match) return false
+
+        if (silent) return true
+
+        const fnName = match[1]
+        const argsStr = match[2] || ''
+
+        state.line = startLine + 1
+
+        const token = state.push('directive_block', '', 0)
+        token.meta = {
+            fnName,
+            args: parseArgs(argsStr),
+            raw: match[0],
+        }
+        token.map = [startLine, state.line]
+
+        return true
+    }
+
+    // Register block rule (higher priority) - handles directives on their own line
+    md.block.ruler.before('paragraph', 'directive_block', directiveBlockRule)
+
+    // Register the inline rule - handles directives embedded in text
     md.inline.ruler.before('escape', 'directive', directiveRule)
 
-    // Register the renderer
+    // Both block and inline directive tokens use the same renderer
+    md.renderer.rules.directive_block = renderDirective
     md.renderer.rules.directive = renderDirective
 }
 
