@@ -240,6 +240,10 @@ main {
         border-bottom-color: var(--sidebar-active-border-color);
         background: var(--sidebar-hover-bg);
     }
+    .sidebar-active {
+        border-left: 3px solid var(--sidebar-active-border-color);
+        padding-left: calc(0.75rem - 3px);
+    }
 
     ul {
         list-style: none;
@@ -308,6 +312,10 @@ main {
         background-color: inherit;
         border-radius: 0;
         box-shadow: none;
+    }
+    .toc-active {
+        border-left: 3px solid var(--sidebar-active-border-color);
+        padding-left: calc(0.75rem - 3px);
     }
 
     .search-result { /* a */
