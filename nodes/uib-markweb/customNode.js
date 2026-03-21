@@ -299,7 +299,7 @@ function internalControlMsgHooks(node, log) {
         /** Internal control hook to perform a search, returns a list of results to the requesting client
          * @param {object} msg A control message with at least { query: string }
          */
-        search: (msg) => {
+        'search': (msg) => {
             const returnTopic = '_search-results'
             const index = node.index
             if (!index) {
@@ -326,35 +326,43 @@ function internalControlMsgHooks(node, log) {
                 _socketId: msg._socketId,
             }, node, uib.ioChannels.control)
         },
-
         /** Internal control hook to navigate to a different page
          * @param {object} msg A control message with at least { toUrl: string }
          */
-        navigate: doNavigate.bind(node),
+        'navigate': doNavigate.bind(node),
 
-        // ! NO LONGER NEEDED
-        /** Internal control hook to get page metadata
-         * @param {object} msg A control message with at least { initialPath: string }
+        /** Internal control hook to return just the sidebar navigation HTML
+         * @param {object} msg A control message with at least { currentPath: string }
          */
-        // getMetadata: (msg) => {
-        //     const index = node.index
-        //     // Strip hash/fragment identifiers (e.g., #section) as they are client-side only
-        //     let lookupPath = msg.initialPath
-        //     if (lookupPath && lookupPath.includes('#')) lookupPath = lookupPath.split('#')[0]
-        //     // console.log(`🌐[uib-markweb:nodeInstance] Internal get-metadata control message received for instance URL "${node.url}": "${msg.initialPath}"`, index.has(lookupPath), index)
-        //     const attributes = index.get(lookupPath)
-        //     const data = { ...attributes, }
-        //     data.content = mdParse(attributes.content || '', attributes) // Pre-render markdown content to HTML for display in metadata panel
+        'get-sidebar-nav': (msg) => {
+            const returnTopic = '_sidebar-nav-result'
+            const currentPath = msg.currentPath || '/'
 
-        //     // Get the client to set the pageData managed prop
-        //     node.sendToFe({
-        //         topic: '_page-metadata',
-        //         initialPath: msg.initialPath,
-        //         attributes: data,
-        //         // attributes: data,
-        //         _socketId: msg._socketId, // Ensure response goes to requesting client only
-        //     }, node, uib.ioChannels.control)
-        // },
+            // Check for sidebar.json override in config folder (don't warn if not found)
+            const sidebarOverride = readConfigFile(node, 'sidebar.json', true)
+
+            let navIndexHtml
+            if (sidebarOverride && Array.isArray(sidebarOverride)) {
+                navIndexHtml = buildSidebarFromJson(sidebarOverride, currentPath)
+            } else {
+                const indexOptions = {
+                    start: 0,
+                    end: 3,
+                    type: 'both',
+                    sidebar: true,
+                    id: 'sidebar-nav',
+                    title: 'Sidebar navigation index',
+                }
+                const tree = createTree(false, { path: currentPath, }, indexOptions, node)
+                navIndexHtml = renderSidebarTree(tree, { currentPath, })
+            }
+
+            node.sendToFe({
+                topic: returnTopic,
+                navHtml: navIndexHtml,
+                _socketId: msg._socketId,
+            }, node, uib.ioChannels.control)
+        },
     }
 }
 
@@ -547,6 +555,9 @@ function parseDuration(durationStr) {
  * @returns {string} The generated navigation HTML
  */
 function indexListing(key, attributes, node, options) {
+    // Max depth default
+    const maxDepth = 5
+
     let currentStart = false
     if (!options) options = {}
 
@@ -573,15 +584,17 @@ function indexListing(key, attributes, node, options) {
 
     if ('end' in options) {
         options.end = Number(options.end)
-    } else if (options.depth) {
+    } else if ('depth' in options) {
         options.end = Number(options.start) + Number(options.depth)
     } else if (hasLatest) {
-        // When latest is specified without explicit end, use max depth
-        options.end = 5
+        // When latest is specified without explicit end or depth, use max depth
+        options.end = maxDepth
     } else if (currentStart) {
-        options.end = Number(attributes.depth)
+        // When currentStart is specified without explicit end or depth, use start + max depth
+        options.end = Number(attributes.depth) + maxDepth
+        // options.end = Number(attributes.depth)
     } else {
-        options.end = 5 // Max depth default
+        options.end = maxDepth // Max depth default
     }
 
     if (!('type' in options)) {
@@ -649,69 +662,11 @@ function indexListing(key, attributes, node, options) {
     }
 
     const tree = createTree(currentStart, attributes, options, node)
-    // const filtered = filteredIndex(currentStart, attributes, options, node)
-    // // console.log('  >>🌐[indexListing] ', { key, options, attributes, filtered, })
-
-    // // Build a hierarchical tree structure from the filtered paths
-    // const tree = new Map()
-
-    // for (const [path, doc] of filtered) {
-    //     // If no start given, and path matches current page, skip it
-    //     if (currentStart && path === attributes.path) continue
-
-    //     // Determine title
-    //     let title = doc.title
-    //     if (doc.path === '/') title = 'Home'
-    //     else if (doc.type === 'folder' && (!title || title === 'index')) {
-    //         // Get the last segment of the path as title and convert to title case
-    //         const segments = doc.path.replace(/\/$/, '').split('/').filter(Boolean) // eslint-disable-line @stylistic/newline-per-chained-call
-    //         const rawTitle = segments[segments.length - 1] || doc.path.slice(1, -1)
-    //         title = rawTitle.replace(/[_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-    //     }
-
-    //     // Split path into segments (remove empty strings from leading/trailing slashes)
-    //     const segments = path
-    //         .replace(/\/$/, '')
-    //         .split('/')
-    //         .filter(Boolean)
-    //     if (segments.length === 0) {
-    //         // Root path
-    //         if (!tree.has('/')) {
-    //             tree.set('/', { path: '/', title, children: new Map(), })
-    //         }
-    //         continue
-    //     }
-
-    //     // Navigate/create tree structure
-    //     let current = tree
-    //     for (let i = 0; i < segments.length; i++) {
-    //         const segment = segments[i]
-    //         const isLast = i === segments.length - 1
-
-    //         if (!current.has(segment)) {
-    //             current.set(segment, {
-    //                 path: isLast ? path : '/' + segments.slice(0, i + 1).join('/') + '/',
-    //                 title: isLast ? title : segment,
-    //                 children: new Map(),
-    //             })
-    //         } else if (isLast) {
-    //             // Update with actual doc info if this is the final segment
-    //             const node = current.get(segment)
-    //             node.path = path
-    //             node.title = title
-    //         }
-    //         current = current.get(segment).children
-    //     }
-    // }
-    // console.log(`  >>🌐[indexListing] TREE for ${attributes.path}`, node.isIndexing, { options, tree, })
 
     // If start and end levels are the same, omit folder (index) entries
     const sameLevel = options.start === options.end
 
-    // Recursive function to render the tree structure as HTML
-    const out = renderTree(tree, options, sameLevel, options.nav)
-    // console.log('  >>🌐[indexListing] OUT', { out, })
-    return out
+    return renderTree(tree, options, sameLevel, options.nav)
 }
 
 /** Create search results wrapper HTML
@@ -775,8 +730,16 @@ function renderSidebarTree(map, options, _level = 0) {
     return html
 }
 
+/** Create a hierarchical tree structure from the filtered index for sidebar or nav rendering
+ * @param {boolean} currentStart Whether to use the current page's depth as the start level (true) or use options.start (false)
+ * @param {object} attributes The current pages attributes
+ * @param {object} indexOptions Options for filtering the index
+ * @param {runtimeNode & uibMwNode} node The current node instance
+ * @returns {Map<string, {path: string, title: string, description: string, children: Map<string, any>}>} The hierarchical tree structure
+ */
 function createTree(currentStart, attributes, indexOptions, node) {
     const filtered = filteredIndex(currentStart, attributes, indexOptions, node)
+    if (!indexOptions.sidebar) console.log(`  >>🌐[markweb:createTree] Filtered index for ${attributes.toUrl}`, { currentStart, indexOptions, filtered, })
     // Build hierarchical tree from filtered index (similar to indexListing)
     const tree = new Map()
     for (const [path, doc] of filtered) {
@@ -913,12 +876,15 @@ function createSidebar(key, attributes, node, options) {
                         Contents
                     </button>
                 </div>
-                <div id="sidebar-panel-nav" class="sidebar-panel active" role="tabpanel" aria-labelledby="sidebar-tab-nav" data-directive="sidebar-nav" data-replace>
+                <uib-var id="sidebar-panel-nav" class="sidebar-panel active" role="tabpanel" aria-labelledby="sidebar-tab-nav" variable="sidebar-nav" type="html">
                     ${navIndexHtml}
-                </div>
+                </uib-var>
                 <div id="sidebar-panel-toc" class="sidebar-panel" role="tabpanel" aria-labelledby="sidebar-tab-toc" hidden>
                     <nav id="sidebar-toc" aria-label="Table of contents">
                         <!-- TOC generated client-side from page headings -->
+                        <uib-var variable="sidebar-toc" type="html">
+                            <p>Table of contents will appear here based on page headings.</p>
+                        </uib-var>
                     </nav>
                 </div>
             </div>
@@ -1070,12 +1036,23 @@ async function buildIndexes(node) {
         files.map(file => getMarkdownFile(node, file))
     )
 
-    // Log any errors
-    results.forEach((result, index) => {
-        if (result.status === 'rejected') {
-            log.error(`🌐🛑[uib-markweb:buildIndex:${url}] Skipping file "${files[index]}" due to error: ${result.reason.message}`)
+    // Collect valid paths from results and log any errors
+    const validPaths = new Set()
+    results.forEach((result, i) => {
+        if (result.status === 'fulfilled' && result.value?.path) {
+            validPaths.add(result.value.path)
+        } else if (result.status === 'rejected') {
+            log.error(`🌐🛑[uib-markweb:buildIndex:${url}] Skipping file "${files[i]}" due to error: ${result.reason.message}`)
         }
     })
+
+    // Remove stale index entries for files that no longer exist
+    for (const key of index.keys()) {
+        if (!validPaths.has(key)) {
+            log.trace(`🌐[uib-markweb:buildIndex:${url}] Removing stale index entry: "${key}"`)
+            index.delete(key)
+        }
+    }
 
     // notify ALL connected clients that indexes have changed
     node.sendToFe({
@@ -1121,6 +1098,7 @@ async function buildIndexes(node) {
  */
 function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isAjax) {
     const log = uib.RED.log
+    // console.log(`🌐[uib-markweb:nodeInstance:checkNames] (from: ${from}) Checking access for "${morePath}"`)
 
     // Check if folder or file name starts with _ or . and deny access
     if (morePath.split(sep).some(part => part.startsWith('_') || part.startsWith('.'))) {
@@ -1187,10 +1165,10 @@ function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isA
     // Now check that the file exists, return an error if not
     try {
         accessSync( fullPath, 'r' )
-        log.trace(`🌐[uib-markweb:nodeInstance:${from}] Source file is accessible: "${fullPath}"`)
+        log.trace(`🌐[uib-markweb:nodeInstance:checkNames] (from: ${from}) Source file is accessible: "${fullPath}"`)
     } catch (err) {
         // const file404 = readConfigFile(this, '404-template.md', false)
-        log.error(`🌐🛑[uib-markweb:nodeInstance:${from}] Source file "${fullPath}" not accessible: ${err.message}`)
+        log.error(`🌐🛑[uib-markweb:nodeInstance:checkNames] (from: ${from}) Source file "${fullPath}" not accessible: ${err.message}`)
         if (res) {
             if (isAjax) {
                 res.status(404).json({ error: 'Page not found', content: '<h1>Page Not Found</h1><p>The requested page does not exist.</p>', })
@@ -1346,14 +1324,20 @@ function doSearch(index, query) {
 function filteredIndex(currentStart, attributes, options, node) {
     const sorted = [...node.index]
         .sort((a, b) => a[1].path.localeCompare(b[1].path))
-    // let filtered = [...node.index]
-    //     .sort((a, b) => a[1].path.localeCompare(b[1].path))
+
+    // For file pages, use the parent folder as the path prefix so sibling entries are included
+    const pathPrefix = currentStart
+        ? (attributes.path.endsWith('/')
+            ? attributes.path
+            : attributes.path.substring(0, attributes.path.lastIndexOf('/') + 1))
+        : ''
+
     let filtered = sorted
         .filter( ([key, value]) => {
             // Depth filtering
             if (value.depth < options.start || value.depth > options.end) return false
             // Path prefix filtering
-            if (currentStart && !value.path.startsWith(attributes.path)) return false
+            if (currentStart && !value.path.startsWith(pathPrefix)) return false
             // Type filtering
             if (options.type === 'folders' && value.type !== 'folder') return false
             if (options.type === 'files' && value.type !== 'file') return false
@@ -1578,6 +1562,7 @@ async function handler(req, res, next) {
     const paths = checkNames(this, morePath, null, null, null, 'handler', res, isAjax)
     if (paths === null) return // nothing more to do
     const { fullPath, parsedPath, } = paths
+    // console.log(`🌐[uib-markweb:handler] Request`, {for: req.originalUrl, parsedMorePath: morePath, fullPath: fullPath, ext: parsedPath.ext, isAjax: isAjax})
 
     // Handle markdown files
     if (parsedPath.ext === '.md') {
@@ -1728,6 +1713,7 @@ function processTemplates(htmlText, node, attributes = {}, calledFrom = '') {
 
     // %%...%% specials
     const foundKeys = { specials: [], attributes: [], }
+    const activeDirectives = new Set()
     htmlText = htmlText.replace(/%%([^%]+)%%/g, (match, key1, key2) => {
         let key = (key1 || key2).trim()
         // If key contains `[...]`, save the contents & remove from key
@@ -1749,11 +1735,17 @@ function processTemplates(htmlText, node, attributes = {}, calledFrom = '') {
         foundKeys.specials.push(key)
         // If there is a specials function for specials[key], call it and return the result
         if (specials[key]) {
+            activeDirectives.add(key)
             return specials[key](key, attributes, node, bracketContent)
         }
         // Otherwise, return the attribute value if exists or the original special if not
         return attributes[key] !== undefined ? attributes[key] : match
     })
+
+    // Save the directives keys found in the text for logging/debugging
+    if (!node.globalAttributes) node.globalAttributes = {}
+    if (!node.globalAttributes.directives) node.globalAttributes.directives = {}
+    node.globalAttributes.directives[calledFrom] = [...activeDirectives]
 
     // Protect HTML <code> wrapped patterns (after %%body%% inserts content with <code> tags)
     htmlText = htmlText.replace(/<code>(%%[^%]+%%|\{\{[^}]+\}\})<\/code>/gi, protectPattern)
@@ -1838,35 +1830,15 @@ function readConfigFile(node, fileName, optional = false) {
 
 /** Render a Map tree as nested UL HTML
  * @param {Map} map The tree map to render
+ * @param {object} [options] Optional options for rendering
  * @param {boolean} [sameLevel] Whether to render only files at the same level (skip folders)
  * @param {boolean} [nav] Whether this is for the nav directive, default=false
  * @param {number} [_level] Current recursion level (internal use)
  * @returns {string} Nested HTML unordered lists
  */
 function renderTree(map, options, sameLevel = false, nav = false, _level = 0) {
-    // Nothing to do
-    // if (map.size === 0) return ''
-    // If not a nav menu, we need extra attributes so that the front-end can reflect changes
-    let hOpts = ''
-    if (_level === 0) {
-        if (nav) {
-            hOpts = ''
-        } else {
-            hOpts = 'data-directive="index" data-replace'
-            if (options) {
-                // hOpts += ` data-options='${JSON.stringify(options)}'`
-                for (const [k, v] of Object.entries(options)) {
-                    if (k === 'id' || k === 'class' || k === 'style' || k === 'title') {
-                        hOpts += ` ${k}="${v}"`
-                    } else {
-                        hOpts += ` data-${k}="${v}"`
-                    }
-                }
-            }
-        }
-    }
-
-    let html = `<ul ${hOpts}>`
+    if (!map || map.size === 0) return ''
+    let html = `<ul>`
     for (const [, entry] of map) {
         // Ignore samelevel in recursive calls
         const childHtml = renderTree(entry.children, null, false, nav, _level++)
