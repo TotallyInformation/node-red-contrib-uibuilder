@@ -655,13 +655,13 @@ export const Uib = class Uib {
         if (isNestedPath) {
             const value = this._resolveNestedPath(this, prop)
             if (value === undefined) {
-                log('warn', 'Uib:get', `get() - property "${prop}" is undefined`)()
+                log('info', 'Uib:get', `get() - property "${prop}" is undefined`)()
             }
             return value
         }
 
         if (this[prop] === undefined) {
-            log('warn', 'Uib:get', `get() - property "${prop}" is undefined`)()
+            log('info', 'Uib:get', `get() - property "${prop}" is undefined`)()
         }
         return this[prop]
     }

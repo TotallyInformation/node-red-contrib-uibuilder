@@ -7504,12 +7504,12 @@ var Uib = (_a2 = class {
     if (isNestedPath) {
       const value2 = this._resolveNestedPath(this, prop);
       if (value2 === void 0) {
-        log("warn", "Uib:get", 'get() - property "'.concat(prop, '" is undefined'))();
+        log("info", "Uib:get", 'get() - property "'.concat(prop, '" is undefined'))();
       }
       return value2;
     }
     if (this[prop] === void 0) {
-      log("warn", "Uib:get", 'get() - property "'.concat(prop, '" is undefined'))();
+      log("info", "Uib:get", 'get() - property "'.concat(prop, '" is undefined'))();
     }
     return this[prop];
   }
