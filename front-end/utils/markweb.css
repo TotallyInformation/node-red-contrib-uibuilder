@@ -73,6 +73,40 @@ h2, h3, h4, h5, h6 {
 
 code {
     background-color: var(--code-bg);
+    padding: 0.1em 0.4em;
+    border-radius: 0.25em;
+    /* font-size: 0.875em; */
+}
+
+pre {
+    position: relative;
+    overflow-x: auto;
+
+    > code {
+        max-width: 100%;
+        font-size: inherit;
+        padding: 0.5em 0.5em;
+        display: block;
+    }
+
+    /* Show language label on hover for code blocks with a language-* class */
+    &[data-language]::after {
+        content: attr(data-language);
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 0.1em 0.5em;
+        font-size: 0.75em;
+        color: var(--text3);
+        background-color: var(--code-bg);
+        border-radius: 0 0.25em 0 0.25em;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity var(--menu-transition);
+    }
+    &[data-language]:hover::after {
+        opacity: 1;
+    }
 }
 
 /* Container layout using CSS Grid */

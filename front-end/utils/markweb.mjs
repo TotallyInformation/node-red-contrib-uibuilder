@@ -523,6 +523,27 @@ if (document.readyState === 'loading') {
 
 // #endregion --- Sidebar Functionality ---
 
+// #region --- Code block language labels ---
+/** Extract language from code elements' language-* class and set it on their parent pre for CSS labelling */
+function promoteCodeLanguageAttrs() {
+    document.querySelectorAll('pre > code[class*="language-"]').forEach((code) => {
+        const pre = code.parentElement
+        if (pre && !pre.dataset.language) {
+            const match = code.className.match(/\blanguage-(\S+)/)
+            if (match) pre.dataset.language = match[1]
+        }
+    })
+}
+// Run on initial load
+promoteCodeLanguageAttrs()
+// Re-run whenever main content changes
+const contentObserverTarget = document.querySelector('main section') || elContent
+if (contentObserverTarget) {
+    new MutationObserver(promoteCodeLanguageAttrs)
+        .observe(contentObserverTarget, { childList: true, subtree: true, })
+}
+// #endregion --- Code block language labels ---
+
 // TODO: Future feature
 // #region --- Checkbox Event Delegation ---
 /** Handle checkbox clicks using event delegation to support dynamically added checkboxes.
