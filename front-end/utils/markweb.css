@@ -240,6 +240,12 @@ main {
     }
 }
 
+.active-link {
+    border-left: 3px solid var(--sidebar-active-border-color);
+    padding-left: calc(0.75rem - 3px);
+    font-style: italic;
+}
+
 /* Sidebar container */
 #sidebar {
     grid-area: sidebar;
@@ -274,10 +280,10 @@ main {
         border-bottom-color: var(--sidebar-active-border-color);
         background: var(--sidebar-hover-bg);
     }
-    .sidebar-active {
+    /* .sidebar-active {
         border-left: 3px solid var(--sidebar-active-border-color);
         padding-left: calc(0.75rem - 3px);
-    }
+    } */
 
     ul {
         list-style: none;
@@ -423,6 +429,29 @@ main {
     cursor: col-resize;
     background: hsl(var(--brand-hue), var(--base-bg-sat), 10%);
     user-select: none;
+}
+
+/* Tree view styles (e.g. %%index%%) */
+.tree {
+    margin: 0.1em 0;
+    padding: 0;
+    max-width: 100%;
+
+    .tree-folder {
+        list-style: none;
+        border-left: 1px dashed hsl(from var(--text3) h s l / 30%);
+        ul {
+            padding-left: 1em;
+            list-style: circle;
+            li:not(.tree-folder) {
+                margin-left: 1em;
+            }
+        }
+    }
+    summary {
+        font-weight: bolder;
+        color: var(--text3)
+    }
 }
 
 /* #region Base Menu Styles */

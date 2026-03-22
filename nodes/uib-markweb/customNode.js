@@ -666,7 +666,7 @@ function indexListing(key, attributes, node, options) {
     // If start and end levels are the same, omit folder (index) entries
     const sameLevel = options.start === options.end
 
-    return renderTree(tree, options, sameLevel, options.nav)
+    return renderTree(tree, options, sameLevel, options.nav, 0, attributes.path)
 }
 
 /** Create search results wrapper HTML
@@ -710,7 +710,8 @@ function renderSidebarTree(map, options, _level = 0) {
         const hasChildren = entry.children && entry.children.size > 0
         const isCurrentPage = options.currentPath === entry.path
             || options.currentPath === entry.path.replace(/\/$/, '')
-        const activeClass = isCurrentPage ? ' class="sidebar-active"' : ''
+        // const activeClass = isCurrentPage ? ' class="sidebar-active"' : ''
+        const activeClass = isCurrentPage ? ' class="active-link"' : ''
         const titleAttr = entry.description ? ` title="${entry.description.replace(/"/g, '&quot;')}"` : ''
 
         if (hasChildren) {
@@ -739,7 +740,7 @@ function renderSidebarTree(map, options, _level = 0) {
  */
 function createTree(currentStart, attributes, indexOptions, node) {
     const filtered = filteredIndex(currentStart, attributes, indexOptions, node)
-    if (!indexOptions.sidebar) console.log(`  >>🌐[markweb:createTree] Filtered index for ${attributes.toUrl}`, { currentStart, indexOptions, filtered, })
+    // if (!indexOptions.sidebar) console.log(`  >>🌐[markweb:createTree] Filtered index for ${attributes.toUrl}`, { currentStart, indexOptions, filtered, })
     // Build hierarchical tree from filtered index (similar to indexListing)
     const tree = new Map()
     for (const [path, doc] of filtered) {
@@ -1834,21 +1835,39 @@ function readConfigFile(node, fileName, optional = false) {
  * @param {boolean} [sameLevel] Whether to render only files at the same level (skip folders)
  * @param {boolean} [nav] Whether this is for the nav directive, default=false
  * @param {number} [_level] Current recursion level (internal use)
+ * @param {string} [currentPath] Current page path for active link highlighting
  * @returns {string} Nested HTML unordered lists
  */
-function renderTree(map, options, sameLevel = false, nav = false, _level = 0) {
+function renderTree(map, options, sameLevel = false, nav = false, _level = 0, currentPath = '') {
     if (!map || map.size === 0) return ''
-    let html = `<ul>`
+    let html = _level > 0 ? '<ul>' : '<ul class="tree">'
     for (const [, entry] of map) {
         // Ignore samelevel in recursive calls
-        const childHtml = renderTree(entry.children, null, false, nav, _level++)
+        const childHtml = renderTree(entry.children, null, false, nav, _level + 1, currentPath)
         // If same level, skip folder entries (show only files)
         if (sameLevel && entry.path.endsWith('/')) {
             // Still include children if any
             if (childHtml) html += childHtml.replace(/^<ul>/, '').replace(/<\/ul>$/, '')
             continue
         }
-        html += `<li><a href="${entry.path}">${entry.title}</a>${childHtml}</li>`
+        const hasChildren = entry.children && entry.children.size > 0
+        const isActive = currentPath && (currentPath === entry.path || currentPath === entry.path.replace(/\/$/, ''))
+        const titleAttr = entry.description ? ` title="${entry.description.replace(/"/g, '&quot;')}"` : ''
+        if (hasChildren) {
+            const folderClass = isActive ? 'tree-folder active-link' : 'tree-folder'
+            // Use details/summary for collapsible folder sections
+            html += `
+            <li class="${folderClass}">
+                <details open data-path="${entry.path}">
+                    <summary${titleAttr}><a href="${entry.path}">${entry.title}</a></summary>
+                    ${childHtml}
+                </details>
+            </li>
+            `
+        } else {
+            const activeClass = isActive ? ' class="active-link"' : ''
+            html += `<li${activeClass}><a href="${entry.path}"${titleAttr}>${entry.title}</a></li>`
+        }
     }
     html += '</ul>'
     // console.log(`>>🌐[renderTree] Rendered tree (sameLevel=${sameLevel}, nav=${nav}):`, html)

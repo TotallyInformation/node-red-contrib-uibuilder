@@ -401,11 +401,13 @@ class SidebarController {
      * @param {string} id The heading element id to highlight
      */
     _highlightTocEntry(id) {
+        // const activeLinkClass = 'toc-active'
+        const activeLinkClass = 'active-link'
         if (!this.tocContainer) return
 
         // Remove existing highlight
-        this.tocContainer.querySelectorAll('.toc-active').forEach((el) => {
-            el.classList.remove('toc-active')
+        this.tocContainer.querySelectorAll(`.${activeLinkClass}`).forEach((el) => {
+            el.classList.remove(activeLinkClass)
         })
 
         // Find the matching link and highlight its parent li or summary
@@ -414,9 +416,9 @@ class SidebarController {
 
         const summary = link.closest('summary')
         if (summary) {
-            summary.classList.add('toc-active')
+            summary.classList.add(activeLinkClass)
         } else {
-            link.closest('li')?.classList.add('toc-active')
+            link.closest('li')?.classList.add(activeLinkClass)
         }
     }
 
@@ -466,6 +468,7 @@ class SidebarController {
 
     /** Highlight current page in sidebar navigation */
     highlightCurrentPage() {
+        const activeLinkClass = 'active-link'
         let currentPath = window.location.pathname
         if (currentPath.startsWith(baseUrl)) {
             currentPath = currentPath.slice(baseUrl.length)
@@ -473,8 +476,8 @@ class SidebarController {
         currentPath = normalizePath(currentPath)
 
         // Remove existing highlights
-        this.sidebar.querySelectorAll('.sidebar-active').forEach((el) => {
-            el.classList.remove('sidebar-active')
+        this.sidebar.querySelectorAll(`.${activeLinkClass}`).forEach((el) => {
+            el.classList.remove(activeLinkClass)
         })
 
         // Find and highlight current page link
@@ -485,9 +488,9 @@ class SidebarController {
                 // Check if link is inside a summary
                 const summary = link.closest('summary')
                 if (summary) {
-                    summary.classList.add('sidebar-active')
+                    summary.classList.add(activeLinkClass)
                 } else {
-                    link.closest('li')?.classList.add('sidebar-active')
+                    link.closest('li')?.classList.add(activeLinkClass)
                 }
                 // Expand parent details elements
                 let parent = link.closest('details')
