@@ -1288,7 +1288,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                 currentPath: pageData?.path || window.location.pathname,
             })
             // If the current page is affected by the index change, navigate to it again to refresh content
-            navigate(pageData.toUrl, false)
+            navigate(pageData.toUrl || window.location.pathname, false)
             break
         }
 
@@ -1323,7 +1323,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             // console.log('Source changed on server.', { ctrlMsg, pageData, })
             if (ctrlMsg.payload.url === pageData.toUrl) {
                 console.log('Current page affected by source change, reloading page content.')
-                navigate(pageData.toUrl, false)
+                navigate(pageData.toUrl || window.location.pathname, false)
             }
             break
         }
@@ -1352,6 +1352,9 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             const hashFragment = ctrlMsg.hashFragment || ''
             const newUrl = baseUrl.replace(/\/$/, '') + data.path + hashFragment
 
+            // Detect whether this is a same-page reload (e.g. source change, config change)
+            const isSamePage = normalizePath(currentPageUrl.replace(baseUrl, '')) === normalizePath(data.path)
+
             // Only push to history if not handling popstate and server says to add to history
             // console.log('pushState:', newUrl, 'addToHistory:', ctrlMsg.addToHistory, 'isHandlingPopstate:', isHandlingPopstate)
             if (ctrlMsg.addToHistory === true && !isHandlingPopstate) {
@@ -1361,20 +1364,25 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                 )
             }
 
-            // If there's a hash fragment, scroll to that element after content is rendered
-            if (hashFragment) {
+            // Scroll after content is rendered - target <main> since it is the scroll container (overflow-y: auto)
+            // Skip scroll reset when reloading the same page (e.g. source/config change)
+            if (!isSamePage || hashFragment) {
                 requestAnimationFrame(() => {
                     setTimeout(() => {
-                        const targetId = hashFragment.slice(1) // Remove leading #
-                        const targetElement = document.getElementById(targetId)
-                        if (targetElement) {
-                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start', })
+                        const scrollContainer = document.querySelector('main') || document.documentElement
+                        if (hashFragment) {
+                            // If there's a hash fragment, scroll to that element
+                            const targetId = hashFragment.slice(1) // Remove leading #
+                            const targetElement = document.getElementById(targetId)
+                            if (targetElement) {
+                                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start', })
+                            }
+                        } else {
+                            // Scroll to top on page navigation if no hash fragment
+                            scrollContainer.scrollTo({ top: 0, behavior: 'instant', })
                         }
                     }, 100)
                 })
-            } else {
-                // Scroll to top on page navigation if no hash fragment
-                window.scrollTo({ top: 0, behavior: 'smooth', })
             }
 
             // Reset the popstate flag after processing
