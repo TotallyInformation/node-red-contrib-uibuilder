@@ -61340,6 +61340,64 @@ function fmVariablesPlugin(md2, handler) {
   md2.renderer.rules.fmVariables = renderFmVariables;
 }
 
+// src/detailsSummaryPlugin.mjs
+var detailsSummaryPlugin = (md2, options = {}) => {
+  const defaults = {
+    levels: [1, 2, 3, 4, 5, 6],
+    open: true,
+    className: "collapsible-section"
+  };
+  const opts = { ...defaults, ...options };
+  md2.core.ruler.after("inline", "details-summary", (state) => {
+    const tokens = state.tokens;
+    const newTokens = [];
+    const stack = [];
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (token.type === "heading_open") {
+        const level = parseInt(token.tag.slice(1), 10);
+        if (opts.levels.includes(level)) {
+          while (stack.length > 0 && stack[stack.length - 1] >= level) {
+            stack.pop();
+            const closeToken = new state.Token("html_block", "", 0);
+            closeToken.content = "</details>\n";
+            newTokens.push(closeToken);
+          }
+          const openToken = new state.Token("html_block", "", 0);
+          const openAttr = opts.open ? " open" : "";
+          const classAttr = opts.className ? ` class="${opts.className}"` : "";
+          openToken.content = `<details${openAttr}${classAttr} data-level="${level}">
+<summary title="H${level}">
+`;
+          newTokens.push(openToken);
+          stack.push(level);
+          newTokens.push(token);
+          i++;
+          while (i < tokens.length && tokens[i].type !== "heading_close") {
+            newTokens.push(tokens[i]);
+            i++;
+          }
+          if (i < tokens.length) {
+            newTokens.push(tokens[i]);
+          }
+          const summaryClose = new state.Token("html_block", "", 0);
+          summaryClose.content = "</summary>\n";
+          newTokens.push(summaryClose);
+          continue;
+        }
+      }
+      newTokens.push(token);
+    }
+    while (stack.length > 0) {
+      stack.pop();
+      const closeToken = new state.Token("html_block", "", 0);
+      closeToken.content = "</details>\n";
+      newTokens.push(closeToken);
+    }
+    state.tokens = newTokens;
+  });
+};
+
 // src/index.mjs
 var md = lib_default({
   html: true,
@@ -61360,10 +61418,11 @@ var md = lib_default({
     return "";
   }
 });
-md.use(import_markdown_it_attrs.default).use(import_markdown_it_anchor.default, { permalink: import_markdown_it_anchor.default.permalink.headerLink() }).use(MarkdownItGitHubAlerts).use(taskLists, { enabled: false, label: true });
+md.use(import_markdown_it_attrs.default).use(import_markdown_it_anchor.default, { permalink: import_markdown_it_anchor.default.permalink.headerLink() }).use(MarkdownItGitHubAlerts).use(taskLists, { enabled: false, label: true }).use(detailsSummaryPlugin);
 var mdParse = md.render.bind(md);
 var export_fm = import_front_matter.default;
 export {
+  detailsSummaryPlugin,
   directivePlugin,
   export_fm as fm,
   fmVariablesPlugin,

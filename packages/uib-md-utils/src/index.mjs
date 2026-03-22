@@ -30,6 +30,8 @@ import { taskLists } from './tasklist.mjs'
 import { directivePlugin } from './directivePlugin.mjs'
 // Private {{varname [arg1=value1, arg2=value2]}} variables plugin
 import { fmVariablesPlugin } from './fmVariablesPlugin.mjs'
+// Private plugin to wrap headings in collapsible <details>/<summary> elements
+import { detailsSummaryPlugin } from './detailsSummaryPlugin.mjs'
 
 const md = markdownit({
     html: true,
@@ -58,6 +60,7 @@ md
     // .use(mdItObsidianCallouts)
     .use(MarkdownItGitHubAlerts)
     .use(taskLists, { enabled: false, label: true, })
+    .use(detailsSummaryPlugin)
     // NB: directivePlugin and fmVariablesPlugin are loaded in customNode.js
     // so their handlers can access the node instance, index, and page attributes
 
@@ -69,6 +72,7 @@ export {
     md,
     mdParse,
     directivePlugin,
+    detailsSummaryPlugin,
     fmVariablesPlugin,
     // mermaid,
 }
