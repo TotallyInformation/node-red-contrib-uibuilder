@@ -3,8 +3,9 @@ title: uib-markweb - Dynamic web sites using Markdown
 description: |
   The `uib-markweb` node allows you to create dynamic web sites using Markdown files.
   You simply define a source folder containing your Markdown files. An HTML template is used to create the overall layout.
+  Everything else is automated for you.
 created: 2026-01-09 15:10:14
-updated: 2026-02-13 16:19:31
+updated: 2026-03-22 20:06:50
 status: Release
 since: v7.6.0
 ---
@@ -17,6 +18,29 @@ since: v7.6.0
 > Connected clients automatically receive page updates when the underlying markdown files change on the server. The client then automatically requests the updated page data and updates the display accordingly. This also allows you to do custom front-end processing of the updated data if desired.
 >
 > A uibuilder managed variable called `pageData` holds all of the current page metadata **and** the HTML page content (in `pageData.content`). The content is rendered to HTML on the Node-RED server, not in the client. This currently happens on each request, future updates are likely to add content caching for performance improvement when large numbers of clients are connected.
+
+## Page layout and styling
+
+Markweb comes with its own CSS stylesheet (`markweb.css`) that extends the default uibuilder brand CSS. The styles are only configured for dark mode currently. But, of course, you can customise and change styles as needed.
+
+The current default HTML template provides a 2 column layout. The left column is a sidebar that contains a search box and results, the main site navigation index, and the current pages table of contents. The sidebar can be toggled open/closed and resized by dragging its edge. The status of the sidebar and the open/closed state of the collapsible navigation list are remembered per user in localStorage. The current page is highlighted in the navigation index. The table of contents also highlights as you scroll through the page content.
+
+The right column contains the page content. The page title is shown at the top, and the page content is rendered below it. The page content is generated from the Markdown files and can include dynamic content using special processing directives and variables as described below.
+
+The left and right columns scroll independently.
+
+In the main content, headings (h2-h6) are collapsible sections. Click on an empty part of the heading line to toggle closed/open the text and sub-headings for that section. Click on heading text to scroll the heading to the top, you will see the URL change to include the heading's anchor link (e.g. `#my-heading`) so that you can easily copy and share the URL to that specific section. Each heading level has a bottom border of varying thickness and color to visually indicate the heading level. Hovering over a heading also shows the level.
+
+The content of the page and any navigation or index lists are automatically updated if the source Markdown folders or files change on the server.
+
+Navigation and other index listings are collapsible and have a faint left-hand border that helps visually indicate the nesting level.
+
+The search box allows you to search for pages by title, description, tags, and content. Search results are sorted by relevance and show a snippet of the matching content. Navigating to a search result retains the search query and results so that you can easily navigate to the next result if desired. Currently, search links only take you to the relavent page, future updates are likely to also scroll to the relevant section within the page. If a search result points to the current page, it is highlighted in the list.
+
+> [!NOTE]
+> Currently, the CSS and JavaScript for markweb uses features only suitable for fairly up-to-date browsers. You will need a browser updated no earlier than mid-2024 to ensure full functionality and styling. This may be improved in the future, if it is a problem for you, please get in touch so that I know and can prioritise it.
+>
+> The front-end CSS and JavaScript are also not yet minified, to make them easier to read and understand. Future updates are likely to add minified versions for improved performance.
 
 ## Configuration (Node-RED Editor)
 
@@ -98,11 +122,11 @@ Attributes:
   * `%%index[to=now, duration=2w]%%`
   * Duration can be negative to go backwards in time from `to`. E.g., `to=now, duration=-1m` for the month before now.
 
-* `latest` - Lists the last `n` created/updated items. Overrides `start`, `end`, and `depth`.
+* `latest` - Lists the last `n` created/updated items. Without an explicit `start`, defaults to the current page's depth level.
   
-  E.g.:
+  E.g:
   
-  * `%%index[latest=10]%%`- 10 most recently created/updated pages.
+  * `%%index[latest=10]%%`- 10 most recently created/updated pages from the current level down.
   * `%%index[latest=5, type=files]%%` - 5 most recent files only.
   * `%%index[latest=3, start=0, end=2]%%` - 3 most recent pages at depth 0-2.
   * `%%index[latest=10, from=2025-01-01]%%` - 10 most recent since Jan 2025.
