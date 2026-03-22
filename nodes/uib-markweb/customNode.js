@@ -572,8 +572,9 @@ function indexListing(key, attributes, node, options) {
     if (hasExplicitStart) {
         options.start = Number(options.start)
     } else if (hasLatest) {
-        // When latest is specified without explicit start, use depth 0 (root)
-        options.start = 0
+        // When latest is specified without explicit start, use current page level
+        options.start = Number(attributes.depth)
+        currentStart = true
     } else {
         // No start given so assume current level
         options.start = Number(attributes.depth)
@@ -587,8 +588,8 @@ function indexListing(key, attributes, node, options) {
     } else if ('depth' in options) {
         options.end = Number(options.start) + Number(options.depth)
     } else if (hasLatest) {
-        // When latest is specified without explicit end or depth, use max depth
-        options.end = maxDepth
+        // When latest is specified without explicit end or depth, use current page depth + max depth
+        options.end = Number(attributes.depth) + maxDepth
     } else if (currentStart) {
         // When currentStart is specified without explicit end or depth, use start + max depth
         options.end = Number(attributes.depth) + maxDepth
