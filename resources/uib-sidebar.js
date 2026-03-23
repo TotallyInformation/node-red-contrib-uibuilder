@@ -305,7 +305,8 @@ RED.nodes.registerType(moduleName, {
     },
     paletteLabel: moduleName,
     category: uibuilder.paletteCategory,
-    color: 'var(--uib-node-colour)',
+    // color: 'var(--uib-node-colour)',
+    color: uibuilder.paletteColor, // node-red v4.1.7 broke using custom var from plugin
     //#endregion --- options --- //
 
     /** Prepares the Editor panel */

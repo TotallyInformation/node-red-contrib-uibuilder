@@ -35,6 +35,8 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
         const uibuilder = window['uibuilder'] = /** @type {UibEditorObject} */ ({
             // Standard palette category for all uibuilder nodes
             paletteCategory: 'uibuilder',
+            // Common node color for all uibuilder nodes - set in each node to avoid v4.1.7 custom var bug
+            paletteColor: 'hsl(248 100% 91%)', // node-red v4.1.7 broke using custom var from plugin
             // Standard width for typed input fields
             typedInputWidth: '68.5%',
             // Are we running on a local device?
@@ -58,7 +60,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
             /** Tracks uibuilder's installed front-end packages - changes as packages added/removed (in uibuilder node) */
             packages: [],
             /** List of uib node names */
-            uibNodeTypes: ['uibuilder', 'uib-cache', 'uib-element', 'uib-html', 'uib-save', 'uib-sender', 'uib-tag', 'uib-update'],
+            uibNodeTypes: ['uibuilder', 'uib-cache', 'uib-element', 'uib-file-list', 'uib-html', 'uib-markweb', 'uib-save', 'uib-sender', 'uib-sidebar', 'uib-tag', 'uib-update'],
 
             // Debug output via log() - turn on/off with true/false
             get debug() { return _dbg },
