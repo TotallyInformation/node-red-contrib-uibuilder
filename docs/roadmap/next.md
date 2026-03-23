@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-03-21 17:27:24
+updated: 2026-03-22 20:14:05
 ---
 
 ## To Fix
@@ -66,65 +66,52 @@ A node that creates a website out of a folder of markdown content.
 * [ ] sidebar.json
 * [ ] Check that duplicate node URLs error.
 * [ ] Check menu styles - all needed?
+* [ ] Ensure non-markdown files are served correctly (e.g. images, pdfs, etc.)
 
-#### Issues:
-* fixed
-  * [x] Notify connected clients when watch is triggered.
-  * [x] Search not finding in other attributes?
-  * [x] Hash link returns are losing the path.
-  * [x] Make sure that `%%search%%` adds a `<search>` element wrapper.
-  * [x] Generate title, created, updated from file details if not in front-matter.
-  * [x] Watcher for config folder.
-  * [x] Make sure index is rebuilt on file changes.
-  * [x] Add date/time range filter to `%%index%%`. `from`, `to` and `duration` options.
-  * [x] Add `latest` option to `%%index%%` to show most recently updated/created pages.
-  * [x] Sidebar collapse state is not remembered.
-  * [x] On index changes, client should simply re-nav to the same page
-  * [x] On client reconnect socket.io, client should also re-nav to the same page. This will ensure that the client always has the latest index and content. It will also ensure that if the client was viewing a page that has been deleted, then it will be taken to the 404 page instead of being stuck on a broken page.
-  * [x] Nav entries no longer need to do anything clever to update when the index changes since the client will simply re-nav to the same page. This will simplify the implementation and avoid potential issues with trying to update the nav entries in place.
-  * [x] Highlight the current page in the index and nav listings.
-  * [x] Index rebuild is not removing pages that have been renamed.
-  * [x] Need to stop `%%...%%` and `{{...}}` from being processed in code blocks.
-  * [x] Code blocks going too wide. Restrict width.
-  * [x] Indexes cannot currently deal with rename or delete events*
-  * [x] Nav menus do not update when the index updates.
-  * [x] Make sure nav is rebuilt on file changes.
+#### To do:
 
-
-* [ ] No checks for duplicate URLs.
-* [ ] Sidebar should move to UNDER the main content if the page width is too narrow. In that case, the drag bar and toggle are not needed. Consider collapsing to a burger menu instead?
-* [ ] Allow for missing index.md file. (list top-level folders and pages). Needed for Astro/Obsidian content.
-* [ ] Cache the default config folder files to avoid re-reading on every page load.
-* [ ] *How to deal with category/tag listing pages?*
-* [ ] ~~Check if return msgs get clientId, etc.~~ They don't, should they?
-
-#### Wish list:
-
-* [-] Auto-menu generation.
-  * [x] Horizontal
-  * [ ] Vertical options.
-
-* [ ] Improve HTML styling.
-* [ ] Page aliases. Allow front-matter `alias` field to specify alternative url paths for a page. Also have a master map.
-* [ ] Add manual index-rebuild button to Editor.
-
-* [ ] uibuilder Editor
+* uibuilder Editor
+  * [ ] Add checks for duplicate URLs.
   * [ ] Include uib-markweb in common url checks.
   * [ ] Show actual folders as hints.
   * [ ] If source folder is inaccessible, show a warning, mark the node invalid.
   * [ ] Help panel.
+  * [ ] Add manual index-rebuild button to Editor.
+  * [ ] Some kind of flag to allow an auto-heading box showing things like page status.
 
-* [ ] Additional search functionality:
-  * [x] Move to realtime comms instead of fetch.
+* [ ] Custom 404 response page. Separate file in config folder with default content if not present.
+  * [ ] Allow for a custom 404 "page" fragment in the _config folder
+* [ ] Allow defaults for variables and directives. Allow filter fns for formatting, etc.
+* [ ] Cache the default config folder files to avoid re-reading on every page load.
+* [ ] *How to deal with category/tag listing pages?*
+* [ ] Allow for folders with no index.md file or `_index.md`. Increases compatibility with other content sources (e.g. Astro, Obsidian, etc.). If a folder does not have an index.md file, then it should still be shown in the listing if it contains other folders or files that are being shown in the listing.
+* [ ] ~~Check if return msgs get clientId, etc.~~ They don't, should they?
+* [ ] Improve HTML styling.
+* [ ] Remove web router on node close.
+* [ ] Consider allowing URL parameters to be passed as front-matter variables? (but not allwing overwriting of existing front-matter variables).
+
+* Config:
+  * [ ] **TEST** Allow for a config folder in/or outside the source folder to hold config files (e.g. HTML wrapper, CSS, etc.)
+  * [ ] Add button on folder inputs to allow creation of the folder.
+  * [ ] Show full path and actual full url in the edit panel
+
+* Markdown extensions:
+  * [ ] Enhanced markdown-it plugin allowing wide range of `[?]` syntax. (ref Obsidian Tasks Plugin)
+  * [ ] Allow transclusions (e.g. `[logStack](fns/logStack.md ':include')`)
+
+* Front-matter:
+  * [ ] Allow for custom front-matter fields to be added to the index and used in the `%%index%%` output. E.g. `tags`, `category`, `author`, etc. This would allow for more powerful filtering and categorisation of pages in the index listings. Also add sorting.
+  * [ ] Page aliases. Allow front-matter `alias` field to specify alternative url paths for a page. Also have a master map.
+  * [ ] Page templates. Allow front-matter `template` field to specify a template file to use for the page.
+  
+* Additional search functionality:
   * [ ] Allow `%%search%%` placeholder in template.
   * [ ] Support keyword search (using front-matter fields).
   * [ ] Search results should stay open after clicking a link.
 
-* [ ] Custom 404 response page. Separate file in config folder with default content if not present.
-* [ ] Ensure non-markdown files are served correctly (e.g. images, pdfs, etc.)
-* [ ] Enhanced markdown-it plugin allowing wide range of `[?]` syntax. (ref Obsidian Tasks Plugin)
-* [ ] Remove web router on node close.
-* [ ] Consider allowing URL parameters to be passed as front-matter variables? (but not allwing overwriting of existing front-matter variables).
+* [-] Auto-menu generation.
+  * [x] Horizontal
+  * [ ] Vertical options.
 
 * Hugo Compatibility:
   * [ ] ❓Support for `%%...%%` template placeholders.
@@ -149,14 +136,6 @@ A node that creates a website out of a folder of markdown content.
   * [ ] ❓Support for Astro image optimization.
   * [ ] ❓Support for Astro routing (e.g. dynamic routes, nested routes, etc.)
 
-* Config:
-  * [x] Add separate setting for the config folder to allow separation of content and config. Better security.
-    * [ ] **TEST** Allow for a config folder in/or outside the source folder to hold config files (e.g. HTML wrapper, CSS, etc.)
-  * [ ] Add button on folder inputs to allow creation of the folder.
-  * [ ] Show full path and actual full url in the edit panel
-  * [ ] Show marked errors/warnings in the edit panel
-  * [ ] Show available marked extensions in the edit panel
-  * [ ] Allow for a custom 404 "page" fragment in the _config folder
 
 ##### Completed
 * [x] Level specifier on nav element to limit depth and start level.
@@ -166,6 +145,29 @@ A node that creates a website out of a folder of markdown content.
 * [x] Page icon overrides. Allow front-matter `favicon` field to specify an icon for the page that overrides the default favicon.
 * [x] ~~Add a "recent" page listing. Available as `{{recent}}`. Needs some directives to specify how many, from where (folder, tags, category), etc.~~ Added to `%%index%%` as `latest` option instead.
 * [x] Update the navigation index from the watcher. Include metadata (`folder`, `created`, `updated`, `tags`, `category`)
+* [x] Add separate setting for the config folder to allow separation of content and config. Better security.
+* [x] Move search to realtime comms instead of fetch.
+* [x] Collapsible sections in the main content.
+* [x] Notify connected clients when watch is triggered.
+* [x] Search not finding in other attributes?
+* [x] Hash link returns are losing the path.
+* [x] Make sure that `%%search%%` adds a `<search>` element wrapper.
+* [x] Generate title, created, updated from file details if not in front-matter.
+* [x] Watcher for config folder.
+* [x] Make sure index is rebuilt on file changes.
+* [x] Add date/time range filter to `%%index%%`. `from`, `to` and `duration` options.
+* [x] Add `latest` option to `%%index%%` to show most recently updated/created pages.
+* [x] Sidebar collapse state is not remembered.
+* [x] On index changes, client should simply re-nav to the same page
+* [x] On client reconnect socket.io, client should also re-nav to the same page. This will ensure that the client always has the latest index and content. It will also ensure that if the client was viewing a page that has been deleted, then it will be taken to the 404 page instead of being stuck on a broken page.
+* [x] Nav entries no longer need to do anything clever to update when the index changes since the client will simply re-nav to the same page. This will simplify the implementation and avoid potential issues with trying to update the nav entries in place.
+* [x] Highlight the current page in the index and nav listings.
+* [x] Index rebuild is not removing pages that have been renamed.
+* [x] Need to stop `%%...%%` and `{{...}}` from being processed in code blocks.
+* [x] Code blocks going too wide. Restrict width.
+* [x] Indexes cannot currently deal with rename or delete events*
+* [x] Nav menus do not update when the index updates.
+* [x] Make sure nav is rebuilt on file changes.
 
 * [x] Sidebar
   * [x] Uses `%%sidebar%%` placeholder in template.
