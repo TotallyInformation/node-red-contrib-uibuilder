@@ -131,7 +131,7 @@ const mod = {
     /** @type {Function|undefined} Reference to a promisified version of RED.util.evaluateNodeProperty*/
     // evaluateNodeProperty: undefined,
     /** @type {string} Custom Node Name - has to match with html file and package.json `red` section */
-    nodeName: 'uib-markweb',
+    nodeName: 'markweb',
     /** @type {string} Path to the default configuration folder */
     defaultConfigPath: join(__dirname, '..', '..', 'templates', '.markweb-defaults'),
 }
