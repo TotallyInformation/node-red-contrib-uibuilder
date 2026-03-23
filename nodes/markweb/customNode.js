@@ -4,7 +4,7 @@
 /** Send a dynamic UI config to the uibuilder front-end library.
  * The FE library will update the UI accordingly.
  *
- * Copyright (c) 2025-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2025-2026 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

@@ -13,18 +13,14 @@ const log = uibuilder.log
 
 /** Module name must match this nodes html file @constant {string} moduleName */
 // @ts-ignore
-const moduleName = 'uib-markweb'
+const moduleName = 'markweb'
 
-/** Validate presence of required/optional marked libraries
+/** Validate The source folder entry
  * @param {*} v Value to validate
  * @returns {boolean} True if valid, false if not
  */
-function validateLibs(v) {
-    // log.debug(`${moduleName}: validateLibs called`, v)
-    // if ( RED.settings['uibMarkwebCheckLibs'].marked.available === true ) {
-    //     return true
-    // }
-    // return false
+function validateSource(v) {
+    // log(`🌐[${moduleName}] validateSource called`, v)
     return true
 }
 
@@ -32,22 +28,23 @@ function validateLibs(v) {
  * @param {*} node A node instance as seen from the Node-RED Editor
  */
 function onEditPrepare(node) {
-    console.log(`${moduleName}: onEditPrepare called`, node, RED.settings.uibMarkwebCheckLibs)
-    // If RED.settings['uibMarkwebCheckLibs'].marked.available is false, mark the node as invalid
-    if ( RED.settings.uibMarkwebCheckLibs.marked.available === true ) {
-        node.valid = false
-    }
+    log(`🌐[${moduleName}] onEditPrepare called`, node)
+
+    // TODO - Needs to use a fetch to the server to get the actual paths
+    // Update inline hints
+    // document.getElementById('actual-source-path').textContent = RED.settings.userDir + '/' + node.source || '<no source>'
+    // document.getElementById('actual-url').textContent = node.url || '<no url>'
+    // document.getElementById('actual-config-path').textContent = node.configFolder || '<no config folder>'
+
     uibuilder.doTooltips('#ti-edit-panel') // Do this at the end
 } // ----- end of onEditPrepare() ----- //
 
 RED.nodes.registerType(moduleName, {
     defaults: {
-        source: { value: '', required: true, },
+        source: { value: '', required: true, validate: validateSource, },
         url: { value: 'markweb', required: true, },
         configFolder: { value: '', },
         name: { value: '', },
-        // Dummy property to allow checking of required libraries
-        markedAvailable: { value: false, validate: validateLibs, },
     },
     align: 'left',
     inputs: 1,
@@ -58,14 +55,15 @@ RED.nodes.registerType(moduleName, {
     // icon: 'node-blue-inverted.svg',
     icon: 'semanticWebWhite.svg',
     label: function () {
-        const url = this.url ? `<${this.url}>` : '<no url>'
+        const url = this.url ? `<${this.url}>` : '<>'
         const name = this.name ? `${this.name} ` : ''
         return `${name}${url}`
     },
 
     paletteLabel: moduleName,
     category: uibuilder.paletteCategory,
-    color: 'var(--uib-node-colour)', // '#E6E0F8'
+    // color: 'var(--uib-node-colour)', // '#E6E0F8'
+    color: uibuilder.paletteColor, // node-red v4.1.7 broke using custom var from plugin
 
     /** Prepares the Editor panel */
     oneditprepare: function () { onEditPrepare(this) },

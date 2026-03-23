@@ -1,5 +1,5 @@
 <!--
-    Copyright (c) 2025-2025 Julian Knight (Totally Information)
+    Copyright (c) 2025-2026 Julian Knight (Totally Information)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,48 +14,52 @@
     limitations under the License.
 -->
 
-<script  type="module" async src="./resources/node-red-contrib-uibuilder/uib-markweb.js"></script>
+<script  type="module" async src="./resources/node-red-contrib-uibuilder/markweb.mjs"></script>
 
-<script type="text/html" data-template-name="uib-markweb">
+<script type="text/html" data-template-name="markweb">
 <div id="ti-edit-panel">
-    <div aria-label="Source folder on server" class="form-row">
+    <div aria-label="Required. Source folder on server. Folder must exist." class="form-row">
         <label for="node-input-source"><i class="fa fa-folder"></i> Source</label>
         <input type="text" id="node-input-source" placeholder="Source folder on server">
     </div>
+    <!--
     <div aria-label="Additional path information" class="form-row form-tips node-help">
-        Actual server path: 
+        Actual server path: <span id="actual-source-path"></span>
     </div>
-    <div aria-label="URL path to serve MarkWeb files on" class="form-row">
+    -->
+
+    <div aria-label="Required. URL path to serve MarkWeb files on" class="form-row">
         <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
         <input type="text" id="node-input-url" placeholder="URL path to serve on">
     </div>
+    <!--
     <div aria-label="Additional information" class="form-row form-tips node-help">
-        Actual URL: 
+        Actual URL: <span id="actual-url"></span>
     </div>
-    <div aria-label="Configuration/templates folder" class="form-row">
-        <label for="node-input-configFolder"><i class="fa fa-folder"></i> Config Folder</label>
+    -->
+
+    <div aria-label="Optional. Configuration/templates folder. If specified, folder must exist." class="form-row">
+        <label for="node-input-configFolder"><i class="fa fa-folder"></i> Config Fldr</label>
         <input type="text" id="node-input-configFolder" placeholder="Configuration/templates folder">
     </div>
+    <!--
     <div aria-label="Additional information" class="form-row form-tips node-help">
-        Actual URL: 
+        Actual URL: <span id="actual-config-path"></span>
     </div>
+    -->
 
     <div aria-label="Node label" class="form-row">
         <label for="node-input-name"><i class="fa fa-tasks"></i> Name</label>
         <input type="text" id="node-input-name">
     </div>
 
+    <!--
     <div aria-label="Errors and warnings" class="form-row form-tips node-help">
         Errors and warnings:
-        <ul></ul>
+        <ul id="errors-warnings-list"></ul>
     </div>
+    -->
 
-    <div aria-label="Extension information" class="form-row form-tips node-help">
-        Marked extension available:
-        <ul></ul>
-    </div>
-
-    <!-- TODO: Will need options for auto-menu -->
-
+    <!-- TODO: Will need options for nav-menu -->
 </div>
 </script>

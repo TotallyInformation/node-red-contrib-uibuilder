@@ -1,0 +1,73 @@
+<script type="text/html" data-help-name="markweb">
+    <p>
+        Zero-code website builder. Creates an entire website from a collection of Markdown files.
+    </p>
+    <p>
+        Markweb is a special implementation of a <code>uibuilder</code> node with greatly simplified configuration and usage.
+        However, most the features of uibuilder are still available where they make sense.
+        So you can still have dynamic content and interactivity on your website if you want it.
+    </p>
+    <p>
+        <a href="./uibuilder/docs/#/nodes/uib-markweb" target="_blank">Detailed documentation</a>.
+    </p>
+
+    <h3>Configuration</h3>
+    <dl class="message-properties">
+        <dt>Source <span class="property-type">string</span></dt>
+        <dd>
+            Required. A server directory path to the folder containing the Markdown files. 
+        </dd>
+        <dd>
+            <b>This MUST be created before deploying this node.</b>
+        </dd>
+        <dd>
+            If a relative path is provided, it will be relative to the Node-RED user directory (e.g. <code>~/.node-red</code>).
+        </dd>
+
+        <dt>URL <span class="property-type">string</span></dt>
+        <dd>
+            Required. The URL path to serve the generated website on. E.g. <code>mywebsite</code>.
+        </dd>
+        <dd>
+            This must be unique across all web endpoints for this instance of Node-RED.
+        </dd>
+
+        <dt class="optional">Config <span class="property-type">string</span></dt>
+        <dd>
+            Optional. The server directory path to a folder containing configuration files that will override the default configuration for the website.
+            This allows you to have multiple different websites with different configurations if desired.
+        </dd>
+        <dd>
+            If a relative path is provided, it will be relative to the Node-RED user directory (e.g. <code>~/.node-red</code>).
+        </dd>
+
+        <dt class="optional">Name <span class="property-type">string</span></dt>
+        <dd>
+            Optional. Text to show in the flow editor to help identify this node. It does not affect the website in any way.
+        </dd>
+    </dl>
+
+    <h3>Inputs</h3>
+    <p>
+        None required. However, any input msg will be forwarded to any connected
+        client browsers. Markweb is a special implementation of a <code>uibuilder</code> node
+        so anything you can do with that, you can do with this node if you want to.
+    </p>
+
+
+    <h3>Outputs</h3>
+    <p>
+        Outputs are the same as for the <code>uibuilder</code> node.
+        However, you are less likely to need to do anything with them. 
+    </p>
+
+    <!--
+    <dl class="message-properties">
+        <div style="margin:8px 8px 2px 13px;border:1px solid var(--red-ui-secondary-border-color);padding:4px;">
+            <p>
+                <i>NOTE:</i> 
+            </p>
+        </div>
+    </dl>
+    -->
+</script>
