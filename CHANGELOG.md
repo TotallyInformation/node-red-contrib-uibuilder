@@ -33,7 +33,7 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * In the Node-RED Editor, a popover is now shown after a UIBUILDER update. It contains highlights of the changes in the new version. It will only be shown once per version update.
 
-* **NEW NODE** `uib-markweb` - Enables simple creation of dynamic web sites using Markdown files. It supports navigation menus, search, front-matter placeholders, custom templates and much more.
+* **NEW NODE** `markweb` - Enables simple creation of dynamic web sites using Markdown files. It supports navigation menus, search, front-matter placeholders, custom templates and much more.
 
 * Two new example flows. "Built-in Web Components" and "Easy UI Updates".
 
@@ -55,9 +55,9 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 #### Documentation
 
-* Mermaid diagrams are now supported in UIBUILDER's documentation. With the first example being for the new `uib-markweb` node's page.
+* Mermaid diagrams are now supported in UIBUILDER's documentation. With the first example being for the new `markweb` node's page.
 
-### New node: uib-markweb
+### New node: markweb
 
 Create a folder containing at least an index.md file for each (sub-)folder. Add the new node and configure the base URL and source folder.
 
@@ -71,7 +71,7 @@ CommonMark and GitHub Flavored Markdown (GFM) are supported. Syntax highlighting
 
 An optional web component `<show-meta>` is also provided to display the current page's metadata (front-matter attributes). This is useful for debugging and development.
 
-See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
+See the [node documentation](./docs/nodes/markweb.md) for full details.
 
 ### Examples (Node-RED library flows)
 
@@ -90,8 +90,8 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 * The sidebar expand/collapse state for each section is remembered across page loads.
 * Each page now automatically shows `status` and/or `since` front-matter.
 * **Fixed** [Issue #575](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/575) - Broken CSS loads.
-* Improvements to developer detailed documentation including details on the uibuilder/uib-markweb instance setup. Should make things a lot easier if other developers want to take part in the future.
-* Mermaid diagrams are now supported. With the first example being for the new `uib-markweb` node's page.
+* Improvements to developer detailed documentation including details on the uibuilder/markweb instance setup. Should make things a lot easier if other developers want to take part in the future.
+* Mermaid diagrams are now supported. With the first example being for the new `markweb` node's page.
 
 ### uib-cache node
 
@@ -120,7 +120,7 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 
 ### uibuilder client library
 
-* **NEW** Function `formatDate`. This uses the Intl API to format dates according to locale and optional pattern. See the [documentation](./docs/clients/uibuilder-client-library.md#formatdate) for details. Really useful as a filter function and works great with the new `uib-markweb` features.
+* **NEW** Function `formatDate`. This uses the Intl API to format dates according to locale and optional pattern. See the [documentation](./docs/clients/uibuilder-client-library.md#formatdate) for details. Really useful as a filter function and works great with the new `markweb` features.
 
 * **NEW** Functions
   
@@ -132,7 +132,7 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 
 * **NEW** Added the `_receivedHRtime` property to messages received from the Node-RED server. This is a high-resolution timestamp (in milliseconds) of when the message was received. It can be used to measure latency and performance. It uses the [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) method which provides sub-millisecond accuracy. The value is the elapsed time since page navigation started.
 
-* **NEW** Added `instanceFolder` to uibuilder node settings. This to bring it into line with the new uib-markweb node, in the future, allow instance root folders to be specified anywhere.
+* **NEW** Added `instanceFolder` to uibuilder node settings. This to bring it into line with the new markweb node, in the future, allow instance root folders to be specified anywhere.
 
 * **NEW** `httpHeaders` property added. This contains the HTTP headers received when the front-end client first connects to the server. This can be useful for debugging and for advanced use cases such as authentication and user tracking. Async so issues a custom event when ready. The `start()` function is now not called until they are ready because the headers are the most reliable way to get the namespace and Node-RED web root (stupid Firefox refuses to read the cookies!).
 
@@ -173,10 +173,13 @@ See the [node documentation](./docs/nodes/uib-markweb.md) for full details.
 
 * `nodes/libs/web.cjs`
   * Made `instanceSetup` more flexible by adding `routeSpec` and `handler` (function) arguments. This allows different types of routes to be added for an instance, e.g. static file serving, dynamic routing, markdown rendering, etc.
-  * Also in `instanceSetup`, reduced the number of routes added to an insance if the node is not a uibuilder node. Allows for simpler nodes such as `uib-markweb`.
+  * Also in `instanceSetup`, reduced the number of routes added to an insance if the node is not a uibuilder node. Allows for simpler nodes such as `markweb`.
 
 * `nodes/libs/tilib.cjs`
   * Added `formatDateIntl` function. This formats a date using the Intl API with a given format string and locale. Underscores in the format string are replaced with spaces. Formate uses standard date/time formatting tokens such as `YYYY`, `MM`, `DD`, `HH`, `mm`, `ss`, etc.
+
+* `nodes/libs/fs.cjs`
+  * Added options argument to the `fgSync` function. Allows for exclusions and other options to be passed to the underlying `fast-glob` library.
 
 * Security related fixes
   * `syntaxHighlight` function in `tilib.cjs` - limited the size of JSON strings to 10k characters to prevent potential denial-of-service attacks via extremely large JSON payloads.
