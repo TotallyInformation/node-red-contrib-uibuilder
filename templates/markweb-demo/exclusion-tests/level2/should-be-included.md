@@ -1,0 +1,1 @@
+This file should be _included_ in the markdown tests as it is a valid markdown file that does not match the exclusion pattern. It should be processed as a markdown file and included in the test results.
