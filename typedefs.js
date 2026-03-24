@@ -428,7 +428,7 @@
  * @property {Function} setC A reference to the context set function for this node instance
  */
 
-/** uibMwNode - uib-markweb node
+/** uibMwNode - markweb node
  * @typedef {object} uibMwNode Local copy of the node instance config + other info
  * @property {string} source The server source folder for the MarkWeb files
  * @property {string} url The URL path to serve the MarkWeb files from
