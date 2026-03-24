@@ -444,6 +444,7 @@ main {
     margin: 0.5em 0;
     padding: 0;
     max-width: 100%;
+    list-style: none;
 
     .tree-folder {
         list-style: none;
