@@ -1012,6 +1012,7 @@ async function navigate(toUrl, addToHistory = true) {
     // Remove origin from toUrl if present
     const origin = window.location.origin
     toUrl = toUrl.replace(origin, '')
+    console.log('>> Normalized toUrl (origin removed if present):', {origin, toUrl, trace: uibuilder.stack()})
     // Remove baseUrl from toUrl if present at start
     if (toUrl.startsWith(baseUrl)) {
         toUrl = toUrl.slice(baseUrl.length)
@@ -1229,7 +1230,9 @@ if (elSearchInput) elSearchInput.addEventListener('input', (e) => {
 
 /** On socket reconnection, reload the current page and request fresh nav indexes */
 document.addEventListener('uibuilder:socket:connected', (evt) => {
-    if (evt.detail?.numConnections > 0) {
+    // ! NOT CONVINCED THIS IS WORKING RELIABLY - NEED TO TEST MORE WITH DISCONNECTIONS
+    // if (evt.detail?.numConnections > 0) {
+    if (evt.detail?.recovered === true) {
         // console.log('uibuilder socket reconnected, refreshing page and nav indexes.', evt.detail)
         // Request updated sidebar nav index from server
         uibuilder.sendCtrl({
@@ -1237,12 +1240,17 @@ document.addEventListener('uibuilder:socket:connected', (evt) => {
             controlType: 'get-sidebar-nav',
             currentPath: pageData?.path || window.location.pathname,
         })
+        console.log('>> Re-navigating to current page to refresh content after socket reconnection:',
+            evt.detail, pageData.toUrl, window.location.pathname, pageData
+        )
         // Reload the current page content
         if (pageData?.toUrl) {
             navigate(pageData.toUrl, false)
         } else {
             window.location.reload()
         }
+    } else {
+        console.log('>> uibuilder socket connected (not recovered).', evt.detail)
     }
 })
 
@@ -1332,10 +1340,8 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             // What is the current page url?
             const currentPageUrl = window.location.pathname
 
-            if (ctrlMsg.error) {
-                // TODO Handle not found
-                console.error('Error during page navigation:', ctrlMsg.error)
-                return
+            if (ctrlMsg.attributes?.error) {
+                console.warn('Error during page navigation:', ctrlMsg.attributes.error)
             }
             const data = updatePageData(ctrlMsg.attributes ?? {}, { from: '_page-navigation-result', initialPath: '', topic: ctrlMsg.topic, hashFragment: ctrlMsg.hashFragment, })
             // console.log(
