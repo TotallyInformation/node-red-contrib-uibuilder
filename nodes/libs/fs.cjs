@@ -418,7 +418,7 @@ class UibFs {
         }
     } // ----- End of replaceTemplate() ----- //
 
-    // TODO Check if this works with uib-markweb too
+    // TODO Check if this works with markweb too
     /** Return list of found files as folder/files and/or urls
      * @param {string} uibId The uibuilder node instance id to search
      * @param {boolean} live If true, the search root will be limited to the currently live served folder
@@ -722,13 +722,14 @@ class UibFs {
 
     /** Return a list of files matching the glob specification
      * @param {string} glob The pattern to match - see fast-glob for details
+     * @param {object} [options] Options to pass to fast-glob (e.g. { ignore: [...] })
      * @returns {string[]} A list of files
      */
-    fgSync(glob) {
+    fgSync(glob, options) {
         if (!glob) return []
         // convert path to pattern before execution; otherwise nothing may be found (on Windows)
         fg.convertPathToPattern(glob)
-        return fg.sync(glob)
+        return fg.sync(glob, options)
     }
 
     /** Synchronously create a folder
