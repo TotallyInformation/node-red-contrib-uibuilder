@@ -60,7 +60,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
             /** Tracks uibuilder's installed front-end packages - changes as packages added/removed (in uibuilder node) */
             packages: [],
             /** List of uib node names */
-            uibNodeTypes: ['uibuilder', 'uib-cache', 'uib-element', 'uib-file-list', 'uib-html', 'uib-markweb', 'uib-save', 'uib-sender', 'uib-sidebar', 'uib-tag', 'uib-update'],
+            uibNodeTypes: ['uibuilder', 'uib-cache', 'uib-element', 'uib-file-list', 'uib-html', 'markweb', 'uib-save', 'uib-sender', 'uib-sidebar', 'uib-tag', 'uib-update'],
 
             // Debug output via log() - turn on/off with true/false
             get debug() { return _dbg },

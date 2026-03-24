@@ -647,7 +647,7 @@ class UibSockets {
         // Can we handle a control request directly? If not, send it out of port #2
         switch (msg.uibuilderCtrl) {
             case 'get page meta': {
-                // TODO: Does not work for uib-markweb - consider alternatives?
+                // TODO: Does not work for markweb - consider alternatives?
                 // This returns the data straight back to the requesting client, does not output to port #2
                 getFileMeta(join(node.instanceFolder, node.sourceFolder, msg.pageName))
                     .then( (fstats) => {

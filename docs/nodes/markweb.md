@@ -1,17 +1,17 @@
 ---
-title: uib-markweb - Dynamic web sites using Markdown
+title: markweb - Dynamic web sites using Markdown
 description: |
-  The `uib-markweb` node allows you to create dynamic web sites using Markdown files.
+  The `markweb` node allows you to create dynamic web sites using Markdown files.
   You simply define a source folder containing your Markdown files. An HTML template is used to create the overall layout.
   Everything else is automated for you.
 created: 2026-01-09 15:10:14
-updated: 2026-03-22 20:06:50
+updated: 2026-03-23 16:21:58
 status: Release
 since: v7.6.0
 ---
 
 > [!TIP]
-> Because `uib-markweb` is built on top of uibuilder, you can use uibuilder's existing features to send messages from Node-RED to the front-end to further update the page dynamically as needed.
+> Because `markweb` is built on top of uibuilder, you can use uibuilder's existing features to send messages from Node-RED to the front-end to further update the page dynamically as needed.
 
 > [!NOTE]
 >
@@ -378,7 +378,7 @@ config:
 ---
 sequenceDiagram
   box hsla(0, 33%, 19%, 0.50) Node-RED Server
-    participant uib-markweb
+    participant markweb
   end
   box hsla(210, 50%, 26%, 0.50) Client Browser
     participant Client
@@ -386,10 +386,10 @@ sequenceDiagram
     participant Page Updates
   end
 
-  uib-markweb->>+Client: Ctrl: _source-change
+  markweb->>+Client: Ctrl: _source-change
   Client->>+navigate(): toUrl
-  navigate()->>+uib-markweb: Ctrl: navigate
-  uib-markweb->>Client: Ctrl: _page-navigation-result
+  navigate()->>+markweb: Ctrl: navigate
+  markweb->>Client: Ctrl: _page-navigation-result
   Client->>+Page Updates: ctrlMsg.attributes
 
 ```
@@ -412,7 +412,7 @@ config:
 ---
 sequenceDiagram
   %%box rgba(66,33,33,0.5) Node-RED Server
-  %%  participant uib-markweb
+  %%  participant markweb
   %%end
   box hsla(210, 50%, 26%, 0.50) Client Browser
     participant _page-navigation-result
@@ -446,7 +446,7 @@ sequenceDiagram
   box rgba(66,33,33,0.5) Node-RED Server
     participant htmlTemplate()
     participant getMarkdownFile()
-    participant uib-markweb
+    participant markweb
   end
   box rgba(33,66,99,0.5) Client Browser
     participant Client
@@ -455,15 +455,15 @@ sequenceDiagram
     participant updatePageData()
   end
 
-  Client->>+uib-markweb: HTTP GET
-  uib-markweb->>+getMarkdownFile(): 
-  uib-markweb->>+htmlTemplate(): 
-  uib-markweb->>+Client: HTTP Response
+  Client->>+markweb: HTTP GET
+  markweb->>+getMarkdownFile(): 
+  markweb->>+htmlTemplate(): 
+  markweb->>+Client: HTTP Response
   Client->>+navHorizontalInit(): 
   Client->>+SIO-client-connect: 
   SIO-client-connect-->>+Client:
-  Client->>+uib-markweb: Ctrl: getMetaData
-  uib-markweb->>+Client: _page-metadata
+  Client->>+markweb: Ctrl: getMetaData
+  markweb->>+Client: _page-metadata
   Client->>+updatePageData(): 
 
 ```
@@ -481,7 +481,7 @@ sequenceDiagram
 
 ### URLs & URL mapping
 
-The URL specified in the node config is used as the *base URL* for the web site. It must be unique among all `uibuilder` and `uib-markweb` nodes in the Node-RED instance and must not clash with any other existing routes in Node-RED. The actual URL will depend on the Node-RED root URL configuration and/or the uibuilder custom web server if used. It is shown in the Editor UI for the node.
+The URL specified in the node config is used as the *base URL* for the web site. It must be unique among all `uibuilder` and `markweb` nodes in the Node-RED instance and must not clash with any other existing routes in Node-RED. The actual URL will depend on the Node-RED root URL configuration and/or the uibuilder custom web server if used. It is shown in the Editor UI for the node.
 
 Any additional path segments after the base URL are used to identify the specific markdown file or folder being requested.
 
@@ -588,7 +588,7 @@ The node uses 2 packages from separate sub-workspaces:
 
 ## Requirements
 
-This is a rough list of the original requirements for the `uib-markweb` node.
+This is a rough list of the original requirements for the `markweb` node.
 
 * [x] Support Commonmark and GFM standards.
 * [x] Support front-matter in markdown files.

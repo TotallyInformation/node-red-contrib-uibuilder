@@ -1,6 +1,6 @@
 ---
 created: 2025-12-15 15:00:36
-updated: 2026-03-18 13:25:18
+updated: 2026-03-23 16:21:58
 version: 7.6.0
 ---
 ### Welcome to UIBUILDER v7.6.0
@@ -8,7 +8,7 @@ This is a relatively minor feature release.
 
 This highlight changes popover is now included. It will only be shown once after an update.
 
-#### NEW NODE: uib-markweb
+#### NEW NODE: markweb
 Enables simple creation of dynamic web sites using Markdown files. It supports navigation menus, search, front-matter placeholders, custom templates and much more.
 
 #### Documentation

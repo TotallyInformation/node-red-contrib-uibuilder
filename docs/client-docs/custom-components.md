@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2026-03-17 16:22:54
+updated: 2026-03-23 16:21:58
 since: v6.6.0
 ---
 
@@ -418,7 +418,7 @@ Simply ensure that the file is served from the same URL location as your main pa
 
 This component is designed to help with debugging _MarkWeb_ pages by showing the current page's metadata as known to the uibuilder client library.
 
-See the [uib-markweb documentation](nodes/markweb) for details of how to use this component with markweb.
+See the [markweb documentation](nodes/markweb) for details of how to use this component with markweb.
 
 To use independently of markweb, simply include the component script in your HTML page as:
 

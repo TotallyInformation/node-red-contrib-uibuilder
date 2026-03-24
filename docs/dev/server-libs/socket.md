@@ -3,14 +3,14 @@ title: Websocket Handling Library
 description: |
   A singleton class that manages the interactions with Socket.IO and so provides all of the realtime communications between Node-RED server and front-end browser client.
 created: 2021-06-27 21:35:00
-updated: 2026-01-02 15:16:13
+updated: 2026-03-23 16:21:58
 ---
 
 `nodes/libs/socket.js`
 
 ## Socket.IO Rooms and Namespaces
 
-A Socket.IO [Namespace](https://socket.io/docs/v4/namespaces/) is created for each `uibuilder` and `uib-markweb` instance.
+A Socket.IO [Namespace](https://socket.io/docs/v4/namespaces/) is created for each `uibuilder` and `markweb` instance.
 
 Namespaces and channels (rooms) ensure that message channels are isolated.
 
@@ -27,11 +27,11 @@ These are mostly from the client to the server to indicate status changes such a
 
 An initial control message is also send from the server to a connecting client when the socket.io connection is established. This message contains important metadata about the instance such as version numbers, instance URL, server timestamp, etc.
 
-Most client-to-server control messages are forwarded to output port #2 of the `uibuilder`/`uib-markweb` nodes for processing by Node-RED flows. Input messages containing the `msg.uibuilderCtrl` property are ignored to prevent control loops.
+Most client-to-server control messages are forwarded to output port #2 of the `uibuilder`/`markweb` nodes for processing by Node-RED flows. Input messages containing the `msg.uibuilderCtrl` property are ignored to prevent control loops.
 
 There are also some client-to-server control messages that request server-side actions, these are never forwarded to output port #2. These include:
 
-* `msg.uibuilderCtrl = "get page meta"` - Requests the server to return the metadata for a specified page in the instance's source folder. The server responds with a control message containing the metadata. (This does not work for `uib-markweb` instances currently.)
+* `msg.uibuilderCtrl = "get page meta"` - Requests the server to return the metadata for a specified page in the instance's source folder. The server responds with a control message containing the metadata. (This does not work for `markweb` instances currently.)
 
 * `msg.uibuilderCtrl = "internal"` - Can be used by a node to trigger node-specific actions. The node must define its own internal control message handlers in the `node.internalControls` object. The message must include a `controlType` property to specify which internal control action to invoke.
 

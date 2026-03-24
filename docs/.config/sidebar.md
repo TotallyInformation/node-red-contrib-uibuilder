@@ -30,7 +30,7 @@
   * [`uib-cache`](nodes/uib-cache.md "Cache data so that (re)loaded pages get the latest")
   * [`uib-element`](nodes/uib-element.md "no-code creation of page elements")
   * [`uib-html`](nodes/uib-html.md "Hydrate low-code JSON UI descriptions into HTML in Node-RED rather than the browser")
-  * [`uib-markweb`](nodes/uib-markweb.md "Create dynamic web sites using Markdown files")
+  * [`markweb`](nodes/markweb.md "Create dynamic web sites using Markdown files")
   * [`uib-save`](nodes/uib-save.md "Save files to the served folder of a given uibuilder node")
   * [`uib-sender`](nodes/uib-sender.md "Tunnel messages direct to a uibuilder node - with optional return. Use lightly if at all")
   * [`uib-sidebar`](nodes/uib-sidebar.md "Creates a simple UI in the Node-RED Editor sidebar")

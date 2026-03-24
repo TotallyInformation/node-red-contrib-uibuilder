@@ -3,10 +3,10 @@ title: uibuilder instance setup processing
 description: |
   The process to create a new uibuilder instance.
 created: 2025-12-30 11:36:05
-updated: 2025-12-30 14:41:08
+updated: 2026-03-23 16:21:58
 ---
 
-A new instance is created when a new `uibuilder` or `uib-markweb` node is added to a Node-RED flow and deployed.
+A new instance is created when a new `uibuilder` or `markweb` node is added to a Node-RED flow and deployed.
 
 > [!NOTE]
 > UIBUILDER either uses the existing Node-RED user-facing ExpressJS web server app or creates its own custom ExpressJS app to serve uibuilder content.
@@ -18,7 +18,7 @@ A new instance is created when a new `uibuilder` or `uib-markweb` node is added 
 
 ## 00) Folder creation
 
-Instance folder creation is only done for `uibuilder` nodes. `uib-markweb` nodes do not create instance folders.
+Instance folder creation is only done for `uibuilder` nodes. `markweb` nodes do not create instance folders.
 
 When a new `uibuilder` node is created, the `nodeInstance(config)` method checks that the `<uibRoot>` folder exists and is writable, checks if the instance folder exists, and creates it if necessary, otherwise offers to adopt it. If a URL rename is detected, it offers to rename the folder.
 
@@ -57,7 +57,7 @@ Node properties referenced:
 * _`node.id` - The unique Node-RED node ID for this instance. Added automatically by Node-RED._
 * _`node.commonStaticLoaded` - Added in instanceSetup to track if common static route has already been added. Prevents multiple additions._
 * _`node.send()` - The node's send method for sending messages. Automatically provided by Node-RED._
-* _`node.type` - The node type, e.g. `uibuilder` or `uib-markweb`. Added automatically by Node-RED._
+* _`node.type` - The node type, e.g. `uibuilder` or `markweb`. Added automatically by Node-RED._
 * `node.url` - The URL path for this instance.
 * `node.instanceFolder` - The full path to the instance folder.
 * `node.sourceFolder` - Usually `src` or `dist` within the instance folder.

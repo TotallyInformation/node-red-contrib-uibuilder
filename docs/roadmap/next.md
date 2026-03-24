@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-03-22 20:14:05
+updated: 2026-03-24 13:50:15
 ---
 
 ## To Fix
@@ -14,11 +14,11 @@ updated: 2026-03-22 20:14:05
 
 ## In Progress
 
-### New node: uib-markweb
+### New node: markweb
 
 A node that creates a website out of a folder of markdown content.
 
-### In progress
+#### In progress
 
 * [ ] Format index listings like the sidebar nav listing.
 * [ ] Moving md formatting tests out of "general.md" into their own files.
@@ -70,15 +70,6 @@ A node that creates a website out of a folder of markdown content.
 
 #### To do:
 
-* uibuilder Editor
-  * [ ] Add checks for duplicate URLs.
-  * [ ] Include uib-markweb in common url checks.
-  * [ ] Show actual folders as hints.
-  * [ ] If source folder is inaccessible, show a warning, mark the node invalid.
-  * [ ] Help panel.
-  * [ ] Add manual index-rebuild button to Editor.
-  * [ ] Some kind of flag to allow an auto-heading box showing things like page status.
-
 * [ ] Custom 404 response page. Separate file in config folder with default content if not present.
   * [ ] Allow for a custom 404 "page" fragment in the _config folder
 * [ ] Allow defaults for variables and directives. Allow filter fns for formatting, etc.
@@ -86,7 +77,6 @@ A node that creates a website out of a folder of markdown content.
 * [ ] *How to deal with category/tag listing pages?*
 * [ ] Allow for folders with no index.md file or `_index.md`. Increases compatibility with other content sources (e.g. Astro, Obsidian, etc.). If a folder does not have an index.md file, then it should still be shown in the listing if it contains other folders or files that are being shown in the listing.
 * [ ] ~~Check if return msgs get clientId, etc.~~ They don't, should they?
-* [ ] Improve HTML styling.
 * [ ] Remove web router on node close.
 * [ ] Consider allowing URL parameters to be passed as front-matter variables? (but not allwing overwriting of existing front-matter variables).
 
@@ -96,22 +86,29 @@ A node that creates a website out of a folder of markdown content.
   * [ ] Show full path and actual full url in the edit panel
 
 * Markdown extensions:
+  * [ ] Code blocks should be collapsible.
   * [ ] Enhanced markdown-it plugin allowing wide range of `[?]` syntax. (ref Obsidian Tasks Plugin)
   * [ ] Allow transclusions (e.g. `[logStack](fns/logStack.md ':include')`)
+  * [ ] Include Mermaid diagrams support.
 
 * Front-matter:
   * [ ] Allow for custom front-matter fields to be added to the index and used in the `%%index%%` output. E.g. `tags`, `category`, `author`, etc. This would allow for more powerful filtering and categorisation of pages in the index listings. Also add sorting.
   * [ ] Page aliases. Allow front-matter `alias` field to specify alternative url paths for a page. Also have a master map.
   * [ ] Page templates. Allow front-matter `template` field to specify a template file to use for the page.
   
+#### Future
+
+* uibuilder Editor
+  * [ ] Add checks for duplicate URLs.
+  * [ ] Include markweb in common url checks.
+  * [ ] Show actual folders as hints.
+  * [ ] If source folder is inaccessible, show a warning, mark the node invalid.
+  * [ ] Add manual index-rebuild button to Editor.
+  * [ ] Some kind of flag to allow an auto-heading box showing things like page status.
+
 * Additional search functionality:
   * [ ] Allow `%%search%%` placeholder in template.
   * [ ] Support keyword search (using front-matter fields).
-  * [ ] Search results should stay open after clicking a link.
-
-* [-] Auto-menu generation.
-  * [x] Horizontal
-  * [ ] Vertical options.
 
 * Hugo Compatibility:
   * [ ] ❓Support for `%%...%%` template placeholders.
@@ -137,7 +134,7 @@ A node that creates a website out of a folder of markdown content.
   * [ ] ❓Support for Astro routing (e.g. dynamic routes, nested routes, etc.)
 
 
-##### Completed
+#### Completed
 * [x] Level specifier on nav element to limit depth and start level.
 * [x] On scroll, when nav menu scrolls offscreen, collapse it to a burger menu and keep it visible.
 * [x] Use server fs watch to provide live updates to pages. Send msg to ALL connected clients when a file changes. Clients can then decide what to do (e.g. reload if they are viewing that page).
@@ -196,6 +193,8 @@ A node that creates a website out of a folder of markdown content.
 ### Ongoing work
 
 * Background rework (may take several releases):
+  * [ ] ! Change all node resource files to use `color: uibuilder.paletteColor, // node-red v4.1.7 broke using custom var from plugin` in register cb. Thanks to some change in node-red v4.1.7 that breaks being able to use a custom CSS var loaded via plugin.
+    * [x] markweb, uibuilder, uib-sidebar
   * [ ] Changing `uib-brand.css` to use more modern CSS, leaving it up to LightningCSS to build for older browsers. In particular, using nested definitions.
   * [ ] Remove remaining ~~5~~ 4 fsextra functions from fs lib. `ensureDirSync` is completed.
   * [ ] Move all nodes editor html to use modules. [Ref](https://discourse.nodered.org/t/text-javascript-vs-module-in-html/94215/4)
@@ -235,7 +234,7 @@ A node that creates a website out of a folder of markdown content.
   * [ ] Investigate and implement best no-code/low-code way to auto-create the SPA from Node-RED. [ref](https://discourse.nodered.org/t/uibuilder-button/98970/13?u=totallyinformation).
 
 * Back-end
-  * [ ] NEW NODE: `uib-markdown` - converts msg.payload containing markdown to HTML using the `mdParse` library created for `uib-markweb`. Pass `msg.attributes` to the parser as options for markdown processing (e.g. to allow custom directives in the markdown). Output HTML in `msg.payload`.
+  * [ ] NEW NODE: `uib-markdown` - converts msg.payload containing markdown to HTML using the `mdParse` library created for `markweb`. Pass `msg.attributes` to the parser as options for markdown processing (e.g. to allow custom directives in the markdown). Output HTML in `msg.payload`.
   * [ ] In web.js, add marked browser libary to the list of served static files.
   * [ ] Failed rename of instance folder may get stuck.
 
@@ -266,7 +265,8 @@ A node that creates a website out of a folder of markdown content.
 
 * Front-end
 
-  * [ ] Add support for marked.
+  * [ ] Reduce number of `[info]` log messages (demote to `[debug]`)
+  * [ ] Improve socket.io dis-/re-/connect handling and messaging. 
 
   * [ ] When handling attribute updates from msg, if msg.attributes is a string, attempt to parse it as JSON before giving up. [ref](https://discourse.nodered.org/t/what-am-i-doing-wrong-or-help/99960/3)
 

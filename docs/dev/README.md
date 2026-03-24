@@ -3,7 +3,7 @@ title: Developer Documentation
 description: |
   Deep dives into the internals of UIBUILDER. This is where to go if you need to understand how things work. These documents may lag behind the actual code however, so it is always worth also referencing the current codebase.
 created: 2019-06-16 16:16:00
-updated: 2025-12-30 11:45:35
+updated: 2026-03-24 21:03:01
 ---
 
 > [!NOTE]
@@ -44,8 +44,8 @@ These are required to run UIBUILDER, they are installed automatically when you i
 Additionally, the following are provided by a workspace private package - these are updated and bundled when uibuilder is updated.
 
 * `@totallyinformation/uib-md-utils` (`packages/uib-md-utils/`) - A private utility package for uibuilder that bundles libraries for Markdown processing.
-  * [marked](https://www.npmjs.com/package/marked) - A fast, lightweight Markdown parser and compiler. Used to convert Markdown to HTML in the `uib-markweb` node.
-  * [front-matter](https://www.npmjs.com/package/front-matter) - A library to parse YAML front-matter from text files. Used in the `uib-markweb` node to extract metadata from Markdown files.
+  * Markdown-IT. Used to convert Markdown to HTML in the `markweb` node.
+  * [front-matter](https://www.npmjs.com/package/front-matter) - A library to parse YAML front-matter from text files. Used in the `markweb` node to extract metadata from Markdown files.
 
 These are optional peer dependencies
 
@@ -118,7 +118,7 @@ For details, see the Client Libraries list above.
 * [`uib-element` node](nodes/uib-element) - TBC
 * [`uib-file-list` node](nodes/uib-file-list) - TBC
 * [`uib-html` node](nodes/uib-html) - TBC
-* [`uib-markweb` node](nodes/uib-markweb) - TBC
+* [`markweb` node](nodes/markweb) - TBC
 * [`uib-save` node](nodes/uib-save) - TBC
 * [`uib-sender node`](nodes/uib-sender) - TBC
 * [`uib-sidebar` node](nodes/uib-sidebar) - TBC
