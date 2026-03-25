@@ -152,6 +152,7 @@ See the [node documentation](./docs/nodes/markweb.md) for full details.
 
 * Tidied up unnecessary async processing in the DOM Mutation Observer. Giving a minor performance boost.
 * Delayed startup of DOM observing so that scripts loaded after the client library have time to set initial values.
+* 2 new managed variables added, `reconnect` and `initialConnect`. `reconnect` is the more useful, it contains a count of the number of times the client has reconnected to the server. `initialConnect` is a boolean that is true until the first successful connection to the server is made. Use `if (uibuilder.get('reconnect') > 0)` to trigger actions on reconnects but not on the initial connection.
 
 ### Development changes
 

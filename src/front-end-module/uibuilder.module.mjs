@@ -410,6 +410,10 @@ export const Uib = class Uib {
     // TODO Move to proper getters
     // #region ---- Externally read-only (via .get method) ---- //
     // version - moved to _meta
+    // Has the initial Socket.IO connection been made? Used to detect if a page reload or just a disconnect/reconnect
+    initialConnect = null
+    // How many times has the client reconnected to Socket.IO since the page was loaded? Note that this will be 0 on the initial connection, so can be used to detect a page reload vs a disconnect/reconnect
+    reconnected = 0
     /** Client ID set by uibuilder on connect */
     clientId = ''
     /** The collection of cookies provided by uibuilder */
@@ -3633,7 +3637,7 @@ export const Uib = class Uib {
 
         // Create the new timer
         this.#timerid = window.setTimeout(() => {
-            log('warn', 'Uib:checkConnect:setTimeout', `Socket.IO reconnection attempt. Current delay: ${delay}. Depth: ${depth}`)()
+            log('warn', 'Uib:checkConnect:setTimeout', `Socket.IO reconnection attempt. Current delay: ${delay}. Depth: ${depth}. Initial Connect: ${this.initialConnect}. Reconnected: ${this.reconnected}`)()
 
             // this is necessary sometimes when the socket fails to connect on startup
             this._socket.disconnect()
@@ -3658,12 +3662,14 @@ export const Uib = class Uib {
      */
     _onConnect() {
         this.currentTransport = this._socket.io.engine.transport.name
+        if (this.initialConnect === null) this.initialConnect = true
+        else this.reconnected++
 
         // WARNING: You cannot change any of the this._socket.auth settings at this point
         log(
             'info',
             'Uib:ioSetup',
-            `✅ SOCKET CONNECTED.\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
+            `✅ SOCKET CONNECTED.\nConnection count: ${this.connectedNum} (Reconnected: ${this.reconnected}, Initial Connect: ${this.initialConnect}), Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
         )()
 
         this._dispatchCustomEvent('uibuilder:socket:connected', { numConnections: this.connectedNum, isRecovery: this._socket.recovered, })
@@ -3673,7 +3679,7 @@ export const Uib = class Uib {
             log(
                 'trace',
                 'Uib:_onConnect:onUpgrade',
-                `SOCKET CONNECTION UPGRADED.\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
+                `SOCKET CONNECTION UPGRADED.\nConnection count: ${this.connectedNum} (Reconnected: ${this.reconnected}, Initial Connect: ${this.initialConnect}), Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
             )()
         })
 
@@ -3683,7 +3689,7 @@ export const Uib = class Uib {
                 log(
                     'error',
                     'Uib:Connection',
-                    `Connected to Node-RED but NO SOCKET UPGRADE!\n➡️ CHECK NETWORK and any PROXIES for issues. ⬅️\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
+                    `Connected to Node-RED but NO SOCKET UPGRADE!\n➡️ CHECK NETWORK and any PROXIES for issues. ⬅️\nConnection count: ${this.connectedNum} (Reconnected: ${this.reconnected}, Initial Connect: ${this.initialConnect}), Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
                 )()
             }
         }, 2000)
