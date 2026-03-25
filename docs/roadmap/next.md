@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-03-24 13:50:15
+updated: 2026-03-25 13:09:00
 ---
 
 ## To Fix
@@ -70,8 +70,7 @@ A node that creates a website out of a folder of markdown content.
 
 #### To do:
 
-* [ ] Custom 404 response page. Separate file in config folder with default content if not present.
-  * [ ] Allow for a custom 404 "page" fragment in the _config folder
+* [ ] Add a `closed` attribute to `<show-meta>`.
 * [ ] Allow defaults for variables and directives. Allow filter fns for formatting, etc.
 * [ ] Cache the default config folder files to avoid re-reading on every page load.
 * [ ] *How to deal with category/tag listing pages?*

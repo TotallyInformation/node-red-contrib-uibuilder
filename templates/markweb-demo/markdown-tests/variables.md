@@ -44,7 +44,16 @@ You can show the current available page variables by using the `<show-meta></sho
 <show-meta></show-meta>
 
 ## Technical details
-When `markweb` renders a markdown file, it processes the content and replaces any `{{variable}}` placeholders with a custom web component `<fm-var></fm-var>`. This component is responsible for looking up the variable name and rendering its value. It also listens for changes to the variable value and updates the rendered content automatically when the variable changes. This allows for dynamic content in markdown files that can react to changes in variables, whether they come from page metadata, global attributes, or system-provided data.
+When `markweb` renders a markdown file, it processes the content and replaces any `{{variable}}` placeholders with a custom web component `<fm-var></fm-var>`.
+
+There are, However, 4 technical methods for rendering variables in markdown content. Each of these methods has its own use cases and advantages, and you can choose the one that best fits your needs for rendering variables in your markdown files. The default `{{variable}}` syntax is the simplest and most straightforward way to render variables and is generally the most useful in Markdown content. The `<uib-var>` component and `uib-var` attribute provide more flexibility and control over how variables are rendered. The `<fm-var>` component is the underlying mechanism for variable rendering in Markweb and can be used directly if you need to access its specific features or behavior.
+
+1. The default `{{variable}}` syntax which is processed by Markweb and replaced with the `<fm-var>` component.
+2. The `<uib-var>` custom web component which can be used directly in markdown content for more flexible variable rendering.
+3. The `uib-var` custom HTML attribute which can be added to any HTML element to render a variable value as the content of that element
+4. The `<fm-var>` component which is used internally by Markweb to render variables when using the `{{variable}}` syntax, but can also be used directly in markdown content if desired. 
+
+This component is responsible for looking up the variable name and rendering its value. It also listens for changes to the variable value and updates the rendered content automatically when the variable changes. This allows for dynamic content in markdown files that can react to changes in variables, whether they come from page metadata, global attributes, or system-provided data.
 
 Available variables are stored in the uibuilder managed `pageData` object, which is accessible in client-side JavaScript code. This allows you to set and update variable values dynamically using `uibuilder.set('pageData.someVar', ...)`.
 
@@ -54,3 +63,6 @@ Available variables are stored in the uibuilder managed `pageData` object, which
 > To access a page variable this way, use `pageData.someVar` as the variable name. For example, `<uib-var name="pageData.title"></uib-var>` would render the page title.
 >
 > These features may be useful for rendering your own custom variables.
+
+### Alternative variable display methods
+
