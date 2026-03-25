@@ -1232,7 +1232,7 @@ if (elSearchInput) elSearchInput.addEventListener('input', (e) => {
 document.addEventListener('uibuilder:socket:connected', (evt) => {
     // ! NOT CONVINCED THIS IS WORKING RELIABLY - NEED TO TEST MORE WITH DISCONNECTIONS
     // if (evt.detail?.numConnections > 0) {
-    if (evt.detail?.recovered === true) {
+    if (uibuilder.get('reconnected') > 0) {
         // console.log('uibuilder socket reconnected, refreshing page and nav indexes.', evt.detail)
         // Request updated sidebar nav index from server
         uibuilder.sendCtrl({
@@ -1241,16 +1241,18 @@ document.addEventListener('uibuilder:socket:connected', (evt) => {
             currentPath: pageData?.path || window.location.pathname,
         })
         console.log('>> Re-navigating to current page to refresh content after socket reconnection:',
-            evt.detail, pageData.toUrl, window.location.pathname, pageData
+            evt.detail, pageData?.toUrl, window.location.pathname, pageData
         )
-        // Reload the current page content
-        if (pageData?.toUrl) {
-            navigate(pageData.toUrl, false)
-        } else {
-            window.location.reload()
-        }
+        // Reload the current page content.
+        // Use pageData.path (reliable, set by server on every navigation) with baseUrl,
+        // falling back to window.location.pathname. Avoids using pageData.toUrl which
+        // may be the string "undefined" on initial page load before any SPA navigation.
+        const reconnectUrl = pageData?.path
+            ? (baseUrl.replace(/\/$/, '') + pageData.path)
+            : window.location.pathname
+        navigate(reconnectUrl, false)
     } else {
-        console.log('>> uibuilder socket connected (not recovered).', evt.detail)
+        console.log('>> uibuilder socket connected (not recovered).', `Initial Connect: ${uibuilder.get('initialConnect')}. Reconnected: ${uibuilder.get('reconnected')}`, evt.detail)
     }
 })
 
