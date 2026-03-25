@@ -1663,10 +1663,16 @@ function renderPrescript(key, attributes, node, options) {
     //   2. </script> or other HTML-breaking sequences in the content
     const b64 = Buffer.from(JSON.stringify(attributes)).toString('base64')
     const content = Buffer.from(mdParse(node, attributes.content, attributes)).toString('base64')
+    // atob() returns a binary (Latin-1) string, not UTF-8 — multi-byte characters like emoji
+    // are corrupted unless we decode via TextDecoder which handles UTF-8 correctly.
     return `<script>
     window.baseUrl = '${node.url}';
-    window.pageData = JSON.parse(atob('${b64}'));
-    window.pageData.content = atob('${content}');
+    (function () {
+        const _td = new TextDecoder()
+        const _from = (b64) => _td.decode(Uint8Array.from(atob(b64), c => c.charCodeAt(0)))
+        window.pageData = JSON.parse(_from('${b64}'))
+        window.pageData.content = _from('${content}')
+    })()
 </script>`
 }
 
