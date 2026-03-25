@@ -5,6 +5,9 @@
  * // HTML usage:
  * <show-meta></show-meta>
  *
+ * // Start collapsed:
+ * <show-meta closed></show-meta>
+ *
  * // With custom metadata object:
  * const el = document.querySelector('show-meta')
  * el.metadata = { title: 'My Page', author: 'John Doe', created: '2026-01-01' }
@@ -28,10 +31,26 @@ class ShowMeta extends HTMLElement {
     #metadata = {}
     #pageDataChangeHandler = null
 
+    /** Observed attributes list
+     * @returns {string[]} Attribute names to observe
+     */
+    static get observedAttributes() {
+        return ['closed']
+    }
+
     /** Component constructor */
     constructor() {
         super()
         this.#metadata = {}
+    }
+
+    /** Called when observed attributes change
+     * @param {string} _name - Attribute name
+     * @param {string|null} _oldValue - Previous value
+     * @param {string|null} _newValue - New value
+     */
+    attributeChangedCallback(_name, _oldValue, _newValue) {
+        this.#render()
     }
 
     /** Called when element is added to the DOM */
@@ -136,8 +155,11 @@ class ShowMeta extends HTMLElement {
         const meta = this.#metadata
         const entries = Object.entries(meta)
 
+        const isOpen = !this.hasAttribute('closed')
+        const openAttr = isOpen ? ' open' : ''
+
         if (entries.length === 0) {
-            this.innerHTML = '<article class="show-meta"><p><em>No metadata available</em></p></article>'
+            this.innerHTML = `<article class="show-meta"><details${openAttr}><summary>Page Metadata</summary><p><em>No metadata available</em></p></details></article>`
             return
         }
 
@@ -156,19 +178,25 @@ class ShowMeta extends HTMLElement {
 
         this.innerHTML = /* html */`
             <article class="show-meta">
-                <h2>Page Metadata</h2>
-                <dl class="show-meta-grid">
-                    ${rows}
-                </dl>
+                <details${openAttr}>
+                    <summary>Page Metadata</summary>
+                    <dl class="show-meta-grid">
+                        ${rows}
+                    </dl>
+                </details>
             </article>
             <style>
                 .show-meta {
                     font-size: 0.7em;
                     padding: 0 var(--border-pad);
 
-                    h2 {
+                    summary {
+                        font-size: 1.5em;
+                        font-weight: bold;
+                        cursor: pointer;
                         padding-bottom: 0;
                         margin-bottom: 0;
+                        list-style: revert;
                     }
 
                     dl {
