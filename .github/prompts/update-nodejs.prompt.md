@@ -4,7 +4,7 @@
 I want to update Node.js to the latest version of my currently installed major version using Windows Package Manager (winget).
 
 ## Context
-- I'm using Windows 10/11
+- I'm using Windows 11
 - I have winget installed
 - I want to stay on the same major version of Node.js
 - I need to verify the update worked correctly
@@ -14,6 +14,7 @@ I want to update Node.js to the latest version of my currently installed major v
 2. Verify Node.js is installed via winget
 3. Update Node.js using winget
 4. Verify the update was successful
+5. Warn me if the new version is no longer an LTS release
 
 ## References
 - Current version check command: `node -v`
