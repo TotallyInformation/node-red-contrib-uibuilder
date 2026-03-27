@@ -13,6 +13,9 @@ Directives run code on the server to generate content. Some support additional p
 
 Directives provide more complex processing than simple variable replacement. They are enclosed in `%%...%%` tags. Attributes are generally optional and are specified inside square brackets `[...]` as space-separated `attribute=value` pairs. Directives have to be pre-defined on the server.
 
+> [!NOTE]
+> Not all directives are suitable for use in your own markdown files. Some are reserved for use in the HTML template (e.g., `%%body%%`) and will not work if used in markdown files. The available directives and their usage may change in future versions of Markweb, so be sure to check the documentation for the version you are using.
+
 ## Available directives
 
 ### Body
@@ -21,7 +24,7 @@ Directives provide more complex processing than simple variable replacement. The
 
 ### Copyright
 
-`%%copyright%%` - Placeholder for copyright information.
+`%%copyright%%` - (Usually in the HTML Template) Placeholder for copyright information.
 
 By default, it uses:
 
@@ -29,7 +32,7 @@ By default, it uses:
 Copyright © %%date [type=updated, format=YYYY]%% {{author}}. Updated %%date [type=updated, format=D_MMM_YYYY]%%
 ```
 
-This is stored in the file `copyright-template.html` in the `templates/.markweb-defaults/` folder.
+This is stored in the file `copyright-template.html` in the `templates/.markweb-defaults/` folder. You can override this by placing your own `copyright-template.html` file in the `configFolder` specified in the Markweb node configuration. This allows you to customize how the copyright information is displayed, while still using the same directive in your markdown files or page templates.
 
 This directive has no attributes of its own. Alternative configurations use a custom template file (e.g., `copyright-template.html`) in the `configFolder` that defines how the copyright information should be displayed. The template can use other directives and variables to customize the output.
 

@@ -24,14 +24,18 @@ Inline code containing variables and special directives should not be processed:
 ```
 Code block with multiple lines
   no syntax highlighting or special directives
-(status is replaced but index is ignored):
+
+Neither {{variables}} nor %%directives%% are processed in code blocks:
 {{status}}, %%index%%
 ```
 
 ```javascript
 // JavaScript code block with syntax highlighting
-function hello() {
-  console.log('Hello, World!')
+function hello(name) {
+  const greeting = 'Hello';
+  const age = 30;
+  let isAdult = true;
+  console.log(`${greeting}, ${name}!`, "Are you: ", age > 18 ? 'an adult' : 'a minor');
 }
 ```
 
@@ -40,6 +44,7 @@ function hello() {
   "name": "John",
   "age": 30,
   "city": "New York",
+  "isAdult": true,
   "location": [54.123, 1.234]
 }
 ```

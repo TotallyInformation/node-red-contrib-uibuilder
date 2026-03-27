@@ -8,6 +8,7 @@ tags:
   - tests
   - formatting
 title: Markdown Formatting Supported by Markweb
+shortTitle: Formatting Checks
 description: Markweb supports various Markdown features and formatting options.
 ---
 

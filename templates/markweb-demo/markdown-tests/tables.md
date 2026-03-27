@@ -1,7 +1,7 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-03-18 16:01:31
-updated: 2026-03-22 15:31:08
+updated: 2026-03-27 20:27:00
 status: Draft
 title: Tables
 description: Different table layouts in markdown.
@@ -34,15 +34,15 @@ Note that only full column alignment is supported, not per-cell alignment.
 
 ## With embedded markup
 
-| Header 1 | Header 2 | Header 3 |
-|----------|----------|----------|
-| **Bold**  | *Italic*  | `Code`    |
-| ~~Strikethrough~~ | [Link](https://example.com) | ![Image](https://via.placeholder.com/20) |
-|With a <br>line break|Another cell|And another|
+| Header 1  | Header 2  | Header 3         |
+|-----------|-----------|------------------|
+| **Bold**  | *Italic*  | `Inline Code`    |
+| ~~Strikethrough~~ | [Link](https://example.com) | ![Bear](https://placebear.com/120/60) |
+|With a <br>line break|Another cell|And<br>another|
 ```markdown
-| Header 1 | Header 2 | Header 3 |
-|----------|----------|----------|
-| **Bold**  | *Italic*  | `Code`    |
-| ~~Strikethrough~~ | [Link](https://example.com) | ![Image](https://via.placeholder.com/20) |
-|With a <br>line break|Another cell|And another|
+| Header 1  | Header 2  | Header 3         |
+|-----------|-----------|------------------|
+| **Bold**  | *Italic*  | `Inline Code`    |
+| ~~Strikethrough~~ | [Link](https://example.com) | ![Bear](https://placebear.com/120/60) |
+|With a <br>line break|Another cell|And<br>another|
 ```

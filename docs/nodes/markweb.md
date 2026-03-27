@@ -1,17 +1,24 @@
 ---
 title: markweb - Dynamic web sites using Markdown
 description: |
-  The `markweb` node allows you to create dynamic web sites using Markdown files.
-  You simply define a source folder containing your Markdown files. An HTML template is used to create the overall layout.
-  Everything else is automated for you.
+  The `markweb` node gives you the ability to really simply create dynamic web sites using Markdown files.
 created: 2026-01-09 15:10:14
-updated: 2026-03-23 16:21:58
+updated: 2026-03-27 20:27:09
 status: Release
 since: v7.6.0
 ---
 
+You simply define a source folder containing your Markdown files. An HTML template is used to create the overall layout. Everything else is automated for you.
+
+Your site automatically updates itself when you make changes to the source markdown files. You can show page variables, lists of files/folders, search results and more using simple directives in your markdown files. You can also use UIBUILDER's client library features to further update the page dynamically as needed.
+
 > [!TIP]
-> Because `markweb` is built on top of uibuilder, you can use uibuilder's existing features to send messages from Node-RED to the front-end to further update the page dynamically as needed.
+> Markweb provides a **lot** of features baked-in. Because of this, the more detailed documentation has been split into a demonstration web site that is built using Markweb itself. This allows you to see the features in action and also provides a reference and testbed for features as they are developed.
+>
+> To view the demo site, simply add a Markweb node to your Node-RED flow. Configure its "Source" to be "[DEMO]". And provide a suitable URL path.
+
+> [!TIP]
+> Because `markweb` is built on top of uibuilder, you can use uibuilder's existing features to send messages from Node-RED to the front-end to further update the page dynamically as needed. You could also, if desired, use your own custom front-end JavaScript to further manipulate the page content or add interactivity.
 
 > [!NOTE]
 >
@@ -19,9 +26,7 @@ since: v7.6.0
 >
 > A uibuilder managed variable called `pageData` holds all of the current page metadata **and** the HTML page content (in `pageData.content`). The content is rendered to HTML on the Node-RED server, not in the client. This currently happens on each request, future updates are likely to add content caching for performance improvement when large numbers of clients are connected.
 
-## Page layout and styling
-
-Markweb comes with its own CSS stylesheet (`markweb.css`) that extends the default uibuilder brand CSS. The styles are only configured for dark mode currently. But, of course, you can customise and change styles as needed.
+## Page layout
 
 The current default HTML template provides a 2 column layout. The left column is a sidebar that contains a search box and results, the main site navigation index, and the current pages table of contents. The sidebar can be toggled open/closed and resized by dragging its edge. The status of the sidebar and the open/closed state of the collapsible navigation list are remembered per user in localStorage. The current page is highlighted in the navigation index. The table of contents also highlights as you scroll through the page content.
 
@@ -37,10 +42,14 @@ Navigation and other index listings are collapsible and have a faint left-hand b
 
 The search box allows you to search for pages by title, description, tags, and content. Search results are sorted by relevance and show a snippet of the matching content. Navigating to a search result retains the search query and results so that you can easily navigate to the next result if desired. Currently, search links only take you to the relavent page, future updates are likely to also scroll to the relevant section within the page. If a search result points to the current page, it is highlighted in the list.
 
+## Styling
+Markweb comes with its own CSS stylesheet (`../uibuilder/utils/markweb.css`) that extends the default uibuilder brand CSS. The styles are only configured for dark mode currently. But, of course, you can customise and change styles as needed.
+
+
 > [!NOTE]
-> Currently, the CSS and JavaScript for markweb uses features only suitable for fairly up-to-date browsers. You will need a browser updated no earlier than mid-2024 to ensure full functionality and styling. This may be improved in the future, if it is a problem for you, please get in touch so that I know and can prioritise it.
+> Currently, the CSS and JavaScript for markweb uses features only suitable for fairly up-to-date browsers. You will need a browser updated no earlier than mid-2022 to ensure full functionality and styling. This may be improved in the future, if it is a problem for you, please get in touch so that I know and can prioritise it.
 >
-> The front-end CSS and JavaScript are also not yet minified, to make them easier to read and understand. Future updates are likely to add minified versions for improved performance.
+> The front-end CSS and JavaScript are also not yet minified, to make them easier to read and understand during development. Future updates are likely to add minified versions for improved performance.
 
 ## Configuration (Node-RED Editor)
 
@@ -63,272 +72,15 @@ While these are initially processed server-side so that only HTML is passed over
 
 ### Directives
 
-> [!NOTE]
->
-> Some of the directives are already being phased out due to improvements in UIBUILDER's reactive client features.
+Directives provide more complex processing than simple variable replacement. They are enclosed in `%%...%%` tags. Attributes are generally optional and are specified inside square brackets `[...]` as comma-separated `attribute=value` pairs.
 
-These provide more complex processing than simple variable replacement. They are enclosed in `%%...%%` tags. Attributes are generally optional and are specified inside square brackets `[...]` as comma-separated `attribute=value` pairs.
-
-#### Copyright placeholder (`%%copyright%%`)
-
-`%%copyright%%` - Placeholder for copyright information.
-
-By default, it uses:
-
-```html
-Copyright © %%date [type=updated, format=YYYY]%% {{author}}. Updated %%date [type=updated, format=D_MMM_YYYY]%%
-```
-
-This is stored in the file `copyright-template.html` in the `templates/.markweb-defaults/` folder.
-
-This directive has no attributes of its own. Alternative configurations use a custom template file (e.g., `copyright-template.html`) in the `configFolder` that defines how the copyright information should be displayed. The template can use other directives and variables to customize the output.
-
-#### Date placeholder (`%%date%%`)
-
-`%%date [attributes]%%` - Placeholder for a date. By default, it shows the current date. Attributes can be used to specify a different date and/or formatting.
-
-Attributes:
-
-* `type` - The type of date to show: Either a date from frontmatter (e.g. `created`, or `updated`), or `now` (default: `now`).
-* `format` - The date format string (default: `YYYY-MM-DD`). Uses standard date formatting tokens. `_` is translated to a space.
-
-#### Index list of files/folders (`%%index%%`)
-
-`%%index [attributes]%%` - Generates an index list of files and/or folders. Attributes can be used to control depth, file types, sorting, etc.
-
-Attributes:
-
-* `start` - The starting depth level to include in the index list (default: the current page's depth).
-* `end` - The ending depth level (default: the current page's depth if `start` not provided, otherwise `5`).
-  
-    `start` and `end` are base 0, so the root folder is level 0.
-
-* `depth` - Shorthand to set the number of levels to include. Equivalent to `end = start + depth`.
-* `type` - The type of items to include: `files`, `folders`, or `both` (default: `both`).
-* `from` - Filter to include only items created/updated after this date/time.
-* `to` - Filter to include only items created/updated before this date/time.
-
-  Can be set to `now` to mean the current date/time at the time of index list creation.
-
-  `%%index[from=2025-01-01, to=now]%%`
-
-
-* `duration` - Filter to include only items created/updated offset from either `from` or `to`.
-  
-  E.g.:
-  
-  * `%%index[duration=1w]%%` Last week from now
-  * `%%index[from=2025-06-01, duration=1m]%%`
-  * `%%index[to=now, duration=2w]%%`
-  * Duration can be negative to go backwards in time from `to`. E.g., `to=now, duration=-1m` for the month before now.
-
-* `latest` - Lists the last `n` created/updated items. Without an explicit `start`, defaults to the current page's depth level.
-  
-  E.g:
-  
-  * `%%index[latest=10]%%`- 10 most recently created/updated pages from the current level down.
-  * `%%index[latest=5, type=files]%%` - 5 most recent files only.
-  * `%%index[latest=3, start=0, end=2]%%` - 3 most recent pages at depth 0-2.
-  * `%%index[latest=10, from=2025-01-01]%%` - 10 most recent since Jan 2025.
-  
-
-*Not yet implemented*:
-
-* `sort` - The sorting order: `name`, `date`, or `custom` (default: `name`).
-* `order` - The sorting direction: `asc` or `desc` (default: `asc`).
-* `exclude` - Comma-separated list of file or folder names to exclude (default: none).
-
-#### Navigation menu (`%%nav%%`)
-
-`%%nav [attributes]%%` - Generates a navigation menu based on the folder structure. Attributes can be used to control depth, type (files/folders/both), orientation (horizontal/vertical), etc.
-
-`nav` uses the `%%index%%` directive internally to build the menu structure. So it accepts the same attributes as `index`, plus:
-
-Attributes:
-
-* `orient` - The orientation of the menu: `horizontal` ~~or `vertical`~~ (default: `horizontal`). As of v7.6.0, only `horizontal` is implemented. You can use `%%index%%` to build vertical lists.
-
-#### Search results placeholder (`%%search-results%%`)
-
-`%%search-results [attributes]%%` - Placeholder for search results.
-
-Attributes:
-
-* `head` - The header text to show above the search results. Default is "Search results for `<span id="search-query">N/A</span>" (<span id="search-count">N/A</span>)`. If set to `short`, it will just show `<span id="search-count">N/A</span> results`.
-
-Search results are sorted by relevance to the search query. The score is available as a tooltip. Scoring is as follows:
-
-* +10 points for a match in the title.
-* +7 points for a match in the tags.
-* +5 points for a match in the description.
-* +1 point for a match in the body text.
-
-Beneath the page title in the search result entry, a snippet of the top-scoring matching text is shown.
-
-If one of the search results is the current page, it is highlighted.
-
-Navigating to any of the search results retains the search query and results so that the user can easily navigate to the next result if desired.
-
-Only one `%%search-results%%` directive is supported per page. It should be in the HTML wrapper template, rather than the Markdown files. If using the `%%sidebar%%` directive, the search results are automatically included in the sidebar. So this directive is really only needed when using a horizontal navigation menu in the page main header.
-
-#### Sidebar (`%%sidebar%%`)
-
-`%%sidebar [attributes]%%` - Generates a sidebar with navigation index and table of contents. The sidebar includes two tabs: one for the navigation index (generated from the page structure) and one for the page's table of contents (generated from page headings).
-
-Features:
-
-* **Navigation tab** - Shows a hierarchical navigation index of the site. Uses `%%index%%` internally to generate the list.
-* **Table of contents tab** - Auto-generated from page headings (h2-h6). Updates dynamically when navigating.
-* **Collapsible sections** - Uses `<details>`/`<summary>` elements. Collapsed/expanded state is remembered per user in localStorage.
-* **Current page highlighting** - The current page is visually highlighted in the navigation.
-* **Resizable** - The sidebar can be resized by dragging its edge. Width resets on page reload.
-* **Toggle open/closed** - A toggle button allows the sidebar to be collapsed. State is remembered in localStorage.
-* **Search box** - Optional search box above the tabs, with search results displayed below it.
-
-Styling:
-
-The sidebar is styled using CSS variables for easy customization. As of UIBUILDER v7.6.0, the UIBUILDER brand CSS is used and partially overridden, however, only dark mode is currently properly configured.
-
-* `--sidebar-min-width: 5em;`, `--sidebar-max-width: 15em;` - these control the default sidebar width. They allow the sidebar to automatically adjust to different screen sizes while maintaining usability.
-* `--sidebar-border-color: var(--text3);` - `--text3` is a standard uibuilder color variable that adapts to light/dark themes.
-
-Attributes:
-
-* `search` - Whether to include the search box: `true` or `false` (default: `true`).
-* `width` - Set the sidebar width (default is set by stylesheet at `5em` to `20em`). Do not forget to include the CSS length unit (e.g., `20em`, `300px`, `25%`, etc.). If not specified, the CSS default is used. This sets both the `--sidebar-max-width` and `--sidebar-min-width` CSS variables to the same value to effectively fix the width. The sidebar is still resizable by dragging, but will reset to this width on page reload.
-* `start` - Starting depth level for navigation index (default: `0`).
-* `end` - Ending depth level for navigation index (default: `3` = 4 levels).
-
-Example usage:
-
-```html
-%%sidebar [search=true, width=20em, start=0, end=3]%%
-```
-
-**Override with sidebar.json**
-
-You can provide a manual `sidebar.json` file in your config folder to fully override the auto-generated navigation index. The file should contain an array of navigation items:
-
-```json
-[
-    {
-        "title": "Home",
-        "shortTitle": "Home",
-        "description": "Welcome page",
-        "path": "/",
-        "children": []
-    },
-    {
-        "title": "Getting Started",
-        "shortTitle": "Start",
-        "description": "How to get started",
-        "path": "/getting-started/",
-        "children": [
-            {
-                "title": "Installation",
-                "path": "/getting-started/installation"
-            },
-            {
-                "title": "Configuration",
-                "path": "/getting-started/configuration"
-            }
-        ]
-    }
-]
-```
-
-**Front-matter fields for sidebar:**
-
-* `shortTitle` - Used in the sidebar instead of `title` if present. Useful for shorter navigation labels.
-* `description` - Used as the HTML `title` attribute (tooltip) on navigation links.
-
-#### Other directives
-
-* `%%url%%` - The base URL of the web site. No attributes.
-  
-* `%%...%%` - Other directives may be added in the future.
+Directives are further documented in Markweb's `[DEMO]` website.
 
 ### Variables
 
-These provide simple variable replacement from front-matter and global/system fields. They are enclosed in `{{...}}` tags.
+Variables provide simple variable replacement from front-matter and global/system fields. They are enclosed in `{{...}}` tags. As with directives, attributes can also be provided inside square brackets `[...]` as comma-separated `attribute=value` pairs. Attributes can be used to show before/after text (or HTML), default values, or other variations on the output.
 
-All front-matter fields from the Markdown files can be used as variables. Some common ones are listed below.
-
-> [!NOTE]
-> All `{{...}}` variables in Markdown are automatically wrapped in an `<fm-var class="fm-..." data-fmvar="...">`  dummy web component once rendered to HTML so that front-end code can update them. Browsers treat dummy components as null displays but can still be styled.
->
-> Any variable render errors are wrapped in `<fm-var class="fm-... variable-error" data-fmvar="...">` or `<fm-var class="fm-... variable-unknown" data-fmvar="...">` with helpful rendered content indicating the error
->
-> You can therefore use CSS to style substituted variable values as needed. You can also use your own custom front-end code to manipulate the content if you desire.
-
-> [!NOTE]
->
-> When specifying variables in the HTML wrapper template, you need to use either `<uib-var variable="...">`  or some other HTML wrapper with a `uib-var="..."` attribute so that the variable replacements are dynamically updatable.
-
-### Enhancing the variable display
-
-> TBC
-
-#### Using CSS
-
-> For both the template HTML (but only if in the `<body>` section) and in Markdown.
-
-(( Styling, before/after content ))
-
-#### Using the `<uib-var>` `before` and `after` attributes
-
-> Only for variables rendered in template HTML within the `<body>` section
-
-The `before` and `after` HTML attributes can be added to the `<uib-var>` component tag. Both allow HTML content even if the tag's `type` attribute is not `html`.
-
-#### Using the `<uib-var>` `filter` attribute
-
-> Only for variables rendered in template HTML within the `<body>` section
-
-(( uibuilder std filter fns, example flow ))
-
-> [!NOTE]
->
-> Unlike variable names in `<uib-var>` and `uib-var`, filter functions are searched for in the `window` global namespace (scope), first. Only if they are not found there will the `uibuilder` namespace be searched. This means that uibuilder built-in functions can be accessed _either_ with or without the `uibuilder.` prefix.
-
-### Standard metadata variables
-
-If not provided in the front-matter, the following default fields are always available, generated from the filing system information of the source Markdown files:
-
-* `title` - The title of the page. The default template shows this both as the `<h1>` visible title and the page `<title>` tag which changes the title in the browser's tab.
-* `created` - The creation date of the page.
-* `updated` - The last updated date of the page.
-* `status` - The status of the page. E.g., `draft`, `published`, etc.
-* `since` - Typically a date or version string that shows when the information on the current page was first introduced. Most useful for technical documentation pages.
-
-From system data and not overridable by front-matter:
-
-* `depth` - How deep in the folder structure the page is.
-* `path` - The current page path relative to the site root.
-* `toUrl` - The resource URL of the current page relative to the site root.
-* `fsMtimeMs` - The last modified time of the source file in milliseconds since epoch. (Used internally checking for file updates).
-* `type` - The type of page: `file` or `folder`.
-
-> [!TIP]
->
-> You can use the global template to provide automatic defaults for frontmatter variables.
-
-### Other common metadata variables
-
-Other commonly used front-matter fields you may wish to include in your Markdown files:
-
-* `description` - The description of the page.
-* `author` - The author of the page.
-* `tags` - The list of tags of the page.
-* `category` - The category of the page.
-
-* `favicon` - Overrides the page's favicon that appears in the browser tab.
-
-* Possible future globals:
-
-  * `template` - A different HTML template to the default to allow for different page layouts.
-  * `siteTitle` - The site title from global config. (Read-only).
-  * `siteDescription` - The site description from global config. (Read-only).
+Variables are further documented in Markweb's `[DEMO]` website.
 
 ## Optional front-end web components
 
@@ -341,6 +93,8 @@ To load the component, include the following script tag in your HTML wrapper tem
 ```html
 <script type="module" src="../uibuilder/utils/show-meta.mjs"></script>
 ```
+
+This is already included in Markweb's default HTML template.
 
 ## Processes
 

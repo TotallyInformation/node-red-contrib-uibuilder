@@ -9,6 +9,8 @@ description: Markweb list features.
 
 ### Unordered Lists
 
+This is a plain bulleted list using leading asterisks or dashes. Nested lists are supported.
+
 * Item 1
 * Item 2
     * Nested item 2.1
@@ -21,11 +23,19 @@ description: Markweb list features.
 
 ### Ordered Lists
 
+This is a numbered list using leading numbers followed by a period. Nested lists are supported and can use any numbering scheme.
+
 1. First item
+    * Nested item 1.1
+    * Nested item 1.2
 2. Second item
-    1. Nested item 2.1
-    2. Nested item 2.2
+   
+   100. Nested item 2.1
+   101. Nested item 2.2
+   102. Nested item 2.3
 3. Third item
+    1. Nested item 3.1
+    2. Nested item 3.2
 
 ### Task Lists (GFM Extension)
 
@@ -38,6 +48,29 @@ description: Markweb list features.
 > Task lists are _not_ interactive checkboxes. They are rendered as static lists with checkboxes that are either checked or unchecked based on the markdown syntax.
 >
 > To create an interactive checklist, use a dynamic list from Node-RED using UIBUILDER features.
+
+### Custom list styles
+
+You can create custom styled lists using standard HTML
+```html
+<ul style="list-style-type: '🤔';">
+    <li>Emoji bullets</li>
+    <li>Another item</li>
+</ul>
+<ol style="list-style-type: upper-roman;">
+    <li>Upper Roman numerals</li>
+    <li>Another item</li>
+</ol>
+```
+
+<ul style="list-style-type: '🤔';">
+    <li>Emoji bullets</li>
+    <li>Another item</li>
+</ul>
+<ol style="list-style-type: upper-roman;">
+    <li>Upper Roman numerals</li>
+    <li>Another item</li>
+</ol>
 
 ### Definition Lists (not currently implemented)
 ```
