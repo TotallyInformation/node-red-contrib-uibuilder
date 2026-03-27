@@ -1,7 +1,7 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-03-22 14:10:53
-updated: 2026-03-22 14:15:40
+updated: 2026-03-25 17:21:34
 status: In Progress
 title: Custom HTML Attributes
 description: >
@@ -14,10 +14,10 @@ tags:
 
 ## Custom attributes syntax
 You can add custom attributes to markdown elements using one of these syntaxes:
-* `{attrname="value"}` - value with quotes.
-* `{attrname=value}` - value without quotes, only if it does not contain spaces or special characters.
-* `{#html-id}` - to apply a custom HTML ID to the element.
-* `{.class-name}` - to apply a custom CSS class to the element.
+* `{attrname="value"}` - custom attribute with value (with quotes).
+* `{attrname=value}` - value (without quotes). If your value contains spaces, you must use quotes.
+* `{#html-id}` - to apply a custom _**HTML ID**_ to the element.
+* `{.class-name}` - to apply a custom _**CSS class**_ to the element.
 
 Multiple attributes can be added by separating them with spaces. As in the first example below.
 

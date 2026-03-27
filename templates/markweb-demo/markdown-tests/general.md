@@ -1,7 +1,7 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-01-07 15:41:19
-updated: 2026-02-12 15:39:28
+updated: 2026-03-26 18:08:33
 status: In Progress
 title: General Markdown Tests
 subtitle: Testing various Commonmark and other Markdown features in markdown files
@@ -17,9 +17,9 @@ description: Testing various Commonmark and other Markdown features in markdown 
 
 ## Supported Markdown Features
 
-Rendering uses the MarkdownIT library, which supports Commonmark and some GitHub Flavored Markdown (GFM) extensions.
+Rendering uses the Markdown-IT library, which supports Commonmark and some GitHub Flavored Markdown (GFM) extensions.
 
-This supports embedded HTML. Note that no sanitization is currently performed, so be cautious when using untrusted content. This is likely to be improved in the future.
+Embedded HTML is also supported. Note that no sanitization is currently performed, so be cautious when using untrusted content. This is likely to be improved in the future.
 
 ### HTML Template and Markdown Variables supported
 
@@ -36,17 +36,21 @@ See [Directives](markdown-tests/directives.md) for details on how to use special
 ### Markdown extensions supported
 
 - Full [Commonmark](https://commonmark.org) support.
-- Standard heading ID's using the heading text.
-- Headings have auto-generated anchor links for easy linking.
-- Custom element ID's using `{#custom-id}` or `{id="custom-id"}` syntax.
-- Custom element classes using `{.class-name}` or `{class="class-name"}` syntax. e.g. `* blah {.success}`. {.success}
-- Custom element attributes using `{attrname="value"}` syntax. e.g. `* blah {style="list-style-type:decimal;"}`. {style="list-style-type:decimal;"}
-- Task lists (checklists) using `- [ ]` and `- [x]` syntax.
+- [GitHub Flavored Markdown (GFM) extensions](https://github.github.com/gfm/).
+
+- Automatic heading ID's using the heading text.
+- Auto-generated heading anchor links for easy linking.
+- [Custom element attributes](markdown-tests/attributes.md) using `{attrname="value"}` syntax. e.g. `* blah {style="list-style-type:decimal;"}`. {style="list-style-type:decimal;"}
+  - Custom element ID's using `{#custom-id}` or `{id="custom-id"}` syntax.
+  - Custom element classes using `{.class-name}` or `{class="class-name"}` syntax. e.g. `* blah {.success}`. {.success}
+- [Task lists (checklists)](markdown-tests/lists.md) using `- [ ]` and `- [x]` syntax.
 - Autolinks for URLs and email addresses. e.g. https://example.com
-- GFM-style tables.
-- GFM-style alert boxes (AKA callouts).
+- [GFM-style tables](markdown-tests/tables.md).
+- [GFM-style alert boxes (AKA callouts)](markdown-tests/gfm-alerts.md).
 - Crossed-out text using `~~strikethrough~~` syntax.
-- Syntax highlighting in code blocks using triple backticks and language specifier via highlight.js.
+- [Syntax highlighting in code blocks](markdown-tests/code-blocks.md) using triple backticks and language specifier via highlight.js.
+- [Frontmatter values](markdown-tests/variables.md) via the `{{variable}}` syntax.
+- Embedded HTML tags, including UIBUILDER's custom web components.
 
 ### Markdown extensions to be added in future
 
@@ -54,19 +58,23 @@ See [Directives](markdown-tests/directives.md) for details on how to use special
 - DL's (Definition Lists).
 - Mermaid diagrams.
 
-## Markdown syntax examples
+## Headings
 
-### Headings
+Headings have:
+* Automatically generated ID's based on their text for linking.
+* Auto-generated anchor links for easy linking to that section.
+* Auto-folding of the content under the heading. Toggled by clicking on the section header.
 
-Headings automatically get ID's based on their text for linking.
+You can also set custom ID's using `## Heading {#custom-id}` or `## Heading {id="custom-id"}` syntax. This updates the anchor links as well.
 
-You can also set custom ID's using `{#custom-id}` or `{id="custom-id"}` syntax:
+> [!TIP]
+> Do not use a level 1 heading in your markdown files as this is reserved for the page title which is automatically rendered by Markweb.
 
-```markdown
-### Heading 4 {#custom-id}
-```
+### Heading 3
 
-#### Heading 4 with custom id {id="custom-id"}
+#### Heading 4 with custom id {#custom-h4}
+
+Try to avoid going beyond heading level 4 in your markdown files as this can become confusing for readers. However, Markweb supports up to level 6 headings, but it is recommended to use them judiciously and maintain a clear structure in your content.
 
 ##### Heading 5
 
@@ -74,7 +82,13 @@ You can also set custom ID's using `{#custom-id}` or `{id="custom-id"}` syntax:
 
 Text under heading 6.
 
-### Emphasis {#emph}
+## Emphasis
+```markdown
+*Italic text* or _italic text_
+**Bold text** or __bold text__
+***Bold and italic*** or ___bold and italic___
+~~strikethrough~~
+```
 
 *Italic text* or _italic text_
 
@@ -84,113 +98,40 @@ Text under heading 6.
 
 ~~Strikethrough~~ (GFM Extension)
 
-```markdown
-*Italic text* or _italic text_
-**Bold text** or __bold text__
-***Bold and italic*** or ___bold and italic___
-~~strikethrough~~
-```
+## Lists
 
-### Lists
+See [Lists](markdown-tests/lists.md) for details on supported list features.
+Unordered (bullet), ordered (numbered) and task lists (GFM extension) are supported. Nested lists are also supported.
 
-#### Unordered Lists
+Currently definition lists are not supported but should be added in the future.
 
-* Item 1
-* Item 2
-    * Nested item 2.1
-    * Nested item 2.2
-* Item 3
+## Links
+See [Links](markdown-tests/links.md) for details on supported link features.
 
-- Alternative syntax
-- Using dashes
-- Works the same
-
-#### Ordered Lists
-
-1. First item
-2. Second item
-    1. Nested item 2.1
-    2. Nested item 2.2
-3. Third item
-
-#### Task Lists (GFM Extension)
-
-> [!NOTE]
-> Tasks lists are _not_ interactive checkboxes. They are rendered as static lists with checkboxes that are either checked or unchecked based on the markdown syntax.
->
-> To create an interactive checklist, use a dynamic list from Node-RED using UIBUILDER features.
-
-- [x] Completed task
-- [ ] Incomplete task
-  - [ ] Subtask 1
-- [ ] Another incomplete task
-
-### Links
-
-> [!NOTE]
-> When using links to other content within the Markweb system, use relative links to the markdown file, without the .md extension. e.g. `[Footnotes Test Page](./markdown-tests/footnotes)`
->
-> Internal links are always relative to the markweb root folder.
-> They start with a `./` prefix or _without any_ `/` prefix.
-
-[Footnotes Test Page](./markdown-tests/footnotes) `[Footnotes Test Page](./markdown-tests/footnotes)`
-
-[Link text](https://example.com) `[Link text](https://example.com)`
-
-[Link with title](https://example.com "Link Title") `[Link with title](https://example.com "Link Title")`
-
-<https://example.com> `<https://example.com>`
-
-[Reference link][ref] `[Reference link][ref]`
-
-[ref]: https://example.com "Reference Link" `[ref]: https://example.com "Reference Link"`
-
-
-#### Autolinks (GFM Extension)
+### Autolinks (GFM Extension)
 
 www.example.com
 
 user@example.com
 
 
-### Images
+## Images
+See [Images](markdown-tests/images.md) for details on supported image features.
 
-![Alt text](../uibuilder/images/maskable_icon_x48.png) some text after.
-
-![Alt text with title](../uibuilder/images/maskable_icon_x48.png "maskable_icon_x48")
- some text after.
-
-```markdown
-![Alt text](blah.png) some text after.
-![Alt text with title](blah.png "maskable_icon_x48")
- some text after.
-```
-
-To set images sizing, wrap, etc.
-
-* Use custom attributes with the `{attrname="value"}` syntax:
-
-  ![Alt text](../uibuilder/images/uib-world.svg){style="width:25px;"} `![Alt text](blah.png){style="width:25px;"}`
-
-* Or use HTML:
-
-  <img src="../uibuilder/images/uib-world.svg" alt="Alt text" title="uib-world" style="width:25px;" />
-
-  ```html
-  <img src="blah.svg" alt="Alt text"
-      title="uib-world" style="width:25px;" />
-  ```
-
-
-### Code
+## Code
 
 See [Code blocks](markdown-tests/code-blocks.md) for details on supported code block features.
 
-### Blockquotes and GFM Alert Boxes (Callouts)
+## Blockquotes and GFM Alert Boxes (Callouts)
 
 See [GFM Alerts](markdown-tests/gfm-alerts.md) for details on supported blockquote and alert box features. GFM Alerts are part of the GitHub Flavored Markdown extensions.
 
-### Horizontal Rules
+## Horizontal Rules
+```markdown
+---
+***
+___
+```
 
 ---
 
@@ -198,13 +139,8 @@ See [GFM Alerts](markdown-tests/gfm-alerts.md) for details on supported blockquo
 
 ___
 
-```
----
-***
-___
-```
 
-### Line Breaks
+## Line Breaks
 
 This is a line with two spaces at the end.  
 This creates a line break.
@@ -212,13 +148,13 @@ This creates a line break.
 Alternatively, use a backslash `\` at the end.\
 This also creates a line break.
 
-Or use the HTML `<br>` tag for a line break.
+Or use the HTML `<br>` tag for<br>a line break.
 
-### Tables (GFM Extension)
+## Tables (GFM Extension)
 
 See [Tables](markdown-tests/tables.md) for details on supported table features.
 
-### Escaping Characters
+## Escaping Characters
 
 \* Not italic \*
 
@@ -232,7 +168,7 @@ See [Tables](markdown-tests/tables.md) for details on supported table features.
 \[Not a link\](url)
 ```
 
-### HTML in Markdown
+## HTML in Markdown
 
 Embedded HTML can be dangerous if the content is not trusted, as no sanitization is currently performed. This may change in the future.
 
@@ -249,33 +185,13 @@ This is
  using HTML.
 ```
 
-### Definition Lists (not currently implemented)
+> [!TIP]
+> You also have access to UIBUILDER's custom web components as well.
 
-Term 1
-:   Definition 1
-
-Term 2
-:   Definition 2a
-:   Definition 2b
-
-```
-Term 1
-:   Definition 1
-
-Term 2
-:   Definition 2a
-:   Definition 2b
-```
-
-### Hard Line Breaks
-
-First line\
-Second line
-
-### Paragraph
+## Paragraph
 
 This is a paragraph with some text.
 It continues on the next line but is part of the same paragraph.
 
-This is a new paragraph separated by a blank line.
+This is a new paragraph separated by a blank line in the Markdown.
 

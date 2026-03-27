@@ -19,7 +19,7 @@ Directives provide more complex processing than simple variable replacement. The
 
 - `%%body%%` (only in the HTML Template) directive to insert the main content body. Converted to HTML from the markdown file.
 
-### Copyright placeholder (`%%copyright%%`)
+### Copyright
 
 `%%copyright%%` - Placeholder for copyright information.
 
@@ -33,7 +33,7 @@ This is stored in the file `copyright-template.html` in the `templates/.markweb-
 
 This directive has no attributes of its own. Alternative configurations use a custom template file (e.g., `copyright-template.html`) in the `configFolder` that defines how the copyright information should be displayed. The template can use other directives and variables to customize the output.
 
-### Date placeholder (`%%date%%`)
+### Date
 
 `%%date [attributes]%%` - Placeholder for a date. By default, it shows the current date. Attributes can be used to specify a different date and/or formatting.
 
@@ -42,7 +42,7 @@ Attributes:
 * `type` - The type of date to show: Either a date from frontmatter (e.g. `created`, or `updated`), or `now` (default: `now`).
 * `format` - The date format string (default: `YYYY-MM-DD`). Uses standard date formatting tokens. `_` is translated to a space.
 
-### Index list of files/folders (`%%index%%`)
+### Index
 
 `%%index [attributes]%%` - Generates an index list of files and/or folders. Attributes can be used to control depth, file types, sorting, etc.
 
@@ -88,7 +88,7 @@ Attributes:
 * `order` - The sorting direction: `asc` or `desc` (default: `asc`).
 * `exclude` - Comma-separated list of file or folder names to exclude (default: none).
 
-### Navigation menu (`%%nav%%`)
+### Nav (Navigation menu)
 
 `%%nav [attributes]%%` - Generates a navigation menu based on the folder structure. Attributes can be used to control depth, type (files/folders/both), orientation (horizontal/vertical), etc.
 
@@ -98,7 +98,8 @@ Attributes:
 
 * `orient` - The orientation of the menu: `horizontal` ~~or `vertical`~~ (default: `horizontal`). As of v7.6.0, only `horizontal` is implemented. You can use `%%index%%` to build vertical lists.
 
-### Search results placeholder (`%%search-results%%`)
+
+### Search results (from sidebar search box)
 
 `%%search-results [attributes]%%` - Placeholder for search results.
 
@@ -121,7 +122,7 @@ Navigating to any of the search results retains the search query and results so 
 
 Only one `%%search-results%%` directive is supported per page. It should be in the HTML wrapper template, rather than the Markdown files. If using the `%%sidebar%%` directive, the search results are automatically included in the sidebar. So this directive is really only needed when using a horizontal navigation menu in the page main header.
 
-### Sidebar (`%%sidebar%%`)
+### Sidebar (Search, Navigation & Table of Contents)
 
 `%%sidebar [attributes]%%` - Generates a sidebar with navigation index and page table of contents.
 
@@ -194,8 +195,10 @@ You can provide a manual `sidebar.json` file in your config folder to fully over
 * `shortTitle` - Used in the sidebar instead of `title` if present. Useful for shorter navigation labels.
 * `description` - Used as the HTML `title` attribute (tooltip) on navigation links.
 
+### Url
+
+`%%url%%` - The base URL of the web site. No attributes.
+
 ### Other directives
 
-* `%%url%%` - The base URL of the web site. No attributes.
-  
-* `%%...%%` - Other directives may be added in the future.
+Other `%%...%%` directives may be added in the future.

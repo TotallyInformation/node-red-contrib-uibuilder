@@ -1,7 +1,7 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-03-18 16:01:31
-updated: 2026-03-22 14:34:26
+updated: 2026-03-25 17:17:55
 status: Complete
 title: Code Blocks
 description: Different code block scenarios in markdown.
@@ -17,7 +17,7 @@ Inline `code` with backticks.
 
 Inline ``code with `backticks` inside``.
 
-Inline code containing special directives (should not be replaced): `{{status}}`, `%%index%%`
+Inline code containing variables and special directives should not be processed: `{{status}}`, `%%index%%`
 
 ## Blocks
 
