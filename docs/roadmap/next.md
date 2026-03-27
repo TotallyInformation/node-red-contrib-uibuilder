@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-03-25 13:09:00
+updated: 2026-03-27 20:39:04
 ---
 
 ## To Fix
@@ -18,66 +18,18 @@ updated: 2026-03-25 13:09:00
 
 A node that creates a website out of a folder of markdown content.
 
-#### In progress
-
-* [ ] Format index listings like the sidebar nav listing.
-* [ ] Moving md formatting tests out of "general.md" into their own files.
-
-#### Refactoring:
-
-* [x] Change the custom `{{...}}` md plugin to wrap the content in `<fm-var class="fm-...">` dummy component. (reactivity not wanted here).
-
-* New server-side indexListing function. With the following requirements:
-  * Ignore any other similar functions in `customNode.js` since this is a new function that is not related to the existing `%%index%%` placeholder processing.
-  * Arguments required:
-    * Must take an options object argument allowing the following arguments:
-    * `start` - only show pages starting at this level in the hierarchy (e.g. start=2 would show pages starting from level 2, which would be the second level of folders, level 0 is the root). If not specified, then start from the level of the currently shown page.
-    * `end` - only show pages up to this level in the hierarchy (e.g. end=3 would show pages up to level 3, which would be the fourth level of folders). If this is not specified, then show up to level 4.
-    * `levels` - alternative to `end`, specify how many levels to show starting from `start` (e.g. start=2, levels=2 would show levels 2 and 3). If `levels` is specified, then `end` is ignored. If `levels` is specified with `folder`, then show this many sub-levels within the specified folder. If `levels` is specified without `start`, then assume `start` is 0 (the root). If `levels` is specified ignore `end`.
-    * (Note: `start` and `end`/`levels` must always be used and must be applied before any other filters with the exception of `folder` since they determine the hierarchy levels of the pages to be shown. `start` and `end` can be numbers or a string that can be parsed as a number. If `start` is specified without `end`, then show only that level. If `end` is specified without `start`, then show from the root up to that level. If both are specified, then show from `start` to `end` inclusive. If `start` is greater than `end`, then show no pages. If `start` is 0, then show from the root. If `end` is 0, then show only the root.)
-    
-    * `folder` - only show pages in this folder. Also allow "current" as a value to show pages in the same folder as the currently shown page. If `levels` is specified, then show this many sub-levels within the specified folder, ignore `end`. If `end` is also specified, then show pages in this folder and show sub-folders up to the `end` level. Ignore `start` when `folder` is specified since the folder filter will determine the starting level. If `folder` is specified without `end` or `levels`, then only show the pages in this folder.
-    * `tags` - only show pages with these tags.
-    * `category` - only show pages in this category.
-    * `author` - only show pages by this author.
-    * `from` - only show pages created/updated after this date. Can be a JavaScript Date object or a string that can be parsed by the Date constructor.
-    * `to` - only show pages created/updated before this date. If `from` is present but not `to`, then assume that `to` is `now`. If `to` is present but not `from`, then assume that `from` is the any date in the index prior to `to`. Can be a JavaScript Date object or a string that can be parsed by the Date constructor.
-    * `duration` - only show pages created/updated within this duration (e.g. last 7 days). If present, ignore `to`. If present without `from`, ignore. If present with `from`, then assume `from` is the start of the duration (e.g. if duration is last 7 days and from is 2025-01-01, then show pages from 2024-12-25 to 2025-01-01). Allow duration to be specified as "7d", "1m", "3h", etc. for days, months, weeks, years, hours, etc.
-    * `latest` - only show the most recently created/updated pages (e.g. latest=5 would show the 5 most recent pages). This should take into account other filters (everything other than `from`, `to` and `duration`) when determining the most recent pages.
-    * `sort` - sort by created date, updated date, title, etc.
-    * Must also take an argument of the current page's attributes object.
-    * Must take an optional argument indicating if the output HTML should be wrapped in the `<div uib-topic="_indexes-changed">` container element for automatic updates when the index changes. Default is true. This allows it to be called from the function that sends the `_indexes-changed` control message since in that case, the page will already have the wrapper.
-  * Each list entry must be a link. The link text must be: `shortTitle` if it exists, otherwise `title` if it exists, otherwise the url path. The link must have a title attribute with the value of the `description` field if it exists.
-  * The listing must be hierarchical according to the folder structure.
-  * The listing hierarchy must be collapsible. The collapsed state will be remembered in browser localStorage.
-  * Only show folders that have at least an index.md file in them. This is to avoid showing empty folders that are just there for organisational purposes. If the folder _only_ has an index.md file, then show the page in the listing but do not show the folder as a collapsible section. If the folder has an index.md file and other files/folders, then show the folder as a collapsible section with the page as the first entry in the section.
-  * If the folder name matches the currently shown page, do not show the folder in the listing, only the pages in the folder. However, if the listing is starting from level 0, then show an extra entry called "Home" that links to the root page (e.g. `/`).
-  * The order of the listing, if not specified by arguments, should be alphabetical by shown title (i.e. `shortTitle` if it exists, otherwise `title` if it exists, otherwise the url path). Folders should be listed before pages. Except for the "Home" entry which should always be first if it exists.
-  * Ignore folder and file names starting with `_` or `.` (e.g. `_index.md`, `.DS_Store`, etc.)
-  * When showing the folder in the list, use the `index.md` file's `title` or `shortTitle` front-matter field if it exists, otherwise use the folder name.
-  * The indexListing must use semantically appropriate HTML elements (e.g. `<ul>`, `<li>`, etc.) and must be accessible (e.g. using ARIA attributes, keyboard navigation, etc.)
-  * The indexListing output must, if the appropriate input argument is true, be wrapped in a `<div uib-topic="_indexes-changed">` container element. This is to ensure that the listing is automatically updated when the server's index changes (e.g. when a file is added, removed, or changed).
-  * The function must return an HTML string.
-  * The function that sends the `_indexes-changed` message to the client when the index changes must be updated to re-run this function and return the new HTML output in the message `payload`. That call must set the argument to wrap the output in the container element to false since the page will already have the wrapper. This will ensure that any index listings on the page are automatically updated when the index changes.
-
-
 #### To test:
 
-* [ ] sidebar.json
-* [ ] Check that duplicate node URLs error.
-* [ ] Check menu styles - all needed?
-* [ ] Ensure non-markdown files are served correctly (e.g. images, pdfs, etc.)
+* [ ] sidebar.json (may want to add include/exclude options so that particular folders can be included as-is or excluded).
 
 #### To do:
 
-* [ ] Add a `closed` attribute to `<show-meta>`.
-* [ ] Allow defaults for variables and directives. Allow filter fns for formatting, etc.
 * [ ] Cache the default config folder files to avoid re-reading on every page load.
 * [ ] *How to deal with category/tag listing pages?*
 * [ ] Allow for folders with no index.md file or `_index.md`. Increases compatibility with other content sources (e.g. Astro, Obsidian, etc.). If a folder does not have an index.md file, then it should still be shown in the listing if it contains other folders or files that are being shown in the listing.
 * [ ] ~~Check if return msgs get clientId, etc.~~ They don't, should they?
 * [ ] Remove web router on node close.
-* [ ] Consider allowing URL parameters to be passed as front-matter variables? (but not allwing overwriting of existing front-matter variables).
+* [ ] Consider allowing URL parameters to be passed as front-matter variables? (but not allowing overwriting of existing front-matter variables).
 
 * Config:
   * [ ] **TEST** Allow for a config folder in/or outside the source folder to hold config files (e.g. HTML wrapper, CSS, etc.)
@@ -164,6 +116,10 @@ A node that creates a website out of a folder of markdown content.
 * [x] Indexes cannot currently deal with rename or delete events*
 * [x] Nav menus do not update when the index updates.
 * [x] Make sure nav is rebuilt on file changes.
+* [x] Add a `closed` attribute to `<show-meta>`.
+* [x] Don't reindex on file/folder changes if folder/file starts with `_` or `.`. But do remove if part of rename.
+* [x] Change the custom `{{...}}` md plugin to wrap the content in `<fm-var class="fm-...">` dummy component. (reactivity not wanted here).
+* [x] Allow defaults for variables and directives. Allow filter fns for formatting, etc.
 
 * [x] Sidebar
   * [x] Uses `%%sidebar%%` placeholder in template.
