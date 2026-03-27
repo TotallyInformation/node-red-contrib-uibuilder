@@ -1,7 +1,15 @@
 
-/* NOTE: UIBUILDER default styles loaded in HTML (optional but recommended for consistent theming) */
+/**
+ * UIBUILDER MarkWeb Theme - Base Styles
+ * NOTE: UIBUILDER default styles should be pre-loaded in HTML (optional but recommended for consistent theming)
+ *
+ * Version: 2026-03-27
+ * Author: Julian Knight (Totally Information)
+ */
+
 /* Import highlight.js styles for code blocks */
-@import url('./github-dark.min.css');
+/* @import url('./hjs-styles/night-owl-jk.min.css'); JK's version of Night Owl, with tweaked comment color */
+@import url('./hjs-styles/monokai-sublime.min.css');
 
 :root {
     /* Currently only set up for dark mode. */
@@ -71,7 +79,7 @@ h2, h3, h4, h5, h6 {
     }
 }
 
-ul {
+ul, ol {
     margin: 0.5em 0;
     padding-left: 1em;
 }
@@ -558,6 +566,9 @@ main {
 /* Main content collapsible sections */
 .collapsible-section:not(ul) {
     position: relative;
+    margin-top: 0.5em;
+    margin-bottom: 0.75em;
+    /* Swap margin for padding to allow for an expander icon in "margin" if desired */
     margin-left: -1.5em;
     padding-left: 1.5em;
 
