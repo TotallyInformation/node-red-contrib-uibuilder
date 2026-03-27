@@ -1,7 +1,7 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-03-20 11:41:53
-updated: 2026-03-22 14:24:16
+updated: 2026-03-27 20:36:00
 status: Draft
 title: Directives
 description: >
@@ -90,6 +90,9 @@ Attributes:
 * `sort` - The sorting order: `name`, `date`, or `custom` (default: `name`).
 * `order` - The sorting direction: `asc` or `desc` (default: `asc`).
 * `exclude` - Comma-separated list of file or folder names to exclude (default: none).
+
+> [!NOTE]
+> If a markdown file contains the `sortPriority` front-matter variable with a value of `high` or `low`, it will be sorted before or after other items respectively.
 
 ### Nav (Navigation menu)
 
