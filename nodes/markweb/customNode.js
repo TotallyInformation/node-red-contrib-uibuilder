@@ -1003,6 +1003,7 @@ function mdExtension(node) {
     }
     /** Convert {{varname}} to HTML spans with the variable value from frontmatter attributes
      * This allows using frontmatter variables anywhere in markdown content AND in Templates
+     * Supported arguments (inside [...]): before, after, prefix (alias for before), default
      * @param {object} args The [args] object passed from the markdown content
      * @param {object} env The page attributes, AKA the page's frontmatter variables
      * @returns {string} The rendered HTML for the fm variable
@@ -1012,17 +1013,23 @@ function mdExtension(node) {
         let value = env[varName]
         let errClass = ''
         if (value === undefined) {
-            value = `[Unknown variable: "${varName}"]`
-            errClass = ' variable-unknown'
+            if (args.default !== undefined) {
+                value = args.default
+            } else {
+                value = `[Unknown variable: "${varName}"]`
+                errClass = ' variable-unknown'
+            }
         }
-        // process standard args
-        let before = ''
-        if (args.before) before = args.before
-        else if (args.prefix) before = args.prefix
-        let after = ''
-        if (args.after) after = args.after
+        // Only render before/after when we have a real value (not an error placeholder)
+        const hasValue = errClass === ''
+        const before = hasValue ? (args.before ?? args.prefix ?? '') : ''
+        const after = hasValue ? (args.after ?? '') : ''
+        // Set data-before/data-after attributes on the element for client-side use (same as uib-var)
+        const escAttr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        const dataBefore = before ? ` data-before="${escAttr(before)}"` : ''
+        const dataAfter = after ? ` data-after="${escAttr(after)}"` : ''
         // Wrap in dummy element with data attribute for client-side processing
-        return /* html */`<fm-var class="fm-${varName}${errClass}" data-fmvar="${varName}">${before}${value}${after}</fm-var>`
+        return /* html */`<fm-var class="fm-${varName}${errClass}" data-fmvar="${varName}"${dataBefore}${dataAfter}>${before}${value}${after}</fm-var>`
     }
     // Extend markdown-it with these plugins
     md
@@ -1390,20 +1397,40 @@ function filteredIndex(currentStart, attributes, options, node) {
         })
     // console.log(`  >>🌐🕸️[filteredIndex] Filtering index for ${attributes.path} with options`, { filtered, sorted, options, })
 
-    // If latest option specified, sort by date descending and limit results
+    /** Map sortPriority string to a numeric rank (high=0, medium/none=1, low=2)
+     * @param {string} priority - The sortPriority frontmatter value
+     * @returns {number} Numeric rank for sorting
+     */
+    const priorityRank = (priority) => {
+        if (priority === 'high') return 0
+        if (priority === 'low') return 2
+        return 1 // 'medium' or unset
+    }
+
+    // If latest option specified, sort by date descending (within priority groups) and limit results
     if (options.latest) {
-        // Sort by updated (or created) date, most recent first
         filtered.sort((a, b) => {
+            const rankA = priorityRank(a[1].sortPriority)
+            const rankB = priorityRank(b[1].sortPriority)
+            if (rankA !== rankB) return rankA - rankB
+            // Within same priority: sort by updated date descending
             const dateA = new Date(a[1].updated || a[1].created || 0)
             const dateB = new Date(b[1].updated || b[1].created || 0)
-            return dateB.getTime() - dateA.getTime() // Descending (newest first)
+            return dateB.getTime() - dateA.getTime()
         })
         // Limit to the specified number
         filtered = filtered.slice(0, options.latest)
     } else {
-        // TODO: Allow options.sort to specify sorting field(s) and order
-        // Default sort by path
-        filtered.sort((a, b) => a[1].path.localeCompare(b[1].path))
+        // Sort by priority group first, then by shortTitle/title/filename within each group
+        filtered.sort((a, b) => {
+            const rankA = priorityRank(a[1].sortPriority)
+            const rankB = priorityRank(b[1].sortPriority)
+            if (rankA !== rankB) return rankA - rankB
+            // Within same priority: sort by shortTitle > title > filename
+            const titleA = a[1].shortTitle || a[1].title || a[1].file || a[1].path
+            const titleB = b[1].shortTitle || b[1].title || b[1].file || b[1].path
+            return titleA.localeCompare(titleB)
+        })
     }
 
     return filtered
@@ -1516,6 +1543,7 @@ async function getMarkdownFile(node, file, morePath, parsedPath, from) {
             tags: parsed.attributes?.tags || [],
             category: parsed.attributes?.category || '',
             author: parsed.attributes?.author || '',
+            sortPriority: parsed.attributes?.sortPriority || '',
             path: urlPath,
             // Use the file's actual last updated timestamp from the filing system
             fsMtimeMs: fStats.mtimeMs,
@@ -1970,8 +1998,20 @@ function setupFileWatcher(node) {
             // Debounce to avoid rebuilding multiple times for rapid changes
             if (rebuildTimeout) clearTimeout(rebuildTimeout)
             rebuildTimeout = setTimeout(async () => {
-                const changesCopy = [...changes]
+                const changesCopy = [...changes].filter(({ filename }) => {
+                    const parts = filename.split('/')
+                    const basename = parts[parts.length - 1]
+                    // Only process .md files
+                    if (!basename.endsWith('.md')) return false
+                    // Skip .md files whose name starts with _ or .
+                    if (basename.startsWith('_') || basename.startsWith('.')) return false
+                    // Skip .md files in any folder whose name starts with _ or .
+                    if (parts.slice(0, -1).some(part => part.startsWith('_') || part.startsWith('.'))) return false
+                    return true
+                })
                 changes = []
+                // Nothing relevant changed, skip reindex
+                if (changesCopy.length === 0) return
                 log.info(`🌐🕸️[markweb:watcher:${instanceUrl}] File/folder changes detected, rebuilding search index`)
                 // (re)Build the search index
                 try {
