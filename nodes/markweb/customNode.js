@@ -210,9 +210,12 @@ function nodeInstance(config) {
     this.isDemo = false
     if (this.source === '[DEMO]') {
         this.isDemo = true
-        // console.log(`🌐🕸️[markweb:nodeInstance] __dirname "${__dirname}"`)
         this.source = join(__dirname, 'templates', '..', '..', '..', 'templates', 'markweb-demo')
+    } else if (this.source === '[DOCS]') {
+        // this.isDemo = true
+        this.source = join(__dirname, '..', '..', 'docs')
     }
+    console.log(`🌐🕸️[markweb:nodeInstance:${this.url}] Initialising new node instance with source "${this.source}" and config folder "${this.configFolder}"`, __dirname)
 
     // if source folder is a relative path, make it relative to userDir
     if (isAbsolute(this.source)) {
@@ -1168,20 +1171,25 @@ function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isA
         return result
     }
 
-    // Check if folder or file name starts with _ or . and deny access - but allow for demo site
-    if (morePath.split(sep).some(part => part.startsWith('_') || part.startsWith('.'))) {
-        log.error(`🌐🕸️🛑[markweb:nodeInstance:checkNames] (From=${from}, url=${node.url}) Access denied to folder/file "${morePath}" because it is in a folder or file starting with "_" or "."`)
-        result.resultCode = 403
-        result.errorAttributes = {
-            error: 'Invalid path',
-            title: 'Error: Invalid path',
-            description: 'Access denied to folder/file starting with "_" or "."',
-            content: '<p>Access denied to folder/file starting with "_" or "."</p>',
-            path: '/' + morePath.replace(/\\/g, '/').replace(/\.md$/, '').replace(/\/index$/, '/'),
-            toUrl: '/' + morePath.replace(/\\/g, '/'),
-            from: from,
+    // If not a Markdown file or folder, allow even if it starts with _ or . (e.g., for assets)
+    if (parsedPath.ext && parsedPath.ext !== '.md') {
+        log.info(`🌐🕸️[markweb:nodeInstance:checkNames] (from: ${from}) Non-markdown file requested, allowing access to "${fullPath}"`)
+    } else {
+        // Check if folder or file name starts with _ or . and deny access - but allow for demo site
+        if (morePath.split(sep).some(part => part.startsWith('_') || part.startsWith('.'))) {
+            log.error(`🌐🕸️🛑[markweb:nodeInstance:checkNames] (From=${from}, url=${node.url}) Access denied to folder/file "${morePath}" because it is in a folder or file starting with "_" or "."`)
+            result.resultCode = 403
+            result.errorAttributes = {
+                error: 'Invalid path',
+                title: 'Error: Invalid path',
+                description: 'Access denied to folder/file starting with "_" or "."',
+                content: '<p>Access denied to folder/file starting with "_" or "."</p>',
+                path: '/' + morePath.replace(/\\/g, '/').replace(/\.md$/, '').replace(/\/index$/, '/'),
+                toUrl: '/' + morePath.replace(/\\/g, '/'),
+                from: from,
+            }
+            return result
         }
-        return result
     }
 
     // Now check that the file exists, return an error if not
@@ -1558,10 +1566,11 @@ async function handler(req, res, next) {
     // Normalize both paths for comparison (remove trailing slashes, handle case)
     const normalizedBaseUrl = req.baseUrl.replace(/\/+$/, '').toLowerCase()
     const normalizedInstanceUrl = this.url.replace(/\/+$/, '').toLowerCase()
+    console.log('normalised', { normalizedBaseUrl, normalizedInstanceUrl, })
     // Handle requests that should be redirected to /uibuilder/...
     // e.g., /markweb/uibuilder/vendor/socket.io/... -> /uibuilder/vendor/socket.io/...
     if (morePath.startsWith('uibuilder/')) {
-        const redirectUrl = '/' + morePath + req.url.substring(req.url.indexOf('?'))
+        const redirectUrl = '/' + morePath + req.url.substring(req.url.indexOf('?')).replace(/\/+$/, '')
         log.info(`🌐🕸️[markweb:handler] REDIRECTING "${req.originalUrl}" to "${redirectUrl}"`)
         return res.redirect(301, redirectUrl)
     }
@@ -1611,8 +1620,19 @@ async function handler(req, res, next) {
         }
     } else {
         // Not a markdown file, serve static
-        log.info(`🌐🕸️[markweb:handler] Request for static file received: "${this.source}", "${this.url}", "${morePath}", "${fullPath}", "${parsedPath.ext}"`)
-        express.static( this.instanceFolder, uib.staticOpts )(req, res, next)
+        log.info(`🌐🕸️[markweb:handler:${this.url}] Request for static file received: "${morePath}", "${fullPath}", "${parsedPath.ext}"`)
+        // express.static( this.instanceFolder, uib.staticOpts )(req, res, next)
+        // Send the file directly to avoid issues with express.static and our custom URL handling
+        res.sendFile(fullPath, (err) => {
+            if (err) {
+                log.error(`🌐🕸️🛑[markweb:handler] Error sending static file "${fullPath}": ${err.message}`)
+                if (!res.headersSent) {
+                    res.status(500).send('Error serving file')
+                }
+            } else {
+                log.trace(`🌐🕸️[markweb:handler] Static file served successfully: "${fullPath}"`)
+            }
+        })
     }
 }
 
