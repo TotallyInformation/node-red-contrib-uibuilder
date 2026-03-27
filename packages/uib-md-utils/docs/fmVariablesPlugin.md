@@ -87,15 +87,49 @@ Output:
 <p>Written by Jane Doe.</p>
 ```
 
-### Variable with arguments
+## Standard arguments
+
+The handler in `customNode.js` recognises the following optional arguments:
+
+| Argument  | Description |
+| --------- | ----------- |
+| `before`  | Text (or HTML) prepended to the value. Only rendered when a value is present. Also emitted as a `data-before` attribute on `<fm-var>`, mirroring `<uib-var>` behaviour. |
+| `after`   | Text (or HTML) appended to the value. Only rendered when a value is present. Also emitted as a `data-after` attribute on `<fm-var>`. |
+| `prefix`  | Alias for `before`. |
+| `default` | Fallback value used when the front-matter variable is absent. `before`/`after` are still rendered around the default value. |
+
+### `default` — missing variable fallback
 
 ```markdown
-Last updated: {{date [format=short]}}
+Status: {{status [default=Unknown]}}
 ```
 
-The handler receives `{ varName: 'date', format: 'short' }`.
+When `status` is not in the page front-matter the output is:
 
-### Multiple variables in one line
+```html
+<fm-var class="fm-status" data-fmvar="status">Unknown</fm-var>
+```
+
+Without `default` the variable renders with a `variable-unknown` class and an error placeholder instead.
+
+### `before` / `after` — surrounding text
+
+Mirrors the `data-before` / `data-after` attributes of the `<uib-var>` web component.
+
+```markdown
+{{status [before=Status: , after=. ]}}
+{{since [before=Since: , after=. , default=n/a]}}
+```
+
+When `status = "Active"` the output is:
+
+```html
+<fm-var class="fm-status" data-fmvar="status" data-before="Status: " data-after=". ">Status: Active. </fm-var>
+```
+
+`before` and `after` are **not** rendered when the variable is missing and no `default` is supplied.
+
+
 
 ```markdown
 Copyright {{year}} {{author}}. All rights reserved.
@@ -105,7 +139,7 @@ Each `{{...}}` is matched and rendered independently.
 
 ## Error handling
 
-- **Handler throws** — The error is caught and rendered as a custom element:
+- **Handler throws** — The error is caught and rendered as a dummy element:
   ```html
   <fm-var class="fm-varName variable-error" data-fmvar="varName">Error in variable: varName</fm-var>
   <p>Error message text</p>
@@ -115,7 +149,7 @@ Each `{{...}}` is matched and rendered independently.
   <fm-var class="fm-varName variable-unknown" data-fmvar="varName">Unknown variable: varName</fm-var>
   ```
 
-The `<fm-var>` custom element is used intentionally so that errors and unknowns are easy to identify and style without conflicting with standard HTML elements.
+The `<fm-var>` dummy element is used intentionally so that errors and unknowns are easy to identify and style without conflicting with standard HTML elements.
 
 ## Styling
 

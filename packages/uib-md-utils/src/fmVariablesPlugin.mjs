@@ -1,6 +1,15 @@
 /**
  * Custom variables plugin for markdown-it
  * Processes {{varname [arg1=value1, arg2=value2]}}
+ *
+ * Standard arguments recognised by the default handler in customNode.js:
+ *  - before  : text (or HTML) prepended to the value; only rendered when a value is present
+ *  - after   : text (or HTML) appended to the value; only rendered when a value is present
+ *  - prefix  : alias for `before`
+ *  - default : fallback value displayed when the frontmatter variable is missing
+ *
+ * When `before` / `after` are supplied they are also set as `data-before` / `data-after`
+ * attributes on the rendered `<fm-var>` element, mirroring the `<uib-var>` component behaviour.
  * @param {object} md - markdown-it instance
  * @param {function} handler - Function to handle variables
  * @returns {void}
@@ -10,25 +19,24 @@ function fmVariablesPlugin(md, handler) {
     // Matches: {{varname [arg1=value1, arg2=value2]}}
     const VARIABLE_RE = /\{\{(\w+)\s*(?:\[([^\]]*)\])?\}\}/ // eslint-disable-line security/detect-unsafe-regex
 
-    /** Parse arguments from variable string
-     * @param {string} argsStr - Arguments string like "arg1=value1, arg2=value2"
+    /** Parse arguments from variable string.
+     * Supports space- or comma-separated key=value pairs.
+     * Values may be double-quoted, single-quoted, or unquoted.
+     * Quoted values may contain spaces and HTML.
+     * @param {string} argsStr - Arguments string, e.g. `before="<b>Title</b>: " after=" end"` or `key=val, key2=val2`
      * @returns {object} Parsed arguments as key-value pairs
      */
     function parseArgs(argsStr) {
         if (!argsStr || !argsStr.trim()) return {}
 
         const args = {}
-        const pairs = argsStr.split(',')
-
-        pairs.forEach((pair) => {
-            const [key, ...valueParts] = pair.split('=')
-            if (key) {
-                const trimmedKey = key.trim()
-                const value = valueParts.join('=').trim()
-                // Remove quotes if present
-                args[trimmedKey] = value.replace(/^["']|["']$/g, '')
-            }
-        })
+        // key=value where value is: double-quoted, single-quoted, or an unquoted non-whitespace token
+        const re = /(\w+)=(?:"([^"]*)"|'([^']*)'|(\S+))/g // eslint-disable-line security/detect-unsafe-regex
+        let match
+        while ((match = re.exec(argsStr)) !== null) {
+            // groups: 1=key, 2=double-quoted, 3=single-quoted, 4=unquoted
+            args[match[1]] = match[2] ?? match[3] ?? match[4] ?? ''
+        }
 
         return args
     }

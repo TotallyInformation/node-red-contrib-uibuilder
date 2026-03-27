@@ -15,21 +15,24 @@ function directivePlugin(md, handlers = {}) {
      * @param {string} argsStr - Arguments string like "arg1=value1, arg2=value2"
      * @returns {object} Parsed arguments as key-value pairs
      */
+    /** Parse arguments from directive string.
+     * Supports space- or comma-separated key=value pairs.
+     * Values may be double-quoted, single-quoted, or unquoted.
+     * Quoted values may contain spaces and HTML.
+     * @param {string} argsStr - Arguments string, e.g. `key="val with spaces" key2=simple`
+     * @returns {object} Parsed arguments as key-value pairs
+     */
     function parseArgs(argsStr) {
         if (!argsStr || !argsStr.trim()) return {}
 
         const args = {}
-        const pairs = argsStr.split(',')
-
-        pairs.forEach((pair) => {
-            const [key, ...valueParts] = pair.split('=')
-            if (key) {
-                const trimmedKey = key.trim()
-                const value = valueParts.join('=').trim()
-                // Remove quotes if present
-                args[trimmedKey] = value.replace(/^["']|["']$/g, '')
-            }
-        })
+        // key=value where value is: double-quoted, single-quoted, or an unquoted non-whitespace token
+        const re = /(\w+)=(?:"([^"]*)"|'([^']*)'|(\S+))/g // eslint-disable-line security/detect-unsafe-regex
+        let match
+        while ((match = re.exec(argsStr)) !== null) {
+            // groups: 1=key, 2=double-quoted, 3=single-quoted, 4=unquoted
+            args[match[1]] = match[2] ?? match[3] ?? match[4] ?? ''
+        }
 
         return args
     }

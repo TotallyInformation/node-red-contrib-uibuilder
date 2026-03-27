@@ -61212,15 +61212,11 @@ function directivePlugin(md2, handlers = {}) {
   function parseArgs(argsStr) {
     if (!argsStr || !argsStr.trim()) return {};
     const args = {};
-    const pairs = argsStr.split(",");
-    pairs.forEach((pair) => {
-      const [key, ...valueParts] = pair.split("=");
-      if (key) {
-        const trimmedKey = key.trim();
-        const value = valueParts.join("=").trim();
-        args[trimmedKey] = value.replace(/^["']|["']$/g, "");
-      }
-    });
+    const re = /(\w+)=(?:"([^"]*)"|'([^']*)'|(\S+))/g;
+    let match2;
+    while ((match2 = re.exec(argsStr)) !== null) {
+      args[match2[1]] = match2[2] ?? match2[3] ?? match2[4] ?? "";
+    }
     return args;
   }
   function directiveRule(state, silent) {
@@ -61292,15 +61288,11 @@ function fmVariablesPlugin(md2, handler) {
   function parseArgs(argsStr) {
     if (!argsStr || !argsStr.trim()) return {};
     const args = {};
-    const pairs = argsStr.split(",");
-    pairs.forEach((pair) => {
-      const [key, ...valueParts] = pair.split("=");
-      if (key) {
-        const trimmedKey = key.trim();
-        const value = valueParts.join("=").trim();
-        args[trimmedKey] = value.replace(/^["']|["']$/g, "");
-      }
-    });
+    const re = /(\w+)=(?:"([^"]*)"|'([^']*)'|(\S+))/g;
+    let match2;
+    while ((match2 = re.exec(argsStr)) !== null) {
+      args[match2[1]] = match2[2] ?? match2[3] ?? match2[4] ?? "";
+    }
     return args;
   }
   function fmVariablesRule(state, silent) {
