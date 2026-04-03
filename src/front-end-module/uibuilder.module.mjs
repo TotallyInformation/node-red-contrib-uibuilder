@@ -1828,7 +1828,22 @@ export const Uib = class Uib {
      * @private
      */
     async _processUibVar(el, varName) {
-        const doVar = (value) => {
+        // Determine the root property and any nested sub-path
+        // e.g. "myvar.aprop" => rootProp="myvar", subPath="aprop"
+        // e.g. "myvar['bprop'].x" => rootProp="myvar", subPath="'bprop'].x"
+        const dotIdx = varName.indexOf('.')
+        const bracketIdx = varName.indexOf('[')
+        // Find the earliest separator
+        let sepIdx = -1
+        if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx)
+        else if (dotIdx >= 0) sepIdx = dotIdx
+        else if (bracketIdx >= 0) sepIdx = bracketIdx
+
+        const hasSubPath = sepIdx > 0
+        const rootProp = hasSubPath ? varName.substring(0, sepIdx) : varName
+
+        const doVar = (rootValue, hasSubPath) => {
+            let value = hasSubPath ? this._resolveNestedPath(this, varName) : rootValue
             // console.log(`🪲[uibuilder:_processUibVar] Variable "${varName}" changed. New value:`, value)
             // log('trace', 'uibuilder:_processUibVar', `Variable "${varName}" changed. New value: `, value)()
             if (typeof value !== 'object') {
@@ -1851,33 +1866,13 @@ export const Uib = class Uib {
             }
         }
 
-        // Determine the root property and any nested sub-path
-        // e.g. "myvar.aprop" => rootProp="myvar", subPath="aprop"
-        // e.g. "myvar['bprop'].x" => rootProp="myvar", subPath="'bprop'].x"
-        const dotIdx = varName.indexOf('.')
-        const bracketIdx = varName.indexOf('[')
-        // Find the earliest separator
-        let sepIdx = -1
-        if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx)
-        else if (dotIdx >= 0) sepIdx = dotIdx
-        else if (bracketIdx >= 0) sepIdx = bracketIdx
-
-        const hasSubPath = sepIdx > 0
-        const rootProp = hasSubPath ? varName.substring(0, sepIdx) : varName
-
         // Create a uibuilder managed variable watcher on the root property
         // When the root property changes, resolve the full nested path to get the value
         this.onChange(rootProp, (rootValue) => {
-            if (hasSubPath) {
-                // Resolve the nested value from the updated root object
-                const nestedValue = this._resolveNestedPath(this, varName)
-                doVar(nestedValue)
-            } else {
-                doVar(rootValue)
-            }
+            doVar(rootValue, hasSubPath)
         })
         // and do it now
-        doVar(await this.evaluateWithRetry(varName, this, {}))
+        doVar(await this.evaluateWithRetry(rootProp, this, {}), hasSubPath)
     }
 
     // ! EXPERIMENTAL - not fully working. Is not reactive.
@@ -3672,7 +3667,7 @@ export const Uib = class Uib {
             `✅ SOCKET CONNECTED.\nConnection count: ${this.connectedNum} (Reconnected: ${this.reconnected}, Initial Connect: ${this.initialConnect}), Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
         )()
 
-        this._dispatchCustomEvent('uibuilder:socket:connected', { numConnections: this.connectedNum, isRecovery: this._socket.recovered, })
+        this._dispatchCustomEvent('uibuilder:socket:connected', { Reconnections: this.reconnected, initialConnect: this.initialConnect, numConnections: this.connectedNum, isRecovery: this._socket.recovered, })
 
         this._socket.io.engine.on('upgrade', () => {
             this.currentTransport = this._socket.io.engine.transport.name

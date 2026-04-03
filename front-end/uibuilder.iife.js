@@ -8439,7 +8439,16 @@
      * @private
      */
     async _processUibVar(el, varName) {
-      const doVar = (value2) => {
+      const dotIdx = varName.indexOf(".");
+      const bracketIdx = varName.indexOf("[");
+      let sepIdx = -1;
+      if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx);
+      else if (dotIdx >= 0) sepIdx = dotIdx;
+      else if (bracketIdx >= 0) sepIdx = bracketIdx;
+      const hasSubPath = sepIdx > 0;
+      const rootProp = hasSubPath ? varName.substring(0, sepIdx) : varName;
+      const doVar = (rootValue, hasSubPath2) => {
+        let value2 = hasSubPath2 ? this._resolveNestedPath(this, varName) : rootValue;
         if (typeof value2 !== "object") {
           value2 = {
             payload: value2
@@ -8455,23 +8464,10 @@
           }
         }
       };
-      const dotIdx = varName.indexOf(".");
-      const bracketIdx = varName.indexOf("[");
-      let sepIdx = -1;
-      if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx);
-      else if (dotIdx >= 0) sepIdx = dotIdx;
-      else if (bracketIdx >= 0) sepIdx = bracketIdx;
-      const hasSubPath = sepIdx > 0;
-      const rootProp = hasSubPath ? varName.substring(0, sepIdx) : varName;
       this.onChange(rootProp, (rootValue) => {
-        if (hasSubPath) {
-          const nestedValue = this._resolveNestedPath(this, varName);
-          doVar(nestedValue);
-        } else {
-          doVar(rootValue);
-        }
+        doVar(rootValue, hasSubPath);
       });
-      doVar(await this.evaluateWithRetry(varName, this, {}));
+      doVar(await this.evaluateWithRetry(rootProp, this, {}), hasSubPath);
     }
     // ! EXPERIMENTAL - not fully working. Is not reactive.
     /** Process a uib-if attribute by safely evaluating a JavaScript expression that returns true/false.
@@ -9814,7 +9810,7 @@
         "Uib:ioSetup",
         "\u2705 SOCKET CONNECTED.\nConnection count: ".concat(this.connectedNum, " (Reconnected: ").concat(this.reconnected, ", Initial Connect: ").concat(this.initialConnect, "), Is a Recovery?: ").concat(this._socket.recovered, ".\nNamespace: ").concat(this.ioNamespace, "\nTransport: ").concat(this.currentTransport)
       )();
-      this._dispatchCustomEvent("uibuilder:socket:connected", { numConnections: this.connectedNum, isRecovery: this._socket.recovered });
+      this._dispatchCustomEvent("uibuilder:socket:connected", { Reconnections: this.reconnected, initialConnect: this.initialConnect, numConnections: this.connectedNum, isRecovery: this._socket.recovered });
       this._socket.io.engine.on("upgrade", () => {
         this.currentTransport = this._socket.io.engine.transport.name;
         log(
