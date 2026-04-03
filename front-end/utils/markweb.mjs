@@ -1374,12 +1374,12 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                 )
             }
 
-            // Scroll after content is rendered - target <main> since it is the scroll container (overflow-y: auto)
+            // Scroll after content is rendered - target <main> <section> since it is the scroll container
             // Skip scroll reset when reloading the same page (e.g. source/config change)
             if (!isSamePage || hashFragment) {
                 requestAnimationFrame(() => {
                     setTimeout(() => {
-                        const scrollContainer = document.querySelector('main') || document.documentElement
+                        const scrollContainer = document.querySelector('main section') || document.documentElement
                         if (hashFragment) {
                             // If there's a hash fragment, scroll to that element
                             const targetId = hashFragment.slice(1) // Remove leading #
