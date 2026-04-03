@@ -1062,7 +1062,7 @@ async function buildIndexes(node) {
     // TODO: Use async fg
     let files
     try {
-        files = fgSync(`${indexFolder}/**/*.md`, { ignore: ['**/_*/**', '**/_*', '**/.*/**', '**/.*'] })
+        files = fgSync(`${indexFolder}/**/*.md`, { ignore: ['**/_*/**', '**/_*', '**/.*/**', '**/.*'], })
     } catch (e) {
         log.error(`🌐🕸️🛑[markweb:buildIndex:${url}] Error reading markdown files from source folder "${indexFolder}": ${e.message}`)
         files = []
@@ -2003,15 +2003,18 @@ function setupFileWatcher(node) {
             // Debounce to avoid rebuilding multiple times for rapid changes
             if (rebuildTimeout) clearTimeout(rebuildTimeout)
             rebuildTimeout = setTimeout(async () => {
-                const changesCopy = [...changes].filter(({ filename }) => {
-                    const parts = filename.split('/')
-                    const basename = parts[parts.length - 1]
+                const changesCopy = [...changes].filter(({ filename, }) => {
+                    // const parts = filename.split('/')
+                    const parts = parse(filename)
+                    // const basename = parts[parts.length - 1]
+                    const basename = parts.base
                     // Only process .md files
-                    if (!basename.endsWith('.md')) return false
+                    // if (!basename.endsWith('.md')) return false
+                    if (parts.ext !== '' && parts.ext !== '.md') return false
                     // Skip .md files whose name starts with _ or .
                     if (basename.startsWith('_') || basename.startsWith('.')) return false
                     // Skip .md files in any folder whose name starts with _ or .
-                    if (parts.slice(0, -1).some(part => part.startsWith('_') || part.startsWith('.'))) return false
+                    if (parts.dir.split('/').some(part => part.startsWith('_') || part.startsWith('.'))) return false
                     return true
                 })
                 changes = []
