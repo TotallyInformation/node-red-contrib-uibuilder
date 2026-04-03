@@ -20,6 +20,13 @@ The main purpose of this demo site is to demonstrate the features of UIBUILDER f
 >
 > You may also see a pair of Emoji's used, especially in logs and debugging. 🌐🕸️ - These are used to help highlight outputs specific to Markweb. (🌐 on its own in logs indicates a uibuilder related output).
 
+## What is Markweb?
+Markweb is a single-node, easy-to-configure website solution for Node-RED.
+
+It allows you to create a website using simple markdown files as the source content.
+
+Markweb takes care of rendering the markdown into HTML and serving it as a website. It also provides features like search, navigation, and dynamic content through variables and directives.
+
 ## Page structure
 The site uses Markweb's default HTML template. It has search, navigation and page table of contents in the left sidebar. The sidebar can be hidden and resized as desired. The main content area automatically shows the page title as a heading, the page description as the first paragraph, the Markdown content of the source file and finally a footer paragraph with the last updated date.
 
