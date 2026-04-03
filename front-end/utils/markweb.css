@@ -160,14 +160,15 @@ main {
     --header-title-scroll-range: 18rem;
     --header-desc-max-size: 1em;
     --header-desc-min-size: 0;
+    --pad-left-right: 1em;
 
     grid-area: main;
-    overflow-y: auto;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
     min-height: 0;
-    padding-left: 1.5em;
-    padding-right: 1.5em;
-    scroll-timeline-name: --markweb-main-scroll;
-    scroll-timeline-axis: block;
+    padding: 0;
+    timeline-scope: --markweb-main-scroll;
 
     #search-results {
         /* position: absolute; */
@@ -243,6 +244,16 @@ main {
     }
 
     /* Main content body - markdown-rendered pages, etc */
+    section {
+        overflow-y: auto;
+        min-height: 0;
+        /* margin-inline-end: -0.5em; */
+        padding-inline-start: var(--pad-left-right);
+        padding-inline-end: var(--pad-left-right);
+        scroll-timeline-name: --markweb-main-scroll;
+        scroll-timeline-axis: block;
+    }
+
     div[data-attribute="body"] {
         p, div {
             margin-inline-start: 0;
@@ -252,13 +263,14 @@ main {
 
     header, footer {
         background-color: hsl(from var(--base-bg) h s 25%);
-        margin: 0.5em -0.5em 0.5em -0.5em;
-        padding: 0.5em 0.5em 0.5em 0.5em;
     }
 
     /* At bottom, (c), dates, etc */
     footer {
-        grid-area: footer;
+        z-index: 10;
+        margin: 0.5em 0 0 0;
+        padding: 0.5em var(--pad-left-right);
+        font-size: 86%;
     }
 
     /* Title, nav, etc */
@@ -266,26 +278,12 @@ main {
         position: sticky;
         top: 0;
         z-index: 10;
-        grid-area: header;
-        margin-bottom: 0.5em;
+        margin: 0 0 0.5em 0;
 
         > h1 {
             font-size: var(--header-title-max-size);
             margin-block-start: 0.1em;
             margin-block-end: 0.3em;
-            /* margin: 0; */
-            /* position: fixed; */
-            /* top: 0; */
-            /* left: var(--header-title-inline-start); */
-            /* z-index: 10; */
-            /* right: auto; */
-            /* width: max-content; */
-            /* max-width: calc(100vw - var(--header-title-inline-start) - var(--header-title-inline-end)); */
-            /* padding-block: 0.2em; */
-            /* font-size: var(--header-title-max-size); */
-            /* line-height: 1.1; */
-            /* text-align: left !important; */
-            /* background-color: hsl(from var(--base-bg) h s l / 94%); */
         }
     }
 
@@ -293,12 +291,12 @@ main {
 
 @keyframes markweb-header-scroll {
     from {
-        margin: 0.5em -0.5em 0.5em -0.5em;
-        padding: 0.5em 0.5em 0.5em 0.5em;
+        margin: 0 0 0.5em 0;
+        padding: 0.5em var(--pad-left-right);
     }
     to {
-        margin: 0 -0.5em 0 -0.5em;
-        padding: 0 0.5em 0 0.5em;
+        margin: 0;
+        padding: 0 var(--pad-left-right);
     }
 }
 @keyframes markweb-header-title-shrink {
@@ -319,25 +317,47 @@ main {
         margin-top: 0;
     }
 }
+@keyframes markweb-footer-scroll {
+    from {
+        margin: 0.5em 0 0 0;
+        padding: 0.5em var(--pad-left-right);
+        font-size: 86%;
+    }
+    to {
+        margin: 0;
+        padding: 0 var(--pad-left-right);
+        font-size: 73%;
+    }
+}
 
 @supports (animation-timeline: --markweb-main-scroll) {
-    main > header {
-        animation-name: markweb-header-scroll;
-        animation-duration: 1s;
-        animation-timing-function: linear;
-        animation-fill-mode: both;
-        animation-timeline: --markweb-main-scroll;
-        animation-range: 0 var(--header-title-scroll-range);
-        > h1 {
-            animation-name: markweb-header-title-shrink;
+    main {
+        > header {
+            animation-name: markweb-header-scroll;
             animation-duration: 1s;
             animation-timing-function: linear;
             animation-fill-mode: both;
             animation-timeline: --markweb-main-scroll;
             animation-range: 0 var(--header-title-scroll-range);
+            > h1 {
+                animation-name: markweb-header-title-shrink;
+                animation-duration: 1s;
+                animation-timing-function: linear;
+                animation-fill-mode: both;
+                animation-timeline: --markweb-main-scroll;
+                animation-range: 0 var(--header-title-scroll-range);
+            }
+            > blockquote, > div {
+                animation-name: markweb-header-desc-shrink;
+                animation-duration: 1s;
+                animation-timing-function: linear;
+                animation-fill-mode: both;
+                animation-timeline: --markweb-main-scroll;
+                animation-range: 0 var(--header-title-scroll-range);
+            }
         }
-        > blockquote, > div {
-            animation-name: markweb-header-desc-shrink;
+        > footer {
+            animation-name: markweb-footer-scroll;
             animation-duration: 1s;
             animation-timing-function: linear;
             animation-fill-mode: both;
@@ -537,6 +557,7 @@ main {
     cursor: col-resize;
     background: hsl(var(--brand-hue), var(--base-bg-sat), 10%);
     user-select: none;
+    z-index: 20;
 }
 
 /* Tree view styles (e.g. %%index%% index listings) */
