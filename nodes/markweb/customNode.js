@@ -2042,7 +2042,9 @@ function setupFileWatcher(node) {
             }, debounceMs)
         })
         watcher.on('error', (error) => {
-            console.error(`🌐🕸️[markweb:watcher:${instanceUrl}] Watcher error: ${error}`)
+            if (!(error.syscall === 'watch' && error.filename === null)) {
+                console.error(`🌐🕸️[markweb:watcher:${instanceUrl}] Watcher error: ${error}`, error)
+            }
         })
     } catch (err) {
         log.error(`🌐🕸️🛑[markweb:setupFileWatcher:${instanceUrl}] Could not set up file watcher: ${err.message}`)
