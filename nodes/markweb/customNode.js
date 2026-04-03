@@ -1025,7 +1025,12 @@ function mdExtension(node) {
         const before = hasValue ? (args.before ?? args.prefix ?? '') : ''
         const after = hasValue ? (args.after ?? '') : ''
         // Set data-before/data-after attributes on the element for client-side use (same as uib-var)
-        const escAttr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        const escAttr = (s) => {
+            return s.replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+        }
         const dataBefore = before ? ` data-before="${escAttr(before)}"` : ''
         const dataAfter = after ? ` data-after="${escAttr(after)}"` : ''
         // Wrap in dummy element with data attribute for client-side processing
@@ -1467,7 +1472,7 @@ async function getMarkdownFile(node, file, morePath, parsedPath, from) {
     const urlPath = '/' + relativePath
         .replace(/\.md$/, '')
         .replace(/(^|\/)index$/, '$1')
-    
+
     // console.group(`>>🌐🕸️[markweb:getMarkdownFile:${node.url}] Processing markdown file:`)
     // console.log(`File: ${file}`)
     // console.log(`Relative Path: ${relativePath}`)
@@ -1594,7 +1599,7 @@ async function handler(req, res, next) {
     // Normalize both paths for comparison (remove trailing slashes, handle case)
     const normalizedBaseUrl = req.baseUrl.replace(/\/+$/, '').toLowerCase()
     const normalizedInstanceUrl = this.url.replace(/\/+$/, '').toLowerCase()
-    console.log('normalised', { normalizedBaseUrl, normalizedInstanceUrl, })
+    // console.log('>> 🌐🕸️[markweb:handler] normalised', { normalizedBaseUrl, normalizedInstanceUrl, })
     // Handle requests that should be redirected to /uibuilder/...
     // e.g., /markweb/uibuilder/vendor/socket.io/... -> /uibuilder/vendor/socket.io/...
     if (morePath.startsWith('uibuilder/')) {
@@ -2034,7 +2039,7 @@ function setupFileWatcher(node) {
             }, debounceMs)
         })
         watcher.on('error', (error) => {
-            console.error(`>>🌐🕸️[markweb:watcher:${instanceUrl}] Watcher error: ${error}`)
+            console.error(`🌐🕸️[markweb:watcher:${instanceUrl}] Watcher error: ${error}`)
         })
     } catch (err) {
         log.error(`🌐🕸️🛑[markweb:setupFileWatcher:${instanceUrl}] Could not set up file watcher: ${err.message}`)
@@ -2110,7 +2115,7 @@ function setupConfigWatcher(node) {
         })
 
         configWatcher.on('error', (error) => {
-            console.error(`>>🌐🕸️[markweb:configWatcher:${instanceUrl}] Config watcher error: ${error}`)
+            console.error(`🌐🕸️[markweb:configWatcher:${instanceUrl}] Config watcher error: ${error}`)
         })
     } catch (err) {
         log.error(`🌐🕸️🛑[markweb:setupConfigWatcher:${instanceUrl}] Could not set up config watcher: ${err.message}`)
