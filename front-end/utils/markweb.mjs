@@ -3,6 +3,8 @@
 /* eslint-disable n/no-unsupported-features/node-builtins */
 // ^ This file is browser code, not Node.js - localStorage is a browser API
 
+const clientVersion = '7.6.0-markweb' // NB: This is not automatically updated, must be manually set to match package.json version field
+
 /** The uibuilder.pageData object is set on load and when navigating
  * You can use it to do your own processing if desired
  * window.pageData is passed in the initial page load, we use that
@@ -22,8 +24,8 @@ const log = uibuilder.log
 // It is used to resolve relative links for SPA navigation.
 // It is also set on page load as window.baseUrl. It does not change.
 const baseUrl = window.baseUrl
-console.info('Base URL:', baseUrl)
-// console.info('Base URL:', baseUrl, pageData)
+console.info(`🌐🕸️[markweb:client load] Base URL: "${baseUrl}". Client version: ${clientVersion}`)
+// console.info('🌐🕸️[markweb:client load] Page Data:', pageData)
 
 // Get references to commonly used elements
 const elContent = document.querySelector('[data-fmvar="content"]')
@@ -1012,7 +1014,7 @@ async function navigate(toUrl, addToHistory = true) {
     // Remove origin from toUrl if present
     const origin = window.location.origin
     toUrl = toUrl.replace(origin, '')
-    console.log('>> Normalized toUrl (origin removed if present):', {origin, toUrl, trace: uibuilder.stack()})
+    // console.log('>> 🌐🕸️[markweb:navigate] Normalized toUrl (origin removed if present):', {origin, toUrl, trace: uibuilder.stack()})
     // Remove baseUrl from toUrl if present at start
     if (toUrl.startsWith(baseUrl)) {
         toUrl = toUrl.slice(baseUrl.length)
@@ -1026,7 +1028,7 @@ async function navigate(toUrl, addToHistory = true) {
     }
     // #endregion --- Normalize toUrl ---
 
-    // console.log(`Navigating to: "${uibuilder.urlJoin(window.location.origin, baseUrl, toUrl, hashFragment ? `(hash: ${hashFragment})` : '')}"` )
+    // console.log(`>> 🌐🕸️[markweb:navigate] Navigating `, { uibuilderCtrl: 'internal', controlType: 'navigate', toUrl: toUrl, addToHistory: addToHistory, hashFragment: hashFragment, } )
 
     // Ask server for new page content via uibuilder control message (see onChange handler below)
     // Pass hashFragment so client can scroll to it after content loads
@@ -1230,7 +1232,6 @@ if (elSearchInput) elSearchInput.addEventListener('input', (e) => {
 
 /** On socket reconnection, reload the current page and request fresh nav indexes */
 document.addEventListener('uibuilder:socket:connected', (evt) => {
-    // ! NOT CONVINCED THIS IS WORKING RELIABLY - NEED TO TEST MORE WITH DISCONNECTIONS
     // if (evt.detail?.numConnections > 0) {
     if (uibuilder.get('reconnected') > 0) {
         // console.log('uibuilder socket reconnected, refreshing page and nav indexes.', evt.detail)
@@ -1240,9 +1241,9 @@ document.addEventListener('uibuilder:socket:connected', (evt) => {
             controlType: 'get-sidebar-nav',
             currentPath: pageData?.path || window.location.pathname,
         })
-        console.log('>> Re-navigating to current page to refresh content after socket reconnection:',
-            evt.detail, pageData?.toUrl, window.location.pathname, pageData
-        )
+        // console.log('>> Re-navigating to current page to refresh content after socket reconnection:',
+        //     evt.detail, pageData?.toUrl, window.location.pathname, pageData
+        // )
         // Reload the current page content.
         // Use pageData.path (reliable, set by server on every navigation) with baseUrl,
         // falling back to window.location.pathname. Avoids using pageData.toUrl which
@@ -1252,7 +1253,8 @@ document.addEventListener('uibuilder:socket:connected', (evt) => {
             : window.location.pathname
         navigate(reconnectUrl, false)
     } else {
-        console.log('>> uibuilder socket connected (not recovered).', `Initial Connect: ${uibuilder.get('initialConnect')}. Reconnected: ${uibuilder.get('reconnected')}`, evt.detail)
+        evt.detail.trace = uibuilder.stack()
+        // console.log('>> uibuilder socket connected (not recovery).', evt.detail)
     }
 })
 
@@ -1422,12 +1424,3 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 // initMenu()
 // Set initial active state on page load
 // updateActiveNavState()
-
-// EXPERIMENTAL ONLY - probably not needed
-const directiveElements = document.querySelectorAll('[data-directive]')
-const directivesSet = new Set()
-directiveElements.forEach((el) => {
-    const directive = el.getAttribute('data-directive')
-    if (directive) directivesSet.add(directive)
-})
-console.log('>> Directives found in DOM:', directivesSet)
