@@ -37,6 +37,8 @@
     --blockquote-bg: hsl(207, 63%, 10%);
     --blockquote-highlight: hsl(204, 90%, 45%);
 
+    --pad-left-right: 1em;
+
     /* #region horizontal menu settings */
     --menu-bg: hsl(var(--brand-hue), var(--base-bg-sat), 15%); /*var(--surface3);*/
     --menu-bg-hover: hsl(210, 100%, 95%);
@@ -160,7 +162,6 @@ main {
     --header-title-scroll-range: 18rem;
     --header-desc-max-size: 1em;
     --header-desc-min-size: 0;
-    --pad-left-right: 1em;
 
     grid-area: main;
     display: grid;
@@ -279,6 +280,7 @@ main {
         top: 0;
         z-index: 10;
         margin: 0 0 0.5em 0;
+        padding: 0.5em var(--pad-left-right);
 
         > h1 {
             font-size: var(--header-title-max-size);
