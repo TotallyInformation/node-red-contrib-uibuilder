@@ -1,6 +1,7 @@
 ---
 author: Julian Knight (Totally Information)
 title: Markweb Configuration
+shortTitle: Configuration
 description: How to configure Markweb in the UIBUILDER node and configuration override files.
 tags: 
   - uibuilder
