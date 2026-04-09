@@ -3,7 +3,7 @@ title: markweb - Dynamic web sites using Markdown
 description: |
   The `markweb` node gives you the ability to really simply create dynamic web sites using Markdown files.
 created: 2026-01-09 15:10:14
-updated: 2026-04-09 14:32:24
+updated: 2026-04-09 19:17:31
 status: Release
 since: v7.6.0
 ---
@@ -67,13 +67,33 @@ Markweb comes with its own CSS stylesheet (`../uibuilder/utils/markweb.css`) tha
    > You can use the text `[DEMO]` as an alternative to an actual folder path. This will load the demo content that is included with uibuilder. This is a great way to quickly get started with Markweb, see how it works, and how you can use Markdown with it.
 
   > [!WARNING]
-  > Any folders or files starting with `_` or `.` are blocked for security reasons.
+  > Any folders or files starting with `_` or `.` are blocked for security reasons (except for `_index.md` file name).
   >
-  > Any folder not containing an `index.md` file is ignored. This file is used as the landing page for a folder.
+  > Any folder not containing an `index.md`, `_index.md`, or `<foldername>.md` file is ignored. This file is used as the landing page for a folder.
 
 - **Configuration Folder** (optional): The folder where Markweb will find the override configuration files. This can be an absolute path or a path relative to the Node-RED user directory. If used, the folder _**MUST EXIST**_. See below for more details on the configuration override files.
 
 - **Name** (optional): A name for the node. Used in the flow Editor. Has no other effect.
+
+### Configuration Override Files
+
+Markweb supports configuration override files that can be used to set configuration options on a per-page basis. These are only used if the "Config Folder" option is set in the node configuration. If it is not set, then Markweb will use the default configuration for all pages.
+
+Currently, only a few files are supported. This is likely to be expanded in the future.
+
+> [!TIP]
+> In order to get copies of the default configuration files, you need only create the config folder, specify it in the node configuration, and then restart Node-RED. So if you need to reset one of more of the files, simply delete or rename the file(s) and restart Node-RED.
+>
+> Changes to the configuration override files do _**not**_ cause the current page to reload automatically. You have to manually reload the page.
+
+The following files are currently supported:
+
+1. `page-template.html`
+2. `copyright-template.html`
+3. `global-attributes.json`
+4. `sidebar.json`
+
+Details on these files and how to use them can be found in the Markweb demonstration website.
 
 ## Special processing directives and variables
 
@@ -254,7 +274,7 @@ Any additional path segments after the base URL are used to identify the specifi
 
 For example, if the base URL is `/docs` and the request is for `/docs/getting-started`, the node will look for a `getting-started.md` file in the source folder.
 
-However, if `getting-started` is a folder, the node will look for an `index.md` file inside that folder.
+However, if `getting-started` is a folder, the node will look for an `index.md`, `_index.md`, or `getting-started.md` file inside that folder.
 
 > [!TIP]
 > All relative links in your markdown files are relative to the *base URL* of the site, *not the current document*. This is important for SPA navigation to work correctly.
@@ -266,7 +286,7 @@ The `source` folder specified in the node's Editor config is used as the root fo
 > [!TIP]
 > The source folder **must** already exist. The node will not create it for you.
 > 
-> It must have at least a single `index.md` file to serve any content.
+> It must have at least a single `index.md`, `_index.md`, or `<foldername>.md` file to serve any content.
 
 The `configFolder` specified in the node config is used to store configuration files such as the HTML wrapper template and global attributes. If a relative path is provided, it is made relative to the Node-RED `userDir` folder.
 
@@ -325,7 +345,7 @@ The node maintains cached indexes of page metadata for navigation and search pur
 >
 > Future releases will consider optimising memory use and options for persisting indexes to disk or using a database.
 
-The index is a representation of the file and folder structure, including only folders and files that are valid markdown pages (i.e., those containing an `index.md` file for folders, `*.md` for files, and nothing starting with `_`).
+The index is a representation of the file and folder structure, including only folders and files that are valid markdown pages (i.e., those containing an `index.md`, `_index.md`, or `<foldername>.md` file for folders, `*.md` for files, and nothing starting with `_` or `.`).
 
 When a client initially loads a page, the node uses the cached indexes to quickly retrieve the necessary metadata for that page, including front-matter attributes and content snippets for search results.
 
@@ -355,104 +375,7 @@ The node uses 2 packages from separate sub-workspaces:
 
 ## Requirements
 
-This is a rough list of the original requirements for the `markweb` node.
-
-* [x] Support Commonmark and GFM standards.
-* [x] Support front-matter in markdown files.
-* [x] Process Markdown server-side to HTML.
-* [x] SPA style "page" serving. Single page app style serving.
-* [x] SPA Navigation to use uibuilder messages instead of fetch. To allow for more dynamic updates.
-* [x] Use existing UIBUILDER processing (web and sockets libraries, etc).
-* [x] Require markdown server libs from a workspace `@totallyinformation/uib-md-utils` package to avoid additional packages in main uibuilder package. Bundled via esbuild.
-* [x] Server-side rendering using new ExpressJS middleware. Using the existing `nodes/libs/web.cjs` class.
-* [x] Folders or files starting with `_` or `.` are blocked.
-* [x] Cached indexes for nav and search. Rebuilt on file changes.
-* [x] Navigation menu generation from folder structure.
-* [x] Automated index lists of folders/files. With parameters to control depth, file types, sorting, etc.
-* [x] Pass all discovered content attributes to the front end as a uibuilder managed variable.
-* [x] `%%index%%` placeholder to generate a list of pages with links. Should use a template for each entry. Allow sorting options (e.g. by created date, updated date, title, etc.). Templates should allow metadata fields to be used. Index must allow pagination. Must have a filter option (e.g. by tag, category, author, date range, etc.)
-* [x] Live reload of changed markdown files. [ref](https://www.npmjs.com/package/markserv)
-* [x] Generate title, created, updated page attributes from file details if not in front-matter.
-* [x] Watch the config folder for changes. Signal all connected clients to reload page if config files change.
-
-
-### Search
-* [x] Seach input box in the nav menu.
-* [x] Search results rendered via `%%search-results%%` directive allowing flexibility in positioning.
-* [x] Backend search index with auto-update on file changes.
-* [x] Search results retained on SPA navigation.
-* [x] Searches include: Front-matter fields, and body text.
-* [x] Search result highlighted if matching the current page.
-
-### Page templates
-
-* [x] Support for a HTML wrapper template with `{{...}}` & `%%....%%` replacements.
-* [x] HTML wrapper. `page-template.html` file in separate config folder to allow customisation of the HTML wrapper round the rendered markdown. With default backup in `templates/.markweb-defaults/`.
-* [x] Global front matter fields. `global-attributes.json` file in separate config folder to allow customisation of the available front matter fields for the rendered markdown. With default backup in `templates/.markweb-defaults/`.
-* [x] `{{...}}` gives simple variable replacement from front-matter (and global/system) fields.
-* [x] `%%....%%` gives more complex processing such as navigation menus, search results, etc.
-* [x] Allow `{{...}}` & `%%....%%` processing to have configuration attributes specified as `[attribute=value,...]` inside the tags.
-
-### Front-end processing
-
-* [x] Ensure that all links are intercepted for SPA navigation. But that external links (containing `:`) are not intercepted. **All relative links are relative to the BASE URL (not the current document).**
-* [x] Ensure that any links containing hash fragments (`#...`) are handled correctly for in-page navigation.
-
-### Node Editor Configuration
-
-* [x] Source folder path on server.
-* [x] URL path to serve the content.
-* [x] Allow markdown-it extensions to be specified - phase 1, fixed in code.
-
-### UIBUILDER changes needed
-
-* [x] Change main uibuilder processing to allow separate specification of the source folder from the url. (Previously, uibuilder assumed a 1:1 mapping of folder to url names).
-* [x] Allow passing of a custom ExpressJS middleware function for a route. (Wasn't previously needed as uibuilder only served static content, now needed so that nodes can have their own custom middleware).
-
-### Required features of the markdown processor
-
-* [x] Full [Commonmark](https://commonmark.org) support.
-* [x] Standard heading ID's using the heading text.
-* [x] Headings have auto-generated anchor links for easy linking.
-* [x] Custom element ID's using `{#custom-id}` or `{id="custom-id"}` syntax.
-* [x] Custom element classes using `{.class-name}` or `{class="class-name"}` syntax.
-* [x] Custom element attributes using `{attrname="value"}` syntax.
-* [x] Task lists (checklists) using `* [ ]` and `* [x]` syntax.
-* [x] Autolinks for raw URLs and email addresses.
-* [x] GFM-style tables. Including left, center and right alignments.
-* [x] GFM-style alert boxes (AKA callouts).
-* [x] Crossed-out text using `~~strikethrough~~` syntax.
-* [x] Syntax highlighting in code blocks using triple backticks and language specifier (`highlight.js`).
-* [x] Access to YAML front-matter fields, including ability to include fields in Markdown text and HTML wrapper.
-
-## Requirements yet to be implemented
-
-These are considered useful enough to be implemented but may not make the initial release.
-
-### Required features of the markdown processor
-
-* [ ] Footnotes.
-* [ ] Mermaid diagrams.
-* [ ] Page table-of-contents
-* [ ] Transclude other markdown files.
-* [ ] Details/summary wrappers for auto-collapsible headings sections (optional).
-* [ ] Automated footer with last-modified date, copyright, author, etc.
-* [ ] Auto-generate a sidebar navigation from the folder structure. Allow for in-page section navigation using headings. Where present, have two tabs in the sidebar: "Contents" and "Sections" (ref Typora's layout).
-* [ ] Partly implemented but needs much more work. ~~Dynamic checklists (clickable checkboxes that update the display, fire an event and send to Node-RED).~~  Deferred for now. Either needs to be able to update the source markdown or maintain state elsewhere.
-
-
-## Possible future requirements
-
-These may or may not be implemented in future releases depending on demand and complexity.
-
-* [ ] Add separate bundle of markdown-it & extensions for front-end use.
-* [ ] Allow additional markdown-it extensions to be specified via node config.
-* [ ] Consider caching nav and search indexes. Possibly to disk or a database.
-* [ ] More comprehensive search features. Possibly using a dedicated search library.
-* [ ] In Editor, if there is a url clash with another uibuilder instance, show a warning.
-* [ ] Allow markdown-it extensions to be specified - probably via `settings.js` uibuilder config.
-* [ ] Mount client versions of markdown-it and extensions to front-end for use in std uibuilder front-ends.
-* [ ] Add option to use the new Navigate web API for SPA navigation. (Safari from 2025-12, Chromium from 2022, Firefox not yet supported).
+The original design requirements plus extended requirements as development progressed are now in the `[DEMO]` Markweb demonstration website documentation. See the "Requirements" section there for details.
 
 ## Default page template
 
@@ -472,7 +395,7 @@ This layout uses a vertical navigation menu in a sidebar on the left, with the p
 ```html
 <!DOCTYPE html>
 <!-- Everything like %%...%% and {{...}} gets replaced on first page load if attributes available.
-  -- Everything that has a data-attribute="...." gets updated when navigating via SPA.
+  -- Everything that has a data-fmvar="...." gets updated when navigating via SPA.
   -- % %body% % is where the main content goes. If you don't include it, you get no content!
   -- <base> is REQUIRED for SPA navigation to work properly.
   -->
@@ -480,20 +403,24 @@ This layout uses a vertical navigation menu in a sidebar on the left, with the p
     <meta charset="UTF-8">
     <base href="%%url%%/">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" data-attribute="description" content="{{description}}">
-    <title data-attribute="title">{{title}}</title>
-    <link rel="icon" href="../uibuilder/images/node-blue.ico">
+    <meta name="description" uib-var="pageData.description" content="No description for this page.">
+    <title uib-var="pageData.title">No title</title>
+    <link rel="icon" uib-var="pageData.favicon" href="../uibuilder/images/uib-world-green.svg">
 
     <link type="text/css" rel="stylesheet" href="../uibuilder/uib-brand.min.css" media="all">
     <link type="text/css" rel="stylesheet" href="../uibuilder/utils/markweb.css" media="all">
     <!-- You can add your own stylesheets here -->
 
+    <!-- REQUIRED: Sets window.pageData at load time -->
+    %%prescript%%
+    <!-- REQUIRED: uibuilder client library (optional logLevel)-->
     <script type="module" src="../uibuilder/uibuilder.esm.min.js?logLevel=1"></script>
     <!-- OPTIONAL show-meta component to display page metadata for debugging -->
     <script type="module" src="../uibuilder/utils/show-meta.mjs"></script>
     <!-- Base URL is REQUIRED by the module! The uibuilder client lib is loaded by this module -->
-    <script type="module" src="../uibuilder/utils/markweb.mjs" data-base-url="%%url%%"></script>
-    <!-- You can add your own scripts here -->
+    <!-- <script type="module" src="../uibuilder/utils/markweb.mjs" data-base-url="%%url%%"></script> -->
+    <script type="module" src="../uibuilder/utils/markweb.mjs"></script>
+    <!-- You can add your own scripts after here -->
 
 </head><body><div id="markweb">
 
@@ -504,28 +431,33 @@ This layout uses a vertical navigation menu in a sidebar on the left, with the p
         <a class="skip-link" href="#main">Skip to main content</a>
         <header>
             <!-- Nav not needed if sidebar is used (add/remove double %) -->
-            <h1 data-attribute="title">{{title}}</h1>
+            <h1><a id="page-title-link" href="#" style="color: inherit; text-decoration: none;"><uib-var variable="pageData.title">No Title</uib-var></a></h1>
+            
             <!-- Results not needed if sidebar is used (add/remove double %) -->
             <!-- search-results -->
             <!-- Optional page status display -->
-            <blockquote class="visible-status" data-attribute="status">Status: {{status}}</blockquote>
-            <div data-attribute="description">{{description}}</div>
+            <blockquote class="visible-status" uib-if="pageData.status !== undefined || pageData.since !== undefined">
+                <uib-var variable="pageData.status" data-before="Status: " data-after=". "></uib-var>
+                <uib-var variable="pageData.since" data-before="Since: " data-after=". "></uib-var>
+            </blockquote>
+            <div uib-var="pageData.description">No Description for this page.</div>
         </header>
 
         <!-- This is where the main content goes. It will be replaced on navigation. -->
-        <section data-attribute="body">%%body%%</section>
+        <section><uib-var variable="pageData.content" type="html">No content</uib-var></section>
 
         <!-- OPTIONAL show-meta component to display page metadata for debugging -->
         <!-- <show-meta></show-meta> -->
 
         <footer><!-- Common page footer -->
-            %%copywrite%% Updated %%date [type=updated]%%. UIBUILDER MarkWeb.
+            %%copyright%%
         </footer>
     </main>
-</div></body></html>
+</div>
+</body></html>
 ```
 
-### Alternate layout with top navigation bar
+### Alternate layout with top navigation bar (outdated - needs an update)
 
 Given as an example of how you can use the directives and variables to create a different layout. This layout uses a horizontal navigation menu in the header, search results appear below the visible title heading.
 

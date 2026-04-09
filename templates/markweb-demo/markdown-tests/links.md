@@ -1,8 +1,8 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-03-26 13:19:58
-updated: 2026-03-26 17:50:12
-status: Completed
+updated: 2026-04-09 19:17:41
+status: Published
 title: URL Links
 description: >
     How to include images in markdown files.
@@ -59,7 +59,7 @@ When linking to another markdown file, you can use the same relative path syntax
 [Variables](markdown-tests/variables)
 
 #### Markdown folders
-You can also reference a folder's default page by omiting the default `index.md` name. Additionally, you can include or omit a trailing slash.
+You can also reference a folder's default page by omiting the default `index.md`/`_index.md`/`<foldername>.md` name. Additionally, you can include or omit a trailing slash.
 ```markdown
 [Markdown Tests](markdown-tests/)
 ```

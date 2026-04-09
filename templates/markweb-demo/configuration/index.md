@@ -10,7 +10,7 @@ tags:
   - configuration
 status: Published
 created: 2026-04-03 16:33:59
-updated: 2026-04-07 16:34:45
+updated: 2026-04-09 19:18:04
 ---
 
 Markweb has 2 places where configuration can be set:
@@ -39,9 +39,9 @@ When you add a Markweb node to your flow, you can configure it by double-clickin
    > You can use the text `[DEMO]` as an alternative to an actual folder path. This will load the demo content that is included with uibuilder. This is a great way to quickly get started with Markweb, see how it works, and how you can use Markdown with it.
 
   > [!WARNING]
-  > Any folders or files starting with `_` or `.` are blocked for security reasons.
+  > Any folders or files starting with `_` or `.` are blocked for security reasons (except for `_index.md` file name).
   >
-  > Any folder not containing an `index.md` file is ignored. This file is used as the landing page for a folder.
+  > Any folder not containing an `index.md`, `_index.md`, or `<foldername>.md` file is ignored. This file is used as the landing page for a folder.
 
 - **Configuration Folder** (optional): The folder where Markweb will find the override configuration files. This can be an absolute path or a path relative to the Node-RED user directory. If used, the folder _**MUST EXIST**_. See below for more details on the configuration override files.
 
