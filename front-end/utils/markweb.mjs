@@ -76,6 +76,28 @@ function updatePageData(attributes, additionalInfo = {}) {
     return pgData
 }
 
+/** Make the page title act as a "back to top" control and clear any hash fragment
+ * @returns {void}
+ */
+function setupPageTitleResetLink() {
+    const pageTitleLink = document.getElementById('page-title-link')
+    if (!pageTitleLink || pageTitleLink.dataset.hashResetBound === 'true') return
+
+    pageTitleLink.dataset.hashResetBound = 'true'
+    pageTitleLink.addEventListener('click', (event) => {
+        event.preventDefault()
+
+        const cleanUrl = `${window.location.pathname}${window.location.search}`
+        const state = (history.state && typeof history.state === 'object') ? { ...history.state, } : {}
+        if (Object.prototype.hasOwnProperty.call(state, 'hash')) delete state.hash
+        history.replaceState(state, '', cleanUrl)
+
+        window.scrollTo({ top: 0, behavior: 'auto', })
+        const scrollContainer = document.querySelector('main > section') || document.documentElement
+        scrollContainer.scrollTo({ top: 0, behavior: 'auto', })
+    })
+}
+
 // #endregion --- Utility Functions ---
 
 // #region --- Sidebar Functionality ---
@@ -599,6 +621,8 @@ let burger = null
 let headerBottom = 0
 /** @type {boolean} */
 let isCollapsed = false
+/** @type {{ key: string, ts: number }} */
+let lastNavigateRequest = { key: '', ts: 0, }
 
 /** Create the burger icon element
  * @returns {HTMLElement} The burger button element
@@ -1028,6 +1052,16 @@ async function navigate(toUrl, addToHistory = true) {
     }
     // #endregion --- Normalize toUrl ---
 
+    // Prevent duplicate in-flight navigate requests for the same target.
+    // This can happen when different ctrl topics trigger a refresh for the same page.
+    const navKey = `${normalizePath(toUrl)}|${hashFragment}|${addToHistory ? '1' : '0'}`
+    const now = Date.now()
+    if (lastNavigateRequest.key === navKey && (now - lastNavigateRequest.ts) < 500) {
+        console.debug('Skipping duplicate navigate request:', { toUrl, hashFragment, addToHistory, })
+        return
+    }
+    lastNavigateRequest = { key: navKey, ts: now, }
+
     // console.log(`>> 🌐🕸️[markweb:navigate] Navigating `, { uibuilderCtrl: 'internal', controlType: 'navigate', toUrl: toUrl, addToHistory: addToHistory, hashFragment: hashFragment, } )
 
     // Ask server for new page content via uibuilder control message (see onChange handler below)
@@ -1098,6 +1132,9 @@ initialPath = initialPath.replace(window.location.origin, '')
 if (initialPath === baseUrl.replace(/\/$/, '')) {
     initialPath = baseUrl
 }
+
+setupPageTitleResetLink()
+
 // console.log('Setting initial history state:', initialPath, { path: initialPath, status: 'initial load', })
 history.replaceState({ path: initialPath, status: 'initial load', }, '', initialPath)
 
@@ -1299,8 +1336,8 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                 controlType: 'get-sidebar-nav',
                 currentPath: pageData?.path || window.location.pathname,
             })
-            // If the current page is affected by the index change, navigate to it again to refresh content
-            navigate(pageData.toUrl || window.location.pathname, false)
+            // Refresh the current page only once and preserve hash fragment.
+            navigate(window.location.pathname + window.location.search + window.location.hash, false)
             break
         }
 
@@ -1322,7 +1359,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             // console.log('Config file changed on server, reloading current page.', ctrlMsg)
             // Reload the current page to pick up any config changes
             if (pageData?.toUrl) {
-                navigate(pageData.toUrl, false)
+                navigate(window.location.pathname + window.location.search + window.location.hash, false)
             } else {
                 // Fallback: reload the page if pageData is not available
                 window.location.reload()
@@ -1333,9 +1370,9 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         // If the server watch fn detects a file/folder change - reload page if the changed file is the current page
         case '_source-change': {
             // console.log('Source changed on server.', { ctrlMsg, pageData, })
-            if (ctrlMsg.payload.url === pageData.toUrl) {
+            if (ctrlMsg.payload?.url === pageData?.toUrl) {
                 console.log('Current page affected by source change, reloading page content.')
-                navigate(pageData.toUrl || window.location.pathname, false)
+                navigate(window.location.pathname + window.location.search + window.location.hash, false)
             }
             break
         }
@@ -1358,29 +1395,33 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             // if (elContent) elContent.innerHTML = data.content || '<p>No content</p>'
             // else console.error('Content element not found to update page content.')
 
-            // Remove trailing slash from baseUrl and include hash fragment if present
-            const hashFragment = ctrlMsg.hashFragment || ''
-            const newUrl = baseUrl.replace(/\/$/, '') + data.path + hashFragment
-
             // Detect whether this is a same-page reload (e.g. source change, config change)
             const isSamePage = normalizePath(currentPageUrl.replace(baseUrl, '')) === normalizePath(data.path)
 
+            // Server may omit hashFragment on some refresh paths.
+            // Preserve the browser hash for same-page updates as a fallback.
+            const hashFragment = ctrlMsg.hashFragment || (isSamePage ? window.location.hash : '')
+            const newUrl = baseUrl.replace(/\/$/, '') + data.path + hashFragment
+
             // Only push to history if not handling popstate and server says to add to history
-            // console.log('pushState:', newUrl, 'addToHistory:', ctrlMsg.addToHistory, 'isHandlingPopstate:', isHandlingPopstate)
+            console.log('pushState:', newUrl, 'addToHistory:', ctrlMsg.addToHistory, 'isHandlingPopstate:', isHandlingPopstate)
             if (ctrlMsg.addToHistory === true && !isHandlingPopstate) {
                 history.pushState(
                     { path: newUrl, hash: hashFragment || undefined, status: 'SPA page change', },
                     '', newUrl
                 )
             }
+            console.log('Updated history state to:', { newUrl, hashFragment, isSamePage, addToHistory: ctrlMsg.addToHistory, isHandlingPopstate, })
+            console.log('Scroll handling for page navigation:', { isSamePage, hashFragment, doit: !(isSamePage || hashFragment), })
 
             // Scroll after content is rendered - target <main> <section> since it is the scroll container
             // Skip scroll reset when reloading the same page (e.g. source/config change)
             if (!isSamePage || hashFragment) {
                 requestAnimationFrame(() => {
                     setTimeout(() => {
-                        const scrollContainer = document.querySelector('main section') || document.documentElement
+                        const scrollContainer = document.querySelector('main > section') || document.documentElement
                         if (hashFragment) {
+                            console.log('Scrolling to hash fragment:', hashFragment)
                             // If there's a hash fragment, scroll to that element
                             const targetId = hashFragment.slice(1) // Remove leading #
                             const targetElement = document.getElementById(targetId)
@@ -1389,7 +1430,9 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                             }
                         } else {
                             // Scroll to top on page navigation if no hash fragment
-                            scrollContainer.scrollTo({ top: 0, behavior: 'instant', })
+                            console.log('Scrolling to top of page')
+
+                            scrollContainer.scrollTo({ top: 0, behavior: 'auto', })
                         }
                     }, 100)
                 })
@@ -1397,6 +1440,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
             // Reset the popstate flag after processing
             isHandlingPopstate = false
+            console.log('Reset isHandlingPopstate to false after page navigation handling.')
 
             // Update active nav link(s) and parent indicators
             // updateActiveNavState(data.path)
