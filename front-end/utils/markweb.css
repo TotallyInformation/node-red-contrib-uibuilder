@@ -702,11 +702,37 @@ blockquote, .markdown-alert {
 /* Task List Styles (markdown-it plugin) */
 .contains-task-list {
     list-style: none;
-    padding-inline-start: unset;
+    padding-inline-start: 0;
+    margin-inline-start: 0;
 
     .contains-task-list {
-        margin-left: 1.5em;
+        margin-inline-start: 1.5em;
     }
+}
+
+.task-list-item {
+    list-style: none;
+    --task-check-col: 1.1em;
+    --task-check-gap: 0.75em;
+}
+
+.task-list-item > :not(:first-child) {
+    margin-inline-start: calc(var(--task-check-col) + var(--task-check-gap));
+}
+
+.task-list-item-label {
+    display: grid;
+    grid-template-columns: var(--task-check-col) minmax(0, 1fr);
+    align-items: start;
+    column-gap: var(--task-check-gap);
+}
+
+.task-list-item-text {
+    min-width: 0;
+}
+
+.task-list-item-checkbox {
+    margin: 0.25em 0 0;
 }
 
 /* Accessibility: Skip to main content link */
