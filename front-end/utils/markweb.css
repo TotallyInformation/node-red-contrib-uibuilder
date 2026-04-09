@@ -660,26 +660,24 @@ blockquote, .markdown-alert {
     border-left: 0.25em solid var(--blockquote-highlight);
 
     p {
-        margin: 0.3em 0;
-    }
-    /* p:first-child {
-        padding: 0.3em 0 0 0;
+        margin: 0.6em 0;
     }
     p:last-child {
-        margin: 0 0;
-        padding: 0 0 0.3em 0;
-    } */
+        margin-bottom: 0;
+    }
 }
 .markdown-alert {
     --blockquote-highlight: hsl(213, 12%, 30%);
-}
-.markdown-alert-title {
-    display: inline-flex;
-    align-items: center;
-    font-weight: 500;
-    margin: auto auto;
-    color: var(--blockquote-highlight);
-    fill: var(--blockquote-highlight);
+
+    .markdown-alert-title {
+        display: inline-flex;
+        margin: 0 0 !important;
+        align-items: center;
+        font-weight: 500;
+        color: var(--blockquote-highlight);
+        fill: var(--blockquote-highlight);
+    }
+
 }
 .octicon {
     margin: 0.3em 0.5em 0.3em 0;
