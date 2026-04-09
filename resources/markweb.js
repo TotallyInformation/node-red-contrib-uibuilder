@@ -62,8 +62,7 @@ RED.nodes.registerType(moduleName, {
 
     paletteLabel: moduleName,
     category: uibuilder.paletteCategory,
-    // color: 'var(--uib-node-colour)', // '#E6E0F8'
-    color: uibuilder.paletteColor, // node-red v4.1.7 broke using custom var from plugin
+    color: 'var(--uib-node-colour)', // '#E6E0F8' '"hsl(248 100% 91%)"'
 
     /** Prepares the Editor panel */
     oneditprepare: function () { onEditPrepare(this) },
