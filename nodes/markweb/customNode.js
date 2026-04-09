@@ -215,7 +215,6 @@ function nodeInstance(config) {
         // this.isDemo = true
         this.source = join(__dirname, '..', '..', 'docs')
     }
-    console.log(`🌐🕸️[markweb:nodeInstance:${this.url}] Initialising new node instance with source "${this.source}" and config folder "${this.configFolder}"`, __dirname)
 
     // if source folder is a relative path, make it relative to userDir
     if (isAbsolute(this.source)) {
@@ -735,8 +734,24 @@ function searchResultsWrapper(key, attributes, node, options) {
 function renderSidebarTree(map, options, _level = 0) {
     if (map.size === 0) return ''
 
+    const priorityRank = (priority) => {
+        if (priority === 'high') return 0
+        if (priority === 'low') return 2
+        return 1
+    }
+
+    const sortedEntries = [...map.values()].sort((a, b) => {
+        const rankA = priorityRank(a.sortPriority)
+        const rankB = priorityRank(b.sortPriority)
+        if (rankA !== rankB) return rankA - rankB
+
+        const titleA = a.title || a.path || ''
+        const titleB = b.title || b.path || ''
+        return titleA.localeCompare(titleB)
+    })
+
     let html = '<ul>'
-    for (const [, entry] of map) {
+    for (const entry of sortedEntries) {
         const hasChildren = entry.children && entry.children.size > 0
         const isCurrentPage = options.currentPath === entry.path
             || options.currentPath === entry.path.replace(/\/$/, '')
@@ -794,8 +809,14 @@ function createTree(currentStart, attributes, indexOptions, node) {
                     path: '/',
                     title,
                     description: doc.description || '',
+                    sortPriority: doc.sortPriority || '',
                     children: new Map(),
                 })
+            } else {
+                const rootEntry = tree.get('/')
+                rootEntry.title = title
+                rootEntry.description = doc.description || ''
+                rootEntry.sortPriority = doc.sortPriority || ''
             }
             continue
         }
@@ -810,6 +831,7 @@ function createTree(currentStart, attributes, indexOptions, node) {
                     path: isLast ? path : '/' + segments.slice(0, i + 1).join('/') + '/',
                     title: isLast ? title : segment,
                     description: isLast ? (doc.description || '') : '',
+                    sortPriority: isLast ? (doc.sortPriority || '') : '',
                     children: new Map(),
                 })
             } else if (isLast) {
@@ -817,6 +839,7 @@ function createTree(currentStart, attributes, indexOptions, node) {
                 nodeEntry.path = path
                 nodeEntry.title = title
                 nodeEntry.description = doc.description || ''
+                nodeEntry.sortPriority = doc.sortPriority || ''
             }
             current = current.get(segment).children
         }
@@ -1931,8 +1954,25 @@ function readConfigFile(node, fileName, optional = false) {
  */
 function renderTree(map, options, sameLevel = false, nav = false, _level = 0, currentPath = '') {
     if (!map || map.size === 0) return ''
+
+    const priorityRank = (priority) => {
+        if (priority === 'high') return 0
+        if (priority === 'low') return 2
+        return 1
+    }
+
+    const sortedEntries = [...map.values()].sort((a, b) => {
+        const rankA = priorityRank(a.sortPriority)
+        const rankB = priorityRank(b.sortPriority)
+        if (rankA !== rankB) return rankA - rankB
+
+        const titleA = a.title || a.path || ''
+        const titleB = b.title || b.path || ''
+        return titleA.localeCompare(titleB)
+    })
+
     let html = _level > 0 ? '<ul>' : '<ul class="tree">'
-    for (const [, entry] of map) {
+    for (const entry of sortedEntries) {
         // Ignore samelevel in recursive calls
         const childHtml = renderTree(entry.children, null, false, nav, _level + 1, currentPath)
         // If same level, skip folder entries (show only files)
@@ -1994,26 +2034,34 @@ function setupFileWatcher(node) {
         })
 
         watcher.on('ready', () => {
-            log.info(`🌐🕸️[markweb:setupFileWatcher:${instanceUrl}] File watcher started for: ${sourcePath}`)
+            log.info(`🌐🕸️[markweb:setupFileWatcher:${instanceUrl}] File watcher started for: "${sourcePath}"`)
         })
         // WARNING: A file rename is an unlink & add event pair - can happen in any order
         watcher.on('all', (eventType, filename) => {
-            log.info(`🌐🕸️[markweb:watcher:${instanceUrl}] File event detected: ${eventType}, ${filename}`, performance.now())
+            log.info(`🌐🕸️[markweb:watcher:${instanceUrl}] File event detected: "${eventType}" for "${filename}"`)
             changes.push({ eventType, filename: urlJoin(filename), })
             // Debounce to avoid rebuilding multiple times for rapid changes
             if (rebuildTimeout) clearTimeout(rebuildTimeout)
             rebuildTimeout = setTimeout(async () => {
-                const changesCopy = [...changes].filter(({ filename, }) => {
-                    // const parts = filename.split('/')
+                const changesCopy = [...changes].filter(({ eventType: evType, filename, }) => {
                     const parts = parse(filename)
-                    // const basename = parts[parts.length - 1]
                     const basename = parts.base
-                    // Only process .md files
-                    // if (!basename.endsWith('.md')) return false
-                    if (parts.ext !== '' && parts.ext !== '.md') return false
-                    // Skip .md files whose name starts with _ or .
+
+                    // Creating a folder alone never warrants a reindex - wait for actual file adds
+                    if (evType === 'addDir') return false
+
+                    // Removing a folder: reindex only if the folder path is valid (no _ or . prefix parts)
+                    if (evType === 'unlinkDir') {
+                        if (basename.startsWith('_') || basename.startsWith('.')) return false
+                        if (parts.dir.split('/').some(part => part.startsWith('_') || part.startsWith('.'))) return false
+                        return true
+                    }
+
+                    // File events (add, change, unlink): must be a .md file with valid naming
+                    if (parts.ext !== '.md') return false
+                    // Skip files whose name starts with _ or .
                     if (basename.startsWith('_') || basename.startsWith('.')) return false
-                    // Skip .md files in any folder whose name starts with _ or .
+                    // Skip files inside a folder whose name starts with _ or .
                     if (parts.dir.split('/').some(part => part.startsWith('_') || part.startsWith('.'))) return false
                     return true
                 })
@@ -2043,7 +2091,7 @@ function setupFileWatcher(node) {
         })
         watcher.on('error', (error) => {
             if (!(error.syscall === 'watch' && error.filename === null)) {
-                console.error(`🌐🕸️[markweb:watcher:${instanceUrl}] Watcher error: ${error}`, error)
+                log.error(`🌐🕸️🛑[markweb:watcher:${instanceUrl}] Watcher error: ${error.message}`, error)
             }
         })
     } catch (err) {
