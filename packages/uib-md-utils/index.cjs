@@ -61145,33 +61145,35 @@ function isTodoItem(tokens, index) {
   return isInline(tokens[index]) && isParagraph(tokens[index - 1]) && isListItem(tokens[index - 2]) && startsWithTodoMarkdown(tokens[index]);
 }
 function todoify(token, TokenConstructor) {
-  const textContent = token.content.slice(4);
+  const isChecked = startsWithCheckedTodoMarkdown(token);
+  stripTodoPrefix(token);
   if (useLabelWrapper) {
-    const labelToken = new TokenConstructor("html_inline", "", 0);
-    const checkbox = makeCheckbox(token, TokenConstructor);
-    labelToken.content = `<label class="task-list-item-label">${checkbox.content}${textContent}</label>`;
-    token.children = [labelToken];
-    token.content = textContent;
+    const labelOpenToken = new TokenConstructor("html_inline", "", 0);
+    const labelCloseToken = new TokenConstructor("html_inline", "", 0);
+    const textWrapOpenToken = new TokenConstructor("html_inline", "", 0);
+    const textWrapCloseToken = new TokenConstructor("html_inline", "", 0);
+    const checkbox = makeCheckbox(TokenConstructor, isChecked);
+    labelOpenToken.content = '<label class="task-list-item-label">';
+    textWrapOpenToken.content = '<span class="task-list-item-text">';
+    textWrapCloseToken.content = "</span>";
+    labelCloseToken.content = "</label>";
+    token.children = [
+      labelOpenToken,
+      checkbox,
+      textWrapOpenToken,
+      ...token.children,
+      textWrapCloseToken,
+      labelCloseToken
+    ];
   } else {
-    token.children.unshift(makeCheckbox(token, TokenConstructor));
-    token.children[1].content = token.children[1].content.slice(4);
-    token.content = textContent;
-    if (token.children[1].position) {
-      token.children[1].position += 4;
-    }
-    if (token.children[1].size) {
-      token.children[1].size -= 4;
-    }
+    token.children.unshift(makeCheckbox(TokenConstructor, isChecked));
   }
 }
-function makeCheckbox(token, TokenConstructor) {
+function makeCheckbox(TokenConstructor, isChecked) {
   const checkbox = new TokenConstructor("html_inline", "", 0);
   const disabledAttr = disableCheckboxes ? ' disabled="" ' : "";
-  let checkedAttr = "";
-  if (token.content.indexOf("[x] ") === 0 || token.content.indexOf("[X] ") === 0) {
-    checkedAttr = ' checked="" ';
-  }
-  let uibActionAttr = "";
+  const checkedAttr = isChecked ? ' checked="" ' : "";
+  const uibActionAttr = "";
   checkbox.content = `<input class="task-list-item-checkbox"${checkedAttr}${disabledAttr}${uibActionAttr}type="checkbox">`;
   return checkbox;
 }
@@ -61186,6 +61188,25 @@ function isListItem(token) {
 }
 function startsWithTodoMarkdown(token) {
   return token.content.indexOf("[ ] ") === 0 || token.content.indexOf("[x] ") === 0 || token.content.indexOf("[X] ") === 0;
+}
+function startsWithCheckedTodoMarkdown(token) {
+  return token.content.indexOf("[x] ") === 0 || token.content.indexOf("[X] ") === 0;
+}
+function stripTodoPrefix(token) {
+  token.content = token.content.slice(4);
+  if (!Array.isArray(token.children)) return;
+  for (const child of token.children) {
+    if (typeof child?.content !== "string") continue;
+    if (!startsWithTodoMarkdown(child)) continue;
+    child.content = child.content.slice(4);
+    if (child.position) {
+      child.position += 4;
+    }
+    if (child.size) {
+      child.size -= 4;
+    }
+    break;
+  }
 }
 function taskLists(md2, options) {
   if (options) {

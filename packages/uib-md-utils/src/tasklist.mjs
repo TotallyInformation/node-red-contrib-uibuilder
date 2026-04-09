@@ -55,47 +55,46 @@ function isTodoItem(tokens, index) {
  * @param {Function} TokenConstructor - The Token constructor from markdown-it state
  */
 function todoify(token, TokenConstructor) {
-    // Get the text content without the checkbox markdown (e.g., "[ ] " or "[x] ")
-    const textContent = token.content.slice(4)
+    const isChecked = startsWithCheckedTodoMarkdown(token)
+    stripTodoPrefix(token)
 
     if (useLabelWrapper) {
-        // Create a label that wraps the checkbox and contains the text
-        const labelToken = new TokenConstructor('html_inline', '', 0)
-        const checkbox = makeCheckbox(token, TokenConstructor)
-        labelToken.content = `<label class="task-list-item-label">${checkbox.content}${textContent}</label>`
+        // Wrap existing parsed children to preserve inline markdown rendering
+        const labelOpenToken = new TokenConstructor('html_inline', '', 0)
+        const labelCloseToken = new TokenConstructor('html_inline', '', 0)
+        const textWrapOpenToken = new TokenConstructor('html_inline', '', 0)
+        const textWrapCloseToken = new TokenConstructor('html_inline', '', 0)
+        const checkbox = makeCheckbox(TokenConstructor, isChecked)
 
-        // Replace all children with just the label token
-        token.children = [labelToken]
-        token.content = textContent
+        labelOpenToken.content = '<label class="task-list-item-label">'
+        textWrapOpenToken.content = '<span class="task-list-item-text">'
+        textWrapCloseToken.content = '</span>'
+        labelCloseToken.content = '</label>'
+
+        token.children = [
+            labelOpenToken,
+            checkbox,
+            textWrapOpenToken,
+            ...token.children,
+            textWrapCloseToken,
+            labelCloseToken,
+        ]
     } else {
-        // Original behaviour: checkbox followed by text content
-        token.children.unshift(makeCheckbox(token, TokenConstructor))
-        token.children[1].content = token.children[1].content.slice(4)
-        token.content = textContent
-
-        if (token.children[1].position) {
-            token.children[1].position += 4
-        }
-
-        if (token.children[1].size) {
-            token.children[1].size -= 4
-        }
+        // Original behaviour: checkbox followed by parsed text content
+        token.children.unshift(makeCheckbox(TokenConstructor, isChecked))
     }
 }
 
 /** Creates a checkbox input token based on the task item state.
- * @param {object} token - The markdown-it token containing task item content
  * @param {Function} TokenConstructor - The Token constructor from markdown-it state
+ * @param {boolean} isChecked - Whether the task item is checked
  * @returns {object} A new html_inline token containing the checkbox input
  */
-function makeCheckbox(token, TokenConstructor) {
+function makeCheckbox(TokenConstructor, isChecked) {
     const checkbox = new TokenConstructor('html_inline', '', 0)
     const disabledAttr = disableCheckboxes ? ' disabled="" ' : ''
-    let checkedAttr = ''
-    if (token.content.indexOf('[x] ') === 0 || token.content.indexOf('[X] ') === 0) {
-        checkedAttr = ' checked="" '
-    }
-    let uibActionAttr = ''
+    const checkedAttr = isChecked ? ' checked="" ' : ''
+    const uibActionAttr = ''
     // if (!disableCheckboxes) uibActionAttr = ' onclick="uibuilder.eventSend(event)" '
     checkbox.content = `<input class="task-list-item-checkbox"${checkedAttr}${disabledAttr}${uibActionAttr}type="checkbox">`
     return checkbox
@@ -130,6 +129,41 @@ function isListItem(token) {
 function startsWithTodoMarkdown(token) {
     // leading whitespace in a list item is already trimmed off by markdown-it
     return token.content.indexOf('[ ] ') === 0 || token.content.indexOf('[x] ') === 0 || token.content.indexOf('[X] ') === 0
+}
+
+/** Checks whether todo markdown starts with a checked marker.
+ * @param {object} token - The markdown-it token to check
+ * @returns {boolean} True if token starts with checked todo markdown
+ */
+function startsWithCheckedTodoMarkdown(token) {
+    return token.content.indexOf('[x] ') === 0 || token.content.indexOf('[X] ') === 0
+}
+
+/** Removes the todo marker prefix from inline token content and first matching child token.
+ * Keeps markdown-it children intact so inline markdown (e.g., code spans) still renders.
+ * @param {object} token - The markdown-it inline token to modify
+ */
+function stripTodoPrefix(token) {
+    token.content = token.content.slice(4)
+
+    if (!Array.isArray(token.children)) return
+
+    for (const child of token.children) {
+        if (typeof child?.content !== 'string') continue
+        if (!startsWithTodoMarkdown(child)) continue
+
+        child.content = child.content.slice(4)
+
+        if (child.position) {
+            child.position += 4
+        }
+
+        if (child.size) {
+            child.size -= 4
+        }
+
+        break
+    }
 }
 
 /** markdown-it plugin to render GitHub-style task lists.
