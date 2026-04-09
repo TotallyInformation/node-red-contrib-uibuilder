@@ -81,7 +81,7 @@ const mdParse = (node, content, env) => {
 
 // ! TODO Move to fs lib
 /** walkFolderStructure - Recursively walks a folder structure and returns a nested object representing folders and files.
- * Folders are only included if they contain an index.md file. Any folder or file starting with _ or . is ignored.
+ * Folders are only included if they contain an index.md or _index.md file. Any folder or file starting with _ (except _index.md) or . is ignored.
  * @param {string} dirPath - The root directory to start walking from
  * @param {string} [_startPath] - The initial starting path (used internally)
  * @param {number} [_level] - Current recursion depth (used internally to prevent infinite loops)
@@ -101,7 +101,7 @@ const walkFolderStructure = async (dirPath, _startPath, _level = 0) => {
      * @param {string} name - The name of the file or folder
      * @returns {boolean} True if the name should be ignored
      */
-    const shouldIgnore = name => name.startsWith('_') || name.startsWith('.')
+    const shouldIgnore = name => (name.startsWith('_') && name !== '_index.md') || name.startsWith('.')
 
     /** Read directory and filter out ignored entries */
     let entries
@@ -113,8 +113,8 @@ const walkFolderStructure = async (dirPath, _startPath, _level = 0) => {
     // Ignore entries starting with _ or .
     entries = entries.filter(e => !shouldIgnore(e.name))
 
-    // Only include this folder if it contains index.md
-    const hasIndexMd = entries.some(e => e.isFile() && e.name === 'index.md')
+    // Only include this folder if it contains index.md or _index.md
+    const hasIndexMd = entries.some(e => e.isFile() && (e.name === 'index.md' || e.name === '_index.md'))
     if (!hasIndexMd) return null
 
     /** @type {FolderTree} */
@@ -130,7 +130,7 @@ const walkFolderStructure = async (dirPath, _startPath, _level = 0) => {
         if (entry.isDirectory()) {
             const child = await walkFolderStructure(fullPath, _startPath, _level + 1)
             if (child) node.children.push(child)
-        } else if (entry.isFile() && entry.name !== 'index.md') {
+        } else if (entry.isFile() && entry.name !== 'index.md' && entry.name !== '_index.md') {
             node.children.push({
                 name: entry.name,
                 type: 'file',
@@ -1085,7 +1085,12 @@ async function buildIndexes(node) {
     // TODO: Use async fg
     let files
     try {
-        files = fgSync(`${indexFolder}/**/*.md`, { ignore: ['**/_*/**', '**/_*', '**/.*/**', '**/.*'], })
+        // Get all regular .md files, excluding _ and . prefixed files/folders
+        const regularFiles = fgSync(`${indexFolder}/**/*.md`, { ignore: ['**/_*/**', '**/_*', '**/.*/**', '**/.*'], })
+        // Also include _index.md files specifically (Hugo/Obsidian compatibility), but not inside _* folders
+        const indexFiles = fgSync(`${indexFolder}/**/_index.md`, { ignore: ['**/_*/**', '**/.*/**', '**/.*'], })
+        // Merge and deduplicate
+        files = [...new Set([...regularFiles, ...indexFiles])]
     } catch (e) {
         log.error(`🌐🕸️🛑[markweb:buildIndex:${url}] Error reading markdown files from source folder "${indexFolder}": ${e.message}`)
         files = []
@@ -1176,8 +1181,9 @@ function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isA
     let parsedPath = parse(morePath)
     if (!parsedPath.ext) {
         if (existsSync(fullPath)) {
-            // The folder exists, we assume the index file needed
-            morePath = join(morePath, 'index.md')
+            // The folder exists - prefer index.md, fall back to _index.md (Hugo/Obsidian compatibility)
+            const hasIndex = existsSync(join(node.instanceFolder, morePath, 'index.md'))
+            morePath = join(morePath, hasIndex ? 'index.md' : '_index.md')
             fullPath = join(node.instanceFolder, morePath)
         } else {
             // Not a folder, so add .md extension
@@ -1210,8 +1216,8 @@ function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isA
     if (parsedPath.ext && parsedPath.ext !== '.md') {
         log.info(`🌐🕸️[markweb:nodeInstance:checkNames] (from: ${from}) Non-markdown file requested, allowing access to "${fullPath}"`)
     } else {
-        // Check if folder or file name starts with _ or . and deny access - but allow for demo site
-        if (morePath.split(sep).some(part => part.startsWith('_') || part.startsWith('.'))) {
+        // Check if folder or file name starts with _ or . and deny access - but allow _index.md (Hugo/Obsidian compatibility)
+        if (morePath.split(sep).some(part => (part.startsWith('_') && part !== '_index.md') || part.startsWith('.'))) {
             log.error(`🌐🕸️🛑[markweb:nodeInstance:checkNames] (From=${from}, url=${node.url}) Access denied to folder/file "${morePath}" because it is in a folder or file starting with "_" or "."`)
             result.resultCode = 403
             result.errorAttributes = {
@@ -1484,16 +1490,17 @@ async function getMarkdownFile(node, file, morePath, parsedPath, from) {
     // check if urlPath already exists in the page index
     // get the actual filename without the path
     const filename = basename(file)
-    // Skip files starting with _ or .
-    if (filename.startsWith('_') || filename.startsWith('.')) {
+    // Skip files starting with _ or . EXCEPT _index.md (Hugo/Obsidian compatibility)
+    if ((filename.startsWith('_') && filename !== '_index.md') || filename.startsWith('.')) {
         return {}
     }
 
     const relativePath = relative(instanceFolder, file)
         .replace(/\\/g, '/')
-    // Replace trailing .md and whole `index` filename with empty string to get the URL path
+    // Replace trailing .md and whole `index` or `_index` filename with empty string to get the URL path
     const urlPath = '/' + relativePath
         .replace(/\.md$/, '')
+        .replace(/(^|\/)_index$/, '$1')
         .replace(/(^|\/)index$/, '$1')
 
     // console.group(`>>🌐🕸️[markweb:getMarkdownFile:${node.url}] Processing markdown file:`)
@@ -1550,7 +1557,7 @@ async function getMarkdownFile(node, file, morePath, parsedPath, from) {
         // Generate title from filename if not in front-matter: remove .md, convert _ to space, capitalize first char
         let derivedTitle
         const fileName = basename(file, '.md')
-        if (fileName === 'index') {
+        if (fileName === 'index' || fileName === '_index') {
             // Use the last segment of the path as the name
             const segments = file.split(/[\\\/]/)
             derivedTitle = segments[segments.length - 2].replace(/_/g, ' ')
@@ -1580,7 +1587,7 @@ async function getMarkdownFile(node, file, morePath, parsedPath, from) {
             // Generate updated from file mtime if not in front-matter
             updated: parsed.attributes?.updated || (fStats.mtimeMs ? new Date(fStats.mtimeMs).toISOString() : ''),
             // Record whether this is a folder or a file
-            type: filename === 'index.md' ? 'folder' : 'file',
+            type: (filename === 'index.md' || filename === '_index.md') ? 'folder' : 'file',
             // Record the file name
             file: filename,
             // Record the folder depth (0 for root index.md, 1 for first level, etc)
