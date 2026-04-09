@@ -4,13 +4,12 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-03-27 20:39:04
+updated: 2026-04-09 13:20:38
 ---
 
 ## To Fix
 
-* [ ] Deploy of new uibuilder node:
-  * [ ] `🌐⚠️[uibuilder:web:setupInstanceStatic:finances] Cannot show default page, index.html does not exist in D:\src\uibRoot\finances\src.`
+* [ ] Deploy of new uibuilder node sometimes results in `Cannot show default page, index.html does not exist in `
 
 ## In Progress
 
@@ -20,10 +19,11 @@ A node that creates a website out of a folder of markdown content.
 
 #### To test:
 
-* [ ] sidebar.json (may want to add include/exclude options so that particular folders can be included as-is or excluded).
+* [ ] Use sub-paths in the URL.
 
-#### To do:
+#### Future
 
+* [ ] sidebar.json - may want to add include/exclude options so that particular folders can be included as-is or excluded.
 * [ ] Cache the default config folder files to avoid re-reading on every page load.
 * [ ] *How to deal with category/tag listing pages?*
 * [ ] Allow for folders with no index.md file or `_index.md`. Increases compatibility with other content sources (e.g. Astro, Obsidian, etc.). If a folder does not have an index.md file, then it should still be shown in the listing if it contains other folders or files that are being shown in the listing.
@@ -46,8 +46,6 @@ A node that creates a website out of a folder of markdown content.
   * [ ] Allow for custom front-matter fields to be added to the index and used in the `%%index%%` output. E.g. `tags`, `category`, `author`, etc. This would allow for more powerful filtering and categorisation of pages in the index listings. Also add sorting.
   * [ ] Page aliases. Allow front-matter `alias` field to specify alternative url paths for a page. Also have a master map.
   * [ ] Page templates. Allow front-matter `template` field to specify a template file to use for the page.
-  
-#### Future
 
 * uibuilder Editor
   * [ ] Add checks for duplicate URLs.
@@ -173,6 +171,7 @@ A node that creates a website out of a folder of markdown content.
 (See the roadmap for lots more, these are just the current thoughts)
 
 * Router improvements
+  * [ ] Allow router settings to be created inside the uibuilder node's config panel. This would allow users to create routes without having to write code.
   * [ ] Add experimental rective menu updates to router library.
   * [ ] Auto-menu generation for menus.
     * [ ] Update router auto-menu with improvements from home site.
@@ -189,8 +188,6 @@ A node that creates a website out of a folder of markdown content.
   * [ ] Investigate and implement best no-code/low-code way to auto-create the SPA from Node-RED. [ref](https://discourse.nodered.org/t/uibuilder-button/98970/13?u=totallyinformation).
 
 * Back-end
-  * [ ] NEW NODE: `uib-markdown` - converts msg.payload containing markdown to HTML using the `mdParse` library created for `markweb`. Pass `msg.attributes` to the parser as options for markdown processing (e.g. to allow custom directives in the markdown). Output HTML in `msg.payload`.
-  * [ ] In web.js, add marked browser libary to the list of served static files.
   * [ ] Failed rename of instance folder may get stuck.
 
   * [ ] Library manager updates

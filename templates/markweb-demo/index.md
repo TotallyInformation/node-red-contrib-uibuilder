@@ -10,7 +10,7 @@ tags:
   - testing
 status: Published
 created: 2026-03-23 17:04:49
-updated: 2026-03-25 11:54:57
+updated: 2026-04-07 16:03:34
 ---
 
 The main purpose of this demo site is to demonstrate the features of UIBUILDER for Node-RED's _MarkWeb_ features in a variety of markdown files. It serves as a testbed for features and as a reference.
@@ -31,6 +31,44 @@ Markweb takes care of rendering the markdown into HTML and serving it as a websi
 The site uses Markweb's default HTML template. It has search, navigation and page table of contents in the left sidebar. The sidebar can be hidden and resized as desired. The main content area automatically shows the page title as a heading, the page description as the first paragraph, the Markdown content of the source file and finally a footer paragraph with the last updated date.
 
 You can override the default template for your own sites by specifying a _Configuration folder_ in the Markweb node configuration and placing your own `page-template.html` file in that folder. This allows you to create your own custom page layouts and designs while still using Markweb's markdown rendering capabilities.
+
+## Page structure details
+
+### Sidebar (Left column)
+
+* _Search box_ - allows you to search for content across all pages in the site. The search is performed on the markdown source files and the results are displayed in a list with links to the relevant pages.
+
+* _Navigation_ - shows a tree list of all pages in the site. The navigation is generated on the server from the markdown source files and their frontmatter metadata. It can be configured to show a hierarchical structure based on the URL paths of the pages. The list is limited to no more than 5 sub-levels for performance and ease of use. Avoid having too many sub-folders in your source content.
+
+  The navigation list is interactive and allows you to expand and collapse sections of the navigation tree. It also highlights the current page you are viewing in the main content area.
+
+  The list is automatically updated when changes happen on the server.
+
+* _Table of contents_ - shows a list of the headings in the current page. This allows you to quickly navigate to different sections of the page. The table of contents is generated from the headings in the markdown source file. It highlights the current section you are viewing in the main content area.
+
+  The list is automatically updated when the page content is changed on the server.
+
+### Centre margin
+
+Between the 2 columns is a margin area that lets you resize the columns. There is also a "hamburger" button that toggles the visibility of the left-hand sidebar.
+
+### Main content (Right column)
+
+* _Header_ - Displays the page title and description.
+
+  The header gets smaller as you scroll down the page to give more space for the main content. The heading text can be clicked to scroll back to the top of the page. The heading text comes from the "title" field in the frontmatter or the file name if the title field is not specified. The description comes from the "description" field in the frontmatter or is left blank if not specified.
+
+* _Centre section_ - Contains the main content of the page, rendered from the markdown file.
+
+  Shows the main markdown content of the page converted to HTML.
+
+  Headings are sized and underlined according to the heading level. They are automatically made collapsible to allow you to hide and show sections of content.
+
+  The content is automatically updated when the page content is changed on the server.
+
+* _Footer_ - Displays the last updated date and other optional information.
+
+  It gets slightly smaller as you scroll down the page to give more space for the main content. The last updated date is taken from page frontmatter (updated field) or the file system's last modified date for the markdown source file.
 
 ## Markdown "frontmatter"
 The markdown source files support a "frontmatter" section at the top of the file which uses YAML syntax to specify metadata about the page. This is used to set the page title, description and other attributes. The content of the markdown file is then rendered as HTML and displayed in the main content area. See the page on [Variables](markdown-tests/variables.md) for more details on how to use frontmatter and the variables it provides.

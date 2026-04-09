@@ -151,10 +151,16 @@ See the [node documentation](./docs/nodes/markweb.md) for full details.
 * If DOMPurify is used, it is now configured to allow custom web components, since uibuilder now makes more extensive use of them.
 
 * Tidied up unnecessary async processing in the DOM Mutation Observer. Giving a minor performance boost.
+
 * Delayed startup of DOM observing so that scripts loaded after the client library have time to set initial values.
+
 * 2 new managed variables added, `reconnect` and `initialConnect`. `reconnect` is the more useful, it contains a count of the number of times the client has reconnected to the server. `initialConnect` is a boolean that is true until the first successful connection to the server is made. Use `if (uibuilder.get('reconnect') > 0)` to trigger actions on reconnects but not on the initial connection.
 
+* Improved processing of `uib-var` custom attribute processing when using object property paths. e.g. `myvar.myprop` or `myvar[5]`. This may previously have been inconsistent.
+
 ### Development changes
+
+* **SECURITY IMPROVEMENTS** - Added minimum package age requirements to help prevent supply chain attacks.
 
 * **NEW** npm script `bugfix-worktree` - creates a new git worktree for bugfix branches. This enables work on a bug fix in a separate directory while keeping the current dev branch work intact. Both directories can be open simultaneously without needing to stash changes or switch branches. When done with the bug fix, commit, push, create a PR, and then remove the worktree.
 

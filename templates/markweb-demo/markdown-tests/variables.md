@@ -1,7 +1,7 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-03-20 11:41:53
-updated: 2026-03-27 20:15:15
+updated: 2026-04-09 14:05:23
 status: Complete
 title: Variables
 description: >
@@ -39,16 +39,18 @@ A variable is a placeholder that can be used in markdown files to insert dynamic
 - `{{status}}` - The current status of the page, e.g., `Draft` or `Published` {plain text}.
 - `{{author}}` - The page author {plain text}.
 - `{{created}}` - The page creation date/time {ISO 8601 text}.
-- `{{updated}}` - The page last updated date/time {ISO 8601 text}.
-- `{{category}}` - The page category {plain text}.
-- `{{tags}}` - The page tags {a list}.
+- `{{updated}}` - The page last updated date/time {ISO 8601 text}. Note that without this, the filing system's last modified date/time is used instead, so this variable is not strictly required however, it is recommended as it is widely used by other markdown web tools.
+- `{{category}}` - The page category {single value, plain text}.
+- `{{tags}}` - The page tags {a list of values, plain text}.
 
 Variables provided by the system, do not use these in your markdown front-matter as they will be overwritten:
 - `{{path}}` - The current page path.
 - `{{url}}` - The full URL of the current page.
 
-Globals (some of these are added automatically, others can be set in the global attributes JSON file):
-- No defaults currently defined.
+Globals (some of these are added automatically, others can be set in the global attributes JSON override file):
+- `{{favicon}}` - The default favicon for the site. (default: `../uibuilder/images/uib-world-green.svg`) {URL}.
+- `{{title}}` - A page title used if a specific page title is set to an empty string. Having no title defaults to the file name, but this allows you to have a default title that is not the file name.
+- `{{description}}` - A global page description used if a specific page description is not provided.
 
 ## Available variables for a page
 You can show the current available page variables by using the `<show-meta></show-meta>` custom web component in your markdown file. This will render a table of all available variables and their current values for that page. This is useful for debugging and understanding what data you have available to work with in your markdown content.

@@ -3,7 +3,7 @@ title: markweb - Dynamic web sites using Markdown
 description: |
   The `markweb` node gives you the ability to really simply create dynamic web sites using Markdown files.
 created: 2026-01-09 15:10:14
-updated: 2026-03-27 20:27:09
+updated: 2026-04-09 14:32:24
 status: Release
 since: v7.6.0
 ---
@@ -53,14 +53,27 @@ Markweb comes with its own CSS stylesheet (`../uibuilder/utils/markweb.css`) tha
 
 ## Configuration (Node-RED Editor)
 
-* **URL**: The URL to use for this web site.
-* **Folder**: The folder where your Markdown files are stored. The folder must already exist.
-* **Name**: A name for the node.
+- **URL** (required): The URL path where the Markweb instance will be served. This must be unique across all Markweb _and_ uibuilder instances.
 
-> [!WARNING]
-> Any folders or files starting with `_` or `.` are blocked for security reasons.
->
-> Any folder not containing an `index.md` file is ignored. This file is used as the landing page for a folder.
+  > [!NOTE]
+  > The URL path _can_ contain sub-paths (e.g. `mysites/docs`). However, if it does, you will need to adjust the default page template for the `../uibuilder/` resource paths. Having a single sub-path would become `../uibuilder/` -> `../../uibuilder/`, two sub-paths would become `../../../uibuilder/`, and so on. Similarly, you should change the default favicon path in the global-attributes.json file.
+
+  > [!WARNING]
+  > Make sure that the URL path is unique across _**all**_ web endpoints in your Node-RED instance. This includes all `uibuilder` and `markweb` nodes as well as any other custom nodes that create web endpoints. If there is a clash, you will get unpredictable results.
+
+- **Source** (required): The folder where your Markweb source files are stored. This can be an absolute path or a path relative to the Node-RED user directory. The folder _**MUST EXIST**_.
+
+   > [!TIP]
+   > You can use the text `[DEMO]` as an alternative to an actual folder path. This will load the demo content that is included with uibuilder. This is a great way to quickly get started with Markweb, see how it works, and how you can use Markdown with it.
+
+  > [!WARNING]
+  > Any folders or files starting with `_` or `.` are blocked for security reasons.
+  >
+  > Any folder not containing an `index.md` file is ignored. This file is used as the landing page for a folder.
+
+- **Configuration Folder** (optional): The folder where Markweb will find the override configuration files. This can be an absolute path or a path relative to the Node-RED user directory. If used, the folder _**MUST EXIST**_. See below for more details on the configuration override files.
+
+- **Name** (optional): A name for the node. Used in the flow Editor. Has no other effect.
 
 ## Special processing directives and variables
 
