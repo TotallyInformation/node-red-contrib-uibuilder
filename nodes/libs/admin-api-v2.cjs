@@ -597,19 +597,19 @@ function adminRouterV2(log) {
                 res.statusMessage = 'File written successfully'
                 res.status(200).end()
                 // Reload connected clients if required by sending them a reload msg
-                if ( params.reload === 'true' ) {
-                    sockets.sendToFe2(
-                        {
-                            _uib: {
-                                reload: true,
-                            },
-                        },
-                        // @ts-ignore
-                        {
-                            url: params.url,
-                        }
-                    )
-                }
+                // if ( params.reload === 'true' ) {
+                //     sockets.sendToFe2(
+                //         {
+                //             _uib: {
+                //                 reload: true,
+                //             },
+                //         },
+                //         // @ts-ignore
+                //         {
+                //             url: params.url,
+                //         }
+                //     )
+                // }
             }
         })
     }) // ---- End of uibputfile ---- //
