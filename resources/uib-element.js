@@ -1,16 +1,13 @@
-/* eslint-disable strict, sonarjs/no-duplicate-string, sonarjs/no-duplicated-branches */
-
 /** Node-RED WidgetTypedInputType
  * @typedef { Array<"bin"|"bool"|"date"|"env"|"flow"|"global"|"json"|"jsonata"|"msg"|"num"|"re"|"str"> } WidgetTypedInputType
  */
+// NOTE: window.uibuilder is added - see `resources` folder
 
 // Isolate this code
 ;(function () {
     'use strict'
 
-    // NOTE: window.uibuilder is added - see `resources` folder
-
-    // RED._debug({topic: 'RED.settings', payload:RED.settings})
+    // #region --------- module variables for the panel --------- //
 
     const uibuilder = window['uibuilder']
     const log = uibuilder.log
@@ -344,7 +341,7 @@
         label: function () {
             return this.name || `[${this.elementtype}] ${this.parent ? `${this.parent}.` : ''}${this.elementid || moduleName}`
         },
-        paletteLabel: moduleName,
+        paletteLabel: 'UI Elements',
         category: uibuilder.paletteCategory,
         color: 'var(--uib-node-colour)', // '#E6E0F8'
 
@@ -357,5 +354,5 @@
         /** Runs before cancel - oneditcancel */
         /** Handle window resizing for the editor - oneditresize */
         /** Show notification warning before allowing delete - oneditdelete */
-    }) // ---- End of registerType() ---- //
+    })
 }())

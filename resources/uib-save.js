@@ -1,14 +1,11 @@
-/* eslint-disable strict, sonarjs/no-duplicate-string */
-
-// Isolate this code
+// NOTE: window.uibuilder is added - see `resources` folder
 ;(function () {
     'use strict'
 
-    // NOTE: window.uibuilder is added - see `resources` folder
+    // #region --------- module variables for the panel --------- //
 
-    // RED._debug({topic: 'RED.settings', payload:RED.settings})
-
-    const uibuilder = window['uibuilder']
+    // NOTE: window.uibuilder is added by editor-common.js - see `resources` folder
+    const uibuilder = window['uibuilder'] // eslint-disable-line no-redeclare
     // const log = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
@@ -16,6 +13,8 @@
 
     /** Copy of deployed uibuilder node instances populated by getUrls() */
     let uibInstances = uibuilder.editorUibInstances
+
+    // #endregion ------------------------------------------------- //
 
     /** Get all of the currently deployed uibuilder URL's
      * NOTE that the uibuilder.urlsByNodeId cannot be used as that includes disabled nodes/flows
@@ -144,11 +143,12 @@
         inputLabels: 'File content to save',
         // outputs: 1,
         // outputLabels: ['HTML payload'],
-        icon: 'font-awesome/fa-floppy-o',
+        // icon: 'font-awesome/fa-floppy-o',
+        icon: 'floppy-disk.svg',
         label: function () {
             return this.name || this.url || 'choose uibuilder node'
         },
-        paletteLabel: moduleName,
+        paletteLabel: 'to file',
         category: uibuilder.paletteCategory,
         color: 'var(--uib-node-colour)', // '#E6E0F8'
 

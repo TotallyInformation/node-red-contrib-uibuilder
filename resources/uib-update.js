@@ -1,14 +1,11 @@
-/* eslint-disable strict, sonarjs/no-duplicate-string */
-
-// Isolate this code
+// NOTE: window.uibuilder is added - see `resources` folder
 ;(function () {
     'use strict'
 
-    // NOTE: window.uibuilder is added - see `resources` folder
+    // #region --------- module variables for the panel --------- //
 
-    // RED._debug({topic: 'RED.settings', payload:RED.settings})
-
-    const uibuilder = window['uibuilder']
+    // NOTE: window.uibuilder is added by editor-common.js - see `resources` folder
+    const uibuilder = window['uibuilder'] // eslint-disable-line no-redeclare
     // const log = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
@@ -25,6 +22,7 @@
         'msg', 'flow', 'global',
         'str', 'env', 'jsonata', 're',
     ]
+    // #endregion ------------------------------------------------- //
 
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
@@ -155,11 +153,11 @@
         label: function () {
             return this.name || `${this.mode}${this.cssSelectorType === 'str' ? ` ${this.cssSelector.replace(/.*::/, '')}` : ''}`  || moduleName
         },
-        paletteLabel: moduleName,
+        paletteLabel: 'update UI',
         category: uibuilder.paletteCategory,
         color: 'var(--uib-node-colour)', // '#E6E0F8'
 
         /** Prepares the Editor panel */
         oneditprepare: function () { onEditPrepare(this) },
-    }) // ---- End of registerType() ---- //
+    })
 }())

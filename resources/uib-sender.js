@@ -1,63 +1,31 @@
-/* eslint-disable strict, sonarjs/no-duplicate-string */
-
-// Isolate this code
+// NOTE: window.uibuilder is added - see `resources` folder
 ;(function () {
     'use strict'
 
+    // #region --------- module variables for the panel --------- //
+
+    // NOTE: window.uibuilder is added by editor-common.js - see `resources` folder
     const uibuilder = window['uibuilder']
     const mylog = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
-    const moduleName  = 'uib-sender'
-    /** Node's label @constant {string} paletteCategory */
-    const nodeLabel  = 'uib-sender'
-    /** Node's palette category @constant {string} paletteCategory */
-    const paletteCategory  = uibuilder.paletteCategory
-    /** Node's background color @constant {string} paletteColor */
-    const paletteColor  = 'var(--uib-node-colour)' // '#E6E0F8'
+    const moduleName = 'uib-sender'
 
     /** Copy of all deployed uibuilder node instances */
     let uibInstances
+
+    // #endregion ------------------------------------------------- //
 
     /** Get all of the current uibuilder URL's */
     function getUrls() {
         uibInstances = uibuilder.getDeployedUrls()
         Object.keys(uibInstances).forEach( (key, i, arr) => {
             $('#node-input-url').append($('<option>', {
-                value: uibInstances[key],
-                text: uibInstances[key],
+                'value': uibInstances[key],
+                'text': uibInstances[key],
                 'data-id': key,
             }))
         })
-        // $.ajax({
-        //     type: 'GET',
-        //     async: false,
-        //     dataType: 'json',
-        //     url: './uibuilder/admin/dummy',
-        //     data: {
-        //         'cmd': 'listinstances',
-        //     },
-        // beforeSend: function(jqXHR) {
-        //     const authTokens = RED.settings.get('auth-tokens')
-        //     if (authTokens) {
-        //         jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-        //     }
-        // },
-        //     success: function(instances) {
-        //         console.log('>> Instances >>', instances, Object.entries(instances) )
-
-        //         uibInstances = instances
-
-        //         Object.keys(instances).forEach( (key, i, arr) => {
-        //             $('#node-input-url').append($('<option>', {
-        //                 value: instances[key],
-        //                 text: instances[key],
-        //                 'data-id': key,
-        //             }))
-        //         })
-
-        //     }
-        // })
     } // ---- end of getUrls ---- //
 
     /** Prep for edit
@@ -129,41 +97,41 @@
         }
 
         window['tiDoTooltips']('#ti-edit-panel') // Do this at the end
-    } // ----- end of onEditPrepare() ----- //
+    }
 
     /** When node type is added to the palette
      * Which happens on load of the Editor
      * @param {*} node -
      */
-    function onPaletteAdd(node) {
-        // console.log('uib-sender onPaletteAdd ', node)
-    } // ---- End of onPaletteAdd ---- //
+    // function onPaletteAdd(node) {
+    //     console.log('uib-sender onPaletteAdd ', node)
+    // }
 
     // @ts-ignore
     RED.nodes.registerType(moduleName, {
-        category: paletteCategory,
-        color: paletteColor,
         defaults: {
-            url: { value: '', required: true },
-            uibId: { value: '' }, // ID of selected uibuilder instance
-            name: { value: '' },
-            topic: { value: '' },
-            passthrough: { value: false },
-            return: { value: false },
-            outputs: { value: 0 },
+            url: { value: '', required: true, },
+            uibId: { value: '', }, // ID of selected uibuilder instance
+            name: { value: '', },
+            topic: { value: '', },
+            passthrough: { value: false, },
+            return: { value: false, },
+            outputs: { value: 0, },
         },
         align: 'right',
         inputs: 1,
         inputLabels: 'Msg with topic property',
         outputs: 0,
         outputLabels: ['Input msg with node ID added'],
-        icon: 'link-out.svg',
-        paletteLabel: nodeLabel,
+        icon: 'uib-link-out.svg',
+        paletteLabel: 'msg sender',
         label: function () { return this.name || this.url || 'choose uibuilder node' },
+        category: uibuilder.paletteCategory,
+        color: 'var(--uib-node-colour)', // '#E6E0F8' '"hsl(248 100% 91%)"'
 
         oneditprepare: function() { onEditPrepare(this) },
 
         /** When this node is added to the palette - happens on (re)load of Editor as well */
-        onpaletteadd: function() { onPaletteAdd(this) },
-    }) // ---- End of registerType() ---- //
+        // onpaletteadd: function() { onPaletteAdd(this) },
+    })
 }())
