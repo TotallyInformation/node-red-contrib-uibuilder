@@ -44,3 +44,5 @@ New `stack` and `logStack` functions. These can be useful for debugging and unde
 
 #### Other
 Various bug fixes, performance improvements and security enhancements as always.
+
+The uibuilder docs, front-end templates and markweb page template now all have different favicons to help differentiate them in the browser.

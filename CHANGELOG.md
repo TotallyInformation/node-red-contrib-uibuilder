@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-02-17 15:33:17
+updated: 2026-04-10 06:06:25
 ---
 
 # Changelog
@@ -36,6 +36,10 @@ Please see the roadmap in the docs for the backlog of future planned development
 * **NEW NODE** `markweb` - Enables simple creation of dynamic web sites using Markdown files. It supports navigation menus, search, front-matter placeholders, custom templates and much more.
 
 * Two new example flows. "Built-in Web Components" and "Easy UI Updates".
+
+* The various uibuilder icons now have more open names in the palette. In addition, the icons have all been updated to use customised, coloured icons. In particular, the uibuilder and markweb primary nodes now use 🌐 and 🕸️ icons respectively which is in line with their log and debug outputs.
+
+* The uibuilder docs, front-end templates and markweb page template now all have different favicons to help differentiate them in the browser.
 
 #### Front-end
 
