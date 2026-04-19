@@ -334,6 +334,8 @@
  *
  * @property {Function} sendToFe Ref to sockets.sendToFe
  * @property {Function} sender Ref to uib-sender event sending function
+ *
+ * @property {Function} watcher Ref to optional chokidar file watcher for client auto-reload on file changes
  */
 
 /** uibConfig - THe module-level `uib` configuration variable
