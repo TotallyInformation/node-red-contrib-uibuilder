@@ -21,9 +21,9 @@
 'use strict'
 
 // Save indexes for convenient debugging - not needed for production
-if (!globalThis._uibuilder_) globalThis._uibuilder_ = {}
-if (!globalThis._uibuilder_.markweb) globalThis._uibuilder_.markweb = {}
-if (!globalThis._uibuilder_.markweb.indexes) globalThis._uibuilder_.markweb.indexes = {}
+// if (!globalThis._uibuilder_) globalThis._uibuilder_ = {}
+// if (!globalThis._uibuilder_.markweb) globalThis._uibuilder_.markweb = {}
+// if (!globalThis._uibuilder_.markweb.indexes) globalThis._uibuilder_.markweb.indexes = {}
 
 /** --- Type Defs - should help with coding ---
  * @typedef {import('../../typedefs').runtimeRED} runtimeRED
@@ -1129,7 +1129,7 @@ async function buildIndexes(node) {
     }, node, uib.ioChannels.control)
 
     // ! TEMPORARY - for debugging convenience
-    globalThis._uibuilder_.markweb.indexes[url] = node.index
+    // globalThis._uibuilder_.markweb.indexes[url] = node.index
 
     log.info(`🌐🕸️[markweb:buildIndex:${url}] Indexed "${instanceFolder}" in ${Math.round(performance.now() - strt)}ms. ${files.length} files, ${(serialize(node.index).byteLength / 1024).toFixed(0)}kb`)
 }
