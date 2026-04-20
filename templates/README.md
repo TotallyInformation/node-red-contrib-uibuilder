@@ -2,7 +2,7 @@
 
 This folder contains the master templates for:
 
-* UIBUILDER blobal common shared files. `/common/` - copied to `<uibRoot>/common/` when UIBUILDER is installed.
+* UIBUILDER global common shared files. `/common/` - copied to `<uibRoot>/common/` when UIBUILDER is installed.
 
 * UIBUILDER global configuration files. `/.config/` - copied to `<uibRoot>/.config/` when UIBUILDER is installed.
 

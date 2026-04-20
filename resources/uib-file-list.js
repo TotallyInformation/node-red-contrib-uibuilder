@@ -5,7 +5,7 @@
     // #region --------- module variables for the panel --------- //
 
     // NOTE: window.uibuilder is added by editor-common.js - see `resources` folder
-    const uibuilder = window['uibuilder'] // eslint-disable-line no-redeclare
+    const uibuilder = window['uibuilder']
     // const log = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
@@ -27,8 +27,8 @@
         // Rebuild the drop-down
         Object.keys(uibuilder.sortInstances(uibInstances)).forEach( (key, i, arr) => {
             $('#node-input-url').append($('<option>', {
-                value: uibInstances[key],
-                text: uibInstances[key],
+                'value': uibInstances[key],
+                'text': uibInstances[key],
                 'data-id': key,
             }))
         })

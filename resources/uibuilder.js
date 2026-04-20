@@ -1945,7 +1945,7 @@
      */
     function runNpmScript(node, scriptName) {
         const elScriptOutput = $('#npm-script-output')
-        const elKillContainer = $('#kill-button-container')
+        // const elKillContainer = $('#kill-button-container')
         const elKillButton = $('#npm-script-kill')
 
         // Only allow 1 script to be run at any time for a single url

@@ -328,7 +328,7 @@ module.exports = {
     buildHTML: function buildHTML(node, msg, parent, md = false) {
         // Must be a string so convert arrays/objects
         if (!node.data) node.data = ''
-        else if (Array.isArray(node.data)) node.data = node.data.join('/n')
+        else if (Array.isArray(node.data)) node.data = node.data.join('\n')
         else if ( node.data.constructor.name === 'Object' ) {
             try {
                 node.data = JSON.stringify(node.data)

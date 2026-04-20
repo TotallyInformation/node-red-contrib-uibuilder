@@ -34,12 +34,12 @@ if (!globalThis._uibuilder_.markweb.indexes) globalThis._uibuilder_.markweb.inde
 
 // #region ----- Module level variables ---- //
 
-const { basename, dirname, join, isAbsolute, parse, relative, resolve, sep, } = require('path')
+const { basename, dirname, join, isAbsolute, parse, relative, sep, } = require('path')
 const express = require('express')
 const {
     accessSync, copySync, existsSync, fgSync,
     readdirSync, readFile, readFileSync,
-    stat, watch,
+    stat,
 } = require('../libs/fs.cjs')
 const { urlJoin, formatDateIntl, } = require('../libs/tilib.cjs')
 const { setNodeStatus, } = require('../libs/uiblib.cjs') // Utility library for uibuilder
@@ -205,9 +205,9 @@ function nodeInstance(config) {
     // Make sure the url is valid & prefix with nodeRoot if needed
     this.url = urlJoin(uib.nodeRoot, this.url.trim())
 
-    // source folder cannot be null/blank
+    // source folder cannot be undefined/null/blank
     this.source = this.source.trim()
-    if (!this.source || this.source === '') {
+    if (!this.source) {
         this.error('🌐🕸️🛑[uibuilder:markweb] Source folder cannot be blank. Please set a valid source folder in the node configuration.')
         return
     }
@@ -604,10 +604,6 @@ function indexListing(key, attributes, node, options) {
 
     if (hasExplicitStart) {
         options.start = Number(options.start)
-    } else if (hasLatest) {
-        // When latest is specified without explicit start, use current page level
-        options.start = Number(attributes.depth)
-        currentStart = true
     } else {
         // No start given so assume current level
         options.start = Number(attributes.depth)
@@ -1211,7 +1207,6 @@ function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isA
     result.fullPath = fullPath
     result.morePath = morePath
 
-
     if (!morePath || typeof morePath !== 'string') {
         result.resultCode = 500
         result.errorAttributes = {
@@ -1240,7 +1235,11 @@ function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isA
                 title: 'Error: Invalid path',
                 description: 'Access denied to folder/file starting with "_" or "."',
                 content: '<p>Access denied to folder/file starting with "_" or "."</p>',
-                path: '/' + morePath.replace(/\\/g, '/').replace(/\.md$/, '').replace(/\/index$/, '/'),
+                path: '/'
+                    + morePath
+                        .replace(/\\/g, '/')
+                        .replace(/\.md$/, '')
+                        .replace(/\/index$/, '/'),
                 toUrl: '/' + morePath.replace(/\\/g, '/'),
                 from: from,
             }
@@ -1261,7 +1260,11 @@ function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isA
             title: 'Error: Page not accessible or not found',
             description: 'The requested page does not exist or cannot be read.',
             content: '<p>The requested page does not exist or cannot be read.</p>',
-            path: '/' + morePath.replace(/\\/g, '/').replace(/\.md$/, '').replace(/\/index$/, '/'),
+            path: '/'
+                + morePath
+                    .replace(/\\/g, '/')
+                    .replace(/\.md$/, '')
+                    .replace(/\/index$/, '/'),
             toUrl: '/' + morePath.replace(/\\/g, '/'),
             from: from,
         }
@@ -1275,7 +1278,7 @@ function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isA
  * @this {runtimeNode & uibMwNode}
  */
 async function doNavigate(msg) {
-    const log = uib.RED.log
+    // const log = uib.RED.log
     const returnTopic = '_page-navigation-result'
     let attributes = {}
 
@@ -1497,9 +1500,8 @@ function filteredIndex(currentStart, attributes, options, node) {
 async function getMarkdownFile(node, file, morePath, parsedPath, from) {
     // fullPath, morePath, parsedPath
     const log = uib.RED.log
-    const userDir = uib.RED.settings.userDir
 
-    const { url, index, instanceFolder, source, isDemo } = node
+    const { url, index, instanceFolder, source, isDemo, } = node
     log.trace(`🌐🕸️[markweb:getMarkdownFile:${url}] Request for markdown file from ${from}, source="${source}", file="${file}"`)
 
     // check if urlPath already exists in the page index
@@ -1723,29 +1725,14 @@ async function handler(req, res, next) {
  * @returns {string} Full HTML page as a string
  */
 function htmlTemplate(node, attributes = {}) {
-    const log = uib.RED.log
+    // const log = uib.RED.log
     // TODO consider caching the page-template content for this instance for efficiency - but think about easy updates, how?
     node.pageTemplate = readConfigFile(node, 'page-template.html', false) || ''
     node.globalAttributes = readConfigFile(node, 'global-attributes.json', false) || {}
     attributes = { ...node.globalAttributes, ...attributes, }
     attributes.url = node.url
-    // add the markdown body
-    // if (!attributes.content) {
-    //     attributes.content = '## Error: No content (htmlTemplate)\n\nThe requested page has no content.'
-    // } else {
-    //     try {
-    //         // attributes.content = marked(processTemplates(attributes.content, attributes))
-    //         attributes.content = processTemplates(attributes.content, attributes) || '<h2>Error: (htmlTemplate)</h2><div>processTemplates produced no output.</div>'
-    //         // attributes.content = mdParse(attributes.content)
-    //         // console.log('>> GOOD ATTRIBUTES >> ', attributes)
-    //     } catch (err) {
-    //         log.error(`🌐🕸️🛑[markweb:htmlTemplate] Error converting markdown to HTML: ${err.message}`)
-    //         // console.log('>> BAD ATTRIBUTES >> ', attributes)
-    //     }
-    // }
     // Replace any %%....%% or {{....}} in content with the matching attributes property value
     const html = processTemplates(node.pageTemplate, node, attributes, 'htmlTemplate-pageTemplate')
-    // console.log('🌐🕸️[markweb:htmlTemplate] ', html)
     return html
 }
 

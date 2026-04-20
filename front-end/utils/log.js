@@ -143,7 +143,7 @@ const Logger = class Logger {
             stack.shift(); stack.shift()
         } catch (e) { }
         const logMethod = console[this.LOG_STYLES[strLevel].console]
-        logMethod(`%c${this.LOG_STYLES[strLevel].pre}${strLevel}%c [${head}]`, `${this.LOG_STYLES.level} ${this.LOG_STYLES[strLevel].css}`, `${this.LOG_STYLES.head} ${this.LOG_STYLES[strLevel].txtCss}`, ...args, `(${stack.join('/n').trim()})`)
+        logMethod(`%c${this.LOG_STYLES[strLevel].pre}${strLevel}%c [${head}]`, `${this.LOG_STYLES.level} ${this.LOG_STYLES[strLevel].css}`, `${this.LOG_STYLES.head} ${this.LOG_STYLES[strLevel].txtCss}`, ...args, `(${stack.join('\n').trim()})`)
 
         // if (level > this.logLevel || level === -1) return function () { }
         // return Function.prototype.bind.call(
