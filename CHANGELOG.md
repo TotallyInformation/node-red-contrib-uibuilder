@@ -43,6 +43,8 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * The uibuilder docs, front-end templates and markweb page template now all have different favicons to help differentiate them in the browser.
 
+* Default CORS (Content-Security-Policy) header updated for improved browser security. You can override it in your settings.js file if needed.
+
 #### Front-end
 
 * `uibuilder.get()` and `uibuilder.set()` functions now support deep object paths. This allows you to get and set nested properties of reactive variables without needing to replace the entire variable. e.g. `myvar.myprop`, `myvar.myprop.subprop` or `myvar[5]`.
@@ -167,7 +169,17 @@ See the [node documentation](./docs/nodes/markweb.md) for full details.
 
 ### Development changes
 
-* **SECURITY IMPROVEMENTS** - Added minimum package age requirements to help prevent supply chain attacks.
+* **SECURITY IMPROVEMENTS**
+  
+  * Added minimum package age requirements to help prevent supply chain attacks.
+  * Default CORS (Content-Security-Policy) header updated for improved browser security. You can override it in your settings.js file if needed. New default is:
+    
+    ```
+    default-src 'self' 'unsafe-inline' data: blob: https:; connect-src 'self' ws: wss:; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; 
+    ```
+
+  * `syntaxHighlight` function in `tilib.cjs` - limited the size of JSON strings to 10k characters to prevent potential denial-of-service attacks via extremely large JSON payloads.
+  * `admin-api-v2.cjs` and `admin-api-v3.cjs` - ensured that parameters expected to be strings are not arrays. This prevents potential injection attacks via array parameters.
 
 * **NEW** npm script `bugfix-worktree` - creates a new git worktree for bugfix branches. This enables work on a bug fix in a separate directory while keeping the current dev branch work intact. Both directories can be open simultaneously without needing to stash changes or switch branches. When done with the bug fix, commit, push, create a PR, and then remove the worktree.
 
@@ -194,10 +206,6 @@ See the [node documentation](./docs/nodes/markweb.md) for full details.
 
 * `nodes/libs/fs.cjs`
   * Added options argument to the `fgSync` function. Allows for exclusions and other options to be passed to the underlying `fast-glob` library.
-
-* Security related fixes
-  * `syntaxHighlight` function in `tilib.cjs` - limited the size of JSON strings to 10k characters to prevent potential denial-of-service attacks via extremely large JSON payloads.
-  * `admin-api-v2.cjs` and `admin-api-v3.cjs` - ensured that parameters expected to be strings are not arrays. This prevents potential injection attacks via array parameters.
 
 * Updated ESLINT - now includes `eslint-plugin-security` to catch potential security issues in the code. Also updated the ESLINT configuration to reflect the new plugin and added some additional rules for better code quality and security.
 
