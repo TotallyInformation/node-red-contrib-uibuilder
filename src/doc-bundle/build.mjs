@@ -71,6 +71,9 @@ async function updateTipsFiles() {
                 'firefox65',
                 'opera58',
             ],
+            supported: {
+                destructuring: true,
+            },
         })
         console.log('... app bundle completed')
     } catch (error) {
