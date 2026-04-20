@@ -287,7 +287,7 @@
         ulEl.classList.add("routemenu");
         ulEl.setAttribute("role", "menubar");
         this.config.routes.forEach((route) => {
-          if (!route.id) return;
+          if (!(route == null ? void 0 : route.id)) return;
           const liEl = document.createElement("li");
           liEl.setAttribute("role", "none");
           const aEl = document.createElement("a");
@@ -679,7 +679,7 @@
   _startDone = new WeakMap();
   // #region --- Variables ---
   /** Class version */
-  __publicField(_UibRouter, "version", "7.5.0-src");
+  __publicField(_UibRouter, "version", "7.6.0-src");
   /** Ensures only 1 class instance on a page */
   __privateAdd(_UibRouter, _instanceExists, false);
   /** Options for Markdown-IT if available (set in constructor) */
