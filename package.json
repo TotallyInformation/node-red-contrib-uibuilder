@@ -22,14 +22,12 @@
     "bugfix-worktree": "git worktree add ../uibuilder-bugfix origin/main -b bug-fix"
   },
   "dependencies": {
+    "@totallyinformation/uib-fs-utils": "*",
+    "@totallyinformation/uib-md-utils": "*",
     "degit": "^2.8.4",
     "express": "^4.17.1",
-    "fast-glob": "^3.2.7",
-    "fs-extra": "^11.1.0",
     "jsdom": "^29.0.1",
-    "socket.io": "^4.3.2",
-    "@totallyinformation/uib-fs-utils": "*",
-    "@totallyinformation/uib-md-utils": "*"
+    "socket.io": "^4.3.2"
   },
   "devDependencies": {
     "@eslint/js": "9.*",

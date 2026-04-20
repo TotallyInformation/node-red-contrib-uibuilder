@@ -35,7 +35,7 @@
 
 const { join, relative, normalize, } = require('node:path')
 // To be removed when feasible - https://github.com/jprichardson/node-fs-extra
-const fsextra = require('fs-extra')
+// const fsextra = require('fs-extra')
 // Async
 const fs = require('node:fs/promises')
 // cb
@@ -43,8 +43,9 @@ const { cp, watch, writeFile, } = require('node:fs') // eslint-disable-line n/no
 // Sync
 const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readdirSync, readFileSync, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // TODO Remove in future?
-const fg = require('fast-glob')
+// const fg = require('fast-glob')
 const process = require('node:process')
+const { fg, fsextra, } = require('@totallyinformation/uib-fs-utils')
 // ! We cannot use uibGlobalConfig here because it causes circular requires (its module uses this fs library)
 // The uibuilder global configuration object, used throughout all nodes and libraries.
 // const uibGlobalConfig = require('./uibGlobalConfig.cjs')

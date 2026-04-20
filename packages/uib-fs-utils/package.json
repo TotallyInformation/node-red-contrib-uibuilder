@@ -15,7 +15,9 @@
         "build": "node build.mjs"
     },
     "devDependencies": {
-        "chokidar": "^5.0.0"
+        "chokidar": "^5.0.0",
+        "fast-glob": "^3.2.7",
+        "fs-extra": "^11.1.0"
     },
     "engines": {
         "node": ">=18.5"
