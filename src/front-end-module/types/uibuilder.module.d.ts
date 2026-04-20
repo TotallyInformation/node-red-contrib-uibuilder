@@ -119,6 +119,8 @@ export class Uib {
     markdown: boolean
     /** Current URL hash. Initial set is done from start->watchHashChanges via a set to make it watched */
     urlHash: string
+    /** HTTP headers received on initial page load - contains useful uibuilder info */
+    httpHeaders: Record<string, string>
     /** Default originator node id - empty string by default */
     originator: string
     /** Optional default topic to be included in outgoing standard messages */
@@ -147,6 +149,10 @@ export class Uib {
     socketOptions: object
     /** How many times has the loaded instance connected to Socket.IO */
     connectedNum: number
+    /** Has the initial Socket.IO connection been made? null until first connection, then true. Used to detect if a page reload or just a disconnect/reconnect */
+    initialConnect: boolean | null
+    /** How many times has the client reconnected to Socket.IO since the page was loaded. Note that this will be 0 on the initial connection */
+    reconnected: number
     /** Is Vue available? */
     isVue: boolean
     /** Vue version if available */
@@ -325,6 +331,15 @@ export class Uib {
      * @param args Arguments to log
      */
     log(...args: any[]): void
+
+    /** Output the current call stack to the console */
+    logStack(): void
+
+    /**
+     * Get the current call stack as an array of objects
+     * @returns Stack array with file, function, line, column and raw entries
+     */
+    stack(): Array<{ file?: string, function?: string, line?: number, column?: number, raw: string }>
 
     /**
      * Create and return a randomised UUID
