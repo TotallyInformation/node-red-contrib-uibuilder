@@ -21,9 +21,9 @@
 'use strict'
 
 // Save indexes for convenient debugging - not needed for production
-if (!globalThis._uibuilder_) globalThis._uibuilder_ = {}
-if (!globalThis._uibuilder_.markweb) globalThis._uibuilder_.markweb = {}
-if (!globalThis._uibuilder_.markweb.indexes) globalThis._uibuilder_.markweb.indexes = {}
+// if (!globalThis._uibuilder_) globalThis._uibuilder_ = {}
+// if (!globalThis._uibuilder_.markweb) globalThis._uibuilder_.markweb = {}
+// if (!globalThis._uibuilder_.markweb.indexes) globalThis._uibuilder_.markweb.indexes = {}
 
 /** --- Type Defs - should help with coding ---
  * @typedef {import('../../typedefs').runtimeRED} runtimeRED
@@ -51,8 +51,8 @@ const uib = require('../libs/uibGlobalConfig.cjs')
 const { serialize, } = require('v8')
 
 // Import my utility packages using npm workspaces
-const { md, mdParse: _mdParseRaw, directivePlugin, fmVariablesPlugin, fm, mermaid, } = require('@totallyinformation/uib-md-utils') // eslint-disable-line n/no-extraneous-require
-const { chokidar, } = require('@totallyinformation/uib-fs-utils') // eslint-disable-line n/no-extraneous-require
+const { md, mdParse: _mdParseRaw, directivePlugin, fmVariablesPlugin, fm, mermaid, } = require('../../packages/uib-md-utils')
+const { chokidar, } = require('../../packages/uib-fs-utils')
 
 /** The node context for the current mdParse call. Set before each synchronous md.render() call.
  * @type {(runtimeNode & uibMwNode)|null}
@@ -1129,7 +1129,7 @@ async function buildIndexes(node) {
     }, node, uib.ioChannels.control)
 
     // ! TEMPORARY - for debugging convenience
-    globalThis._uibuilder_.markweb.indexes[url] = node.index
+    // globalThis._uibuilder_.markweb.indexes[url] = node.index
 
     log.info(`🌐🕸️[markweb:buildIndex:${url}] Indexed "${instanceFolder}" in ${Math.round(performance.now() - strt)}ms. ${files.length} files, ${(serialize(node.index).byteLength / 1024).toFixed(0)}kb`)
 }
@@ -1703,7 +1703,7 @@ async function handler(req, res, next) {
         }
     } else {
         // Not a markdown file, serve static
-        log.info(`🌐🕸️[markweb:handler:${this.url}] Request for static file received: "${morePath}", "${fullPath}", "${parsedPath.ext}"`)
+        log.trace(`🌐🕸️[markweb:handler:${this.url}] Request for static file received: "${morePath}", "${fullPath}", "${parsedPath.ext}"`)
         // express.static( this.instanceFolder, uib.staticOpts )(req, res, next)
         // Send the file directly to avoid issues with express.static and our custom URL handling
         res.sendFile(fullPath, (err) => {

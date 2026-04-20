@@ -562,7 +562,7 @@ function nodeInstance(config) {
     if ( this.reload === true ) {
         try {
             // this is a local npm workspace package and so not in package.json dependencies
-            if (!chokidar) ({ chokidar, } = require('@totallyinformation/uib-fs-utils')) // eslint-disable-line n/no-extraneous-require
+            if (!chokidar) ({ chokidar, } = require('../../packages/uib-fs-utils')) // eslint-disable-line n/no-extraneous-require
             log.debug(`🌐🪲[uibuilder:nodeInstance:${this.url}] Successfully loaded chokidar for file watching, it will be used by all further instances needing it.`)
         } catch (e) {
             log.error(`🌐🛑[uibuilder:nodeInstance:${this.url}] Failed to load chokidar for file watching. Reload on file change will not work. ${e.message}`, e)

@@ -1,10 +1,10 @@
 ---
 created: 2025-12-15 15:00:36
-updated: 2026-03-23 16:21:58
+updated: 2026-04-20 15:19:33
 version: 7.6.0
 ---
 ### Welcome to UIBUILDER v7.6.0
-This is a relatively minor feature release.
+This is a feature release.
 
 This highlight changes popover is now included. It will only be shown once after an update.
 
@@ -48,3 +48,5 @@ Various bug fixes, performance improvements and security enhancements as always.
 The uibuilder docs, front-end templates and markweb page template now all have different favicons to help differentiate them in the browser.
 
 If you have set the `Reload connected clients on save?` option on the uibuilder node's File tab, **clients will automatically reload** the visible page not only if you change a file in the file Editor but also if you make changes elsewhere such as using an external editor or the `uib-save` node. So you now have the option of a **full development server workflow**.
+
+Default Content-Security-Policy (CSP) header updated for improved browser security. You can override it in your settings.js file if needed.

@@ -28,7 +28,8 @@ const path = require('node:path')
 const { AsyncLocalStorage, } = require('node:async_hooks') // https://nodejs.org/docs/latest-v18.x/api/async_context.html#class-asynclocalstorage
 
 const express = require('express')
-const fg = require('fast-glob') // https://github.com/mrmlnc/fast-glob
+// const fg = require('fast-glob') // https://github.com/mrmlnc/fast-glob
+const { fg, } = require('../../packages/uib-fs-utils')
 
 const fslib = require('./fs.cjs') // Utility library for uibuilder
 const web = require('./web.cjs')
