@@ -35,6 +35,8 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * **NEW NODE** `markweb` - Enables simple creation of dynamic web sites using Markdown files. It supports navigation menus, search, front-matter placeholders, custom templates and much more.
 
+* If you have set the `Reload connected clients on save?` option on the uibuilder node's File tab, **clients will automatically reload** the visible page not only if you change a file in the file Editor but also if you make changes elsewhere such as using an external editor or the `uib-save` node. So you now have the option of a **full development server workflow**.
+
 * Two new example flows. "Built-in Web Components" and "Easy UI Updates".
 
 * The various uibuilder icons now have more open names in the palette. In addition, the icons have all been updated to use customised, coloured icons. In particular, the uibuilder and markweb primary nodes now use 🌐 and 🕸️ icons respectively which is in line with their log and debug outputs.
@@ -60,6 +62,7 @@ Please see the roadmap in the docs for the backlog of future planned development
 #### Documentation
 
 * Mermaid diagrams are now supported in UIBUILDER's documentation. With the first example being for the new `markweb` node's page.
+* The Roadmap has now been split into separate pages as it was totally unmanageable as a single page. You can use the links on the main Roadmap page to navigate to the different sections.
 
 ### New node: markweb
 

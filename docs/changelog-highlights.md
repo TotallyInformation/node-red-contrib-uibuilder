@@ -46,3 +46,5 @@ New `stack` and `logStack` functions. These can be useful for debugging and unde
 Various bug fixes, performance improvements and security enhancements as always.
 
 The uibuilder docs, front-end templates and markweb page template now all have different favicons to help differentiate them in the browser.
+
+If you have set the `Reload connected clients on save?` option on the uibuilder node's File tab, **clients will automatically reload** the visible page not only if you change a file in the file Editor but also if you make changes elsewhere such as using an external editor or the `uib-save` node. So you now have the option of a **full development server workflow**.
