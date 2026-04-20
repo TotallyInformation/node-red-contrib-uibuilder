@@ -172,7 +172,7 @@ See the [node documentation](./docs/nodes/markweb.md) for full details.
 * **SECURITY IMPROVEMENTS**
   
   * Added minimum package age requirements to help prevent supply chain attacks.
-  * Default CORS (Content-Security-Policy) header updated for improved browser security. You can override it in your settings.js file if needed. New default is:
+  * Default Content-Security-Policy (CSP) header updated for improved browser security. You can override it in your settings.js file if needed. New default is:
     
     ```
     default-src 'self' 'unsafe-inline' data: blob: https:; connect-src 'self' ws: wss:; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; 
