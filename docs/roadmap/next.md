@@ -16,6 +16,8 @@ updated: 2026-04-19 20:05:36
 
 ### Ongoing work
 
+* Change docs bundle to use an npm workspace
+
 * Background rework (may take several releases):
   * [ ] Changing `uib-brand.css` to use more modern CSS, leaving it up to LightningCSS to build for older browsers. In particular, using nested definitions.
   * [ ] Remove remaining ~~5~~ 4 fsextra functions from fs lib. `ensureDirSync` is completed.

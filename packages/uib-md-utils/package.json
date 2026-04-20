@@ -1,5 +1,5 @@
 {
-    "name": "@totallyinformation/uib-md-utils",
+    "name": "uib-md-utils",
     "version": "1.0.0",
     "private": true,
     "description": "Internal Markdown utilities for uibuilder - bundled marked and front-matter",
