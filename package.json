@@ -23,8 +23,6 @@
     "bugfix-worktree": "git worktree add ../uibuilder-bugfix origin/main -b bug-fix"
   },
   "dependencies": {
-    "uib-fs-utils": "*",
-    "uib-md-utils": "*",
     "degit": "^2.8.4",
     "express": "^4.17.1",
     "jsdom": "^29.0.1",

@@ -51,8 +51,8 @@ const uib = require('../libs/uibGlobalConfig.cjs')
 const { serialize, } = require('v8')
 
 // Import my utility packages using npm workspaces
-const { md, mdParse: _mdParseRaw, directivePlugin, fmVariablesPlugin, fm, mermaid, } = require('@totallyinformation/uib-md-utils') // eslint-disable-line n/no-extraneous-require
-const { chokidar, } = require('@totallyinformation/uib-fs-utils') // eslint-disable-line n/no-extraneous-require
+const { md, mdParse: _mdParseRaw, directivePlugin, fmVariablesPlugin, fm, mermaid, } = require('../../packages/uib-md-utils')
+const { chokidar, } = require('../../packages/uib-fs-utils')
 
 /** The node context for the current mdParse call. Set before each synchronous md.render() call.
  * @type {(runtimeNode & uibMwNode)|null}
@@ -1703,7 +1703,7 @@ async function handler(req, res, next) {
         }
     } else {
         // Not a markdown file, serve static
-        log.info(`🌐🕸️[markweb:handler:${this.url}] Request for static file received: "${morePath}", "${fullPath}", "${parsedPath.ext}"`)
+        log.trace(`🌐🕸️[markweb:handler:${this.url}] Request for static file received: "${morePath}", "${fullPath}", "${parsedPath.ext}"`)
         // express.static( this.instanceFolder, uib.staticOpts )(req, res, next)
         // Send the file directly to avoid issues with express.static and our custom URL handling
         res.sendFile(fullPath, (err) => {

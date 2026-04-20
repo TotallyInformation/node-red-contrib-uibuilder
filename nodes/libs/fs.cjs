@@ -45,7 +45,7 @@ const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readd
 // TODO Remove in future?
 // const fg = require('fast-glob')
 const process = require('node:process')
-const { fg, fsextra, } = require('@totallyinformation/uib-fs-utils')
+const { fg, fsextra, } = require('../../packages/uib-fs-utils')
 // ! We cannot use uibGlobalConfig here because it causes circular requires (its module uses this fs library)
 // The uibuilder global configuration object, used throughout all nodes and libraries.
 // const uibGlobalConfig = require('./uibGlobalConfig.cjs')
