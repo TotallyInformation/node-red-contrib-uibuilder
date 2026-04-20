@@ -43,7 +43,7 @@ Please see the roadmap in the docs for the backlog of future planned development
 
 * The uibuilder docs, front-end templates and markweb page template now all have different favicons to help differentiate them in the browser.
 
-* Default CORS (Content-Security-Policy) header updated for improved browser security. You can override it in your settings.js file if needed.
+* Default Content-Security-Policy (CSP) header updated for improved browser security. You can override it in your settings.js file if needed.
 
 #### Front-end
 
