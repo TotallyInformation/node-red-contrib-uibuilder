@@ -1,11 +1,10 @@
-/* eslint-disable strict, sonarjs/no-duplicate-string */
-
-// Isolate this code
+// NOTE: window.uibuilder is added - see `resources` folder
 ;(function () {
     'use strict'
 
-    // NOTE: window.uibuilder is added - see `resources` folder
+    // #region --------- module variables for the panel --------- //
 
+    // NOTE: window.uibuilder is added by editor-common.js - see `resources` folder
     const uibuilder = window['uibuilder']
     // const log = uibuilder.log
 
@@ -17,6 +16,8 @@
     /** Copy of deployed uibuilder node instances populated by getUrls() */
     let uibInstances = uibuilder.editorUibInstances
 
+    // #endregion ------------------------------------------------- //
+
     /** Get all of the currently deployed uibuilder URL's
      * NOTE that the uibuilder.urlsByNodeId cannot be used as that includes disabled nodes/flows
      */
@@ -26,13 +27,16 @@
         // Rebuild the drop-down
         Object.keys(uibuilder.sortInstances(uibInstances)).forEach( (key, i, arr) => {
             $('#node-input-url').append($('<option>', {
-                value: uibInstances[key],
-                text: uibInstances[key],
+                'value': uibInstances[key],
+                'text': uibInstances[key],
                 'data-id': key,
             }))
         })
     } // ---- end of getUrls ---- //
 
+    /** Update the search root display based on the selected uibuilder instance and live folder option.
+     * @param {*} node A node instance as seen from the Node-RED Editor
+     */
     function srchRoot(node) {
         if (node.uibId) {
             const uibNode = RED.nodes.node(node.uibId)
@@ -70,7 +74,7 @@
         }
 
         uibuilder.doTooltips('#ti-edit-panel') // Do this at the end
-    } // ----- end of onEditPrepare() ----- //
+    }
 
     /** Validation function for the URL field - Also updates uibId or url if needed - incl blank on import
      * @param {*} v Value
@@ -114,14 +118,14 @@
         return this.valid !== false
     }
 
-    // @ts-ignore
+    // Register the node type, defaults and set up the edit fns
     RED.nodes.registerType(moduleName, {
         defaults: {
-            name: { value: '' },
-            topic: { value: '' },
+            name: { value: '', },
+            topic: { value: '', },
 
-            url: { value: '', required: true, validate: chkUrl },
-            uibId: { value: '' }, // ID of selected uibuilder instance
+            url: { value: '', required: true, validate: chkUrl, },
+            uibId: { value: '', }, // ID of selected uibuilder instance
 
             folder: { value: 'src', },
             filter: { value: '', },
@@ -136,15 +140,15 @@
         inputLabels: 'Trigger search',
         outputs: 1,
         outputLabels: ['Search output'],
-        icon: 'font-awesome/fa-search',
+        icon: 'uib-search.svg',
         label: function () {
-            return this.name || this.url ? `Srch '${this.url}'` : undefined || 'choose uibuilder node'
+            return this.name || this.url ? `Srch '${this.url}'` : 'choose uibuilder node'
         },
-        paletteLabel: moduleName,
+        paletteLabel: 'uib file list',
         category: uibuilder.paletteCategory,
         color: 'var(--uib-node-colour)', // '#E6E0F8'
 
         /** Prepares the Editor panel */
         oneditprepare: function () { onEditPrepare(this) },
-    }) // ---- End of registerType() ---- //
+    })
 }())

@@ -1,0 +1,601 @@
+[
+    {
+        "id": "99b68b4208b45e2f",
+        "type": "subflow",
+        "name": "Reset MSG",
+        "info": "",
+        "category": "",
+        "in": [
+            {
+                "x": 60,
+                "y": 40,
+                "wires": [
+                    {
+                        "id": "44c96ae25491502b"
+                    }
+                ]
+            }
+        ],
+        "out": [
+            {
+                "x": 420,
+                "y": 40,
+                "wires": [
+                    {
+                        "id": "44c96ae25491502b",
+                        "port": 0
+                    }
+                ]
+            }
+        ],
+        "env": [],
+        "meta": {},
+        "color": "#C0C0C0",
+        "icon": "font-awesome/fa-close"
+    },
+    {
+        "id": "44c96ae25491502b",
+        "type": "function",
+        "z": "99b68b4208b45e2f",
+        "name": "delete msg but keep socket id",
+        "func": "return {\n    _socketId: msg._socketId\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 230,
+        "y": 40,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9a441642d682bedd",
+        "type": "tab",
+        "label": "Easy FE Updates",
+        "disabled": false,
+        "info": "This flow tests out the various HTML helpers\r\nprovided by uibuilder to make updating web\r\npages as simple and easy as possible.\r\n\r\n## Special Attributes\r\n\r\n* `uib-topic`\r\n* `uib-var`\r\n* `uib-bine` (EXPERIMENTAL)\r\n\r\n## Custom web components (built-in)\r\n\r\n* `<uib-var>` - Substitute dynamic data into \r\n  the UI (similar to {{varname}} in frameworks).\r\n\r\n* `<apply-template>` - Apply the content of\r\n  an HTML <template> to the UI without the need for JavaScript.\r\n\r\n* `<uib-meta>` - Display page metadata such\r\n  as the created/last-updated timestamp or size.\r\n  Taken from the physical page file.\r\n\r\n* `<uib-control>` - Change the styling and other\r\n  parameters of the uibuilder client.",
+        "env": []
+    },
+    {
+        "id": "dd92a0f088b77f27",
+        "type": "group",
+        "z": "9a441642d682bedd",
+        "name": "",
+        "style": {
+            "fill": "#e3f3d3",
+            "fill-opacity": "0.25",
+            "label": true
+        },
+        "nodes": [
+            "8ef062a8ba7ad9d2",
+            "c654344a651d4de3",
+            "fd3860e81f60ad78",
+            "ca4a7c97ab334b1d",
+            "ef1bc0845d32725e"
+        ],
+        "x": 24,
+        "y": 79,
+        "w": 672,
+        "h": 82
+    },
+    {
+        "id": "b0603345b3ca1c09",
+        "type": "group",
+        "z": "9a441642d682bedd",
+        "name": "Setup - run this first to set up the page and style - only needs to run once",
+        "style": {
+            "fill": "#dbcbe7",
+            "fill-opacity": "0.26",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "288bb580c99f1733",
+            "19efb49adc098e73",
+            "08edd62693944096",
+            "f31faa59a1a0c499",
+            "64ea9876eb5e8fa9",
+            "2392be064ad5c7ec",
+            "08d76b684c2d4b21",
+            "27fb63a4feb50d27"
+        ],
+        "x": 54,
+        "y": 179,
+        "w": 632,
+        "h": 162
+    },
+    {
+        "id": "4f059dcba8b03bad",
+        "type": "group",
+        "z": "9a441642d682bedd",
+        "name": "We will automatically send our data when a client connects. Load the page to match the numbers with the outputs",
+        "style": {
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "b542367e3fb2079b",
+            "015b448a781b4eb8",
+            "842038b272dfedf5",
+            "dace792338556075",
+            "a8e6165a61c66775",
+            "2b8de9b0e79576c8"
+        ],
+        "x": 24,
+        "y": 359,
+        "w": 722,
+        "h": 202
+    },
+    {
+        "id": "d67eb0db6063b442",
+        "type": "comment",
+        "z": "9a441642d682bedd",
+        "name": "Tests the different easy ways to update web page \\n content and styling using simple messages from Node-RED",
+        "info": "",
+        "x": 230,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "ce381315c8ac304f",
+        "type": "comment",
+        "z": "9a441642d682bedd",
+        "name": "Example updated: 2026-02-15 \\n Tested using UIBUILDER v7.6.0",
+        "info": "",
+        "x": 590,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "8ef062a8ba7ad9d2",
+        "type": "link in",
+        "z": "9a441642d682bedd",
+        "g": "dd92a0f088b77f27",
+        "name": "uib in",
+        "links": [
+            "b542367e3fb2079b"
+        ],
+        "x": 65,
+        "y": 120,
+        "wires": [
+            [
+                "c654344a651d4de3"
+            ]
+        ]
+    },
+    {
+        "id": "c654344a651d4de3",
+        "type": "uibuilder",
+        "z": "9a441642d682bedd",
+        "g": "dd92a0f088b77f27",
+        "name": "",
+        "topic": "",
+        "url": "easy-updates",
+        "okToGo": true,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "7.6.0",
+        "showMsgUib": true,
+        "title": "",
+        "descr": "",
+        "editurl": "vscode://file/src/uibRoot/easy-updates/?windowId=_blank",
+        "x": 180,
+        "y": 120,
+        "wires": [
+            [],
+            [
+                "fd3860e81f60ad78"
+            ]
+        ]
+    },
+    {
+        "id": "288bb580c99f1733",
+        "type": "template",
+        "z": "9a441642d682bedd",
+        "g": "b0603345b3ca1c09",
+        "name": "index.html",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "mustache",
+        "template": "<!doctype html>\n<html lang=\"en\"><head>\n\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <link rel=\"icon\" href=\"../uibuilder/images/node-blue.ico\">\n\n    <title>Easy Update Testing - Node-RED UIBUILDER</title>\n    <meta name=\"description\" content=\"Node-RED UIBUILDER - Easy Update Testing\">\n\n    <!-- Your own CSS (defaults to loading uibuilders css)-->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\" logLevel=\"1\">\n        /* THE UIBUILDER LIBRARY MUST BE IN THE HTML! DO NOT REMOVE */\n    </script>\n    <script defer src=\"./index.js\">\n        /* OPTIONAL: Put your custom code in that */\n    </script>\n    <!-- #endregion -->\n\n</head><body><main>\n\n    <h1 class=\"with-subtitle\">Easy Update Testing</h1>\n    <div role=\"doc-subtitle\">Using UIBUILDER for Node-RED</div>\n\n    <details open><summary><h2>UIBUILDER-specific HTML attributes</h2></summary>\n        <blockquote>\n            Note that you can add these attributes to <i><u>any</u> HTML element</i>.\n            <p>\n                This gives you a lot of flexibility in how you structure your page and where\n                you want to data-driven content updates.\n            </p><p>\n                See the <i><a href=\"https://example.com/reactivity-dynamic-html-attributes\">Reactivity - dynamic HTML attributes</a></i> page in the documentation for more details of how these attributes work and the different options available.\n            </p>\n        </blockquote>\n\n        <details open><summary><h3>1️⃣ uib-topic attribute (since v7.0.0)</h3></summary>\n            <p>\n                <i>This is by far the simplest method to update the content of an element on the page</i>.\n                Using the <code>uib-topic</code> attribute, we simply need to send a message from Node-RED with the\n                matching topic name.\n                It is likely to be the best choice for where you want to update the content from Node-RED.\n            </p>\n            <p>\n                The <code>msg.payload</code> will <i>replace</i> the content of the element.\n                <b>This can contain HTML</b>.\n            </p>\n            <pre class=\"src-code\"><code class=\"language-html\">&lt;div&gt;\n    &lt;span uib-topic=&quot;set-by-simple-msg&quot;&gt;&lt;/span&gt;\n&lt;/div&gt;</code></pre>\n            <div class=\"demo\">\n                <span uib-topic=\"set-by-simple-msg\"></span>\n            </div>\n        </details>\n\n        <details><summary><h3>2️⃣ uib-var attribute (since v7.6.0)</h3></summary>\n            <p>\n                Using the <code>uib-var</code> attribute is marginally more complex than\n                <code>uib-topic</code>, however it offers more flexibility.\n                It is likely to be the best choice if dealing with updates in front-end JavaScript.\n            </p>\n            <p>\n                In this example, we use a remote command message from Node-RED to\n                set the variable name and value. This means that we don't need to add\n                any code to our <code>index.js</code>. But, the Node-RED message is more\n                complex, e.g.\n                <code>msg._uib = {\"command\":\"set\",\"prop\":\"setByRemoteCmd\",\"value\":{\"payload\": \"Hello from Node-RED\"}}</code>.\n            </p>\n            <p>\n                Note how the <code>value</code> property looks like a normal Node-RED message. You can also add an\n                <code>attributes</code> property to set attributes on the element,\n                e.g. <code>msg.value.attributes = {class:\"red-text\", title:\"This is a tooltip\"}</code>.\n            </p>\n            <pre class=\"src-code\"><code class=\"language-html\">&lt;div&gt;\n    &lt;span uib-var=&quot;setByRemoteCmd&quot;&gt;&lt;/span&gt;\n&lt;/div&gt;</code></pre>\n            <div class=\"demo\">\n                <span uib-var=\"setByRemoteCmd\"></span>\n            </div>\n        </details>\n\n        <details><summary><h3>3️⃣ uib-var attribute using JavaScript (since v7.6.0)</h3></summary>\n            <p>\n                This example again uses the <code>uib-var</code> attribute, but this time\n                we use JavaScript code in our <code>index.js</code> to update a managed variable\n                \"manually\".\n            </p>\n            <p>\n                We also demonstrate using a deep property of an object variable instead of a simple variable name.\n            </p>\n            <p>\n                While this may seem a more complex approach, it is highly flexible. It gives you full control over\n                the variable value and when to update it.\n            </p>\n            <p>\n                You can also use this approach to update the variable from other sources,\n                e.g. user interactions on the page, without needing to send messages from Node-RED.\n                There are many other possibilities.\n            </p>\n            <p>\n                In this case, we will still take a message from Node-RED but we will process it in our\n                <code>index.js</code> to extract the value we want to set and then update the variable.\n            </p>\n            <pre class=\"src-code\"><code class=\"language-html\">&lt;div&gt;\n    &lt;span uib-var=&quot;setByJavaScript.deep.deeper&quot;&gt;&lt;/span&gt;\n&lt;/div&gt;</code></pre>\n            <div class=\"demo\">\n                <span uib-var=\"setByJavaScript.deep.deeper\"></span>\n            </div>\n        </details>\n\n    </details>\n\n    <details open><summary><h2>UIBUILDER built-in custom HTML web components</h2></summary>\n        <blockquote>\n            See the <i>Built-in Web Components</i> example flow for more examples of using the web components.\n            Also see the <a href=\"https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/custom-components\">Custom web components</a> page in the documentation for details of how to use them and their extra attributes.\n        </blockquote>\n\n        <details><summary><h3>4️⃣ &lt;uib-var topic=\"...\"&gt; (since v6.6.0)</h3></summary>\n            <p>\n                Using the <code>uib-var</code> web component, we have a similar approach\n                to using the custom attributes.\n                This was the first \"easy update\" method added to UIBUILDER and is still supported,\n                but the <code>uib-topic</code> and <code>uib-var</code> attributes are now the\n                easier approaches for most use cases.\n            </p>\n            <p>\n                Use the same update approachs as for the <code>uib-topic</code> attribute above.\n            </p>\n            <p>\n                No <code>type=\"html\"</code> is used in this example so the HTML in the payload is ignored.\n            </p>\n            <pre class=\"src-code\"><code class=\"language-html\">&lt;div&gt;\n    &lt;uib-var topic=&quot;set-by-simple-msg&quot;&gt;&lt;/uib-var&gt;\n&lt;/div&gt;</code></pre>\n            <div class=\"demo\">\n                <uib-var topic=\"set-by-simple-msg\"></uib-var>\n            </div>\n        </details>\n\n        <details><summary><h3>5️⃣ &lt;uib-var variable=\"...\"&gt; (since v6.6.0)</h3></summary>\n            <p>\n                Using the <code>uib-var</code> web component, we have a similar approach\n                to using the custom attributes.\n                This was the first \"easy update\" method added to UIBUILDER and is still supported,\n                but the <code>uib-topic</code> and <code>uib-var</code> attributes are now the\n                easier approaches for most use cases.\n            </p>\n            <p>\n                Use the same update approachs as for the <code>uib-var</code> attribute above.\n            </p>\n            <pre class=\"src-code\"><code class=\"language-html\">&lt;div&gt;\n    &lt;uib-var variable=&quot;setByJavaScript2&quot; type=&quot;object&quot;&gt;&lt;/uib-var&gt;\n&lt;/div&gt;</code></pre>\n            <div class=\"demo\">\n                <uib-var variable=\"setByJavaScript2\" type=\"object\"></uib-var>\n            </div>\n        </details>\n\n    </details>\n\n    <details><summary><h2>Differences between the attributes and the web component</h2></summary>\n        <p>\n            The main differences between the custom attributes and the web components are:\n            <ul>\n                <li>\n                    The custom attributes are simpler and easier to use for basic updates.\n                </li>\n                <li>\n                    The custom attributes can be placed on <i>any</i> HTML element.\n                </li>\n                <li>\n                    The custom attributes rely on the browser monitoring changes to the DOM.\n                    While this is very efficient, it does mean that if you create an extremely\n                    large page with lots of these attributes, and especially if you are pushing\n                    data to them very rapidly, then you might start to see the browser struggling to keep up.\n                    In contrast, the web components are more self-contained and so may perform better in these extreme\n                    cases. Note, however, that you would need to have a very large page and be pushing data very rapidly\n                    to see any difference in performance. For most use cases, the custom attributes will be perfectly fine.\n                </li>\n                <li>\n                    The web components support some extra attributes: <code>filter</code>, <code>undefined</code>,\n                    <code>report</code>, and <code>type</code> which allow a lot more control over the formatting and\n                    behavior. \n                </li>\n                <li>\n                    The custom attributes will treat the content as HTML and so will render it as such.\n                    They even will use embeded <code>&lt;style&gt;</code> and run embedded <code>&lt;script&gt;</code> code.\n                    You should therefore take care to sanitize any HTML inputs.\n                </li>\n                <li>\n                    The web components content payload is assumed to be plain text by default.\n                    To allow HTML content, you need to set the <code>type</code> attribute to \"html\".\n                    For complex objects, you can set the <code>type</code> to \"object\" and then the\n                    content will be treated as a JavaScript object and shown as a syntax-highlighted JSON string.\n                    The custom attributes will treat the content as HTML and so will render it as such, which is simpler but less flexible.\n                </li>\n            </ul>\n        </p><p>\n            See the documentation for details:\n            <a href=\"https://totallyinformation.github.io/node-red-contrib-uibuilder/#/using/easy-ui-updates\" target=\"_blank\">Easy UI Updates</a>.\n        </p>\n    </details>\n\n    <article>\n        <p>\n            This page and its accompanying Node-RED flow are designed to test the ease of updating web pages from\n            simple Node-RED messages.\n        </p>\n        <p>\n            We will start with the simplest method but also show others that may be helpful in different\n            circumstances.\n            The goal is to demonstrate how quickly and easily you can update the content of a web page using\n            UIBUILDER\n            and Node-RED, without needing to write complex JavaScript or HTML code or even much of a Node-RED flow.\n        </p>\n        <blockquote>\n            If you examine the HTML source, note that nearly <i>all</i> of the code is explanation.\n            There are only a few lines that are actually doing anything.\n        </blockquote>\n        <blockquote>\n            The data-driven updates on this page are triggered in Node-RED simply by loading this page.\n        </blockquote>\n        <blockquote>\n            Note that updates <i>do not need to come from Node-RED</i>!\n            <p>\n                They can come from your own JavaScript code or from user interactions\n                on the page, e.g. button clicks, form submissions, etc.\n            </p>\n        </blockquote>\n        <blockquote>\n            These features provide the equivalent of \"reactivity\" features in modern JavaScript frameworks, but without needing to write any complex code\n            or load a large, complex framework. You can have a fully reactive page with just a few lines of code and simple Node-RED messages.\n        </blockquote>\n    </article>\n\n    <!-- '#more' is used as a parent for dynamic HTML content in examples\n        Also, send {topic:\"more\", payload:\"Hello from <b>Node-RED</b>\"} to auto-display the payload -->\n    <div id=\"more\" uib-topic=\"more\"></div>\n\n</main></body></html>\n",
+        "output": "str",
+        "x": 330,
+        "y": 220,
+        "wires": [
+            [
+                "f31faa59a1a0c499"
+            ]
+        ]
+    },
+    {
+        "id": "19efb49adc098e73",
+        "type": "inject",
+        "z": "9a441642d682bedd",
+        "g": "b0603345b3ca1c09",
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "setup all FE files",
+        "x": 115,
+        "y": 220,
+        "wires": [
+            [
+                "08edd62693944096",
+                "64ea9876eb5e8fa9",
+                "08d76b684c2d4b21"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "08edd62693944096",
+        "type": "change",
+        "z": "9a441642d682bedd",
+        "g": "b0603345b3ca1c09",
+        "name": "index.html",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.html",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 215,
+        "y": 220,
+        "wires": [
+            [
+                "288bb580c99f1733"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "f31faa59a1a0c499",
+        "type": "uib-save",
+        "z": "9a441642d682bedd",
+        "g": "b0603345b3ca1c09",
+        "url": "easy-updates",
+        "uibId": "c654344a651d4de3",
+        "folder": "src",
+        "fname": "",
+        "createFolder": false,
+        "reload": true,
+        "usePageName": false,
+        "encoding": "utf8",
+        "mode": 438,
+        "name": "",
+        "topic": "",
+        "x": 580,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "64ea9876eb5e8fa9",
+        "type": "change",
+        "z": "9a441642d682bedd",
+        "g": "b0603345b3ca1c09",
+        "name": "index.js",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.js",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 215,
+        "y": 260,
+        "wires": [
+            [
+                "27fb63a4feb50d27"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "2392be064ad5c7ec",
+        "type": "template",
+        "z": "9a441642d682bedd",
+        "g": "b0603345b3ca1c09",
+        "name": "index.css",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "css",
+        "syntax": "plain",
+        "template": "/* Load defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-brand.min.css`\n * This is optional but reasonably complete and allows for light/dark mode switching.\n */\n@import url(\"../uibuilder/uib-brand.min.css\");\n\n/*\n  Note that all of this custom CSS is optional and is\n  only used to make the test page look nicer!\n\n  Try commenting it out to see the difference.\n\n  Also note that we are using nested selectors. These\n  don't work on older browsers.\n*/\n\n.src-code {\n    border: 1px solid silver;\n    background-color: black;\n    color: white;\n    border-radius: var(--border-radius);\n    padding: 0.5em;\n\n    code {\n        display: block;\n        background-color: transparent;\n    }\n}\n\ncode {\n    background-color: var(--surface2);\n}\n\n.demo {\n    border: 1px solid silver;\n    background-color: hsl(145, 93%, 5%);\n    color: white;\n    border-radius: var(--border-radius);\n    padding: 0.5em;\n    min-height: 1.5lh;\n}\n\nblockquote {\n    padding: 0.5em 1em 0.5em 1em;\n    margin: 0.5em 0 1em 0;\n    color: inherit;\n    background-color: hsl(207, 63%, 10%);\n    border-left: 0.25em solid hsl(204, 90%, 45%);\n\n    p {\n        margin: 0.3em 0;\n    }\n}\n\nul {\n    padding-inline-start: 1em;\n    list-style-type: disclosure-closed;\n\n    li {\n        margin: 0.5em 0;\n        padding-left: 0.5em;;\n    }\n}\n",
+        "output": "str",
+        "x": 340,
+        "y": 300,
+        "wires": [
+            [
+                "f31faa59a1a0c499"
+            ]
+        ]
+    },
+    {
+        "id": "08d76b684c2d4b21",
+        "type": "change",
+        "z": "9a441642d682bedd",
+        "g": "b0603345b3ca1c09",
+        "name": "index.css",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.css",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 215,
+        "y": 300,
+        "wires": [
+            [
+                "2392be064ad5c7ec"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "27fb63a4feb50d27",
+        "type": "template",
+        "z": "9a441642d682bedd",
+        "g": "b0603345b3ca1c09",
+        "name": "index.js",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "javascript",
+        "syntax": "plain",
+        "template": "// Give VS Code IntelliSense for uibuilder\n// (not part of the code, just for type checking and auto-completion)\n/// <reference path=\"../types/uibuilder.d.ts\" />\n\n// Listen for incoming messages from Node-RED and action\n// This sets up a listener function. So you can set it up before\n// other things if you want.\nuibuilder.onChange('msg', (msg) => {\n    // For example #3, we listen for a msg with `msg.deeper` and update the variable `setByJavaScript` with the value of `msg.deeper`.\n    if (msg.deeper) {\n        console.log('Received msg.deeper from Node-RED. Updating setByJavaScript.deep.deeper:', msg)\n        // We can update this either way:\n        // uibuilder.set('setByJavaScript', { deep: { deeper: msg.deeper } })\n        uibuilder.set('setByJavaScript.deep.deeper', msg.deeper)\n    }\n})\n\n// Create a uibuilder managed variable. We use this in the\n// HTML for example #3. We don't have to do this of course\n// It is fine for the variable to be undefined until we set it,\n// but this way we can give it an initial value and structure.\n//\n// If we don't use a delay as in the code below, this default\n// will likely never be seen in the page. Try this out by \n// stopping the update from Node-RED.\nuibuilder.set('setByJavaScript', {\n    deep: {\n        deeper: 'This is the initial value of the variable setByJavaScript. It will be updated by a remote command from Node-RED.',\n    },\n})\n\n// Page startup needs a bit of time to set up the custom web components.\n// So we are delaying by a few ms. Alternatively,\n// you could create a listener for the `uib-var:ready` event and run the set\n// command in that. But, in practice, a short delay is usually sufficient.\nsetTimeout(() => {\n    uibuilder.set('setByJavaScript2', {\n        text: 'This variable is set by JavaScript after a delay of 10ms.',\n        text2: 'Because of how JS works, it needs time to start before running this.',\n        text3: 'It is not updated by a remote command from Node-RED.',\n        text4: 'But, of course, it could come from Node-RED if we wanted it to.',\n        obj: {\n            nested: true,\n            number: Math.random() * 100,\n            int: 42,\n            today: new Date(),\n        },\n    })    \n}, 10);\n",
+        "output": "str",
+        "x": 340,
+        "y": 260,
+        "wires": [
+            [
+                "f31faa59a1a0c499"
+            ]
+        ]
+    },
+    {
+        "id": "b542367e3fb2079b",
+        "type": "link out",
+        "z": "9a441642d682bedd",
+        "g": "4f059dcba8b03bad",
+        "name": "link out 59",
+        "mode": "link",
+        "links": [
+            "8ef062a8ba7ad9d2"
+        ],
+        "x": 705,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "fd3860e81f60ad78",
+        "type": "switch",
+        "z": "9a441642d682bedd",
+        "g": "dd92a0f088b77f27",
+        "name": "Client Connect?",
+        "property": "uibuilderCtrl",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "client connect",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 380,
+        "y": 120,
+        "wires": [
+            [
+                "ef1bc0845d32725e"
+            ]
+        ]
+    },
+    {
+        "id": "ca4a7c97ab334b1d",
+        "type": "link out",
+        "z": "9a441642d682bedd",
+        "g": "dd92a0f088b77f27",
+        "name": "link out 61",
+        "mode": "link",
+        "links": [
+            "842038b272dfedf5"
+        ],
+        "x": 655,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "015b448a781b4eb8",
+        "type": "change",
+        "z": "9a441642d682bedd",
+        "g": "4f059dcba8b03bad",
+        "name": "2️⃣ uib-var attribute (by remote cmd)",
+        "rules": [
+            {
+                "t": "set",
+                "p": "_uib",
+                "pt": "msg",
+                "to": "{\"command\":\"set\",\"prop\":\"setByRemoteCmd\",\"value\":{\"payload\":\"This was set by a <i>remote command</i> that updated a uibuilder managed variable <code>setByRemoteCmd</code>.\",\"attributes\":{\"style\":\"color: hsl(270, 50%, 90%);\",\"title\":\"We set this from Node-RED as well!\"}}}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 430,
+        "y": 440,
+        "wires": [
+            [
+                "b542367e3fb2079b"
+            ]
+        ]
+    },
+    {
+        "id": "842038b272dfedf5",
+        "type": "link in",
+        "z": "9a441642d682bedd",
+        "g": "4f059dcba8b03bad",
+        "name": "Client Connect",
+        "links": [
+            "ca4a7c97ab334b1d"
+        ],
+        "x": 130,
+        "y": 400,
+        "wires": [
+            [
+                "015b448a781b4eb8",
+                "dace792338556075",
+                "a8e6165a61c66775"
+            ]
+        ],
+        "l": true
+    },
+    {
+        "id": "ef1bc0845d32725e",
+        "type": "subflow:99b68b4208b45e2f",
+        "z": "9a441642d682bedd",
+        "g": "dd92a0f088b77f27",
+        "name": "",
+        "x": 550,
+        "y": 120,
+        "wires": [
+            [
+                "ca4a7c97ab334b1d"
+            ]
+        ]
+    },
+    {
+        "id": "dace792338556075",
+        "type": "change",
+        "z": "9a441642d682bedd",
+        "g": "4f059dcba8b03bad",
+        "name": "1️⃣ & 4️⃣ uib-topic attribute",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "set-by-simple-msg",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "object",
+                "tot": "date"
+            },
+            {
+                "t": "set",
+                "p": "attributes",
+                "pt": "msg",
+                "to": "{\"style\":\"color: hsl(270, 100%, 80%);\",\"title\":\"We set this from Node-RED!\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 400,
+        "y": 400,
+        "wires": [
+            [
+                "b542367e3fb2079b"
+            ]
+        ]
+    },
+    {
+        "id": "a8e6165a61c66775",
+        "type": "change",
+        "z": "9a441642d682bedd",
+        "g": "4f059dcba8b03bad",
+        "name": "3️⃣ uib-var attribute using JavaScript",
+        "rules": [
+            {
+                "t": "set",
+                "p": "deeper",
+                "pt": "msg",
+                "to": "This also set this from Node-RED but processed in the front-end",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 430,
+        "y": 480,
+        "wires": [
+            [
+                "b542367e3fb2079b"
+            ]
+        ]
+    },
+    {
+        "id": "2b8de9b0e79576c8",
+        "type": "comment",
+        "z": "9a441642d682bedd",
+        "g": "4f059dcba8b03bad",
+        "name": "5️⃣ is processed in the browser, not from here",
+        "info": "",
+        "x": 450,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "95ca8abf680f2c33",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-uibuilder": "7.6.0"
+        }
+    }
+]

@@ -30,6 +30,7 @@
   * [`uib-cache`](nodes/uib-cache.md "Cache data so that (re)loaded pages get the latest")
   * [`uib-element`](nodes/uib-element.md "no-code creation of page elements")
   * [`uib-html`](nodes/uib-html.md "Hydrate low-code JSON UI descriptions into HTML in Node-RED rather than the browser")
+  * [`markweb`](nodes/markweb.md "Create dynamic web sites using Markdown files")
   * [`uib-save`](nodes/uib-save.md "Save files to the served folder of a given uibuilder node")
   * [`uib-sender`](nodes/uib-sender.md "Tunnel messages direct to a uibuilder node - with optional return. Use lightly if at all")
   * [`uib-sidebar`](nodes/uib-sidebar.md "Creates a simple UI in the Node-RED Editor sidebar")
@@ -37,7 +38,7 @@
   * [`uib-update`](nodes/uib-update.md "no-code update of any existing HTML page element")
   * [`uibuilder`](nodes/uibuilder.md "The main node")
   * [Function node enhancements](nodes/function-node.md)
-* The front-end client
+* The front-end
   * *[Introduction](client-docs/readme.md)*
   * [Controlling from Node-RED](client-docs/control-from-node-red.md)
   * [Custom Components](client-docs/custom-components.md "AKA 'Widgets', built-in and external elements to incorporate in your UI")
@@ -51,7 +52,7 @@
   * [uib-brand Style Sheet](client-docs/uib-brand-css.md "How to use the UIBUILDER standard style sheet uib-brand.css")
   * [Using Markdown](client-docs/markdown.md "How to render Markdown in UIBUILDER pages")
   * [Variables](client-docs/variables.md)
-* Zero-code element types
+* Zero-code elements
   * [Forms](elements/forms.md)
   * [Headings, text boxes, etc.](elements/other.md)
   * [HTML](elements/html.md)
@@ -70,12 +71,14 @@
   * [How to use low-code in the browser](how-to/use-low-code-in-fe.md "Define and update elements in the browser using low-code")
   * [Live development server](how-to/dev-server.md "How to use Node-RED as a live web development server")
   * [Loading external files](how-to/load-external-files.md "Including HTML, styles, scripts, and web components")
+  * [Remote edit front-end files](how-to/remote-editing.md "Editing front-end files using full IDE features")
   * [Send code to the browser](how-to/send-code-to-fe.md "Dynamically send JavaScript code from Node-RED to browser clients")
   * [Uploading files](how-to/send-file-to-server.md "How to send files from the browser to Node-RED")
   * [Use Fn nodes to change msg._ui](how-to/function-node.md)
   * [Use the cache node](how-to/cache-node.md)
 * Security
   * [Authenticated client properties](security/authenticated-client-properties.md "A standardised msg._client message property added to both UIBUILDER and Dashboard 2.0 outputs when an authenticated client is detected")
+  * [Using Cloudflare Zero Trust](security/cloudflare-zero-trust.md "How to use Cloudflare Zero Trust to secure your Node-RED and UIBUILDER instances")
   * [Securing apps using NGINX](security/uib-security-nginx.md "How to use NGINX as a reverse proxy with TLS and identity authentication")
   * [Securing Data](security/securing-data.md "How to use flows and uibiulder middleware to secure your data")
   * [Securing uib web apps](security/security.md "Overview of general web app security with some specifics for Node-RED and UIBUILDER")

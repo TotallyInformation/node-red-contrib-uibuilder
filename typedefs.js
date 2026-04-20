@@ -248,6 +248,7 @@
  * @property {string} url The url path (and folder path) to be used by this instance
  * @property {boolean} okToGo Is the url valid for this node or not? Not passed into the node, only used to stop processing.
  * @property {string} oldUrl The PREVIOUS url path (and folder path) after a url rename
+ * @property {string} instancePath Allows for the node to use a different folder name than the url
  * @property {boolean} fwdInMessages Forward input msgs to output #1?
  * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
  * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
@@ -282,6 +283,7 @@
  * @property {string} topic msg.topic overrides incoming msg.topic
  * @property {string} url The url path (and folder path) to be used by this instance
  * @property {string} oldUrl The PREVIOUS url path (and folder path) after a url rename
+ * @property {string} instancePath Allows for the node to use a different folder name than the url
  * @property {boolean} fwdInMessages Forward input msgs to output #1?
  * @property {boolean} allowScripts Allow scripts to be sent to front-end via msg? WARNING: can be a security issue.
  * @property {boolean} allowStyles Allow CSS to be sent to the front-end via msg? WARNING: can be a security issue.
@@ -293,6 +295,8 @@
  * @property {string} sourceFolder (src or dist) the instance FE code folder to be served by ExpressJS
  * @property {string} deployedVersion The version of uibuilder when this node was last deployed
  * @property {boolean} showMsgUib Whether to include msg._uib (clientId/real IP/page name) in std output msgs
+ * @property {string} customFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
+ * @property {Object<string, Function>} [internalControls] Internal custom hook functions called via control messages
  *
  * @property {string} instanceFolder Name of the fs path used to hold custom files & folders for THIS INSTANCE
  * @property {number} ioClientsCount How many Socket clients connected to this instance?
@@ -330,6 +334,8 @@
  *
  * @property {Function} sendToFe Ref to sockets.sendToFe
  * @property {Function} sender Ref to uib-sender event sending function
+ *
+ * @property {Function} watcher Ref to optional chokidar file watcher for client auto-reload on file changes
  */
 
 /** uibConfig - THe module-level `uib` configuration variable
@@ -422,6 +428,29 @@
  * @property {string} varName The variable name in use in the store
  * @property {Function} getC A reference to the context get function for this node instance
  * @property {Function} setC A reference to the context set function for this node instance
+ */
+
+/** uibMwNode - markweb node
+ * @typedef {object} uibMwNode Local copy of the node instance config + other info
+ * @property {string} source The server source folder for the MarkWeb files
+ * @property {string} url The URL path to serve the MarkWeb files from
+ * @property {string} name only used for labelling the node in the flow
+ * @property {''} sourceFolder Used in web.instanceSetup() for uibuilder nodes, must be '' here
+ * @property {string} instanceFolder The full path to the instance folder. Used in web.instanceSetup()
+ * @property {string} configFolder The full or relative path to the config folder. Used in web.instanceSetup()
+ * @property {string} pageTemplate The pages HTML template content - cached for efficiency
+ * @property {Object<string, Function>} [internalControls] Internal custom hook functions called via control messages
+ * @property {Function} sendToFe Ref to sockets.sendToFe
+ * @property {FSWatcher} watcher Ref to the fs watcher to allow it to be closed on node delete
+ * @property {Map} index Map of page names to page meta-data
+ * @property {object} globalAttributes Non-page-specific attributes merged with page-specific attributes when sent to the front-end
+ *   Includes `directives` from the template file
+ *
+ * @property {object} statusDisplay Settings for the uibuilder node status
+ * @property {string} statusDisplay.text Text to display
+ * @property {string} statusDisplay.fill Fill colour: black, blue, red, yellow, ...
+ * @property {string} statusDisplay.shape dot or ring
+ *
  */
 
 /** uibListNode
@@ -719,7 +748,7 @@
  * @property {string} [VNode.key] .
  */
 
-// ==== vvv These need some work vvv ==== //
+// #region ==== vvv These need some work vvv ==== //
 
 /** ExpressJS App
  * @typedef {object} expressApp ExpessJS `app` object
@@ -996,3 +1025,5 @@ module.exports = {}
     _def: { category: "uibuilder", color: "#E6E0F8", defaults: { … }, credentials: { … }, inputs: 1, … }
 }
  */
+
+// #endregion ==== ^^^ These need some work ^^^ ==== //

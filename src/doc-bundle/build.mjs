@@ -11,8 +11,9 @@ console.log('-------------------------------')
 // get the current execution folder
 const curDir = resolve('.')
 console.log('Current folder is', curDir)
-const jsOutpath = join(curDir, 'docs', '.config', 'app.js')
-console.log('JS output file will be', jsOutpath)
+const appOutpath = join(curDir, 'docs', '.config', 'app.js')
+const mermaidOutpath = join(curDir, 'docs', '.config', 'mermaid.js')
+console.log('JS output file will be', appOutpath)
 const cssOutPath = join(curDir, 'docs', '.config')
 console.log('CSS output folder will be', cssOutPath)
 
@@ -50,7 +51,7 @@ async function updateTipsFiles() {
 
     /** Build a single output app.js from docsify & all needed plugins */
     try {
-        console.log('Starting ESBUILD for app.js ...', jsOutpath)
+        console.log('Starting ESBUILD for app.js ...', appOutpath)
         await build({
             entryPoints: [
                 'src/doc-bundle/bundle-input.mjs'
@@ -60,7 +61,41 @@ async function updateTipsFiles() {
             minify: true,
             sourcemap: true,
             logLevel: 'info',
-            outfile: jsOutpath,
+            outfile: appOutpath,
+            // outdir: resolve('../../docs/.config/',),
+            platform: 'browser',
+            target: [
+                // Start of 2019
+                'chrome72',
+                'safari12.1',
+                'firefox65',
+                'opera58',
+            ],
+            supported: {
+                destructuring: true,
+            },
+        })
+        console.log('... app bundle completed')
+    } catch (error) {
+        console.error('... Error building app bundle:', error)
+        process.exit(1) // eslint-disable-line n/no-process-exit
+    }
+
+    console.log('-------------------------------')
+
+    /** Build a single output mermaid.js from docsify & all needed plugins */
+    try {
+        console.log('Starting ESBUILD for mermaid.js ...', mermaidOutpath)
+        await build({
+            entryPoints: [
+                'src/doc-bundle/mermaid-input.mjs'
+            ],
+            format: 'iife',
+            bundle: true,
+            minify: true,
+            sourcemap: true,
+            logLevel: 'info',
+            outfile: mermaidOutpath,
             // outdir: resolve('../../docs/.config/',),
             platform: 'browser',
             target: [
@@ -71,9 +106,9 @@ async function updateTipsFiles() {
                 'opera58',
             ],
         })
-        console.log('... JS bundle completed')
+        console.log('... mermaid bundle completed')
     } catch (error) {
-        console.error('... Error building JS bundle:', error)
+        console.error('... Error building mermaid bundle:', error)
         process.exit(1) // eslint-disable-line n/no-process-exit
     }
 

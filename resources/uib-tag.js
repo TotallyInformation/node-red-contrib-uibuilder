@@ -1,13 +1,10 @@
-/* eslint-disable strict, sonarjs/no-duplicate-string */
-
-// Isolate this code
+/* eslint-disable @stylistic/arrow-parens */
 ;(function () {
     'use strict'
 
-    // NOTE: window.uibuilder is added - see `resources` folder
+    // #region --------- module variables for the panel --------- //
 
-    // RED._debug({topic: 'RED.settings', payload:RED.settings})
-
+    // NOTE: window.uibuilder is added by editor-common.js - see `resources` folder
     const uibuilder = window['uibuilder']
     // const log = uibuilder.log
 
@@ -25,6 +22,8 @@
         'msg', 'flow', 'global',
         'str', 'env', 'jsonata', 're',
     ]
+
+    // #endregion ------------------------------------------------- //
 
     /** Prep for edit
      * @param {*} node A node instance as seen from the Node-RED Editor
@@ -70,7 +69,7 @@
         $('#node-input-slotSourceProp').typedInput({
             types: inputTypes,
             default: 'msg',
-            typeField: $('#node-input-slotSourcePropType')
+            typeField: $('#node-input-slotSourcePropType'),
         })
 
         $('#node-input-slotPropMarkdown').on('change', function() {
@@ -85,9 +84,9 @@
 
         // attribsSource typed input - https://nodered.org/docs/api/ui/typedInput/
         $('#node-input-attribsSource').typedInput({
-            types: ['msg', 'flow', 'global', 'json', 'jsonata',],
+            types: ['msg', 'flow', 'global', 'json', 'jsonata'],
             default: 'msg',
-            typeField: $('#node-input-attribsSourceType')
+            typeField: $('#node-input-attribsSourceType'),
         })
 
         uibuilder.doTooltips('#ti-edit-panel') // Do this at the end
@@ -129,42 +128,42 @@
     // @ts-ignore
     RED.nodes.registerType(moduleName, {
         defaults: {
-            name: { value: '' },
-            topic: { value: '' },
+            name: { value: '', },
+            topic: { value: '', },
 
-            tag: { value: '', validate: (v) => tiValidateOptString(v, 'tag', false, false) }, // RED.validators.regex(/^((?!<|>).)*$/) },
-            tagSource: { value: '' },
-            tagSourceType: { value: 'str' },
+            tag: { value: '', validate: (v) => tiValidateOptString(v, 'tag', false, false), }, // RED.validators.regex(/^((?!<|>).)*$/) },
+            tagSource: { value: '', },
+            tagSourceType: { value: 'str', },
 
-            parent: { value: 'body', validate: (v) => tiValidateOptString(v, 'parent', false, false) },
-            parentSource: { value: '' },
-            parentSourceType: { value: 'str' },
+            parent: { value: 'body', validate: (v) => tiValidateOptString(v, 'parent', false, false), },
+            parentSource: { value: '', },
+            parentSourceType: { value: 'str', },
 
-            elementId: { value: '', validate: (v) => tiValidateOptString(v, 'elementId', true, false) },
-            elementIdSourceType: { value: 'str' },
+            elementId: { value: '', validate: (v) => tiValidateOptString(v, 'elementId', true, false), },
+            elementIdSourceType: { value: 'str', },
 
-            position: { value: 'last', validate: (v) => tiValidateOptString(v, 'position', false, true) },
-            positionSourceType: { value: 'str' },
+            position: { value: 'last', validate: (v) => tiValidateOptString(v, 'position', false, true), },
+            positionSourceType: { value: 'str', },
 
-            slotSourceProp: { value: '', validate: () => true }, // allow anything including blank
-            slotSourcePropType: { value: 'msg' },
+            slotSourceProp: { value: '', validate: () => true, }, // allow anything including blank
+            slotSourcePropType: { value: 'msg', },
 
-            attribsSource: { value: '', validate: () => true },
-            attribsSourceType: { value: 'msg' },
+            attribsSource: { value: '', validate: () => true, },
+            attribsSourceType: { value: 'msg', },
 
-            slotPropMarkdown: { value: false },
+            slotPropMarkdown: { value: false, },
         },
         align: 'left',
         inputs: 1,
         inputLabels: 'Source data',
         outputs: 1,
         outputLabels: ['uibuilder dynamic UI configuration'],
-        icon: 'font-awesome/fa-tag',
+        icon: 'tag.svg',
         label: function () {
             // return this.name || `${this.mode}${this.cssSelectorType === 'str' ? ` ${this.cssSelector.replace(/.*::/, '')}` : ''}`  || moduleName
             return this.name || `[${this.tag}] ${this.parent ? `${this.parent}.` : ''}${this.elementId || moduleName}`
         },
-        paletteLabel: moduleName,
+        paletteLabel: 'single tag',
         category: uibuilder.paletteCategory,
         color: 'var(--uib-node-colour)', // '#E6E0F8'
 
@@ -175,5 +174,5 @@
         // oneditresize: function() { // (size) {
         //     console.log('uib-tag WIDTH: ', $('#red-ui-editor-stack > div > div.red-ui-tray-body-wrapper > div > div:nth-child(2) > div:nth-child(1)').css('width'))
         // }, // ---- End of oneditcancel ---- //
-    }) // ---- End of registerType() ---- //
+    })
 }())

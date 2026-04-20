@@ -14,8 +14,11 @@ import 'docsify-plugin-flexible-alerts/dist/docsify-plugin-flexible-alerts.js'
 import 'docsify-copy-code/dist/docsify-copy-code.js'
 // import 'docsify-plugin-toc/dist/docsify-plugin-toc.js'
 import 'docsify-plugin-toc/src/index.js'
+import 'docsify-mermaid/dist/docsify-mermaid.js'
 
-const version = '2025-09-12'
+// NB: mermaid must be loaded BEFORE docsify, so it's in a separate bundle. See mermaid-input.mjs
+
+const version = '2026-02-12'
 console.log(`uibuilder docsify app.js - version: ${version}`)
 
 /** Don't load CSS into an app.css bundle because, in this case

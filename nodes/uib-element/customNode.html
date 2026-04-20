@@ -1,5 +1,5 @@
 <!--
-    Copyright (c) 2022-2024 Julian Knight (Totally Information)
+    Copyright (c) 2022-2026 Julian Knight (Totally Information)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -13,8 +13,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-
-<script src="./resources/node-red-contrib-uibuilder/uib-element.js"></script>
 
 <style>
     .custom-combobox {
@@ -37,103 +35,104 @@
 </style>
 
 <script type="text/html" data-template-name="uib-element">
-<div id="ti-edit-panel">
+    <div id="ti-edit-panel">
 
-    <div class="form-row func-tabs-row">
-        <ul style="min-width: 450px; margin-bottom: 20px;" id="el-tabs"></ul>
-    </div>
-
-    <div id="el-tabs-content">
-
-        <div id="el-tab-main" style="display:none">
-            <div aria-label="The type of element or component to add to the UI" class="form-row">
-                <label for="node-input-elementtype"><i class="fa fa-code"></i> Type</label>
-                <input type="text" id="node-input-elementtype" style="width:70%;"></input>
-            </div>
-
-            <div id="type-info" aria-label="Type information" class="form-row form-tips node-help" style="width:89%"></div>
-            
-            <div aria-label="If supplied, must be unique on the page & retrigger of the node will REPLACE the element.&#10;If not supplied, element will always be ADDED to page." class="form-row">
-                <label for="node-input-elementid"><i class="fa fa-file-code-o"></i> HTML ID</label>
-                <input type="text" id="node-input-elementid" placeholder="Valid unique HTML element id string">
-                <input type="hidden" id="node-input-elementIdSourceType">
-            </div>
-            
-            <div aria-label="A CSS selector that uniquely identifies the HTML parent element to attach the new element to.&#10;Must be a non-blank string" class="form-row">
-                <label for="node-input-parent"><i class="fa fa-level-up"></i> Parent</label>
-                <input type="text" id="node-input-parent" placeholder="CSS Selector">
-                <input type="hidden" id="node-input-parentSourceType">
-            </div>
-            
-            <div aria-label="Relative position inside the parent.&#10;'first', 'last' or a number.&#10;Ignored if no HTML ID provided." class="form-row">
-                <label for="node-input-position"><i class="fa fa-hashtag"></i> Position</label>
-                <input type="text" id="node-input-position" placeholder="Last, first or a number">
-                <input type="hidden" id="node-input-positionSourceType">
-            </div>
-                        
-            <div aria-label="The core data content to process." class="form-row">
-                <label for="node-input-data"><i class="fa fa-database"></i> Data</label>
-                <input type="text" id="node-input-data" placeholder="">
-                <input type="hidden" id="node-input-dataSourceType">
-            </div>
-
-            <div aria-label="Optional heading. Leave blank for no heading." class="form-row">
-                <label for="node-input-heading"><i class="fa fa-header"></i> Heading</label>
-                <select id="node-input-headingLevel" style="width:3.7em;">
-                    <option value="h2">H2</option>
-                    <option value="h3">H3</option>
-                    <option value="h4">H4</option>
-                    <option value="h5">H5</option>
-                    <option value="h6">H6</option>
-                </select>
-                <input type="text" id="node-input-heading" placeholder="Optional heading">
-                <input type="hidden" id="node-input-headingSourceType">
-            </div>
-
-            <div aria-label="Will pass msg.payload through to the output.&#10;When not checked (default), payload is not passed.&#10;If checked, the front-end library will trigger the onMsg event handler." class="form-row">
-                <input type="checkbox" id="node-input-passthrough" style="display: inline-block; width: auto; vertical-align: top;">
-                <label for="node-input-passthrough" style="width: 90%;">Pass <code>msg.payload</code> to output?</label>
-            </div>
-            
-            <hr>
-            
-            <div aria-label="Default msg topic. Make unique if using uib-cache." class="form-row">
-                <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
-                <input type="text" id="node-input-topic">
-            </div>
-            <div aria-label="Node name (descriptive only)" class="form-row">
-                <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-                <input type="text" id="node-input-name">
-            </div>
-            
-            <div aria-label="Additional information" class="form-row form-tips node-help" style="width:89%">
-                <p>
-                    Outputs a uibuilder <code>_ui</code> configuration object.
-                </p>
-                <p>
-                    Each output element is wrapped in a containing <code>&lt;div></code> tag
-                    (except for the add table/list rows and the title element). It is that
-                    tag that has the <code>id</code> on it.
-                </p>
-                <p>
-                    Send the output to a uibuilder main node and the resulting page(s) will have some
-                    new UI elements added dynamically without the need for any coding. Use the default
-                    "Blank" template to get a simple web page that will "just work". However, any of the 
-                    templates should easily accept the output of this node without coding needed.
-                </p>
-                <p>
-                    The output of the node can be further processed for more complex requirements. uib-element
-                    nodes can also be chained together, simply use a change or function node to replace the
-                    <code>msg.payload</code> in readiness for the next <code>uib-element</code> node. Leave
-                    the <code>msg._ui</code> property as-is and the next <code>uib-element</code> node will 
-                    add to it.
-                </p>
-            </div>
+        <div class="form-row func-tabs-row">
+            <ul style="min-width: 450px; margin-bottom: 20px;" id="el-tabs"></ul>
         </div>
 
-        <div id="el-tab-conf" style="display:none"><!-- Content loaded when tab changes --></div>
-    </div>
-    
-</div>
+        <div id="el-tabs-content">
 
+            <div id="el-tab-main" style="display:none">
+                <div aria-label="The type of element or component to add to the UI" class="form-row">
+                    <label for="node-input-elementtype"><i class="fa fa-code"></i> Type</label>
+                    <input type="text" id="node-input-elementtype" style="width:70%;"></input>
+                </div>
+
+                <div id="type-info" aria-label="Type information" class="form-row form-tips node-help" style="width:89%"></div>
+                
+                <div aria-label="If supplied, must be unique on the page & retrigger of the node will REPLACE the element.&#10;If not supplied, element will always be ADDED to page." class="form-row">
+                    <label for="node-input-elementid"><i class="fa fa-file-code-o"></i> HTML ID</label>
+                    <input type="text" id="node-input-elementid" placeholder="Valid unique HTML element id string">
+                    <input type="hidden" id="node-input-elementIdSourceType">
+                </div>
+                
+                <div aria-label="A CSS selector that uniquely identifies the HTML parent element to attach the new element to.&#10;Must be a non-blank string" class="form-row">
+                    <label for="node-input-parent"><i class="fa fa-level-up"></i> Parent</label>
+                    <input type="text" id="node-input-parent" placeholder="CSS Selector">
+                    <input type="hidden" id="node-input-parentSourceType">
+                </div>
+                
+                <div aria-label="Relative position inside the parent.&#10;'first', 'last' or a number.&#10;Ignored if no HTML ID provided." class="form-row">
+                    <label for="node-input-position"><i class="fa fa-hashtag"></i> Position</label>
+                    <input type="text" id="node-input-position" placeholder="Last, first or a number">
+                    <input type="hidden" id="node-input-positionSourceType">
+                </div>
+                            
+                <div aria-label="The core data content to process." class="form-row">
+                    <label for="node-input-data"><i class="fa fa-database"></i> Data</label>
+                    <input type="text" id="node-input-data" placeholder="">
+                    <input type="hidden" id="node-input-dataSourceType">
+                </div>
+
+                <div aria-label="Optional heading. Leave blank for no heading." class="form-row">
+                    <label for="node-input-heading"><i class="fa fa-header"></i> Heading</label>
+                    <select id="node-input-headingLevel" style="width:3.7em;">
+                        <option value="h2">H2</option>
+                        <option value="h3">H3</option>
+                        <option value="h4">H4</option>
+                        <option value="h5">H5</option>
+                        <option value="h6">H6</option>
+                    </select>
+                    <input type="text" id="node-input-heading" placeholder="Optional heading">
+                    <input type="hidden" id="node-input-headingSourceType">
+                </div>
+
+                <div aria-label="Will pass msg.payload through to the output.&#10;When not checked (default), payload is not passed.&#10;If checked, the front-end library will trigger the onMsg event handler." class="form-row">
+                    <input type="checkbox" id="node-input-passthrough" style="display: inline-block; width: auto; vertical-align: top;">
+                    <label for="node-input-passthrough" style="width: 90%;">Pass <code>msg.payload</code> to output?</label>
+                </div>
+                
+                <hr>
+                
+                <div aria-label="Default msg topic. Make unique if using uib-cache." class="form-row">
+                    <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
+                    <input type="text" id="node-input-topic">
+                </div>
+                <div aria-label="Node name (descriptive only)" class="form-row">
+                    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+                    <input type="text" id="node-input-name">
+                </div>
+                
+                <div aria-label="Additional information" class="form-row form-tips node-help" style="width:89%">
+                    <p>
+                        Outputs a uibuilder <code>_ui</code> configuration object.
+                    </p>
+                    <p>
+                        Each output element is wrapped in a containing <code>&lt;div></code> tag
+                        (except for the add table/list rows and the title element). It is that
+                        tag that has the <code>id</code> on it.
+                    </p>
+                    <p>
+                        Send the output to a uibuilder main node and the resulting page(s) will have some
+                        new UI elements added dynamically without the need for any coding. Use the default
+                        "Blank" template to get a simple web page that will "just work". However, any of the 
+                        templates should easily accept the output of this node without coding needed.
+                    </p>
+                    <p>
+                        The output of the node can be further processed for more complex requirements. uib-element
+                        nodes can also be chained together, simply use a change or function node to replace the
+                        <code>msg.payload</code> in readiness for the next <code>uib-element</code> node. Leave
+                        the <code>msg._ui</code> property as-is and the next <code>uib-element</code> node will 
+                        add to it.
+                    </p>
+                </div>
+            </div>
+
+            <div id="el-tab-conf" style="display:none"><!-- Content loaded when tab changes --></div>
+        </div>
+        
+    </div>
 </script>
+
+<script src="./resources/node-red-contrib-uibuilder/uib-element.js"></script>

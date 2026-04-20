@@ -1,7 +1,8 @@
+/* eslint-disable jsdoc/valid-types */
 /* eslint-disable jsdoc/check-param-names */
 /* eslint-disable @stylistic/no-multi-spaces */
 // @ts-nocheck
-/**
+/** This is the source main file for the uibuilder client library
  * @kind module
  * @module uibuilder
  * @description The client-side Front-End JavaScript for uibuilder in HTML Module form
@@ -15,10 +16,27 @@
  * @copyright (c) 2022-2025 Julian Knight (Totally Information)
  */
 
+const perf = new Map()
+perf.set('loading uibuilder client library', performance.now())
+
+// Fastest way to get the http headers - called in constructor
+const __uibHeadersPromise = fetch(location.href, { method: 'HEAD', cache: 'no-store', })
+    .then((r) => {
+        // console.log('>> >> HEADERS >> >> ', r.headers)
+        const h = {}
+        r.headers.forEach((v, k) => h[k] = v)
+        window.__uibHeaders = h
+        return h
+        // return r.headers
+    })
+
 // #region --- Type Defs --- //
 /**
  * A string containing HTML markup
  * @typedef {string} html
+ */
+/**
+ * @type {import('./libs/uib-worker.mjs').UibHeaderWorker} Reference to header worker
  */
 // #endregion --- Type Defs --- //
 
@@ -31,12 +49,14 @@ import UibMeta from '../components/uib-meta.mjs'
 import ApplyTemplate from '../components/apply-template.mjs'
 import UibControl from '../components/uib-control.mjs'
 import { reactive as createReactive, Reactive } from './reactive.mjs'
+import { formatDate } from './libs/format-date-time.mjs'
+// import uibHeaderWorker from './libs/uib-worker.mjs'
 // import { dom } from './tinyDom'
 
 // Incorporate the logger module - NB: This sets a global `log` object for use if it can.
 // import logger from './logger'
 
-const version = '7.5.0-src'
+const version = '7.6.0-src'
 
 // #region --- Module-level utility functions --- //
 
@@ -335,6 +355,8 @@ export const Uib = class Uib {
     #sendUrlHash = false
     // Used to help create unique element ID's if one hasn't been provided, increment on use
     #uniqueElID = 0
+    // Reference to our mini web worker
+    // #headerWorker = uibHeaderWorker
     // Externally accessible command functions (NB: Case must match) - remember to update _uibCommand for new commands
     #extCommands = [
         'elementExists', 'get', 'getManagedVarList', 'getWatchedVars', 'htmlSend', 'include',
@@ -376,9 +398,10 @@ export const Uib = class Uib {
     // Track ui observers (see uiWatch)
     #uiObservers = {}
 
-    // List of uib specific attributes that will be watched and processed dynamically
-    uibAttribs = ['uib-topic', 'data-uib-topic']
-    #uibAttrSel = `[${this.uibAttribs.join('], [')}]`
+    // CSS selector for querySelectorAll to find elements with known uib attributes.
+    // NOTE: CSS cannot match attribute name prefixes, so this covers known names.
+    //       _uibAttrScanOne handles any uib-prefixed attributes found on matched elements.
+    #uibAttrSel = '[uib-topic], [data-uib-topic], [uib-var], [data-uib-var], [uib-if], [data-uib-if]'
 
     //#endregion
 
@@ -387,6 +410,10 @@ export const Uib = class Uib {
     // TODO Move to proper getters
     // #region ---- Externally read-only (via .get method) ---- //
     // version - moved to _meta
+    // Has the initial Socket.IO connection been made? Used to detect if a page reload or just a disconnect/reconnect
+    initialConnect = null
+    // How many times has the client reconnected to Socket.IO since the page was loaded? Note that this will be 0 on the initial connection, so can be used to detect a page reload vs a disconnect/reconnect
+    reconnected = 0
     /** Client ID set by uibuilder on connect */
     clientId = ''
     /** The collection of cookies provided by uibuilder */
@@ -433,6 +460,8 @@ export const Uib = class Uib {
     markdown = false
     // Current URL hash. Initial set is done from start->watchHashChanges via a set to make it watched
     urlHash = location.hash
+    // HTTP Headers on initial load - contain useful uibuilder info
+    httpHeaders = {}
     // #endregion ---- ---- ---- ---- //
 
     // TODO Move to proper getters/setters
@@ -516,9 +545,39 @@ export const Uib = class Uib {
 
     get meta() { return Uib._meta }
 
+    /** Extract the root property from a nested property path (e.g., 'myvar.aprop' or 'myvar["bprop"]').
+     * @private
+     * @param {string} prop The property name or nested property path
+     * @returns {Object<boolean, string, string|null>} Whether the prop is a nested path,
+     *   the root property name (e.g., 'myvar' from 'myvar.aprop' or 'myvar["bprop"]'),
+     *   and the nested path or null if not a nested path
+     */
+    _nestedPath(prop) {
+        const isNestedPath = prop.includes('.') || prop.includes('[')
+        let nestedPath = null
+        let rootProp
+        if (isNestedPath) {
+            const dotIdx = prop.indexOf('.')
+            const bracketIdx = prop.indexOf('[')
+            let sepIdx = -1
+            if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx)
+            else if (dotIdx >= 0) sepIdx = dotIdx
+            else if (bracketIdx >= 0) sepIdx = bracketIdx
+            if (sepIdx > 0) {
+                // Extract the root property and nested path
+                rootProp = prop.substring(0, sepIdx)
+                // For bracket notation, keep the '[' so _setNestedPath can properly strip quotes
+                nestedPath = prop.substring(prop[sepIdx] === '[' ? sepIdx : sepIdx + 1)
+            }
+        }
+        return { isNestedPath, rootProp, nestedPath, }
+    }
+
     /** Function to set uibuilder properties to a new value - works on any property except _* or #*
      * Also triggers any event listeners.
+     * Supports nested property paths (e.g., 'myvar.aprop' or 'myvar["bprop"]').
      * Example: this.set('msg', {topic:'uibuilder', payload:42});
+     * Example: this.set('myvar.nested.prop', 42);
      * @param {string} prop Any uibuilder property who's name does not start with a _ or #
      * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
      * @param {boolean} [store] If true, the variable is also saved to the browser localStorage if possible
@@ -533,36 +592,58 @@ export const Uib = class Uib {
             return `Cannot use set() on protected property "${prop}"`
         }
 
+        // Check if this is a nested property path (contains . or [)
+        const { isNestedPath, rootProp, nestedPath, } = this._nestedPath(prop)
+        // console.log('🪲 is nested?', { prop, isNestedPath, rootProp, nestedPath, })
+
         // Check for an old value
-        const oldVal = this[prop] ?? undefined
+        const oldVal = isNestedPath
+            ? this._resolveNestedPath(this, prop)
+            : (this[prop] ?? undefined)
 
-        // We must add the var to the uibuilder object
-        this[prop] = val
+        if (isNestedPath && nestedPath) {
+            // Ensure root property exists and is an object
+            if (this[rootProp] == null || typeof this[rootProp] !== 'object') {
+                this[rootProp] = {}
+            }
+            // Set the nested property
+            this._setNestedPath(this[rootProp], nestedPath, val)
+            // Keep track of all managed variables (track root property for nested paths)
+            this.#managedVars[rootProp] = rootProp
+        } else {
+            // We must add the var to the uibuilder object
+            this[prop] = val
+            // Keep track of all managed variables (track root property for nested paths)
+            this.#managedVars[prop] = prop
+        }
 
-        // Keep track of all managed variables
-        this.#managedVars[prop] = prop
-
-        // If requested, save to store
-        if (store === true) this.setStore(prop, val, autoload)
+        // If requested, save to store (save the entire root object for nested paths)
+        if (store === true) this.setStore(rootProp, isNestedPath ? this[rootProp] : val, autoload)
 
         log('trace', 'Uib:set', `prop set - prop: ${prop}, val: `, val, ` store: ${store}, autoload: ${autoload}`)()
 
         // Trigger this prop's event callbacks (listeners which are set by this.onChange)
-        // this.emit(prop, val)
+        // Fire event for the root property (since that's what actually changed)
+        const eventProp = isNestedPath ? rootProp : prop
+        const eventVal = this[eventProp] // get the current value of the root property (which will include the nested changes if it's a nested path)
 
         // trigger an event on the prop name, pass both the name and value to the event details
-        this._dispatchCustomEvent('uibuilder:propertyChanged', { prop: prop, value: val, oldValue: oldVal, store: store, autoload: autoload, })
-        this._dispatchCustomEvent(`uibuilder:propertyChanged:${prop}`, { prop: prop, value: val, oldValue: oldVal, store: store, autoload: autoload, })
+        this._dispatchCustomEvent('uibuilder:propertyChanged', { prop: eventProp, value: eventVal, oldValue: oldVal, store: store, autoload: autoload, })
+        this._dispatchCustomEvent(`uibuilder:propertyChanged:${eventProp}`, { prop: eventProp, value: eventVal, oldValue: oldVal, store: store, autoload: autoload, })
 
-        return val
+        // And return the (root) value for good measure
+        return eventVal
     }
 
     /** Function to get the value of a uibuilder property
+     * Supports nested property paths (e.g., 'myvar.aprop' or 'myvar["bprop"]').
      * Example: uibuilder.get('msg')
+     * Example: uibuilder.get('myvar.nested.prop')
      * @param {string} prop The name of the property to get as long as it does not start with a _ or #
      * @returns {*|undefined} The current value of the property
      */
     get(prop) {
+        // Handle special properties first - these are either protected or virtual properties that don't exist directly on the uibuilder object
         if (prop.startsWith('_') || prop.startsWith('#')) {
             log('warn', 'Uib:get', `Cannot use get() on protected property "${prop}"`)()
             return
@@ -570,8 +651,21 @@ export const Uib = class Uib {
         if (prop === 'version') return Uib._meta.version
         if (prop === 'msgsCtrl') return this.msgsCtrlReceived
         if (prop === 'reconnections') return this.connectedNum
+
+        // Extract root property for nested paths
+        const { isNestedPath, rootProp, } = this._nestedPath(prop)
+
+        // Handle nested paths
+        if (isNestedPath) {
+            const value = this._resolveNestedPath(this, prop)
+            if (value === undefined) {
+                log('info', 'Uib:get', `get() - property "${prop}" is undefined`)()
+            }
+            return value
+        }
+
         if (this[prop] === undefined) {
-            log('warn', 'Uib:get', `get() - property "${prop}" is undefined`)()
+            log('info', 'Uib:get', `get() - property "${prop}" is undefined`)()
         }
         return this[prop]
     }
@@ -643,6 +737,13 @@ export const Uib = class Uib {
         try {
             localStorage.removeItem(this.storePrefix + id)
         } catch (e) { }
+    }
+
+    /** Returns a list of the externally accessible command functions that are available to be called from Node-RED
+     * @returns {string[]} List of externally accessible command functions
+     */
+    getCommandList() {
+        return this.#extCommands
     }
 
     /** Returns a list of uibuilder properties (variables) that can be watched with onChange
@@ -721,10 +822,11 @@ export const Uib = class Uib {
         // this.#propChangeCallbacks[topic]._nextRef-- // Don't bother, let the ref# increase
     }
 
-    /** Register a change callback for a specific msg.topic
+    /** Register a change callback for a specific msg.topic (works for std and ctrl msgs)
      * Similar to onChange but more convenient if needing to differentiate by msg.topic.
      * @example let otRef = uibuilder.onTopic('mytopic', function(){ console.log('Received a msg with msg.topic=`mytopic`. msg: ', this) })
      * To cancel a change listener: uibuilder.cancelTopic('mytopic', otRef)
+     * Since v7.6, added ctrl msgs so that <uib-var> and uib-topic in HTML can process control as well as standard msgs
      *
      * @param {string} topic The msg.topic we want to listen for
      * @param {Function} callback The function that will run when an appropriate msg is received. `this` inside the callback as well as the cb's single argument is the received msg.
@@ -748,13 +850,14 @@ export const Uib = class Uib {
         }
 
         document.addEventListener('uibuilder:stdMsgReceived', msgRecvdEvtCallback)
+        document.addEventListener('uibuilder:ctrlMsgReceived', msgRecvdEvtCallback)
 
         return nextCbRef
     }
 
     cancelTopic(topic, cbRef) {
         document.removeEventListener('uibuilder:stdMsgReceived', this.#msgRecvdByTopicCallbacks[topic][cbRef])
-        delete this.#msgRecvdByTopicCallbacks[topic][cbRef]
+        document.removeEventListener('uibuilder:ctrlMsgReceived', this.#msgRecvdByTopicCallbacks[topic][cbRef])
         // this.#msgRecvdCallbacks[topic]._nextRef-- // Don't bother, let the ref# increase
     }
 
@@ -869,6 +972,15 @@ export const Uib = class Uib {
         return exists
     } // --- End of elementExists --- //
 
+    /** Format a Date using Intl with optional pattern support.
+     * @param {Date|string|number} date Input JS Date, date string, or timestamp
+     * @param {string} [pattern] Optional pattern string
+     * @param {string} [locale] Locale code. Defaults to browser locale.
+     * @returns {string} Formatted date string
+     */
+    // formatDate = formatDate
+    formatDate = formatDate
+
     /** Format a number using the INTL standard library - compatible with uib-var filter function
      * @param {number} value Number to format
      * @param {number} decimalPlaces Number of decimal places to include. Default=no default
@@ -923,6 +1035,15 @@ export const Uib = class Uib {
         return !!this.uibrouterinstance
     }
 
+    /** Check if an attribute name is a uibuilder-specific attribute.
+     * Matches names starting with 'uib-', 'data-uib-', or ':'.
+     * @param {string} name The attribute name to check
+     * @returns {boolean} True if the attribute name is a uib attribute
+     */
+    isUibAttribute(name) {
+        return name.startsWith('uib-') || name.startsWith('data-uib-') || name.startsWith(':')
+    }
+
     /** Only keep the URL Hash & ignoring query params
      * @param {string} url URL to extract the hash from
      * @returns {string} Just the route id
@@ -932,8 +1053,22 @@ export const Uib = class Uib {
         return '#' + url.replace(/^.*#(.*)/, '$1').replace(/\?.*$/, '')
     }
 
+    /** Standardised logging function that uses the log level system and can be extended in the future to do more than just log to the console
+     * @param {...*} arguments The arguments to log,
+     *   first argument can optionally be a log level string or number (e.g., 'info', 'warn', 'error', 'debug', 'trace')
+     *   2nd argument can optionally be a source string to identify the source of the log (e.g., 'uibuilder:myFunction')
+     *   Remaining arguments are the data to log, can be multiple and of any type.
+     */
     log() {
         log(...arguments)()
+    }
+
+    /** Output the current call stack to the console */
+    logStack() {
+        const stack = this.stack()
+        stack.shift() // Drop 1st entry as it's always the logStack function itself
+        console.log('%cCall stack:', log.LOG_STYLES.info.css, stack)
+        // log('info', 'Uib:logStack', 'Call stack:', this.stack())()
     }
 
     /** Makes a null or non-object into an object. If thing is already an object.
@@ -964,6 +1099,18 @@ export const Uib = class Uib {
     navigate(url) {
         if (url) window.location.href = url
         return window.location
+    }
+
+    /** Create and return a randomised UUID
+     * Uses the browsers crypto library if available (newer browsers)
+     * or something based on the timestamp and a random number
+     * @returns {string} The UUID
+     */
+    randomUUID() {
+        return (typeof crypto !== 'undefined' && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36)
+                .substring(2, 11)}`
     }
 
     /** Wrap a provided variable in a proxy object so that it can be used reactively
@@ -1063,6 +1210,101 @@ export const Uib = class Uib {
             }, ms)
         }
     } // ---- End of ping ---- //
+
+    /** Get the current call stack as an array of objects containing file, function, line, column, and raw information.
+     * Sheesh! Sometimes JavaScript is a PAIN. The stack property of an Error object is not yet an official standard
+     * and is implemented differently across browsers. So we have to do a bunch of parsing to try to get a consistent
+     * output across browsers. We will attempt to parse the stack trace in Chromium, Firefox, and Safari formats, and
+     * return an array of objects with the same properties for each line of the stack trace.
+     * @returns {Array<{{file:string,function:string,line:number,column:number,raw:string}}>} Stack array
+     */
+    stack() {
+        /** Map a Chromium stack trace line to an object with function, file, line, and column properties.
+         * @param {string} line Input stack trace line from Chromium, e.g. "    at myFunction (http://example.com/script.js:10:15)"
+         * @param {string} [raw] Optional raw line to include in output if parsing fails. Defaults to the input line.
+         * @returns {object} An object with function, file, line, column, and raw properties extracted from the stack trace line
+         */
+        function _stackMapChromium(line) {
+            // console.log(arguments, arguments.length === 2 ? arguments[1] : '--no raw--')
+            let raw
+            if (arguments.length === 2) {
+                // console.log('Using provided raw line for output: ', arguments[1])
+                raw = arguments[1]
+            } else {
+                // console.log('No raw line provided, using input line for output: ', line)
+                raw = line
+            }
+
+            // Check line for "at <" - if so, there is no function name, so we need to adjust the regex to account for that
+            if (line.includes('at <')) {
+                // No function name case
+                line = line.replace('at <', 'at anonymous (<') + ')' // Replace with a placeholder function name so that the regex can still capture the file, line, and column
+            }
+            const match = line.match(/at\s+(.*)\s+\((.*):(\d+):(\d+)\)/) || line.match(/at\s+(.*):(\d+):(\d+)/)
+            if (match) {
+                return {
+                    function: match[1],
+                    file: match[2],
+                    line: parseInt(match[3], 10),
+                    column: parseInt(match[4], 10),
+                    raw,
+                }
+            }
+            return { raw, }
+        }
+        /** Map a Firefox stack trace line to a Chromium-like format for easier parsing.
+         * @param {string} line Input stack trace line from Firefox, e.g. "myFunction@http://example.com/script.js:10:15"
+         * @returns {object} An object with function, file, line, column, and raw properties extracted from the stack trace line
+         */
+        function _stackMapFirefox(line) {
+            const raw = line
+            line = line
+                .replace(/^@/, 'anonymous@')
+                .replace(/debugger eval code/g, '<anonymous>')
+                .replace(/^(.*)@(.*):(\d+):(\d+)$/, '    at $1 ($2:$3:$4)')
+            return _stackMapChromium(line, raw)
+        }
+        /** Map a Safari stack trace line to a Chromium-like format for easier parsing.
+         * Note that Safari does not include line or column numbers, so these will be set to 0.
+         *      It does not even include the calling script file name :(
+         * @param {string} line Input stack trace line from Safari, e.g. "myFunction@http://example.com/script.js"
+         * @returns {object} An object with function, file (<safari-unknown>), line (0), column (0), and raw properties extracted from the stack trace line
+         */
+        function _stackMapSafari(line) {
+            const raw = line
+            line = line
+                .replace(/^global code@/, 'anonymous@')
+                .replace(/^(.*)@$/, '    at $1 (<safari-unknown>:0:0)')
+            return _stackMapChromium(line, raw)
+        }
+
+        let stack = (new Error()).stack
+        let type = 'unknown'
+        // Is this a Safari browser? Safari has a different stack trace format and doesn't include the "at" keyword, so we need to adjust for that
+        if (stack.includes('at ')) {
+            // Chromium case - we can parse the stack as is, dropping the first 2 lines which are just "Error" and the current function
+            type = 'chromium'
+            stack = stack.split('\n').slice(2)
+            stack = stack.map(_stackMapChromium)
+        } else if (stack.endsWith('@')) {
+            // Safari case - it is cr@p and does not include line or column numbers, so we will just return the raw stack lines as the file and function with line and column as null. We also need to drop the first line which is just "Error"
+            type = 'safari'
+            // console.trace() // Does not trace other than this fn on Safari unlike other browsers.
+            stack = stack.split('\n').slice(1) // Remove the first line
+            stack = stack.map(_stackMapSafari)
+        } else if (stack.includes('@')) {
+            // else is this Firefox? Firefox also has a different format, It uses "@" instead of "at" and doesn't include the column number, so we need to adjust for that as well
+            type = 'firefox'
+            // Firefox case - we will replace "@" with "at" and add a placeholder column number to make it compatible with our regex parsing below
+            stack = stack.split('\n').slice(1, -1) // Remove the first & last lines
+            stack = stack.map(_stackMapFirefox)
+        } else {
+            // Unknown format, return raw stack as a single entry
+            return [{ raw: stack, }]
+        }
+
+        return stack
+    }
 
     /** Convert JSON to Syntax Highlighted HTML
      * @param {object} json A JSON/JavaScript Object
@@ -1418,50 +1660,55 @@ export const Uib = class Uib {
 
     /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
      * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
-     *          as possible. Async so that calling function does not need to wait.
+     *          as possible.
      * Observer is set up in the start() function
      * @param {MutationRecord[]} mutations Array of Mutation Records
      * @private
      */
-    async _uibAttribObserver(mutations/* , observer */) {
-        mutations.forEach( async (m) => { // async so process does not wait
-            log('trace', 'uibuilder:_uibAttribObserver', 'Mutations ', m)()
-            // ! wrong - Deal with attribute changes
-            if (m.attributeName && (m.attributeName.startsWith('uib') || m.attributeName.startsWith('data-uib'))) {
+    _uibAttribObserver(mutations/* , observer */) {
+        const mlen = mutations.length
+        for (let i = 0; i < mlen; i++) {
+            const m = mutations[i]
+            // log('trace', 'uibuilder:_uibAttribObserver', 'Mutations ', m)()
+            // Deal with attribute changes
+            if (m.attributeName && this.isUibAttribute(m.attributeName)) {
                 // log(0, 'attribute mutation', m.attributeName, m.target.getAttribute(m.attributeName), m.oldValue, m )()
                 this._uibAttrScanOne(m.target)
             } else if (m.addedNodes.length > 0) {
                 // And deal with newly added elements (e.g. from route change)
-                // Check for added nodes with uib attribs
-                m.addedNodes.forEach( async (n) => { // async so process does not wait
-                    // Attributes are a map and we need an array
-                    let aNames = []
-                    try { // Nodes might not always have attributes
-                        aNames = [...n.attributes]
-                    } catch (e) {}
-                    // ! wrong - Get any added elements that have uib attribs
-                    const intersect = this.arrayIntersect(this.uibAttribs, aNames)
-                    // Process them
-                    intersect.forEach( async (el) => {
-                        this._uibAttrScanOne(el)
-                    })
-                    // And get any children of the added elements that have uib attribs (a node might not have querySelectorAll method)
-                    let uibChildren = []
-                    // ! wrong
-                    if (n.querySelectorAll) uibChildren = n.querySelectorAll(this.#uibAttrSel)
-                    // Process them
-                    uibChildren.forEach( async (el) => {
-                        this._uibAttrScanOne(el)
-                    })
-                })
+                const nlen = m.addedNodes.length
+                for (let i = 0; i < nlen; i++) {
+                    const n = m.addedNodes[i]
+                    // Check if the added node itself has uib attributes
+                    try {
+                        if (n.attributes && [...n.attributes].some(a => this.isUibAttribute(a.name))) {
+                            this._uibAttrScanOne(n)
+                        }
+                    } catch (e) {} // Nodes might not always have attributes
+                    // And get any children of the added element that have uib attribs
+                    // WARNING: This only selects KNOWN attribute names, not all prefixes.
+                    if (n.querySelectorAll) {
+                        const elToCheck = n.querySelectorAll(this.#uibAttrSel)
+                        const len = elToCheck.length
+                        for (let i = 0; i < len; i++) {
+                            this._uibAttrScanOne(elToCheck[i])
+                        }
+                    }
+                }
             }
-        })
+        }
     }
 
+    /** Process a uib-topic attribute by setting up a topic listener and applying received msgs to the element
+     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
+     * @param {HTMLElement} el The element to process
+     * @param {string} topic The msg topic string to watch for
+     * @private
+     */
     _processUibTopic(el, topic) {
         // Create a topic listener
         this.onTopic(topic, (msg) => {
-            log('trace', 'uibuilder:_uibAttrScanOne', `Msg with topic "${topic}" received. msg content: `, msg)()
+            // log('trace', 'uibuilder:_uibAttrScanOne', `Msg with topic "${topic}" received. msg content: `, msg)()
             msg._uib_processed_by = '_uibAttrScanOne' // record that this has already been processed
 
             // Process msg.attributes
@@ -1506,28 +1753,315 @@ export const Uib = class Uib {
 
             // TODO (MAYBE) Process msg.classes and msg.styles. msg.props (for non-string data)?
 
-            // Process msg.payload (applied as slot HTML) - NB: Will process <script> & <style>
-            if (Object.prototype.hasOwnProperty.call(msg, 'payload')) this.replaceSlot(el, msg.payload)
+            // If el has a `content` attrib, we must apply as text not html
+            if (el.hasAttribute('content')) {
+                if (Object.prototype.hasOwnProperty.call(msg, 'payload')) el.setAttribute('content', msg.payload)
+            } else {
+                // Process msg.payload (applied as slot HTML) - NB: Will process <script> & <style>
+                if (Object.prototype.hasOwnProperty.call(msg, 'payload')) this.replaceSlot(el, msg.payload)
+            }
         })
     }
 
+    /** Resolve a dotted/bracketed property path on an object
+     * e.g. resolveNestedPath(obj, 'a.b["c"]') => obj.a.b.c
+     * @param {object} obj The object to resolve from
+     * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
+     * @returns {*} The resolved value, or undefined if not found
+     * @private
+     */
+    _resolveNestedPath(obj, path) {
+        if (!obj || !path) return undefined
+        // Split on dots and bracket notation, filter out empty segments
+        const keys = path
+            .replace(/\[["'`]?/g, '.')
+            .replace(/["'`]?\]/g, '')
+            .split('.')
+            .filter(Boolean)
+        let current = obj
+        for (const key of keys) {
+            if (current == null) return undefined
+            current = current[key]
+        }
+        return current
+    }
+
+    /** Set a value at a dotted/bracketed property path on an object
+     * e.g. _setNestedPath(obj, 'a.b["c"]', value) => obj.a.b.c = value
+     * Creates intermediate objects if they don't exist
+     * @param {object} obj The object to set the value on
+     * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
+     * @param {*} value The value to set
+     * @returns {boolean} True if successful, false otherwise
+     * @private
+     */
+    _setNestedPath(obj, path, value) {
+        if (!obj || !path) return false
+        // Split on dots and bracket notation, filter out empty segments
+        const keys = path
+            .replace(/\[["'`]?/g, '.')
+            .replace(/["'`]?\]/g, '')
+            .split('.')
+            .filter(Boolean)
+
+        // Navigate to the parent of the final key, creating objects as needed
+        let current = obj
+        for (let i = 0; i < keys.length - 1; i++) {
+            const key = keys[i]
+            if (current[key] == null || typeof current[key] !== 'object') {
+                current[key] = {}
+            }
+            current = current[key]
+        }
+
+        // Set the final property
+        const finalKey = keys[keys.length - 1]
+        current[finalKey] = value
+        return true
+    }
+
+    /** Process a uib-var attribute by evaluating the variable reference and applying it to the element
+     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc).
+     *  Supports deep property paths such as "myvar.aprop" or "myvar['bprop']".
+     * @param {HTMLElement} el The element to process
+     * @param {string} varName The variable name (optionally with property path) to watch for
+     * @private
+     */
+    async _processUibVar(el, varName) {
+        // Determine the root property and any nested sub-path
+        // e.g. "myvar.aprop" => rootProp="myvar", subPath="aprop"
+        // e.g. "myvar['bprop'].x" => rootProp="myvar", subPath="'bprop'].x"
+        const dotIdx = varName.indexOf('.')
+        const bracketIdx = varName.indexOf('[')
+        // Find the earliest separator
+        let sepIdx = -1
+        if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx)
+        else if (dotIdx >= 0) sepIdx = dotIdx
+        else if (bracketIdx >= 0) sepIdx = bracketIdx
+
+        const hasSubPath = sepIdx > 0
+        const rootProp = hasSubPath ? varName.substring(0, sepIdx) : varName
+
+        const doVar = (rootValue, hasSubPath) => {
+            let value = hasSubPath ? this._resolveNestedPath(this, varName) : rootValue
+            // console.log(`🪲[uibuilder:_processUibVar] Variable "${varName}" changed. New value:`, value)
+            // log('trace', 'uibuilder:_processUibVar', `Variable "${varName}" changed. New value: `, value)()
+            if (typeof value !== 'object') {
+                value = {
+                    payload: value,
+                }
+            }
+            // Deal with different element types:
+            if (Object.prototype.hasOwnProperty.call(value, 'payload')) {
+                if (el.hasAttribute('content')) {
+                    // If el has a `content` attrib, we must apply as text not html
+                    el.setAttribute('content', value.payload)
+                } else if (el.hasAttribute('rel')) {
+                    // If it has a `rel` attribute, we have to set the `href`
+                    el.setAttribute('href', value.payload)
+                } else {
+                    // Otherwise, we replace the innerHTML
+                    this.replaceSlot(el, value.payload)
+                }
+            }
+        }
+
+        // Create a uibuilder managed variable watcher on the root property
+        // When the root property changes, resolve the full nested path to get the value
+        this.onChange(rootProp, (rootValue) => {
+            doVar(rootValue, hasSubPath)
+        })
+        // and do it now
+        doVar(await this.evaluateWithRetry(rootProp, this, {}), hasSubPath)
+    }
+
+    // ! EXPERIMENTAL - not fully working. Is not reactive.
+    /** Process a uib-if attribute by safely evaluating a JavaScript expression that returns true/false.
+     * If true (the default), the element's content is visible. If false, the content is hidden.
+     * Uses display style rather than removing content so the element can be shown again later.
+     * The expression can reference uibuilder managed variables (e.g. pageData.status) directly
+     * as well as global/window variables.
+     * @param {HTMLElement} el The element to process
+     * @param {string} expr The JavaScript expression to evaluate
+     * @private
+     */
+    async _processUibIf(el, expr) {
+        // /** Evaluate the expression using current managed variables and apply visibility
+        //  * @private
+        //  */
+        // const evaluate = () => {
+        //     // Skip if element has been removed from DOM
+        //     if (!el.isConnected) return
+        //     let result = true
+        //     try {
+        //         // Inject user-set managed variables as local parameters so they can be
+        //         // referenced directly in expressions (e.g. `pageData.status || pageData.since`).
+        //         // Only include names that are valid JS identifiers.
+        //         const varNames = Object.keys(this.#managedVars).filter(name => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name))
+        //         const varValues = varNames.map(name => this[name])
+        //         // Also expose the uibuilder instance itself
+        //         varNames.push('uibuilder')
+        //         varValues.push(this)
+        //         result = (new Function(...varNames, `return (${expr})`))(...varValues)
+        //         console.log(`🪲[uibuilder:_processUibIf] Evaluated expression "${expr}" with result:`, result)
+        //     } catch (e) {
+        //         log('warn', 'uibuilder:_processUibIf', `Failed to evaluate uib-if expression "${expr}". Defaulting to true.`, e.message)()
+        //     }
+        //     // Coerce to boolean, default to true for non-boolean returns
+        //     if (typeof result !== 'boolean') result = this.truthy(result, true)
+        //     el.style.display = result ? '' : 'none'
+        // }
+        // // Evaluate immediately with whatever vars are available now
+        // setTimeout(() => {
+        //     evaluate()
+        // }, 300)
+        // // Re-evaluate whenever any managed variable changes (handles timing/late-set vars)
+        // document.addEventListener('uibuilder:propertyChanged', evaluate)
+        // const result = await this.evaluateWithRetry(expr, this, {})
+        const result = await this.evaluateWithRetry(expr, this, {})
+        // console.log(`🪲[uibuilder:_processUibIf] Final result for expression "${expr}":`, result)
+        el.style.display = result ? '' : 'none'
+    }
+
+    /** Creates a safe evaluator function for template (string) expressions
+     * - will retry several times if variables are not yet available, and defaults to false if still not successful after retries.
+     * @param {string} expression - The expression to evaluate (e.g., "pageData.status || pageData.since")
+     * @param {object} context - The context object containing variables (e.g., { pageData })
+     * @param {object} options - Configuration options
+     * @returns {Promise<boolean>} - Resolves to true/false
+     */
+    async evaluateWithRetry(expression, context, options = {}) {
+        const {
+            maxRetries = 3,
+            retryDelay = 300,
+            defaultValue = false,
+        } = options
+
+        // Create a safe evaluation function
+        const evaluator = this.createSafeEvaluator(expression)
+
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const result = evaluator(context)
+                // console.log(`🪲[uibuilder:evaluateWithRetry] Attempt ${attempt + 1} for expression "${expression}" with result:`, result)
+
+                // Convert to boolean and check if we got a meaningful result
+                // (not undefined/null on first attempts)
+                if (result !== undefined && result !== null) {
+                    // return Boolean(result)
+                    return result
+                }
+
+                // If this was the last attempt, return default
+                if (attempt === maxRetries) {
+                    return defaultValue
+                }
+
+                // Wait before retry
+                await this.sleep(retryDelay)
+            } catch (error) {
+                console.warn(`Evaluation attempt ${attempt + 1} failed:`, error.message)
+
+                if (attempt === maxRetries) {
+                    return defaultValue
+                }
+
+                await this.sleep(retryDelay)
+            }
+        }
+
+        return defaultValue
+    }
+
+    /** Creates a sandboxed evaluator function for string expressions that can reference properties on a provided context object
+     * - Uses the Function constructor to create a new function with the context passed as an argument, and uses a with() block to allow direct access to context properties.
+     * - Catches and logs any errors during function creation, returning a safe default function that returns false if creation fails.
+     * @param {string} expression - The expression to evaluate
+     * @returns {Function} - Evaluator function
+     */
+    createSafeEvaluator(expression) {
+        // Validate the expression (basic security check)
+        if (typeof expression !== 'string' || expression.trim() === '') {
+            throw new Error('Expression must be a non-empty string')
+        }
+
+        // Create function with explicit parameter to avoid global scope access
+        // The context will be passed as an argument, making available variables explicit
+        try {
+            return new Function('context', `
+                // 'use strict';
+                with (context) {
+                    return (${expression});
+                }
+            `)
+        } catch (error) {
+            console.error('Failed to create evaluator:', error)
+            return () => false // Return safe default function
+        }
+    }
+
+    /** Promise-based (async) sleep utility
+     * @param {number} ms - Milliseconds to sleep
+     * @returns {Promise<void>} - Resolves after the specified time
+     */
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms))
+    }
+
+    // ! EXPERIMENTAL
+    /** Process a uib-bind:* attribute by evaluating the bind value and applying it to the element as the named attribute
+     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
+     * @param {HTMLElement} el The element to process
+     * @param {string} bindName The name of the attribute to bind
+     * @param {string} bindValue The value to bind to the attribute
+     * @private
+     */
+    _processUibBind(el, bindName, bindValue) {
+        // log('print', 'uibuilder:_uibAttrScanOne', 'Processing uib-bind:', bindName, 'for element:', el)()
+        // treat the attribute value as a javascript function, run the function safely
+        let value = bindValue
+        try {
+            value = (new Function(`return (${bindValue})`))()
+            log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 1 uib-bind attribute:', bindName, 'with value:', value)()
+        } catch (e) {
+            log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 1 uib-bind attribute:', bindName, 'with value:', value)()
+            try {
+                console.log(globalThis)
+                value = globalThis[bindValue] ?? bindValue
+                // value = (new Function(`return (window.${attr.value})`))()
+                log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 2 uib-bind attribute:', bindName, 'with value:', value)()
+            } catch (e) {
+                log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 2 uib-bind attribute:', bindName, 'with value:', value)()
+            }
+        }
+
+        // set the attribute names by bindName to the value of the attribute
+        if (bindName && value) {
+            // Set the attribute to the value of the bindName
+            el.setAttribute(bindName, value)
+            // If the bindName is 'value', then also set the value of the element
+            if (bindName === 'value') el.value = value
+        } else {
+            log('warn', 'uibuilder:_uibAttrScanOne', 'Invalid uib-bind attribute:', bindName, 'with value:', value, 'for element:', el)()
+        }
+    }
+
     /** Check a single HTML element for uib attributes and add auto-processors as needed.
-     * Async so that calling function does not need to wait.
-     * Understands only uib-topic at present. Msgs received on the topic can have:
+     * Understands uib-prefixed attributes (e.g. uib-topic, uib-var, uib-bind:*, uib-if, etc). Msgs received on the topic can have:
      *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
      *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
      * @param {Element} el HTML Element to check for uib-* or data-uib-* attributes
      * @private
      */
-    async _uibAttrScanOne(el) {
-        log('trace', 'uibuilder:_uibAttrScanOne', 'Setting up auto-processor for: ', el)()
-        // Get all of the elements attributes that start with uib- or data-uib- or :
+    _uibAttrScanOne(el) {
+        // log('trace', 'uibuilder:_uibAttrScanOne', 'Setting up auto-processor for: ', el)()
+        // If the element doesn't exist any more or has no attributes - ignore
         if (!el || !el.attributes) {
             // log('warn', 'uibuilder:_uibAttrScanOne', 'No element or no attributes found. Skipping.', el)()
             return
         }
-        // Get the attributes that start with uib- or data-uib-
-        let uibAttribs = [...el.attributes].filter(attr => attr.name.startsWith('uib-') || attr.name.startsWith('data-uib-') || attr.name.startsWith(':'))
+        // Get all of the element's attributes that are uib-specific
+        let uibAttribs = [...el.attributes].filter(attr => this.isUibAttribute(attr.name))
         // If no uib attributes, then skip
         if (uibAttribs.length === 0) {
             // log('trace', 'uibuilder:_uibAttrScanOne', 'No uib attributes found. Skipping.', el)()
@@ -1536,61 +2070,42 @@ export const Uib = class Uib {
         // Remove duplicates
         uibAttribs = [...new Set(uibAttribs)]
 
-        uibAttribs.forEach((attr) => {
+        // Process all of the found attributes
+        const alen = uibAttribs.length
+        for (let i = 0; i < alen; i++) {
+            const attr = uibAttribs[i]
             if (attr?.name === 'uib-topic' || attr?.name === 'data-uib-topic') this._processUibTopic(el, attr.value)
-            // Check for uib-bind:* attributes
+            else if (attr?.name === 'uib-var' || attr?.name === 'data-uib-var') this._processUibVar(el, attr.value)
+            else if (attr?.name === 'uib-if' || attr?.name === 'data-uib-if') this._processUibIf(el, attr.value)
+            // ! EXPERIMENTAL Check for uib-bind:* attributes
             else if (attr?.name.startsWith('uib-bind:') || attr?.name.startsWith('data-uib-bind:') || attr?.name.startsWith(':')) {
                 // Get the bind name
                 const bindName = attr.name.replace(/^(uib-bind:|data-uib-bind:|:)/, '')
-                // log('print', 'uibuilder:_uibAttrScanOne', 'Processing uib-bind:', bindName, 'for element:', el)()
-                // treat the attribute value as a javascript function, run the function safely
-                let value = attr.value
-                try {
-                    value = (new Function(`return (${attr.value})`))()
-                    log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 1 uib-bind attribute:', bindName, 'with value:', value)()
-                } catch (e) {
-                    log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 1 uib-bind attribute:', bindName, 'with value:', value)()
-                    try {
-                        console.log(globalThis)
-                        value = globalThis[attr.value] ?? attr.value
-                        // value = (new Function(`return (window.${attr.value})`))()
-                        log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 2 uib-bind attribute:', bindName, 'with value:', value)()
-                    } catch (e) {
-                        log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 2 uib-bind attribute:', bindName, 'with value:', value)()
-                    }
-                }
-
-                // set the attribute names by bindName to the value of the attribute
-                if (bindName && value) {
-                    // Set the attribute to the value of the bindName
-                    el.setAttribute(bindName, value)
-                    // If the bindName is 'value', then also set the value of the element
-                    if (bindName === 'value') el.value = value
-                } else {
-                    log('warn', 'uibuilder:_uibAttrScanOne', 'Invalid uib-bind attribute:', attr.name, 'with value:', value, 'for element:', el)()
-                }
+                this._processUibBind(el, bindName, attr.value)
             }
-        })
+        }
     }
 
     /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
-     * Async so that calling function does not need to wait.
+     * WARNING: Can only check for KNOWN attrib names, not all as per the main processing.
      * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
      * @private
      */
-    async _uibAttrScanAll(parentEl) {
+    _uibAttrScanAll(parentEl) {
         if (!Array.isArray(parentEl)) parentEl = [parentEl]
-        parentEl.forEach( async (p) => { // async so process does not wait
-            // ! wrong
+        const len = parentEl.length
+        for (let i = 0; i < len; i++) {
+            const p = parentEl[i]
+            // ! WARNING: Only selects KNOWN attribute names, not all
             const uibChildren = p.querySelectorAll(this.#uibAttrSel)
             // log('trace', 'uibuilder:_uibAttrScanAll:forEach:children', 'p, uibChildren: ', p, uibChildren)()
             if (uibChildren.length > 0) {
                 // console.log('existing elements uib attrib', uibChildren)
-                uibChildren.forEach( (el) => {
-                    this._uibAttrScanOne(el) // async so process does not wait
+                uibChildren.forEach((el) => {
+                    this._uibAttrScanOne(el)
                 })
             }
-        })
+        }
     }
 
     /** Given a FileList array, send each file to Node-RED and return file metadata
@@ -2152,6 +2667,11 @@ export const Uib = class Uib {
      * @private
      */
     _ctrlMsgFromServer(receivedCtrlMsg) {
+        this._dispatchCustomEvent('uibuilder:ctrlMsgReceived', receivedCtrlMsg)
+
+        // track received high-res timestamp
+        const ts = performance.now()
+
         // Make sure that msg is an object & not null
         if (receivedCtrlMsg === null) {
             receivedCtrlMsg = {}
@@ -2160,6 +2680,9 @@ export const Uib = class Uib {
             msg['uibuilderCtrl:' + this._ioChannels.control] = receivedCtrlMsg
             receivedCtrlMsg = msg
         }
+
+        // Add high-res timestamp to msg
+        receivedCtrlMsg._receivedHRtime = ts
 
         // @since 2018-10-07 v1.0.9: Work out local time offset from server
         this._checkTimestamp(receivedCtrlMsg)
@@ -2226,19 +2749,19 @@ export const Uib = class Uib {
 
         // Is this msg for this pageName?
         if (obj.pageName && obj.pageName !== this.pageName) {
-            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this page')()
+            log('trace', 'Uib:_msgRcvdEvents:_forThis', 'Not for this page')()
             r = false
         }
 
         // Is this msg for this clientId?
         if (obj.clientId && obj.clientId !== this.clientId) {
-            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this clientId')()
+            log('trace', 'Uib:_msgRcvdEvents:_forThis', 'Not for this clientId')()
             r = false
         }
 
         // Is this msg for this tabId?
         if (obj.tabId && obj.tabId !== this.tabId) {
-            log('trace', 'Uib:_msgRcvdEvents:_uib', 'Not for this tabId')()
+            log('trace', 'Uib:_msgRcvdEvents:_forThis', 'Not for this tabId')()
             r = false
         }
 
@@ -2303,7 +2826,7 @@ export const Uib = class Uib {
             this._dispatchCustomEvent('uibuilder:msg:_ui', msg)
             _ui._uiManager(msg)
         }
-    } // --- end of _msgRcvdEvents ---
+    }
 
     /** Internal send fn. Send a standard or control msg back to Node-RED via Socket.IO
      * NR will generally expect the msg to contain a payload topic
@@ -2348,7 +2871,7 @@ export const Uib = class Uib {
             if (this.topic !== undefined && this.topic !== '') msgToSend.topic = this.topic
             else {
                 // Did the last inbound msg have a topic?
-                if ( Object.prototype.hasOwnProperty.call(this, 'msg') && Object.prototype.hasOwnProperty.call(this.msg, 'topic') ) {
+                if ( Object.prototype.hasOwnProperty.call(this, 'msg') && this.msg !== null && Object.prototype.hasOwnProperty.call(this.msg, 'topic') ) {
                     msgToSend.topic = this.msg.topic
                 }
             }
@@ -2390,8 +2913,14 @@ export const Uib = class Uib {
      * @private
      */
     _stdMsgFromServer(receivedMsg) {
+        // track received high-res timestamp
+        const ts = performance.now()
+
         // Make sure that msg is an object & not null
         receivedMsg = this.makeMeAnObject(receivedMsg, 'payload')
+
+        // Add high-res timestamp to msg
+        receivedMsg._receivedHRtime = ts
 
         // Don't process if the inbound msg is not for us
         if (receivedMsg._uib && !this._forThis(receivedMsg._uib)) return
@@ -2569,6 +3098,92 @@ export const Uib = class Uib {
             }
         }
     } // --- end of _uibCommand ---
+
+    /** Send a message to Node-RED and return a promise that resolves when a matching response is received.
+     * The response must have the same msg.topic and msg._uib.correlationId to match.
+     * @param {object} msg The message to send to Node-RED
+     * @param {object} [options] Options for the async send
+     * @param {number} [options.timeout] Timeout in milliseconds (default: 60000 = 60 seconds)
+     * @param {Function} [options.onSuccess] Optional callback function to call on success. Receives the response msg.
+     * @param {string} [options.originator] Optional Node-RED node ID to return the message to
+     * @returns {Promise<object>} Promise that resolves with the response message or rejects on timeout
+     * @example
+     * // Basic usage
+     * const response = await uibuilder.asyncSend({ topic: 'myTopic', payload: 'Hello' })
+     *
+     * // With options
+     * const response = await uibuilder.asyncSend(
+     *     { topic: 'getData', payload: { id: 123 } },
+     *     { timeout: 30000, onSuccess: (msg) => console.log('Got response:', msg) }
+     * )
+     *
+     * // Using .then()
+     * uibuilder.asyncSend({ topic: 'query', payload: 'test' })
+     *     .then(response => console.log('Response:', response))
+     *     .catch(err => console.error('Failed:', err))
+     */
+    asyncSend(msg, options = {}) {
+        const timeout = options.timeout ?? 60000
+        const onSuccess = options.onSuccess
+        const originator = options.originator ?? ''
+
+        // Ensure msg is an object
+        msg = this.makeMeAnObject(msg, 'payload')
+
+        // Generate a unique correlation ID
+        const correlationId = this.randomUUID()
+
+        // Ensure msg has a topic
+        if (!msg.topic) {
+            msg.topic = this.topic || 'uibuilder/asyncSend'
+        }
+
+        // Add correlation ID to the message
+        if (!msg._uib) msg._uib = {}
+        msg._uib.correlationId = correlationId
+
+        const topic = msg.topic
+
+        return new Promise((resolve, reject) => {
+            // Cleanup function to remove listener and clear timeout
+            const cleanup = (tid, lref) => {
+                if (tid) clearTimeout(tid)
+                if (lref !== undefined) {
+                    this.cancelTopic(topic, lref)
+                }
+            }
+
+            // Set up timeout
+            const timeoutId = setTimeout(() => {
+                cleanup(timeoutId, listenerRef)
+                reject(new Error(`asyncSend timeout after ${timeout}ms for topic "${topic}" with correlationId "${correlationId}"`))
+            }, timeout)
+
+            // Set up listener for response
+            const listenerRef = this.onTopic(topic, (responseMsg) => {
+                // Check if the correlationId matches
+                if (responseMsg._uib?.correlationId === correlationId) {
+                    cleanup(timeoutId, listenerRef)
+
+                    // Call onSuccess callback if provided
+                    if (typeof onSuccess === 'function') {
+                        try {
+                            onSuccess(responseMsg)
+                        } catch (err) {
+                            log('warn', 'Uib:asyncSend', 'onSuccess callback threw an error', err)()
+                        }
+                    }
+
+                    resolve(responseMsg)
+                }
+                // If correlationId doesn't match, ignore this message (keep waiting)
+            })
+
+            // Send the message
+            log('trace', 'Uib:asyncSend', `Sending async message with topic "${topic}" and correlationId "${correlationId}"`, msg)()
+            this._send(msg, this._ioChannels.client, originator)
+        })
+    }
 
     /** Send log text to uibuilder's beacon endpoint (works even if socket.io not connected)
      * @param {string} txtToSend Text string to send
@@ -2885,6 +3500,59 @@ export const Uib = class Uib {
     }
     // #endregion -------- ------------ -------- //
 
+    // #region ------- Web Worker -------- //
+    /** Get HTTP headers that were sent with the page request
+     * Uses a web worker to fetch headers from the server.
+     * @param {string} [headerName] Optional specific header name to retrieve (case-insensitive)
+     * @returns {Promise<object|string|null>} Promise resolving to all headers object, a specific header value, or null
+     * @example
+     * // Get all headers
+     * const allHeaders = await uibuilder.headers()
+     * console.log(allHeaders)
+     *
+     * // Get a specific header
+     * const contentType = await uibuilder.headers('content-type')
+     * console.log(contentType)
+     *
+     * // Using .then()
+     * uibuilder.headers('x-uibuilder-namespace').then(ns => console.log(ns))
+     */
+    // async headers(headerName) {
+    //     return this.#headerWorker.getHeadersAsync(headerName)
+    // }
+
+    /** Get HTTP headers synchronously (may be empty if not yet fetched)
+     * @param {string} [headerName] Optional specific header name to retrieve (case-insensitive)
+     * @returns {object|string|null} All headers object, a specific header value, or null
+     * @example
+     * // Get all headers (may be empty if called too early)
+     * const allHeaders = uibuilder.headersSync()
+     *
+     * // Check if headers are ready first
+     * if (uibuilder.headersReady) {
+     *     const contentType = uibuilder.headersSync('content-type')
+     * }
+     */
+    // headersSync(headerName) {
+    //     return this.#headerWorker.getHeaders(headerName)
+    // }
+
+    /** Check if HTTP headers have been fetched and are available
+     * @returns {boolean} True if headers are ready to be read
+     */
+    // get headersReady() {
+    //     return this.#headerWorker.isReady
+    // }
+
+    /** Re-fetch HTTP headers from the server
+     * Useful if you need to refresh headers after some server-side change
+     * @param {string} [url] Optional URL to fetch headers from (defaults to current page)
+     */
+    // refreshHeaders(url) {
+    //     this.#headerWorker.fetchHeaders(url)
+    // }
+    // #endregion ------- ------- -------- //
+
     // #region ------- Socket.IO -------- //
 
     /** Return the Socket.IO namespace
@@ -2900,7 +3568,8 @@ export const Uib = class Uib {
         let ioNamespace
 
         /** Try getting the namespace cookie. */
-        ioNamespace = this.cookies['uibuilder-namespace']
+        ioNamespace = this.httpHeaders['uibuilder-namespace'] || this.cookies['uibuilder-namespace']
+        if (ioNamespace.startsWith('/')) ioNamespace = ioNamespace.slice(1)
 
         // if it wasn't available, try using the current url path
         if (ioNamespace === undefined || ioNamespace === '') {
@@ -2963,7 +3632,7 @@ export const Uib = class Uib {
 
         // Create the new timer
         this.#timerid = window.setTimeout(() => {
-            log('warn', 'Uib:checkConnect:setTimeout', `Socket.IO reconnection attempt. Current delay: ${delay}. Depth: ${depth}`)()
+            log('warn', 'Uib:checkConnect:setTimeout', `Socket.IO reconnection attempt. Current delay: ${delay}. Depth: ${depth}. Initial Connect: ${this.initialConnect}. Reconnected: ${this.reconnected}`)()
 
             // this is necessary sometimes when the socket fails to connect on startup
             this._socket.disconnect()
@@ -2988,22 +3657,24 @@ export const Uib = class Uib {
      */
     _onConnect() {
         this.currentTransport = this._socket.io.engine.transport.name
+        if (this.initialConnect === null) this.initialConnect = true
+        else this.reconnected++
 
         // WARNING: You cannot change any of the this._socket.auth settings at this point
         log(
             'info',
             'Uib:ioSetup',
-            `✅ SOCKET CONNECTED.\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
+            `✅ SOCKET CONNECTED.\nConnection count: ${this.connectedNum} (Reconnected: ${this.reconnected}, Initial Connect: ${this.initialConnect}), Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
         )()
 
-        this._dispatchCustomEvent('uibuilder:socket:connected', { numConnections: this.connectedNum, isRecovery: this._socket.recovered, })
+        this._dispatchCustomEvent('uibuilder:socket:connected', { Reconnections: this.reconnected, initialConnect: this.initialConnect, numConnections: this.connectedNum, isRecovery: this._socket.recovered, })
 
         this._socket.io.engine.on('upgrade', () => {
             this.currentTransport = this._socket.io.engine.transport.name
             log(
                 'trace',
                 'Uib:_onConnect:onUpgrade',
-                `SOCKET CONNECTION UPGRADED.\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
+                `SOCKET CONNECTION UPGRADED.\nConnection count: ${this.connectedNum} (Reconnected: ${this.reconnected}, Initial Connect: ${this.initialConnect}), Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
             )()
         })
 
@@ -3013,7 +3684,7 @@ export const Uib = class Uib {
                 log(
                     'error',
                     'Uib:Connection',
-                    `Connected to Node-RED but NO SOCKET UPGRADE!\n➡️ CHECK NETWORK and any PROXIES for issues. ⬅️\nConnection count: ${this.connectedNum}, Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
+                    `Connected to Node-RED but NO SOCKET UPGRADE!\n➡️ CHECK NETWORK and any PROXIES for issues. ⬅️\nConnection count: ${this.connectedNum} (Reconnected: ${this.reconnected}, Initial Connect: ${this.initialConnect}), Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
                 )()
             }
         }, 2000)
@@ -3062,12 +3733,18 @@ export const Uib = class Uib {
             this.set('ioConnected', false)
         }
 
+        if (this.headers) {
+            console.log('HTTP Headers: ', this.headersReady, this.headers)
+        }
+
         // Update the URL path to make sure we have the right one
         this.socketOptions.path = this.ioPath
+        // console.log('>> ioPath: ', this.ioPath, ' >> ioNamespace: ', this.ioNamespace, this.socketOptions)
 
         // Create the socket - make sure client uses Socket.IO version from the uibuilder module (using path)
         log('trace', 'Uib:ioSetup', `About to create IO object. Transports: [${this.socketOptions.transports.join(', ')}]`)()
         this._socket = io(this.ioNamespace, this.socketOptions)
+        // console.log(this._socket, '>> ioPath: ', this.ioPath, ' >> ioNamespace: ', this.ioNamespace, this.socketOptions)
 
         this._connectGlobal()
 
@@ -3253,6 +3930,16 @@ export const Uib = class Uib {
 
     constructor() {
         log('trace', 'Uib:constructor', 'Starting')()
+        perf.set('constructor starting', performance.now())
+
+        __uibHeadersPromise.then((headers) => { // eslint-disable-line promise/catch-or-return
+            this.httpHeaders = headers
+            perf.set('http headers', performance.now())
+            // console.log('>> >> HEADERS >> >> ', performance.now(), headers)
+            // trigger a custom event to say that headers are ready
+            this._dispatchCustomEvent('uibuilder:httpHeadersReady', headers)
+            return
+        })
 
         // Track whether the client is online or offline
         window.addEventListener('offline', (e) => {
@@ -3265,15 +3952,6 @@ export const Uib = class Uib {
             log('warn', 'Browser', 'Reconnected to network')()
             this._checkConnect()
         })
-
-        document.cookie.split(';').forEach((c) => {
-            const splitC = c.split('=')
-            this.cookies[splitC[0].trim()] = splitC[1]
-        })
-
-        /** Client ID set by uibuilder - lasts until browser profile is closed, applies to all tabs */
-        this.set('clientId', this.cookies['uibuilder-client-id'])
-        log('trace', 'Uib:constructor', 'Client ID: ', this.clientId)()
 
         /** Tab ID - lasts while the tab is open (even if reloaded)
          * WARNING: Duplicating a tab retains the same tabId
@@ -3315,12 +3993,72 @@ export const Uib = class Uib {
             }
         })
 
+        // Attempt to restore autoload variables
+        try {
+            const autoloadVars = this.getStore('_uibAutoloadVars')
+            if (Object.keys(autoloadVars).length > 0) {
+                Object.keys(autoloadVars).forEach( (id) => {
+                    this.set(id, this.getStore(id))
+                })
+            }
+        } catch (e) {}
+
+        // Watch for URL hash changes in case using a front-end router. Updates watched var `urlHash` and socket.io `auth.urlHash`
+        this._watchHashChanges()
+
+        // Set dummy msg for consistency
+        this.set('msg', null)
+        // Set up msg listener for the optional showMsg
+        this.onChange('msg', (msg) => {
+            if (this.#isShowMsg === true) {
+                const eMsg = document.getElementById('uib_last_msg')
+                if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg)
+            }
+        })
+
+        this._dispatchCustomEvent('uibuilder:constructorComplete')
+
+        log('trace', 'Uib:constructor', 'Ending')()
+        perf.set('constructor finished', performance.now())
+    }
+
+    /** Start up Socket.IO comms and listeners
+     * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
+     * necessarily work out the correct ioPath to use.
+     * Also, if cookies aren't permitted in the browser, both ioPath and ioNamespace may need to be specified.
+     * @param {object} [options] The start options object.
+     * @returns {void}
+     */
+    start(options) {
+        log('trace', 'Uib:start', 'Starting')()
+        perf.set('start starting', performance.now())
+
+        // Cancel the msg event handler if already present
+        if ( this.#MsgHandler ) this.cancelChange('msg', this.#MsgHandler)
+
+        if (this.started === true) {
+            log('info', 'Uib:start', 'Start function already called. Resetting Socket.IO and msg handler.')()
+        }
+
+        // if (!document.cookie) log('error', 'uibuilder:start', 'No cookies! There should be some, is this stupid Firefox?')()
+        document.cookie.split(';').forEach((c) => {
+            const splitC = c.split('=')
+            this.cookies[splitC[0].trim()] = splitC[1]
+        })
+
+        /** Client ID set by uibuilder - lasts until browser profile is closed, applies to all tabs */
+        this.set('clientId', this.httpHeaders['uibuilder-client-id'] || this.cookies['uibuilder-client-id'] || undefined)
+        log('trace', 'Uib:constructor', 'Client ID: ', this.clientId)()
+
         this.set('ioNamespace', this._getIOnamespace())
 
-        // #region - Try to make sure client uses Socket.IO client version from the uibuilder module (using cookie or path) @since v2.0.0 2019-02-24 allows for httpNodeRoot
+        // console.log('window.location', window.location, this.ioNamespace)
+        // console.log('cookies: ', this.cookies, document.cookie)
 
         /** httpNodeRoot (to set path) */
-        if ('uibuilder-webRoot' in this.cookies) {
+        if (this.httpHeaders) {
+            this.set('httpNodeRoot', this.httpHeaders['uibuilder-webroot'])
+        } else if ('uibuilder-webRoot' in this.cookies) {
             this.set('httpNodeRoot', this.cookies['uibuilder-webRoot'])
             log('trace', 'Uib:constructor', `httpNodeRoot set by cookie to "${this.httpNodeRoot}"`)()
         } else {
@@ -3335,47 +4073,28 @@ export const Uib = class Uib {
         this.set('ioPath', this.urlJoin(this.httpNodeRoot, Uib._meta.displayName, 'vendor', 'socket.io'))
         log('trace', 'Uib:constructor', `ioPath: "${this.ioPath}"`)()
 
-        //#endregion
-
         // Work out pageName
         this.set('pageName', window.location.pathname.replace(`${this.ioNamespace}/`, ''))
         if ( this.pageName.endsWith('/') ) this.set('pageName', `${this.pageName}index.html`)
         if ( this.pageName === '' ) this.set('pageName', 'index.html')
 
-        // Attempt to restore autoload variables
-        try {
-            const autoloadVars = this.getStore('_uibAutoloadVars')
-            if (Object.keys(autoloadVars).length > 0) {
-                Object.keys(autoloadVars).forEach( (id) => {
-                    this.set(id, this.getStore(id))
-                })
-            }
-        } catch (e) {}
-
-        // ! Experimental service worker
-        // this.registerServiceWorker('sw')
-
-        this._dispatchCustomEvent('uibuilder:constructorComplete')
-
-        log('trace', 'Uib:constructor', 'Ending')()
-    }
-
-    /** Start up Socket.IO comms and listeners
-     * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
-     * necessarily work out the correct ioPath to use.
-     * Also, if cookies aren't permitted in the browser, both ioPath and ioNamespace may need to be specified.
-     * @param {object} [options] The start options object.
-     * @returns {void}
-     */
-    start(options) {
-        log('trace', 'Uib:start', 'Starting')()
-
-        // Cancel the msg event handler if already present
-        if ( this.#MsgHandler ) this.cancelChange('msg', this.#MsgHandler)
-
-        if (this.started === true) {
-            log('info', 'Uib:start', 'Start function already called. Resetting Socket.IO and msg handler.')()
-        }
+        // Delay DOM monitoring by 5ms which is enough for a following script to set some values
+        // but not enough to be visible
+        setTimeout(() => {
+            // Initial scan for uib-* attributes & add suitable change processors
+            this._uibAttrScanAll(document)
+            // Observer to watch for new/changed elements & add suitable change processors
+            const observer = new MutationObserver(this._uibAttribObserver.bind(this))
+            observer.observe(document, {
+                subtree: true,
+                attributes: true,
+                attributeOldValue: true,
+                // No attributeFilter - the callback uses isUibAttribute() to filter by prefix,
+                // which is more flexible than an explicit list of attribute names.
+                childList: true,
+            })
+            perf.set('observing', performance.now())
+        }, 5)
 
         log('log', 'Uib:start', 'Cookies: ', this.cookies, `\nClient ID: ${this.clientId}`)()
         log('trace', 'Uib:start', 'ioNamespace: ', this.ioNamespace, `\nioPath: ${this.ioPath}`)()
@@ -3399,13 +4118,10 @@ export const Uib = class Uib {
         this.set('started', this._ioSetup())
 
         if ( this.started === true ) {
-            log('trace', 'Uib:start', 'Start completed. Socket.IO client library loaded.')()
+            log('trace', 'Uib:start', 'Socket.IO client library loaded.')()
         } else {
-            log('error', 'Uib:start', 'Start completed. ERROR: Socket.IO client library NOT LOADED.')()
+            log('error', 'Uib:start', 'ERROR: Socket.IO client library NOT LOADED.')()
         }
-
-        // Watch for URL hash changes in case using a front-end router. Updates watched var `urlHash` and socket.io `auth.urlHash`
-        this._watchHashChanges()
 
         // Check if Vue is present (used for dynamic UI processing)
         if (window['Vue']) {
@@ -3433,27 +4149,9 @@ export const Uib = class Uib {
             log('trace', 'Uib:start', 'Markdown-IT is not loaded.')()
         }
 
-        // Set up msg listener for the optional showMsg
-        this.onChange('msg', (msg) => {
-            if (this.#isShowMsg === true) {
-                const eMsg = document.getElementById('uib_last_msg')
-                if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg)
-            }
-        })
-
-        // Initial scan for uib-* attributes & add suitable change processors
-        this._uibAttrScanAll(document)
-        // Observer to watch for new/changed elements & add suitable change processors
-        const observer = new MutationObserver(this._uibAttribObserver.bind(this))
-        observer.observe(document, {
-            subtree: true,
-            attributes: true,
-            attributeOldValue: true,
-            attributeFilter: this.uibAttribs,
-            childList: true,
-        })
-
         this._dispatchCustomEvent('uibuilder:startComplete')
+        perf.set('start finished', performance.now())
+        // console.log('Performance: ', perf)
     }
 
     // #endregion -------- ------------ -------- //
@@ -3548,13 +4246,18 @@ try {
 export { uibuilder }
 export default uibuilder
 
-// Attempt to run start fn
-uibuilder.start()
+// Attempt to run start fn only after HTTP headers are ready
+document.addEventListener('uibuilder:httpHeadersReady', () => {
+    uibuilder.start()
 
-// Add built-in web component classes as a new Custom Element to the window object
-customElements.define('uib-var', UibVar)
-customElements.define('uib-meta', UibMeta)
-customElements.define('apply-template', ApplyTemplate)
-customElements.define('uib-control', UibControl)
+    // Add built-in web component classes as a new Custom Element to the window object
+    customElements.define('uib-var', UibVar)
+    customElements.define('uib-meta', UibMeta)
+    customElements.define('apply-template', ApplyTemplate)
+    customElements.define('uib-control', UibControl)
+
+    perf.set('all done', performance.now())
+    console.log('Performance: ', perf)
+})
 
 // #endregion --- Wrap up ---

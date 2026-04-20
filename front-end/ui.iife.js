@@ -139,10 +139,18 @@
      */
     constructor(win, extLog, jsonHighlight) {
       // #region --- Class variables ---
-      __publicField(this, "version", "7.5.0-src");
+      __publicField(this, "version", "7.6.0-src");
       // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
       __publicField(this, "sanitiseExtraTags", ["uib-var"]);
       __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
+      /** DOMPurify custom element handling options - allows all valid custom elements (hyphenated tags)
+       * @type {{tagNameCheck: RegExp, attributeNameCheck: RegExp, allowCustomizedBuiltInElements: boolean}}
+       */
+      __publicField(this, "sanitiseCustomElementHandling", {
+        tagNameCheck: /^[a-z][a-z0-9]*-[a-z0-9-]*$/,
+        attributeNameCheck: /^[a-z_][\w.-]*$/i,
+        allowCustomizedBuiltInElements: false
+      });
       /** Optional Markdown-IT Plugins */
       __publicField(this, "ui_md_plugins");
       if (win) _a.win = win;
@@ -1152,7 +1160,11 @@
      */
     sanitiseHTML(html) {
       if (!_a.win["DOMPurify"]) return html;
-      return _a.win["DOMPurify"].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs });
+      return _a.win["DOMPurify"].sanitize(html, {
+        ADD_TAGS: this.sanitiseExtraTags,
+        ADD_ATTR: this.sanitiseExtraAttribs,
+        CUSTOM_ELEMENT_HANDLING: this.sanitiseCustomElementHandling
+      });
     }
     // TODO - Allow notify to sit in corners rather than take over the screen
     /** Show a pop-over "toast" dialog or a modal alert

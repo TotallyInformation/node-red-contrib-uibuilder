@@ -1,6 +1,6 @@
 /* eslint-disable jsdoc/valid-types */
 /**
- * Copyright (c) 2017-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -87,6 +87,9 @@ let log = dummyLog // reset to RED.log or anything else you fancy at any point
 
 // Placeholder - set in export
 let userDir = ''
+
+// We need to load chokidar here since it is only needed if reload is true and it has native dependencies which can cause install issues
+let chokidar
 
 // #endregion ----- uibuilder module-level globals ----- //
 
@@ -382,6 +385,7 @@ function nodeInstance(config) {
     this.topic = config.topic ?? ''
     this.url = config.url // Undefined or '' is not valid
     this.oldUrl = config.oldUrl
+    this.instancePath = config.instancePath ?? this.url // Allows for the node to use a different folder name than the url
     this.fwdInMessages = config.fwdInMessages ?? false
     this.allowScripts = config.allowScripts ?? false
     this.allowStyles = config.allowStyles ?? false
@@ -444,12 +448,14 @@ function nodeInstance(config) {
 
     // NB: uibRoot folder checks done in runtimeSetup()
 
+    // Double-check that this.instancePath has a valid value
+    if ( !this.instancePath ) this.instancePath = this.url
+
     /** Name of the fs path used to hold custom files & folders for THIS INSTANCE of uibuilder
      *   Files in this folder are also served to URL but take preference
      *   over those in the nodes folders (which act as defaults) @type {string}
      */
-    this.instanceFolder = path.join(/** @type {string} */ (uib.rootFolder), this.url)
-
+    this.instanceFolder = path.join(/** @type {string} */ (uib.rootFolder), this.instancePath)
     // ! TODO Need to find a way to make this more robust for when folder rename fails
     // Check whether the url has been changed. If so, rename the folder
     if ( this.oldUrl !== undefined && this.oldUrl !== '' && this.url !== this.oldUrl ) {
@@ -538,8 +544,8 @@ function nodeInstance(config) {
     // Save a reference to sendToFe to allow this and other nodes referencing this to send direct to clients
     this.sendToFe = sockets.sendToFe.bind(sockets)
 
-    log.trace(`🌐[uibuilder[:nodeInstance:${this.url}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, this.url )}`)
-    log.trace(`🌐[uibuilder[:nodeInstance:${this.url}] Source files . : ${this.instanceFolder}`)
+    log.trace(`🌐[uibuilder:nodeInstance:${this.url}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, this.url )}`)
+    log.trace(`🌐[uibuilder:nodeInstance:${this.url}] Source files . : ${this.instanceFolder}`)
 
     // We only do the following if io is not already assigned (e.g. after a redeploy)
     this.statusDisplay.text = 'Node Initialised'
@@ -552,6 +558,40 @@ function nodeInstance(config) {
     // 3rd-party node (non-flow) Event handlers (e.g. uib-sender)
     externalEvents(this)
 
+    // If this.reload is true, then we want to trigger a reload of the client when FE files change
+    if ( this.reload === true ) {
+        try {
+            // this is a local npm workspace package and so not in package.json dependencies
+            if (!chokidar) ({ chokidar, } = require('@totallyinformation/uib-fs-utils')) // eslint-disable-line n/no-extraneous-require
+            log.debug(`🌐🪲[uibuilder:nodeInstance:${this.url}] Successfully loaded chokidar for file watching, it will be used by all further instances needing it.`)
+        } catch (e) {
+            log.error(`🌐🛑[uibuilder:nodeInstance:${this.url}] Failed to load chokidar for file watching. Reload on file change will not work. ${e.message}`, e)
+            return
+        }
+        if (chokidar) {
+            // Watch the instance folder for changes and trigger a reload if they happen
+            try {
+                this.watcher = chokidar.watch(this.instanceFolder, {
+                    cwd: this.instanceFolder,
+                    persistent: true,
+                    // Doesn't fire on initial setup
+                    ignoreInitial: true,
+                    // Only check up to 9 deep
+                    depth: 9,
+                    // Waits for writes to finish (adds 100ms polling, waits until stable for 2sec)
+                    // Also adds 2 sec delay when renaming files so try to do without.
+                    // awaitWriteFinish: true,
+                })
+                this.watcher.on('all', (event, path) => {
+                    log.info(`🌐[uibuilder:nodeInstance:${this.url}] File change detected (${event}): ${path}. Triggering client reload.`)
+                    sockets.sendToFe({ _uib: { reload: true, }, }, this, uib.ioChannels.server)
+                })
+            } catch (error) {
+                console.error(`🌐🛑[uibuilder:nodeInstance:${this.url}] Error setting up file watcher: ${error.message}`, chokidar)
+            }
+        }
+    }
+
     /** Do something when Node-RED is closing down which includes when this node instance is redeployed
      * Note use of arrow function so as to retain the correct `this` context
      */
@@ -563,6 +603,12 @@ function nodeInstance(config) {
 
         // Cancel any event listeners for this node
         RED.events.off(`UIBUILDER/send/${this.url}`, this.sender)
+
+        // Cancel the file watcher if it exists
+        if ( this.watcher ) {
+            this.watcher.close()
+            log.trace(`🌐[uibuilder[:nodeInstance:close:${this.url}] File watcher closed`)
+        }
 
         // Tidy up the ExpressJS routes if a node is removed
         if (removed) {

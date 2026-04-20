@@ -34,11 +34,20 @@ import { showOverlay } from './libs/show-overlay.mjs'
 
 const Ui = class Ui {
     // #region --- Class variables ---
-    version = '7.5.0-src'
+    version = '7.6.0-src'
 
     // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
     sanitiseExtraTags = ['uib-var']
     sanitiseExtraAttribs = ['variable', 'report', 'undefined']
+
+    /** DOMPurify custom element handling options - allows all valid custom elements (hyphenated tags)
+     * @type {{tagNameCheck: RegExp, attributeNameCheck: RegExp, allowCustomizedBuiltInElements: boolean}}
+     */
+    sanitiseCustomElementHandling = {
+        tagNameCheck: /^[a-z][a-z0-9]*-[a-z0-9-]*$/,
+        attributeNameCheck: /^[a-z_][\w.-]*$/i,
+        allowCustomizedBuiltInElements: false,
+    }
 
     /** Reference to DOM window - must be passed in the constructor
      * Allows for use of this library/class with `jsdom` in Node.JS as well as the browser.
@@ -1341,7 +1350,11 @@ const Ui = class Ui {
      */
     sanitiseHTML(html) {
         if (!Ui.win['DOMPurify']) return html
-        return Ui.win['DOMPurify'].sanitize(html, { ADD_TAGS: this.sanitiseExtraTags, ADD_ATTR: this.sanitiseExtraAttribs, })
+        return Ui.win['DOMPurify'].sanitize(html, {
+            ADD_TAGS: this.sanitiseExtraTags,
+            ADD_ATTR: this.sanitiseExtraAttribs,
+            CUSTOM_ELEMENT_HANDLING: this.sanitiseCustomElementHandling,
+        })
     }
 
     // TODO - Allow notify to sit in corners rather than take over the screen

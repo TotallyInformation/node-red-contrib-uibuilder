@@ -1,7 +1,7 @@
 /* eslint-disable jsdoc/valid-types */
 /** Manage uibuilder server files
  *
- * Copyright (c) 2023-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -39,9 +39,9 @@ const fsextra = require('fs-extra')
 // Async
 const fs = require('node:fs/promises')
 // cb
-const { cp, writeFile, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
+const { cp, watch, writeFile, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // Sync
-const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readFileSync, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
+const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readdirSync, readFileSync, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // TODO Remove in future?
 const fg = require('fast-glob')
 const process = require('node:process')
@@ -51,6 +51,8 @@ const process = require('node:process')
 
 // Holder for degit which is only loaded when needed
 let degit = null
+// Keep a reference to `this` (in constructor) for use in async methods
+let me
 
 class UibFs {
     // #region --- Class vars ---
@@ -73,9 +75,13 @@ class UibFs {
 
     /** Node's fs libs constants */
     constants = fs.constants
+
     // #endregion --- ----- ---
 
-    // constructor() {} // ---- End of constructor ---- //
+    constructor() {
+        // ONLY WORKS BECAUSE THIS IS A SINGLETON!
+        me = this
+    }
 
     // #region ---- Utility methods ----
 
@@ -119,20 +125,38 @@ class UibFs {
     /** Walks through a folder and sub-folders returning list of files
      * @param {string} dir Folder name to start the walk
      * @param {string} ftype File extension to filter on, e.g. '.html'
+     * @param {number} [level] Current recursion level - used internally
      * @returns {Promise<string[]>} On each call, returns the next found file name
      */
-    async walk(dir, ftype) {
-        let files = await fs.readdir(dir)
+    async walk(dir, ftype, level = 0) {
+        let files
+        try {
+            files = await fs.readdir(dir) // eslint-disable-line security/detect-non-literal-fs-filename
+        } catch (err) {
+            console.error(`🌐🛑[UibFs:walk] Error reading directory '${dir}': ${err.message}`)
+            return []
+        }
+        console.log(`walk dir: ${dir}, ftype: ${ftype}, level: ${level}, files: ${files.length}`, me, this)
         // @ts-ignore
-        files = await Promise.all(files.map(async (file) => {
-            const filePath = join(dir, file)
-            const stats = await fs.stat(filePath)
-            if (stats.isDirectory()) {
-                return this.walk(filePath, ftype)
-            } else if (stats.isFile() && file.endsWith(ftype)) {
-                return filePath
-            }
-        }))
+        try {
+            files = await Promise.all(files.map(async (file) => {
+                const filePath = join(dir, file)
+                let stats
+                try {
+                    stats = await fs.stat(filePath) // eslint-disable-line security/detect-non-literal-fs-filename
+                } catch (err) {
+                    console.error(`🌐🛑[UibFs:walk] Error stating file '${filePath}': ${err.message}`)
+                }
+                if (stats && stats?.isDirectory()) {
+                    return me.walk(filePath, ftype, level++)
+                } else if (stats.isFile() && file.endsWith(ftype)) {
+                    return filePath
+                }
+            }))
+        } catch (err) {
+            console.error(`🌐🛑[UibFs:walk] Error processing files in directory '${dir}': ${err.message}`)
+            return []
+        }
 
         // Filter out undefined entries before concatenating
         return files.filter(Boolean).reduce((all, folderContents) => all.concat(folderContents), [])
@@ -189,7 +213,7 @@ class UibFs {
 
         let stat
         try {
-            const fstat = await fs.stat(fname)
+            const fstat = await fs.stat(fname) // eslint-disable-line security/detect-non-literal-fs-filename
             stat = {
                 created: fstat.birthtime,
                 modified: fstat.mtime,
@@ -265,13 +289,22 @@ class UibFs {
      * @returns {Promise<string>} The text contents of the file.
      */
     async getTemplateFile(template, fName) {
-        return await fs.readFile( join(__dirname, '..', '..', 'templates', template, fName), 'utf8')
+        return await fs.readFile( join(__dirname, '..', '..', 'templates', template, fName), 'utf8') // eslint-disable-line security/detect-non-literal-fs-filename
     }
 
     async getUibInstanceRootFolders() {
         // const chkInstances = Object.values(uib.instances).includes(params.url)
         // const chkFolders = existsSync(join(uib.rootFolder, params.url))
     }
+
+    readdir = fs.readdir
+
+    /** Read a file, return as a buffer unless options.encoding is provided
+     * @param {import('node:fs').PathLike} path The file path/name to read
+     * @param {object|string=} options
+     * @returns {string|Buffer} File contents as a string
+     */
+    readFile = fs.readFile
 
     /** Removes a file or directory. The directory can have contents. If the path does not exist, silently does nothing.
      * @param {string} path Folder/File to remove
@@ -385,6 +418,7 @@ class UibFs {
         }
     } // ----- End of replaceTemplate() ----- //
 
+    // TODO Check if this works with markweb too
     /** Return list of found files as folder/files and/or urls
      * @param {string} uibId The uibuilder node instance id to search
      * @param {boolean} live If true, the search root will be limited to the currently live served folder
@@ -479,6 +513,8 @@ class UibFs {
         return out
     }
 
+    /** Get a file's stats (async/promise) */
+    stat = fs.stat
     // TODO chk params
     /** Output a file to an instance folder (async/promise)
      * NB: Errors have the fn indicator at the end because this is expected to be a utility fn called from elsewhere
@@ -522,7 +558,7 @@ class UibFs {
             // If createFolder flag set, attempt to create the folder
             if (createFolder === true) {
                 try {
-                    await fs.mkdir(fullFolder, { recursive: true, }) // Add mode?
+                    await fs.mkdir(fullFolder, { recursive: true, }) // eslint-disable-line security/detect-non-literal-fs-filename, security/detect-non-literal-fs-filename
                 } catch (err) {
                     throw new Error(`Cannot create folder. ${err.message} [UibFs:writeInstanceFile]`, err)
                 }
@@ -535,7 +571,7 @@ class UibFs {
 
         try {
             // https://nodejs.org/docs/latest-v14.x/api/fs.html#fs_fspromises_writefile_file_data_options
-            await fs.writeFile(fullname, data)
+            await fs.writeFile(fullname, data) // eslint-disable-line security/detect-non-literal-fs-filename
             // await fs.outputFile(fullname, data)
         } catch (err) {
             throw new Error(`File write FAIL. ${err.message} [UibFs:writeInstanceFile]`, err)
@@ -577,6 +613,8 @@ class UibFs {
         }
     }
 
+    watch = watch
+
     /** Write to a file (make sure it exists first)
      * @param {string|Buffer|URL|number} file File path to write to
      * @param {string|Buffer|DataView|object} data Data to write to file
@@ -590,7 +628,7 @@ class UibFs {
     // #region ---- Synchronous methods ----
 
     /** Synchronously try access and error if fail.
-     * @throws Error if required access not available
+     * @throws {Error} Error if required access not available
      * @param {string} path Path to try to access
      * @param {'r'|'w'|'rw'|number} mode Modes required to work: r, w or rw
      */
@@ -622,7 +660,7 @@ class UibFs {
     /** Synchronous Folder or File copy - Will THROW on error
      * @param {Array<string>|string} src Source. Single string or array of strings that will be `join`d
      * @param {Array<string>|string} dest Destination. Single string or array of strings that will be `join`d
-     * @param {import('node:fs').CopySyncOptions} [opts] Optional.
+     * @param {import('node:fs').CopySyncOptions} [opts] Optional. node:fs copy options
      */
     copySync(src, dest, opts) {
         if (opts === undefined) {
@@ -679,18 +717,19 @@ class UibFs {
      */
     existsSync() {
         const p = join(...arguments)
-        return existsSync(p)
+        return existsSync(p) // eslint-disable-line security/detect-non-literal-fs-filename
     }
 
     /** Return a list of files matching the glob specification
      * @param {string} glob The pattern to match - see fast-glob for details
+     * @param {object} [options] Options to pass to fast-glob (e.g. { ignore: [...] })
      * @returns {string[]} A list of files
      */
-    fgSync(glob) {
+    fgSync(glob, options) {
         if (!glob) return []
         // convert path to pattern before execution; otherwise nothing may be found (on Windows)
         fg.convertPathToPattern(glob)
-        return fg.sync(glob)
+        return fg.sync(glob, options)
     }
 
     /** Synchronously create a folder
@@ -699,17 +738,19 @@ class UibFs {
      * @returns {string|undefined} Returns undefined unless recursive is set in which case the 1st created path is returned
      */
     mkdirSync(path, options) {
-        return mkdirSync(path, options)
+        return mkdirSync(path, options) // eslint-disable-line security/detect-non-literal-fs-filename
     }
 
+    readdirSync = readdirSync
+
     /** Read a JSON file and return as a JavaScript object
-     * @throws If reading or parsing fails
+     * @throws {Error} If reading or parsing fails
      * @param {string} file JSON file path/name to read
      * @returns {object} The parsed JSON file as an object
      */
     readJSONSync(file) {
         try {
-            return JSON.parse(readFileSync(file, 'utf8'))
+            return JSON.parse(readFileSync(file, 'utf8')) // eslint-disable-line security/detect-non-literal-fs-filename
         } catch (e) {
             e.message = `${file}: ${e.message} [UibFs:readJSONSync]`
             throw e

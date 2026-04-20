@@ -1,0 +1,34 @@
+{
+    "name": "@totallyinformation/uib-md-utils",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Internal Markdown utilities for uibuilder - bundled marked and front-matter",
+    "main": "index.cjs",
+    "module": "index.mjs",
+    "exports": {
+        ".": {
+            "import": "./index.mjs",
+            "require": "./index.cjs"
+        }
+    },
+    "scripts": {
+        "build": "node build.mjs"
+    },
+    "devDependencies": {
+        "front-matter": "^4.0.2",
+        "highlight.js": "^11.11.1",
+        "markdown-it": "^14.1.0",
+        "markdown-it-anchor": "^9.2.0",
+        "markdown-it-attrs": "^4.3.1",
+        "markdown-it-github-alerts": "^1.0.1",
+        "mermaid": "^11.12.2"
+    },
+    "engines": {
+        "node": ">=18.5"
+    },
+    "author": {
+        "name": "Julian Knight (TotallyInformation)",
+        "url": "https://github.com/TotallyInformation"
+    },
+    "license": "Apache-2.0"
+}

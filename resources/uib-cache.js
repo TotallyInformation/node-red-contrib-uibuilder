@@ -130,12 +130,12 @@
         inputLabels: 'Msg to cache or cache control msg',
         outputs: 1,
         outputLabels: ['Through msg or msg from cache'],
-        icon: 'parser-json.svg',
+        icon: 'uib-parser-json.svg',
         label: function () {
             if ( this.cacheall === true ) return this.name || `Cache All (${this.num})`
             return this.name || `Cache by msg.${this.cacheKey} (${this.num})`
         },
-        paletteLabel: moduleName,
+        paletteLabel: 'data cache',
         category: uibuilder.paletteCategory,
         color: 'var(--uib-node-colour)', // '#E6E0F8'
 

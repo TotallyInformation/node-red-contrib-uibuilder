@@ -1,3 +1,4 @@
+// @ts-nocheck
 /** Define the base component extensions for other components in this package.
  * Used to ensure that standard properties and methods are available in every component.
  *
@@ -66,7 +67,7 @@
  */
 class TiBaseComponent extends HTMLElement {
     /** Component version */
-    static baseVersion = '2025-06-09'
+    static baseVersion = '2025-09-20'
 
     /** Holds a count of how many instances of this component are on the page that don't have their own id
      * Used to ensure a unique id if needing to add one dynamically
@@ -231,7 +232,7 @@ class TiBaseComponent extends HTMLElement {
             throw new Error(`[${this.localName}] cssText must be provided`)
         }
 
-        // TODO: - Add ability to append after other stylesheets (inlcuding those in the HTML head)
+        // TODO: - Add ability to append after other stylesheets (including those in the HTML head)
 
         // Check if same stylesheet already exists
         const existingStylesheet = this._findExistingStylesheet()
@@ -349,7 +350,34 @@ class TiBaseComponent extends HTMLElement {
         // set properties from the msg
         Object.keys(msg.payload).forEach(key => {
             if (key.startsWith('_')) return
-            this[key] = msg.payload[key]
+            let key2 = key.toLowerCase()
+            if (key2.startsWith('data-')) key2 = 'data' // special case
+            switch (key2) {
+                case 'value': {
+                    this.setAttribute('value', msg.payload[key])
+                    break
+                }
+
+                case 'class': {
+                    this.className = msg.payload[key]
+                    break
+                }
+
+                case 'style': {
+                    this.style.cssText = msg.payload[key]
+                    break
+                }
+
+                case 'data': {
+                    this.dataset[key.replace('data-', '')] = msg.payload[key]
+                    break
+                }
+
+                default: {
+                    this[key] = msg.payload[key]
+                    break
+                }
+            }
         })
     }
 

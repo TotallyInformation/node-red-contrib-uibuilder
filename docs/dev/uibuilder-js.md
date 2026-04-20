@@ -3,17 +3,8 @@ title: Developer documentation for `uibuilder.js`
 description: |
   `uibuilder.js` is the main file that defines the uibuilder node. It is this that is _required_ into Node-RED when it starts.
 created: 2019-05-18 18:25:00
-updated: 2024-03-23 16:50:25
+updated: 2025-12-20 16:50:25
 ---
-
-> [!WARNING]
-> This document needs updating, it is incomplete, especially for UIBUILDER v7.
-
-- [Key processing elements](#key-processing-elements)
-- [Global/Module properties](#globalmodule-properties)
-- [uibuilder Node Instance properties](#uibuilder-node-instance-properties)
-- [Functions/Methods](#functionsmethods)
-- [Admin API's](#admin-apis)
 
 ## Key processing elements
 
@@ -25,7 +16,18 @@ Installing the npm module will ensure that all dependent components are also ins
 
 Once a uibuilder node is added to any flow, the uibuilder module will be initialised on Node-RED startup.
 
-Everything in the `module.exports` function is run at this point. That creates all of the uibuilder "global" variables, functions and API's.
+Everything here is "global" in the sense that it is the same for all uibuilder instances.
+
+Prior to the actual setup functions, a number of "global" variables and functions are created including uibuilder's `log` function and the `uib` cross-module global configuration variable.
+
+Everything in the `Uib` and `runtimeSetup` functions is run at this point. They:
+
+1. Grab a reference to the Node-RED `RED` object for ease of access.
+2. Run the `runtimeSetup` function:
+   1. Checks that the `userDir` Node-RED folder is writable. The whole node setup will fail if not.
+   2. Adds an event handler that outputs a summary of uibuilder's configuration on Node-RED startup.
+   3. Creates all of the uibuilder "global" variables, functions and API's. These are added to the `uib` variable which is referenced to `uibGlobalConfig` which is actually a separate library `nodes/libs/uibGlobalConfig.cjs`, a singleton class library that is either referenced by or passed to other libraries and nodes as needed.
+3. Register the node-type. This also links a number of variables to the Editor, they all start with `uibuilder....` and are accessible in Editor code as `RED.settings.uibuilder....`.
 
 The runtime `RED` object is available from this point onwards.
 
@@ -33,11 +35,35 @@ The webserver, Socket.IO and other common variables are set up here. Admin and e
 
 ### Instance Initialisation
 
-Each instance of uibuilder is initialised when flows start.
+Every `uibuilder` node added to a flow creates a new instance. Each instance of uibuilder is initialised when flows start.
 
 The global function `nodeInstance` is called for each instance.
 
-### Adding staticServer paths for vendor packages
+1. A check is done to make sure that a valid URL setting is available. Initialisation fails if not.
+2. The node instance is created using Node-RED's standard `RED.nodes.createNode(this, config)` function. At this point, the `nodeInstance` function gets its own `this` object that contains the node's definition.
+   1. If the folder is being created, `fslib.replaceTemplate()` is run asynchronously in order to copy over the appropriate template folder/file structure. The instance setup does not wait for this to complete, though an error will be logged if it fails.
+3. The instances server filing system folder is created if needed. If it already exists, either a notification is given to the user to accept or reject, or this is a url name change and the folder must be renamed. Various checks are done to make sure that the folder exists and is writable.
+4. `web.instanceSetup(this)` is now run in order to set up all of the various ExpressJS routes for the instance.
+5. `sockets.addNS(this)` is now run in order to set up the Socket.IO connections (Name Space) for his instance. *A reference to the namespace is added to the instance object to allow easy future comms*. A reference to the name-spaced `sendToFe` is also added to make it easier to send instance messages to the front-end.
+6. A message input handler is defined `this.on('input', inputMsgHandler)`.
+7. An "external" event handler is registered to handle cross-node events such as links from `uib-sender` nodes.
+8. A close event handler is added for removal of nodes.
+
+### Inbound message handler `inputMsgHandler`
+
+> [!NOTE]
+>
+> If either the message is null or contains `msg.uibuilderCtrl`, the message will not be processed. In particular, uibuilder control messages must not be processed since this would create a message loop.
+>
+> If the msg has a `_ui` property that has `_ui.from` = "client", then `_ui` is removed to prevent front-end processing loops.
+
+1. The inbound msg is forwarded to any connected clients using `sockets.sendToFe( msg, this, uib.ioChannels.server )`.
+2. If the advanced option to forward in Node-RED has also been selected for this instance, the msg is output to port #1 (the top output port).
+
+### Adding `staticServer` paths for vendor packages
+
+> [!WARNING]
+> This section needs updating, it is incomplete, especially for UIBUILDER v7.
 
 Call `uiblib.checkInstalledPackages`. Reads the packageList and masterPackageList, updates the package list file and uib.installedPackages. 
 
@@ -45,39 +71,52 @@ Call `uiblib.checkInstalledPackages`. Reads the packageList and masterPackageLis
 
 ### Client Connection
 
-A client connection is any browser tab that loads and starts the uibuilder client library code. So a single device/user can have many connections.
+A client connection is any browser tab that loads and starts the uibuilder client library code. So a single user device can have many connections.
 
-When a client loads and starts processing using `start()`, The client socket.io library handshakes with the server.
+When a client loads, it automatically starts processing using the client `start()` function. The client socket.io library handshakes with the server.
 
-**Note**: that this process also happens when a client _**re**connects_.
+> [!NOTE]
+> This process also happens when a client _**re**connects_. Which will happen if the client browser has disconnected for any reason (e.g. the device went to sleep or there was a transient network issue). For this reason, the `_socketId` should not be considered a safe measure of a single client connection.
 
 The server sends back a message:
 
 ```json
-{"uibuilderCtrl":"client connect","cacheControl":"REPLAY","debug":false,"_socketId":"/nr/uib#9qYqdW79Y7t9gvVtAAAA","from":"server","serverTimestamp":"2019-05-25T19:42:15.979Z","_msgid":"11547966.4e5bc7"}
+{
+  "uibuilderCtrl":"client connect",
+  "cacheControl":"REPLAY",
+  "debug":false,
+  "_socketId":"/nr/uib#9qYqdW79Y7t9gvVtAAAA",
+  "from":"server",
+  "serverTimestamp":"2019-05-25T19:42:15.979Z",
+  "_msgid":"11547966.4e5bc7"
+}
 ```
 
-The client then responds with a message:
+This message will appear on port 2 of the uibuilder node. The `msg.from` property indicates which direction the message is coming from/to.
 
-```json
-{"uibuilderCtrl":"ready for content","cacheControl":"REPLAY","from":"client","_socketId":"/nr/uib#9qYqdW79Y7t9gvVtAAAA","_msgid":"779d7aca.e2e904"}
-```
+The message may be fed into a caching function/node to trigger a data dump to the client.
 
-Both of these messages will appear on port 2 of the uibuilder node. The `msg.from` property indicates which direction the message is coming from/to.
-
-The second message may be fed into a caching function/node to trigger a data dump to the client.
+<img src="dev/image-20251220131214160.png" alt="Example caching flow" style="zoom:80%;" />
 
 ### Client Disconnection
 
 When a client disconnects for any reason (page reload, tab closed, browser crash, laptop closed, etc.), The _server_ issues a "client disconnect message" to port 2 of the uibuilder node:
 
 ```json
-{"uibuilderCtrl":"client disconnect","reason":"transport close","_socketId":"/nr/uib#qWaT5gj1iMamw9OeAAAD","from":"server","_msgid":"783a6d61.408254"}
+{
+    "uibuilderCtrl":"client disconnect",
+    "reason":"transport close",
+    "_socketId":"/nr/uib#qWaT5gj1iMamw9OeAAAD",
+    "from":"server", "_msgid":"783a6d61.408254"
+}
 ```
 
 Note that if a client disconnects then reconnects it will have a different `_socketId` property.
 
 ## Global/Module properties
+
+> [!WARNING]
+> This section needs updating, it is incomplete, especially for UIBUILDER v7.
 
 ### `uib` {Object} [Module global]
 
@@ -178,6 +217,9 @@ Note that if a client disconnects then reconnects it will have a different `_soc
 * `userDir` {String}: The current userDir folder. `RED.settings.userDir`.
   
 ## uibuilder Node Instance properties
+
+> [!WARNING]
+> This document needs updating, it is incomplete, especially for UIBUILDER v7.
 
 Each instance of the uibuilder node has the following variables.
 
@@ -298,6 +340,9 @@ Note that the file `typedefs.js` may have a more up-to-date version of this.
 ```
 
 ## Functions/Methods
+
+> [!WARNING]
+> This document needs updating, it is incomplete, especially for UIBUILDER v7.
 
 ### Module level
 

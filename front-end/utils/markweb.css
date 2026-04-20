@@ -1,0 +1,973 @@
+
+/**
+ * UIBUILDER MarkWeb Theme - Base Styles
+ * NOTE: UIBUILDER default styles should be pre-loaded in HTML (optional but recommended for consistent theming)
+ *
+ * Version: 2026-03-27
+ * Author: Julian Knight (Totally Information)
+ */
+
+/* Import highlight.js styles for code blocks */
+/* @import url('./hjs-styles/night-owl-jk.min.css'); JK's version of Night Owl, with tweaked comment color */
+@import url('./hjs-styles/monokai-sublime.min.css');
+
+:root {
+    /* Currently only set up for dark mode. */
+    color-scheme: dark;
+
+    --brand-hue: 201; /* Slightly different to uib-brand, close to uib docs */
+    --base-bg-sat: 18%;
+    --base-bg-light: 19%;
+    /* --base-bg: var(--surface1, hsl(var(--brand-hue), var(--base-bg-sat), var(--base-bg-light))); */
+    --base-bg: hsl(var(--brand-hue), var(--base-bg-sat), var(--base-bg-light));
+    --base-fg: var(--text2);
+    --base-accent: var(--primary);
+    --code-bg: hsl(207, 43%, 10%);
+
+    /* The layout container */
+    --container-max-width: 100em;
+
+    /* The Sidebar container */
+    --sidebar-min-width: 5em;
+    --sidebar-max-width: 15em;
+    --sidebar-border-color: var(--text3);
+    --sidebar-active-border-color: var(--primary);
+    --sidebar-hover-bg: hsl(var(--brand-hue), var(--base-bg-sat), 22%);
+
+    --blockquote-bg: hsl(207, 63%, 10%);
+    --blockquote-highlight: hsl(204, 90%, 45%);
+
+    --pad-left-right: 1em;
+
+    /* #region horizontal menu settings */
+    --menu-bg: hsl(var(--brand-hue), var(--base-bg-sat), 15%); /*var(--surface3);*/
+    --menu-bg-hover: hsl(210, 100%, 95%);
+    --menu-bg-active: hsl(210, 100%, 90%);
+    --menu-bg-parent-active-1: hsl(210, 80%, 94%);
+    --menu-bg-parent-active-2: hsl(210, 60%, 96%);
+    --menu-bg-parent-active-3: hsl(210, 40%, 97%);
+    --menu-text: var(--text1);
+    --menu-text-hover: hsl(210, 100%, 40%);
+    --menu-border: hsl(220, 15%, 85%);
+    --menu-shadow: hsla(220, 20%, 20%, 0.15);
+    --menu-transition: 0.2s ease;
+    --menu-item-padding: 0.75rem 1rem;
+    --menu-min-width: 12rem;
+    --menu-breakpoint: 768px;
+    --menu-z-index: 1000;
+    /* #endregion horizontal menu settings */
+}
+
+html {
+    color: var(--base-fg);
+    background-color: var(--base-bg);
+    accent-color: var(--base-accent);
+    font-size: 1em;
+}
+
+body {
+    margin:0;
+}
+
+/* Heading styles with bottom border */
+h2, h3, h4, h5, h6 {
+    width: 100%;
+    border-bottom: 1px solid var(--text3);
+    padding-bottom: 0.3em;
+
+    a[href^="#"] {
+        color: inherit;
+        text-decoration: none;
+    }
+}
+
+ul, ol {
+    margin: 0.5em 0;
+    padding-left: 1em;
+}
+
+code {
+    background-color: var(--code-bg);
+    padding: 0.1em 0.4em;
+    border-radius: 0.25em;
+    /* font-size: 0.875em; */
+}
+
+pre {
+    position: relative;
+    overflow-x: auto;
+
+    > code {
+        max-width: 100%;
+        font-size: inherit;
+        padding: 0.5em 0.5em;
+        display: block;
+    }
+
+    /* Show language label on hover for code blocks with a language-* class */
+    &[data-language]::after {
+        content: attr(data-language);
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 0.1em 0.5em;
+        font-size: 0.75em;
+        color: var(--text3);
+        background-color: var(--code-bg);
+        border-radius: 0 0.25em 0 0.25em;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity var(--menu-transition);
+    }
+    &[data-language]:hover::after {
+        opacity: 1;
+    }
+}
+
+/* Container layout using CSS Grid */
+#markweb {
+    width: 100%;
+    max-width: var(--container-max-width);
+    margin:0;
+    display: grid;
+    height: 100dvh;
+    overflow: hidden;
+
+    /* 3 cols x 1 row layout. Sidebar constrained min/max, main column takes remaining space */
+    gap: 0;
+    grid-template-columns:
+        minmax(var(--sidebar-min-width), var(--sidebar-max-width))
+        5px
+        1fr;
+    grid-template-areas:
+        "sidebar drag main";
+    justify-items: stretch;
+    transition: grid-template-columns 0.3s ease;
+
+    /* Hide the sidebar column when the toggle input is checked */
+    &:has(#sidebar-toggle input:checked) {
+        grid-template-columns: 0px 5px 1fr;
+
+        #sidebar {
+            overflow: hidden;
+            opacity: 0;
+        }
+    }
+}
+
+/* Where you put your content */
+main {
+    --header-title-max-size: 2em;
+    --header-title-min-size: 1em;
+    --header-title-scroll-range: 18rem;
+    --header-desc-max-size: 1em;
+    --header-desc-min-size: 0;
+
+    grid-area: main;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+    min-height: 0;
+    padding: 0;
+    timeline-scope: --markweb-main-scroll;
+
+    #search-results {
+        /* position: absolute; */
+        /* top: 100%; */
+        /* left: 0; */
+        /* right: 0; */
+        /* background: hsl(0, 0%, 100%); */
+        border: 1px solid hsl(0, 0%, 80%);
+        border-radius: var(--border-radius, 0.25rem);
+        max-height: 20em;
+        overflow-y: auto;
+        /* z-index: calc(var(--menu-z-index) + 1); */
+        /* box-shadow: 0 4px 6px hsla(0, 0%, 0%, 0.1); */
+
+        #search-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            /* background: hsl(210, 20%, 95%); */
+            border-bottom: 1px solid var(--surface3);
+            font-weight: 500;
+
+            span:first-child {
+                display: inline-block;
+                font-size: 0.9rem;
+            }
+            .search-close {
+                display: inline-block;
+                cursor: pointer;
+                margin-inline-start: 1px;
+                margin-inline-end: 3px;
+                -webkit-user-modify: read-only !important;
+                user-select: none !important;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                padding: 0.25rem 0.5rem;
+                font-size: 1.25rem;
+                line-height: 1;
+                transition: background-color 0.15s ease, color 0.15s ease;
+            }
+            .search-close:hover,
+            .search-close:focus {
+                background: hsl(0, 0%, 90%);
+                color: hsl(0, 0%, 20%);
+            }
+        }
+        #search-details {
+            a {
+                display: block;
+                padding: 0.75rem;
+                text-decoration: none;
+                border-bottom: 1px solid hsl(0, 0%, 90%);
+            }
+            a:hover { background: hsl(210, 50%, 15%); }
+            a:last-child { border-bottom: none; }
+            .no-results { padding: 0.75rem; color: hsl(0, 0%, 50%); }
+
+            /* Highlight search result matching current page */
+            a.search-result-active {
+                /* background: hsl(210, 60%, 92%); */
+                border-left: 3px solid hsl(210, 100%, 45%);
+                padding-left: calc(0.75rem - 3px);
+            }
+            a.search-result-active:hover {
+                background: hsl(210, 60%, 85%);
+            }
+            a.search-result-active strong {
+                color: hsl(210, 100%, 30%);
+            }
+        }
+    }
+
+    /* Main content body - markdown-rendered pages, etc */
+    section {
+        overflow-y: auto;
+        min-height: 0;
+        /* margin-inline-end: -0.5em; */
+        padding-inline-start: var(--pad-left-right);
+        padding-inline-end: var(--pad-left-right);
+        scroll-timeline-name: --markweb-main-scroll;
+        scroll-timeline-axis: block;
+    }
+
+    div[data-attribute="body"] {
+        p, div {
+            margin-inline-start: 0;
+            margin-inline-end: 0;
+        }
+    }
+
+    header, footer {
+        background-color: hsl(from var(--base-bg) h s 25%);
+    }
+
+    /* At bottom, (c), dates, etc */
+    footer {
+        z-index: 10;
+        margin: 0.5em 0 0 0;
+        padding: 0.5em var(--pad-left-right);
+        font-size: 86%;
+    }
+
+    /* Title, nav, etc */
+    header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        margin: 0 0 0.5em 0;
+        padding: 0.5em var(--pad-left-right);
+
+        > h1 {
+            font-size: var(--header-title-max-size);
+            margin-block-start: 0.1em;
+            margin-block-end: 0.3em;
+        }
+    }
+
+}
+
+@keyframes markweb-header-scroll {
+    from {
+        margin: 0 0 0.5em 0;
+        padding: 0.5em var(--pad-left-right);
+    }
+    to {
+        margin: 0;
+        padding: 0 var(--pad-left-right);
+    }
+}
+@keyframes markweb-header-title-shrink {
+    from {
+        font-size: var(--header-title-max-size);
+    }
+    to {
+        font-size: var(--header-title-min-size);
+        margin-top: 0;
+    }
+}
+@keyframes markweb-header-desc-shrink {
+    from {
+        font-size: var(--header-desc-max-size);
+    }
+    to {
+        font-size: var(--header-desc-min-size);
+        margin-top: 0;
+    }
+}
+@keyframes markweb-footer-scroll {
+    from {
+        margin: 0.5em 0 0 0;
+        padding: 0.5em var(--pad-left-right);
+        font-size: 86%;
+    }
+    to {
+        margin: 0;
+        padding: 0 var(--pad-left-right);
+        font-size: 73%;
+    }
+}
+
+@supports (animation-timeline: --markweb-main-scroll) {
+    main {
+        > header {
+            animation-name: markweb-header-scroll;
+            animation-duration: 1s;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
+            animation-timeline: --markweb-main-scroll;
+            animation-range: 0 var(--header-title-scroll-range);
+            > h1 {
+                animation-name: markweb-header-title-shrink;
+                animation-duration: 1s;
+                animation-timing-function: linear;
+                animation-fill-mode: both;
+                animation-timeline: --markweb-main-scroll;
+                animation-range: 0 var(--header-title-scroll-range);
+            }
+            > blockquote, > div {
+                animation-name: markweb-header-desc-shrink;
+                animation-duration: 1s;
+                animation-timing-function: linear;
+                animation-fill-mode: both;
+                animation-timeline: --markweb-main-scroll;
+                animation-range: 0 var(--header-title-scroll-range);
+            }
+        }
+        > footer {
+            animation-name: markweb-footer-scroll;
+            animation-duration: 1s;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
+            animation-timeline: --markweb-main-scroll;
+            animation-range: 0 var(--header-title-scroll-range);
+        }
+    }
+}
+
+#markweb:has(#sidebar-toggle input:checked) main > header > h1 {
+    left: calc(5px + 1.5em);
+}
+
+.active-link {
+    border-left: 3px solid var(--sidebar-active-border-color);
+    padding-left: calc(0.75rem - 3px);
+    font-style: italic;
+}
+
+/* Sidebar container */
+#sidebar {
+    grid-area: sidebar;
+    overflow-y: auto;
+    min-height: 0;
+    margin-left: 1em;
+    margin-top: 0.5em;
+    padding-right: 0.5em;
+    transition: opacity 0.3s ease;
+
+    /* Sidebar tab selectors (buttons) */
+    .sidebar-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--sidebar-border-color);
+        flex-shrink: 0;
+        margin-bottom: 1em;
+    }
+    .sidebar-tab {
+        flex: 1;
+        padding: 0.75rem 0.5rem;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+    }
+    .sidebar-tab:hover {
+        background: var(--sidebar-hover-bg);
+    }
+    .sidebar-tab.active, .sidebar-tab[aria-selected="true"] {
+        border-bottom-color: var(--sidebar-active-border-color);
+        background: var(--sidebar-hover-bg);
+    }
+
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        border-left: 1px dashed hsl(from var(--text3) h s l / 30%);
+
+        ul {
+            margin-left: 1em;
+        }
+    }
+    li {
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        summary {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: bolder;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+    }
+
+    #search-form {
+        width: 100%;
+        margin: 0;
+        padding: 5px;
+        border: none;
+    }
+    #search-header {
+        padding: 0 0.3em;
+        border: none;
+
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        span:first-child {
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+        .search-close {
+            -webkit-user-modify: read-only !important;
+            user-select: none !important;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            padding: 0.25rem 0.5rem;
+            font-size: 1.25rem;
+            line-height: 1;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        /* .search-close:hover,
+        .search-close:focus {
+            background: hsl(0, 0%, 90%);
+            color: hsl(0, 0%, 20%);
+        } */
+    }
+    #sidebar-toc {
+        background-color: inherit;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .toc-active {
+        border-left: 3px solid var(--sidebar-active-border-color);
+        padding-left: calc(0.75rem - 3px);
+    }
+
+    .search-result { /* a */
+        display: block;
+        padding: 0.3em;
+        color: inherit;
+        line-height: 1;
+        text-decoration: none;
+        border-bottom: 1px solid hsl(0, 0%, 90%);
+        border-left: 3px solid transparent;
+
+        strong {
+            display: block;
+            font-size: 0.8em;
+        }
+        small {
+            font-size: 0.7em;
+        }
+    }
+    .search-result-active {
+        border-left: 3px solid hsl(210, 100%, 45%);
+    }
+
+    article {
+        margin: 0;
+        border: none;
+        padding: 0;
+        border-radius: 0;
+    }
+}
+#sidebar-toggle {
+    position: absolute;
+    background: var(--base-bg);
+    top: 0.3em;
+    width: 1rem;
+    height: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+
+    input {
+       display: none;
+    }
+
+    span {
+        height: 3px;
+        width: 100%;
+        background: var(--text3);
+        border-radius: 2px;
+        transition: transform 0.3s ease, opacity 0.2s ease;
+    }
+
+    /* input:checked ~ span:nth-child(2) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    input:checked ~ span:nth-child(3) {
+        opacity: 0;
+    }
+
+    input:checked ~ span:nth-child(4) {
+        transform: rotate(-45deg) translate(6px, -6px);
+    } */
+}
+/* Resizer handle: placed in the grid area between sidebar and main */
+#sidebar-resizer {
+    position: relative;
+    grid-area: drag;
+    /* cursor: ew-resize; */
+    cursor: col-resize;
+    background: hsl(var(--brand-hue), var(--base-bg-sat), 10%);
+    user-select: none;
+    z-index: 20;
+}
+
+/* Tree view styles (e.g. %%index%% index listings) */
+.tree {
+    margin: 0.5em 0;
+    padding: 0;
+    max-width: 100%;
+    list-style: none;
+
+    .tree-folder {
+        list-style: none;
+        border-left: 1px dashed hsl(from var(--text3) h s l / 30%);
+        ul {
+            padding-left: 1em;
+            list-style: circle;
+            li:not(.tree-folder) {
+                margin-left: 1em;
+            }
+        }
+    }
+    summary {
+        font-weight: bolder;
+        color: var(--text3)
+    }
+}
+
+/* Main content collapsible sections */
+.collapsible-section:not(ul) {
+    position: relative;
+    margin-top: 0.5em;
+    margin-bottom: 0.75em;
+    /* Swap margin for padding to allow for an expander icon in "margin" if desired */
+    margin-left: -1.5em;
+    padding-left: 1.5em;
+
+    > summary {
+        list-style: none;
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+
+        h2, h3, h4, h5, h6 {
+            display: inline;
+            border-bottom: none;
+        }
+
+        /* &::before {
+            content: '▶';
+            font-family: system-ui, sans-serif;
+            position: absolute;
+            right: 0.5rem;
+            width: 1.5em;
+            font-size: 0.65em;
+            line-height: 2.5;
+            color: var(--text3);
+            transition: transform 0.2s ease;
+        } */
+    }
+    /* &[open] > summary::before {
+        transform: rotate(90deg);
+    } */
+
+    /* --cs-start-hue: 203; */
+    --cs-start-hue: 41;
+    --cs-hue-step: 25;
+    --cs-sat: 48%;
+    --cs-lum: 50%;
+    --cs-transparency: 0.2;
+
+    /* Set border color and font size based on nesting level (up to 6 levels, level 1 = H2), sizes based on std browser h_ levels */
+    &[data-level="1"] > summary { 
+        border-bottom: 6px solid hsl(var(--cs-start-hue) var(--cs-sat) var(--cs-lum) / var(--cs-transparency));
+    }
+    &[data-level="2"] > summary {
+        border-bottom: 5px solid hsl(calc(var(--cs-start-hue) + var(--cs-hue-step)) var(--cs-sat) var(--cs-lum) / var(--cs-transparency));
+    }
+    &[data-level="3"] > summary {
+        border-bottom: 4px solid hsl(calc(var(--cs-start-hue) + 2 * var(--cs-hue-step)) var(--cs-sat) var(--cs-lum) / var(--cs-transparency));
+    }
+    &[data-level="4"] > summary {
+        border-bottom: 3px solid hsl(calc(var(--cs-start-hue) + 3 * var(--cs-hue-step)) var(--cs-sat) var(--cs-lum) / var(--cs-transparency));
+    }
+    &[data-level="5"] > summary {
+        border-bottom: 2px solid hsl(calc(var(--cs-start-hue) + 4 * var(--cs-hue-step)) var(--cs-sat) var(--cs-lum) / var(--cs-transparency));
+    }
+    &[data-level="6"] > summary {
+        border-bottom: 1px solid hsl(calc(var(--cs-start-hue) + 5 * var(--cs-hue-step)) var(--cs-sat) var(--cs-lum) / var(--cs-transparency));
+    }
+}
+
+/* #region Blockquotes & GFM Alert Box Styles (markdown-it plugin) */
+blockquote, .markdown-alert {
+    padding: 0.5em 1em 0.5em 1em;
+    margin: 0.5em 0 1em 0;
+    color: inherit;
+    background-color: var(--blockquote-bg);
+    border-left: 0.25em solid var(--blockquote-highlight);
+
+    p {
+        margin: 0.6em 0;
+    }
+    p:last-child {
+        margin-bottom: 0;
+    }
+}
+.markdown-alert {
+    --blockquote-highlight: hsl(213, 12%, 30%);
+
+    .markdown-alert-title {
+        display: inline-flex;
+        margin: 0 0 !important;
+        align-items: center;
+        font-weight: 500;
+        color: var(--blockquote-highlight);
+        fill: var(--blockquote-highlight);
+    }
+
+}
+.octicon {
+    margin: 0.3em 0.5em 0.3em 0;
+}
+.markdown-alert-note {
+    --blockquote-highlight: hsl(213, 89%, 64%);
+}
+.markdown-alert-tip {
+    --blockquote-highlight: hsl(122, 33%, 51%);
+}
+.markdown-alert-important {
+    --blockquote-highlight: hsl(262, 67%, 66%);
+}
+.markdown-alert-warning {
+    --blockquote-highlight: hsl(40, 68%, 46%);
+}
+.markdown-alert-caution {
+    --blockquote-highlight: hsl(3, 75%, 60%);
+}
+/* #endregion Blockquotes & GFM Alert Box Styles */
+
+/* Task List Styles (markdown-it plugin) */
+.contains-task-list {
+    list-style: none;
+    padding-inline-start: 0;
+    margin-inline-start: 0;
+
+    .contains-task-list {
+        margin-inline-start: 1.5em;
+    }
+}
+
+.task-list-item {
+    list-style: none;
+    --task-check-col: 1.1em;
+    --task-check-gap: 0.75em;
+}
+
+.task-list-item > :not(:first-child) {
+    margin-inline-start: calc(var(--task-check-col) + var(--task-check-gap));
+}
+
+.task-list-item-label {
+    display: grid;
+    grid-template-columns: var(--task-check-col) minmax(0, 1fr);
+    align-items: start;
+    column-gap: var(--task-check-gap);
+}
+
+.task-list-item-text {
+    min-width: 0;
+}
+
+.task-list-item-checkbox {
+    margin: 0.25em 0 0;
+}
+
+/* Accessibility: Skip to main content link */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--text1);
+    color: var(--surface1);
+    padding: 8px 12px;
+    z-index: 1000;
+    text-decoration: none;
+
+    &:focus {
+        top: 0;
+    }
+}
+
+/* Visible status blockquote styling - defaults to hidden */
+.visible-status {
+    display: none;
+}
+
+/* Unknown frontmatter variable styling {{unknown}} */
+.variable-unknown {
+    color: hsl(0, 100%, 70%);
+    font-style: italic;
+}
+
+/* #region ?? STILL NEEDED ?? Base Menu Styles */
+nav.horizontal {
+    position: sticky;
+    top: 0;
+    border-radius: 0;
+    background: var(--menu-bg);
+    /* z-index: var(--menu-z-index); */
+    /* border-bottom: 1px solid var(--menu-border); */
+    /* transition: var(--menu-transition); */
+
+    ul {
+        display: flex;
+        flex-wrap: wrap;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        gap: 1em;
+    }
+
+    /* Hide nested ul by default, show on hover */
+    ul ul {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        flex-direction: column;
+        background: var(--menu-bg);
+        border: 1px solid var(--menu-border);
+        border-radius: 0.25rem;
+        box-shadow: 0 4px 12px var(--menu-shadow);
+        min-width: var(--menu-min-width);
+        z-index: var(--menu-z-index);
+        gap: 0;
+    }
+
+    /* Show nested ul on parent hover */
+    li:hover > ul,
+    li:focus-within > ul {
+        display: flex;
+    }
+
+    /* Ensure parent li is positioned for absolute children */
+    li {
+        position: relative;
+    }
+
+    /* Deeply nested menus fly out to the right */
+    ul ul ul {
+        top: 1em;
+        left: 2em;
+    }
+}
+
+/* #region Burger Menu (Collapsed State) */
+/* Burger icon - hidden by default, shown when .collapsed class is added via JS */
+.menu-burger {
+    display: none;
+    position: fixed;
+    top: 0.5rem;
+    left: auto;
+    right: auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.5rem;
+    background: var(--menu-bg);
+    border: 1px solid var(--menu-border);
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 8px var(--menu-shadow);
+    cursor: pointer;
+    z-index: calc(var(--menu-z-index) + 10);
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 1s ease, left 0.3s ease, right 0.3s ease;
+
+    /* Burger lines */
+    span {
+        display: block;
+        width: 1.25rem;
+        height: 2px;
+        background: var(--menu-text);
+        border-radius: 1px;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+}
+
+/* Default positioning: align with content area on wider screens */
+@media (min-width: 769px) {
+    .menu-burger {
+        left: calc(100vw - 3.5rem);
+    }
+}
+
+/* Mobile: position on right edge */
+@media (max-width: 768px) {
+    .menu-burger {
+        right: 0.5rem;
+    }
+}
+
+/* Show burger when nav is collapsed */
+nav.horizontal.collapsed + .menu-burger,
+.menu-burger.visible {
+    display: flex;
+    opacity: 1;
+}
+
+/* Animate burger to X when menu is open */
+.menu-burger.open span:nth-child(1) {
+    transform: rotate(45deg) translate(0.3rem, 0.3rem);
+}
+.menu-burger.open span:nth-child(2) {
+    opacity: 0;
+}
+.menu-burger.open span:nth-child(3) {
+    transform: rotate(-45deg) translate(0.3rem, -0.3rem);
+}
+
+/* Collapsed nav state */
+nav.horizontal.collapsed {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: auto;
+    max-width: 80vw;
+    max-height: 0;
+    overflow: hidden;
+    border: none;
+    border-radius: 0 0 0 0.5rem;
+    box-shadow: 0 4px 12px var(--menu-shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: max-height 0.3s ease, opacity 0.2s ease;
+
+    /* Stack items vertically */
+    > ul {
+        flex-direction: column;
+        padding: 0.5rem;
+        gap: 0;
+    }
+
+    /* Nested menus expand inline */
+    ul ul {
+        position: static;
+        box-shadow: none;
+        border: none;
+        border-left: 2px solid var(--menu-bg-hover);
+        margin-left: 1rem;
+        min-width: 0;
+    }
+
+    ul ul ul {
+        top: 0;
+        left: 0;
+    }
+
+    li {
+        width: 100%;
+    }
+
+    a {
+        display: block;
+        padding: var(--menu-item-padding);
+    }
+}
+
+/* Expanded collapsed menu (on hover/focus/click) */
+nav.horizontal.collapsed.open {
+    max-height: 80vh;
+    overflow-y: auto;
+    opacity: 1;
+    pointer-events: auto;
+    margin-top: 3rem; /* Below the burger icon */
+}
+/* #endregion Burger Menu (Collapsed State) */
+
+/* #endregion Base Menu Styles */
+
+/* #region Mobile/Responsive Menu Styles */
+@media (max-width: 768px) {
+    /* Search form in mobile menu */
+    /* #search-form {
+        order: -1;
+        width: 100%;
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--menu-border);
+    } */
+
+    /* #search-input {
+        width: 100%;
+    } */
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .horizontal .menubar a {
+        padding: 1rem;
+        min-height: 44px;
+    }
+}
+
+/* Print styles - hide navigation */
+@media print {
+    .horizontal {
+        display: none !important;
+    }
+}
+/* #endregion Mobile/Responsive Menu Styles */

@@ -30,7 +30,6 @@
 }
 .sidebar-nav>ul>li:has(ul) {
     border-top: 1px solid var(--heading-h2-border-color);
-    margin-top: 1rem;
     margin-top: .3rem;
     padding-top: .1rem;
 }
@@ -52,6 +51,14 @@
 }
 .results-panel.show > div > a p {
     font-size: smaller;
+}
+
+.sidebar-nav details {
+    margin: 0;
+}
+.sidebar-nav details > summary {
+    cursor: pointer;
+    /* list-style: none; */
 }
 
 .dhide {

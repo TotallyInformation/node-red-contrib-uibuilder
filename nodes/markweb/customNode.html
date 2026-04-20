@@ -1,0 +1,65 @@
+<!--
+    Copyright (c) 2025-2026 Julian Knight (Totally Information)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<script type="text/html" data-template-name="markweb">
+    <div id="ti-edit-panel">
+        <div aria-label="Required. Source folder on server. Folder must exist." class="form-row">
+            <label for="node-input-source"><i class="fa fa-folder"></i> Source</label>
+            <input type="text" id="node-input-source" placeholder="Source folder on server">
+        </div>
+        <!--
+        <div aria-label="Additional path information" class="form-row form-tips node-help">
+            Actual server path: <span id="actual-source-path"></span>
+        </div>
+        -->
+
+        <div aria-label="Required. URL path to serve MarkWeb files on" class="form-row">
+            <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+            <input type="text" id="node-input-url" placeholder="URL path to serve on">
+        </div>
+        <!--
+        <div aria-label="Additional information" class="form-row form-tips node-help">
+            Actual URL: <span id="actual-url"></span>
+        </div>
+        -->
+
+        <div aria-label="Optional. Configuration/templates folder. If specified, folder must exist." class="form-row">
+            <label for="node-input-configFolder"><i class="fa fa-folder"></i> Config Fldr</label>
+            <input type="text" id="node-input-configFolder" placeholder="Configuration/templates folder">
+        </div>
+        <!--
+        <div aria-label="Additional information" class="form-row form-tips node-help">
+            Actual URL: <span id="actual-config-path"></span>
+        </div>
+        -->
+
+        <div aria-label="Node label" class="form-row">
+            <label for="node-input-name"><i class="fa fa-tasks"></i> Name</label>
+            <input type="text" id="node-input-name">
+        </div>
+
+        <!--
+        <div aria-label="Errors and warnings" class="form-row form-tips node-help">
+            Errors and warnings:
+            <ul id="errors-warnings-list"></ul>
+        </div>
+        -->
+
+        <!-- TODO: Will need options for nav-menu -->
+    </div>
+</script>
+
+<script src="./resources/node-red-contrib-uibuilder/markweb.js"></script>

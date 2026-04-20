@@ -58,7 +58,7 @@
 class UibRouter {
     // #region --- Variables ---
     /** Class version */
-    static version = '7.5.0-src'
+    static version = '7.6.0-src'
     /** Ensures only 1 class instance on a page */
     static #instanceExists = false
     /** Options for Markdown-IT if available (set in constructor) */
@@ -431,7 +431,7 @@ class UibRouter {
             ulEl.classList.add('routemenu')
             ulEl.setAttribute('role', 'menubar')
             this.config.routes.forEach((route) => {
-                if (!route.id) return // No route id, skip this one
+                if (!route?.id) return // No route id, skip this one
                 // Create a list item for the route
                 const liEl = document.createElement('li')
                 liEl.setAttribute('role', 'none') // No role for the list item

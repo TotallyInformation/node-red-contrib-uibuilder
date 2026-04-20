@@ -28,6 +28,8 @@
  * typedef {import('../typedefs.js').myNode} myNode
  */
 
+// #region ----- Module level variables ---- //
+
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
  */
@@ -38,6 +40,11 @@ const mod = {
     nodeName: 'uib-cache',
 }
 
+// Placeholder for save debounce timers
+const saveTimers = new Map()
+// Placeholder for status update throttle timers
+const statusTimers = new Map()
+
 // #endregion ----- Module level variables ---- //
 
 // #region ----- Module-level support functions ----- //
@@ -46,9 +53,7 @@ const mod = {
  * @param {runtimeNode & cacheNode} node Reference to node instance
  */
 function setNodeStatus(node) {
-    let len = 0
-    if (node.cache) len = Object.keys(node.cache).length
-
+    const len = node.cache ? Object.keys(node.cache).length : 0
     node.status({ fill: 'blue', shape: 'dot', text: `${node.cacheKey} entries: ${len}`, })
 } // ---- end of setStatus ---- //
 
@@ -57,17 +62,52 @@ function setNodeStatus(node) {
  */
 function trimCacheAll(node) {
     if (node.num === 0) return // 0 = infinite, so no need to trim
-    Object.keys(node.cache).forEach( (key) => {
+    for (const key of Object.keys(node.cache)) {
         const msgs = node.cache[key]
         // See if the array is now too long - if so, slice it down to size
         if ( msgs.length > node.num ) {
             node.cache[key] = msgs.slice( msgs.length - node.num )
         }
-    })
+    }
 
     // Save the cache
     node.setC(node.varName, node.cache, node.storeName)
 } // ---- end of trimCache ---- //
+
+/** Debounced save to context store
+ * @param {runtimeNode & cacheNode} node Reference to node instance
+ * @param {number} [delay] Debounce delay in ms (default 100ms)
+ */
+function debouncedSave(node, delay = 100) {
+    const nodeId = node.id
+    if (saveTimers.has(nodeId)) {
+        clearTimeout(saveTimers.get(nodeId))
+    }
+    saveTimers.set(nodeId, setTimeout(() => {
+        node.setC(node.varName, node.cache, node.storeName)
+        saveTimers.delete(nodeId)
+    }, delay))
+}
+
+/** Throttled status update - only updates every `delay` ms during high message throughput
+ * @param {runtimeNode & cacheNode} node Reference to node instance
+ * @param {number} [delay] Throttle delay in ms (default 2000ms)
+ */
+function throttledStatus(node, delay = 2000) {
+    const nodeId = node.id
+    // If a timer is already running, skip this update
+    if (statusTimers.has(nodeId)) return
+
+    // Update status immediately
+    setNodeStatus(node)
+
+    // Set a timer to prevent further updates until delay has passed
+    statusTimers.set(nodeId, setTimeout(() => {
+        statusTimers.delete(nodeId)
+        // Update status again after the delay to show final count
+        setNodeStatus(node)
+    }, delay))
+}
 
 /** Add a new msg to the cache, dropping excessive entries if needed
  * @param {*} msg The recieved message to add
@@ -88,7 +128,9 @@ function addToCache(msg, node) {
     if ( !node.cache[cacheKeyValue] ) node.cache[cacheKeyValue] = []
 
     // HAS to be a CLONE to avoid downstream changes impacting cache
-    const clone = mod.RED.util.cloneMessage(msg)
+    // @since v7.6.0 - use structuredClone for better performance
+    // const clone = mod.RED.util.cloneMessage(msg)
+    const clone = structuredClone(msg)
     delete clone._msgid
 
     // Add a new entry to the array
@@ -99,10 +141,12 @@ function addToCache(msg, node) {
         node.cache[cacheKeyValue] = node.cache[cacheKeyValue].slice( node.cache[cacheKeyValue].length - node.num )
     }
 
-    // Save the cache
-    node.setC(node.varName, node.cache, node.storeName)
+    // Save the cache. @since v7.6.0 - debounced to improve performance under high load
+    debouncedSave(node)
+    node.cacheCount++
 
-    setNodeStatus(node)
+    // @since v7.6.0 - throttled to improve performance under high load
+    throttledStatus(node)
 } // ---- end of addToCache ---- //
 
 /** Clear the cache
@@ -122,16 +166,16 @@ function clearCache(node) {
  * @param {object} msg Reference to the input message
  */
 function sendCache(send, node, msg) {
+    if (mod.RED === null) return
     const toSend = []
+    const socketId = msg._socketId ? msg._socketId : null
 
-    Object.values(node.cache).forEach( (cachedMsgs) => {
-        // toSend.push(...cachedMsgs)
-
-        cachedMsgs.forEach( (cachedMsg) => {
-            if (mod.RED === null) return
-
+    for (const cachedMsgs of Object.values(node.cache)) {
+        for (const cachedMsg of cachedMsgs) {
             // Has to be a clone to prevent changes from downstream nodes
-            const clone = mod.RED.util.cloneMessage(cachedMsg)
+            // @since v7.6.0 - use structuredClone for better performance
+            // const clone = mod.RED.util.cloneMessage(cachedMsg)
+            const clone = structuredClone(cachedMsg)
 
             // Add replay indicator
             if (!clone._uib) clone._uib = {}
@@ -139,14 +183,12 @@ function sendCache(send, node, msg) {
 
             // Add socketId if needed - only for uib control msgs
             // TODO Add flag override
-            if (msg.uibuilderCtrl && msg._socketId) {
-                clone._socketId = msg._socketId
-            }
+            if (socketId) clone._socketId = socketId
 
             // send( clone )
             toSend.push( clone )
-        })
-    })
+        }
+    }
 
     send([toSend])
 } // ---- end of sendCache ---- //
@@ -231,6 +273,12 @@ function nodeInstance(config) {
      * same `this` context and so has access to all of the node instance properties.
      */
     this.on('close', (removed, done) => {
+        // Flush any pending saves
+        if (saveTimers.has(this.id)) {
+            clearTimeout(saveTimers.get(this.id))
+            this.setC(this.varName, this.cache, this.storeName)
+            saveTimers.delete(this.id)
+        }
         done()
     })
 
@@ -288,10 +336,8 @@ function inputMsgHandler(msg, send, done) {
     }
 
     // We are done
-    // done()
+    done()
 } // ----- end of inputMsgHandler ----- //
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = UibCache
-
-// EOF

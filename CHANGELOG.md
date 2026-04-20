@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2025-09-07 21:24:01
+updated: 2026-04-10 06:06:25
 ---
 
 # Changelog
@@ -24,6 +24,182 @@ Please see the roadmap in the docs for the backlog of future planned development
 ------------
 
 <!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
+
+## v7.6.0
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.5.0...v7.6.0).
+
+### 📌 Highlights
+
+* In the Node-RED Editor, a popover is now shown after a UIBUILDER update. It contains highlights of the changes in the new version. It will only be shown once per version update.
+
+* **NEW NODE** `markweb` - Enables simple creation of dynamic web sites using Markdown files. It supports navigation menus, search, front-matter placeholders, custom templates and much more.
+
+* If you have set the `Reload connected clients on save?` option on the uibuilder node's File tab, **clients will automatically reload** the visible page not only if you change a file in the file Editor but also if you make changes elsewhere such as using an external editor or the `uib-save` node. So you now have the option of a **full development server workflow**.
+
+* Two new example flows. "Built-in Web Components" and "Easy UI Updates".
+
+* The various uibuilder icons now have more open names in the palette. In addition, the icons have all been updated to use customised, coloured icons. In particular, the uibuilder and markweb primary nodes now use 🌐 and 🕸️ icons respectively which is in line with their log and debug outputs.
+
+* The uibuilder docs, front-end templates and markweb page template now all have different favicons to help differentiate them in the browser.
+
+#### Front-end
+
+* `uibuilder.get()` and `uibuilder.set()` functions now support deep object paths. This allows you to get and set nested properties of reactive variables without needing to replace the entire variable. e.g. `myvar.myprop`, `myvar.myprop.subprop` or `myvar[5]`.
+
+* All HTML custom elements and reactive attributes also now support nested object paths. e.g. `<uib-var topic="myvar.myprop">` or `<div uib-var="myvar.myprop.subprop">`. This allows you to directly bind to nested properties of reactive variables without needing to replace the entire variable.
+
+* Updated `uibuilder.onTopic()` to process _**control messages**_ as well as standard ones. Added so that the `<uib-var topic="...">` component and `uib-topic` attribute can listen for control messages.
+
+* `<uib-var>` component now recognizes `data-before` and `data-after` attributes. Useful for adding units, labels, or other contextual information around the variable value without needing extra HTML elements.
+
+* New `uib-var` custom _reactive_ HTML attribute added. Mostly of use for `<meta>`, `<title>`, `<link>` elementts in the `<head>` HMTL section.
+
+* If DOMPurify is used, it is now configured to allow custom web components, since uibuilder now makes more extensive use of them.
+
+* New `stack` and `logStack` functions. These can be useful for debugging and understanding the flow of your code especially with complex and deeply nested functions.
+
+#### Documentation
+
+* Mermaid diagrams are now supported in UIBUILDER's documentation. With the first example being for the new `markweb` node's page.
+* The Roadmap has now been split into separate pages as it was totally unmanageable as a single page. You can use the links on the main Roadmap page to navigate to the different sections.
+
+### New node: markweb
+
+Create a folder containing at least an index.md file for each (sub-)folder. Add the new node and configure the base URL and source folder.
+
+The node will serve the markdown files as HTML pages using Single-Page Application (SPA) style navigation. The markdown is converted to HTML and inserted into a page template.
+
+The Markdown conversion is done on Node-RED startup and re-done when a source page changes. So loading and navigation from the browser remains very fast.
+
+It supports YAML front-matter in the markdown files. All front-matter attributes are available as placeholders in the page template and in the markdown using `{{attributeName}}` tags. Special instructions (directives) are also available to create navigation menus, index listings, search results, etc. These use `%%...%%` syntax.
+
+CommonMark and GitHub Flavored Markdown (GFM) are supported. Syntax highlighting for code blocks is also included. Some additional extensions are also supported such as custom attributes.
+
+An optional web component `<show-meta>` is also provided to display the current page's metadata (front-matter attributes). This is useful for debugging and development.
+
+See the [node documentation](./docs/nodes/markweb.md) for full details.
+
+### Examples (Node-RED library flows)
+
+* **NEW** Built-in Web Components
+  
+  Shows how to use the uibuilder client web components: `<uib-meta>`, `<uib-var>`, `<apply-template>`, and `<uib-control>`. These are all included in the main client library and do not need to be loaded separately.
+
+* **NEW** Easy UI Updates
+
+  Illustrates the use of the different ways to update the UI from Node-RED or your own front-end JavaScript. Includes examples of using the (new) `uib-var` and (existing) `uib-topic` custom HTML attributes, and the existing `<uib-var>` web component.
+
+### Documentation
+
+* The sidebar of documentation page links now scrolls the current page link into view.
+* The sidebar top-level entries that have children are now collapsible sections. Added because the documentaiton continues to grown.
+* The sidebar expand/collapse state for each section is remembered across page loads.
+* Each page now automatically shows `status` and/or `since` front-matter.
+* **Fixed** [Issue #575](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/575) - Broken CSS loads.
+* Improvements to developer detailed documentation including details on the uibuilder/markweb instance setup. Should make things a lot easier if other developers want to take part in the future.
+* Mermaid diagrams are now supported. With the first example being for the new `markweb` node's page.
+
+### uib-cache node
+
+* **Added** several techniques to reduce resource overheads when the cache is receiving very large numbers of inputs.
+
+### uib-elements node
+
+* **FIXED** [Issue 580](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/580) - Missing data could cause a Node-RED crash. Additional checks and try/catch trap added.
+
+### uibuilder node
+
+* **NEW** Function `uibuilder.getCommandList()`. This function returns a list of available commands that can be sent from Node-RED to the front-end client.
+* **FIXED** VScode link not properly updating on node url change.
+* Added a new config variable `instancePath`. This is the first change that will eventually allow uibuilder instances to use a different server folder than `<uibRoot>/<url>`.
+
+### uib-var component
+
+* **FIXED** Not updating when the given variable is zero (0). [Ref](https://discourse.nodered.org/t/passing-data-via-uib-var/100301).
+
+### `uib-brand.css` front-end styles
+
+* **Added** `.visually-hidden` class for elements hidden from sighted users but still accessible to screen readers. Use for skip links, form explanations, and status updates otherwise not needed for sighted users.
+* **FIXED** Misconfigured fieldset border.
+* Tweaks to `blockquote` and `code` styles for better appearance.
+* All z-index values changed to use CSS variables. This allows you to easily change the z-index values in your own CSS if needed.
+
+### uibuilder client library
+
+* **NEW** Function `formatDate`. This uses the Intl API to format dates according to locale and optional pattern. See the [documentation](./docs/clients/uibuilder-client-library.md#formatdate) for details. Really useful as a filter function and works great with the new `markweb` features.
+
+* **NEW** Functions
+  
+  * `randomUUID`. This function generates a random UUID (Universally Unique Identifier) using the browser's `crypto.randomUUID()` method if available. If not available, it falls back to a simple implementation that combines the current timestamp and a random string. This can be useful for generating unique IDs for elements, messages, or other purposes in your front-end code.
+
+  * `asyncSend`. This function allows you to send a message to the server and wait for a response. It returns a promise that resolves with the response message. This is useful for request/response patterns where you need to get data from the server before proceeding. [Ref](https://discourse.nodered.org/t/navigation-guards-with-vuerouter-in-uibuilder/100109).
+  
+  * `stack` and `logStack`. These functions allow you to log a stack trace to the console. `stack` returns the stack details, while `logStack` logs the details as a regular console log message. This can be useful for debugging and understanding the flow of your code especially with complex and deeply nested functions.
+
+* **NEW** Added the `_receivedHRtime` property to messages received from the Node-RED server. This is a high-resolution timestamp (in milliseconds) of when the message was received. It can be used to measure latency and performance. It uses the [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) method which provides sub-millisecond accuracy. The value is the elapsed time since page navigation started.
+
+* **NEW** Added `instanceFolder` to uibuilder node settings. This to bring it into line with the new markweb node, in the future, allow instance root folders to be specified anywhere.
+
+* **NEW** `httpHeaders` property added. This contains the HTTP headers received when the front-end client first connects to the server. This can be useful for debugging and for advanced use cases such as authentication and user tracking. Async so issues a custom event when ready. The `start()` function is now not called until they are ready because the headers are the most reliable way to get the namespace and Node-RED web root (stupid Firefox refuses to read the cookies!).
+
+* `<uib-var>` component now recognizes `data-before` and `data-after` attributes. These allow you to specify text to show before and after the variable value. This is useful for adding units, labels, or other contextual information around the variable value without needing extra HTML elements.
+
+* **NEW** Custom *reactive* HTML attribute `uib-var` added. Similar to the component above but much simpler processing. However, it allows you to control _any_ HTML element.
+  
+  > NOTE: Does not (yet) support any of the extended HTML attributes that `<uib-var>` supports such as `data-before`, `data-after` or `filter`.
+  >
+  > May be of most use on HTML elements that don't allow HMTL content.
+
+* `uibuilder.get()` and `uibuilder.set()` functions now support deep object paths. This allows you to get and set nested properties of reactive variables without needing to replace the entire variable. e.g. `myvar.myprop`, `myvar.myprop.subprop` or `myvar[5]`.
+
+* Updated `uibuilder.onTopic()` to process _**control messages**_ as well as standard ones. Added so that the `<uib-var topic="...">` component and `uib-topic` attribute can listen for control messages.
+
+* If DOMPurify is used, it is now configured to allow custom web components, since uibuilder now makes more extensive use of them.
+
+* Tidied up unnecessary async processing in the DOM Mutation Observer. Giving a minor performance boost.
+
+* Delayed startup of DOM observing so that scripts loaded after the client library have time to set initial values.
+
+* 2 new managed variables added, `reconnect` and `initialConnect`. `reconnect` is the more useful, it contains a count of the number of times the client has reconnected to the server. `initialConnect` is a boolean that is true until the first successful connection to the server is made. Use `if (uibuilder.get('reconnect') > 0)` to trigger actions on reconnects but not on the initial connection.
+
+* Improved processing of `uib-var` custom attribute processing when using object property paths. e.g. `myvar.myprop` or `myvar[5]`. This may previously have been inconsistent.
+
+### Development changes
+
+* **SECURITY IMPROVEMENTS** - Added minimum package age requirements to help prevent supply chain attacks.
+
+* **NEW** npm script `bugfix-worktree` - creates a new git worktree for bugfix branches. This enables work on a bug fix in a separate directory while keeping the current dev branch work intact. Both directories can be open simultaneously without needing to stash changes or switch branches. When done with the bug fix, commit, push, create a PR, and then remove the worktree.
+
+* **NEW** Added npm workspaces under folder `packages`. This is to allow easier management of shared utility packages.
+
+  * **NEW** workspace private package `@totallyinformation/uib-md-utils` - A collection of Markdown utility functions that can be shared between uibuilder's server and front-end client libraries. The package bundles its own dependencies using ESBuild.
+  * **NEW** workspace private package `@totallyinformation/uib-mf-utils` - Filing System utility sub-pages. Currently only `chokidar` to allow extended FS watch for markweb. The package bundles its own dependencies using ESBuild.
+
+* **NEW** Control message added. `msg.uibuilderCtrl = 'internal'` allows internal control messages to be sent to nodes.
+
+  Provides a hook such that receipt of a control msg can trigger a node process. Requires msg to include `{uibuilderCtrl: 'internal', controlType: 'someControlType', ...}`. The node can then define its own internal control message handlers in the `node.internalControls` object.
+
+  WARNING: Carefully validate all inputs.
+
+* `nodes\libs\admin-api-v3.cjs` - Removed reference to `node:inspector` which is not used. [ref](https://discourse.nodered.org/t/node-red-version-of-mqtt-explorer/99738/14).
+* Removed DEP0190 error when using node.js v24+ by removing `shell:true` from child_process spawn calls and replacing with an OS explicit shell command.
+
+* `nodes/libs/web.cjs`
+  * Made `instanceSetup` more flexible by adding `routeSpec` and `handler` (function) arguments. This allows different types of routes to be added for an instance, e.g. static file serving, dynamic routing, markdown rendering, etc.
+  * Also in `instanceSetup`, reduced the number of routes added to an insance if the node is not a uibuilder node. Allows for simpler nodes such as `markweb`.
+
+* `nodes/libs/tilib.cjs`
+  * Added `formatDateIntl` function. This formats a date using the Intl API with a given format string and locale. Underscores in the format string are replaced with spaces. Formate uses standard date/time formatting tokens such as `YYYY`, `MM`, `DD`, `HH`, `mm`, `ss`, etc.
+
+* `nodes/libs/fs.cjs`
+  * Added options argument to the `fgSync` function. Allows for exclusions and other options to be passed to the underlying `fast-glob` library.
+
+* Security related fixes
+  * `syntaxHighlight` function in `tilib.cjs` - limited the size of JSON strings to 10k characters to prevent potential denial-of-service attacks via extremely large JSON payloads.
+  * `admin-api-v2.cjs` and `admin-api-v3.cjs` - ensured that parameters expected to be strings are not arrays. This prevents potential injection attacks via array parameters.
+
+* Updated ESLINT - now includes `eslint-plugin-security` to catch potential security issues in the code. Also updated the ESLINT configuration to reflect the new plugin and added some additional rules for better code quality and security.
 
 ## v7.5.0
 

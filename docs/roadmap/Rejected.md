@@ -13,3 +13,11 @@ author: Julian Knight (Totally Information)
   * Might be a use in the future for offloading some work to a separate thread.
   * https://sharedworker.okikio.dev - a pony-/polly-fill library
   * https://groups.google.com/a/chromium.org/g/blink-dev/c/H73tticuudc?pli=1
+
+## Dynamic attributes
+
+Do we actually NEED additional `uib-*` dynamic attributes? With `uib-topic`, we can already control any content/attributes/properties simply by sending a msg. We can also use `uibuilder.set('msg', ....)` from front-end code so really we don't need anything else? `uib-show` could simply be adding/removing a class. Inputs might be dealt with by simply using the `set` method. Not true 2-way binding but is that really needed?
+
+Even `uib-on` isn't really needed since we can just use the HTML `onchange`, `onclick`, etc. attributes.
+
+NB: `uib-var` can already bind to a variable other than `msg`.

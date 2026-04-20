@@ -1,9 +1,12 @@
+/* eslint-disable jsdoc/check-tag-names */
+/* eslint-disable jsdoc/valid-types */
+// @ts-nocheck
 /** A zero dependency web component that will display a managed uibuilder variable.
  *
  * Version: See component version
  */
 /*
-  Copyright (c) 2023-2025 Julian Knight (Totally Information)
+  Copyright (c) 2023-2026 Julian Knight (Totally Information)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -37,7 +40,7 @@ import TiBaseComponent from './ti-base-component.mjs'
 
 /**
  * @class
- * @extends TiBaseComponent
+ * @augments TiBaseComponent
  * @description Define a new zero dependency custom web component will display a managed uibuilder variable.
  *
  * @element uib-var
@@ -45,10 +48,10 @@ import TiBaseComponent from './ti-base-component.mjs'
 
  * METHODS FROM BASE: (see TiBaseComponent)
  * STANDARD METHODS:
-  * @method attributeChangedCallback Called when an attribute is added, removed, updated or replaced
-  * @method connectedCallback Called when the element is added to a document
-  * @method constructor Construct the component
-  * @method disconnectedCallback Called when the element is removed from a document
+  * @function attributeChangedCallback Called when an attribute is added, removed, updated or replaced
+  * @function connectedCallback Called when the element is added to a document
+  * @function constructor Construct the component
+  * @function disconnectedCallback Called when the element is removed from a document
 
  * OTHER METHODS:
   * None
@@ -65,11 +68,13 @@ import TiBaseComponent from './ti-base-component.mjs'
   * @attr {string} name - Optional. HTML name attribute. Included in output _meta prop.
 
  * Other watched attributes:
-  * None
+  * @attr {string} data-before - Optional. Text to show before the variable value.
+  * @attr {string} data-after - Optional. Text to show after the variable value.
+  * @attr {string} filter - Optional. A function name which will be applied to the variable value before display. Can include arguments in parentheses (e.g. `myFilter(1, 'abc')`). The function can be a global function or a function on the uibuilder client instance (e.g. `uibuilder.get`).
 
  * PROPS FROM BASE: (see TiBaseComponent)
  * OTHER STANDARD PROPS:
-  * @prop {string} componentVersion Static. The component version string (date updated). Also has a getter that returns component and base version strings.
+  * @property {string} componentVersion Static. The component version string (date updated). Also has a getter that returns component and base version strings.
 
  * Other props:
   * By default, all attributes are also created as properties
@@ -81,6 +86,7 @@ import TiBaseComponent from './ti-base-component.mjs'
   * <uib-var name="var02" variable="msg.payload"></uib-var>
   * <uib-var name="var03" variable="msg.payload" type="json"></uib-var>
   * <uib-var name="var04" variable="msg.payload" filter="uibuilder.get('msg.payload')"></uib-var>
+  * <uib-var name="var04" variable="msg.payload" data-before="Status: " data-after=". "></uib-var>
 
  * @see https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/custom-components?id=uib-var
 
@@ -88,7 +94,7 @@ import TiBaseComponent from './ti-base-component.mjs'
  */
 class UibVar extends TiBaseComponent {
     /** Component version */
-    static componentVersion = '2025-01-05'
+    static componentVersion = '2026-02-15'
 
     /** Makes HTML attribute change watched
      * @returns {Array<string>} List of all of the html attribs (props) listened to
@@ -97,14 +103,13 @@ class UibVar extends TiBaseComponent {
         return [
             // Standard watched attributes:
             /* 'inherit-style', */ 'name',
-            // Other watched attributes:            
-            'filter', 'id', 'report', 
+            // Other watched attributes:
+            'filter', 'id', 'report',
             'topic', 'type', 'undefined', 'variable',
         ]
     }
-    
 
-    //#region --- Class Properties ---
+    // #region --- Class Properties ---
 
     /** Name of the uibuilder mangaged variable to use @type {string} */
     #variable
@@ -125,7 +130,7 @@ class UibVar extends TiBaseComponent {
     /** what are the available types? */
     types = ['plain', 'html', 'markdown', 'object', 'json', 'table', 'list', 'array']
 
-    //#endregion --- Class Properties ---
+    // #endregion --- Class Properties ---
 
     constructor() {
         super()
@@ -152,14 +157,16 @@ class UibVar extends TiBaseComponent {
 
         if (!varName) return
 
-        // NB: We don't show an initial current value when the variable name is set.
-        //     We wait for the value of the variable to change then show.
+        // Set the initial value immediately - this handles the case where the variable was already set before this component was connected to the DOM
+        this._varChange(this.uibuilder.get(varName))
 
         // Watch for changes in the variable (could use `uibuilder:propertyChanged:${prop}` event instead)
         this.#varCb = this.uibuilder.onChange(varName, this._varChange.bind(this))
     }
 
-    /** Get the watched uibuilder variable name */
+    /** Get the watched uibuilder variable name
+     * @returns {string} The watched variable name
+     */
     get variable() {
         return this.#variable
     }
@@ -169,7 +176,7 @@ class UibVar extends TiBaseComponent {
         this.#topic = topicName
         // Stop any previous variable or topic settings
         if (this.#topicCb) this.uibuilder.cancelTopic(topicName, this.#topicCb)
-        
+
         // Handle empty topic
         if (!topicName) return
 
@@ -177,7 +184,9 @@ class UibVar extends TiBaseComponent {
         this.#topicCb = this.uibuilder.onTopic(topicName, this._topicChange.bind(this))
     }
 
-    /** Get the watched uibuilder msg topic */
+    /** Get the watched uibuilder msg topic
+     * @returns {string} The watched topic name
+     */
     get topic() {
         return this.#topic
     }
@@ -200,7 +209,7 @@ class UibVar extends TiBaseComponent {
         if (this.#topicCb) {
             this.uibuilder.cancelTopic(this.#topic, this.#topicCb)
 
-            Object.keys(this.#topicCb).forEach( topic => {
+            Object.keys(this.#topicCb).forEach( (topic) => {
                 this.uibuilder.cancelTopic(topic, this.#topicCb[topic])
             })
         }
@@ -212,8 +221,8 @@ class UibVar extends TiBaseComponent {
      * NOTE: On initial startup, this is called for each watched attrib set in HTML - BEFORE connectedCallback is called.
      * Attribute values can only ever be strings
      * @param {string} attrib The name of the attribute that is changing
-     * @param {string} newVal The new value of the attribute
      * @param {string} oldVal The old value of the attribute
+     * @param {string} newVal The new value of the attribute
      */
     attributeChangedCallback(attrib, oldVal, newVal) {
         /** Optionally ignore attrib changes until instance is fully connected
@@ -279,7 +288,7 @@ class UibVar extends TiBaseComponent {
                             let y = x.replace(/^["'`]/, '').replace(/["'`]$/, '')
                             // Attempt very limited parse in case it is valid object/array
                             try {
-                                y = new Function(`return ${y}`)() // eslint-disable-line no-new-func
+                                y = new Function(`return ${y}`)()
                             } catch (e) {}
                             return y
                         }
@@ -298,7 +307,7 @@ class UibVar extends TiBaseComponent {
         }
 
         // Keep at end. Let everyone know that an attribute has changed for this instance of the component
-        this._event('attribChanged', { attribute: attrib, newVal: newVal, oldVal: oldVal })
+        this._event('attribChanged', { attribute: attrib, newVal: newVal, oldVal: oldVal, })
     } // --- end of attributeChangedCallback --- //
 
     /** Process watched uibuilder variable value change
@@ -309,9 +318,9 @@ class UibVar extends TiBaseComponent {
         let success = true
         if (this.splitVarName.length > 0) {
             let target = value
-            let partSuccess = []
+            const partSuccess = []
             try {
-                this.splitVarName.forEach( part => {
+                this.splitVarName.forEach( (part) => {
                     let successPart
                     if (target[part] === undefined) successPart = false
                     else successPart = true
@@ -341,7 +350,7 @@ class UibVar extends TiBaseComponent {
         this.showVar()
         if (this.report === true) this.uibuilder.send({ topic: msg.topic, payload: this.value || undefined, source: this.localName, id: this.id, })
     }
-    
+
     /** Convert this.value to DOM output (applies output filter if needed)
      * @param {boolean} chkVal If true (default), check for undefined value. False used to run filter even with no value set.
      */
@@ -349,7 +358,7 @@ class UibVar extends TiBaseComponent {
         this.uibuilder.log('trace', this.localName, `showVar. chkVal: '${chkVal}'. Value=`, this.value)
 
         // If user doesn't want to show undefined vars, allow the component slot to show instead
-        if (chkVal === true && !this.value && this.undef !== true) {
+        if (chkVal === true && this.value === undefined && this.undef !== true) {
             // this.shadow.innerHTML = '<slot></slot>'
             return
         }
@@ -389,14 +398,20 @@ class UibVar extends TiBaseComponent {
                 if (!Array.isArray(val)) val = [val]
                 // console.log('🔦 val ⟫', val)
                 out = '<ul>'
-                val.forEach( li => {
+                val.forEach( (li) => {
                     out += `<li>${li}</li>`
                 })
                 out += '</ul>'
                 break
             }
 
-            case 'plain':
+            case 'plain': {
+                // get the plain text version of the value by using DOM conversion
+                const div = document.createElement('div')
+                div.innerHTML = val
+                out = div.textContent
+                // NB: Deliberately fall through to html/default
+            }
             case 'html':
             default: {
                 const t = typeof val
@@ -409,6 +424,10 @@ class UibVar extends TiBaseComponent {
                 break
             }
         }
+
+        // Add before and after text if specified
+        if (this.dataset.before) out = `${this.dataset.before}${out}`
+        if (this.dataset.after) out = `${out}${this.dataset.after}`
 
         // if (this.uib) this.shadow.innerHTML = this.uibuilder.sanitiseHTML(out)
         // else this.shadow.innerHTML = out
@@ -429,7 +448,7 @@ class UibVar extends TiBaseComponent {
             let globalFn = globalThis[splitFilter[0]]
             if (globalFn && splitFilter.length > 1) {
                 const parts = [splitFilter.pop()]
-                parts.forEach( part => {
+                parts.forEach( (part) => {
                     globalFn = globalFn[part]
                 } )
             }

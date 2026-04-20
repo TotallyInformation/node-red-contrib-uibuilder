@@ -3,8 +3,7 @@ title: Description of uibuilder's nodes
 description: |
   Each node has a specific purpose. The main uibuilder node will always be needed. The other nodes play a supporting role.
 created: 2023-08-23 10:44:10
-lastUpdated: 2023-08-23 11:05:19
-updated: 2023-12-30 17:01:41
+updated: 2026-03-23 16:21:58
 ---
 
 * [`uibuilder`](nodes/uibuilder.md) - The main node. You need at least one of these in order to make full use of all of the features.
@@ -40,6 +39,14 @@ updated: 2023-12-30 17:01:41
   Output can be saved to files using `uib-save`, this then allows you to have highly efficient "static" HTML created from data that perhaps is only occasionally updated.
 
   Output can also be used with other tools such as the `http-in`/`http-out` nodes or the Node-RED Dashboard.
+
+* [`markweb`](nodes/markweb.md) - Create full web pages using a simple markup language.
+  
+  This node uses the [Marked](https://marked.js.org) library with extensions to render markdown content into HTML pages, supporting advanced features like front-matter, navigation menus, and more.
+  
+  It is designed to work seamlessly with uibuilder, allowing you to build complete dynamic web sites easily.
+
+  It has significantly fewer configuration overheads compared to the main uibuilder node, making it ideal for content-focused applications.
 
 * [`uib-save`](nodes/uib-save.md) - Save files to a specific uibuilder node instance.
   

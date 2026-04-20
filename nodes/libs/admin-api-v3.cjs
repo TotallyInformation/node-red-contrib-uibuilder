@@ -38,7 +38,6 @@ const { killTree, } = require('./uiblib.cjs')
 
 const templateConf = require('../../templates/template_dependencies.js') // Template configuration metadata
 const elements = require('../elements/elements.js')
-const { url, } = require('node:inspector')
 
 const v3AdminRouter = express.Router() // eslint-disable-line new-cap
 const asyncLocalStorage = new AsyncLocalStorage()
@@ -51,6 +50,7 @@ const runningProcesses = new Map()
 // #region === REST API Validation functions === //
 
 /** Validate url query parameter
+ * NB: The URL param only has to be a potentially valid name, it doesn't have to exist
  * @param {object} params The GET (res.query) or POST (res.body) parameters
  * @param {string} params.url The uibuilder url to check
  * @returns {{statusMessage: string, status: number}} Status message
@@ -64,6 +64,8 @@ function chkParamUrl(params) {
         res.status = 500
         return res
     }
+    // Make sure that params.url is a string, not an array
+    if ( Array.isArray(params.url) ) params.url = params.url[0]
 
     // Trim the url
     params.url = params.url.trim()
@@ -106,7 +108,8 @@ function chkParamUrl(params) {
  */
 function chkParamFname(params) {
     const res = { statusMessage: '', status: 0, }
-    const fname = params.fname
+    /** @type {string} */
+    const fname = Array.isArray(params.fname) ? params.fname[0] : params.fname
 
     // We have to have an fname (file name) to work with
     if ( fname === undefined ) {
@@ -143,7 +146,8 @@ function chkParamFname(params) {
  */
 function chkParamFldr(params) {
     const res = { statusMessage: '', status: 0, }
-    const folder = params.folder
+    /** @type {string} */
+    const folder = Array.isArray(params.folder) ? params.folder[0] : params.folder
 
     // we have to have a folder name
     if ( folder === undefined ) {
@@ -354,6 +358,16 @@ function adminRouterV3(uib, log) {
                     const npmScriptNames = packageMgt.getInstanceNpmScriptNames(params.url)
                     res.statusMessage = 'NPM script names list returned'
                     res.status(200).json( npmScriptNames )
+                    break
+                }
+
+                // Get the docs/changelog-highlights.md file content
+                case 'getChangeSummary': {
+                    log.trace('🌐[uibuilder:adminRouterV3:GET:getChangeSummary] Returning the contents of docs/changelog-highlights.md')
+                    const fname = path.join(__dirname, '..', '..', 'docs', 'changelog-highlights.md')
+                    const fileContent = fslib.readFileSync(fname, 'utf8')
+                    res.statusMessage = 'Change summary returned'
+                    res.status(200).send(fileContent)
                     break
                 }
 

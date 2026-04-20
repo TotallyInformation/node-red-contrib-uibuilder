@@ -1,6 +1,8 @@
 // @ts-nocheck
 'use strict'
 
+mermaid.initialize({ startOnLoad: false, theme: 'dark', }) // eslint-disable-line no-undef
+
 window.$docsify = {
     loadSidebar: '.config/sidebar.md',
     name: 'UIBUILDER Documentation v7',
@@ -54,6 +56,9 @@ window.$docsify = {
         target: 'h2, h3',
         ignoreHeaders: ['<!-- {docsify-ignore} -->', '<!-- {docsify-ignore-all} -->'],
     },
+    mermaidConfig: {
+        querySelector: '.mermaid',
+    },
 
     plugins: [
         // Tips plugin - displays random or specific tips from tips folder
@@ -69,6 +74,7 @@ window.$docsify = {
                 'Front-end templates.md',
                 'Messages to the UI are automatically filtered.md',
                 'No-code output is low-code.md',
+                'Offline clients.md',
                 'Send messages to Node-RED from the browser.md',
                 'Send to UI from a function node.md',
                 'uibuilder node outputs.md',
@@ -325,9 +331,15 @@ window.$docsify = {
                         if (desc) desc.setAttribute('content', fm.description)
                     }
 
+                    let statusTxt = ''
                     if (fm.status) {
-                        content = `> Status: ${fm.status}\n\n${content}`
+                        statusTxt += `<b>Status</b>: ${fm.status}. `
                     }
+                    if (fm.since) {
+                        statusTxt += `<b>Since</b>: UIBUILDER ${fm.since}. `
+                    }
+                    if (statusTxt !== '')
+                        content = `> ${statusTxt}\n\n${content}`
 
                     if (fm.title) {
                         content = `# ${fm.title}\n\n${content}`
@@ -373,6 +385,100 @@ window.$docsify = {
             hook.afterEach(function (html, next) {
                 // html = html.replace(/UIBUILDER/g, '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')
                 next(html + footer.join(''))
+            })
+
+            hook.doneEach(() => {
+                // Make top-level sidebar list items with nested lists collapsible
+                const sidebar = document.querySelector('.sidebar-nav > ul')
+                if (sidebar) {
+                    const STORAGE_KEY = 'uib-docs-sidebar-state'
+
+                    /** Get saved sidebar state from localStorage
+                     * @returns {Object} Saved state object or empty object
+                     */
+                    const getSavedState = () => {
+                        try {
+                            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}
+                        } catch (e) {
+                            return {}
+                        }
+                    }
+
+                    /** Save sidebar state to localStorage
+                     * @param {string} sectionId - The section identifier
+                     * @param {boolean} isOpen - Whether the section is open
+                     */
+                    const saveState = (sectionId, isOpen) => {
+                        try {
+                            const state = getSavedState()
+                            state[sectionId] = isOpen
+                            localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+                        } catch (e) {
+                            console.warn('Failed to save sidebar state:', e)
+                        }
+                    }
+
+                    /** Generate a stable ID from section text content
+                     * @param {HTMLElement} summaryEl - The summary element
+                     * @returns {string} A stable identifier for the section
+                     */
+                    const getSectionId = (summaryEl) => {
+                        // Use text content, trimmed and lowercased, as the key
+                        return summaryEl.textContent
+                            .trim().toLowerCase()
+                            .replace(/\s+/g, '-')
+                    }
+
+                    const savedState = getSavedState()
+
+                    // Get all top-level list items
+                    const topLevelItems = sidebar.querySelectorAll(':scope > li')
+                    topLevelItems.forEach((li) => {
+                        const nestedList = li.querySelector(':scope > ul')
+                        // Only convert items that have a nested list (sections with children)
+                        if (nestedList) {
+                            // Check if already converted to details
+                            if (li.querySelector(':scope > details')) return
+
+                            // Get the text/link content (everything before the nested ul)
+                            const summaryContent = []
+                            const childNodes = Array.from(li.childNodes)
+                            for (const node of childNodes) {
+                                if (node === nestedList) break
+                                summaryContent.push(node.cloneNode(true))
+                            }
+
+                            // Create details/summary structure
+                            const details = document.createElement('details')
+                            const summary = document.createElement('summary')
+                            summaryContent.forEach((node) => summary.appendChild(node))
+
+                            // Generate section ID and check saved state
+                            const sectionId = getSectionId(summary)
+                            // Default to open if no saved state exists
+                            const isOpen = savedState.hasOwnProperty(sectionId) ? savedState[sectionId] : true
+                            details.open = isOpen
+
+                            // Add toggle event listener to save state
+                            details.addEventListener('toggle', () => {
+                                saveState(sectionId, details.open)
+                            })
+
+                            details.appendChild(summary)
+                            details.appendChild(nestedList)
+
+                            // Clear the li and add the details element
+                            li.innerHTML = ''
+                            li.appendChild(details)
+                        }
+                    })
+                }
+
+                // Scroll active link into view
+                const activeLink = document.querySelector('.sidebar-nav li.active')
+                if (activeLink) {
+                    activeLink.scrollIntoView({ behavior: 'smooth', block: 'center', })
+                }
             })
 
             // Invoked on each page load after new HTML has been appended to the DOM

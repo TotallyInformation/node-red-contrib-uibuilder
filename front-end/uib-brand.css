@@ -4,7 +4,6 @@
  *       Remove shadows for dark mode.
  *
  * 1em ~= 16px
- * 
  * Recommended @media breakpoints:
  * Tablet:        48em @ 16pt   = 768px
  * Tablet Wide:   62em @ 16pt   = 992px
@@ -13,14 +12,14 @@
  * Mobile Medium: 37.5em @ 16pt = 600px
  * Mobile Large:  48em @ 16pt   = 768px
  *
- * 
  * https://css-tricks.com/a-complete-guide-to-custom-properties/ for details on using custom css properties
  * https://una.im/css-color-theming/ for more on color theory calculations
  * https://web.dev/building-a-color-scheme/ is the basis for this style
  * https://unifyned.com/colors.html extends the above
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
- * @version: 2025-09-07
+ * NB: The version is updated automatically by the build process to the current date - see gulpfile.js
+ * @version: 2026-03-17
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -63,6 +62,20 @@
     --code-font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace, var(--emoji-fonts);
     --cursive-font-family: 'Segoe Print', 'Bradley Hand', Chilanka, TSCu_Comic, casual, cursive, var(--emoji-fonts);
 
+    --base-margin: 1rem;
+    --max-width: 64rem;
+
+    --border-radius: 0.5rem; /*8px;*/
+    --border-pad: 0.5rem;
+    --border-margin: 0;
+
+    /* For the .grid-fit class, the minimum child element size */
+    --grid-fit-min: 15rem;
+
+    /* For the show/hide elements in PWA mode */
+    --pwa-display-mode: block;
+
+    /* #region --- Colour Prep --- */
     --brand-hue: 200;
     --text-hue: var(--brand-hue);
     --surface-hue: var(--brand-hue);
@@ -80,19 +93,7 @@
     --dark-lightness: calc(var(--light-lightness) * .75);
     --lightness-value: var(--light-lightness);
     --lightness: calc(var(--lightness-value) + var(--lightness-bias));
-
-    --base-margin: 1rem;
-    --max-width: 64rem;
-
-    --border-radius: 0.5rem; /*8px;*/
-    --border-pad: 0.5rem;
-    --border-margin: 0;
-
-    /* For the .grid-fit class, the minimum child element size */
-    --grid-fit-min: 15rem;
-
-    /* For the show/hide elements in PWA mode */
-    --pwa-display-mode: block;
+    /* #endregion --- Colour Prep --- */
 
     /* #region --- Brand --- */
     --brand: hsl(
@@ -100,7 +101,7 @@
         calc(100% * var(--saturation))
         calc(100% * var(--lightness))
     );
-    /*#endregion --- --- */
+    /*#endregion --- Brand --- */
 
     /* #region --- Shadows https://shadows.brumm.af/ --- */
     --surface-shadow-light: var(--brand-hue) 10% 20%;
@@ -362,6 +363,13 @@
     --form-border: 1px solid var(--text3);
     /* #endregion --- --- */
 
+    /* #region ---- Z-Indexes (since 2026-03-16 uib v7.6.0) ---- */
+    --z-nav-h: 980; /* Horizontal navigation menu */
+    --z-toaster: 992; /* Toast container */
+    --z-toast: 990; /* Individual toast - inside toaster only if modal */
+    --z-info-overlay: 10000; /* For info overlays that need to be above everything else */
+    /* #endregion ---- Z-Indexes ---- */
+
     /* #region === NAVIGATION MENUS === */
     /* The main background color for the menu */
     --nav-bg: var(--surface3);
@@ -570,7 +578,6 @@ button, input[type="button" i], input[type="reset" i], input[type="submit" i], :
     text-align: center;
     transition: background 250ms ease-in-out, transform 150ms ease;
     -webkit-appearance: none;
-    -moz-appearance: none;
     appearance: none;
     border-radius: var(--border-radius);
     /* box-shadow: 0 3px 5px rgb(var(--uib-color-fg), 0.5); */
@@ -601,12 +608,23 @@ select {
     border: none;
 }
 blockquote {
-    border: 1px solid var(--text3);
-    padding: 0.3rem;
-    box-shadow: var(--shadow);
+    /* box-shadow: var(--shadow); */
+    padding: 0.5em 1em 0.5em 1em;
+    margin: 0.5em 0 1em 0;
+    color: inherit;
+    border: none;
+    border-left: 0.25em solid var(--text3);
+    background-color: var(--surface3);
+    box-shadow: none;
+    p, div {
+        margin: 0.3em 0;
+    }
 }
 code {
+    display: inline-block;
     font-size: 120%;
+    background-color: var(--surface3);
+    padding: 0 0.3em 0 0.3em;
 }
 header, footer, main, section, article {
     /* default prep for container queries */
@@ -746,7 +764,7 @@ form input, form textarea, form select, form fieldset, form output {
     flex: 2;
     border-radius: var(--border-radius);
     padding:0.3rem;
-    border: 1px solid var(--form-border);
+    border: var(--form-border);
 }
 form button, input[type="button" i], form input[type="reset" i], form input[type="submit" i] {
     width:auto;
@@ -909,7 +927,7 @@ nav.horizontal input[type="submit"] {
         box-shadow: var(--shadow);
         padding: 0.5em 0.5em;
         border-radius: var(--border-radius);
-        z-index: 1000;
+        z-index: var(--z-nav-h);
         left: 1.6em;
         top: 1em;
         width: max-content;
@@ -1066,6 +1084,21 @@ button.compact {
     text-transform: uppercase;
 }
 
+/* Visually hidden but still accessible to screen readers
+   Use for skip links, form explanations, status updates
+   otherwise not needed for sighted users.
+ */
+.visually-hidden:not(:focus):not(:active) {
+  /* Tab focusable elements will be visible when active */
+    border: 0;
+    clip-path: inset(100%);
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
 /*#endregion ---- Utility ---- */
 
 /*#region -- Toasts/Notifications/Alerts - Readable pop-over notifications -- */
@@ -1074,7 +1107,7 @@ button.compact {
     position:absolute; 
     top:0; left:0;
     min-width:100vw; min-height:100vh; 
-    z-index:998;
+    z-index: var(--z-toaster);
     -webkit-backdrop-filter: grayscale(60%) blur(10px);
     backdrop-filter: grayscale(60%) blur(10px);
     display:flex;
@@ -1086,7 +1119,7 @@ button.compact {
     align-items: var(--toast-x-position, center);
     justify-content: var(--toast-y-position, center);
 }
-.toast {
+.toast { /* Individual toast - only inside toaster if modal */
     background: var(--surface1);
     color: var(--text2);
     border: 4px solid var(--text3);
@@ -1096,7 +1129,7 @@ button.compact {
     box-sizing: border-box;
     min-width:50vw; max-width:50vw; max-height:50vh; overflow-y:auto;
     padding:1em; margin-bottom:.5em; margin-top:.5em;
-    z-index:999;
+    z-index: var(--z-toast);
     /* Allow for further positioning of the toast */
     position:relative;
     top:auto;left:auto;
@@ -1262,7 +1295,7 @@ button.compact {
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 10000;
+    z-index: var(--z-info-overlay);
     max-width: 90vw;
     width: auto;
     min-width: 21em;

@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2025-09-05 16:10:59
+updated: 2026-03-18 13:46:30
 ---
 
 Functions accessible in client-side user code.
@@ -21,6 +21,12 @@ Functions accessible in client-side user code.
 > [!NOTE]
 > Where functions are marked as being accessible as Node-RED command messages, details can be found in [Controling From Node-RED](client-docs/control-from-node-red).
 
+> [!TIP]
+> UIBUILDER includes *Type Definition files* for the client library. If you are using a modern code editor such as Visual Studio Code, you will get auto-completion and inline help for all the functions described in this documentation.
+>
+> The definitions are found in the `types` folder when using the default "Blank" template in the uibuilder node. If you are using a custom template, you can copy the contents of the `types` folder to your custom template folder to get the same functionality. In addition, you may need the `/tsconfig.json` file to get the best results. Although these files relate to TypeScript (which UIBUILDER does not use), they also work with JavaScript.
+>
+> The definitions are periodically updated so if your editor isn't giving you the expected help, check that you have the correct version that matches the version of UIBUILDER.
 
 ## Receiving Messages from Node-RED
 
@@ -994,18 +1000,11 @@ Allows fine control of the communications.
 
 Allows fine control of the communications. Also stops the auto-reconnect timer.
 
-### `formatNumber(value, decimalPlaces, intl, opts)` - Format an input number to a given locale and decimal places :id=formatNumber
+[formatDate](fns/format-date-time.md ':include')
 
-Takes numeric input and formats it using the JavaScript standard [`INTL` library](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString).
+[formatNumber](fns/formatNumber.md ':include')
 
-Allows optional setting of the number of decimal places.
-
-The `intl` argument takes the form like `en-GB`, `de-DE` (German), `ja-JP` (Japanese), etc. If not provided, the function takes the browser's current locale using `navigator.language` so that the number defaults to being formatted in the browser's current locale.
-
-The `opts` argument allows passing INTL number formatting options, for example: `{ style: 'currency', currency: 'JPY' }` to get currency formatted as Japanese Yen.
-
-> [!NOTE]
-> This function is compatible with the [`uib-var` web component's `filter` attribute](client-docs/custom-components#filter). e.g. `<uib-var topic="mytopic/#1" filter="uibuilder.formatNumber(2, 'de-DE')">[...]</uib-var>`
+[getCommandList](fns/getCommandList.md ':include')
 
 ### `hasUibRouter` - Returns true if a uibrouter instance is loaded, otherwise returns false :id=hasUibRouter
 
@@ -1023,6 +1022,8 @@ The first 2 arguments are required. All remaining arguments are included in the 
 To set the log level to display in your code, use `uibuilder.logLevel = 5` or `uibuilder.logLevel = 'trace'`. Set to your desired level.
 
 Future versions of this function after v6.1 will extend it to output to an on-page visible log and/or log back to Node-RED.
+
+[logStack](fns/logStack.md ':include')
 
 ### `makeMeAnObject(thing, property)` - Return a valid object if input is null or a string :id=makeMeAnObject
 
@@ -1065,6 +1066,8 @@ Fast but accurate number rounding (https://stackoverflow.com/a/48764436/1309986 
 
 Inputs must be numbers otherwise an error is generated.
 
+[stack](fns/stack.md ':include')
+
 ### `truthy(val, [default])` - Returns true or false or the optional default value depending on the value :id=truthy
 
 True accepts 'on', 'On', 'ON', 'true', 'True', 'TRUE', '1', true, 1
@@ -1105,124 +1108,4 @@ While multiple properties can be given in the options object, only the following
 
 ## Alphabetical function list
 
-Those marked with `*` can be triggered with a command message from Node-RED flows. Those marked with `§` are low-code _ui functions and so can be triggered from Node-RED using messages containing [suitable `_ui` properties](client-docs/config-driven-ui).
-
-If examining the library code, please remember that functions starting with `_` are for *internal* use.
-
-### `uibuilder` functions :id=uibuilder-fns
-
-Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
-
-* [`$`](#dollar) - Alias of `document.querySelect`.
-* [`$$`](#dollar2) - Alias of `document.querySelectAll`.
-* `$ui`§ - Reference to the ui.js library, not a function.
-* [`addClass`](#addClass)§ - Adds a class name to an HTML element.
-* [`applyTemplate`](#applyTemplate)§ - Applies `<template>` tag contents as appended children of the target.
-* [`arrayIntersect`](#arrayIntersect) - Return new array of the intersection of the 2 input arrays.
-* [`beaconLog`](#beaconLog)
-* [`buildHtmlTable`](#buildHtmlTable) - Create an HTML table from an array/object input.
-* [`cancelChange`](#cancelChange) - Cancel a managed variable event watcher.
-* [`cancelTopic`](#cancelTopic) - Cancel a topic event watcher.
-* [`clearHtmlCache`](#clearHtmlCache)
-* [`connect()`]() - Manually (re)connect Socket.IO communications between the browser and Node-RED.
-* [`convertMarkdown`](#convertMarkdown) - Convert a Markdown string to HTML.
-* [`copyToClipboard`](#copyToClipboard)
-* [`createHtmlTable`](#createHtmlTable) - Create an HTML table from an array/object input & insert to the page.
-* [`elementExists`](#elementExists)*
-* ~~[`elementIsVisible`](#elementIsVisible)~~ - Temporarily deprecated.
-* [`eventSend`](#eventSend) - Returns standardised data to Node-RED. For form inputs or other events.
-* [`formatNumber`](#formatNumber) - Outputs a number as a formatted string.
-* [`get`](#get)* - Return the value of a managed variable.
-* [`getElementAttributes`](#getElementAttributes) - Return object containing attribute-name/value keypairs (or an empty object).
-* [`getElementClasses`](#getElementClasses) - Checks for CSS Classes and return as array if found or undefined if not.
-* [`getElementCustomProps`](#getElementCustomProps) - Return object containing an elements custom property/value pairs.
-* [`getFormElementDetails`](#getFormElementDetails) - Return object containing the key properties of a form element.
-* [`getFormElementValue`](#getFormElementValue) - Check for el.value and el.checked, return as an object.
-* [`getManagedVarList`](#getManagedVarList)* - Returns list of all managed variables.
-* [`getPageMeta`](#getPageMeta) - Asks the server for the created/update timestamps and size (in bytes) of the current page.
-* [`getStore`](#getStore)
-* [`getWatchedVars`](#getWatchedVars)* - Returns list of all managed variables.
-* [`hasUibRouter`](#hasUibRouter)
-* [`htmlSend`](#htmlSend)* - Sends the current page's full HTML back to Node-RED.
-* [`include`](#include)*
-* [`joinRoom(room)`](#joinRoom) - join an arbitrary socket.io room to receive messages from it.
-* [`keepHashFromUrl`](#keepHashFromUrl)
-* [`leaveRoom(room)`](#leaveRoom) - leave an arbitrary socket.io room to stop receiving messages from it.
-* [`loadScriptSrc`](#load)§
-* [`loadScriptTxt`](#load)§
-* [`loadStyleSrc`](#load)§
-* [`loadStyleTxt`](#load)§
-* [`loadui`](#loadui)§
-* [`log`](#log)
-* [`logToServer`](#logToServer)
-* [`makeMeAnObject`](#makeMeAnObject) - Returns the input as an object.
-* [`navigate`](#navigate)* - Forces the browser to change URL.
-* [`notify`](#notify)
-* [`onChange`](#onChange)
-* [`onTopic`](#onTopic)
-* [`removeClass`](#removeClass)§
-* [`removeStore`](#removeStore)
-* [`replaceSlot`](#replaceSlot)§
-* [`replaceSlotMarkdown`](#replaceSlotMarkdown)§
-* [`restoreHtmlFromCache`](#restoreHtmlFromCache)
-* [`returnElementId`](#returnElementId) - Return elements existing ID or, add a new unique id to the element and return it.
-* [`round`](#round) - Rounds the input number to a given set of decimal places.
-* [`sanitiseHTML`](#sanitiseHTML) - Ensures that the input HTML is safe.
-* [`saveHtmlCache`](#savehtmlcache)
-* [`scrollTo`](#scrollTo)*
-* [`send`](#send) - Sends a custom message back to Node-RED.
-* [`sendCtrl`](#sendCtrl) - Sends a control message back to Node-RED.
-* [`sendCustom`](#sendcustom) - Sends a message to a specified Socket.IO channel.
-* [`sendRoom(room, msg)`](#sendRoom) - Send a message to an arbitrary socket.io room.
-* [`set`](#set)* - Create/update a uibuilder managed variable.
-* [`setOriginator`](#setOriginator)
-* [`setPing`](#setPing)
-* [`setStore`](#setStore)
-* [`showDialog`](#showDialog)
-* [`showMsg`](#showMsg)*
-* [`showOverlay`](#showOverlay)* - Displays an overlay window with customizable content and behavior.
-* [`showStatus`](#showStatus)*
-* [`start`](#start)
-* [`syntaxHighlight`](#syntaxHighlight)
-* [`tblAddRow`](#tblAddRow)§ - Add a new row to a table.
-* [`tblAddListener`](#tblAddListener)§ - Add an event listener to a table row or cell.
-* [`tblRemoveRow`](#tblRemoveRow)§ - Remove a row from a table.
-* [`truthy`](#truthy)
-* [`ui`](#ui)
-* [`uiEnhanceElement`](#uiEnhanceElement)
-* [`uiGet`](#uiGet)*
-* [`uiWatch`](#uiWatch)*
-* ['uploadFile'](#uploadFile)
-* [`urlJoin`](#urlJoin) - Join arguments as a valid URL path string.
-* [`watchDom`](#watchDom)
-* [`watchUrlHash`](#watchUrlHash)*
-
-### Global (`window`) functions :id=global-fns
-
-These are attached to the `window` (AKA `globalThis`) object if they can be.
-
-They will not be attached if there is a name clash to avoid issues with other libraries. The `$` and `$$` definitions in particular are widely used by other libraries and frameworks, this will generally not cause any issues since their use should be the same (jQuery use is slightly different but should generally still work). `$ui` is not likely to be used by another library but if it is, this may be slightly more problematic - however, it is rare that you will use this directly anyway.
-
-* [`$`](#dollar) - Alias of `document.querySelect`
-* [`$$`](#dollar2) - Alias of `document.querySelectAll`
-* `$ui`§ - Reference to the ui.js library, not a function.
-* `on` - Alias of `window.addEventListener`
-* `uib` - Alias of `uibuilder`.
-* `uibuilder` - the loaded instance of the client library.
-
-### Extended HTML `Element` class methods :id=element-class-methods
-
-These are added to the prototype of the [`Element` built-in HTML class](https://developer.mozilla.org/en-US/docs/Web/API/Element). This enables them to be used in any case that returns an HTML object based on the `Element` class. For example, the `$(cssSelector)` function will return something useful such that `$('#custom-drag').on('wheel', (e) => console.log('wheel', e))` will add an event listener to the HTML element with an id of `custom-drag`. `$$(cssSelector)` will return an array of elements.
-
-> [!TIP]
-> SVG's and MathML elements also inherit from this class and so these utility functions will work on them as well.
-
-As with the global functions, these are only attached if they don't already exist. Some other libraries or frameworks might also define them which should not be an issue as it is anticipated they will behave in the same way.
-
-* `on` - Alias of `<element>.addEventListener`. [[Reference](https://developer.mozilla.org/en-US/docs/Web/API/element#events)]
-* `query` - Alias of `<element>.querySelect`
-* `queryAll` - Alias of `<element>.querySelectAll`
-
-### Extended HTML `document` object methods :id=html-document-methods
-
-* `on` - Alias of `document.addEventListener`
+[function-list](fns/function-list.md ':include')

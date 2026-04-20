@@ -1,0 +1,48 @@
+/** Build script for uib-md-utils
+ * Bundles marked and front-matter into both CJS and ESM formats
+ */
+
+import * as esbuild from 'esbuild' // eslint-disable-line n/no-extraneous-import
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+
+// @ts-ignore
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+const commonOptions = {
+    entryPoints: [join(__dirname, 'src/index.mjs')],
+    bundle: true,
+    // This also excludes built-in Node.js modules like 'fs', 'path', etc. from the bundle
+    platform: 'node',
+    target: 'node18',
+    minify: false, // Keep readable for debugging
+    sourcemap: false,
+    loader: {
+        '.mjs': 'js',
+    },
+}
+
+// Build CommonJS version
+// @ts-ignore
+await esbuild.build({
+    ...commonOptions,
+    outfile: join(__dirname, 'index.cjs'),
+    format: 'cjs',
+    banner: {
+        js: '/** @file Bundled Markdown utilities for uibuilder (CJS) - includes marked and front-matter */',
+    },
+})
+
+// Build ESM version
+// @ts-ignore
+await esbuild.build({
+    ...commonOptions,
+    outfile: join(__dirname, 'index.mjs'),
+    format: 'esm',
+    banner: {
+        js: '/** @file Bundled Markdown utilities for uibuilder (ESM) - includes marked and front-matter */',
+    },
+})
+
+console.log('✓ uib-md-utils bundled successfully (CJS + ESM)')

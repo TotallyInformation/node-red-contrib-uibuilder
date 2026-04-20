@@ -1,5 +1,22 @@
 # Copilot Instructions
 
+This repository is a set of nodes to be used with the Node-RED platform along with some front-end libraries and web components that complement them. This makes up a web application development framework focused on low-code solutions. It allows users of Node-RED to create web applications with minimal coding effort.
+
+When contributing to this repository, please adhere to the following guidelines to ensure code quality, maintainability, and consistency across the project.
+
+## Repository Structure
+
+- `nodes/`: Contains Node-RED node definitions and related code. The `libs/` subdirectory holds shared libraries used by multiple nodes.
+- `frontend/`: Contains the live, built front-end libraries and web components that complement the Node-RED nodes.
+- `src/`: Contains the source code that must be built for live use.
+    - `front-end-module/`: Contains source code for front-end components and libraries before they are built.
+    - `components/`: Contains reusable UI components used across the front-end modules. These are mostly built into the front-end library.
+    - `editor/`: Contains source code for the Node-RED editor UI components that have not yet been converted to use the `resources/` folder.
+    - `doc-bundle/`: Contains source code that is built to enable the Docsify based documentation to work offline.
+- `resources/`: Contains static resources used by Node-RED nodes in the editor UI.
+- `templates/`: Contains folders that are either copied to the deployed Node-RED instance or used as templates for front-end instances.
+- `docs/`: Contains documentation related to the project, including usage guides and API references
+
 ## Core Requirements
 
 - Follow project ESLINT configurations
@@ -22,7 +39,7 @@
 - Prefer arrow functions
 - Use optional chaining
 - Add JSDoc if missing
-- Add TypeScript types/interfaces
+- Add TypeScript types/interfaces even for JavaScript files
 - Assume the use of ESLINT v9
 
 ### Documentation
