@@ -56,7 +56,7 @@ const execa = require('execa')
 // import * as esbuild from 'esbuild'
 const esbuild = require('esbuild')
 
-const fs = require('fs-extra')
+const { fsextra: fs, } = require('./packages/uib-fs-utils')
 // const { default: esm } = require('socket.io-client')
 
 // const { promisify } = require('util')
@@ -78,9 +78,9 @@ const stdio = 'inherit'
 // @ts-ignore Find the module version in the package.json
 const { version, } = JSON.parse(fs.readFileSync('package.json'))
 // Desired release version
-const release = '7.6.0'
+const release = '7.6.1'
 // Wanted node.js version - used for ESBUILD
-const nodeVersion = 'node18.5'
+const nodeVersion = 'node18'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js Build Version: ${nodeVersion}`)
 
