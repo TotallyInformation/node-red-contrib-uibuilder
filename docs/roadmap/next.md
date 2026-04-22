@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-04-19 20:05:36
+updated: 2026-04-22 11:50:47
 ---
 
 ## To Fix
@@ -67,3 +67,8 @@ updated: 2026-04-19 20:05:36
 
   Other possibles: Instagram, Blog, LinkedIn, NR Forum, BlueSky, Mastodon.
 
+## Next
+
+* Add `uibuilder.dataCheck(<time>)` function to the client library. If set, will check - when the browser indicated that the page is visible - whether data has been received from Node-RED within the specified time. If not, it will reload the page. This is to deal with computers going to sleep and then waking up with stale data.
+* Switch to new build/watch script from gulp.
+* Add github new tag process to new build script.

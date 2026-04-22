@@ -10,20 +10,15 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Please see the roadmap in the docs for the backlog of future planned developments.
 
+## v7.6.1
 
-## Compatibility of current release
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.6.0...v7.6.1).
 
-* Servers:
-  * Node-RED: v4+
-  * Node.js: v18+ LTS
-  * Platforms: Linux, Windows, MacOS, Raspberry Pi, Docker, etc.
-* Browsers: 
-  * CSS - 0.12% or above of global usage but not Internet Explorer ([ref.](https://browserslist.dev/?q=Pj0wLjEyJSwgbm90IGllID4gMA%3D%3D)). The uncompiled CSS should work in all current mainstream browsers. The compiled CSS (`uib-brand.min.css`) should work in browsers back to early 2019, possibly before. Enforced by [LightningCSS](https://lightningcss.com/).
-  * JavaScript - ES6+ so should work in all current mainstream browsers. The compiled JS (`uibuilder.min.js`) should work in browsers back to early 2019, possibly before. Enforced by [ESBuild](https://esbuild.github.io/).
+This is a bug-fix release.
 
-------------
+The order of loading of ExpressJS web server middleware has been corrected so that any custom middleware in `~/.node-red/uibuilder/.common/uibMiddleware.js` is now loaded after the uibuilder master middleware that adds uibuilder specific headers and cookies. This should allow custom middleware to work as expected.
 
-<!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
+--- 
 
 ## v7.6.0
 
