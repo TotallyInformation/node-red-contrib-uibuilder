@@ -1,12 +1,17 @@
 {
   "name": "node-red-contrib-uibuilder",
-  "version": "7.6.0",
+  "version": "7.7.0",
   "description": "Easily create data-driven web UI's for Node-RED. Single- & Multi-page. Multiple UI's. Work with existing web development workflows or mix and match with no-code/low-code features.",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "buildDocBundle": "node ./src/doc-bundle/build.mjs",
+    "build": "node bin/build.mjs",
+    "build:watch": "node bin/build.mjs --watch",
+    "build:fe": "node bin/build.mjs fe",
+    "build:node": "node bin/build.mjs node",
+    "build:css": "node bin/build.mjs css",
+    "buildDocBundle": "node bin/build.mjs docs",
     "code:main": "code --new-window ./_workspaces/uibuilder-main.code-workspace",
     "code:client": "code --new-window ./_workspaces/uibuilder-client.code-workspace",
     "code:markweb": "code --new-window ./_workspaces/uibuilder-markweb.code-workspace",
@@ -37,6 +42,7 @@
     "@types/node": "18.*",
     "@types/node-red": "*",
     "browserslist": "^4",
+    "browserslist-to-esbuild": "^2.1.1",
     "docsify": "^4.13.1",
     "docsify-copy-code": "^3.0.0",
     "docsify-darklight-theme": "^3.2.0",
