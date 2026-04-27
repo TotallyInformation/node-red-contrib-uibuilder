@@ -56,7 +56,7 @@ import { formatDate } from './libs/format-date-time.mjs'
 // Incorporate the logger module - NB: This sets a global `log` object for use if it can.
 // import logger from './logger'
 
-const version = '7.6.0-src'
+const version = '7.6.2-src'
 
 // #region --- Module-level utility functions --- //
 
@@ -1853,6 +1853,9 @@ export const Uib = class Uib {
             }
             // Deal with different element types:
             if (Object.prototype.hasOwnProperty.call(value, 'payload')) {
+                // Skip update when payload is null or undefined to avoid setting attributes
+                // to the literal string "undefined" (e.g. <link rel="icon"> href="undefined").
+                if (value.payload == null) return
                 if (el.hasAttribute('content')) {
                     // If el has a `content` attrib, we must apply as text not html
                     el.setAttribute('content', value.payload)
