@@ -4,18 +4,26 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-04-22 11:50:47
+updated: 2026-04-22 17:40:53
 ---
 
 ## To Fix
 
 * [ ] Deploy of new uibuilder node sometimes results in `Cannot show default page, index.html does not exist in `
+* [ ] Markweb: Footer not updating with changed frontmatter - e.g. updated date.
+* [ ] Markweb: # location not showing in address bar. Works for dev instance but not for video instance.
+* [ ] Markweb: Sometimes still getting undefined as the input to markdown renderer.
+      🌐🕸️🛑[markweb:nodeInstance:checkNames] (from: handler) Source file "D:\src\nrvideos\data\node_modules\node-red-contrib-uibuilder\templates\markweb-demo\undefined.md" not accessible: ENOENT: no such file or directory, access 'D:\src\nrvideos\data\node_modules\node-red-contrib-uibuilder\templates\markweb-demo\undefined.md'
+* [ ] Document asyncSend in client library doc.
 
 ## In Progress
 
 
 ### Ongoing work
 
+* Document possible gotchas with Markweb and how to avoid them.
+  * Deep url paths - need to adjust the page template's relative links.
+  * Missing folder from navigation - must have at least a `index.md` page in the folder.
 * Change docs bundle to use an npm workspace
 * Force close socket.io connections on node-red close to prevent hanging connections and allow clean restarts.
 * If using a custom Express server, force close it on node-red close to prevent hanging connections and allow clean restarts.
@@ -59,6 +67,22 @@ updated: 2026-04-22 11:50:47
   * [ ] `resources\uib-sidebar.js` - add markdown support using RED.utils.renderMarkdown().
 
 
+## Next
+
+* Client library:
+  * Add `uibuilder.dataCheck(<time>)` function to the client library. If set, will check - when the browser indicated that the page is visible - whether data has been received from Node-RED within the specified time. If not, it will reload the page. This is to deal with computers going to sleep and then waking up with stale data.
+* Build/Watch script:
+  * Switch to new build/watch script from gulp.
+  * Add github new tag process to new build script.
+* Documentation:
+  * The new build script and processes.
+  * The CSP overrides and how to use them.
+* Markweb:
+  * Video.
+  * Allow `readme.md` or `README.md` to be used as folder default pages as well as `index.md`, `.index.md`, and `_index.md`.
+* web.js
+  * Check whether CSP really needs the `wss: ws:` settings for connect-src.
+
 ## Communications
 
 * Use IFTTT to cross-post:
@@ -67,8 +91,3 @@ updated: 2026-04-22 11:50:47
 
   Other possibles: Instagram, Blog, LinkedIn, NR Forum, BlueSky, Mastodon.
 
-## Next
-
-* Add `uibuilder.dataCheck(<time>)` function to the client library. If set, will check - when the browser indicated that the page is visible - whether data has been received from Node-RED within the specified time. If not, it will reload the page. This is to deal with computers going to sleep and then waking up with stale data.
-* Switch to new build/watch script from gulp.
-* Add github new tag process to new build script.

@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-04-10 06:06:25
+updated: 2026-04-27 16:53:24
 ---
 
 # Changelog
@@ -10,6 +10,20 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Please see the roadmap in the docs for the backlog of future planned developments.
 
+## Server and browser compatibility
+
+UIBUILDER aims to be compatible with the current major release of Node-RED. That currently targets Node.js v18 on the server.
+
+On the browser side, UIBUILDER aims to be compatible with over 99% of browsers actively seen on the Internet. This includes Chrome, Firefox, Edge, Safari and Opera. It also includes current mobile browsers on Android and iOS. The target compatibility date is early 2019. [Minimum versions: 'chrome73', 'firefox66', 'opera60', 'safari12.1', 'ios12.2', 'edge79']
+
+## v7.6.2
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.6.1...v7.6.2).
+
+This is a bug-fix release.
+
+A number of fixes have been made to Markweb, nothing major.
+
 ## v7.6.1
 
 [Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.6.0...v7.6.1).
@@ -17,8 +31,6 @@ Please see the roadmap in the docs for the backlog of future planned development
 This is a bug-fix release.
 
 The order of loading of ExpressJS web server middleware has been corrected so that any custom middleware in `~/.node-red/uibuilder/.common/uibMiddleware.js` is now loaded after the uibuilder master middleware that adds uibuilder specific headers and cookies. This should allow custom middleware to work as expected.
-
---- 
 
 ## v7.6.0
 
