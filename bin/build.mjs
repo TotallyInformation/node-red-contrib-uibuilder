@@ -24,7 +24,7 @@
  */
 
 import * as esbuild from 'esbuild' // eslint-disable-line n/no-unpublished-import
-import browserslistToEsbuild from 'browserslist-to-esbuild'
+// import browserslistToEsbuild from 'browserslist-to-esbuild'
 import { browserslistToTargets, transform } from 'lightningcss' // eslint-disable-line n/no-unpublished-import
 import browserslist from 'browserslist' // eslint-disable-line n/no-unpublished-import
 import { readFile, writeFile, stat } from 'node:fs/promises'

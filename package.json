@@ -43,7 +43,6 @@
     "@types/node": "18.*",
     "@types/node-red": "*",
     "browserslist": "^4",
-    "browserslist-to-esbuild": "^2.1.1",
     "docsify": "^4.13.1",
     "docsify-copy-code": "^3.0.0",
     "docsify-darklight-theme": "^3.2.0",
