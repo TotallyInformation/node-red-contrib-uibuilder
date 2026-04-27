@@ -21,6 +21,9 @@ const commonOptions = {
     loader: {
         '.mjs': 'js',
     },
+    supported: {
+        destructuring: true,
+    },
 }
 
 // Build CommonJS version
