@@ -3,7 +3,7 @@
 /* eslint-disable n/no-unsupported-features/node-builtins */
 // ^ This file is browser code, not Node.js - localStorage is a browser API
 
-const clientVersion = '7.6.0-markweb' // NB: This is not automatically updated, must be manually set to match package.json version field
+const clientVersion = '7.6.2-markweb' // NB: This is not automatically updated, must be manually set to match package.json version field
 
 /** The uibuilder.pageData object is set on load and when navigating
  * You can use it to do your own processing if desired
@@ -1401,11 +1401,12 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             // Server may omit hashFragment on some refresh paths.
             // Preserve the browser hash for same-page updates as a fallback.
             const hashFragment = ctrlMsg.hashFragment || (isSamePage ? window.location.hash : '')
-            const newUrl = baseUrl.replace(/\/$/, '') + data.path + hashFragment
+            // Guard: only build newUrl when data.path is a valid string to avoid pushing '/baseundefined' to history
+            const newUrl = data.path ? (baseUrl.replace(/\/$/, '') + data.path + hashFragment) : window.location.pathname
 
             // Only push to history if not handling popstate and server says to add to history
             console.log('pushState:', newUrl, 'addToHistory:', ctrlMsg.addToHistory, 'isHandlingPopstate:', isHandlingPopstate)
-            if (ctrlMsg.addToHistory === true && !isHandlingPopstate) {
+            if (data.path && ctrlMsg.addToHistory === true && !isHandlingPopstate) {
                 history.pushState(
                     { path: newUrl, hash: hashFragment || undefined, status: 'SPA page change', },
                     '', newUrl
