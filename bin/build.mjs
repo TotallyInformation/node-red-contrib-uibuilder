@@ -15,6 +15,7 @@
  *   node bin/build.mjs node         Build Node.js packages only
  *   node bin/build.mjs css          Build CSS only
  *   node bin/build.mjs docs         Build docs bundle only
+ *   node bin/build.mjs versions     Update all version strings only (no build)
  *   node bin/build.mjs fe css       Build front-end and CSS
  *   node bin/build.mjs fe --watch   Build front-end and watch for changes
  *
@@ -31,7 +32,6 @@ import { readFileSync } from 'node:fs'
 import { resolve, dirname, join, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
-import { chokidar } from '../packages/uib-fs-utils/index.mjs'
 
 // #region ---- Bootstrap ----
 
@@ -54,18 +54,40 @@ const PKG_VERSION = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
 
 // --- Build targets ─────────────────────────────────────────────────────────
 
-/** @type {string} Browserslist query that controls browser support for both JS and CSS builds */
-const BROWSER_QUERY = '>=0.12%, not ie > 0'
+/** Explicit esbuild browser targets — early 2019 baseline.
+ * Hardcoded rather than derived from browserslist so the JS build target is
+ * fully deterministic and immune to browserslist database updates.
+ * Minimum versions per caniuse for full ES2018 destructuring support:
+ *   chrome 60, firefox 55, opera 47, safari 11.1, ios_saf 11.4, edge 79
+ * Targeting early 2019: chrome73, firefox66, opera60, safari12.1, ios12.2, edge79
+ * @type {string[]}
+ */
+const ESBUILD_BROWSER_TARGETS_HARDCODED = [
+    'chrome73',
+    'firefox66',
+    'opera60',
+    'safari12.1',
+    'ios12.2',
+    'edge79',
+]
 
-/**
- * esbuild Node.js target version.
+/** @type {string} Browserslist query that controls browser support for both JS and CSS builds */
+// const BROWSER_QUERY = '>=0.12%, not ie > 0'
+// const BROWSER_QUERY = [
+//     '>=0.12%',
+//     'not ie > 0',
+//     ... ESBUILD_BROWSER_TARGETS_HARDCODED,
+// ].join(', ')
+const CSS_QUERY = '>=0.12%, not ie > 0, not ios_saf < 12.2, not safari < 12.1, not edge < 79'
+
+/** esbuild Node.js target version.
  * Aligned with the Node-RED v3+ minimum requirement of Node.js 18.
  * Increase to 'node22' when Node-RED v4 becomes the baseline.
  * @type {string}
  */
 const NODE_TARGET = 'node18'
 
-// --- Directory paths ───────────────────────────────────────────────────────
+// ─── Directory paths ───────────────────────────────────────────────────────
 
 /** @type {string} Source directory for all front-end module source files */
 const FE_SRC = 'src/front-end-module'
@@ -76,19 +98,17 @@ const FE_OUT = 'front-end'
 /** @type {string} Source directory for built-in web components (bundled into FE module) */
 const COMPONENTS_SRC = 'src/components'
 
-// --- Computed browser targets ─────────────────────────────────────────────
+// ─── Computed browser targets ─────────────────────────────────────────────
 
 /** Resolved browserslist result; used to derive both esbuild and LightningCSS targets */
-const _browserslistResult = browserslist(BROWSER_QUERY)
+// const _browserslistResult = browserslist(BROWSER_QUERY)
 
-/**
- * LightningCSS browser targets derived from the browserslist query.
+/** LightningCSS browser targets derived from the browserslist query.
  * Used by the CSS build to emit forwards-compatible CSS.
  */
-const LIGHTNING_TARGETS = browserslistToTargets(_browserslistResult)
+const LIGHTNING_TARGETS = browserslistToTargets(browserslist(CSS_QUERY))
 
-/**
- * Convert a browserslist result array to esbuild-compatible target strings.
+/** Convert a browserslist result array to esbuild-compatible target strings.
  * Maps browser identifiers to the esbuild format (e.g. 'chrome 120' → 'chrome120').
  * Browsers not recognised by esbuild (op_mini, kaios, samsung, etc.) are filtered out.
  * @param {string[]} list - Raw browserslist result array
@@ -136,17 +156,16 @@ const LIGHTNING_TARGETS = browserslistToTargets(_browserslistResult)
 //     return result
 // }
 
-/**
- * esbuild browser targets derived from the browserslist query.
+/** esbuild browser targets derived from the browserslist query.
  * Used for all front-end JavaScript builds.
  * @type {string[]}
  */
 // const ESBUILD_BROWSER_TARGETS = browserslistToEsbuildTargets(_browserslistResult)
-const ESBUILD_BROWSER_TARGETS = browserslistToEsbuild(BROWSER_QUERY)
+const ESBUILD_BROWSER_TARGETS = ESBUILD_BROWSER_TARGETS_HARDCODED
 
-// --- Version file configuration ────────────────────────────────────────────
+// ─── Version file configuration ────────────────────────────────────────────
 
-/**
+/** Type: VersionFileEntry
  * @typedef {object} VersionFileEntry
  * @property {string}          file  Relative path from project root to the source file
  * @property {RegExp}          regex Regular expression matching the version string in the file
@@ -155,8 +174,7 @@ const ESBUILD_BROWSER_TARGETS = browserslistToEsbuild(BROWSER_QUERY)
  *   'date'     → version set to source file's last modified date (e.g. '2026-04-21')
  */
 
-/**
- * Source files whose embedded version strings are automatically updated before building.
+/** Source files whose embedded version strings are automatically updated before building.
  *
  * - type 'semantic': replaces the semver number with the current package.json version.
  *   The regex must match the complete version declaration including the '-src' suffix.
@@ -173,9 +191,9 @@ const VERSION_FILES = [
     { file: `${FE_OUT}/uib-brand.css`,        regex: /(^ \* @version: )[\d-]+$/m,     type: 'date', },
 ]
 
-// --- Front-end module build configurations ────────────────────────────────
+// ─── Front-end module build configurations ────────────────────────────────
 
-/**
+/** Type: FEBuildConfig
  * @typedef {object} FEBuildConfig
  * @property {string}   name         Human-readable name used in log output
  * @property {string}   entryPoint   Relative path from root to the source entry point
@@ -185,8 +203,7 @@ const VERSION_FILES = [
  * @property {string[]} watchFiles   Glob patterns of source files that trigger a rebuild when changed
  */
 
-/**
- * Front-end module build configurations.
+/** Front-end module build configurations.
  * Each entry produces four output files:
  *   *.iife.min.js  (IIFE, minified, with source map)
  *   *.iife.js      (IIFE, unminified)
@@ -238,7 +255,7 @@ const FE_BUILDS = [
     },
 ]
 
-/**
+/** Type: ExperimentalBuildConfig
  * @typedef {object} ExperimentalBuildConfig
  * @property {string}   name        Human-readable name used in log output
  * @property {string}   entryPoint  Relative path from root to the source entry point
@@ -246,8 +263,7 @@ const FE_BUILDS = [
  * @property {string[]} watchFiles  Glob patterns of source files that trigger a rebuild when changed
  */
 
-/**
- * Configuration for the experimental front-end module.
+/** Configuration for the experimental front-end module.
  * Produces a single minified ESM output with a source map.
  * @type {ExperimentalBuildConfig}
  */
@@ -258,9 +274,9 @@ const EXPERIMENTAL_BUILD = {
     watchFiles: [`${FE_SRC}/experimental.mjs`],
 }
 
-// --- Node.js package build configurations ─────────────────────────────────
+// ─── Node.js package build configurations ─────────────────────────────────
 
-/**
+/** Type: NodeBuildConfig
  * @typedef {object} NodeBuildConfig
  * @property {string}   name        Human-readable name used in log output
  * @property {string}   entryPoint  Relative path from root to the source entry point
@@ -268,8 +284,7 @@ const EXPERIMENTAL_BUILD = {
  * @property {string[]} watchFiles  Glob patterns of source files that trigger a rebuild when changed
  */
 
-/**
- * Node.js package build configurations.
+/** Node.js package build configurations.
  * Each entry produces two output files: CJS (.cjs) and ESM (.mjs).
  * Node.js code is intentionally NOT minified to aid debugging and produce readable stack traces.
  * @type {NodeBuildConfig[]}
@@ -293,8 +308,7 @@ const NODE_BUILDS = [
     },
 ]
 
-/**
- * CSS build configuration.
+/** CSS build configuration.
  * The source is the unminified brand CSS; the build produces a minified file and source map.
  */
 const CSS_BUILD = {
@@ -385,6 +399,20 @@ async function updateVersionInOutputFile(filePath, regex, suffix) {
     }
 }
 
+/**
+ * Update all version strings across every entry in VERSION_FILES.
+ *
+ * Runs both 'semantic' and 'date' update types.  This is equivalent to the
+ * pre-build version-stamp step but can be invoked standalone without triggering
+ * any esbuild or LightningCSS compilation.
+ * @async
+ * @returns {Promise<void>}
+ */
+async function updateAllVersions() {
+    await Promise.all(VERSION_FILES.map(e => updateVersionInSourceFile(e)))
+    console.log('[versions] All version strings updated.')
+}
+
 // #endregion ---- Version Helpers ----
 
 // #region ---- Front-End Builds ----
@@ -392,8 +420,7 @@ async function updateVersionInOutputFile(filePath, regex, suffix) {
 /** Shared esbuild loader map for front-end builds — treats .mjs and .cjs as plain JS */
 const FE_LOADER = { '.mjs': 'js', '.cjs': 'js', }
 
-/**
- * Build a single front-end module in all four standard output formats.
+/** Build a single front-end module in all four standard output formats.
  *
  * Outputs produced (where `outBase` is the configured base path):
  *   {outBase}.iife.min.js   IIFE, minified,   with source map
@@ -420,6 +447,9 @@ async function buildFEModule(config) {
         platform:    'browser',
         loader:      FE_LOADER,
         target:      ESBUILD_BROWSER_TARGETS,
+        supported: {
+            destructuring: true,
+        },
     }
 
     /**
@@ -477,8 +507,7 @@ async function buildFEModule(config) {
     console.log(`[build] ✓ ${config.name}`)
 }
 
-/**
- * Build the experimental front-end module as a single minified ESM file with a source map.
+/** Build the experimental front-end module as a single minified ESM file with a source map.
  * This module is kept as a separate output because it may contain unstable or preview features.
  * @async
  * @returns {Promise<void>}
@@ -498,6 +527,10 @@ async function buildExperimental() {
             sourcemap: true,
             loader:    FE_LOADER,
             target:    ESBUILD_BROWSER_TARGETS,
+            supported: {
+                destructuring: true,
+            },
+
         })
     } catch (err) {
         throw new Error(`[${config.name}] ESM (min) build failed: ${err.message}`)
@@ -505,8 +538,7 @@ async function buildExperimental() {
     console.log(`[build] ✓ ${config.name}`)
 }
 
-/**
- * Build all configured front-end modules and the experimental module concurrently.
+/** Build all configured front-end modules and the experimental module concurrently.
  * Individual failures are caught and reported; other builds continue unaffected.
  * @async
  * @returns {Promise<void>}
@@ -657,8 +689,7 @@ async function buildCSS() {
 
 // #region ---- Docs Bundle Build ----
 
-/**
- * Build the Docsify documentation bundle for offline use.
+/** Build the Docsify documentation bundle for offline use.
  * Delegates to the existing src/doc-bundle/build.mjs script by spawning a child process so
  * that the doc bundle's top-level await and side effects are fully isolated.
  * @async
@@ -716,12 +747,18 @@ async function safeRebuild(buildFn, label) {
 async function startWatch() {
     console.log('\n[watch] Starting watch mode...\n')
 
+    // Lazily import chokidar only when watch mode is actually used.
+    // The uib-fs-utils bundle uses dynamic require() which fails at module parse
+    // time in a pure ESM context, so a top-level static import would break every
+    // non-watch invocation (e.g. `node bin/build.mjs versions`).
+    const { chokidar, } = await import('../packages/uib-fs-utils/index.mjs')
+
     /**
      * Strip the project root from a path for cleaner log lines.
      * @param {string} p - Absolute file path
      * @returns {string} Input path with the project root removed, for concise logging
      */
-    const rel = (p) => p.replace(ROOT + '\\', '').replace(ROOT + '/', '')
+    const rel = (p) => p.replace(ROOT + '\\', '').replace(ROOT + '/')
 
     // ── Front-end modules (one watcher per config) ──────────────────────
     for (const config of FE_BUILDS) {
@@ -779,11 +816,12 @@ async function startWatch() {
  *
  * Flags:  --watch | -w  Enable watch mode after the initial build
  * Targets (positional args, any combination):
- *   all   Build everything (default when no positional arg is given)
- *   fe    Front-end modules
- *   node  Node.js workspace packages
- *   css   CSS files
- *   docs  Docsify documentation bundle
+ *   all      Build everything (default when no positional arg is given)
+ *   fe       Front-end modules
+ *   node     Node.js workspace packages
+ *   css      CSS files
+ *   docs     Docsify documentation bundle
+ *   versions Update all version strings without building
  *
  * @returns {{ targets: string[], watch: boolean }} Parsed build targets and watch mode flag
  */
@@ -809,11 +847,13 @@ function parseArgs() {
 async function main() {
     const { targets, watch, } = parseArgs()
 
-    const buildAll  = targets.includes('all')
-    const buildFE   = buildAll || targets.includes('fe')
-    const buildNode = buildAll || targets.includes('node')
-    const buildCss  = buildAll || targets.includes('css')
-    const buildDocs = buildAll || targets.includes('docs')
+    const buildAll      = targets.includes('all')
+    const versionsOnly  = targets.length === 1 && targets.includes('versions')
+    const buildFE       = buildAll || targets.includes('fe')
+    const buildNode     = buildAll || targets.includes('node')
+    const buildCss      = buildAll || targets.includes('css')
+    const buildDocs     = buildAll || targets.includes('docs')
+    const updateVersions = targets.includes('versions')
 
     // ── Startup banner ───────────────────────────────────────────────────
     const SEP = '─'.repeat(60)
@@ -821,14 +861,25 @@ async function main() {
     console.log('  uibuilder build script')
     console.log(`  Package version : ${PKG_VERSION}`)
     console.log(`  Node.js target  : ${NODE_TARGET}  (Node-RED ≥v3 baseline)`)
-    console.log(`  Browser target  : ${BROWSER_QUERY}`)
+    console.log(`  Browser target  : ${ESBUILD_BROWSER_TARGETS_HARDCODED.join(', ')}`)
     console.log(`  Targets         : ${targets.join(', ')}${watch ? '  [watch mode]' : ''}`)
     console.log(SEP)
     console.log()
 
+    // ── Standalone versions-only target ─────────────────────────────────
+    if (versionsOnly || updateVersions) {
+        await updateAllVersions()
+        if (versionsOnly) {
+            console.log('\n[build] Done.')
+            return
+        }
+        console.log()
+    }
+
     // ── Pre-build: update semantic version strings in FE source files ────
     // Date-type entries (CSS @version) are handled by their own build functions.
-    if (buildFE) {
+    // Skipped when 'versions' already ran above (avoids duplicate updates).
+    if (buildFE && !updateVersions) {
         const semanticEntries = VERSION_FILES.filter(e => e.type === 'semantic')
         await Promise.all(semanticEntries.map(e => updateVersionInSourceFile(e)))
         console.log()
