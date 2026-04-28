@@ -1,4 +1,46 @@
 
+/* === Sidebar layout order ===
+   .sidebar is a flex column. By assigning explicit `order` values we control
+   the visual position of every child independently of when each plugin inserts
+   its element into the DOM — no JS timing hacks required.
+   Known direct children and their desired visual order:
+     0  .app-name      — site logo / title
+     1  .search        — search input (inserted by docsify-search plugin)
+     2  .sidebar-tabs  — Navigation / Page TOC toggle buttons (ours)
+     3  .sidebar-toc-panel — page TOC list (ours)
+     4  .sidebar-nav   — the main navigation tree
+*/
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+.sidebar > .app-name {
+    order: 0;
+    flex-shrink: 0;
+}
+.sidebar > .search {
+    order: 1;
+    flex-shrink: 0;
+}
+.sidebar > .sidebar-tabs {
+    order: 2;
+    flex-shrink: 0;
+}
+.sidebar > .sidebar-toc-panel {
+    order: 3;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+}
+.sidebar > .sidebar-nav {
+    order: 4;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+}
+
 :root {
     --base-font-size: 20px;
     --base-line-height: 1.5; /* 1.7 */
@@ -198,6 +240,128 @@ figcaption::before {
     z-index: 999;
 }
 
+/* === Sidebar Resize Handle === */
+.sidebar-resize-handle {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: var(--sidebar-width, 18.5em);
+    width: 6px;
+    cursor: col-resize;
+    z-index: 101;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.sidebar-resize-handle::after {
+    content: '';
+    display: block;
+    position: absolute;
+    inset: 0;
+    left: 50%;
+    width: 2px;
+    transform: translateX(-50%);
+    background: transparent;
+    transition: background-color 0.2s;
+}
+.sidebar-resize-handle:hover::after,
+.sidebar-resize-handle.is-dragging::after {
+    background: var(--uib-blue, hsl(204 89% 55% / 70%));
+}
+
+/* === Sidebar Tabs === */
+.sidebar-tabs {
+    display: flex;
+    gap: 0.3rem;
+    padding: 0.3rem 0.5rem 0.4rem;
+    border-bottom: 1px solid var(--heading-h2-border-color, hsl(0 0% 50% / 30%));
+    flex-shrink: 0;
+}
+.sidebar-tab-btn {
+    flex: 1;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: var(--sidebar-nav-link-color, inherit);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.8em;
+    line-height: 1.4;
+    transition: background-color 0.2s, color 0.2s;
+}
+.sidebar-tab-btn:hover:not(.active) {
+    background: hsl(204 89% 55% / 15%);
+}
+.sidebar-tab-btn.active {
+    background: var(--sidebar-nav-link-color--active, hsl(204 89% 55%));
+    color: var(--body-bg, #000);
+    border-color: var(--sidebar-nav-link-color--active, hsl(204 89% 55%));
+    font-weight: 600;
+}
+
+/* === Sidebar TOC Panel === */
+.sidebar .sidebar-nav[aria-hidden='true'],
+.sidebar-toc-panel[aria-hidden='true'] {
+    display: none;
+}
+.sidebar-toc-panel {
+    overflow-y: auto;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.9em;
+}
+.sidebar-toc-panel ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.sidebar-toc-panel ul ul {
+    padding-left: 1rem;
+}
+.sidebar-toc-panel li {
+    margin: 0.2rem 0;
+    line-height: 1.3;
+}
+.sidebar-toc-panel details {
+    margin: 0;
+}
+.sidebar-toc-panel details > summary.sidebar-toc-link {
+    cursor: pointer;
+    list-style: revert;
+    display: list-item;
+    font-style: italic;
+    font-weight: bolder;
+    border-top: 1px solid var(--heading-h2-border-color);
+    margin-top: 0.3rem;
+    padding-top: 0.1rem;
+    padding-left: 0;
+}
+/* Buttons styled as nav links — avoids Docsify link-binder scanning <a href> elements */
+.sidebar-toc-link {
+    background: none;
+    border: none;
+    border-radius: 0.2rem;
+    color: var(--sidebar-nav-link-color, inherit);
+    cursor: pointer;
+    display: block;
+    font-size: inherit;
+    padding: 0.1rem 0.2rem;
+    text-align: left;
+    transition: color 0.15s, background-color 0.15s;
+    width: 100%;
+}
+.sidebar-toc-link:hover {
+    color: var(--sidebar-nav-link-color--active, inherit);
+    background: hsl(204 89% 55% / 10%);
+}
+.sidebar-toc-link.is-active {
+    color: var(--sidebar-nav-link-color--active, inherit);
+    font-weight: 600;
+}
+.sidebar-toc-empty {
+    padding: 0.5rem;
+    opacity: 0.6;
+    font-style: italic;
+}
+
 #docsify-darklight-theme p {
     visibility: hidden;
 }
@@ -226,9 +390,9 @@ figcaption::before {
   }
   
   @media only screen and (min-width: 1300px) {
-    section.content {
+    /* section.content {
       padding-right: 250px;
-    }
+    } */
     #docsify-darklight-theme {
         right: -8rem;
         position: absolute;
