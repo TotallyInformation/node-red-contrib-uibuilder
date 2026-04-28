@@ -22,7 +22,15 @@
 }
 .sidebar > .search {
     order: 1;
-    flex-shrink: 0;
+    flex: 0 0 auto;   /* never shrink/grow based on flex; size is driven by content */
+    overflow: hidden; /* clip results to the constrained height */
+    max-height: 50%;  /* at most half the sidebar; prevents pushing nav/toc off-screen */
+}
+/* Restore internal scroll on the results panel — our overflow:hidden on .search
+   clips it to max-height, so the panel itself must scroll rather than the sidebar */
+.sidebar .results-panel {
+    overflow-y: auto;
+    max-height: calc(50vh - 3rem); /* subtract ~input height */
 }
 .sidebar > .sidebar-tabs {
     order: 2;
