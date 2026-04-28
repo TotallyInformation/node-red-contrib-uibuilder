@@ -1395,6 +1395,9 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             // if (elContent) elContent.innerHTML = data.content || '<p>No content</p>'
             // else console.error('Content element not found to update page content.')
 
+            // Update all data-fmvar elements (e.g. footer copyright) with the new page's frontmatter
+            postDataUpdate(data)
+
             // Detect whether this is a same-page reload (e.g. source change, config change)
             const isSamePage = normalizePath(currentPageUrl.replace(baseUrl, '')) === normalizePath(data.path)
 

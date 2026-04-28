@@ -1322,6 +1322,8 @@ async function doNavigate(msg) {
         // processTemplates(node.pageTemplate, attributes)
         attributes = await getMarkdownFile(this, fullPath, morePath, parsedPath, 'doNavigate')
         attributes.content = mdParse(this, attributes.content || '', attributes) // Pre-render markdown content to HTML for display in metadata panel
+        // Render the copyright footer so the client can update data-fmvar="copyright" on navigation
+        attributes.copyright = renderCopyright('copyright', attributes, this)
         this.sendToFe({
             topic: returnTopic,
             attributes: attributes,
