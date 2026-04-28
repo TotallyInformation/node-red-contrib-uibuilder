@@ -772,7 +772,7 @@ class UibWeb {
                     'X-Content-Type-Options': 'nosniff',
                     'Content-Security-Policy':
                         "default-src 'self' 'unsafe-inline' data: blob: https:; "
-                        + "connect-src 'self' ws: wss:; "
+                        + "connect-src 'self'; "
                         + "img-src 'self' data: blob: https:; "
                         + "font-src 'self' data: https:; "
                         + "style-src 'self' 'unsafe-inline' data: blob: https:; "
