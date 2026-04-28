@@ -16,7 +16,7 @@ window.$docsify = {
     // loadNavbar: true,
     // mergeNavbar: true,
     autoHeader: false,
-    logo: '/images/node-lblue-125x125.png',
+    logo: '/images/node-blue.svg',
     auto2top: true,
     alias: {
         // Moved pages
