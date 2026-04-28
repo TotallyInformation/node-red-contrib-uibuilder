@@ -3,7 +3,7 @@
 /* eslint-disable n/no-unsupported-features/node-builtins */
 // ^ This file is browser code, not Node.js - localStorage is a browser API
 
-const clientVersion = '7.6.2-markweb' // NB: This is not automatically updated, must be manually set to match package.json version field
+const clientVersion = '7.6.2-src' // NB: This is replaced with the actual version during the build process by bin/build.mjs
 
 /** The uibuilder.pageData object is set on load and when navigating
  * You can use it to do your own processing if desired
