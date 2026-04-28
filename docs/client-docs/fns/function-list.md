@@ -1,6 +1,6 @@
 ---
 created: 2026-01-02 13:03:58
-updated: 2026-03-18 13:44:58
+updated: 2026-04-28 15:26:29
 ---
 Those marked with `*` can be triggered with a command message from Node-RED flows. Those marked with `§` are low-code _ui functions and so can be triggered from Node-RED using messages containing [suitable `_ui` properties](client-docs/config-driven-ui).
 
@@ -16,6 +16,7 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`addClass`](#addClass)§ - Adds a class name to an HTML element.
 * [`applyTemplate`](#applyTemplate)§ - Applies `<template>` tag contents as appended children of the target.
 * [`arrayIntersect`](#arrayIntersect) - Return new array of the intersection of the 2 input arrays.
+* [`asyncSend`](#asyncSend) - Send a message back to Node-RED and return a promise.
 * [`beaconLog`](#beaconLog)
 * [`buildHtmlTable`](#buildHtmlTable) - Create an HTML table from an array/object input.
 * [`cancelChange`](#cancelChange) - Cancel a managed variable event watcher.
