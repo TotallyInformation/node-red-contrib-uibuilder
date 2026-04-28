@@ -4,20 +4,14 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-04-22 17:40:53
+updated: 2026-04-28 16:53:24
 ---
 
 ## To Fix
 
 * [ ] Deploy of new uibuilder node sometimes results in `Cannot show default page, index.html does not exist in `
-* [ ] Markweb: Footer not updating with changed frontmatter - e.g. updated date.
-* [ ] Markweb: # location not showing in address bar. Works for dev instance but not for video instance.
-* [ ] Markweb: Sometimes still getting undefined as the input to markdown renderer.
-      🌐🕸️🛑[markweb:nodeInstance:checkNames] (from: handler) Source file "D:\src\nrvideos\data\node_modules\node-red-contrib-uibuilder\templates\markweb-demo\undefined.md" not accessible: ENOENT: no such file or directory, access 'D:\src\nrvideos\data\node_modules\node-red-contrib-uibuilder\templates\markweb-demo\undefined.md'
-* [ ] Document asyncSend in client library doc.
 
 ## In Progress
-
 
 ### Ongoing work
 
@@ -80,8 +74,6 @@ updated: 2026-04-22 17:40:53
 * Markweb:
   * Video.
   * Allow `readme.md` or `README.md` to be used as folder default pages as well as `index.md`, `.index.md`, and `_index.md`.
-* web.js
-  * Check whether CSP really needs the `wss: ws:` settings for connect-src.
 
 ## Communications
 
