@@ -189,6 +189,7 @@ const VERSION_FILES = [
     { file: `${FE_SRC}/ui.mjs`,               regex: /version = '[\d.]+-src'/,        type: 'semantic', },
     { file: `${FE_SRC}/uibrouter.mjs`,        regex: /static version = '[\d.]+-src'/, type: 'semantic', },
     { file: `${FE_OUT}/uib-brand.css`,        regex: /(^ \* @version: )[\d-]+$/m,     type: 'date', },
+    { file: `${FE_OUT}/utils/markweb.mjs`,    regex: /version = '[\d.]+-markweb'/,     type: 'semantic', },
 ]
 
 // ─── Front-end module build configurations ────────────────────────────────
