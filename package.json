@@ -49,7 +49,6 @@
     "docsify-mermaid": "^2.0.1",
     "docsify-pagination": "^2.10.1",
     "docsify-plugin-flexible-alerts": "^1.1.1",
-    "docsify-plugin-toc": "1.3.2",
     "docsify-themeable": "^0.9.0",
     "esbuild": "0.*",
     "esbuild-node-externals": "1.*",
