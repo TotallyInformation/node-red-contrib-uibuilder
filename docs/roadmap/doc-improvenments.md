@@ -1,10 +1,9 @@
 ---
 title: Roadmap for improving uibuilder documentation
-description: >
-    This page is a working document to track the development of the uibuilder documentation. It is not intended to be a comprehensive list of all features or changes, but rather a high-level overview of the main areas of development.
-    It is expected that this page will be updated frequently as development progresses and new features are added or changed.
+description: |
+  This page is a working document to track the development of the uibuilder documentation. It is not intended to be a comprehensive list of all features or changes, but rather a high-level overview of the main areas of development. It is expected that this page will be updated frequently as development progresses and new features are added or changed.
 created: 2026-04-19 14:45:25
-updated: 2026-04-19 19:21:38
+updated: 2026-04-28 16:52:52
 author: Julian Knight (Totally Information)
 ---
 
@@ -25,10 +24,6 @@ author: Julian Knight (Totally Information)
 * [ ] Document grid and flex layouts.
 * [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
 * [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
-
-* Move page ToC to a 2nd sidebar tab.
-* Make sidebar resizable.
-* Reduce the size of the sidebar uib icon. Use SVG.
 
 * Document the `.public` folder and how to use it with the custom web server.
 * Create a comparison table of how to do things with VueJS vs Node-RED/uibuilder.

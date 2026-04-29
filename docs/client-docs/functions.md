@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2026-03-18 13:46:30
+updated: 2026-04-28 15:07:58
 ---
 
 Functions accessible in client-side user code.
@@ -64,6 +64,10 @@ This simulates joining a specified room on the client side, uibuilder will start
 This simulates leaving a specified room on the client side, uibuilder will stop forwarding messages sent to the room to this client.
 
 ## Sending Messages to Node-RED
+
+### `asyncSend(msg, options = {})` - Send a message back to Node-RED and return a promise :id=asyncSend
+
+[asyncSend](fns/asyncSend.md ':include')
 
 ### `eventSend(domevent, originator = '')` - Send a standard message back to Node-RED in response to a DOM event :id=eventSend
 

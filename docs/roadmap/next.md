@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-04-19 20:05:36
+updated: 2026-04-28 16:53:24
 ---
 
 ## To Fix
@@ -13,9 +13,11 @@ updated: 2026-04-19 20:05:36
 
 ## In Progress
 
-
 ### Ongoing work
 
+* Document possible gotchas with Markweb and how to avoid them.
+  * Deep url paths - need to adjust the page template's relative links.
+  * Missing folder from navigation - must have at least a `index.md` page in the folder.
 * Change docs bundle to use an npm workspace
 * Force close socket.io connections on node-red close to prevent hanging connections and allow clean restarts.
 * If using a custom Express server, force close it on node-red close to prevent hanging connections and allow clean restarts.
@@ -58,6 +60,20 @@ updated: 2026-04-19 20:05:36
   * [ ] Add SVGAnimate class to web components package.
   * [ ] `resources\uib-sidebar.js` - add markdown support using RED.utils.renderMarkdown().
 
+
+## Next
+
+* Client library:
+  * Add `uibuilder.dataCheck(<time>)` function to the client library. If set, will check - when the browser indicated that the page is visible - whether data has been received from Node-RED within the specified time. If not, it will reload the page. This is to deal with computers going to sleep and then waking up with stale data.
+* Build/Watch script:
+  * Switch to new build/watch script from gulp.
+  * Add github new tag process to new build script.
+* Documentation:
+  * The new build script and processes.
+  * The CSP overrides and how to use them.
+* Markweb:
+  * Video.
+  * Allow `readme.md` or `README.md` to be used as folder default pages as well as `index.md`, `.index.md`, and `_index.md`.
 
 ## Communications
 

@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-04-10 06:06:25
+updated: 2026-04-28 16:50:58
 ---
 
 # Changelog
@@ -10,20 +10,31 @@ Please see the documentation for archived changelogs - a new archive is produced
 
 Please see the roadmap in the docs for the backlog of future planned developments.
 
+## Server and browser compatibility
 
-## Compatibility of current release
+UIBUILDER aims to be compatible with the current major release of Node-RED. That currently targets Node.js v18 on the server.
 
-* Servers:
-  * Node-RED: v4+
-  * Node.js: v18+ LTS
-  * Platforms: Linux, Windows, MacOS, Raspberry Pi, Docker, etc.
-* Browsers: 
-  * CSS - 0.12% or above of global usage but not Internet Explorer ([ref.](https://browserslist.dev/?q=Pj0wLjEyJSwgbm90IGllID4gMA%3D%3D)). The uncompiled CSS should work in all current mainstream browsers. The compiled CSS (`uib-brand.min.css`) should work in browsers back to early 2019, possibly before. Enforced by [LightningCSS](https://lightningcss.com/).
-  * JavaScript - ES6+ so should work in all current mainstream browsers. The compiled JS (`uibuilder.min.js`) should work in browsers back to early 2019, possibly before. Enforced by [ESBuild](https://esbuild.github.io/).
+On the browser side, UIBUILDER aims to be compatible with over 99% of browsers actively seen on the Internet. This includes Chrome, Firefox, Edge, Safari and Opera. It also includes current mobile browsers on Android and iOS. The target compatibility date is early 2019. [Minimum versions: 'chrome73', 'firefox66', 'opera60', 'safari12.1', 'ios12.2', 'edge79']
 
-------------
+I did sneak in 1 change to this release. Some updates to the layout of the UIBUILDER documentation. There is now only a dark-mode since the light-mode was not really usable. More importantly, the sidebar is now **resizable** _and_ now includes the **page Table of Contents**. This means that there is now a lot more room for the actual documentation content.
 
-<!-- ## [Unreleased](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.1.0...main) -->
+## v7.6.2
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.6.1...v7.6.2).
+
+This is a bug-fix release.
+
+* A number of fixes have been made to Markweb, nothing major. Includes making the copyright footer dynamically update on changes to the page front-matter.
+* Removed ws: and wss: from the default Content Security Policy (CSP) `connect-src` as they are not needed and can interfere with other settings.
+* Added `uibuilder.asyncSend()` function to the client docs.
+
+## v7.6.1
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.6.0...v7.6.1).
+
+This is a bug-fix release.
+
+The order of loading of ExpressJS web server middleware has been corrected so that any custom middleware in `~/.node-red/uibuilder/.common/uibMiddleware.js` is now loaded after the uibuilder master middleware that adds uibuilder specific headers and cookies. This should allow custom middleware to work as expected.
 
 ## v7.6.0
 

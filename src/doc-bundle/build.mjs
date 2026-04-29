@@ -66,10 +66,12 @@ async function updateTipsFiles() {
             platform: 'browser',
             target: [
                 // Start of 2019
-                'chrome72',
+                'chrome73',
+                'firefox66',
+                'opera60',
                 'safari12.1',
-                'firefox65',
-                'opera58',
+                'ios12.2',
+                'edge79',
             ],
             supported: {
                 destructuring: true,
@@ -100,11 +102,16 @@ async function updateTipsFiles() {
             platform: 'browser',
             target: [
                 // Start of 2019
-                'chrome72',
+                'chrome73',
+                'firefox66',
+                'opera60',
                 'safari12.1',
-                'firefox65',
-                'opera58',
+                'ios12.2',
+                'edge79',
             ],
+            supported: {
+                destructuring: true,
+            },
         })
         console.log('... mermaid bundle completed')
     } catch (error) {

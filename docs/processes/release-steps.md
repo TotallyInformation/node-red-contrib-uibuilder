@@ -70,9 +70,10 @@ Needs to be run against:
 
 These are in `templates\blank\types` AND `src\front-end-module\types`. They are updated by asking Copilot _"Update the typescript descripion files in `./templates/blank/types` and `src\front-end-module\types` to match the updated version of `./src/front-end-module/uibuilder.module.mjs`"_.
 
-## 03c) Build the uib-md-utils package
+## 03c) Build the uib-md-utils & uib-fs-utils packages
 
 Run `npm run buildUibMdUtils` to build the package.
+Run `npm run buildUibFsUtils` to build the package.
 
 ## 04) Do a final commit & push to the dev branch
 
@@ -112,7 +113,7 @@ Remember to switch branches to the version branch in VS Code before continuing.
 
 ## 08) Publish new version to npm
 
-* Run `npm publish --access public` from VSCode terminal (making sure to use main branch).
+* Run `npm login` then `npm publish --access public` from VSCode terminal (making sure to use main branch).
 * Check https://www.npmjs.com/package/node-red-contrib-uibuilder to make sure it has updated.
 
 ## 09) Update Node-RED flows and forum

@@ -643,10 +643,10 @@ class UibWeb {
 
         // (1.) Instance log route (./_clientLog)
         if (fullRoutes) this.addBeaconRoute(node)
-        // (1a) httpMiddleware - Optional common middleware from a custom file (same for all instances)
-        this.addMiddlewareFile(node)
-        // (1b) masterMiddleware - uib's internal dynamic middleware to add uibuilder specific headers & cookie
+        // (1a) masterMiddleware - uib's internal dynamic middleware to add uibuilder specific headers & cookie
         this.addMasterMiddleware(node)
+        // (1b) httpMiddleware - Optional common middleware from a custom file (same for all instances)
+        this.addMiddlewareFile(node)
         // (1c) & (1d)
         if (fullRoutes) {
             // (1c) Add user-provided API middleware
@@ -708,7 +708,7 @@ class UibWeb {
         // this.dumpInstanceRoutes(true, node.url)
     } // --- End of instanceSetup --- //
 
-    /** (1a) Optional common middleware from a file (same for all instances)
+    /** (1b) Optional common middleware from a file (same for all instances)
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     addMiddlewareFile(node) {
@@ -726,7 +726,7 @@ class UibWeb {
         /** Check for <uibRoot>/.config/uibMiddleware.js, use it if present. Copy template if not exists @since v2.0.0-dev4 */
         const uibMwPath = join(uib.configFolder, 'uibMiddleware.js')
         try {
-            const uibMiddleware = require(uibMwPath)
+            const uibMiddleware = require(uibMwPath) // eslint-disable-line security/detect-non-literal-require
             if ( typeof uibMiddleware === 'function' ) {
                 // ! TODO: Add some more checks in here (e.g. does the function have a next()?)
                 this.instanceRouters[node.url].use( uibMiddleware )
@@ -740,7 +740,7 @@ class UibWeb {
         }
     } // --- End of addMiddlewareFile --- //
 
-    /** (1b) Add uib's internal dynamic middleware - adds uibuilder specific headers & cookies
+    /** (1a) Add uib's internal dynamic middleware - adds uibuilder specific headers & cookies
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     addMasterMiddleware(node) {
@@ -772,7 +772,7 @@ class UibWeb {
                     'X-Content-Type-Options': 'nosniff',
                     'Content-Security-Policy':
                         "default-src 'self' 'unsafe-inline' data: blob: https:; "
-                        + "connect-src 'self' ws: wss:; "
+                        + "connect-src 'self'; "
                         + "img-src 'self' data: blob: https:; "
                         + "font-src 'self' data: https:; "
                         + "style-src 'self' 'unsafe-inline' data: blob: https:; "
@@ -901,7 +901,7 @@ class UibWeb {
             // Try to require the api module file
             let instanceApi
             try {
-                instanceApi = require(instanceApiPath)
+                instanceApi = require(instanceApiPath) // eslint-disable-line security/detect-non-literal-require
             } catch (e) {
                 log.error(`🌐🛑[uibuilder:webjs:addInstanceApiRouter] Could not require instance API file. API not added. '${node.url}', '${instanceApiPath}'. ${e.message}`)
                 return false
@@ -1203,7 +1203,7 @@ class UibWeb {
             let instanceRouteFile = {}
             let routeKeys = []
             try {
-                instanceRouteFile = require(routeFilePath)
+                instanceRouteFile = require(routeFilePath) // eslint-disable-line security/detect-non-literal-require
                 routeKeys = Object.keys(instanceRouteFile)
             } catch (e) {
                 log.error(`🌐🛑[uibuilder:webjs:addInstanceCustomRoutes:${node.url}] Could not require instance route file. '${routeFilePath}'. ${e.message}`)

@@ -158,7 +158,7 @@
      */
     constructor(win, extLog, jsonHighlight) {
       // #region --- Class variables ---
-      __publicField(this, "version", "7.6.0-src");
+      __publicField(this, "version", "7.6.2-src");
       // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
       __publicField(this, "sanitiseExtraTags", ["uib-var"]);
       __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -3740,12 +3740,13 @@
   var Decoder = class _Decoder extends Emitter {
     /**
      * Decoder constructor
-     *
-     * @param {function} reviver - custom reviver to pass down to JSON.stringify
      */
-    constructor(reviver) {
+    constructor(opts) {
       super();
-      this.reviver = reviver;
+      this.opts = Object.assign({
+        reviver: void 0,
+        maxAttachments: 10
+      }, typeof opts === "function" ? { reviver: opts } : opts);
     }
     /**
      * Decodes an encoded packet string into packet JSON.
@@ -3805,7 +3806,13 @@
         if (buf != Number(buf) || str.charAt(i) !== "-") {
           throw new Error("Illegal attachments");
         }
-        p.attachments = Number(buf);
+        const n = Number(buf);
+        if (!isInteger(n) || n < 0) {
+          throw new Error("Illegal attachments");
+        } else if (n > this.opts.maxAttachments) {
+          throw new Error("too many attachments");
+        }
+        p.attachments = n;
       }
       if ("/" === str.charAt(i + 1)) {
         const start = i + 1;
@@ -3846,7 +3853,7 @@
     }
     tryParse(str) {
       try {
-        return JSON.parse(str, this.reviver);
+        return JSON.parse(str, this.opts.reviver);
       } catch (e) {
         return false;
       }
@@ -6844,7 +6851,7 @@
     window.__uibHeaders = h;
     return h;
   });
-  var version = "7.6.0-iife";
+  var version = "7.6.2-iife";
   var isMinified = !/param/.test(function(param) {
   });
   function log() {
@@ -8455,6 +8462,7 @@
           };
         }
         if (Object.prototype.hasOwnProperty.call(value2, "payload")) {
+          if (value2.payload == null) return;
           if (el.hasAttribute("content")) {
             el.setAttribute("content", value2.payload);
           } else if (el.hasAttribute("rel")) {

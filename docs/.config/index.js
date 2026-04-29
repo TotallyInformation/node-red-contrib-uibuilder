@@ -16,7 +16,7 @@ window.$docsify = {
     // loadNavbar: true,
     // mergeNavbar: true,
     autoHeader: false,
-    logo: '/images/node-lblue-125x125.png',
+    logo: '/images/node-blue.svg',
     auto2top: true,
     alias: {
         // Moved pages
@@ -44,18 +44,18 @@ window.$docsify = {
     },
     // notFoundPage: true,
     notFoundPage: '.config/404.md',
-    toc: {
-        // tocMaxLevel: 5,
-        // target: 'h2, h3, h4, h5'
-        // -- --
-        // scope: '.markdown-section',
-        // headings: 'h2, h3, h4, h5',
-        // title: 'Table of Contents',
-        // https://github.com/justintien/docsify-plugin-toc
-        tocMaxLevel: 3,
-        target: 'h2, h3',
-        ignoreHeaders: ['<!-- {docsify-ignore} -->', '<!-- {docsify-ignore-all} -->'],
-    },
+    // toc: {
+    //     // tocMaxLevel: 5,
+    //     // target: 'h2, h3, h4, h5'
+    //     // -- --
+    //     // scope: '.markdown-section',
+    //     // headings: 'h2, h3, h4, h5',
+    //     // title: 'Table of Contents',
+    //     // https://github.com/justintien/docsify-plugin-toc
+    //     tocMaxLevel: 3,
+    //     target: 'h2, h3',
+    //     ignoreHeaders: ['<!-- {docsify-ignore} -->', '<!-- {docsify-ignore-all} -->'],
+    // },
     mermaidConfig: {
         querySelector: '.mermaid',
     },
@@ -488,6 +488,242 @@ window.$docsify = {
             // })
 
             // Hooks: [ "init", "mounted", "beforeEach", "afterEach", "doneEach", "ready" ]
+        },
+
+        // Sidebar enhancements: resizable divider + Navigation/TOC tab switching
+        function sidebarEnhancementsPlugin(hook) {
+            const STORAGE_KEY_WIDTH = 'uib-docs-sidebar-width'
+            const STORAGE_KEY_TAB = 'uib-docs-sidebar-tab'
+
+            // ---- Resize Handle ----
+
+            /** Apply a sidebar width in pixels, optionally persisting it
+             * @param {number} widthPx - Width in pixels
+             * @param {boolean} [persist=false] - Whether to save to localStorage
+             */
+            const applySidebarWidth = (widthPx, persist = false) => {
+                document.documentElement.style.setProperty('--sidebar-width', `${widthPx}px`)
+                if (persist) localStorage.setItem(STORAGE_KEY_WIDTH, `${widthPx}px`)
+            }
+
+            hook.mounted(() => {
+                // Restore saved sidebar width
+                const savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH)
+                if (savedWidth) document.documentElement.style.setProperty('--sidebar-width', savedWidth)
+
+                // Create the draggable resize handle between sidebar and content
+                const handle = document.createElement('div')
+                handle.className = 'sidebar-resize-handle'
+                handle.setAttribute('title', 'Drag to resize sidebar')
+                handle.setAttribute('aria-hidden', 'true')
+                document.body.appendChild(handle)
+
+                let isDragging = false
+                let dragStartX = 0
+                let dragStartWidth = 0
+
+                handle.addEventListener('pointerdown', (e) => {
+                    const sidebar = document.querySelector('.sidebar')
+                    if (!sidebar) return
+                    isDragging = true
+                    dragStartX = e.clientX
+                    dragStartWidth = sidebar.getBoundingClientRect().width
+                    handle.classList.add('is-dragging')
+                    handle.setPointerCapture(e.pointerId)
+                    e.preventDefault()
+                })
+
+                handle.addEventListener('pointermove', (e) => {
+                    if (!isDragging) return
+                    const newWidth = Math.max(160, Math.min(640, dragStartWidth + (e.clientX - dragStartX)))
+                    applySidebarWidth(newWidth)
+                })
+
+                handle.addEventListener('pointerup', () => {
+                    if (!isDragging) return
+                    isDragging = false
+                    handle.classList.remove('is-dragging')
+                    const sidebar = document.querySelector('.sidebar')
+                    if (sidebar) applySidebarWidth(sidebar.getBoundingClientRect().width, true)
+                })
+            })
+
+            // ---- Sidebar Tabs (Navigation / Page TOC) ----
+
+            /** Activate a sidebar tab and show/hide panels accordingly
+             * @param {'nav'|'toc'} tab - Which tab to show
+             */
+            const activateTab = (tab) => {
+                const navBtn = document.querySelector('.sidebar-tab-btn[data-tab="nav"]')
+                const tocBtn = document.querySelector('.sidebar-tab-btn[data-tab="toc"]')
+                const sidebarNav = document.querySelector('.sidebar .sidebar-nav')
+                const tocPanel = document.querySelector('.sidebar-toc-panel')
+                if (!navBtn || !tocBtn || !sidebarNav || !tocPanel) return
+
+                const isNav = tab === 'nav'
+                navBtn.classList.toggle('active', isNav)
+                tocBtn.classList.toggle('active', !isNav)
+                navBtn.setAttribute('aria-selected', String(isNav))
+                tocBtn.setAttribute('aria-selected', String(!isNav))
+                sidebarNav.setAttribute('aria-hidden', String(!isNav))
+                tocPanel.setAttribute('aria-hidden', String(isNav))
+            }
+
+            /** Scroll to a heading by ID without triggering a Docsify page re-render.
+             * Setting window.location.hash causes Docsify's router to re-render the
+             * whole page. Instead we scroll directly and update the URL via history API.
+             * @param {string} id - The heading element ID to scroll to
+             */
+            const scrollToHeading = (id) => {
+                const target = document.getElementById(id)
+                if (!target) return
+                target.scrollIntoView({ behavior: 'smooth', block: 'start', })
+                const pageBase = window.location.hash.split('?')[0] || '#/'
+                history.pushState(null, '', `${pageBase}?id=${id}`)
+            }
+
+            /** Rebuild the page TOC from h2/h3 headings in the rendered content.
+             * H2s that have H3 children are wrapped in <details><summary> to match
+             * the collapsible style of the Navigation panel.
+             */
+            const buildToc = () => {
+                const tocPanel = document.querySelector('.sidebar-toc-panel')
+                if (!tocPanel) return
+
+                const mainContent = document.querySelector('.markdown-section')
+                const headings = mainContent ? Array.from(mainContent.querySelectorAll('h2, h3')) : []
+                tocPanel.innerHTML = ''
+
+                if (headings.length === 0) {
+                    const empty = document.createElement('p')
+                    empty.className = 'sidebar-toc-empty'
+                    empty.textContent = 'No headings on this page.'
+                    tocPanel.appendChild(empty)
+                    return
+                }
+
+                // Pre-scan to know which H2s have H3 children so we can decide
+                // whether to use <details><summary> or a plain <button>.
+                const h2HasChildren = new Map()
+                let lastH2Key = null
+                headings.forEach((h) => {
+                    if (h.tagName === 'H2') {
+                        lastH2Key = h.id || h.textContent.trim()
+                        h2HasChildren.set(lastH2Key, false)
+                    } else if (lastH2Key !== null) {
+                        h2HasChildren.set(lastH2Key, true)
+                    }
+                })
+
+                const ul = document.createElement('ul')
+                let currentDetails = null
+                let currentSubUl = null
+
+                headings.forEach((heading) => {
+                    // Strip trailing '#' link anchors added by docsify-themeable
+                    const label = heading.textContent.replace(/\s*#\s*$/, '').trim()
+                    const id = heading.id
+
+                    if (heading.tagName === 'H2') {
+                        currentSubUl = null
+                        const h2Key = id || label
+                        const hasChildren = h2HasChildren.get(h2Key)
+                        const li = document.createElement('li')
+
+                        if (hasChildren) {
+                            // Wrap in <details><summary> to match Navigation panel style
+                            const details = document.createElement('details')
+                            details.open = true
+                            const summary = document.createElement('summary')
+                            summary.className = 'sidebar-toc-link sidebar-toc-h2'
+                            summary.textContent = label
+                            if (id) summary.addEventListener('click', () => scrollToHeading(id))
+                            details.appendChild(summary)
+                            currentDetails = details
+                            li.appendChild(details)
+                        } else {
+                            const btn = document.createElement('button')
+                            btn.type = 'button'
+                            btn.className = 'sidebar-toc-link sidebar-toc-h2'
+                            btn.textContent = label
+                            if (id) btn.addEventListener('click', () => scrollToHeading(id))
+                            currentDetails = null
+                            li.appendChild(btn)
+                        }
+                        ul.appendChild(li)
+                    } else {
+                        const li = document.createElement('li')
+                        const btn = document.createElement('button')
+                        btn.type = 'button'
+                        btn.className = 'sidebar-toc-link sidebar-toc-h3'
+                        btn.textContent = label
+                        if (id) btn.addEventListener('click', () => scrollToHeading(id))
+                        li.appendChild(btn)
+
+                        if (!currentSubUl) {
+                            currentSubUl = document.createElement('ul')
+                            ;(currentDetails || ul).appendChild(currentSubUl)
+                        }
+                        currentSubUl.appendChild(li)
+                    }
+                })
+
+                tocPanel.appendChild(ul)
+            }
+
+            // Visual ordering is handled entirely by CSS flex `order` values on
+            // .sidebar's children (see index.css). This means we can simply append
+            // our elements to .sidebar without caring about insertion timing or
+            // what other plugins do — CSS guarantees the correct visual sequence:
+            //   .app-name → .search → .sidebar-tabs → .sidebar-toc-panel → .sidebar-nav
+            hook.doneEach(() => {
+                const sidebarEl = document.querySelector('.sidebar')
+                if (!sidebarEl) return
+
+                // Create and append elements once; reuse them on subsequent page loads.
+                if (!sidebarEl.querySelector('.sidebar-tabs')) {
+                    const tabsContainer = document.createElement('div')
+                    tabsContainer.className = 'sidebar-tabs'
+                    tabsContainer.setAttribute('role', 'tablist')
+                    tabsContainer.setAttribute('aria-label', 'Sidebar view')
+
+                    const navBtn = document.createElement('button')
+                    navBtn.className = 'sidebar-tab-btn'
+                    navBtn.dataset.tab = 'nav'
+                    navBtn.textContent = 'Navigation'
+                    navBtn.setAttribute('role', 'tab')
+                    navBtn.setAttribute('type', 'button')
+
+                    const tocBtn = document.createElement('button')
+                    tocBtn.className = 'sidebar-tab-btn'
+                    tocBtn.dataset.tab = 'toc'
+                    tocBtn.textContent = 'Page TOC'
+                    tocBtn.setAttribute('role', 'tab')
+                    tocBtn.setAttribute('type', 'button')
+
+                    tabsContainer.appendChild(navBtn)
+                    tabsContainer.appendChild(tocBtn)
+                    sidebarEl.appendChild(tabsContainer)
+
+                    tabsContainer.addEventListener('click', (e) => {
+                        const btn = e.target.closest('[data-tab]')
+                        if (!btn) return
+                        activateTab(btn.dataset.tab)
+                        localStorage.setItem(STORAGE_KEY_TAB, btn.dataset.tab)
+                    })
+                }
+
+                if (!sidebarEl.querySelector('.sidebar-toc-panel')) {
+                    const tocPanel = document.createElement('div')
+                    tocPanel.className = 'sidebar-toc-panel'
+                    tocPanel.setAttribute('role', 'tabpanel')
+                    tocPanel.setAttribute('aria-label', 'Table of contents')
+                    sidebarEl.appendChild(tocPanel)
+                }
+
+                buildToc()
+                activateTab(localStorage.getItem(STORAGE_KEY_TAB) || 'nav')
+            })
         },
     ],
 }

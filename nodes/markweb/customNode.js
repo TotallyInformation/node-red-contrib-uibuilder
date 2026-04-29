@@ -753,6 +753,8 @@ function renderSidebarTree(map, options, _level = 0) {
 
     let html = '<ul>'
     for (const entry of sortedEntries) {
+        // Skip entries with no valid path to avoid generating href="undefined" in HTML
+        if (!entry.path) continue
         const hasChildren = entry.children && entry.children.size > 0
         const isCurrentPage = options.currentPath === entry.path
             || options.currentPath === entry.path.replace(/\/$/, '')
@@ -957,6 +959,8 @@ function buildSidebarFromJson(items, currentPath) {
 
     let html = '<ul>'
     for (const item of items) {
+        // Skip items with no valid path to avoid generating href="undefined" in HTML
+        if (!item.path) continue
         const hasChildren = item.children && Array.isArray(item.children) && item.children.length > 0
         const isCurrentPage = currentPath === item.path
         const activeClass = isCurrentPage ? ' class="sidebar-active"' : ''
@@ -1175,6 +1179,22 @@ function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isA
         parsedPath: null,
     }
 
+    // Validate morePath before any use - catches undefined, null, non-string, or the literal string 'undefined'
+    if (!morePath || typeof morePath !== 'string' || morePath === 'undefined') {
+        result.resultCode = 400
+        result.errorAttributes = {
+            error: 'Invalid path',
+            title: 'Error: Invalid path',
+            description: 'No path provided or is invalid type.',
+            content: '<p>No path provided or is invalid type in the request.</p>',
+            path: '/',
+            toUrl: '/',
+            from: from,
+        }
+        log.error(`🌐🕸️🛑[markweb:nodeInstance:checkNames] (from=${from}, url=${node.url}) Invalid path: "${morePath}"`)
+        return result
+    }
+
     let fullPath = join(node.instanceFolder, morePath)
     // console.log(`🌐🕸️[markweb:nodeInstance:checkNames] (from: ${from}, url=${node.url}) Checking access. morePath="${morePath}", fullPath="${fullPath}"`)
 
@@ -1206,21 +1226,6 @@ function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isA
     result.parsedPath = parsedPath
     result.fullPath = fullPath
     result.morePath = morePath
-
-    if (!morePath || typeof morePath !== 'string') {
-        result.resultCode = 500
-        result.errorAttributes = {
-            error: 'Invalid path',
-            title: 'Error: Invalid path',
-            description: 'No path provided or is invalid type.',
-            content: '<p>No path provided or is invalid type in the request.</p>',
-            path: '/',
-            toUrl: '/',
-            from: from,
-        }
-        log.error(`🌐🕸️🛑[markweb:nodeInstance:checkNames] (from=${from}, url=${node.url}) Invalid path: "${morePath}"`)
-        return result
-    }
 
     // If not a Markdown file or folder, allow even if it starts with _ or . (e.g., for assets)
     if (parsedPath.ext && parsedPath.ext !== '.md') {
@@ -1291,6 +1296,8 @@ async function doNavigate(msg) {
         // Ignore for now
         return
     }
+    // Empty morePath means the root/index page (same as handler's fallback)
+    if (!morePath) morePath = 'index.md'
     // console.log(`🌐🕸️[markweb:nodeInstance:doNavigate] (from: ${msg.toUrl}, url=${this.url})`, {morePath, msg})
 
     const paths = checkNames(this, morePath, attributes, returnTopic, msg, 'doNavigate', null, null)
@@ -1315,6 +1322,8 @@ async function doNavigate(msg) {
         // processTemplates(node.pageTemplate, attributes)
         attributes = await getMarkdownFile(this, fullPath, morePath, parsedPath, 'doNavigate')
         attributes.content = mdParse(this, attributes.content || '', attributes) // Pre-render markdown content to HTML for display in metadata panel
+        // Render the copyright footer so the client can update data-fmvar="copyright" on navigation
+        attributes.copyright = renderCopyright('copyright', attributes, this)
         this.sendToFe({
             topic: returnTopic,
             attributes: attributes,
@@ -1985,6 +1994,8 @@ function renderTree(map, options, sameLevel = false, nav = false, _level = 0, cu
 
     let html = _level > 0 ? '<ul>' : '<ul class="tree">'
     for (const entry of sortedEntries) {
+        // Skip entries with no valid path to avoid generating href="undefined" in HTML
+        if (!entry.path) continue
         // Ignore samelevel in recursive calls
         const childHtml = renderTree(entry.children, null, false, nav, _level + 1, currentPath)
         // If same level, skip folder entries (show only files)
