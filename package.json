@@ -58,7 +58,7 @@
     "eslint-plugin-n": "17.*",
     "eslint-plugin-promise": "7.*",
     "eslint-plugin-security": "^4.0.0",
-    "execa": "5.*",
+    "execa": "8.*",
     "globals": "17.*",
     "gulp": "5.*",
     "gulp-clean-css": "4.*",
