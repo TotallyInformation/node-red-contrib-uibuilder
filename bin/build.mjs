@@ -16,6 +16,7 @@
  *   node bin/build.mjs css          Build CSS only
  *   node bin/build.mjs docs         Build docs bundle only
  *   node bin/build.mjs versions     Update all version strings only (no build)
+ *   node bin/build.mjs tag          Create and push a GitHub release tag
  *   node bin/build.mjs fe css       Build front-end and CSS
  *   node bin/build.mjs fe --watch   Build front-end and watch for changes
  *
@@ -31,7 +32,10 @@ import { readFile, writeFile, stat } from 'node:fs/promises'
 import { readFileSync } from 'node:fs'
 import { resolve, dirname, join, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { spawn } from 'node:child_process'
+import { spawn, execFile } from 'node:child_process'
+import { promisify } from 'node:util'
+
+const execFileAsync = promisify(execFile)
 
 // #region ---- Bootstrap ----
 
@@ -719,6 +723,45 @@ async function buildDocBundle() {
 
 // #endregion ---- Docs Bundle Build ----
 
+// #region ---- Git Tag ----
+
+/**
+ * Create and push a GitHub tag for the current release version.
+ *
+ * Reads the current version from {@link PKG_VERSION} and the most-recent git tag via
+ * `git describe --tags --abbrev=0`.  If the versions differ, a new tag `v{PKG_VERSION}`
+ * is created locally and pushed to the remote with `--follow-tags` and `origin --tags`.
+ * No-op (with an informational log) when the tag already exists.
+ * @async
+ * @returns {Promise<void>}
+ */
+async function createGitTag() {
+    let lastTag = ''
+    try {
+        const { stdout, } = await execFileAsync('git', ['describe', '--tags', '--abbrev=0'])
+        lastTag = stdout.trim()
+    } catch (_err) {
+        // No tags exist yet — treat as empty string
+    }
+
+    console.log(`[tag] Last committed tag : ${lastTag || '(none)'}`)
+    console.log(`[tag] Current version    : v${PKG_VERSION}`)
+
+    if (lastTag.replace(/^v/, '') === PKG_VERSION) {
+        console.log('[tag] Tag already exists — nothing to do.')
+        return
+    }
+
+    const tagName = `v${PKG_VERSION}`
+    console.log(`[tag] Creating tag ${tagName} ...`)
+    await execFileAsync('git', ['tag', tagName])
+    await execFileAsync('git', ['push', '--follow-tags'])
+    await execFileAsync('git', ['push', 'origin', '--tags'])
+    console.log(`[tag] ✓ Tag ${tagName} created and pushed.`)
+}
+
+// #endregion ---- Git Tag ----
+
 // #region ---- Watch Mode ----
 
 /**
@@ -823,6 +866,7 @@ async function startWatch() {
  *   css      CSS files
  *   docs     Docsify documentation bundle
  *   versions Update all version strings without building
+ *   tag      Create and push a GitHub release tag for the current version
  *
  * @returns {{ targets: string[], watch: boolean }} Parsed build targets and watch mode flag
  */
@@ -855,6 +899,8 @@ async function main() {
     const buildCss      = buildAll || targets.includes('css')
     const buildDocs     = buildAll || targets.includes('docs')
     const updateVersions = targets.includes('versions')
+    const tagOnly       = targets.length === 1 && targets.includes('tag')
+    const buildTagTarget = targets.includes('tag')
 
     // ── Startup banner ───────────────────────────────────────────────────
     const SEP = '─'.repeat(60)
@@ -877,6 +923,13 @@ async function main() {
         console.log()
     }
 
+    // ── Standalone tag-only target ───────────────────────────────────────
+    if (tagOnly) {
+        await createGitTag()
+        console.log('\n[build] Done.')
+        return
+    }
+
     // ── Pre-build: update semantic version strings in FE source files ────
     // Date-type entries (CSS @version) are handled by their own build functions.
     // Skipped when 'versions' already ran above (avoids duplicate updates).
@@ -889,10 +942,12 @@ async function main() {
     // ── Run selected builds ──────────────────────────────────────────────
     /** @type {Array<[string, () => Promise<void>]>} */
     const tasks = []
-    if (buildFE)   tasks.push(['front-end modules',  buildAllFE])
-    if (buildNode) tasks.push(['node packages',       buildAllNode])
-    if (buildCss)  tasks.push(['CSS',                 buildCSS])
-    if (buildDocs) tasks.push(['docs bundle',         buildDocBundle])
+    if (buildFE)         tasks.push(['front-end modules',  buildAllFE])
+    if (buildNode)       tasks.push(['node packages',       buildAllNode])
+    if (buildCss)        tasks.push(['CSS',                 buildCSS])
+    if (buildDocs)       tasks.push(['docs bundle',         buildDocBundle])
+    // 'tag' is intentionally excluded from 'all' — must be invoked explicitly
+    if (buildTagTarget)  tasks.push(['git tag',             createGitTag])
 
     if (tasks.length === 0) {
         console.warn('[build] No recognised build targets. Use: all | fe | node | css | docs')
