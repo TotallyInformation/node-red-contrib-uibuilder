@@ -9840,11 +9840,12 @@
     }
     /** Called by _ioSetup when Socket.IO disconnects from Node-RED
      * @param {string} reason Disconnection title
+     * @param {object} details Any details about the disconnection
      * @private
      */
-    _onDisconnect(reason) {
-      log("info", "Uib:ioSetup:socket-disconnect", "\u26D4 Socket Disconnected. Reason: ".concat(reason))();
-      this._dispatchCustomEvent("uibuilder:socket:disconnected", reason);
+    _onDisconnect(reason, details) {
+      log("info", "Uib:ioSetup:socket-disconnect", "\u26D4 Socket Disconnected. Reason: ".concat(reason), details)();
+      this._dispatchCustomEvent("uibuilder:socket:disconnected", { reason, details });
       this._checkConnect();
     }
     /** Setup Socket.io

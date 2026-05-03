@@ -3697,15 +3697,16 @@ export const Uib = class Uib {
 
     /** Called by _ioSetup when Socket.IO disconnects from Node-RED
      * @param {string} reason Disconnection title
+     * @param {object} details Any details about the disconnection
      * @private
      */
-    _onDisconnect(reason) {
+    _onDisconnect(reason, details) {
         // reason === 'io server disconnect' - redeploy of Node instance
         // reason === 'transport close' - Node-RED terminating
         // reason === 'ping timeout' - didn't receive a pong response?
-        log('info', 'Uib:ioSetup:socket-disconnect', `⛔ Socket Disconnected. Reason: ${reason}`)()
+        log('info', 'Uib:ioSetup:socket-disconnect', `⛔ Socket Disconnected. Reason: ${reason}`, details)()
 
-        this._dispatchCustomEvent('uibuilder:socket:disconnected', reason)
+        this._dispatchCustomEvent('uibuilder:socket:disconnected', { reason, details, })
 
         /** A workaround for SIO's failure to reconnect after a disconnection */
         this._checkConnect()
