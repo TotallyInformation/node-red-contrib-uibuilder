@@ -4,12 +4,12 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-04-28 16:53:24
+updated: 2026-05-01 13:53:10
 ---
 
 ## To Fix
 
-* [ ] Deploy of new uibuilder node sometimes results in `Cannot show default page, index.html does not exist in `
+* [ ] Deploy of new uibuilder node sometimes results in `🌐⚠️[uibuilder:web:setupInstanceStatic:nojs-charts] Cannot show default page, index.html does not exist in D:\src\uibRoot\nojs-charts\src.`.  Likely because the reload option is on so as the default folders & files being created, the node tries to reload the page. Maybe suspend watcher for initial deployment somehow?
 
 ## In Progress
 
@@ -74,7 +74,8 @@ updated: 2026-04-28 16:53:24
 * Markweb:
   * Video.
   * Allow `readme.md` or `README.md` to be used as folder default pages as well as `index.md`, `.index.md`, and `_index.md`.
-
+* Editor:
+  * uib-sidebar - add markdown support.
 ## Communications
 
 * Use IFTTT to cross-post:

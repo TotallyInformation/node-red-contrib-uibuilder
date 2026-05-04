@@ -18,11 +18,23 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 I did sneak in 1 change to this release. Some updates to the layout of the UIBUILDER documentation. There is now only a dark-mode since the light-mode was not really usable. More importantly, the sidebar is now **resizable** _and_ now includes the **page Table of Contents**. This means that there is now a lot more room for the actual documentation content.
 
+## v7.7.0
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.6.2...v7.7.0).
+
+### uibuilder client library
+
+* Socket.IO disconnect function updated to add the disconnect details introduced in Socket.IO v4.5. The `uibuilder:socket:disconnected` event updated to output `{reason, details}` instead of just the reason string.
+
+---
+
 ## v7.6.2
 
 [Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.6.1...v7.6.2).
 
 This is a bug-fix release.
+
+However, there is an update to the UIBUILDER Documentation! The page table-of-contents now sits in the sidebar (similar to Markweb)  which gives a lot more room for the main text. In addition, the sidebar is now resizable.
 
 * A number of fixes have been made to Markweb, nothing major. Includes making the copyright footer dynamically update on changes to the page front-matter.
 * Removed ws: and wss: from the default Content Security Policy (CSP) `connect-src` as they are not needed and can interfere with other settings.

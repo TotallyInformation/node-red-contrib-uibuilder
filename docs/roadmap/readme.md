@@ -1,9 +1,9 @@
 ---
 title: uibuilder Roadmap
-description: >
+description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2026-04-19 19:06:08
+updated: 2026-05-04 12:31:11
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -356,7 +356,7 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 ## UIBUILDER v8 planned breaking changes
 
-* [ ] None yet - Major version changes typically include a new baseline node.js version though.
+* [ ] Node.js min version v22 LTS - to match Node-RED v5
 
 ## Ideas for releases further out
 
