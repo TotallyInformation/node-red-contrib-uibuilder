@@ -7032,7 +7032,7 @@
     return json;
   }
   var _ui = new ui_default(window, log, syntaxHighlight);
-  var _a2, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _uniqueElID, _extCommands, _managedVars, _showStatus, _uiObservers, _uibAttrSel;
+  var _a2, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _manualDisconnect, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _uniqueElID, _extCommands, _managedVars, _showStatus, _uiObservers, _uibAttrSel;
   var Uib = (_a2 = class {
     // #endregion -------- ------------ -------- //
     // #region Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
@@ -7122,6 +7122,10 @@
        * @type {number|null}
        */
       __privateAdd(this, _timerid, null);
+      /** True when disconnect() was called intentionally - prevents _onDisconnect from triggering auto-reconnect
+       * @type {boolean}
+       */
+      __privateAdd(this, _manualDisconnect, false);
       // Holds the reference ID for the internal msg change event handler so that it can be cancelled
       __privateAdd(this, _MsgHandler);
       // Placeholder for io.socket - can't make a # var until # fns allowed in all browsers
@@ -9087,6 +9091,7 @@
      */
     _ctrlMsgFromServer(receivedCtrlMsg) {
       this._dispatchCustomEvent("uibuilder:ctrlMsgReceived", receivedCtrlMsg);
+      this.set("serverShutdown", false);
       const ts = performance.now();
       if (receivedCtrlMsg === null) {
         receivedCtrlMsg = {};
@@ -9103,8 +9108,11 @@
       switch (receivedCtrlMsg.uibuilderCtrl) {
         // Node-RED is shutting down
         case "shutdown": {
-          log("info", "Uib:ioSetup:".concat(this._ioChannels.control), '\u274C Received "shutdown" from server')();
-          this.set("serverShutdown", void 0);
+          this.set("serverShutdown", true);
+          this.disconnect('\u274C Received "shutdown" from server');
+          setTimeout(() => {
+            this.connect("Re-enabled socket.io auto-reconnect after shutdown");
+          }, 3e4);
           break;
         }
         /** We are connected to the server - 1st msg from server */
@@ -9846,6 +9854,10 @@
     _onDisconnect(reason, details) {
       log("info", "Uib:ioSetup:socket-disconnect", "\u26D4 Socket Disconnected. Reason: ".concat(reason), details)();
       this._dispatchCustomEvent("uibuilder:socket:disconnected", { reason, details });
+      if (__privateGet(this, _manualDisconnect)) {
+        __privateSet(this, _manualDisconnect, false);
+        return;
+      }
       this._checkConnect();
     }
     /** Setup Socket.io
@@ -9882,7 +9894,9 @@
       this._socket.on("disconnect", this._onDisconnect.bind(this));
       this._socket.on("connect_error", (err) => {
         if (navigator.onLine === false) return;
-        log("error", "Uib:ioSetup:connect_error", "\u274C Socket.IO Connect Error. Reason: ".concat(err.message), err)();
+        if (!err.message.startsWith("xhr poll error")) {
+          log("error", "Uib:ioSetup:connect_error", "\u274C Socket.IO Connect Error. Reason: ".concat(err.message), err)();
+        }
         this.set("ioConnected", false);
         this.set("socketError", err);
         this._dispatchCustomEvent("uibuilder:socket:disconnected", err);
@@ -9918,14 +9932,29 @@
         this.set("globalMsg", args.slice(0, -1));
       });
     }
-    /** Manually (re)connect socket.io */
-    connect() {
+    /** Manually (re)connect socket.io
+     * @param {string} [reason] Optional reason text for manual connection, used for logging
+     */
+    connect(reason = "Manual connect") {
+      __privateSet(this, _manualDisconnect, false);
+      log("info", "Uib:connect", reason)();
+      this._socket.io.reconnection(true);
+      if (this._socketGlobal) this._socketGlobal.connect();
       this._socket.connect();
     }
-    /** Manually disconnect socket.io and stop any auto-reconnect timer */
-    disconnect() {
+    /** Manually disconnect socket.io and stop any auto-reconnect timer
+     * @param {string} [reason] Optional reason text for manual disconnection, used for logging
+     */
+    disconnect(reason = "Manual disconnect") {
+      log("info", "Uib:disconnect", reason)();
+      __privateSet(this, _manualDisconnect, true);
+      this._socket.io.reconnection(false);
+      if (this._socketGlobal) this._socketGlobal.disconnect();
       this._socket.disconnect();
-      if (__privateGet(this, _timerid)) window.clearTimeout(__privateGet(this, _timerid));
+      if (__privateGet(this, _timerid)) {
+        window.clearTimeout(__privateGet(this, _timerid));
+        __privateSet(this, _timerid, null);
+      }
     }
     /** Start up Socket.IO comms and listeners
      * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
@@ -10021,7 +10050,7 @@
       perf.set("start finished", performance.now());
     }
     // #endregion -------- ------------ -------- //
-  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _uniqueElID = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), _uibAttrSel = new WeakMap(), // #region --- Static variables ---
+  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _manualDisconnect = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _uniqueElID = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), _uibAttrSel = new WeakMap(), // #region --- Static variables ---
   __publicField(_a2, "_meta", {
     version,
     type: "module",
@@ -10210,5 +10239,5 @@
  *   See Uib._meta for client version string
  * @license Apache-2.0
  * @author Julian Knight (Totally Information)
- * @copyright (c) 2022-2025 Julian Knight (Totally Information)
+ * @copyright (c) 2022-2026 Julian Knight (Totally Information)
  */
