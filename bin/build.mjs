@@ -200,12 +200,13 @@ const VERSION_FILES = [
 
 /** Type: FEBuildConfig
  * @typedef {object} FEBuildConfig
- * @property {string}   name         Human-readable name used in log output
- * @property {string}   entryPoint   Relative path from root to the source entry point
- * @property {string}   outBase      Base path for output files (format + extension suffixes are appended)
- * @property {RegExp}   versionRegex Regex matching the version string in esbuild output files
- * @property {string}   [nodeOut]    If provided, also builds a Node.js CJS bundle to this path
- * @property {string[]} watchFiles   Glob patterns of source files that trigger a rebuild when changed
+ * @property {string}   name          Human-readable name used in log output
+ * @property {string}   entryPoint    Relative path from root to the source entry point
+ * @property {string}   outBase       Base path for output files (format + extension suffixes are appended)
+ * @property {RegExp}   versionRegex  Regex matching the version string in esbuild output files
+ * @property {string}   [versionFile] Relative path from root of the source file whose embedded version is stamped before each build
+ * @property {string}   [nodeOut]     If provided, also builds a Node.js CJS bundle to this path
+ * @property {string[]} watchFiles    Glob patterns of source files that trigger a rebuild when changed
  */
 
 /** Front-end module build configurations.
@@ -224,6 +225,7 @@ const FE_BUILDS = [
         entryPoint:   `${FE_SRC}/uibuilder.module.mjs`,
         outBase:      `${FE_OUT}/uibuilder`,
         versionRegex: /version = "([\d.]+-src)"/,
+        versionFile:  `${FE_SRC}/uibuilder.module.mjs`,
         watchFiles: [
             `${FE_SRC}/uibuilder.module.mjs`,
             `${FE_SRC}/ui.mjs`,
@@ -243,6 +245,7 @@ const FE_BUILDS = [
         entryPoint:   `${FE_SRC}/ui.mjs`,
         outBase:      `${FE_OUT}/ui`,
         versionRegex: /version = "([\d.]+-src)"/,
+        versionFile:  `${FE_SRC}/ui.mjs`,
         nodeOut:      'nodes/libs/ui.cjs',
         watchFiles: [
             `${FE_SRC}/ui.mjs`,
@@ -254,6 +257,7 @@ const FE_BUILDS = [
         entryPoint:   `${FE_SRC}/uibrouter.mjs`,
         outBase:      `${FE_OUT}/utils/uibrouter`,
         versionRegex: /version = "([\d.]+-src)"/,
+        versionFile:  `${FE_SRC}/uibrouter.mjs`,
         watchFiles:   [
             `${FE_SRC}/uibrouter.mjs`
         ],
@@ -442,6 +446,12 @@ const FE_LOADER = { '.mjs': 'js', '.cjs': 'js', }
  * @throws {Error} If any individual sub-build fails
  */
 async function buildFEModule(config) {
+    // Stamp the embedded version string in the source file before compiling
+    if (config.versionFile) {
+        const vEntry = VERSION_FILES.find(e => e.file === config.versionFile)
+        if (vEntry) await updateVersionInSourceFile(vEntry)
+    }
+
     const entryPoint = join(ROOT, config.entryPoint)
     const outBase = join(ROOT, config.outBase)
 
@@ -549,6 +559,11 @@ async function buildExperimental() {
  * @returns {Promise<void>}
  */
 async function buildAllFE() {
+    // markweb.mjs lives directly in FE_OUT and has no dedicated build entry;
+    // stamp its version string here whenever any FE build runs.
+    const markwebEntry = VERSION_FILES.find(e => e.file === `${FE_OUT}/utils/markweb.mjs`)
+    if (markwebEntry) await updateVersionInSourceFile(markwebEntry)
+
     const tasks = [
         ...FE_BUILDS.map(cfg => buildFEModule(cfg)),
         buildExperimental(),
@@ -604,6 +619,10 @@ async function buildNodePackage(config) {
             ...common,
             format:  'esm',
             outfile: join(ROOT, `${config.outBase}.mjs`),
+            // CJS dependencies bundled into ESM use esbuild's __require shim, which throws
+            // at runtime because `require` is not defined in native ESM. Injecting a
+            // createRequire polyfill at the top of the bundle makes __require work correctly.
+            banner:  { js: "import { createRequire } from 'module';\nconst require = createRequire(import.meta.url);\n", },
         })
     } catch (err) {
         throw new Error(`[${config.name}] ESM build failed: ${err.message}`)
@@ -783,8 +802,7 @@ async function safeRebuild(buildFn, label) {
 /**
  * Start chokidar file watchers for all configured build targets.
  * Each module has its own dedicated watcher so only the affected output(s) are rebuilt
- * when a source file changes.  The initial build must have been completed before calling
- * this function.
+ * when a source file changes.  No initial build is performed — only file changes trigger builds.
  * @async
  * @returns {Promise<void>}
  */
@@ -858,7 +876,7 @@ async function startWatch() {
 /**
  * Parse process.argv to determine which build targets to run and whether to enable watch mode.
  *
- * Flags:  --watch | -w  Enable watch mode after the initial build
+ * Flags:  --watch | -w  Skip initial build; enter watch mode immediately (only changed files are rebuilt)
  * Targets (positional args, any combination):
  *   all      Build everything (default when no positional arg is given)
  *   fe       Front-end modules
@@ -883,9 +901,9 @@ function parseArgs() {
  *
  * 1. Parses CLI arguments.
  * 2. Prints a startup banner with version and target information.
- * 3. Updates semantic version strings in source files before building.
- * 4. Runs the selected builds concurrently.
- * 5. Optionally enters watch mode to rebuild on file changes.
+ * 3. Runs the selected builds concurrently (skipped in watch mode).
+ *    Version strings are stamped inside each build function, just before compilation.
+ * 4. Optionally enters watch mode; only changed files trigger a rebuild (no initial build).
  * @async
  * @returns {Promise<void>}
  */
@@ -930,39 +948,32 @@ async function main() {
         return
     }
 
-    // ── Pre-build: update semantic version strings in FE source files ────
-    // Date-type entries (CSS @version) are handled by their own build functions.
-    // Skipped when 'versions' already ran above (avoids duplicate updates).
-    if (buildFE && !updateVersions) {
-        const semanticEntries = VERSION_FILES.filter(e => e.type === 'semantic')
-        await Promise.all(semanticEntries.map(e => updateVersionInSourceFile(e)))
-        console.log()
-    }
+    // ── Run selected builds (skipped entirely in watch mode — only changes trigger builds) ──
+    if (!watch) {
+        /** @type {Array<[string, () => Promise<void>]>} */
+        const tasks = []
+        if (buildFE)         tasks.push(['front-end modules',  buildAllFE])
+        if (buildNode)       tasks.push(['node packages',       buildAllNode])
+        if (buildCss)        tasks.push(['CSS',                 buildCSS])
+        if (buildDocs)       tasks.push(['docs bundle',         buildDocBundle])
+        // 'tag' is intentionally excluded from 'all' — must be invoked explicitly
+        if (buildTagTarget)  tasks.push(['git tag',             createGitTag])
 
-    // ── Run selected builds ──────────────────────────────────────────────
-    /** @type {Array<[string, () => Promise<void>]>} */
-    const tasks = []
-    if (buildFE)         tasks.push(['front-end modules',  buildAllFE])
-    if (buildNode)       tasks.push(['node packages',       buildAllNode])
-    if (buildCss)        tasks.push(['CSS',                 buildCSS])
-    if (buildDocs)       tasks.push(['docs bundle',         buildDocBundle])
-    // 'tag' is intentionally excluded from 'all' — must be invoked explicitly
-    if (buildTagTarget)  tasks.push(['git tag',             createGitTag])
-
-    if (tasks.length === 0) {
-        console.warn('[build] No recognised build targets. Use: all | fe | node | css | docs')
-        return
-    }
-
-    // Run all tasks concurrently; individual failures are caught inside each function
-    const results = await Promise.allSettled(tasks.map(([, fn]) => fn()))
-    for (let i = 0; i < results.length; i++) {
-        if (results[i].status === 'rejected') {
-            console.error(`\n[main] ✗ ${tasks[i][0]}: ${results[i].reason}`)
+        if (tasks.length === 0) {
+            console.warn('[build] No recognised build targets. Use: all | fe | node | css | docs')
+            return
         }
-    }
 
-    console.log('\n[build] Build complete.')
+        // Run all tasks concurrently; individual failures are caught inside each function
+        const results = await Promise.allSettled(tasks.map(([, fn]) => fn()))
+        for (let i = 0; i < results.length; i++) {
+            if (results[i].status === 'rejected') {
+                console.error(`\n[main] ✗ ${tasks[i][0]}: ${results[i].reason}`)
+            }
+        }
+
+        console.log('\n[build] Build complete.')
+    }
 
     // ── Optionally enter watch mode ──────────────────────────────────────
     if (watch) {
