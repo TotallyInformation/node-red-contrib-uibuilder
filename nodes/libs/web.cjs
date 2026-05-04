@@ -92,6 +92,9 @@ class UibWeb {
     /** ExpressJS Route Metadata */
     routers = { admin: [], user: [], instances: {}, config: {}, }
 
+    /** Track active connections to allow them to be closed on shutdown or redeploy */
+    connections = new Set()
+
     /** Called when class is instantiated */
     constructor() {
         /** Set up a dummy ExpressJS Middleware Function
@@ -286,7 +289,13 @@ class UibWeb {
                 this.server = require('http').createServer(this.app)
             }
 
-            // Connect the server to the requested port, domain is the same as Node-RED
+            // ONLY FOR CUSTOM WEB: Track the web server connections to allow them to be force closed on shutdown or redeploy
+            this.server.on('connection', (socket) => {
+                this.connections.add(socket)
+                socket.on('close', () => this.connections.delete(socket))
+            })
+
+            // Handle server errors, particularly EADDRINUSE which is common when using a custom port
             this.server.on('error', (err) => {
                 if (err.code === 'EADDRINUSE') {
                     this.server.close()
@@ -301,6 +310,7 @@ class UibWeb {
                 }
             })
 
+            // Connect the server to the requested port, domain is the same as Node-RED
             this.server.listen(uib.customServer.port, () => {
                 // uib.customServer.host = this.server.address().address // not very useful. Typically returns `::`
             })
