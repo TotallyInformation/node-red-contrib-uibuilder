@@ -66,6 +66,7 @@ const path = require('path')
 
 // The uibuilder global configuration object, used throughout all nodes and libraries.
 const uibGlobalConfig = require('../libs/uibGlobalConfig.cjs')
+const ui = require('../libs/ui.cjs')
 
 // #endregion ----- Require packages ----- //
 
@@ -354,6 +355,26 @@ function runtimeSetup() {
     /** (d) Pass core objects to the Socket.IO handler module */
     sockets.setup(uib, web.server)
 
+    // For a custom web server only: Catch SIGINT and close the server and any active connections
+    if ( uib.customServer.isCustom === true ) {
+        process.on('SIGINT', () => {
+            log.info(`🌐[uibuilder:runtimeSetup] Caught SIGINT, shutting down custom server and socket.io gracefully...`)
+            sockets.io.sockets.sockets.forEach((socket) => {
+                socket.disconnect(true)
+            })
+            if ( web.connections.size > 0 ) {
+                log.info(`🌐[uibuilder:runtimeSetup] Force-closing active connections: ${web.connections.size}`)
+                for (const socket of web.connections) {
+                    socket.destroy()
+                    web.connections.delete(socket)
+                }
+            }
+            // web.server.close(() => {
+            //     log.info('🌐[uibuilder:runtimeSetup] Custom server closed')
+            // })
+        })
+    }
+
     RED.events.emit('UIBUILDER/runtimeSetupComplete', uib)
 } // --- end of runtimeSetup --- //
 
@@ -598,26 +619,19 @@ function nodeInstance(config) {
     this.on('close', (removed, done) => {
         log.trace(`🌐[uibuilder[:nodeInstance:close:${this.url}] nodeInstance:on-close: ${removed ? 'Node Removed' : 'Node (re)deployed'}`)
 
-        // @ts-ignore
+        // Let all the clients know Node-RED is shutting down (or a full/modified nodes redeploy)
+        if (!removed) {
+            sockets.sendToFe({ uibuilderCtrl: 'shutdown', }, this, uib.ioChannels.control)
+        }
+
+        // Stop inputs being processed immediately
         this.removeListener('input', inputMsgHandler)
 
         // Cancel any event listeners for this node
         RED.events.off(`UIBUILDER/send/${this.url}`, this.sender)
 
-        // Cancel the file watcher if it exists
-        if ( this.watcher ) {
-            this.watcher.close()
-            log.trace(`🌐[uibuilder[:nodeInstance:close:${this.url}] File watcher closed`)
-        }
-
-        // Tidy up the ExpressJS routes if a node is removed
-        if (removed) {
-            delete web.routers.instances[this.url]
-            delete web.instanceRouters[this.url]
-        }
-
         // Do any complex close processing here if needed - MUST BE LAST
-        uiblib.instanceClose(this, uib, sockets, web, done)
+        uiblib.instanceClose(this, uib, sockets, web, done, removed)
         // done()
     })
 
@@ -694,5 +708,3 @@ function inputMsgHandler (msg, send, done) {
 
 /** Export the function that defines the node */
 module.exports = Uib
-
-// EOF

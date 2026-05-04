@@ -2,7 +2,7 @@
 /**
  * Utility library for uibuilder
  *
- * Copyright (c) 2017-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -88,15 +88,15 @@ function nanoId(length) {
 }
 
 const UibLib = {
-    // ! TODO: Replace fs-extra
     /** Do any complex, custom node closure code here
      * @param {uibNode} node Reference to the node instance object
      * @param {object} uib Reference to the uibuilder master config object
      * @param {object} sockets - Instance of Socket.IO handler singleton
      * @param {object} web - Instance of ExpressJS handler singleton
      * @param {Function|null} done Default=null, internal node-red function to indicate processing is complete
+     * @param {boolean} removed Indicates if the node instance is being removed (as opposed to just being stopped) - if true, the instance folder will be deleted if the deleteOnDelete flag is set for this url
      */
-    instanceClose: function(node, uib, sockets, web, done = null) {
+    instanceClose: function(node, uib, sockets, web, done = null, removed = false) {
         // const RED = /** @type {runtimeRED} */ uib.RED
         const log = uib.RED.log
 
@@ -105,44 +105,48 @@ const UibLib = {
         /** @type {object} instances[] Reference to the currently defined instances of uibuilder */
         const instances = uib.instances
 
-        try { // Wrap this in a try to make sure that everything is working
-            // Remove url folder if requested
-            if ( uib.deleteOnDelete[node.url] === true ) {
-                log.trace(`🌐[uibuilder:uiblib:instanceClose] Deleting instance folder. URL: ${node.url}`)
+        node.statusDisplay.text = 'CLOSED'
+        this.setNodeStatus(node)
 
-                // Remove the flag in case someone recreates the same url!
-                delete uib.deleteOnDelete[node.url]
+        // Cancel the file watcher if it exists
+        if ( node.watcher ) {
+            // @ts-ignore
+            node.watcher.close()
+            log.trace(`🌐[uibuilder[:nodeInstance:close:${node.url}] File watcher closed`)
+        }
+
+        // Tidy up the ExpressJS routes if a node is removed
+        if (removed) {
+            delete web.routers.instances[node.url]
+            delete web.instanceRouters[node.url]
+        }
+
+        try {
+            // Remove url folder if requested
+            if ( removed && uib.deleteOnDelete[node.url] === true ) {
+                log.trace(`🌐[uibuilder:uiblib:instanceClose] Deleting instance folder. URL: ${node.url}`)
 
                 fslib.remove(path.join(uib.rootFolder, node.url))
                     .catch((err) => {
                         log.error(`🌐🛑[uibuilder:uiblib:processClose] Deleting instance folder failed. URL=${node.url}, Error: ${err.message}`)
                     })
+
+                // Remove the flag in case someone recreates the same url!
+                delete uib.deleteOnDelete[node.url]
             }
+        } catch (err) {
+            log.error(`🌐🛑[uibuilder:uiblib:instanceClose] Failed to remove instance folder for URL="${node.url}". Error: ${err.message}`, err)
+        }
 
-            // Keep a log of the active instances @since 2019-02-02
-            delete instances[node.id] // = undefined
+        // Keep a log of the active instances @since 2019-02-02
+        delete instances[node.id] // = undefined
 
-            node.statusDisplay.text = 'CLOSED'
-            this.setNodeStatus(node)
-
-            // Let all the clients know we are closing down
-            sockets.sendToFe({ uibuilderCtrl: 'shutdown', }, node, uib.ioChannels.control)
-
+        try {
             // Disconnect all Socket.IO clients for this node instance
             sockets.removeNS(node)
         } catch (err) {
             log.error(`🌐🛑[uibuilder:uiblib:instanceClose] Error in closure. Error: ${err.message}`, err)
         }
-
-        /*
-            // This code borrowed from the http nodes
-            // THIS DOESN'T ACTUALLY WORK!!! Static routes don't set route.route
-            app._router.stack.forEach(function(route,i,routes) {
-                if ( route.route && route.route.path === node.url ) {
-                    routes.splice(i,1)
-                }
-            });
-        */
 
         // This should be executed last if present. `done` is the data returned from the 'close'
         // event and is used to resolve async callbacks to allow Node-RED to close
