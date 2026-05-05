@@ -822,10 +822,19 @@ async function startWatch() {
      */
     const rel = (p) => p.replace(ROOT + '\\', '').replace(ROOT + '/')
 
+    /**
+     * Normalise a file path to forward slashes so chokidar glob patterns work on Windows.
+     * path.join() converts '**' glob segments to backslash-separated paths on Windows,
+     * which micromatch (used internally by chokidar) does not recognise as globs.
+     * @param {string} p - Absolute path, potentially containing backslashes
+     * @returns {string} Path with all backslashes replaced by forward slashes
+     */
+    const toGlobPath = (p) => p.replace(/\\/g, '/')
+
     // ── Front-end modules (one watcher per config) ──────────────────────
     for (const config of FE_BUILDS) {
         chokidar
-            .watch(config.watchFiles.map(f => join(ROOT, f)), { ignoreInitial: true, })
+            .watch(config.watchFiles.map(f => toGlobPath(join(ROOT, f))), { ignoreInitial: true, })
             .on('change', (p) => {
                 console.log(`[watch] Changed: ${rel(p)}`)
                 safeRebuild(() => buildFEModule(config), config.name)
@@ -838,7 +847,7 @@ async function startWatch() {
 
     // ── Experimental module ──────────────────────────────────────────────
     chokidar
-        .watch(EXPERIMENTAL_BUILD.watchFiles.map(f => join(ROOT, f)), { ignoreInitial: true, })
+        .watch(EXPERIMENTAL_BUILD.watchFiles.map(f => toGlobPath(join(ROOT, f))), { ignoreInitial: true, })
         .on('change', (p) => {
             console.log(`[watch] Changed: ${rel(p)}`)
             safeRebuild(buildExperimental, EXPERIMENTAL_BUILD.name)
@@ -847,7 +856,7 @@ async function startWatch() {
     // ── Node.js packages (one watcher per config) ────────────────────────
     for (const config of NODE_BUILDS) {
         chokidar
-            .watch(config.watchFiles.map(f => join(ROOT, f)), { ignoreInitial: true, })
+            .watch(config.watchFiles.map(f => toGlobPath(join(ROOT, f))), { ignoreInitial: true, })
             .on('change', (p) => {
                 console.log(`[watch] Changed: ${rel(p)}`)
                 safeRebuild(() => buildNodePackage(config), config.name)
@@ -860,7 +869,7 @@ async function startWatch() {
 
     // ── CSS source ───────────────────────────────────────────────────────
     chokidar
-        .watch(CSS_BUILD.watchFiles.map(f => join(ROOT, f)), { ignoreInitial: true, })
+        .watch(CSS_BUILD.watchFiles.map(f => toGlobPath(join(ROOT, f))), { ignoreInitial: true, })
         .on('change', (p) => {
             console.log(`[watch] Changed: ${rel(p)}`)
             safeRebuild(buildCSS, CSS_BUILD.name)
