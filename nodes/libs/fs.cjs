@@ -20,9 +20,6 @@
 
 // REFERENCES
 //  https://nodejs.org/docs/latest-v14.x/api/fs.html
-//  https://github.com/jprichardson/node-fs-extra
-//  https://github.com/jprichardson/node-jsonfile
-//  https://github.com/isaacs/node-graceful-fs
 
 /** --- Type Defs ---
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
@@ -33,19 +30,17 @@
 
 // ! WARNING: Take care not to end up with circular requires. e.g. libs/socket.js or uiblib.js cannot be required here
 
-const { join, relative, normalize, } = require('node:path')
-// To be removed when feasible - https://github.com/jprichardson/node-fs-extra
-// const fsextra = require('fs-extra')
+const { join, relative, normalize, dirname, } = require('node:path')
 // Async
 const fs = require('node:fs/promises')
 // cb
 const { cp, watch, writeFile, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // Sync
-const { accessSync, cpSync, constants: fsConstants, existsSync, mkdirSync, readdirSync, readFileSync, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
+const { accessSync, closeSync, cpSync, constants: fsConstants, existsSync, mkdirSync, openSync, readdirSync, readFileSync, renameSync, rmSync, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // TODO Remove in future?
 // const fg = require('fast-glob')
 const process = require('node:process')
-const { fg, fsextra, } = require('../../packages/uib-fs-utils')
+const { fg, } = require('../../packages/uib-fs-utils')
 // ! We cannot use uibGlobalConfig here because it causes circular requires (its module uses this fs library)
 // The uibuilder global configuration object, used throughout all nodes and libraries.
 // const uibGlobalConfig = require('./uibGlobalConfig.cjs')
@@ -767,32 +762,67 @@ class UibFs {
 
     // #endregion ---- ---- ----
 
-    // #region ---- fs-extra passthrough methods that need replacement ----
+    // #region ---- fs-extra replacement methods (native Node.js) ----
 
     /** Ensures that the file exists. If the file that is requested to be created is in directories that do not exist, these directories are created. If the file already exists, it is NOT MODIFIED.
      * @param {string} file File path to ensure
      */
-    ensureFileSync = fsextra.ensureFileSync
+    ensureFileSync(file) {
+        mkdirSync(dirname(file), { recursive: true, }) // eslint-disable-line security/detect-non-literal-fs-filename
+        // Open in append mode: creates the file without modifying it if it already exists
+        const fd = openSync(file, 'a') // eslint-disable-line security/detect-non-literal-fs-filename
+        closeSync(fd)
+    }
 
     /** Moves a file or directory, even across devices.
+     * Falls back to copy+delete when a cross-device rename (EXDEV) is detected.
      * @param {string} src Source folder/file
      * @param {string} dest Destination folder/file
      * @param {object=} opts { overwrite: true } - overwrite is false by default
      */
-    moveSync = fsextra.moveSync
+    moveSync(src, dest, opts = {}) {
+        const { overwrite = false, } = /** @type {{overwrite?: boolean}} */ (opts)
+        const destExists = existsSync(dest) // eslint-disable-line security/detect-non-literal-fs-filename
+        if (!overwrite && destExists) {
+            throw new Error(`Move failed: destination already exists at "${dest}" [UibFs:moveSync]`)
+        }
+        if (overwrite && destExists) {
+            // Node.js v14.14+ - remove dest first so rename/copy has a clean target
+            rmSync(dest, { recursive: true, force: true, })
+        }
+        try {
+            renameSync(src, dest) // eslint-disable-line security/detect-non-literal-fs-filename
+        } catch (err) {
+            if (err.code === 'EXDEV') {
+                // Cross-device link: copy recursively then remove source (Node.js v16.7+)
+                cpSync(src, dest, { recursive: true, })
+                rmSync(src, { recursive: true, force: true, })
+            } else {
+                throw err
+            }
+        }
+    }
 
     /** Removes a file or directory. The directory can have contents. If the path does not exist, silently does nothing.
+     * Uses Node.js v14.14+ rmSync with recursive and force flags.
      * @param {string} path Folder/file path to remove
      */
-    removeSync = fsextra.removeSync
+    removeSync(path) {
+        rmSync(path, { recursive: true, force: true, })
+    }
 
     /** Writes an object to a JSON file.
-     * https://github.com/jprichardson/node-fs-extra/blob/master/docs/writeJson.md
      * @param {string} file File path to write to
-     * @param {object} object Object to write to
-     * @param {object} options
+     * @param {object} object Object to serialise as JSON
+     * @param {any=} options Serialisation options: spaces (default 2), EOL (default '\n')
+     * @returns {Promise<void>}
      */
-    writeJson = fsextra.writeJson
+    async writeJson(file, object, options = {}) {
+        const spaces = options.spaces ?? 2
+        const EOL = options.EOL ?? '\n'
+        const json = JSON.stringify(object, null, spaces).replace(/\n/g, EOL) + EOL
+        await fs.writeFile(file, json, 'utf8') // eslint-disable-line security/detect-non-literal-fs-filename
+    }
 
     // #endregion ---- ---- ----
 } // ----- End of UibPackages ----- //
