@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-04-28 16:50:58
+updated: 2026-05-04 16:39:42
 ---
 
 # Changelog
@@ -24,7 +24,16 @@ I did sneak in 1 change to this release. Some updates to the layout of the UIBUI
 
 ### uibuilder client library
 
+* When the Node-RED server tells clients that it is shutting down, the Socket.IO auto-reconnect is turned off for 30 seconds to allow the server to restart without clients trying to reconnect and causing errors. Also reduced the number of error messages logged to the client console when Node-RED is disconnected.
 * Socket.IO disconnect function updated to add the disconnect details introduced in Socket.IO v4.5. The `uibuilder:socket:disconnected` event updated to output `{reason, details}` instead of just the reason string.
+
+### uibuilder node
+
+* Improved shutdown processing, especially when using a custom Express server. Socket.IO and web connections are now terminated if Node-RED recieves a SIGINT. In addition, each instance's close function has been tidied up & the "shutdown" control message is now sent to connected clients earlier. This also updates the web and uiblib libraries.
+
+### Runtime libraries
+
+* The remaining ~~5~~ 4 fsextra functions in fs lib. `ensureDirSync` have been replaced with native functions. fs-extra is no longer a dev- or other dependency.
 
 ---
 

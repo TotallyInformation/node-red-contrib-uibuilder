@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2026-05-04 12:31:11
+updated: 2026-05-04 13:12:23
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -128,7 +128,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * Consider creating templates or examples from flows in my dev instance.
 * Consider adding a `data-initVars` attribute to the client script load. This would automatically take `window.xxxx` variables and `set` them as uibuilder variables as early as possible. This would allow early setting of these variables for use in the client's reactive features. Would also need to be specified as a query parameter on the script src for processing in ESM.
 * Move ti-base-component to a separate package. Publish separately. Include here.
-* Move the uib-brand CSS to a separate package. Publish separately. Possibly as a sub-package of uibuilder.
 * Some form of more direct RPC implementation between client and server. What functions might the server be able to do for the client? What might the server want to ask of or control on the client?
   * A latency test might be useful.
 * Implement the `dom` (`tinyDOM`) FE library.
@@ -136,7 +135,6 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * **BIG** How to have a "live" feature. This would be a mix of http-in/-response and uibuilder nodes. It would create a live endpoint that would be pre-populated with the uibuilder default ESM template. Would allow server-side rendering. See [live.md](live.md)
 * Check message sizes. If >limit, split into chunks and use standard msg.parts to allow reassembly - both on the server AND on the client. Allow auto-splitting of messages for large messages and use the msg.parts feature from node-red core to allow easy re-constitution.
 * Allow http responses using transfer encoding chunked. [Ref](https://discourse.nodered.org/t/http-transfer-encoding-chunked/94332/6).
-* Move all runtime code to ESM's and rely on ESBUILD to build the runtime. This will allow us to use the latest JS features but retain backwards compatibility.
 * Consider adding some telemetry. Idea being to better understand how many instances are in use, which versions and what platforms. Perhaps also detecting which browser types are in use to help steer coding. Would need to be opt-out, transparent and documented. Might use a [non-reversible device id?](https://www.npmjs.com/package/node-machine-id).
   * An interesting pre-cursor to this might be to create an internal track of front-end client use. E.g. count the max # users connected to an instance and perhaps what browsers they are using (initially this would not be sent anywhere but would be accessible via the info page and written to a json file in each instance root folder).
 
