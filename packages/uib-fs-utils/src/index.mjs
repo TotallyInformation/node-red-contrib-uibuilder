@@ -4,10 +4,8 @@
 
 import chokidar from 'chokidar'
 import fg from 'fast-glob'
-import fsextra from 'fs-extra/esm'
 
 export {
     chokidar,
     fg,
-    fsextra,
 }
