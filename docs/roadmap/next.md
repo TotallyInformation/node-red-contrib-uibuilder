@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-05-01 13:53:10
+updated: 2026-05-04 17:28:52
 ---
 
 ## To Fix
@@ -12,6 +12,8 @@ updated: 2026-05-01 13:53:10
 * [ ] Deploy of new uibuilder node sometimes results in `🌐⚠️[uibuilder:web:setupInstanceStatic:nojs-charts] Cannot show default page, index.html does not exist in D:\src\uibRoot\nojs-charts\src.`.  Likely because the reload option is on so as the default folders & files being created, the node tries to reload the page. Maybe suspend watcher for initial deployment somehow?
 
 ## In Progress
+
+* Make sure that Markweb nodes remove web routes and socket.io namespaces when deleted.
 
 ### Ongoing work
 
@@ -24,7 +26,6 @@ updated: 2026-05-01 13:53:10
 
 * Background rework (may take several releases):
   * [ ] Changing `uib-brand.css` to use more modern CSS, leaving it up to LightningCSS to build for older browsers. In particular, using nested definitions.
-  * [ ] Remove remaining ~~5~~ 4 fsextra functions from fs lib. `ensureDirSync` is completed.
   * [ ] Rename all .js node.js files to .cjs to avoid confusion with ESM modules. (libs now all done).
   * [ ] No need to pass uib var now it is in a module, can simply require it. (Except for libs/fs which is already used by the uib module).
 
