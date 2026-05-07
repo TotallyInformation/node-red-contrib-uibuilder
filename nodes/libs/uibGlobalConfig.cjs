@@ -2,7 +2,7 @@
 /** UIBUILDER's global configuration data
  * Moved from nodes/uibuilder/uibuilder.js to here to for clarity and central loading. @since v7.3.0
  *
- * Copyright (c) 2025-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2025-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -30,11 +30,12 @@ const path = require('path')
 const fslib = require('./fs.cjs') // File/folder handling library (by Totally Information)
 
 const pkgJson = fslib.readJSONSync(path.join( __dirname, '..', '..', 'package.json' ))
+
 /** @type {uibConfig} */
 const uibGlobalConfig = {
     /** Current module version (taken from package.json) @constant {string} uib.version */
     version: pkgJson.version,
-    // Refernce to the version of Node.js in use.
+    // Reference to the version of Node.js in use.
     nodeVersion: process.version.replace('v', '').split('.'),
     // If existing install of uibuilder is < this version, then user must re-deploy flows after upgrade
     reDeployNeeded: '4.1.2',
@@ -95,6 +96,16 @@ const uibGlobalConfig = {
             'case sensitive routing': true,
             // For security
             'x-powered-by': false,
+        },
+        // Default Content Security Policy for uibuilder custom server only.
+        contentSecurityPolicy: {
+            'default-src': "'self' 'unsafe-inline' data: blob: https:;",
+            'connect-src': "'self';",
+            'img-src': "'self' data: blob: https:;",
+            'font-src': "'self' data: https:;",
+            'style-src': "'self' 'unsafe-inline' data: blob: https:;",
+            'script-src': "'self' 'unsafe-inline' 'unsafe-eval' blob: https:;",
+            'frame-src': "'self' https:;", // added in v7.7.0
         },
     },
 
