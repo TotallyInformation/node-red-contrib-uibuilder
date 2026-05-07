@@ -20,9 +20,11 @@ import MarkdownItGitHubAlerts from 'markdown-it-github-alerts'
 import attrs from 'markdown-it-attrs'
 // https://www.npmjs.com/package/markdown-it-anchor
 import anchor from 'markdown-it-anchor'
+// https://www.npmjs.com/package/markdown-it-footnote
+import footnote from 'markdown-it-footnote'
 
 // Private mermaid plugin
-// import { markdownItMermaidServer, renderMarkdownAsync } from './pluginMermaid.mjs'
+import { markdownItMermaid } from './pluginMermaid.mjs'
 
 // Private version of task lists
 import { taskLists } from './tasklist.mjs'
@@ -54,9 +56,10 @@ const md = markdownit({
 })
 
 md
-    // .use(markdownItMermaidServer)
+    .use(markdownItMermaid)
     .use(attrs)
     .use(anchor, { permalink: anchor.permalink.headerLink(), })
+    .use(footnote)
     // .use(mdItObsidianCallouts)
     .use(MarkdownItGitHubAlerts)
     .use(taskLists, { enabled: false, label: true, })
@@ -74,5 +77,4 @@ export {
     directivePlugin,
     detailsSummaryPlugin,
     fmVariablesPlugin,
-    // mermaid,
 }
