@@ -3,6 +3,16 @@
 /* eslint-disable n/no-unsupported-features/node-builtins */
 // ^ This file is browser code, not Node.js - localStorage is a browser API
 
+// Mermaid is bundled locally (no CDN). startOnLoad is disabled because page
+// content arrives asynchronously from the server after the socket connects.
+// mermaid.run() is called explicitly in postDataUpdate() after each content
+// injection so that <pre class="mermaid"> elements are always processed,
+// whether on initial load or after SPA navigation.
+import mermaid from './mermaid.esm.min.js'
+// mermaid.initialize({ startOnLoad: false, theme: 'dark', })
+// mermaid.initialize({ startOnLoad: false, theme: 'redux-dark-color', })
+mermaid.initialize({ startOnLoad: false, theme: 'dark', darkMode: true, })
+
 const clientVersion = '7.6.2-src' // NB: This is replaced with the actual version during the build process by bin/build.mjs
 
 /** The uibuilder.pageData object is set on load and when navigating
@@ -1022,6 +1032,7 @@ function postDataUpdate(data) {
             }
         }
     })
+
 }
 
 /** Handle SPA navigation
@@ -1472,3 +1483,39 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 // initMenu()
 // Set initial active state on page load
 // updateActiveNavState()
+
+// Watch for <pre class="mermaid"> elements added by the uib-var component
+// (which updates the DOM asynchronously after uibuilder.set('pageData', …)).
+// mermaid.initialize({ startOnLoad: false }) means Mermaid never auto-scans;
+// this observer ensures every diagram is rendered regardless of timing.
+;(function setupMermaidObserver() {
+    const contentSection = document.querySelector('main > section')
+    if (!contentSection) return
+    const observer = new MutationObserver((mutations) => {
+        /** @type {Element[]} */
+        const unprocessed = []
+        for (const mutation of mutations) {
+            for (const node of mutation.addedNodes) {
+                if (node.nodeType !== Node.ELEMENT_NODE) continue
+                // The node itself may be a mermaid pre
+                if (node.matches('pre.mermaid') && !node.hasAttribute('data-processed')) {
+                    unprocessed.push(node)
+                }
+                // Or it may contain mermaid pres deeper in the subtree
+                node.querySelectorAll?.('pre.mermaid:not([data-processed])').forEach((el) => unprocessed.push(el))
+            }
+        }
+        if (unprocessed.length > 0) {
+            mermaid.run({ nodes: unprocessed, })
+        }
+    })
+    observer.observe(contentSection, { childList: true, subtree: true, })
+
+    // Catch any <pre class="mermaid"> elements that were already in the DOM
+    // before the observer was attached (e.g. uib-var processed window.pageData
+    // synchronously before this point in the module executed).
+    const existing = Array.from(contentSection.querySelectorAll('pre.mermaid:not([data-processed])'))
+    if (existing.length > 0) {
+        mermaid.run({ nodes: existing, })
+    }
+})()
