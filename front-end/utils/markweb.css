@@ -245,7 +245,7 @@ main {
     }
 
     /* Main content body - markdown-rendered pages, etc */
-    section {
+    > section { /* For footnotes */
         overflow-y: auto;
         min-height: 0;
         /* margin-inline-end: -0.5em; */
@@ -699,7 +699,7 @@ blockquote, .markdown-alert {
 }
 /* #endregion Blockquotes & GFM Alert Box Styles */
 
-/* Task List Styles (markdown-it plugin) */
+/* #region Task List Styles (markdown-it plugin) */
 .contains-task-list {
     list-style: none;
     padding-inline-start: 0;
@@ -709,31 +709,27 @@ blockquote, .markdown-alert {
         margin-inline-start: 1.5em;
     }
 }
-
 .task-list-item {
     list-style: none;
     --task-check-col: 1.1em;
     --task-check-gap: 0.75em;
 }
-
 .task-list-item > :not(:first-child) {
     margin-inline-start: calc(var(--task-check-col) + var(--task-check-gap));
 }
-
 .task-list-item-label {
     display: grid;
     grid-template-columns: var(--task-check-col) minmax(0, 1fr);
     align-items: start;
     column-gap: var(--task-check-gap);
 }
-
 .task-list-item-text {
     min-width: 0;
 }
-
 .task-list-item-checkbox {
     margin: 0.25em 0 0;
 }
+/* #endregion Task List Styles */
 
 /* Accessibility: Skip to main content link */
 .skip-link {
@@ -754,6 +750,11 @@ blockquote, .markdown-alert {
 /* Visible status blockquote styling - defaults to hidden */
 .visible-status {
     display: none;
+
+    /* Show the blockquote if it contains children with content */
+    &:has(> :not(:empty)) {
+        display: block;
+    }
 }
 
 /* Unknown frontmatter variable styling {{unknown}} */
@@ -761,6 +762,54 @@ blockquote, .markdown-alert {
     color: hsl(0, 100%, 70%);
     font-style: italic;
 }
+
+/* Tweak Mermaid diagram styling */
+.mermaid > svg {
+    margin: 0;
+}
+
+/* #region Footnote Styles (markdown-it-footnote plugin) */
+.footnotes-sep {
+    margin-block-start: 2rem;
+    border: none;
+    border-block-start: 1px solid hsl(0 0% 50% / 0.4);
+}
+
+.footnotes {
+    font-size: 0.875em;
+    color: var(--text2, inherit);
+
+    ol {
+        padding-inline-start: 1.5em;
+    }
+
+    li {
+        margin-block: 0.25em;
+    }
+
+    /* Back-reference arrow */
+    .footnote-backref {
+        text-decoration: none;
+        margin-inline-start: 0.25em;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+/* Inline footnote reference superscript */
+.footnote-ref a {
+    text-decoration: none;
+    font-size: 0.75em;
+    vertical-align: super;
+    line-height: 1;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+/* #endregion Footnote Styles */
 
 /* #region ?? STILL NEEDED ?? Base Menu Styles */
 nav.horizontal {
