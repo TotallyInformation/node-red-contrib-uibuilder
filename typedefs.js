@@ -69,6 +69,9 @@
  * @property {object} [uibuilder.socketOptions] Override Socket.IO options if desired. See https://socket.io/docs/v4/server-options/
  * @property {boolean} [uibuilder.instanceApiAllowed] Allow instance-level custom API's to be loaded. Could be a security issue so it is controlled in settings.js
  * @property {Function} [uibuilder.hooks] Provide hook functions
+ * @property {object} [uibuilder.contentSecurityPolicy] Override the default Content Security Policy (CSP) header for uibuilder ExpressJS routes.
+ *   Defined as an object with the same keys as the CSP directives (e.g. defaultSrc, scriptSrc, etc.) and values as strings of the allowed sources for that directive (e.g. "'self' 'unsafe-inline' data: blob: https:").
+ *   See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy for details of the policy format and options.
  *
  * @property {string} coreNodesDir Folder containing Node-RED core nodes
  * @property {string} version Node-RED version
@@ -395,6 +398,7 @@
  * @property {undefined|string} customServer.hostName The host name of the Node-RED server
  * @property {boolean}          customServer.isCustom Is uibuilder using a custom ExpressJS server?
  * @property {object}           customServer.serverOptions Optional ExpressJS server options
+ * @property {object}           customServer.contentSecurityPolicy Optional deconstructed Content Security Policy settings for custom server. See https://helmetjs.github.io/docs/csp/
  *
  * @property {undefined|object} degitEmitter Event emitter for degit, populated on 1st use. See POST admin API
  * @property {runtimeRED|null} RED Keep a reference to RED for convenience. Set at the start of Uib
