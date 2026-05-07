@@ -26,10 +26,46 @@ I did sneak in 1 change to this release. Some updates to the layout of the UIBUI
 
 * When the Node-RED server tells clients that it is shutting down, the Socket.IO auto-reconnect is turned off for 30 seconds to allow the server to restart without clients trying to reconnect and causing errors. Also reduced the number of error messages logged to the client console when Node-RED is disconnected.
 * Socket.IO disconnect function updated to add the disconnect details introduced in Socket.IO v4.5. The `uibuilder:socket:disconnected` event updated to output `{reason, details}` instead of just the reason string.
+* **FIX** for issue with `RED.util.uib.send()`. Was generating an uncaught error if the specified uibuilder instance did not exist.
+* Moved some startup processing into the runtime plugin. This means that the uibuilder global configuration is available earlier in the startup process since plugins are loaded before nodes.
+
+### Markweb
+
+* The automatic status block has been corrected and moved to the main content. It only shows if either or both of the `status` and/or `since` front-matter attributes are set.  Note that this is driven purely by CSS (no JavaScript) but it requires a relatively up-to-date browser to work correctly.
+* [Mermaid diagrams](https://mermaid.ai/open-source/intro/) are now supported as code blocks in markdown files.
+* Markdown footnotes are now also supported. See the Footnotes page in the `[DEMO]` Markweb for details and examples. We use the [markdown-it-footnote](https://github.com/markdown-it/markdown-it-footnote) plugin for this.
 
 ### uibuilder node
 
+* **NEW** In Node-RED's `settings.js` file, you can now specify `uibuilder.contentSecurityPolicy` to set the default Content-Security-Policy (CSP) header for uibuilder instances. This allows you to improve the security of your uibuilder applications by restricting the sources of content that can be loaded in the browser.
+
+  It is defined as an object. The default value is:
+  
+  ```json
+  {
+    "default-src": "'self' 'unsafe-inline' data: blob: https:;",
+    "connect-src": "'self';",
+    "img-src": "'self' data: blob: https:;",
+    "font-src": "'self' data: https:;",
+    "style-src": "'self' 'unsafe-inline' data: blob: https:;",
+    "script-src": "'self' 'unsafe-inline' 'unsafe-eval' blob: https:;",
+    "frame-src": "'self' https:;"
+  }
+  ```
+
+  You can customize this value to suit your needs. For example, if you want to allow loading scripts from a specific CDN, you can add that CDN's URL to the `script-src` directive.
+  See See https://helmetjs.github.io/docs/csp/ for more details on how to configure CSP headers. NOTE the `;` on the end of each text value, this is REQUIRED.
+
+  This means that you no longer need a custom `<uibRoot/.config/uibMiddleware.js` file just to set the CSP header. You can simply set it in your `settings.js` file.
+
 * Improved shutdown processing, especially when using a custom Express server. Socket.IO and web connections are now terminated if Node-RED recieves a SIGINT. In addition, each instance's close function has been tidied up & the "shutdown" control message is now sent to connected clients earlier. This also updates the web and uiblib libraries.
+
+* Started to move initialisation processing into the runtime plugin. This allows the uibuilder global configuration to be available earlier in the startup process since plugins are loaded before nodes. This is a work in progress and will continue over several releases.
+
+### Runtime plugin
+
+* Started to move initialisation processing into the runtime plugin. This allows the uibuilder global configuration to be available earlier in the startup process since plugins are loaded before nodes. This is a work in progress and will continue over several releases.
+
 
 ### Runtime libraries
 

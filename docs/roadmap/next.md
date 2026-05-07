@@ -4,12 +4,19 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-05-04 17:28:52
+updated: 2026-05-07 20:58:04
 ---
 
-## To Fix
+## Possible issues/improvements
 
 * [ ] Deploy of new uibuilder node sometimes results in `🌐⚠️[uibuilder:web:setupInstanceStatic:nojs-charts] Cannot show default page, index.html does not exist in D:\src\uibRoot\nojs-charts\src.`.  Likely because the reload option is on so as the default folders & files being created, the node tries to reload the page. Maybe suspend watcher for initial deployment somehow?
+* [ ] Required module 'ui' is not used in uibuilder runtime? [ref](https://deepscan.io/dashboard/#view=project&tid=13157&pid=16160&bid=1020671&prid=&subview=issues).
+* [ ] Remove docsify-darklight-theme dependency as it is dated and not being used. Will remove a bunch of audit failures.
+* [ ] Remove gulp dependencies once we are sure that the new build/watch script is working well and we have no need for the old gulp tasks. This will remove a bunch of audit failures.
+* [ ] Add Markweb instances to the list of uibuilder apps/urls.
+* [ ] Review all instances of `this.RED = RED` or `mod.RED = RED`. The reference is now created in the global config by the runtime plugin. It should not be needed anywhere else unless the global config cannot be required.
+* [ ] Document the CSP overrides and how to use them.
+* [ ] Move the fs processing in the startup of the uibuilder node into the runtime plugin. Including the setup of the fslib.
 
 ## In Progress
 
