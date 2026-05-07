@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2026-04-28 15:07:58
+updated: 2026-04-28 17:15:35
 ---
 
 Functions accessible in client-side user code.
