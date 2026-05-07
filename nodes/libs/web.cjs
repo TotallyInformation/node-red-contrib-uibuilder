@@ -762,6 +762,11 @@ class UibWeb {
 
         const qSec = uib.customServer.type === 'https' // true if using https else false
 
+        // Compile CSP string here so we don't have to do it for every request in the middleware - default defined in uibGlobalConfig.cjs
+        const csp
+            = Object.entries(uib.customServer?.contentSecurityPolicy ?? {})
+                .map(([k, v]) => `${k} ${v}`).join(' ') // eslint-disable-line @stylistic/newline-per-chained-call
+
         const that = this
 
         /** Return a middleware handler
@@ -780,13 +785,7 @@ class UibWeb {
                     // Help reduce risk of XSS and other attacks
                     'X-XSS-Protection': '1;mode=block',
                     'X-Content-Type-Options': 'nosniff',
-                    'Content-Security-Policy':
-                        "default-src 'self' 'unsafe-inline' data: blob: https:; "
-                        + "connect-src 'self'; "
-                        + "img-src 'self' data: blob: https:; "
-                        + "font-src 'self' data: https:; "
-                        + "style-src 'self' 'unsafe-inline' data: blob: https:; "
-                        + "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; ",
+                    'Content-Security-Policy': csp,
                     // 'X-Frame-Options': 'SAMEORIGIN',
                     // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
                     'x-powered-by': 'uibuilder',
