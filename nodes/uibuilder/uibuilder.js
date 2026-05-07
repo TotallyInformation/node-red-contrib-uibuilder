@@ -64,7 +64,7 @@ try { // web
 
 const path = require('path')
 
-// The uibuilder global configuration object, used throughout all nodes and libraries.
+/** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
 const uibGlobalConfig = require('../libs/uibGlobalConfig.cjs')
 const ui = require('../libs/ui.cjs')
 
@@ -86,10 +86,7 @@ const dummyLog = {
 }
 let log = dummyLog // reset to RED.log or anything else you fancy at any point
 
-// Placeholder - set in export
-let userDir = ''
-
-// We need to load chokidar here since it is only needed if reload is true and it has native dependencies which can cause install issues
+// We need to define chokidar here - it is required later - only if reload is true and it has native dependencies which can cause install issues
 let chokidar
 
 // #endregion ----- uibuilder module-level globals ----- //
@@ -118,8 +115,7 @@ function externalEvents(node) {
  * @param {runtimeRED} RED Node-RED's runtime object
  */
 function Uib(RED) {
-    // Keep a global reference to the RED object for convenience, especially in the libraries
-    uib.RED = RED
+    // NB: A reference to the RED object (uib.RED) is defined in the runtime plugin and passed to the uibGlobalConfig module, so it can be accessed from any module that requires it.
 
     // Lets get set up
     runtimeSetup() // (1a)
@@ -166,33 +162,22 @@ function runtimeSetup() {
         throw new Error(`🌐🛑[uibuilder:runtimeSetup] UIBUILDER cannot be configured,\n  Node-RED userDir folder "${RED.settings.userDir}" is not writable.`, e)
     }
 
-    // Add list all uibuilder apps function to RED.util so it can be used inside function nodes
-    // NOTE: Only add things here that require uibuilder configuration data or libraries which won't be available
+    // #region ----- Add list all uibuilder apps function to RED.util so it can be used inside function nodes ----- //
+    // NOTE: Only add things here that require libraries which won't be available
     //       until after plugins are defined. Most things should be added in the the runtime plugin.
-    RED.util.uib = {
-        /** Return a list of all instances
-         * @returns {object} List of all registered uibuilder instances
-         */
-        listAllApps: () => {
-            return uib.apps
-        },
-
-        /** Send a message to a specific uibuilder instance
-         * @param {string} uibName The name (url) of the uibuilder instance to send via
-         * @param {object} msg Message object to send to the front-end
-         */
-        send: (uibName, msg) => {
-            const targetNode = RED.nodes.getNode(uib.apps[uibName].node)
-            if ( !targetNode ) {
-                throw new Error(`🌐🛑[RED.util.uib.send] ERROR: uibuilder instance '${uibName}' not found`)
-            }
-            msg.from = 'server/function-node'
-            sockets.sendToFe2(msg, targetNode)
-        },
-
-        // Merge in functions from the runtime plugin
-        ...RED.util.uib,
-    }
+    /** Send a message to a specific uibuilder instance
+     * @param {string} uibName The name (url) of the uibuilder instance to send via
+     * @param {object} msg Message object to send to the front-end
+     */
+    RED.util.uib.send = (uibName, msg) => {
+        const targetNode = RED.nodes.getNode(uib.apps[uibName]?.node)
+        if ( !targetNode ) {
+            throw new Error(`🌐🛑[RED.util.uib.send] ERROR: uibuilder instance '${uibName}' not found`)
+        }
+        msg.from = 'server/function-node'
+        sockets.sendToFe2(msg, targetNode)
+    },
+    // #endregion ----- Add list all uibuilder apps function to RED.util so it can be used inside function nodes ----- //
 
     // #region ----- back-end debugging ----- //
     // @ts-ignore
@@ -205,86 +190,41 @@ function runtimeSetup() {
     RED.events.on('runtime-event', function(event) {
         if (event.id === 'runtime-state' && initialised === false ) {
             initialised = true
-            const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
+            // const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
             RED.log.info('+-----------------------------------------------------')
-            RED.log.info(`| 🌐 ${uib.moduleName} v${uib.version} initialised`)
-            RED.log.info(`| root folder: ${uib.rootFolder}`)
-            if ( uib.customServer.isCustom === true ) {
-                RED.log.info('| Using custom ExpressJS webserver at:')
-                RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot} or ${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`)
-            } else {
-                RED.log.info('| Using Node-RED\'s webserver at:')
-                RED.log.info(`|   ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`)
-            }
-            RED.log.info('| Installed packages:')
+            // RED.log.info(`| 🌐 ${uib.moduleName} v${uib.version} initialised`)
+            // RED.log.info(`| root folder: ${uib.rootFolder}`)
+            // if ( uib.customServer.isCustom === true ) {
+            //     RED.log.info('| Using custom ExpressJS webserver at:')
+            //     RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot} or ${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`)
+            // } else {
+            //     RED.log.info('| Using Node-RED\'s webserver at:')
+            //     RED.log.info(`|   ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`)
+            // }
+            RED.log.info('| 🌐 Installed packages:')
             // @ts-ignore
             const pkgs = Object.keys(packageMgt.uibPackageJson.uibuilder.packages)
-            for (let i = 0; i < pkgs.length; i += 4) {
-                const k = []
-                for (let j = 0; j <= 3; j++) {
-                    if ( pkgs[i + j] ) k.push(pkgs[i + j])
+            if (pkgs.length === 0) {
+                RED.log.info('| No packages installed')
+            } else {
+                for (let i = 0; i < pkgs.length; i += 4) {
+                    const k = []
+                    for (let j = 0; j <= 3; j++) {
+                        if ( pkgs[i + j] ) k.push(pkgs[i + j])
+                    }
+                    RED.log.info(`| ${k.join(', ')}`)
                 }
-                RED.log.info(`|   ${k.join(', ')}`)
             }
             RED.log.info('+-----------------------------------------------------')
         }
     })
 
-    // #region ----- Constants for standard setup ----- //
+    // NOTE: Many uib globals have now been moved to the runtime plugin - including settings.js overrides
 
-    /** Folder containing settings.js, installed nodes, etc. @constant {string} userDir */
-    userDir = RED.settings.userDir
-    uib.rootFolder = path.join(userDir, uib.moduleName)
-    // If projects are enabled - update root folder to `<userDir>/projects/<projectName>/uibuilder/<url>`
-    if ( uiblib.getProps(RED, RED.settings.get('editorTheme'), 'projects.enabled') === true ) {
-        const currProject = uiblib.getProps(RED, RED.settings.get('projects'), 'activeProject', '')
-        if ( currProject !== '' ) uib.rootFolder = path.join(userDir, 'projects', currProject, uib.moduleName)
-    }
-
-    // Record the httpNodeRoot for later use
-    uib.nodeRoot = RED.settings.httpNodeRoot
-
-    // Get and record uibuilder settings from settings.js into the `uib` master object - these apply to all instances of uib
-    if ( RED.settings.uibuilder ) {
-        const settings = RED.settings.uibuilder
-
-        // Change the root folder
-        if ( settings.uibRoot && typeof settings.uibRoot === 'string') {
-            uib.rootFolder = settings.uibRoot
-        }
-
-        // Get web-relavent uibuilder settings from settings.js
-        uib.customServer.port = Number(RED.settings.uiPort)
-        // Note the system host name
-        uib.customServer.hostName = require('os').hostname()
-        /** HTTP(s) port. If set & different to node-red, uibuilder will use its own ExpressJS server */
-        // @ts-ignore - deliberately allowing string/number comparison
-        if ( settings.port && settings.port != RED.settings.uiPort) {
-            uib.customServer.isCustom = true
-            uib.customServer.port = Number(settings.port)
-            // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change instead if needed.
-            uib.nodeRoot = ''
-        }
-        // http, https or http2 (default=http)
-        if ( RED.settings.https ) uib.customServer.type = 'https'
-        if ( settings.customType ) uib.customServer.type = settings.customType
-
-        // Allow instance-level api's to be loaded (default=false)
-        if ( settings.instanceApiAllowed === true ) uib.instanceApiAllowed = true
-
-        if ( settings.serverOptions ) {
-            uib.customServer.serverOptions = Object.assign(uib.customServer.serverOptions, settings.serverOptions)
-        }
-    }
-
-    /** Locations for uib config can common folders */
-    uib.configFolder = path.join(uib.rootFolder, uib.configFolderName)
-    uib.commonFolder = path.join(uib.rootFolder, uib.commonFolderName)
-
-    // #endregion -------- Constants -------- //
+    // TODO: Move the fs processing into the runtime plugin
 
     // (a) Configure the UibFs handler class (requires uib.RED - now using the uibGlobalConfig module)
-    fslib.setup(uib) // Cannot reuired uib in fs module as it creates a circular dependency
+    fslib.setup(uib) // Cannot required uib in fs module as it creates a circular dependency
 
     // #region ----- Set up uibuilder root, root/.config & root/common folders ----- //
 
