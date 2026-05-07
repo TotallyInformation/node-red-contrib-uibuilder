@@ -1,116 +1,37 @@
-import mermaid from 'mermaid'
-
-/** markdown-it plugin for server-side Mermaid diagram rendering
- * @param {object} md - markdown-it instance
- * @param {object} options - plugin options
- * @returns {object} markdown-it instance with plugin
+/** markdown-it plugin that renders mermaid fenced code blocks as
+ * `<pre class="mermaid">...raw diagram code...</pre>` elements.
+ *
+ * Client-side rendering is delegated to the mermaid browser library loaded by
+ * markweb.mjs (the bundled front-end/utils/mermaid.esm.min.js).  No server-side
+ * processing, no async machinery, and no external dependencies are required.
+ *
+ * Non-mermaid fence blocks are passed through to the default fence renderer.
+ * @module pluginMermaid
  */
-function markdownItMermaidServer(md, options = {}) {
-    const defaultOptions = {
-        theme: 'default',
-        securityLevel: 'strict',
-        className: 'mermaid-diagram',
-        backgroundColor: 'transparent',
-        width: 800,
-        height: 600,
-    }
 
-    const opts = { ...defaultOptions, ...options, }
-
-    // Initialize Mermaid for server-side rendering
-    mermaid.initialize({
-        startOnLoad: false,
-        theme: opts.theme,
-        securityLevel: opts.securityLevel,
-        fontFamily: 'arial, sans-serif',
-    })
-
-    // Store the original fence renderer
+/** markdown-it plugin that emits mermaid fence blocks as `<pre class="mermaid">` elements.
+ * @param {import('markdown-it')} md - markdown-it instance
+ * @returns {import('markdown-it')} The modified markdown-it instance
+ */
+function markdownItMermaid(md) {
     const defaultFenceRenderer = md.renderer.rules.fence || function(tokens, idx, options, env, self) {
         return self.renderToken(tokens, idx, options)
     }
 
-    // Override the fence renderer
-    md.renderer.rules.fence = function(tokens, idx, mdOptions, env, self) {
+    md.renderer.rules.fence = function(tokens, idx, options, env, self) {
         const token = tokens[idx]
-        const info = token.info.trim()
-        const langName = info.split(/\s+/g)[0]
+        const langName = token.info.trim().split(/\s+/g)[0]
 
-        // Check if this is a mermaid code block
         if (langName === 'mermaid') {
-            const code = token.content.trim()
-            const id = `mermaid-${Math.random().toString(36)
-                .substr(2, 9)}`
-
-            // Store the render promise in the token
-            // This will be resolved later
-            if (!env.mermaidPromises) {
-                env.mermaidPromises = []
-            }
-
-            // Create a placeholder that we'll replace
-            const placeholder = `__MERMAID_PLACEHOLDER_${env.mermaidPromises.length}__`
-
-            // Queue the rendering
-            env.mermaidPromises.push(
-                mermaid.render(id, code)
-                    .then(result => ({
-                        placeholder,
-                        html: /* html */`
-                            <div class="${opts.className}" data-diagram-id="${id}">
-                                ${result.svg}
-                            </div>
-                        `,
-                    }))
-                    .catch(error => ({
-                        placeholder,
-                        html: /* html */`
-                            <div class="${opts.className} mermaid-error" data-diagram-id="${id}">
-                                <pre style="color: red; background: #fee; padding: 10px; border-radius: 4px;">
-                                    Error rendering Mermaid diagram:
-                                    ${md.utils.escapeHtml(error.message)}
-
-                                    Diagram code:
-                                    ${md.utils.escapeHtml(code)}
-                                </pre>
-                            </div>
-                        `,
-                    }))
-            )
-
-            return placeholder
+            // Emit raw diagram code inside a <pre class="mermaid"> element.
+            // mermaid.js (loaded by markweb.mjs) scans for these elements and renders them client-side.
+            return `<pre class="mermaid">${md.utils.escapeHtml(token.content.trim())}</pre>\n`
         }
 
-        // Use default renderer for other code blocks
-        return defaultFenceRenderer(tokens, idx, mdOptions, env, self)
+        return defaultFenceRenderer(tokens, idx, options, env, self)
     }
 
     return md
 }
 
-/** Render markdown with server-side Mermaid diagrams
- * @param {object} md - markdown-it instance with plugin
- * @param {string} markdown - Markdown content
- * @returns {Promise<string>} Rendered HTML
- */
-async function renderMarkdownAsync(md, markdown) {
-    const env = {}
-
-    // First pass: render markdown and collect mermaid promises
-    let html = md.render(markdown, env)
-
-    // Wait for all mermaid diagrams to render
-    if (env.mermaidPromises && env.mermaidPromises.length > 0) {
-        const results = await Promise.all(env.mermaidPromises)
-
-        // Replace placeholders with actual rendered SVGs
-        results.forEach((result) => {
-            html = html.replace(result.placeholder, result.html)
-        })
-    }
-
-    return html
-}
-
-// Export both the plugin and the async render function
-export { markdownItMermaidServer, renderMarkdownAsync }
+export { markdownItMermaid }

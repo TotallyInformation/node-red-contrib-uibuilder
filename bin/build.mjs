@@ -29,7 +29,7 @@ import * as esbuild from 'esbuild' // eslint-disable-line n/no-unpublished-impor
 import { browserslistToTargets, transform } from 'lightningcss' // eslint-disable-line n/no-unpublished-import
 import browserslist from 'browserslist' // eslint-disable-line n/no-unpublished-import
 import { readFile, writeFile, stat } from 'node:fs/promises'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { resolve, dirname, join, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn, execFile } from 'node:child_process'
@@ -317,6 +317,22 @@ const NODE_BUILDS = [
     },
 ]
 
+/** Configuration for the mermaid browser bundle builds.
+ * Both IIFE and ESM outputs are produced and written to FE_OUT/utils/.
+ * The build is delegated to the uib-md-utils package's own build script so that
+ * mermaid is always resolved from the same node_modules tree as the md utilities.
+ * @type {{ name: string, outDir: string, watchFiles: string[] }}
+ */
+const MERMAID_BUILD = {
+    name:       'mermaid-browser-bundle',
+    outDir:     `${FE_OUT}/utils`,
+    // Watch the mermaid dist file in node_modules — rebuilt when mermaid is installed/updated
+    watchFiles: [
+        'node_modules/mermaid/dist/mermaid.esm.min.mjs',
+        'packages/uib-md-utils/node_modules/mermaid/dist/mermaid.esm.min.mjs',
+    ],
+}
+
 /** CSS build configuration.
  * The source is the unminified brand CSS; the build produces a minified file and source map.
  */
@@ -567,6 +583,7 @@ async function buildAllFE() {
     const tasks = [
         ...FE_BUILDS.map(cfg => buildFEModule(cfg)),
         buildExperimental(),
+        buildMermaid(),
     ]
     const results = await Promise.allSettled(tasks)
     for (const result of results) {
@@ -648,7 +665,36 @@ async function buildAllNode() {
 
 // #endregion ---- Node.js Package Builds ----
 
-// #region ---- CSS Build ----
+// #region ---- Mermaid Browser Bundle Build ----
+
+/**
+ * Build mermaid as self-contained browser bundles (IIFE + ESM) by delegating to the
+ * uib-md-utils package build script.  This ensures mermaid is resolved from the same
+ * node_modules tree used by the markdown utilities.
+ *
+ * Outputs:
+ *   front-end/utils/mermaid.iife.min.js   IIFE, minified
+ *   front-end/utils/mermaid.esm.min.js    ESM,  minified
+ * @async
+ * @returns {Promise<void>}
+ */
+async function buildMermaid() {
+    return new Promise((resolve, reject) => {
+        const child = spawn(
+            process.execPath,
+            [join(ROOT, 'packages/uib-md-utils/build.mjs')],
+            { cwd: ROOT, stdio: 'inherit', }
+        )
+        child.on('close', (code) => {
+            if (code === 0) resolve()
+            else reject(new Error(`[mermaid-browser-bundle] Build exited with code ${code}`))
+        })
+        child.on('error', reject)
+    })
+}
+
+// #endregion ---- Mermaid Browser Bundle Build ----
+
 
 /**
  * Build and minify the uib-brand CSS file using LightningCSS.
@@ -815,6 +861,10 @@ async function startWatch() {
     // non-watch invocation (e.g. `node bin/build.mjs versions`).
     const { chokidar, } = await import('../packages/uib-fs-utils/index.mjs')
 
+    // Chokidar v5 removed glob pattern support — it only accepts real filesystem paths.
+    // picomatch is used to filter change events against the original patterns.
+    const { default: picomatch, } = await import('picomatch') // eslint-disable-line n/no-extraneous-import
+
     /**
      * Strip the project root from a path for cleaner log lines.
      * @param {string} p - Absolute file path
@@ -823,57 +873,125 @@ async function startWatch() {
     const rel = (p) => p.replace(ROOT + '\\', '').replace(ROOT + '/')
 
     /**
-     * Normalise a file path to forward slashes so chokidar glob patterns work on Windows.
-     * path.join() converts '**' glob segments to backslash-separated paths on Windows,
-     * which micromatch (used internally by chokidar) does not recognise as globs.
-     * @param {string} p - Absolute path, potentially containing backslashes
+     * Normalise a path to forward slashes for consistent cross-platform comparisons.
+     * @param {string} p - Path, potentially containing backslashes
      * @returns {string} Path with all backslashes replaced by forward slashes
      */
-    const toGlobPath = (p) => p.replace(/\\/g, '/')
+    const toFwdSlash = (p) => p.replace(/\\/g, '/')
+
+    /** Regex that matches any glob special character */
+    const GLOB_CHARS_RE = /[*?[\]{!@+]/
+
+    /**
+     * Resolve an array of watchFiles patterns into chokidar-compatible filesystem paths
+     * and a combined picomatch filter function.
+     *
+     * Chokidar v5 no longer resolves glob patterns — passing a pattern like
+     * `src/**\/*.mjs` results in an empty watcher.  Instead we watch the deepest
+     * concrete ancestor directory of each glob pattern so chokidar picks up all
+     * descendant changes, then filter emitted paths with picomatch to avoid
+     * spurious rebuilds from unrelated files in the same directory.
+     *
+     * @param {string[]} patterns - Relative watchFiles pattern strings
+     * @returns {{ watchPaths: string[], isMatch: (p: string) => boolean }} Resolved watch paths and a combined pattern matcher
+     */
+    function resolveWatchEntries(patterns) {
+        /** @type {string[]} */
+        const watchPaths = []
+        /** @type {Array<(p: string) => boolean>} */
+        const matchers = []
+
+        for (const pattern of patterns) {
+            const absPattern = toFwdSlash(join(ROOT, pattern))
+
+            if (GLOB_CHARS_RE.test(pattern)) {
+                // Glob pattern: derive the base directory (everything before the first glob char)
+                const globIdx = absPattern.search(GLOB_CHARS_RE)
+                const baseDir = absPattern.slice(0, absPattern.lastIndexOf('/', globIdx))
+                watchPaths.push(baseDir)
+                matchers.push(picomatch(absPattern))
+            } else {
+                // Plain file path: watch directly; match by exact normalised path
+                watchPaths.push(absPattern)
+                matchers.push((p) => toFwdSlash(p) === absPattern)
+            }
+        }
+
+        const isMatch = (p) => matchers.some(m => m(toFwdSlash(p)))
+        return { watchPaths, isMatch, }
+    }
 
     // ── Front-end modules (one watcher per config) ──────────────────────
     for (const config of FE_BUILDS) {
+        const { watchPaths, isMatch, } = resolveWatchEntries(config.watchFiles)
         chokidar
-            .watch(config.watchFiles.map(f => toGlobPath(join(ROOT, f))), { ignoreInitial: true, })
+            .watch(watchPaths, { ignoreInitial: true, })
             .on('change', (p) => {
+                if (!isMatch(p)) return
                 console.log(`[watch] Changed: ${rel(p)}`)
                 safeRebuild(() => buildFEModule(config), config.name)
             })
             .on('add',    (p) => {
+                if (!isMatch(p)) return
                 console.log(`[watch] Added:   ${rel(p)}`)
                 safeRebuild(() => buildFEModule(config), config.name)
             })
     }
 
     // ── Experimental module ──────────────────────────────────────────────
-    chokidar
-        .watch(EXPERIMENTAL_BUILD.watchFiles.map(f => toGlobPath(join(ROOT, f))), { ignoreInitial: true, })
-        .on('change', (p) => {
-            console.log(`[watch] Changed: ${rel(p)}`)
-            safeRebuild(buildExperimental, EXPERIMENTAL_BUILD.name)
-        })
+    {
+        const { watchPaths, isMatch, } = resolveWatchEntries(EXPERIMENTAL_BUILD.watchFiles)
+        chokidar
+            .watch(watchPaths, { ignoreInitial: true, })
+            .on('change', (p) => {
+                if (!isMatch(p)) return
+                console.log(`[watch] Changed: ${rel(p)}`)
+                safeRebuild(buildExperimental, EXPERIMENTAL_BUILD.name)
+            })
+    }
 
     // ── Node.js packages (one watcher per config) ────────────────────────
     for (const config of NODE_BUILDS) {
+        const { watchPaths, isMatch, } = resolveWatchEntries(config.watchFiles)
         chokidar
-            .watch(config.watchFiles.map(f => toGlobPath(join(ROOT, f))), { ignoreInitial: true, })
+            .watch(watchPaths, { ignoreInitial: true, })
             .on('change', (p) => {
+                if (!isMatch(p)) return
                 console.log(`[watch] Changed: ${rel(p)}`)
                 safeRebuild(() => buildNodePackage(config), config.name)
             })
             .on('add',    (p) => {
+                if (!isMatch(p)) return
                 console.log(`[watch] Added:   ${rel(p)}`)
                 safeRebuild(() => buildNodePackage(config), config.name)
             })
     }
 
     // ── CSS source ───────────────────────────────────────────────────────
-    chokidar
-        .watch(CSS_BUILD.watchFiles.map(f => toGlobPath(join(ROOT, f))), { ignoreInitial: true, })
-        .on('change', (p) => {
-            console.log(`[watch] Changed: ${rel(p)}`)
-            safeRebuild(buildCSS, CSS_BUILD.name)
-        })
+    {
+        const { watchPaths, isMatch, } = resolveWatchEntries(CSS_BUILD.watchFiles)
+        chokidar
+            .watch(watchPaths, { ignoreInitial: true, })
+            .on('change', (p) => {
+                if (!isMatch(p)) return
+                console.log(`[watch] Changed: ${rel(p)}`)
+                safeRebuild(buildCSS, CSS_BUILD.name)
+            })
+    }
+
+    // ── Mermaid browser bundle (rebuilds when mermaid dist is updated) ───
+    {
+        // Watch whichever mermaid dist file actually exists on disk
+        const candidates = MERMAID_BUILD.watchFiles.map(f => join(ROOT, f)).filter(f => existsSync(f))
+        if (candidates.length > 0) {
+            chokidar
+                .watch(candidates, { ignoreInitial: true, })
+                .on('change', (p) => {
+                    console.log(`[watch] mermaid updated: ${rel(p)}`)
+                    safeRebuild(buildMermaid, MERMAID_BUILD.name)
+                })
+        }
+    }
 
     console.log('[watch] Watching for changes. Press Ctrl+C to stop.\n')
 }
