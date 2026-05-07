@@ -161,13 +161,11 @@ const mod = {
 // #endregion ----- Module level variables ---- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
+ * As a module-level named function, it will inherit `mod` and other module-level variables
  * @param {runtimeRED} RED The Node-RED runtime object
  */
 function ModuleDefinition(RED) {
-    // As a module-level named function, it will inherit `mod` and other module-level variables
-
-    // Save a reference to the RED runtime for convenience
-    if (!uib.RED) uib.RED = RED
+    // NB: A reference to the RED object (uib.RED) is defined in the runtime plugin and passed to the uibGlobalConfig module, so it can be accessed from any module that requires it.
 
     /** Register a new instance of the specified node type (2) */
     RED.nodes.registerType(mod.nodeName, nodeInstance, {
