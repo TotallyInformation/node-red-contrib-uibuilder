@@ -51,7 +51,7 @@ const uib = require('../libs/uibGlobalConfig.cjs')
 const { serialize, } = require('v8')
 
 // Import my utility packages using npm workspaces
-const { md, mdParse: _mdParseRaw, directivePlugin, fmVariablesPlugin, fm, mermaid, } = require('../../packages/uib-md-utils')
+const { md, mdParse: _mdParseRaw, directivePlugin, fmVariablesPlugin, fm, } = require('../../packages/uib-md-utils')
 const { chokidar, } = require('../../packages/uib-fs-utils')
 
 /** The node context for the current mdParse call. Set before each synchronous md.render() call.
@@ -1759,7 +1759,7 @@ function renderPrescript(key, attributes, node, options) {
     //   1. processTemplates replacing {{...}} / %%...%% patterns found inside the JSON
     //   2. </script> or other HTML-breaking sequences in the content
     const b64 = Buffer.from(JSON.stringify(attributes)).toString('base64')
-    const content = Buffer.from(mdParse(node, attributes.content, attributes)).toString('base64')
+    const content = Buffer.from(mdParse(node, attributes.content || '', attributes)).toString('base64')
     // atob() returns a binary (Latin-1) string, not UTF-8 — multi-byte characters like emoji
     // are corrupted unless we decode via TextDecoder which handles UTF-8 correctly.
     return `<script>
