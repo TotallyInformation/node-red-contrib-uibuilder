@@ -40,7 +40,8 @@ const { accessSync, existsSync, fgSync, mkdirSync, readFile, } = require('./fs.c
 const { mylog, urlJoin, } = require('./tilib.cjs') // dumpReq, mylog
 // WARNING: Don't try to deconstruct this, if you do the initial uibPackageJson access fails for some reason
 const packageMgt = require('./package-mgt.cjs')
-const path = require('path')
+/** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
+const uib = require('../libs/uibGlobalConfig.cjs')
 
 // Filename for default web page
 const defaultPageName = 'index.html'
@@ -109,11 +110,9 @@ class UibWeb {
      *  This makes them available wherever this MODULE is require'd.
      *  Because JS passess objects by REFERENCE, updates to the original
      *    variables means that these are updated as well.
-     * @param {uibConfig} uib reference to uibuilder 'global' configuration object
-     * param {Object} server reference to ExpressJS server being used by uibuilder
      */
-    setup( uib ) {
-        if ( !uib ) throw new Error('[uibuilder:web.js:setup] Called without required uib parameter or uib is undefined.')
+    setup() {
+        // if ( !uib ) throw new Error('[uibuilder:web.js:setup] Called without required uib parameter or uib is undefined.')
         if ( uib.RED === null ) throw new Error('[uibuilder:web.js:setup] uib.RED is null')
 
         // Prevent setup from being called more than once
