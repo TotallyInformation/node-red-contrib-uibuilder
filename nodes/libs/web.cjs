@@ -777,7 +777,6 @@ class UibWeb {
             // Check for client id from client - if it exists, reuse it otherwise create one
             const clientId = getClientId(req)
 
-            // TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
             res
                 // Headers only accessible in the browser via web workers
                 .header({
