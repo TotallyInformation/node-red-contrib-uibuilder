@@ -73,7 +73,7 @@ function setupUibGlobalConfig(RED) {
         }
         // Allow override of the default Content Security Policy (CSP) header for uibuilder ExpressJS routes.
         if ( settings.contentSecurityPolicy ) {
-            uib.customServer.contentSecurityPolicy = Object.assign(uib.customServer.contentSecurityPolicy, settings.contentSecurityPolicy)
+            uib.customServer.contentSecurityPolicy = settings.contentSecurityPolicy
         }
     }
 
