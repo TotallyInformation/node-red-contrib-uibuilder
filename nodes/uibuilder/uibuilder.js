@@ -66,7 +66,6 @@ const path = require('path')
 
 /** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
 const uibGlobalConfig = require('../libs/uibGlobalConfig.cjs')
-const ui = require('../libs/ui.cjs')
 
 // #endregion ----- Require packages ----- //
 
