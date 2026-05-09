@@ -3,8 +3,7 @@ title: Check all libraries on node-red startup process
 description: |
   The process to check for manually installed libraries and check for updates when node-red starts up
 created: 2022-09-17 16:05:22
-lastUpdated: 2022-09-17 16:05:28
-updated: 2023-12-30 17:01:41
+updated: 2026-05-09 11:09:57
 ---
 
 ## Overview
@@ -19,7 +18,7 @@ updated: 2023-12-30 17:01:41
 ## uibuilder
 
 * runtimeSetup()
-  * packageMgt.setup(uib)
+  * packageMgt.setup()
 
 ## Package Management (`nodes/libs/package-mgt.js`)
 
