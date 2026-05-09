@@ -253,9 +253,10 @@ module.exports = {
 
     /** Utility function to html pretty-print JSON
      * @param {*} json JSON to pretty-print
+     * @param {number} [maxLength] Maximum length of the output string. Default=10000. Longer strings will be truncated with '...truncated...'. Since v7.7.0
      * @returns {string} HTML
      */
-    syntaxHighlight: function(json) {
+    syntaxHighlight: function(json, maxLength = 10000) {
         /*
             pre .string { color: orange; }
             .number { color: white; }
@@ -264,9 +265,9 @@ module.exports = {
             .key { color: #069fb3;}
         */
         json = JSON.stringify(json, undefined, 4)
-        // Trim to maximum of 10k characters
-        if (json.length > 10000) {
-            json = json.substring(0, 10000) + '...truncated...'
+        // Trim to maximum of maxLength characters
+        if (json.length > maxLength) {
+            json = json.substring(0, maxLength) + '...truncated...'
         }
         json = json
             .replace(/&/g, '&amp;')
