@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2026-03-23 16:21:58
+updated: 2026-05-23 14:13:41
 since: v6.6.0
 ---
 
@@ -14,34 +14,41 @@ The following custom web components are built into UIBUILDER:
 * [`<uib-var>`](#uib-var) - Substitute dynamic data into the UI (similar to `{{varname}}` in frameworks).
 * [`<uib-control>`](#uib-control) - Change the styling and other parameters of the uibuilder client.
 
-In addition, some raw web component ES Module libraries may be included and made available under the `../uibuilder/components/` path. See [Additional components](#additional-components) below for details.
+In addition, some raw web component ES Module libraries may be included and made available under the `../uibuilder/utils/` URL path. See [Additional components](#additional-components) below for details. Currently, these include:
+
+* `<show-meta>` - A component to show the current page's metadata as known to the uibuilder client library. This is designed to help with debugging _MarkWeb_ pages but can be used independently of markweb.
+* `<json-viewer>` - A component to show JavaScript data in a pretty-printed, collapsible tree format with filtering. Unlike generic JSON viewers, this component can also handle functions, circular references and other non-JSON data. It also includes a pure JavaScript renderer that can be used to render JSON data to HTML without needing to use the component itself (and that is made available in Node-RED function nodes).
 
 ## Introduction
 
-UIBUILDER can work with front-end frameworks such as REACT, VueJS, etc. However, it does not need them. But one thing that these frameworks often have are collections of components that you can add to your HTML. Each component will produce something useful in your web page such as an information card, tabbed interface, navigation menu, etc.
+UIBUILDER can work with front-end frameworks such as REACT, VueJS, etc. However, it does not need them. But one thing that these frameworks often have are collections of *components* that you can add to your HTML. Each component will produce something useful in your web page such as an information card, tabbed interface, navigation menu, etc. These might also be referred to as "widgets".
 
-For more modern browsers though, *there is an alternative to a framework and that is "[web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_Components)"*. These are a W3C international standard and they are defined using JavaScript. The built-in components described here are examples of such components.
+For more modern browsers though, *there is an alternative to a framework and that is "[web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_Components)"*. These are a W3C international standard and they are defined using JavaScript. The components described here are examples of these.
 
-To make use of a web component, all that is needed is to load it as a library. Web components are written as ES Modules (ESM). In this form, you can only use them with the ESM version of the uibuilder client library and they will need loading as an `import` statement in your module `index.js` just like the client library itself. (`uib-var` & `uib-meta` are loaded for you though, you don't have to do anything).
+To make use of a web component, all that is needed is to *load it as a library*. Web components are written as ES Modules (ESM). In this form, you can only use them with the ESM version of the uibuilder client library and they will need loading as an `import` statement in your module `index.js` just like the client library itself. (`uib-var` & `uib-meta` are loaded for you though, you don't have to do anything).
 
-However, some components may also be built so that they can be loaded as a linked script. This is easily done using a build tool such as [`esbuild`](https://esbuild.github.io/). When built this way, they can be used with the standard IIFE version of the uibuilder client library. A well-crafted component will often include a version for loading this way but it is up to the author to make this available. Check the component's documentation for details.
+However, some components may also be built so that they can be loaded as a linked script. This is easily done using a build tool such as [`esbuild`](https://esbuild.github.io/). When built this way, they can be used with the standard IIFE version of the uibuilder client library. A well-crafted component will often include a version for loading this way but it is up to the author to make this available. Check the component's documentation for details. An example of this in UIBUILDER is the `<json-viewer>` component which is available in both ESM and IIFE formats.
 
-Needless to say, any web components written by [TotallyInformation](https://github.com/TotallyInformation) and certainly any included with UIBUILDER will be written such that their library can simply be linked with no other code needed to make them work. However, they will also be usable as standard ES modules. Again though, the built-in components are loaded for you automatically by the uibuilder client library, you don't load them yourself.
+Needless to say, any web components written by [TotallyInformation](https://github.com/TotallyInformation) and certainly any included with UIBUILDER will be written such that their library can simply be linked with no other code needed to make them work. However, they will also be usable as standard ES modules. Again though, the *built-in* components are loaded for you automatically by the uibuilder client library, you don't load them yourself.
 
 > [!NOTE]
-> UIBUILDER's no-code `uib-element` node currently sends out low-code JSON data that describes each element, the uibuilder client library converts (hydrates) this configuration into HTML and inserts to or updates the page. While this is reasonably efficient since no actual HTML/JavaScript code is sent, it could be even more efficient by having a corresponding *web component* for each element. This is something that is likely to happen in a future release.
+> UIBUILDER's no-code `uib-element` node currently sends out low-code JSON data that describes each element, the uibuilder client library converts (hydrates) this configuration into HTML and inserts to or updates the page. While this is reasonably efficient since no actual HTML/JavaScript code is sent, it could be even more efficient by having a corresponding *web component* for each element. This is something that may happen in future releases.
 
 > [!TIP]
 > There is a more extensive package of web components available from [Totally Information](https://wc.totallyinformation.net). They are designed to work with or without UIBUILDER. Indeed they should work with other web servers and also with the Node-RED Dashboard or http-in/-response nodes.
 > 
 > The built-in components described here are built to the same standards used in the other package.
 
-> [!TIP]
-> The web components described on this page **do not need to be separately loaded** in your own front-end code. They are already included in the uibuilder client library. You can simply use them in your HTML.
+## Built-in components
 
-## Built-in: `<apply-template>` :id=apply-template
+> [!TIP]
+> The web components described in this section **do not need to be separately loaded** in your own front-end code. They are already included in the uibuilder client library. You can simply use them in your HTML.
+
+### `<apply-template>` :id=apply-template
 
 This small but powerful component allows you to keep "templates" in your HTML that are copied to another place. The referenced template's content will _replace_ to the contents of the `<apply-template>` tag.
+
+This is somewhat similar to VueJS's "teleport" component but with some differences. The main difference being that the template content is copied to the new location rather than moved. This means that the same template can be applied multiple times if needed. There is an option to prevent this if required (see below).
 
 > [!TIP]
 > If you have a `<slot></slot>` tag in your template, the original HTML contents of the `<apply-template>` tag will be moved into the slot.
@@ -51,7 +58,7 @@ I've never understood why this isn't a standard HTML feature! Doing this by hand
 > [!NOTE]
 > The uibuilder front-end library also has a built-in function [`uibuilder.applyTemplate((sourceId, targetId, config)`](client-docs/functions#applyTemplate). It does the same thing as this component but does it in JavaScript code so you can do `uibuilder.applyTemplate('template-1', 'more')` in code to get a similar effect. The main differences being that: You must supply the id of an element to which the template contents will be appended. And you can apply attributes to the _1st child element_ using the `config` parameter.
 
-### Attributes :id=apply-template-attribs
+#### Attributes :id=apply-template-attribs
 
 #### template-id
 
@@ -67,7 +74,7 @@ This is helpful if you need to ensure that the source template can only ever be 
 
 Technically, the content of the template is ["adopted"](https://developer.mozilla.org/en-US/docs/Web/API/Document/adoptNode) and so is no longer available in the template.
 
-### Example  :id=apply-template-examples
+#### Example  :id=apply-template-examples
 
 ```html
 <!doctype html><html lang="en">
@@ -123,7 +130,7 @@ Technically, the content of the template is ["adopted"](https://developer.mozill
 </body></html>
 ```
 
-## Built-in: `<uib-meta>` (since v7.6) :id=uib-meta
+### `<uib-meta>` (since v7.6) :id=uib-meta
 
 Display metadata information about the containing page.
 
@@ -134,7 +141,7 @@ The uibuilder client library will automatically request this data from the uibui
 > [!NOTE]
 > This component could easily be extended to get things like the uibuilder node's title and description and other information if required.
 
-### Attributes :id=uib-meta-attribs
+#### Attributes :id=uib-meta-attribs
 
 #### type :id=uib-meta-type
 
@@ -163,7 +170,7 @@ For size output:
 * `k` - kilobytes (_bytes/1024_) to 1 decimal place.
 * `m` - megabytes (_bytes/(1024*1024)_) to 2 decimal places.
 
-### Examples :id=uib-meta-examples
+#### Examples :id=uib-meta-examples
 
 ```html
 <div id="more">
@@ -175,7 +182,7 @@ For size output:
 </div>
 ```
 
-## Built-in: `<uib-var>` (since v6.6) :id=uib-var
+### `<uib-var>` (since v6.6) :id=uib-var
 
 Include easily updated output on a web page.
 
@@ -195,11 +202,11 @@ There is no need to separately load the component library, that is done automati
 > For example, you cannot use it with `<link>` or `<meta>` elements. For those, use the [`uib-var` custom attribute](client-docs/reactive#uib-var) instead.
 
 
-### Attributes :id=uib-var-attribs
+#### Attributes :id=uib-var-attribs
 
 These attributes can be added to the `<uib-var>` tag. Noting that attributes must always have _string_ values, e.g. `topic="my/topic/#1"`.
 
-#### topic :id=uib-var-topic
+##### topic :id=uib-var-topic
 
 Adds a background "listener" for messages from Node-RED via UIBUILDER that have the `topic` property matching this attribute. For example, the HTML `<uib-var topic="my/topic/#1"></uib-var>` will be automatically updated to show `42` when the corresponding uibuilder node is sent a message containing `{topic: 'my/topic/#1', payload: 42}`.
 
@@ -209,7 +216,7 @@ This approach is especially useful to be able to display MQTT topic values in yo
 
 > Cannot be used in conjunction with the `variable` attribute.
 
-#### variable :id=uib-var-variable
+##### variable :id=uib-var-variable
 
 Displays the *value* of the given variable name in your web page and *dynamically updates* as long as the variable is changed using `uibuilder.set()`; or from Node-RED using the appropriate uib set command, e.g. `msg = {"_uib":{"command":"set","prop":"myVar","value":"42"}}`. By default, the tag inserts the variable value inline with other text. Class and Style attributes can be added as for any other HTML.
 
@@ -222,7 +229,7 @@ Displays the *value* of the given variable name in your web page and *dynamicall
 > [!TIP]
 > You can use deep property names with the `variable` attribute. For example, `variable="myVar.propName"` will display the value of `myVar.propName` and update when that value changes.
 
-#### filter :id=uib-var-filter
+##### filter :id=uib-var-filter
 
 Takes a string representation of a function name that will be run before display. It can be used on its own or in conjunction with either the `variable` or `topic` attributes.
 
@@ -270,17 +277,17 @@ Generally, it will be best to define your own function. Further standard filters
     
     
 
-#### undefined :id=uib-var-undefined
+##### undefined :id=uib-var-undefined
 
 If present or set to `on`, or `true`, the component will show the text "undefined" if the variable is undefined. 
 
 If not present or set to anything else, an undefined variable will show the _slot content_ (anything put between the open and close tag). This lets you have an initial value showing that is replaced as soon as the variable is actually set.
 
-#### report :id=uib-var-report
+##### report :id=uib-var-report
 
 If present or set to `on`, or `true`, the component will return a standard message back to Node-RED when the variable changes value.
 
-#### type :id=uib-var-type
+##### type :id=uib-var-type
 
 Must be one of:
 
@@ -293,13 +300,13 @@ Must be one of:
 
 Final output is passed to uibuilder's sanitise function so if the DOMPurify library is loaded, the output is santized by it.
 
-#### data-before and data-after (since v7.6) :id=uib-var-data-before-after
+##### data-before and data-after (since v7.6) :id=uib-var-data-before-after
 
 These attributes allow you to specify text to show before and after the variable value. This is useful for adding units, labels, or other contextual information around the variable value without needing extra HTML elements.
 
 HTML content in these attributes will be rendered.
 
-### Styling
+#### Styling
 
 The component tries to load `./index.css` as a stylesheet so that your own styling can be used in any output.
 
@@ -307,12 +314,12 @@ Simply ensure that the file is served from the same URL location as your main pa
 
 This is the standard method for UIBUILDER instances but this feature is not dependent on UIBUILDER.
 
-### Useful filter functions
+#### Useful filter functions
 
 > [!TIP]
 > When used as a filter function, the first parameter passed to the function is always the variable or topic value - so you do not specify it in the `filter` attribute. Any additional parameters provided in the `filter` attribute are passed after this.
 
-#### formatNumber :id=uib-var-format-number
+##### formatNumber :id=uib-var-format-number
 
 Formats a number to a given locale and optionally, a set number of decimal places.
 
@@ -327,22 +334,28 @@ Parameters: `formatNumber(value, decimalPlaces, intl, opts)`. Where `opts` is an
 
 See details in the [client functions doc](client-docs/functions#formatNumber).
 
-#### formatDate :id=uib-var-format-date
+##### formatDate :id=uib-var-format-date
 
-[formatDate](fns/format-date-time.md ':include')
+Takes a JavaScript Date object (or a date string that can be converted to a Date object) and formats it using the JavaScript standard INTL library.
+
+Only a limited set of format patterns are currently supported. If no pattern is provided, the date is formatted using the given/default locale format.
+
+If no locale is provided, the browser's default locale is used.
+
+See the [formatDate documentation](fns/format-date-time.md) for details.
 
 Example:
 ```html
 <uib-var variabl="mydate" filter="formatDate('iso', 'en-GB')"></uib-var>
 ```
 
-#### Other pre-defined filters
+##### Other pre-defined filters
 
 Check out the [uibuilder client library functions documentation](client-docs/functions) which contains other functions that may be of use.
 
-### Examples :id=uib-var-examples
+#### Examples :id=uib-var-examples
 
-#### Show the uibuilder client library version
+##### Show the uibuilder client library version
 
 ```html
 <p>
@@ -351,21 +364,21 @@ Check out the [uibuilder client library functions documentation](client-docs/fun
 </p>
 ```
 
-#### Show the last message send/received to/from Node-RED
+##### Show the last message send/received to/from Node-RED
 
 ```html
 <p>Last msg sent: "<uib-var variable="sentMsg" type="object"></uib-var>".</p>
 <p>Last msg received: "<uib-var variable="msg" type="object"></uib-var>".</p>
 ```
 
-#### Show undefined variable and report to Node-RED when variable changes
+##### Show undefined variable and report to Node-RED when variable changes
 
 ```html
 <!-- Shows the value even if undefined. Sends a msg to Node-RED when myVar is changed -->
 <p>The answer is <code><uib-var variable="myVar" undefined report></uib-var></code>.</p>
 ```
 
-#### Using in Markdown content
+##### Using in Markdown content
 
 ```markdown
 ## My Heading
@@ -374,13 +387,13 @@ The version of the uibuilder client library currently
 loaded is `<uib-var variable="version"></uib-var>`.
 ```
 
-#### Adding a `uib-var` tag to your page using no-code from Node-RED
+##### Adding a `uib-var` tag to your page using no-code from Node-RED
 
 Use a `uib-tag` node:
 
 ![example uib-tag node](image.png)
 
-## Built-in: `<uib-control>` :id=uib-control
+### `<uib-control>` :id=uib-control
 
 > [!WARNING]
 > This component is currently EXPERIMENTAL.
@@ -393,28 +406,31 @@ Included in your page using the `<uib-control>` tag, see the examples below on h
 
 There is no need to separately load the component, that is done automatically by the uibuilder client library.
 
-### Attributes :id=uib-control-attribs
+#### Attributes :id=uib-control-attribs
 
 These attributes can be added to the `<uib-control>` tag. Noting that attributes must always have _string_ values, e.g. `topic="my/topic/#1"`.
 
 No attributes are currently defined.
 
-### Styling
+#### Styling
 
 The component tries to load `./index.css` as a stylesheet so that your own styling can be used in any output.
 
 Simply ensure that the file is served from the same URL location as your main page.
 
-### Examples :id=uib-control-examples
+#### Examples :id=uib-control-examples
 
-#### ???
+##### ???
 
 ```html
 ```
 
 ## Additional components :id=additional-components
 
-### `<show-meta>` component :id=show-meta
+> [!TIP]
+> The web components in this section are available from uibuilder but are not automatically loaded. They are all available via the `../uibuilder/utils/...` URL path.
+
+### `<show-meta>` :id=show-meta
 
 This component is designed to help with debugging _MarkWeb_ pages by showing the current page's metadata as known to the uibuilder client library.
 
@@ -439,6 +455,157 @@ elShowMeta.metadata = { title: 'My Page', author: 'John Doe', created: '2026-01-
 
 This component was added in UIBUILDER v7.6.0. It is provided only as a raw ES Module.
 
+### `<json-viewer>` (since v7.7.0) :id=json-viewer
+
+A component to show JavaScript data in a pretty-printed, collapsible tree format with filtering. Unlike generic JSON viewers, this component can also handle functions, circular references and other non-JSON data. It also includes a pure JavaScript renderer that can be used to render JSON data to HTML without needing to use the component itself (and that is made available in Node-RED function nodes).
+
+> [!WARNING]
+> If you pass a truely huge object to the component, it may cause the browser to become unresponsive due to browser limitations on the number of DOM elements and the time taken to render them.
+>
+> To help with this, the component has a `maxChildren` attribute and property that limits the number of displayed children for each object or array. This defaults to 1,000. A warning message is shown if the number of children exceeds this limit. You can adjust this limit as needed but be aware that setting it too high may cause performance issues.
+>
+> Additionally, there is a total limit of 50,000 entries that can be rendered. If this limit is exceeded, the component will stop rendering and show a warning message.
+
+#### Usage
+
+> [!TIP]
+> There is an example flow included with the UIBUILDER package that demonstrates how to use this component in Node-RED function nodes and in front-end custom scripts. Check out the flow library for `Client-side code » json-viewer` for details.
+
+To use the component, you need to include the component script in your `index.html` page.
+
+For the standard script approach (AKA "IIFE") use as:
+
+```html
+<script defer src="../uibuilder/utils/json-viewer.iife.min.js"></script>
+```
+Add this after the uibuilder client library and before your own script. It automatically registers itself.
+
+If using ES Modules (ESM), you can import it as:
+
+```javascript
+import '../uibuilder/utils/json-viewer.esm.min.js'
+```
+At the top of your own module script.
+
+In the body of your HTML:
+
+```html
+<json-viewer id="jv1"></json-viewer>
+```
+
+The component then adds the required styles and wrappers to the page.
+
+You either use the `data` attribute (for simple JSON string data) in the HTML or the `data` property from JavaScript to provide the data to show. The component will then render the data as a collapsible tree.
+
+```javascript
+const elJV = document.getElementById('jv1')
+elJV.data = { hello: 'world', nested: { values: [1, 2, 3] } }
+```
+
+##### Using the pure JavaScript renderer
+
+###### With Node-RED function nodes
+
+The renderer is made available to Node-RED function nodes transparently as `RED.util.uib.renderToHTML` and can be used like this:
+
+```javascript
+msg.payload = RED.util.uib.renderToHTML(msg, { /* options if you want them */ })
+```
+
+The resulting HTML can be sent to a uibuilder node via a `uib-element` node set to "HTML" mode. Alternatively, you can use it with any other Node-RED node that can send HTML content to a page, e.g. `http-response`, `template`, `ui_template`, etc.
+
+###### With front-end custom scripts
+
+The pure JavaScript renderer is also available as a static method on the component class. For example, in front-end custom scripts, you can do:
+
+```javascript
+// In an ES Module script
+import { renderToHTML } from '../uibuilder/utils/json-viewer.esm.min.js'
+const data = { hello: 'world', nested: { values: [1, 2, 3] } }
+const html = renderToHTML(data, { maxDepth: 3, filterType: 'string' })
+```
+This may be helpful if you want to use the renderer in your own custom components or in other contexts where you don't want to use the full component.
+
+##### Editing
+
+When the `editable` attribute is present, editable properties and values are shown with a dashed underline. 
+
+Click on a property or value to edit it. When you finish editing, a `json-viewer:change` event is emitted with the path to the changed value and the new value. If you are using UIBUILDER, the changed values will also be sent in a message to Node-RED with the topic `json-viewer/change` and the payload containing the HMTL id, object path for the edit and old/new values.
+
+In edit mode, any objects `{...}` or arrays `[...]` get an additional button to the right of the opening brace/bracket. This lets you add new properties/entries.
+
+> [!TIP]
+> The HTML elements `data` property is updated with your edits. This will be a better representation of the data since it does not have to do so much conversion.
+>
+> If you set the `data` property from JavaScript by assigning another variable to it, remember that JavaScript passes objects by reference. This means that your original variable will also be updated.
+
+> [!NOTE]
+> There are a few limitations to be aware of with editing. These are due to limitations of HTML/JavaScript and the need to convert values to and from strings for editing.
+>
+> * The following value types cannot be edited since they cannot be reliably converted to and from strings. They will be shown as read-only.
+> 
+>   * *Symbols*, *functions*, *Circular references*, and *Regex*.
+> 
+> * *Bigint* values can be edited but the value in the message returned to Node-RED will be a string representation of the bigint since they cannot be stringified to JSON. You can convert this back to a bigint in Node-RED with `BigInt(value)`. (Note that bigints are numbers with a trailing "n", e.g. `123n`). Make sure to include the *trailing "n"* when editing bigints.
+> * *Map* and *Set* values are represented as objects and arrays respectively and so can be edited but the value returned to Node-RED will be in this form. You can convert these back to Map and Set in Node-RED with `new Map(Object.entries(value))` and `new Set(value)` respectively.
+
+#### Styling
+
+The component uses the "Light DOM" and so can be styled with your own CSS. It also adds its own styles. Either as a stylesheet at the top of your page when used as a component. Or, when used as a JavaScript renderer and asking for the optional styles, they will be inserted immediately before the rendered HTML.
+
+The component makes extensive use of CSS variables so that you can easily change the styling of the output. It is set up for both light and dark theme use.
+
+#### Supported attributes
+
+* data        - JSON string or serialisable value to display
+  
+  > [!NOTE]
+  > It is generally better to use the data property from JavaScript since that is a lot more flexible and can handle any JavaScript data, including functions and circular references. The `data` attribute is only for simple JSON data.
+
+* max-depth   - Maximum auto-expand depth on first render (default: 2)
+* collapsed   - Presence collapses all nodes on first render
+* filter-type - Restrict visible nodes to this data type (e.g. "string", "number")
+* editable    - Presence enables inline editing of scalar leaf values
+
+#### Custom events
+
+* `json-viewer:connected`     - Instance added to DOM
+* `json-viewer:disconnected`  - Instance removed from DOM
+* `json-viewer:ready`         - Instance ready for interaction
+* `json-viewer:attribChanged` - Watched attribute changed. evt.detail.data = { attribute, newVal, oldVal }
+* `json-viewer:toggle`        - Node expanded or collapsed. evt.detail.data = { path, expanded }
+* `json-viewer:copy`          - Path or value copied to clipboard. evt.detail.data = { path, text, kind }
+* `json-viewer:search`        - Search query changed. evt.detail.data = { query, matches }
+* `json-viewer:change`        - Editable scalar value changed. evt.detail.data = { path, newValue }
+
+#### Methods
+
+* `collapseAll`  - Collapse all expandable nodes
+* `expandAll`    - Expand all expandable nodes
+* `search`       - Apply a search query programmatically
+* `renderToHTML` - Static re-export of the pure renderer (convenience)
+
+#### Examples
+
+##### Standard use as an HTML component
+
+```html
+<json-viewer data='{"hello":"world"}' max-depth="3"></json-viewer>
+```
+
+##### Use as a JavaScript renderer
+
+```javascript
+const el = document.querySelector('json-viewer')
+el.data = { nested: { values: [1, 2, 3] } }
+```
+
+##### Listening for events
+```javascript
+// Listen for a node being toggled
+el.addEventListener('json-viewer:toggle', evt => console.log(evt.detail.data))
+```
+
 ## External components
 
 Web components can be challenging to build but are often fairly simple. There are plenty of web resources to get you started with development of them. However, there are also a lot of existing components that you can easily make use of with Node-RED and UIBUILDER.
@@ -447,7 +614,7 @@ Such components can be manually added to your `index.html` file OR they can be d
 
 Some potentially useful components are shown below.
 
-### Totally Information experimental web components
+### Totally Information web components
 
 Totally Information has a set of web components that work with or without UIBUILDER though they will generally have extra features when used with. 
 
@@ -463,7 +630,7 @@ A nice looking gauge was gifted to the community by Node-RED forum contributor H
 
 ### Include-fragment-element
 
-This web component is written and maintained by GitHub. It lets you have something like this in your 
+This web component is written and maintained by GitHub. It lets you have something like this in your page:
 
 ```html
 <div class="tip">
