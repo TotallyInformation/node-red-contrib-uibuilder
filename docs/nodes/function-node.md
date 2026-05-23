@@ -2,64 +2,15 @@
 title: Enhancements to the Node-RED function node
 description: |
   UIBUILDER adds some functional extensions to Node-RED's Function Node. This page describes them.
+  The functions are all added to the uib namespace of the RED.util object, so they can be used in any function node without needing to require or import anything.
 created: 2024-06-14 20:53:10
-updated: 2025-05-27 17:25:31
+updated: 2026-05-23 15:44:56
 ---
 
-## Send message to clients
+> [!TIP]
+> Node-RED's Monaco web code editor provides autocompletion for these functions, so you can just start typing `RED.util.uib.` in a function node and the list of available functions will appear. Selecting one of the functions from the list will show a tooltip with the function's parameters and description.
 
-`RED.util.uib.send(uibname, msg)` will send a message to all connected clients of the specified uibuilder instance. The usual message routing, middleware and filtering rules apply.
-
- ### Parameters
- 
- * `uibname` is the name (url) of a uibuilder instance. Sends a message to any connected clients of that instance.
- * `msg` is any valid Node-RED message object.
-
-> [!NOTE]
-> This obviously bypasses any `uib-cache` nodes you might be using so messages sent this way will not be cached for new clients.
-
-## List all uibuilder instances (Apps)
-
-`RED.util.uib.listAllApps()` returns a list object containing all of the uibuilder nodes and some details about them.
-
-### Example output
-
-```json
-{
-  "uib-element-test": {
-    "node":"90794d03f65a40d4",
-    "url":"uib-element-test",
-    "title":"Zero-code examples",
-    "descr":"A collection of flows that demonstrate and test all of the uib-element node's output types."
-  },
-  // ...
-}
-```
-
-> [!NOTE]
-> The title and description for an instance is set in the uibuilder node's advanced configuration tab.
-
-## Decimal places
-
-`RED.util.uib.dp(inp, dp, int)` returns a _string representation_ of an input _number_ formatted to the given number of decimal places and locale.
-
-### Parameters
-
-* `inp` is the input number.
-* `dp` defaults to 1 decimal place.
-* `int` defaults to `en-GB` locale.
-
-### Example
-
-```javascript
-// Assuming msg.payload = 1234.5678
-msg.payload = RED.util.uib.dp(msg.payload, 2, 'en-GB')
-
-return msg
-// Returns "1,234.57" in the payload
-```
-
-## Deep object find
+## `deepObjFind` - Deep object find :id=deep-object-find
 
 `RED.util.uib.deepObjFind(obj, matcher, cb)` will search into a deeply nested object for a match and then call a callback function with the object that matched.
 
@@ -117,7 +68,68 @@ RED.util.uib.deepObjFind(msg._ui, matcher, cb)
 ```
 
 
-## Truthy
+## `dp` - Decimal places :id=decimal-places
+
+`RED.util.uib.dp(inp, dp, int)` returns a _string representation_ of an input _number_ formatted to the given number of decimal places and locale.
+
+### Parameters
+
+* `inp` is the input number.
+* `dp` defaults to 1 decimal place.
+* `int` defaults to `en-GB` locale.
+
+### Example
+
+```javascript
+// Assuming msg.payload = 1234.5678
+msg.payload = RED.util.uib.dp(msg.payload, 2, 'en-GB')
+
+return msg
+// Returns "1,234.57" in the payload
+```
+
+## `listAllApps` - List all uibuilder instances (Apps) :id=list-all-apps
+
+`RED.util.uib.listAllApps()` returns a list object containing all of the uibuilder nodes and some details about them.
+
+### Example output
+
+```json
+{
+  "uib-element-test": {
+    "node":"90794d03f65a40d4",
+    "url":"uib-element-test",
+    "title":"Zero-code examples",
+    "descr":"A collection of flows that demonstrate and test all of the uib-element node's output types."
+  },
+  // ...
+}
+```
+
+> [!NOTE]
+> The title and description for an instance is set in the uibuilder node's advanced configuration tab.
+
+## `renderToHTML` (since v7.7.0) - Render JSON to HTML :id=render-to-html
+
+`RED.util.uib.renderToHTML(obj)` takes a JavaScript object and renders it to HTML using the [`saferSerialize`](#safer-serialize) function. This allows you to render complex (or simple) data to HTML without needing worring about serialization errors.
+
+## `saferSerialize` (since v7.7.0) - Serialize JavaScript object data without errors :id=safer-serialize
+
+`RED.util.uib.saferSerialize(obj)` takes a JavaScript object and returns a string representation without throwing errors due to circular references, functions, or other non-serializable data types. This is particularly useful for logging or debugging complex objects in Node-RED function nodes.
+
+## `send` - Send a message to uibuilder connected clients :id=send
+
+`RED.util.uib.send(uibname, msg)` will send a message to all connected clients of the specified uibuilder instance. The usual message routing, middleware and filtering rules apply.
+
+ ### Parameters
+ 
+ * `uibname` is the name (url) of a uibuilder instance. Sends a message to any connected clients of that instance.
+ * `msg` is any valid Node-RED message object.
+
+> [!NOTE]
+> This obviously bypasses any `uib-cache` nodes you might be using so messages sent this way will not be cached for new clients.
+
+## `truthy` - Check if value is truthy :id=truthy
 
 `RED.util.uib.truthy(inp)` returns TRUE if the input is "[truthy](https://developer.mozilla.org/en-US/docs/Glossary/Truthy)", otherwise FALSE.
 
@@ -139,3 +151,4 @@ node.warn( RED.util.uib.truthy("True") )
 node.warn( RED.util.uib.truthy("On") )
 node.warn( RED.util.uib.truthy(1) )
 ```
+
