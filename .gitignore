@@ -142,3 +142,6 @@ docs/docs.md
 docs/.config/doctest.md
 docs/roadmap/.~readme.md
 _workspaces/VSCode User settings.json
+packages/telemetry/.wrangler/*
+packages/telemetry/.env.test.local
+packages/telemetry/wrangler.toml
