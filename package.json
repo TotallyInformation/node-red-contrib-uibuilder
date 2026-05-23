@@ -11,6 +11,7 @@
     "build:fe": "node bin/build.mjs fe",
     "build:node": "node bin/build.mjs node",
     "build:css": "node bin/build.mjs css",
+    "build:json-viewer": "node bin/build.mjs json-viewer",
     "buildVersions": "node bin/build.mjs versions",
     "buildDocBundle": "node bin/build.mjs docs",
     "createTag": "node bin/build.mjs tag",
