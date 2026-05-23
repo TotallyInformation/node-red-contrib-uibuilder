@@ -22,18 +22,59 @@ I did sneak in 1 change to this release. Some updates to the layout of the UIBUI
 
 [Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.6.2...v7.7.0).
 
+### 📌 Highlights
+
+### NEW Node-RED Function Node utility functions
+
+UIBUILDER has enhanced the `RED.util` object for quite some time. It adds the `RED.util.uib` namespace which contains utility functions for use in Node-RED Function nodes.
+
+This release adds to this namespace two new functions:
+
+* `saferSerialize()` - This is a more robust version of `JSON.stringify()` that can handle circular references, functions and other data types without throwing an error.
+
+   It lets you pass more complex data over to the front-end without worrying about serialization errors.
+
+* `renderToHTML()` - This function takes a JavaScript object and renders it to an HTML string using the new `saferSerialize` function.
+
+  This can be used anywhere that can display HTML, not just UIBUILDER. For example, you could use it to render complex data in a Dashboard template node.
+
+There is also a new *example flow* that you can import. In the uibuilder examples, look for `Client-side code >> Web Component - json-viewer`. It demonstrates both the saferSerialize, renderToHTML functions and the new json-viewer web component.
+
+> [!NOTE]
+> `renderToHTML()` and `saferSerialize()` do not quite produce the same output as the `json-viewer` component since they have no JavaScript interactivity available. However, they do produce a nicely formatted and highlighted HTML representation of the data that is much more robust than `JSON.stringify()`.
+>
+> Use `<json-viewer>` in a web page for the best experience.
+
+### NEW json-viewer HTML Web Component library
+
+This optional library provides an HTML Web Component `<json-viewer>` that can be used to display JSON data in a nicely formatted and interactive way. It supports collapsible sections for objects and arrays, syntax highlighting, and other features to make it easier to explore complex JSON data.
+
+If loaded in your `index.html` file, it not only provides the new element but also enhances the existing `uibuilder.syntaxHighlight()` and `uibuilder.showMsg()` functions to use the new library for rendering JSON data. This gives a much nicer output with collapsible sections for large objects and arrays.
+
 ### uibuilder client library
 
-* When the Node-RED server tells clients that it is shutting down, the Socket.IO auto-reconnect is turned off for 30 seconds to allow the server to restart without clients trying to reconnect and causing errors. Also reduced the number of error messages logged to the client console when Node-RED is disconnected.
-* Socket.IO disconnect function updated to add the disconnect details introduced in Socket.IO v4.5. The `uibuilder:socket:disconnected` event updated to output `{reason, details}` instead of just the reason string.
 * **FIX** for issue with `RED.util.uib.send()`. Was generating an uncaught error if the specified uibuilder instance did not exist.
 * Moved some startup processing into the runtime plugin. This means that the uibuilder global configuration is available earlier in the startup process since plugins are loaded before nodes.
+* **ENHANCED** `uibuilder.syntaxHighlight()` function now looks for the JsonViewer library. If loaded, it is used to render to HTML instead of the custom renderer. This gives a much nicer output with collapsible sections for large objects and arrays. If the library is not loaded, it falls back to the original custom renderer.
+* **ENHANCED** `uibuilder.showMsg()` function now has tooltips for its two action buttons. It will also use the JsonViewer library if loaded.
+* When the Node-RED server tells clients that it is shutting down, the Socket.IO auto-reconnect is turned off for 30 seconds to allow the server to restart without clients trying to reconnect and causing errors. Also reduced the number of error messages logged to the client console when Node-RED is disconnected.
+* Socket.IO disconnect function updated to add the disconnect details introduced in Socket.IO v4.5. The `uibuilder:socket:disconnected` event updated to output `{reason, details}` instead of just the reason string.
 
 ### Markweb
 
 * The automatic status block has been corrected and moved to the main content. It only shows if either or both of the `status` and/or `since` front-matter attributes are set.  Note that this is driven purely by CSS (no JavaScript) but it requires a relatively up-to-date browser to work correctly.
 * [Mermaid diagrams](https://mermaid.ai/open-source/intro/) are now supported as code blocks in markdown files.
 * Markdown footnotes are now also supported. See the Footnotes page in the `[DEMO]` Markweb for details and examples. We use the [markdown-it-footnote](https://github.com/markdown-it/markdown-it-footnote) plugin for this.
+
+### Sidebar node
+
+* **FIXED** Clearly nobody has been using the features of the `uib-sidebar`! Because if you had tried to send dynamic content to the sidebar, it wasn't working at all! Now, it does indeed work correctly.
+
+* **NEW** You can now have as many `uib-sidebar` nodes as you like. Each one will add its defined HTML to the sidebar. This allows you to easily modularise your sidebar content and have different nodes responsible for different parts of the sidebar. Each sidebar node has its own input and output so they can be updated and respond to messages independently. The content from each sidebar node is added to the sidebar in the order that the nodes are listed in the Node-RED editor.
+
+  > [!TIP]
+  > Each of the sidebar HTML definitions has a change listener attached. This means that, if you include input elements in the HTML, they report back to the node's output when they change. This allows you to easily create interactive sidebar content.
+
 
 ### uibuilder node
 
@@ -56,7 +97,14 @@ I did sneak in 1 change to this release. Some updates to the layout of the UIBUI
   You can customize this value to suit your needs. For example, if you want to allow loading scripts from a specific CDN, you can add that CDN's URL to the `script-src` directive.
   See See https://helmetjs.github.io/docs/csp/ for more details on how to configure CSP headers. NOTE the `;` on the end of each text value, this is REQUIRED.
 
-  This means that you no longer need a custom `<uibRoot/.config/uibMiddleware.js` file just to set the CSP header. You can simply set it in your `settings.js` file.
+  This means that you no longer need a custom `<uibRoot>/.config/uibMiddleware.js` file just to set the CSP header. You can simply set it in your `settings.js` file.
+
+  > [!NOTE]
+  > If you are using a CSP override in your `<uibRoot>/.config/uibMiddleware.js` file, that will take preference of this setting.
+  >
+  > Node-RED must be restarted after changing this setting for it to take effect.
+  >
+  > These settings do not affect http-in/-response or Dashboard nodes. They only affect the uibuilder & Markweb nodes.
 
 * Improved shutdown processing, especially when using a custom Express server. Socket.IO and web connections are now terminated if Node-RED recieves a SIGINT. In addition, each instance's close function has been tidied up & the "shutdown" control message is now sent to connected clients earlier. This also updates the web and uiblib libraries.
 
@@ -66,10 +114,14 @@ I did sneak in 1 change to this release. Some updates to the layout of the UIBUI
 
 * Started to move initialisation processing into the runtime plugin. This allows the uibuilder global configuration to be available earlier in the startup process since plugins are loaded before nodes. This is a work in progress and will continue over several releases.
 
-
 ### Runtime libraries
 
 * The remaining ~~5~~ 4 fsextra functions in fs lib. `ensureDirSync` have been replaced with native functions. fs-extra is no longer a dev- or other dependency.
+* Unnecessary `require` of the ui library removed from the uibuilder node's runtime.
+* UIBUILDER's global configuration and filing-system setup is now done in the runtime plugin rather than the uibuilder node. This makes it available earlier and ensures it is ready for other nodes such as Markweb.
+* There are now fewer places where the global config object is passed by reference. Instead, the global config singleton class is used directly where needed. This should make it easier to maintain and reduce the risk of errors.
+* `tilib.cjs` - added a `maxLength` parameter to the `syntaxHighlight` function to allow the output length to be limited. This is to prevent potential denial-of-service attacks via extremely large JSON payloads. This is used when displaying the uibuilder details page from the editor.
+* `admin-api-v2.cjs` - extend length of JSON outputs.
 
 ---
 

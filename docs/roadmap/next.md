@@ -4,19 +4,41 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-05-07 20:58:04
+updated: 2026-05-23 16:37:38
 ---
 
 ## Possible issues/improvements
-
-* [ ] Deploy of new uibuilder node sometimes results in `🌐⚠️[uibuilder:web:setupInstanceStatic:nojs-charts] Cannot show default page, index.html does not exist in D:\src\uibRoot\nojs-charts\src.`.  Likely because the reload option is on so as the default folders & files being created, the node tries to reload the page. Maybe suspend watcher for initial deployment somehow?
-* [ ] Required module 'ui' is not used in uibuilder runtime? [ref](https://deepscan.io/dashboard/#view=project&tid=13157&pid=16160&bid=1020671&prid=&subview=issues).
-* [ ] Remove docsify-darklight-theme dependency as it is dated and not being used. Will remove a bunch of audit failures.
 * [ ] Remove gulp dependencies once we are sure that the new build/watch script is working well and we have no need for the old gulp tasks. This will remove a bunch of audit failures.
+* [ ] Code smells:
+  * [ ] this.uib, this.log, this.RED - should be using the global config module instead.
+  * [ ] (uib) - passing uib object instead of using the module.
+  * [ ] check that hooks are in uib?
+* [ ] Alter uibuilder where we have `JSON.stringify` to use saferSerialize instead.
+
+
+### Markweb
 * [ ] Add Markweb instances to the list of uibuilder apps/urls.
-* [ ] Review all instances of `this.RED = RED` or `mod.RED = RED`. The reference is now created in the global config by the runtime plugin. It should not be needed anywhere else unless the global config cannot be required.
+* [ ] Reduce the chattiness of the markweb client library.
+
+### Documentation
 * [ ] Document the CSP overrides and how to use them.
+* [ ] Remove docsify-darklight-theme dependency as it is dated and not being used. Will remove a bunch of audit failures.
+
+### uibuilder node
+* [ ] Deploy of new uibuilder node sometimes results in `🌐⚠️[uibuilder:web:setupInstanceStatic:nojs-charts] Cannot show default page, index.html does not exist in D:\src\uibRoot\nojs-charts\src.`.  Likely because the reload option is on so as the default folders & files being created, the node tries to reload the page. Maybe suspend watcher for initial deployment somehow?
 * [ ] Move the fs processing in the startup of the uibuilder node into the runtime plugin. Including the setup of the fslib.
+
+### CSS
+* [ ] Add `font-variant-numeric: tabular-nums` to the table CSS to make numbers line up better in tables. (NB: only affects numbers so can be for all cells).
+
+### Other
+* [ ] Telemetry
+  * [ ] Cloudflare worker and D1
+  * [ ] Privacy policy document
+  * [ ] Function to create a node-red instance UUID if one doesn't already exist and store it in the local filesystem.
+  * [ ] Telemetry function(s) in uiblib to locally store telemetry data
+  * [ ] Function to periodically send telemetry data to the cloudflare worker & clear down local data. Run monthly only.
+  * [ ] Record: node-red instance UUID, uibuilder version, node-red version, node-red environment (docker, local, etc), browser family and version (aggregated), number of uibuilder nodes, number of Markweb nodes, number of uibuilder instances, number of Markweb instances, date/time of first use, date/time of last use.
 
 ## In Progress
 
@@ -30,6 +52,8 @@ updated: 2026-05-07 20:58:04
 * Change docs bundle to use an npm workspace
 * Force close socket.io connections on node-red close to prevent hanging connections and allow clean restarts.
 * If using a custom Express server, force close it on node-red close to prevent hanging connections and allow clean restarts.
+
+* [ ] Review all instances of `this.RED = RED` or `mod.RED = RED`. The reference is now created in the global config by the runtime plugin. It should not be needed anywhere else unless the global config cannot be required.
 
 * Background rework (may take several releases):
   * [ ] Changing `uib-brand.css` to use more modern CSS, leaving it up to LightningCSS to build for older browsers. In particular, using nested definitions.
