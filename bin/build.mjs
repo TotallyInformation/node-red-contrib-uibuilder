@@ -262,6 +262,16 @@ const FE_BUILDS = [
             `${FE_SRC}/uibrouter.mjs`
         ],
     },
+    {
+        name:       'json-viewer',
+        entryPoint: `${COMPONENTS_SRC}/json-viewer/json-viewer.mjs`,
+        outBase:    `${FE_OUT}/utils/json-viewer`,
+        nodeOut:    `${FE_OUT}/utils/json-viewer.cjs`,
+        watchFiles: [
+            `${COMPONENTS_SRC}/json-viewer/json-viewer.mjs`,
+            `${COMPONENTS_SRC}/ti-base-component.mjs`,
+        ],
+    },
 ]
 
 /** Type: ExperimentalBuildConfig
@@ -1046,6 +1056,8 @@ async function main() {
     const updateVersions = targets.includes('versions')
     const tagOnly       = targets.length === 1 && targets.includes('tag')
     const buildTagTarget = targets.includes('tag')
+    // Named FE module builds (e.g. `node bin/build.mjs json-viewer`)
+    const namedFEBuilds = targets.filter(t => FE_BUILDS.some(cfg => cfg.name === t))
 
     // ── Startup banner ───────────────────────────────────────────────────
     const SEP = '─'.repeat(60)
@@ -1085,9 +1097,16 @@ async function main() {
         if (buildDocs)       tasks.push(['docs bundle',         buildDocBundle])
         // 'tag' is intentionally excluded from 'all' — must be invoked explicitly
         if (buildTagTarget)  tasks.push(['git tag',             createGitTag])
+        // Individual named FE module builds (e.g. `node bin/build.mjs json-viewer`)
+        if (!buildFE && namedFEBuilds.length > 0) {
+            for (const name of namedFEBuilds) {
+                const cfg = FE_BUILDS.find(c => c.name === name)
+                tasks.push([cfg.name, () => buildFEModule(cfg)])
+            }
+        }
 
         if (tasks.length === 0) {
-            console.warn('[build] No recognised build targets. Use: all | fe | node | css | docs')
+            console.warn('[build] No recognised build targets. Use: all | fe | node | css | docs | <module-name>')
             return
         }
 
