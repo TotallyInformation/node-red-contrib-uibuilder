@@ -5143,7 +5143,9 @@ Object.assign(lookup2, {
 });
 
 // src/components/ti-base-component.mjs
-var _TiBaseComponent = class _TiBaseComponent extends HTMLElement {
+var _HTMLElement = typeof HTMLElement !== "undefined" ? HTMLElement : class {
+};
+var _TiBaseComponent = class _TiBaseComponent extends _HTMLElement {
   // get id() {
   //     return this.id
   // }
@@ -7003,28 +7005,31 @@ if (ll !== void 0) {
 log.level = log.default;
 function syntaxHighlight(json) {
   if (json === void 0) {
-    json = '<span class="undefined">undefined</span>';
-  } else {
-    try {
-      json = JSON.stringify(json, void 0, 4);
-      json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function(match) {
-        let cls = "number";
-        if (/^"/.test(match)) {
-          if (/:$/.test(match)) {
-            cls = "key";
-          } else {
-            cls = "string";
-          }
-        } else if (/true|false/.test(match)) {
-          cls = "boolean";
-        } else if (/null/.test(match)) {
-          cls = "null";
+    return '<span class="undefined">undefined</span>';
+  }
+  try {
+    if (JsonViewer) return JsonViewer.renderToHTML(json, { includeStyles: false });
+  } catch (e) {
+  }
+  try {
+    json = JSON.stringify(json, void 0, 4);
+    json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function(match) {
+      let cls = "number";
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) {
+          cls = "key";
+        } else {
+          cls = "string";
         }
-        return '<span class="'.concat(cls, '">').concat(match, "</span>");
-      });
-    } catch (e) {
-      json = "Syntax Highlight ERROR: ".concat(e.message);
-    }
+      } else if (/true|false/.test(match)) {
+        cls = "boolean";
+      } else if (/null/.test(match)) {
+        cls = "null";
+      }
+      return '<span class="'.concat(cls, '">').concat(match, "</span>");
+    });
+  } catch (e) {
+    json = "Syntax Highlight ERROR: ".concat(e.message);
   }
   return json;
 }
@@ -8864,7 +8869,8 @@ var Uib = (_a2 = class {
                 attributes: {
                   onclick: 'uibuilder.copyToClipboard("msg")',
                   class: "compact",
-                  style: "right:3em;"
+                  style: "right:3em;",
+                  title: "Copy message to clipboard"
                 },
                 slot: "\u{1F4CB}"
               },
@@ -8873,7 +8879,8 @@ var Uib = (_a2 = class {
                 attributes: {
                   onclick: "uibuilder.showMsg()",
                   class: "compact",
-                  style: "right:.5em;"
+                  style: "right:.5em;",
+                  title: "Turn off message display"
                 },
                 slot: "\u26D4"
               },
