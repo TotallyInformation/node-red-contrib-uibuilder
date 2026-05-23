@@ -1,9 +1,9 @@
 ---
 created: 2026-04-18 22:52:40
-updated: 2026-04-19 02:33:12
+updated: 2026-05-09 11:34:45
 ---
 
-This is the design document for a new photo library that will eventually be delivered via a new UIBUILDER node.
+This is the design document for a possible new photo library that will eventually be delivered via a new UIBUILDER node.
 
 ## Base requirements
 
