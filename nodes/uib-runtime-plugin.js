@@ -25,10 +25,13 @@
  */
 
 const path = require('node:path')
+
+const { saferSerialize, } = require('./libs/tilib.cjs') // Safer JSON.stringify with circular reference handling
 const fslib = require('./libs/fs.cjs') // File/folder handling library (by Totally Information)
 const packageMgt = require('./libs/package-mgt.cjs')
 const web = require('./libs/web.cjs')
 const sockets = require('./libs/socket.cjs')
+const { renderToHTML, } = require('../front-end/utils/json-viewer.cjs')
 /** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
 const uib = require('./libs/uibGlobalConfig.cjs')
 
@@ -169,6 +172,7 @@ function onAdd() {
     const RED = uib.RED
 
     // Add some uibuilder specific utility functions to RED.util so they can be used inside function nodes
+    // ! NOTE: If updating these, also update the TypeScript defs in editor-common.js.
     RED.util.uib = {
         /** Recursive object deep find
          * @param {*} obj The object to be searched
@@ -196,25 +200,25 @@ function onAdd() {
             return inp.toLocaleString(int, { minimumFractionDigits: dp, maximumFractionDigits: dp, })
         },
 
-        /** Returns true/false or a default value for truthy/falsy and other values
-         * @param {string|number|boolean|*} val The value to test
-         * @param {any} deflt Default value to use if the value is not truthy/falsy
-         * @returns {boolean|any} The truth! Or the default
-         */
-        truthy: (val, deflt) => {
-            let ret
-            if (['on', 'On', 'ON', 'true', 'True', 'TRUE', '1', true, 1].includes(val)) ret = true
-            else if (['off', 'Off', 'OFF', 'false', 'False', 'FALSE', '0', false, 0].includes(val)) ret = false
-            else ret = deflt
-            return ret
-        },
-
         /** Return a list of all instances
          * @returns {object} List of all registered uibuilder instances
          */
         listAllApps: () => {
             return uib.apps
         },
+
+        /** Render a JavaScript value to an HTML string using the json-viewer component's pure renderer.
+         * The returned HTML includes optional embedded styles and a structured tree representation.
+         * @param {*} data The data to render (any JavaScript value)
+         * @param {object} [opts] Rendering options
+         * @param {number} [opts.maxDepth] Maximum auto-expand depth. Default=2
+         * @param {boolean} [opts.collapsed] Whether all nodes start collapsed. Default=false
+         * @param {boolean} [opts.editable] Whether scalar leaf values are editable. Default=false
+         * @param {boolean} [opts.interactive] Whether to include search/collapse controls. Default=false
+         * @param {boolean} [opts.includeStyles] Whether to embed the component CSS. Default=true
+         * @returns {string} An HTML string representing the data tree
+         */
+        renderToHTML: (data, opts = {}) => renderToHTML(data, opts),
 
         /** Send a message to a specific uibuilder instance
          * @param {string} uibName The name (url) of the uibuilder instance to send via
@@ -227,6 +231,26 @@ function onAdd() {
             }
             msg.from = 'server/function-node'
             sockets.sendToFe2(msg, targetNode)
+        },
+
+        /** Safer JSON.stringify with circular reference handling
+         * @param {*} obj The object to serialize
+         * @param {number} [space] Number of spaces for indentation (default=2)
+         * @returns {string} JSON string
+         */
+        saferSerialize: saferSerialize,
+
+        /** Returns true/false or a default value for truthy/falsy and other values
+         * @param {string|number|boolean|*} val The value to test
+         * @param {any} deflt Default value to use if the value is not truthy/falsy
+         * @returns {boolean|any} The truth! Or the default
+         */
+        truthy: (val, deflt) => {
+            let ret
+            if (['on', 'On', 'ON', 'true', 'True', 'TRUE', '1', true, 1].includes(val)) ret = true
+            else if (['off', 'Off', 'OFF', 'false', 'False', 'FALSE', '0', false, 0].includes(val)) ret = false
+            else ret = deflt
+            return ret
         },
 
         // In case another plugin defines more of these and is processed first
