@@ -1,26 +1,26 @@
 ---
 title: uib-sidebar - Creates a UI in the Node-RED Editor sidebar
 description: |
-  Usage and configuration.
+  While it is best to avoid using the Node-RED Editor as a general UI or dashboard, this node allows you to quickly and easily create a simple UI in the sidebar of the Editor. The UI also allows inputs which are returned back to the source node as messages.
+since: v7.2.0
+author: Julian Knight (Totally Information)
 created: 2025-03-29 13:16:09
-updated: 2025-03-29 16:38:32
+updated: 2026-05-10 15:55:39
 ---
-
-Available since uibuilder v7.2.
-
-While it is best to avoid using the Node-RED Editor as a general UI or dashboard, this node allows you to quickly and easily create a simple UI in the sidebar of the Editor.
 
 ## Overview
 
-The `uib-sidebar` node is a single node that creates a sidebar UI in the Node-RED Editor. It uses the built-in ACE/Monaco editor with a default HTML template to create the main layout. The node automatically creates the sidebar when added to your flows.
+The `uib-sidebar` node creates a sidebar UI in the Node-RED Editor. It uses the built-in ACE/Monaco editor with a default HTML template to create the main layout. The node automatically creates the sidebar when added to your flows.
 
-> [!NOTE]
-> Only a single sidebar can be created. If you add multiple `uib-sidebar` nodes, they should all show the same HTML in the editor config.
+> [!TIP]
+> You don't specify a full HTML page in the node's configuration. Instead, you just specify the HTML that you want to have appear in the sidebar.
 
 The node automatically sends any data from input HTML elements (`<input>`, `<textarea>`, `<select>`, `<button>`, etc) back to the node's output port as soon as the user changes a value.
 
 > [!NOTE]
 > A future enhancement will allow you to wrap inputs in a `<form>` element and only send the data when the form is submitted. At present, each input sends a message immediately it gets a new value.
+
+You can have multiple `uib-sidebar` nodes in your flows. Each one will add its defined HTML to the sidebar. This allows you to easily modularise your sidebar content and have different nodes responsible for different parts of the sidebar. Each sidebar node has its own input and output so they can be updated and respond to messages independently. The content from each sidebar node is added to the sidebar in the order that the nodes are listed in the Node-RED editor.
 
 ## Configuring
 
@@ -30,11 +30,11 @@ The main configuration is simply the HTML content of the sidebar.
 > Changes to the HTML in the config are reflected in the sidebar immediately (e.g. before deploy is pressed). This allows easy prototyping of the sidebar UI. Changes are not saved until the flow is deployed.
 
 > [!WARNING]
-> Inputs of type `file` are not current supported in the sidebar. A message is sent back containing the file meta-data but currently the file is not. This will be added in a future release.
+> Inputs of type `file` are not current supported in the sidebar. A message is sent back containing the file meta-data but currently the file is not. This may be added in a future release.
 
 ## Sending Data to the Node
 
-The node supports using `msg.sidebar.<html-id>` properties that will automatically update id'd HTML elements. For example, `msg.sidebar.div1.innerHTML` with a value of some HTML will change the HTML content of the div with an id of `div1`.
+The node supports using `msg.sidebar.<html-id>` message properties that will automatically update id'd HTML elements. For example, `msg.sidebar.div1.innerHTML` with a value of some HTML will change the HTML content of the div with an id of `div1`.
 
 Each sub-property should be a valid HTML attribute for the element. The most common attributes are likely to be `innerHTML`, `innerText`, `style`, and `class` along with `value` for inputs. HTML attributes are always character strings. However, any attribute name will be added even if it makes no sense.
 
@@ -55,8 +55,15 @@ Here is an example message content that updates the visible HTML of a paragraph,
 }
 ```
 
+Example sidebar HTML for this message might be:
+
+```html
+<p id="p1">{...waiting for input...}</p>
+<input id="in1" type="number" />
+```
+
 > [!NOTE]
-> Only `msg.sidebar` properties are processed at present. Other properties will be ignored.
+> Only `msg.sidebar` properties are processed at present. Other properties are ignored.
 
 ## Output Messages
 The node sends a message back to the output port whenever an input element changes. The value of the input is contained in both the msg.payload and msg.value (or msg.checked for checkbox inputs).
@@ -68,6 +75,7 @@ Each message contains a set of meta-data properties that describe the input elem
   "payload": "some value",
   "topic": "uib-sidebar/input/in1",
   "from": "uib-sidebar",
+  "sourceNode": "1234567890abcdef",
   "id": "in1",
   "name": "",
   "attributes": {
