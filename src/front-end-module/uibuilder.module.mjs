@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable jsdoc/valid-types */
 /* eslint-disable jsdoc/check-param-names */
 /* eslint-disable @stylistic/no-multi-spaces */
@@ -270,34 +271,42 @@ log.level = log.default
 // }
 
 /** Convert JSON to Syntax Highlighted HTML
+ * If the `json-viewer` custom element is registered, delegates to its static
+ * `renderToHTML` method. Otherwise falls back to the built-in regex renderer.
  * @param {object} json A JSON/JavaScript Object
  * @returns {html} Object reformatted as highlighted HTML
  */
 function syntaxHighlight(json) {
     if (json === undefined) {
-        json = '<span class="undefined">undefined</span>'
-    } else {
-        try {
-            json = JSON.stringify(json, undefined, 4)
-            // json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // eslint-disable-line newline-per-chained-call
-            json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
-                let cls = 'number'
-                if ((/^"/).test(match)) {
-                    if ((/:$/).test(match)) {
-                        cls = 'key'
-                    } else {
-                        cls = 'string'
-                    }
-                } else if ((/true|false/).test(match)) {
-                    cls = 'boolean'
-                } else if ((/null/).test(match)) {
-                    cls = 'null'
+        return '<span class="undefined">undefined</span>'
+    }
+
+    // Use the json-viewer component's pure renderer if it is loaded
+    try {
+        if (JsonViewer) return JsonViewer.renderToHTML(json, { includeStyles: false, })
+    } catch (e) { /* Fall through to built-in renderer on failure */ }
+
+    // Built-in regex-based fallback renderer
+    try {
+        json = JSON.stringify(json, undefined, 4)
+        // json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // eslint-disable-line newline-per-chained-call
+        json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
+            let cls = 'number'
+            if ((/^"/).test(match)) {
+                if ((/:$/).test(match)) {
+                    cls = 'key'
+                } else {
+                    cls = 'string'
                 }
-                return `<span class="${cls}">${match}</span>`
-            })
-        } catch (e) {
-            json = `Syntax Highlight ERROR: ${e.message}`
-        }
+            } else if ((/true|false/).test(match)) {
+                cls = 'boolean'
+            } else if ((/null/).test(match)) {
+                cls = 'null'
+            }
+            return `<span class="${cls}">${match}</span>`
+        })
+    } catch (e) {
+        json = `Syntax Highlight ERROR: ${e.message}`
     }
     return json
 }
@@ -2405,6 +2414,7 @@ export const Uib = class Uib {
                                     onclick: 'uibuilder.copyToClipboard("msg")',
                                     class: 'compact',
                                     style: 'right:3em;',
+                                    title: 'Copy message to clipboard',
                                 },
                                 slot: '📋',
                             },
@@ -2414,6 +2424,7 @@ export const Uib = class Uib {
                                     onclick: 'uibuilder.showMsg()',
                                     class: 'compact',
                                     style: 'right:.5em;',
+                                    title: 'Turn off message display',
                                 },
                                 slot: '⛔',
                             },
