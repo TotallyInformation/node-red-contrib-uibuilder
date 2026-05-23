@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/valid-types */
 /** An example template for Node-RED custom nodes
  *
  * Copyright (c) 2025-2025 Julian Knight (Totally Information)
@@ -22,7 +23,7 @@
  * @typedef {import('../../typedefs').runtimeNode} runtimeNode
  */
 
-//#region ----- Module level variables ---- //
+// #region ----- Module level variables ---- //
 
 // Uncomment this if you want to use the promisified version of evaluateNodeProperty
 // const { promisify } = require('util')
@@ -39,9 +40,9 @@ const mod = {
     nodeName: 'uib-sidebar',
 }
 
-//#endregion ----- Module level variables ---- //
+// #endregion ----- Module level variables ---- //
 
-//#region ----- Module-level support functions ----- //
+// #region ----- Module-level support functions ----- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
  * @param {runtimeRED} RED The Node-RED runtime object
@@ -61,8 +62,8 @@ function ModuleDefinition(RED) {
 
 /** 2) This is run when an actual instance of our node is committed to a flow
  * type {function(this:runtimeNode&senderNode, runtimeNodeConfig & senderNode):void}
- * @param {runtimeNodeConfig & tiTemplateNode} config The Node-RED node instance config object
- * @this {runtimeNode & tiTemplateNode}
+ * @param {runtimeNodeConfig} config The Node-RED node instance config object
+ * @this {runtimeNode}
  */
 function nodeInstance(config) {
     // As a module-level named function, it will inherit `mod` and other module-level variables
@@ -75,20 +76,22 @@ function nodeInstance(config) {
     RED.nodes.createNode(this, config)
 
     /** Transfer config items from the Editor panel to the runtime */
+    // @ts-ignore
     this.name = config.name ?? ''
+    // @ts-ignore
     this.html = config.html ?? ''
     // this.topic = config.topic ?? ''
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)
 
-    RED.log.trace(`📊 [uib-sidebar] Listening for posts to /uibuilder/sidebarui/${this.id}`)
-    RED.httpAdmin.post(`/uibuilder/sidebarui/${this.id}`, (req, res) => {
-        RED.log.trace(`📊 [uib-sidebar] POST request for /uibuilder/sidebarui/${this.id}`, req.body)
+    RED.log.trace(`📊 [uib-sidebar] Listening for posts to /uibuilder/uib-sidebar/${this.id}`)
+    RED.httpAdmin.post(`/uibuilder/uib-sidebar/${this.id}`, (req, res) => {
+        RED.log.trace(`📊 [uib-sidebar] POST request for /uibuilder/uib-sidebar/${this.id}`, req.body)
         // res.status(200).send( { 'response': 'ok', 'id': this.id } )
-        res.status(200).json( { 'response': 'ok', 'id': this.id } )
+        res.status(200).json( { response: 'ok', id: this.id, } )
         this.send({
-            ...req.body
+            ...req.body,
         })
     })
 }
@@ -99,9 +102,9 @@ function nodeInstance(config) {
  * @param {object} msg The msg object received.
  * @param {Function} send Per msg send function, node-red v1+
  * @param {Function} done Per msg finish function, node-red v1+
- * @this {runtimeNode & tiTemplateNode}
+ * @this {runtimeNode}
  */
-async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
+async function inputMsgHandler(msg, send, done) {
     // const RED = mod.RED
 
     // Pass straight through
@@ -113,20 +116,20 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
     done()
 }
 
+/** Helper function to send a msg to the Editor UI for this node instance
+ * @param {runtimeNode} node The node instance to send the msg to the editor for
+ * @param {object} msg The msg object to send to the editor
+ */
 function sendToEditor(node, msg) {
     const RED = mod.RED
-    RED.log.trace(`📊 [uib-sidebar] Sending to editor for ${node.id}`, msg, )
-    RED.events.emit('runtime-event', {
-        id: `UIBUILDER/uib-sidebar/${node.id}`,
-        retain: false,
-        payload: {
-            srcId: node.id,
-            ...msg,
-        },
+    RED.log.trace(`📊 [uib-sidebar] Sending to editor for ${node.id}`, msg )
+    RED.comms.publish(`UIBUILDER/uib-sidebar/${node.id}`, {
+        srcId: node.id,
+        ...msg,
     })
 }
 
-//#endregion ----- Module-level support functions ----- //
+// #endregion ----- Module-level support functions ----- //
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = ModuleDefinition
