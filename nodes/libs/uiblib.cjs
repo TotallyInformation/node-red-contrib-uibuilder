@@ -1,6 +1,6 @@
+/* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable jsdoc/valid-types */
-/**
- * Utility library for uibuilder
+/** Utility library for uibuilder
  *
  * Copyright (c) 2017-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
@@ -25,6 +25,7 @@
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs.js').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs.js').runtimeNode} runtimeNode
+ * @typedef {import('../../typedefs.js').uibConfig} uibConfig
  * typedef {import('../typedefs.js')}
  * typedef {import('node-red')} Red
  * typedef {import('Express')} Express
@@ -34,9 +35,11 @@
 
 const path = require('node:path')
 const { promisify, } = require('node:util')
-const crypto = require('node:crypto')
+const { randomFillSync, randomUUID, } = require('node:crypto')
 const { exec, spawn, spawnSync, } = require('node:child_process')
 const fslib = require('./fs.cjs')
+/** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
+const uib = require('./uibGlobalConfig.cjs')
 // NOTE: Don't add socket.js here otherwise it will stop working because it references this module
 
 /** Encode data in a buffer as Base32 with a url-safe alphabet.
@@ -69,22 +72,6 @@ function encodeNanoId(buff, length, size) {
     }
 
     return output.substring(0, length)
-}
-
-/** Generates a secure and URL-friendly unique ID.
- * Based on https://github.com/luavixen/foxid
- * @param {number} [length] - Length of the generated ID, defaults to 21.
- * @returns {string} Newly generated ID as a string.
- */
-function nanoId(length) {
-    length = Math.max(length | 0, 0) || 21
-    const size = (length * 5 + 7) >>> 3
-
-    const buffer = Buffer.allocUnsafeSlow(size)
-
-    crypto.randomFillSync(buffer, 0, size)
-
-    return encodeNanoId(buffer, length, size)
 }
 
 const UibLib = {
@@ -153,6 +140,26 @@ const UibLib = {
         if (done) done()
     }, // ---- End of processClose function ---- //
 
+    /** Get the client id from req headers cookie string OR, create a new one and return that
+     * @param {*} req ExpressJS request object
+     * @returns {string} The clientID
+     */
+    getClientId: function getClientId(req) {
+        const uidLen = 21
+        const regex = new RegExp(`uibuilder-client-id=(?<id>.{${uidLen}})`)
+        let clientId
+        if ( req.headers.cookie ) {
+            const matches = req.headers.cookie.match(regex)
+            // if ( !matches || !matches.groups.id ) clientId = nanoid()
+            if ( !matches || !matches.groups.id ) clientId = this.nanoId(uidLen)
+            else clientId = matches.groups.id
+        } else {
+            // clientId = nanoid()
+            clientId = this.nanoId(uidLen)
+        }
+        return clientId
+    },
+
     /**  Get property values from an Object.
      * Can list multiple properties, the first found (or the default return) will be returned
      * Makes use of RED.util.getMessageProperty
@@ -186,41 +193,6 @@ const UibLib = {
         return ans || defaultAnswer
     }, // ---- End of getProps ---- //
 
-    // hooks: function(hookName) {
-    //     if (RED.settings.uibuilder && RED.settings.uibuilder.hooks && RED.settings.uibuilder.hooks[hookName]) {
-    //         return RED.settings.uibuilder.hooks[hookName]
-    //     }
-    // },
-
-    /** Simple fn to set a node status in the admin interface
-     * fill: red, green, yellow, blue or grey
-     * shape: ring, dot
-     * @param {object} node _
-     */
-    setNodeStatus: function( node ) {
-        node.status(node.statusDisplay)
-    }, // ---- End of setNodeStatus ---- //
-
-    /** Get the client id from req headers cookie string OR, create a new one and return that
-     * @param {*} req ExpressJS request object
-     * @returns {string} The clientID
-     */
-    getClientId: function getClientId(req) {
-        const uidLen = 21
-        const regex = new RegExp(`uibuilder-client-id=(?<id>.{${uidLen}})`)
-        let clientId
-        if ( req.headers.cookie ) {
-            const matches = req.headers.cookie.match(regex)
-            // if ( !matches || !matches.groups.id ) clientId = nanoid()
-            if ( !matches || !matches.groups.id ) clientId = nanoId(uidLen)
-            else clientId = matches.groups.id
-        } else {
-            // clientId = nanoid()
-            clientId = nanoId(uidLen)
-        }
-        return clientId
-    },
-
     /** Get an individual value for a typed input field and save to supplied node object - REQUIRES standardised node property names
      * Use propnameSource and propnameSourceType as standard input field names
      * @param {string} propName Name of the node property to check
@@ -253,6 +225,157 @@ const UibLib = {
                 node.warn(`🌐⚠️[uibuilder:uiblib:getSource] Cannot evaluate source for ${propName}. ${e.message} (${srcType})`)
             }
         }
+    },
+
+    /** Kill a process tree
+     * Inspired by https://github.com/pkrumins/node-tree-kill
+     * @param {number|string} rootPid OS pid that will be killed along with its children
+     * @param {"SIGTERM"|"SIGKILL"} [signal] Optional. The signal to send (default=SIGTERM)
+     */
+    killTree: function killTree(rootPid, signal = 'SIGTERM') {
+        // @ts-ignore In case a string number is passed
+        rootPid = parseInt(rootPid, 10)
+        if (Number.isNaN(rootPid)) {
+            throw new Error(`Invalid root PID, must be a number: ${rootPid}`)
+        }
+
+        const tree = {}
+        const pidsToProcess = {}
+        tree[rootPid] = []
+        pidsToProcess[rootPid] = 1
+        // TODO PROBABLY REMOVE
+        const callback = () => {}
+
+        switch (process.platform) {
+            case 'win32': {
+                exec('taskkill /pid ' + rootPid + ' /T /F', callback) // eslint-disable-line security/detect-child-process
+                break
+            }
+
+            case 'darwin': {
+                buildProcessTree(rootPid, tree, pidsToProcess,
+                    function (parentPid) {
+                        return spawn('pgrep', ['-P', parentPid])
+                    },
+                    function () {
+                        killAll(tree, signal, callback)
+                    }
+                )
+                break
+            }
+
+            default: { // Linux
+                buildProcessTree(rootPid, tree, pidsToProcess,
+                    function (parentPid) {
+                        return spawn('ps', ['-o', 'pid', '--no-headers', '--ppid', parentPid])
+                    },
+                    function () {
+                        killAll(tree, signal, callback)
+                    }
+                )
+                break
+            }
+        }
+
+        /** Build a process tree for the given parent PID
+         * @param {number} parentPid Parent PID to process
+         * @param {object} tree Object to hold the tree
+         * @param {object} pidsToProcess Object to hold the list of PIDs to process
+         * @param {Function} spawnChildProcessesList Function to spawn child processes
+         * @param {Function} cb Callback function
+         */
+        function buildProcessTree(parentPid, tree, pidsToProcess, spawnChildProcessesList, cb) {
+            const ps = spawnChildProcessesList(parentPid)
+            let allData = ''
+            ps.stdout.on('data', function (data) {
+                allData += data.toString('ascii')
+            })
+
+            const onClose = function (code) {
+                delete pidsToProcess[parentPid]
+
+                if (code != 0) {
+                    // no more parent processes
+                    if (Object.keys(pidsToProcess).length == 0) {
+                        cb()
+                    }
+                    return
+                }
+
+                allData.match(/\d+/g).forEach(function (spid) {
+                    // ts-ignore
+                    rootPid = parseInt(spid, 10)
+                    tree[parentPid].push(rootPid)
+                    tree[rootPid] = []
+                    pidsToProcess[rootPid] = 1
+                    buildProcessTree(rootPid, tree, pidsToProcess, spawnChildProcessesList, cb)
+                })
+            }
+
+            ps.on('close', onClose)
+        }
+
+        /** Kill a complete process tree (for MacOS and Linux)
+         * @param {object} tree tree of pids to process
+         * @param {string} signal Signal to send
+         * @param {Function} [callback] Optional callback fn
+         * @returns {void|Function} Nothing unless a callback is provided
+         * @throws {Error} If an error occurs during the kill process
+         */
+        function killAll(tree, signal, callback) {
+            const killed = {}
+            try {
+                Object.keys(tree).forEach(function (pid) {
+                    tree[pid].forEach(function (pidpid) {
+                        if (!killed[pidpid]) {
+                            killPid(pidpid, signal)
+                            killed[pidpid] = 1
+                        }
+                    })
+                    if (!killed[pid]) {
+                        // @ts-ignore
+                        killPid(pid, signal)
+                        killed[pid] = 1
+                    }
+                })
+            } catch (err) {
+                if (callback) {
+                    return callback(err)
+                }
+                throw err
+            }
+            if (callback) {
+                return callback()
+            }
+        }
+
+        /** Kill a single pid using process.kill
+         * @param {number} pid OS pid
+         * @param {string} signal Signal to send
+         */
+        function killPid(pid, signal) {
+            try {
+                process.kill(pid, signal)
+            } catch (err) {
+                if (err.code !== 'ESRCH') throw err
+            }
+        }
+    },
+
+    /** Generates a secure and URL-friendly unique ID.
+     * Based on https://github.com/luavixen/foxid
+     * @param {number} [length] - Length of the generated ID, defaults to 21.
+     * @returns {string} Newly generated ID as a string.
+     */
+    nanoId(length) {
+        length = Math.max(length | 0, 0) || 21
+        const size = (length * 5 + 7) >>> 3
+
+        const buffer = Buffer.allocUnsafeSlow(size)
+
+        randomFillSync(buffer, 0, size)
+
+        return encodeNanoId(buffer, length, size)
     },
 
     /** Run an OS command asynchronously, with streaming and process control support.
@@ -416,140 +539,14 @@ const UibLib = {
         return out
     },
 
-    /** Kill a process tree
-     * Inspired by https://github.com/pkrumins/node-tree-kill
-     * @param {number|string} rootPid OS pid that will be killed along with its children
-     * @param {"SIGTERM"|"SIGKILL"} [signal] Optional. The signal to send (default=SIGTERM)
+    /** Simple fn to set a node status in the admin interface
+     * fill: red, green, yellow, blue or grey
+     * shape: ring, dot
+     * @param {object} node _
      */
-    killTree: function killTree(rootPid, signal = 'SIGTERM') {
-        // @ts-ignore In case a string number is passed
-        rootPid = parseInt(rootPid, 10)
-        if (Number.isNaN(rootPid)) {
-            throw new Error(`Invalid root PID, must be a number: ${rootPid}`)
-        }
-
-        const tree = {}
-        const pidsToProcess = {}
-        tree[rootPid] = []
-        pidsToProcess[rootPid] = 1
-        // TODO PROBABLY REMOVE
-        const callback = () => {}
-
-        switch (process.platform) {
-            case 'win32': {
-                exec('taskkill /pid ' + rootPid + ' /T /F', callback)
-                break
-            }
-
-            case 'darwin': {
-                buildProcessTree(rootPid, tree, pidsToProcess,
-                    function (parentPid) {
-                        return spawn('pgrep', ['-P', parentPid])
-                    },
-                    function () {
-                        killAll(tree, signal, callback)
-                    }
-                )
-                break
-            }
-
-            default: { // Linux
-                buildProcessTree(rootPid, tree, pidsToProcess,
-                    function (parentPid) {
-                        return spawn('ps', ['-o', 'pid', '--no-headers', '--ppid', parentPid])
-                    },
-                    function () {
-                        killAll(tree, signal, callback)
-                    }
-                )
-                break
-            }
-        }
-
-        /** Build a process tree for the given parent PID
-         * @param {number} parentPid Parent PID to process
-         * @param {object} tree Object to hold the tree
-         * @param {object} pidsToProcess Object to hold the list of PIDs to process
-         * @param {Function} spawnChildProcessesList Function to spawn child processes
-         * @param {Function} cb Callback function
-         */
-        function buildProcessTree(parentPid, tree, pidsToProcess, spawnChildProcessesList, cb) {
-            const ps = spawnChildProcessesList(parentPid)
-            let allData = ''
-            ps.stdout.on('data', function (data) {
-                allData += data.toString('ascii')
-            })
-
-            const onClose = function (code) {
-                delete pidsToProcess[parentPid]
-
-                if (code != 0) {
-                    // no more parent processes
-                    if (Object.keys(pidsToProcess).length == 0) {
-                        cb()
-                    }
-                    return
-                }
-
-                allData.match(/\d+/g).forEach(function (spid) {
-                    // ts-ignore
-                    rootPid = parseInt(spid, 10)
-                    tree[parentPid].push(rootPid)
-                    tree[rootPid] = []
-                    pidsToProcess[rootPid] = 1
-                    buildProcessTree(rootPid, tree, pidsToProcess, spawnChildProcessesList, cb)
-                })
-            }
-
-            ps.on('close', onClose)
-        }
-
-        /** Kill a complete process tree (for MacOS and Linux)
-         * @param {object} tree tree of pids to process
-         * @param {string} signal Signal to send
-         * @param {Function} [callback] Optional callback fn
-         * @returns {void|Function} Nothing unless a callback is provided
-         * @throws {Error} If an error occurs during the kill process
-         */
-        function killAll(tree, signal, callback) {
-            const killed = {}
-            try {
-                Object.keys(tree).forEach(function (pid) {
-                    tree[pid].forEach(function (pidpid) {
-                        if (!killed[pidpid]) {
-                            killPid(pidpid, signal)
-                            killed[pidpid] = 1
-                        }
-                    })
-                    if (!killed[pid]) {
-                        // @ts-ignore
-                        killPid(pid, signal)
-                        killed[pid] = 1
-                    }
-                })
-            } catch (err) {
-                if (callback) {
-                    return callback(err)
-                }
-                throw err
-            }
-            if (callback) {
-                return callback()
-            }
-        }
-
-        /** Kill a single pid using process.kill
-         * @param {number} pid OS pid
-         * @param {string} signal Signal to send
-         */
-        function killPid(pid, signal) {
-            try {
-                process.kill(pid, signal)
-            } catch (err) {
-                if (err.code !== 'ESRCH') throw err
-            }
-        }
-    },
+    setNodeStatus: function( node ) {
+        node.status(node.statusDisplay)
+    }, // ---- End of setNodeStatus ---- //
 
     /** Escape an array of strings for safe use in a shell command
      * Based on https://github.com/nodejs/help/issues/5063#issuecomment-3211961369
@@ -580,6 +577,20 @@ const UibLib = {
         return escaped.join(' ')
     },
 
+    /** Sort a uibuilder apps object by url instead of the natural order added
+     * @param {*} apps The apps object to sort
+     * @returns {*} apps sorted by url
+     */
+    sortApps: function sortApps(apps) {
+        return apps.sort((a, b) => {
+            const nameA = a[0].toUpperCase()
+            const nameB = b[0].toUpperCase()
+            if (nameA < nameB) return -1
+            if (nameA > nameB) return 1
+            return 0
+        })
+    },
+
     /** Sort a uibuilder instances object by url instead of the natural order added
      * @param {*} instances The instances object to sort
      * @returns {*} instances sorted by url
@@ -596,21 +607,181 @@ const UibLib = {
         )
     },
 
-    /** Sort a uibuilder apps object by url instead of the natural order added
-     * @param {*} apps The apps object to sort
-     * @returns {*} apps sorted by url
+    // #region ----- Telemetry functions ----- //
+
+    /** Send anonymous telemetry data to the uibuilder Cloudflare analytics endpoint.
+     * Only sends when telemetry is enabled and the configured interval has elapsed since the last successful send.
+     * On success, records the Unix send timestamp as `lastSent` in the telemetry file.
+     * All errors are caught and logged; the function never rejects.
+     * NOTE: Uses the native `fetch` global (requires Node.js ≥ 18; experimental in v18, stable in v21+).
+     * @returns {Promise<null|number>} Returns the Unix timestamp of the send if successful, or null if telemetry is disabled, uuid is missing, interval has not elapsed, or an error occurred.
+     * @throws {Error} If an error occurs during the fetch, an error is thrown with a message describing the issue. Network errors are expected and logged as trace, not warn.
      */
-    sortApps: function sortApps(apps) {
-        return apps.sort((a, b) => {
-            const nameA = a[0].toUpperCase()
-            const nameB = b[0].toUpperCase()
-            if (nameA < nameB) return -1
-            if (nameA > nameB) return 1
-            return 0
-        })
+    sendTelemetry: async function sendTelemetry() {
+        const log = uib.RED.log
+
+        if ( uib.telemetryEnabled !== true ) return null
+        if ( !uib.telemetry?.uuid ) return null
+
+        // Only send if the configured interval has elapsed since the last successful send
+        const lastSent = uib.telemetry?.lastSent // Unix timestamp in seconds, or undefined
+        const nowS = Math.floor(Date.now() / 1000)
+        if ( lastSent && (nowS - lastSent) < uib.telemetrySendInterval ) return null
+
+        log.info(`🌐[uiblib:sendTelemetry] Going to send Telemetry (uuid=${uib.telemetry.uuid})`)
+
+        const payload = uib.telemetry
+
+        try {
+            // eslint-disable-next-line n/no-unsupported-features/node-builtins -- fetch is experimental in Node.js v18 but available; stable from v21+
+            const res = await fetch(uib.telemetryEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', },
+                body: JSON.stringify(payload),
+            })
+            if ( res.ok ) {
+                log.info(`🌐[uiblib:sendTelemetry] Telemetry sent successfully (uuid=${uib.telemetry.uuid})`)
+                // Return the time of send so we don't send again for 30 days.
+                return nowS
+            }
+            throw new Error(`Telemetry endpoint returned ${res.status} ${res.statusText}`)
+        } catch (err) {
+            // Network errors are expected (e.g. air-gapped installs). Log as trace, not warn.
+            throw new Error(`Could not reach telemetry endpoint: ${err.message}`)
+        }
     },
+
+    /** Write the current `uibGlobalConfig.telemetry` value to `<uibRoot>/.config/telemetry.json`.
+     * If `data` is provided its properties are merged into `uibGlobalConfig.telemetry` before saving.
+     * Per uuid:
+     * {
+     *   uuid:          string,   // Instance UUID (required)
+     *   uib_version:   string,   // uibuilder package version
+     *   nr_version:    string,   // Node-RED version
+     *   node_version:  string,   // Node.js version
+     *   os_platform:   string,   // e.g. "linux", "win32", "darwin"
+     *   uib_count:     number,   // Count of uibuilder nodes deployed
+     *   markweb_count: number,   // Count of markweb nodes deployed
+     *   browsers: [              // Pre-aggregated browser stats (NOT raw UA strings)
+     *     { family: string, version: string, count: number }
+     *   ]
+     * }
+     * @returns {Promise<void>}
+     * @throws {Error} If there is an error stringifying the telemetry data or writing the file, an error is thrown with a message describing the issue.
+     */
+    fileTelemetry: async function fileTelemetry() {
+        let json = '{}\n'
+
+        try {
+            json = JSON.stringify(uib.telemetry, null, 2) + '\n'
+        } catch (err) {
+            throw new Error(`Invalid telemetry data. ${err.message} [UibFs:fileTelemetry]`, err)
+        }
+
+        // Write the telemetry object to the telemetry file (will create the file if needed but not the folder)
+        const telemetryFile = path.join(uib.configFolder, uib.telemetryFilename)
+        try {
+            await fslib.writeFile(telemetryFile, json, 'utf8')
+        } catch (err) {
+            throw new Error(`Could not write telemetry file '${telemetryFile}'. ${err.message} [UibFs:fileTelemetry]`, err)
+        }
+    },
+
+    /** Update UIBUILDER Telemetry data
+     * Loaded from and saved to `<uibRoot>/.config/telemetry.json` via UibFs.
+     * {
+     *   uuid:          string,   // Instance UUID (required)
+     *   uib_version:   string,   // uibuilder package version
+     *   nr_version:    string,   // Node-RED version
+     *   node_version:  string,   // Node.js version
+     *   os_platform:   string,   // e.g. "linux", "win32", "darwin"
+     *   uib_count:     number,   // Count of uibuilder nodes deployed
+     *   markweb_count: number,   // Count of markweb nodes deployed
+     *   browsers: [              // Pre-aggregated browser stats (NOT raw UA strings)
+     *     { family: string, version: string, count: number }
+     *   ]
+     * }
+     * @param {object} data Optional telemetry data to merge
+     */
+    updateTelemetryData: async function updateTelemetryData(data) {
+        const log = uib.RED.log
+        const tel = uib.telemetry
+
+        // if data provided, merge it into the current telemetry object
+        if ( data !== undefined && data !== null && typeof data === 'object' ) {
+            uib.telemetry = { ...tel, ...data, }
+        }
+
+        tel.uib_version = uib.me.version
+        tel.nr_version = uib.RED.settings.version
+        tel.node_version = process.version
+        tel.os_platform = process.platform
+        tel.uib_count = Object.keys(uib.instances).length
+        tel.markweb_count = Object.keys(uib.mwinstances).length
+
+        let result = null
+        // If telemetry is disabled (in settings.js), ensure that there is no uuid
+        if ( uib.telemetryEnabled === false ) {
+            delete tel.uuid
+        } else {
+            // Otherwise make sure that the uuid exists
+            if ( !tel.uuid ) tel.uuid = randomUUID()
+            // And see if it needs sending
+            try {
+                result = await this.sendTelemetry()
+            } catch (err) {
+                log.error(`🌐[uiblib:sendTelemetry] Error sending telemetry (uuid=${tel.uuid}): ${err.message}`)
+            }
+        }
+
+        if ( result !== null ) { // Send was successful and we have a timestamp to record
+            // Record the time of the successful send so we don't send again for 30 days.
+            uib.telemetry.lastSent = result
+            // Clear down the browser stats as these will be re-populated over time and we don't want to send old data on the next send.
+            uib.telemetry.browsers = []
+        }
+
+        // This will write the file (and create if needed)
+        // Do this regardless of result in case something else changed
+        try {
+            await this.fileTelemetry()
+        } catch (err) {
+            log.error(`🌐[uiblib:fileTelemetry] Error writing telemetry file: ${err.message}`)
+        }
+    },
+
+    /** Read the telemetry config file on startup (`<uibRoot>/.config/telemetry.json`), with content from
+     * global context telemetry if it does not already exist. Parsed contents are merged into `uibGlobalConfig.telemetry`.
+     * @returns {Promise<void>} If successful, uib.telemetry will have been updated with the parsed contents
+     *    of the telemetry file. Otherwise throws an error.
+     */
+    parseTelemetryFile: async function parseTelemetryFile() {
+        const log = uib.RED.log
+        const telemetryFile = path.join(uib.configFolder, uib.telemetryFilename)
+
+        // Try to read the telemetry file (if !exists, the call to updateTelemetryData() will create it anyway)
+        if ( fslib.existsSync(telemetryFile) ) {
+            let parsed
+            try {
+                const raw = await fslib.readFile(telemetryFile, 'utf8')
+                parsed = JSON.parse(raw)
+            } catch (err) {
+                throw new Error(`Could not read or parse telemetry file '${telemetryFile}'. ${err.message} [uiblib:parseTelemetryFile]`)
+            }
+            uib.telemetry = parsed
+        }
+
+        // Update telemetry data with current versions, counts, etc. & if data provided, merge it into global telemetry object.
+        // This will eventually write (and create if needed) the file.
+        try {
+            await this.updateTelemetryData()
+        } catch (err) {
+            log.error(`🌐[uiblib:updateTelemetryData] Error updating telemetry data: ${err.message}`)
+        }
+    },
+
+    // #endregion ----- Telemetry functions ----- //
+
 } // ---- End of module.exports ---- //
 
 module.exports = UibLib
-
-// EOF
