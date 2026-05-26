@@ -28,20 +28,22 @@
  * @typedef {import('../../typedefs.js').uibPackageJson} uibPackageJson
  */
 
-// ! WARNING: Take care not to end up with circular requires. e.g. libs/socket.js or uiblib.js cannot be required here
-
 const { join, relative, normalize, dirname, } = require('node:path')
+const { randomUUID, } = require('node:crypto')
 // Async
 const fs = require('node:fs/promises')
 // cb
 const { cp, watch, writeFile, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
 // Sync
-const { accessSync, closeSync, cpSync, constants: fsConstants, existsSync, mkdirSync, openSync, readdirSync, readFileSync, renameSync, rmSync, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
-// TODO Remove in future?
-// const fg = require('fast-glob')
-const process = require('node:process')
+const {
+    accessSync, closeSync, cpSync, constants: fsConstants, existsSync, mkdirSync, openSync, // eslint-disable-line n/no-unsupported-features/node-builtins
+    readdirSync, readFileSync, renameSync, rmSync, } = require('node:fs')
+
 const { fg, } = require('../../packages/uib-fs-utils')
+
+// ! WARNING: Take care not to end up with circular requires. e.g. libs/socket.js or uiblib.js cannot be required here
 // ! We cannot use uibGlobalConfig here because it causes circular requires (its module uses this fs library)
+//   So it is passed in the setup function and stored as this.uib
 // The uibuilder global configuration object, used throughout all nodes and libraries.
 // const uibGlobalConfig = require('./uibGlobalConfig.cjs')
 
@@ -161,7 +163,6 @@ class UibFs {
     get uibRootFolder() {
         return this.uib.rootFolder
     }
-
     // #endregion ---- ---- ----
 
     // #region ---- Async Methods ----
@@ -511,6 +512,10 @@ class UibFs {
 
     /** Get a file's stats (async/promise) */
     stat = fs.stat
+
+    /** Write to a file (async/promise) */
+    writeFile = fs.writeFile
+
     // TODO chk params
     /** Output a file to an instance folder (async/promise)
      * NB: Errors have the fn indicator at the end because this is expected to be a utility fn called from elsewhere
@@ -699,13 +704,6 @@ class UibFs {
 
         return dir
     }
-
-    // ensureFolder({ folder, copyFrom,  }) {
-    // const cpyOpts = { 'preserveTimestamps': true }
-    // Make sure folder exists, create if not
-    // Make sure that the folder can be read/write
-    // If copyFrom not undefined/null/'', copy to folder
-    // }
 
     /** Does the path exist? Pass 1 or more args which are joined & then checked
      * param {...string} path FS Path to check, multiple strings are path.join'd
