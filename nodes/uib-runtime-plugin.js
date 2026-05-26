@@ -27,11 +27,16 @@
 const path = require('node:path')
 
 const { saferSerialize, } = require('./libs/tilib.cjs') // Safer JSON.stringify with circular reference handling
+// const { parseTelemetryFile, } = require('./libs/uiblib.cjs')
 const fslib = require('./libs/fs.cjs') // File/folder handling library (by Totally Information)
 const packageMgt = require('./libs/package-mgt.cjs')
 const web = require('./libs/web.cjs')
 const sockets = require('./libs/socket.cjs')
 const { renderToHTML, } = require('../front-end/utils/json-viewer.cjs')
+
+// WARNING: Don't try to deconstruct this, if you do, some things fail because they lose the correct `this` binding
+const uiblib = require('./libs/uiblib.cjs')
+
 /** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
 const uib = require('./libs/uibGlobalConfig.cjs')
 
@@ -84,6 +89,7 @@ function setupUibGlobalConfig(RED) {
     uib.configFolder = path.join(uib.rootFolder, uib.configFolderName)
     uib.commonFolder = path.join(uib.rootFolder, uib.commonFolderName)
 }
+
 /** Set up the uibuilder global filing system config, checking permissions and initialising the fs class */
 function setupUibFs() {
     const RED = uib.RED
@@ -305,13 +311,24 @@ function pluginDefinition(RED) {
 
     // Show the base uibuilder config on startup in the log
     let initialised = false
-    RED.events.on('runtime-event', function(event) {
-        if (event.id === 'runtime-state' && initialised === false ) {
+    // RED.events.on('runtime-event', function(event) {
+    //     if (event.id === 'runtime-state' && initialised === false ) {
+    //         initialised = true
+    //     }
+    // })
+    RED.events.on('flows:started', async function(event) {
+        // Parse the telemetry file to load the telemetry data into the global uib object
+        // (ensures the file exists & sends data to cloudflare if needed)
+        // NB: Runs every time the flows are (re)started
+        await uiblib.parseTelemetryFile()
+
+        if (initialised === false ) { // make sure we only log this once, not on every deploy (flows:started is emitted on every deploy)
             initialised = true
             const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
             RED.log.info('+-----------------------------------------------------')
             RED.log.info(`| 🌐 ${uib.moduleName} v${uib.version} initialised`)
             RED.log.info(`| root folder: ${uib.rootFolder}`)
+            RED.log.info(`| Telemetry: ${uib.telemetryEnabled === true ? `On, uuid: ${uib.telemetry?.uuid}` : 'Off'}`)
             if ( uib.customServer.isCustom === true ) {
                 RED.log.info('| Using custom ExpressJS webserver at:')
                 RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot} or ${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`)
@@ -319,6 +336,7 @@ function pluginDefinition(RED) {
                 RED.log.info('| Using Node-RED\'s webserver at:')
                 RED.log.info(`|   ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`)
             }
+            RED.log.info(`| Instances: ${uib.telemetry?.uib_count} uibuilder, ${uib.telemetry?.markweb_count} markweb`)
             const pkgs = Object.keys(packageMgt.uibPackageJson.uibuilder.packages)
             RED.log.info('| Installed packages:')
             if (pkgs.length === 0) {
