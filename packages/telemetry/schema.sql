@@ -4,6 +4,7 @@
 
 CREATE TABLE IF NOT EXISTS instances (
     uuid          TEXT    PRIMARY KEY,
+    count_seen    INTEGER NOT NULL DEFAULT 0,
     first_seen    INTEGER NOT NULL,
     last_seen     INTEGER NOT NULL,
     uib_version   TEXT,

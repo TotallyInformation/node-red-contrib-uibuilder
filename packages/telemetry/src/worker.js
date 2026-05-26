@@ -110,9 +110,10 @@ async function handleTelemetry(request, env) {
     // Upsert the instance record
     await env.DB.prepare(`
         INSERT INTO instances
-            (uuid, first_seen, last_seen, uib_version, nr_version, node_version, os_platform, uib_count, markweb_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (uuid, count_seen, first_seen, last_seen, uib_version, nr_version, node_version, os_platform, uib_count, markweb_count)
+        VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(uuid) DO UPDATE SET
+            count_seen    = instances.count_seen + 1,
             last_seen     = excluded.last_seen,
             uib_version   = excluded.uib_version,
             nr_version    = excluded.nr_version,
