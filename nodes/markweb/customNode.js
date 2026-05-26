@@ -199,6 +199,10 @@ function nodeInstance(config) {
     this.name = config.name ?? ''
     this.configFolder = config.configFolder ?? ''
     this.sourceFolder = '' // Used in web.instanceSetup(), should be ''
+    // TODO: Add option to set title and description in the editor, which can then be used in the FE for display and SEO purposes. For now, just use the url as the title.
+    this.title = config.title ?? ''
+    this.descr = config.descr ?? ''
+
 
     // Make sure the url is valid & prefix with nodeRoot if needed
     this.url = urlJoin(uib.nodeRoot, this.url.trim())
@@ -231,6 +235,17 @@ function nodeInstance(config) {
     } catch (err) {
         this.error(`🌐🕸️🛑[uibuilder:markweb] Source folder must be readable. Please check permissions. Source="${this.instanceFolder}"`)
         return
+    }
+
+    // Keep a log of the active instances
+    uib.mwinstances[this.id] = this.url
+    log.trace(`🌐[uibuilder[:nodeInstance:${this.url}] Node uib.MWInstances Registered: ${JSON.stringify(uib.mwinstances)}`)
+    uib.apps[this.url] = {
+        node: this.id,
+        url: this.url,
+        title: this.title,
+        descr: this.descr,
+        type: 'markweb',
     }
 
     // if config folder is a relative path, make it relative to userDir
