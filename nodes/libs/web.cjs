@@ -33,13 +33,14 @@
 
 const { join, parse, } = require('path')
 const express = require('express')
-const socketjs = require('./socket.cjs')
-// const { getNs } = require('./socket.js') // NO! This gives an error because of incorrect `this` binding
-const { getClientId, sortApps, } = require('./uiblib.cjs')
 const { accessSync, existsSync, fgSync, mkdirSync, readFile, } = require('./fs.cjs')
 const { mylog, urlJoin, } = require('./tilib.cjs') // dumpReq, mylog
-// WARNING: Don't try to deconstruct this, if you do the initial uibPackageJson access fails for some reason
+
+// WARNING: Don't try to deconstruct these, if you do, some things fail because they lose the correct `this` binding
 const packageMgt = require('./package-mgt.cjs')
+const socketjs = require('./socket.cjs')
+const uiblib = require('./uiblib.cjs')
+
 /** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
 const uib = require('../libs/uibGlobalConfig.cjs')
 
@@ -403,7 +404,7 @@ class UibWeb {
             if ( Object.keys(this.uib.instances).length === 0 ) {
                 page += '<p>Instance list not yet ready, please try again</p>'
             } else {
-                for ( let [url, data] of sortApps(Object.entries(this.uib.apps)) ) { // eslint-disable-line prefer-const
+                for ( let [url, data] of uiblib.sortApps(Object.entries(this.uib.apps)) ) { // eslint-disable-line prefer-const
                     const title = data.title.length === 0 ? '' : `: ${data.title}`
                     const descr = data.descr.length === 0 ? '' : `<div>${data.descr}</div>`
                     page += `
@@ -775,7 +776,7 @@ class UibWeb {
          */
         function masterMiddleware (req, res, next) {
             // Check for client id from client - if it exists, reuse it otherwise create one
-            const clientId = getClientId(req)
+            const clientId = uiblib.getClientId(req)
 
             res
                 // Headers only accessible in the browser via web workers
