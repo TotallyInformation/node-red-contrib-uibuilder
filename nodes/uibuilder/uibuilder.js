@@ -198,6 +198,7 @@ function nodeInstance(config) {
         url: this.url,
         title: this.title,
         descr: this.descr,
+        type: 'uibuilder',
     }
 
     // Keep track of the number of times each instance is deployed.
