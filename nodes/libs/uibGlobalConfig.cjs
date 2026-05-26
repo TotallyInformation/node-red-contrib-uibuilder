@@ -26,7 +26,7 @@
  * @typedef {import('express')} Express
  */
 
-const path = require('path')
+const path = require('node:path')
 const fslib = require('./fs.cjs') // File/folder handling library (by Totally Information)
 
 const pkgJson = fslib.readJSONSync(path.join( __dirname, '..', '..', 'package.json' ))
@@ -69,13 +69,14 @@ const uibGlobalConfig = {
     ioChannels: { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder', },
 
     // {node.id: url} for each uibuilder nodeInstance. Helps when ensuring that the URL's are unique.
-    deployments: {},
-    instances: {},
-    // Instance details Schema: `{url: {node.id, node.title, node.desc}}`
-    apps: {},
+    deployments: {}, // uibuilder only
+    instances: {}, // uibuilder only
+    mwinstances: {}, // markweb only
+    // Instance details Schema: `{url: {node.id, node.title, node.descr, node.type}}`
+    apps: {}, // uibuilder and markweb
 
     // Options for serveStatic. See https://expressjs.com/en/resources/middleware/serve-static.html
-    staticOpts: {}, // Default: { maxAge: 31536000, immutable: true, },
+    staticOpts: {}, // Default: { maxAge: 31536000, immutable: true } - set in uibuilder.js when creating the node, can be overridden by settings.js uibuilder.staticOpts
 
     /** Set of instances that have requested their local instance folders be deleted on deploy
      *  see html file oneditdelete, updated by admin api. Actually set in admin-api-v3.js/put and consumed in uiblib.js/instanceClose
@@ -121,6 +122,52 @@ const uibGlobalConfig = {
     instanceApiAllowed: false,
     // Only set if requested to use an external template. See libs/fs.js:replaceTemplate()
     degitEmitter: undefined,
+
+    /** UIBUILDER telemetry settings
+     * Telemetry is optional and always anonymous. It is used to collect basic information about the usage
+     * of uibuilder to help guide future development. It is not used for any other purpose and is not shared with any third parties.
+     * See the privacy policy for more details.
+     * Telemetry data is stored in a JSON file in the uibuilder config folder and is loaded and saved via the UibFs library.
+     * It is sent to a Cloudflare work endpoint once a month if telemetry is enabled.
+     */
+    telemetryEnabled: true, // Set from settings.js uibuilder.telemetryEnabled. Default=true
+    telemetryFilename: 'telemetry.json', // Name of the telemetry file in the config folder
+    /** URL of the uibuilder Cloudflare Worker telemetry endpoint.
+     * For local testing with wrangler dev, use http://localhost:8787/telemetry and
+     * cd packages/telemetry && npx wrangler dev
+     * @constant {string}
+     */
+    // telemetryEndpoint: 'https://uibuilder-telemetry.totallyinformation.workers.dev/telemetry',
+    telemetryEndpoint: 'http://localhost:8787/telemetry',
+    // telemetrySendInterval: 2592000, // 30*24*60*60=30d in secs, Number of days between telemetry sends
+    telemetrySendInterval: 30, // 30 secs, for testing only
+    /** Telemetry data
+     * Loaded from and saved to `<uibRoot>/.config/telemetry.json` via UibFs.
+     * See also uiblib.cjs:updateTelemetryData() for the data that is collected and sent to the telemetry endpoint.
+     * {
+     *   uuid:          string,   // Instance UUID (required)
+     *   uib_version:   string,   // uibuilder package version
+     *   nr_version:    string,   // Node-RED version
+     *   node_version:  string,   // Node.js version
+     *   os_platform:   string,   // e.g. "linux", "win32", "darwin"
+     *   uib_count:     number,   // Count of uibuilder nodes deployed
+     *   markweb_count: number,   // Count of markweb nodes deployed
+     *   browsers: [              // Pre-aggregated browser stats (NOT raw UA strings)
+     *     { family: string, version: string, count: number }
+     *   ]
+     * }
+     */
+    telemetry: {
+        // uuid will be set in uiblib.js:updateTelemetryData() when telemetry is sent
+        uib_version: pkgJson.version,
+        // nr_version: RED.settings.version,
+        node_version: process.version,
+        os_platform: process.platform,
+        // uib_count: Object.keys(uib.instances).length,
+        // markweb_count: Object.keys(uib.mwinstances).length,
+        // browsers: [], // will be set ??
+        // lastSent: 0, // timestamp of last telemetry send - set in uib-runtime-plugin:sendTelemetry()
+    },
 
     // A reference to the uibuilder package.json file contents for convenience
     me: pkgJson,
