@@ -354,12 +354,16 @@
  *
  *  Default `empty string`.
  * @property {object} deployments Track across redeployments
- * @property {object} instances When nodeInstance is run, add the node.id as a key with the value being the
+ * @property {object} instances For uibuilder nodes, when nodeInstance is run, add the node.id as a key with the value being the
  *  url then add processing to ensure that the URL's are unique.
  *
  *  Schema: `{<node.id>: <url>}`
- * @property {object} apps Instance details
- *  Schema: `{url: {node.id, node.url, node.title, node.desc}}
+ * @property {object} mwinstances For markweb nodes, when nodeInstance is run, add the node.id as a key with the value being the
+ *  url then add processing to ensure that the URL's are unique.
+ *
+ *  Schema: `{<node.id>: <url>}`
+ * @property {object} apps Instance details (uibuilder and markweb)
+ *  Schema: `{url: {node.id, node.url, node.title, node.descr, node.type}}`
  * @property {string} masterTemplateFolder Location of master template folders (containing default front-end code).
  *
  *  Default `../template`
@@ -408,6 +412,12 @@
  * @property {string=} httpRoot Copy of RED.settings.httpRoot for ease of use
  * @property {string=} reDeployNeeded If the last deployed version is this version or earlier and the current version is greater than this, tell the Editor that a redeploy is needed
  * @property {boolean} instanceApiAllowed Are instance-level API's allowed to be loaded? Could be a security issue so controlled from settings.js uibuilder.instanceApiAllowed. Default=false
+ * @property {boolean} telemetryEnabled Is telemetry enabled? Set from settings.js uibuilder.telemetryEnabled. Default=true
+ * @property {string} telemetryFilename Name of the telemetry file in the config folder. Default 'telemetry.json'
+ * @property {string} telemetryEndpoint URL of the uibuilder Cloudflare Worker telemetry endpoint.
+ *   Either 'http://localhost:8787/telemetry' for local testing or https://uibuilder-telemetry.totallyinformation.workers.dev/telemetry for production.
+ * @property {number} telemetrySendInterval How often to send telemetry data to the endpoint, in seconds. Default 30d
+ * @property {object} [telemetry] Telemetry data for the uibuilder instance. Loaded from and saved to `<uibRoot>/.config/telemetry.json`.
  */
 
 /** senderNode1
