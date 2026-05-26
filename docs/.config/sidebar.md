@@ -93,6 +93,7 @@
   * [Details](dev/README.md)
   * [REST API's](apis/readme.md)
   * [Runtime events](dev/uib-event-comms.md "Node-RED runtime events used in UIBUILDER")
+* [UIBUILDER Privacy policy <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/PRIVACY.md)
 * [Glossary of terms](glossary.md)
 * [Main readme <sup>🔗</sup>](uibhome)
 * [Apache v2 license <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/LICENSE)
