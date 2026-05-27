@@ -3,7 +3,7 @@ title: Telemetry Process
 description: |
   The process to handle telemetry data in uibuilder.
 created: 2026-05-26 14:02:46
-updated: 2026-05-27 14:04:37
+updated: 2026-05-27 15:22:21
 ---
 
 > [!NOTE]
@@ -53,8 +53,8 @@ updated: 2026-05-27 14:04:37
      * cd packages/telemetry && npx wrangler dev
      * @constant {string}
      */
-    // telemetryEndpoint: 'https://uibuilder-telemetry.totallyinformation.workers.dev/telemetry',
-    telemetryEndpoint: 'http://localhost:8787/telemetry',
+    telemetryEndpoint: 'https://uibtelemetry.totallyinformation.net/telemetry',
+    // telemetryEndpoint: 'http://localhost:8787/telemetry',
     telemetrySendInterval: 2592000, // 30*24*60*60=30d in secs, Number of days between telemetry sends
     /** Telemetry data
      * Loaded from and saved to `<uibRoot>/.config/telemetry.json` via UibFs.

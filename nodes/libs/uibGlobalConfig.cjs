@@ -137,7 +137,8 @@ const uibGlobalConfig = {
      * cd packages/telemetry && npx wrangler dev
      * @constant {string}
      */
-    telemetryEndpoint: 'https://uibuilder-telemetry.totallyinformation.workers.dev/telemetry',
+    telemetryEndpoint: 'https://uibtelemetry.totallyinformation.net/telemetry',
+    // telemetryEndpoint: 'https://uibuilder-telemetry.totallyinfo.workers.dev/telemetry',
     // telemetryEndpoint: 'http://localhost:8787/telemetry',
     telemetrySendInterval: 2592000, // 30*24*60*60=30d in secs, Number of days between telemetry sends
     // telemetrySendInterval: 30, // 30 secs, for testing only

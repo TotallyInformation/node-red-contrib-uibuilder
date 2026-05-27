@@ -72,6 +72,7 @@
  * @property {object} [uibuilder.contentSecurityPolicy] Override the default Content Security Policy (CSP) header for uibuilder ExpressJS routes.
  *   Defined as an object with the same keys as the CSP directives (e.g. defaultSrc, scriptSrc, etc.) and values as strings of the allowed sources for that directive (e.g. "'self' 'unsafe-inline' data: blob: https:").
  *   See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy for details of the policy format and options.
+ * @property {boolean} [uibuilder.telemetryEnabled] Allow telemetry data to be collected and sent to the telemetry endpoint. See uibGlobalConfig for the endpoint URL and data collection details.
  *
  * @property {string} coreNodesDir Folder containing Node-RED core nodes
  * @property {string} version Node-RED version
@@ -415,7 +416,7 @@
  * @property {boolean} telemetryEnabled Is telemetry enabled? Set from settings.js uibuilder.telemetryEnabled. Default=true
  * @property {string} telemetryFilename Name of the telemetry file in the config folder. Default 'telemetry.json'
  * @property {string} telemetryEndpoint URL of the uibuilder Cloudflare Worker telemetry endpoint.
- *   Either 'http://localhost:8787/telemetry' for local testing or https://uibuilder-telemetry.totallyinformation.workers.dev/telemetry for production.
+ *   Either 'http://localhost:8787/telemetry' for local testing or https://uibtelemetry.totallyinformation.net/telemetry for production.
  * @property {number} telemetrySendInterval How often to send telemetry data to the endpoint, in seconds. Default 30d
  * @property {object} [telemetry] Telemetry data for the uibuilder instance. Loaded from and saved to `<uibRoot>/.config/telemetry.json`.
  */
