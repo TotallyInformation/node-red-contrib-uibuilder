@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-05-23 16:37:38
+updated: 2026-05-27 14:06:25
 ---
 
 ## Possible issues/improvements
@@ -14,6 +14,8 @@ updated: 2026-05-23 16:37:38
   * [ ] (uib) - passing uib object instead of using the module.
   * [ ] check that hooks are in uib?
 * [ ] Alter uibuilder where we have `JSON.stringify` to use saferSerialize instead.
+* [ ] Add app type to nr admin index page to make it easier to identify uibuilder and markweb nodes.
+* [ ] Add size trap to saferSerialize to prevent very large objects from being serialized and crashing the system.
 
 
 ### Markweb
@@ -30,15 +32,6 @@ updated: 2026-05-23 16:37:38
 
 ### CSS
 * [ ] Add `font-variant-numeric: tabular-nums` to the table CSS to make numbers line up better in tables. (NB: only affects numbers so can be for all cells).
-
-### Other
-* [ ] Telemetry
-  * [ ] Cloudflare worker and D1
-  * [ ] Privacy policy document
-  * [ ] Function to create a node-red instance UUID if one doesn't already exist and store it in the local filesystem.
-  * [ ] Telemetry function(s) in uiblib to locally store telemetry data
-  * [ ] Function to periodically send telemetry data to the cloudflare worker & clear down local data. Run monthly only.
-  * [ ] Record: node-red instance UUID, uibuilder version, node-red version, node-red environment (docker, local, etc), browser family and version (aggregated), number of uibuilder nodes, number of Markweb nodes, number of uibuilder instances, number of Markweb instances, date/time of first use, date/time of last use.
 
 ## In Progress
 

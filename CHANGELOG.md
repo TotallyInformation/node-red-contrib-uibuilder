@@ -24,6 +24,25 @@ I did sneak in 1 change to this release. Some updates to the layout of the UIBUI
 
 ### 📌 Highlights
 
+* Markweb now supports Mermaid diagrams and Markdown footnotes. The automatic status block has been corrected and moved to the main content.
+* Easier CSP overrides. `uibuilder.contentSecurityPolicy` in settings.js.
+* New anonymous telemetry feature.
+* The uibuilder initial log summary nows starts just after the 'flows:started' event to ensure that telemetry data is available. Whether telemetry is active and the number of uibuilder and markweb node instances are now also shown.
+
+### NEW telemetry feature
+
+Records anonymous, non-identifiable data about uibuilder usage to a cloud endpoint to help guide future development.
+
+Data is stored locally and sent no more than monthly if enabled. See the telemetry process documentation for details.
+
+The send process is checked every time flows are (re)started. So on stable platforms, sending might be much longer than a month.
+
+There is a new Privacy Policy document for GDPR and other compliance purposes.
+
+Telemetry is optional and can be disabled in settings.js (`uibuilder.telemetryEnabled`). If disabled, data will still be collected locally but not sent to the cloud endpoint.
+
+The telemetry data is written to `<uibRoot>/.config/telemetry.json`.
+
 ### NEW Node-RED Function Node utility functions
 
 UIBUILDER has enhanced the `RED.util` object for quite some time. It adds the `RED.util.uib` namespace which contains utility functions for use in Node-RED Function nodes.
@@ -65,6 +84,7 @@ If loaded in your `index.html` file, it not only provides the new element but al
 * The automatic status block has been corrected and moved to the main content. It only shows if either or both of the `status` and/or `since` front-matter attributes are set.  Note that this is driven purely by CSS (no JavaScript) but it requires a relatively up-to-date browser to work correctly.
 * [Mermaid diagrams](https://mermaid.ai/open-source/intro/) are now supported as code blocks in markdown files.
 * Markdown footnotes are now also supported. See the Footnotes page in the `[DEMO]` Markweb for details and examples. We use the [markdown-it-footnote](https://github.com/markdown-it/markdown-it-footnote) plugin for this.
+* Markweb nodes are now tracked in the uibuilder global configuration.
 
 ### Sidebar node
 
@@ -77,6 +97,16 @@ If loaded in your `index.html` file, it not only provides the new element but al
 
 
 ### uibuilder node
+
+* Improved shutdown processing, especially when using a custom Express server. Socket.IO and web connections are now terminated if Node-RED recieves a SIGINT. In addition, each instance's close function has been tidied up & the "shutdown" control message is now sent to connected clients earlier. This also updates the web and uiblib libraries.
+
+* Started to move initialisation processing into the runtime plugin. This allows the uibuilder global configuration to be available earlier in the startup process since plugins are loaded before nodes. This is a work in progress and will continue over several releases.
+
+### Runtime plugin
+
+* Started to move initialisation processing into the runtime plugin. This allows the uibuilder global configuration to be available earlier in the startup process since plugins are loaded before nodes. This is a work in progress and will continue over several releases.
+
+### Runtime libraries
 
 * **NEW** In Node-RED's `settings.js` file, you can now specify `uibuilder.contentSecurityPolicy` to set the default Content-Security-Policy (CSP) header for uibuilder instances. This allows you to improve the security of your uibuilder applications by restricting the sources of content that can be loaded in the browser.
 
@@ -106,22 +136,18 @@ If loaded in your `index.html` file, it not only provides the new element but al
   >
   > These settings do not affect http-in/-response or Dashboard nodes. They only affect the uibuilder & Markweb nodes.
 
-* Improved shutdown processing, especially when using a custom Express server. Socket.IO and web connections are now terminated if Node-RED recieves a SIGINT. In addition, each instance's close function has been tidied up & the "shutdown" control message is now sent to connected clients earlier. This also updates the web and uiblib libraries.
-
-* Started to move initialisation processing into the runtime plugin. This allows the uibuilder global configuration to be available earlier in the startup process since plugins are loaded before nodes. This is a work in progress and will continue over several releases.
-
-### Runtime plugin
-
-* Started to move initialisation processing into the runtime plugin. This allows the uibuilder global configuration to be available earlier in the startup process since plugins are loaded before nodes. This is a work in progress and will continue over several releases.
-
-### Runtime libraries
-
 * The remaining ~~5~~ 4 fsextra functions in fs lib. `ensureDirSync` have been replaced with native functions. fs-extra is no longer a dev- or other dependency.
 * Unnecessary `require` of the ui library removed from the uibuilder node's runtime.
 * UIBUILDER's global configuration and filing-system setup is now done in the runtime plugin rather than the uibuilder node. This makes it available earlier and ensures it is ready for other nodes such as Markweb.
 * There are now fewer places where the global config object is passed by reference. Instead, the global config singleton class is used directly where needed. This should make it easier to maintain and reduce the risk of errors.
 * `tilib.cjs` - added a `maxLength` parameter to the `syntaxHighlight` function to allow the output length to be limited. This is to prevent potential denial-of-service attacks via extremely large JSON payloads. This is used when displaying the uibuilder details page from the editor.
 * `admin-api-v2.cjs` - extend length of JSON outputs.
+
+### Other
+
+* uibuilder now tracks markweb nodes deployed (runtime only). Markweb "apps" are also now added to the global config `apps` property. The apps property has been extended with a `type` property which is either "uibuilder" or "markweb".
+* Startup summary log moved from `runtime-event`>`runtime-state` to `flows:started` event to ensure that telemetry data is available for the summary log.
+
 
 ---
 
