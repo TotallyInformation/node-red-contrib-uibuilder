@@ -83,6 +83,10 @@ function setupUibGlobalConfig(RED) {
         if ( settings.contentSecurityPolicy ) {
             uib.customServer.contentSecurityPolicy = settings.contentSecurityPolicy
         }
+        // Allow override of the telemetry service
+        if ( settings.telemetryEnabled && typeof settings.telemetryEnabled === 'boolean' ) {
+            uib.telemetryEnabled = settings.telemetryEnabled
+        }
     }
 
     /** Locations for uib config can common folders */
