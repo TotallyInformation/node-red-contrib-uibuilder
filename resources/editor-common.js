@@ -451,7 +451,6 @@ declare namespace RED {
                     'file://types/uibuilder/uib-util.d.ts'
                 )
             }
-            }
 
             if (window.monaco) {
                 inject()
