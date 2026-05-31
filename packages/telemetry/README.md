@@ -142,9 +142,8 @@ Receives a telemetry report from a Node-RED instance. Rate-limited to one accept
   "uib_count":     3,
   "markweb_count": 1,
   "browsers": [
-    { "family": "Chrome",  "major": 124, "count": 5 },
-    { "family": "Firefox", "major": 125, "count": 2 }
-  ]
+    { "family": "Chrome",  "version": "124", "count": 5 },
+    { "family": "Firefox", "version": "125", "count": 2 }
 }
 ```
 
