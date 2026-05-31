@@ -2491,8 +2491,8 @@ var BaseXHR = class extends Polling {
   /**
    * Sends data.
    *
-   * @param {String} data to send.
-   * @param {Function} called upon flush.
+   * @param {String} data - data to send.
+   * @param {Function} fn - called upon flush.
    * @private
    */
   doWrite(data, fn) {
@@ -3256,7 +3256,7 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
   /**
    * Sends a packet.
    *
-   * @param {String} type: packet type.
+   * @param {String} type - packet type.
    * @param {String} data.
    * @param {Object} options.
    * @param {Function} fn - callback function.

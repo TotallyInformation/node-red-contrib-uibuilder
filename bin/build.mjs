@@ -689,22 +689,30 @@ async function buildAllNode() {
  * @returns {Promise<void>}
  */
 async function buildMermaid() {
-    return new Promise((resolve, reject) => {
+    /** Run a node script in a child process and reject if it exits non-zero.
+     * @param {string} scriptRelPath Relative script path from repository root
+    * @param {string[]} [scriptArgs] Optional CLI arguments for the script
+     * @returns {Promise<void>}
+     */
+    const runNodeScript = (scriptRelPath, scriptArgs = []) => new Promise((resolve, reject) => {
         const child = spawn(
             process.execPath,
-            [join(ROOT, 'packages/uib-md-utils/build.mjs')],
+            [join(ROOT, scriptRelPath), ...scriptArgs],
             { cwd: ROOT, stdio: 'inherit', }
         )
         child.on('close', (code) => {
             if (code === 0) resolve()
-            else reject(new Error(`[mermaid-browser-bundle] Build exited with code ${code}`))
+            else reject(new Error(`[${MERMAID_BUILD.name}] ${scriptRelPath} exited with code ${code}`))
         })
         child.on('error', reject)
     })
+
+    // Keep uib-md-utils and the docs mermaid bundle aligned whenever mermaid changes.
+    await runNodeScript('packages/uib-md-utils/build.mjs')
+    await runNodeScript('src/doc-bundle/build.mjs', ['--mermaid-only'])
 }
 
 // #endregion ---- Mermaid Browser Bundle Build ----
-
 
 /**
  * Build and minify the uib-brand CSS file using LightningCSS.
