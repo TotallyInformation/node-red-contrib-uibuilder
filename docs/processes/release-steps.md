@@ -3,7 +3,7 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2026-03-17 16:53:33
+updated: 2026-05-31 16:56:14
 author: Julian Knight (Totally Information)
 ---
 
@@ -72,7 +72,7 @@ These are in `templates\blank\types` AND `src\front-end-module\types`. They are 
 
 * Commit and push
 
-## 05) Merge GitHub dev branch to main
+## 05) Merge GitHub dev branch to main via a pull request
 
 * Do a pull request, dev branch to main.
 * Check DeepScan and Snyk results and resolve any issues.
@@ -101,7 +101,7 @@ Remember to switch branches to the version branch in VS Code before continuing.
 
 ## 07) Create a new GitHub tag & release
 
-* Run `gulp createTag` from VSCode terminal (making sure to use main branch).
+* Run `npm run createTag` from VSCode terminal (making sure to use main branch).
 * [On GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/tags), create a release from the tag and paste the version changelog notes into the release notes.
 
 ## 08) Publish new version to npm
