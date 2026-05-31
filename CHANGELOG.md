@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-05-04 16:39:42
+updated: 2026-05-31 13:17:17
 ---
 
 # Changelog
@@ -25,6 +25,9 @@ I did sneak in 1 change to this release. Some updates to the layout of the UIBUI
 ### 📌 Highlights
 
 * Markweb now supports Mermaid diagrams and Markdown footnotes. The automatic status block has been corrected and moved to the main content.
+* The `uib-sidebar` node is now working correctly which creates a mini-web-page in the Node-RED Editor's sidebar panel. It has been updated to allow multiple sidebar nodes to be used. Each will create a separate section in the sidebar and can have its own input and output for dynamic content.
+* New `<json-viewer>` web component made available for displaying JSON data in a structured format. Accepts pretty much ALL JavaScript object data, not just JSON. The uibuilder client library's `syntaxHighlight()` and `showMsg()` functions have also been updated to use this new component if it is loaded, giving a much nicer output with collapsible sections for large objects and arrays.
+* Updated `RED.util.uib` namespace for Node-RED Function nodes with new `saferSerialize()` and `renderToHTML()` functions for more robust JavaScript object handling and rendering.
 * Easier CSP overrides. `uibuilder.contentSecurityPolicy` in settings.js.
 * New anonymous telemetry feature.
 * The uibuilder initial log summary nows starts just after the 'flows:started' event to ensure that telemetry data is available. Whether telemetry is active and the number of uibuilder and markweb node instances are now also shown.
@@ -90,17 +93,17 @@ If loaded in your `index.html` file, it not only provides the new element but al
 
 * **FIXED** Clearly nobody has been using the features of the `uib-sidebar`! Because if you had tried to send dynamic content to the sidebar, it wasn't working at all! Now, it does indeed work correctly.
 
-* **NEW** You can now have as many `uib-sidebar` nodes as you like. Each one will add its defined HTML to the sidebar. This allows you to easily modularise your sidebar content and have different nodes responsible for different parts of the sidebar. Each sidebar node has its own input and output so they can be updated and respond to messages independently. The content from each sidebar node is added to the sidebar in the order that the nodes are listed in the Node-RED editor.
+* **NEW** You can now have as many `uib-sidebar` nodes as you like. Each one will add its defined HTML to the sidebar, wrapped in a `<section>` tag with a unique ID. This allows you to easily modularise your sidebar content and have different nodes responsible for different parts of the sidebar. Each sidebar node has its own input and output so they can be updated and respond to messages independently. The content from each sidebar node is added to the sidebar in the order that the nodes are listed in the Node-RED editor.
 
   > [!TIP]
-  > Each of the sidebar HTML definitions has a change listener attached. This means that, if you include input elements in the HTML, they report back to the node's output when they change. This allows you to easily create interactive sidebar content.
+  > Each of the sidebar HTML definitions has a `change` listener attached. This means that, if you include input elements in the HTML, they report back to the node's output when their content value changes. This allows you to easily create interactive sidebar content.
 
 
 ### uibuilder node
 
 * Improved shutdown processing, especially when using a custom Express server. Socket.IO and web connections are now terminated if Node-RED recieves a SIGINT. In addition, each instance's close function has been tidied up & the "shutdown" control message is now sent to connected clients earlier. This also updates the web and uiblib libraries.
 
-* Started to move initialisation processing into the runtime plugin. This allows the uibuilder global configuration to be available earlier in the startup process since plugins are loaded before nodes. This is a work in progress and will continue over several releases.
+* Started to move initialisation processing into the runtime plugin. This allows the uibuilder global configuration to be available earlier in the startup process since plugins are loaded before nodes. This is a work in progress and will continue over several releases. This also simplifies the uibuilder node's code and should make it easier to maintain and extend in the future. This is also important now that we have Markweb as well as uibuilder nodes that need to share the global configuration and filing system setup.
 
 ### Runtime plugin
 

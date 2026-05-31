@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-05-27 14:06:25
+updated: 2026-05-31 13:20:42
 ---
 
 ## Possible issues/improvements
@@ -19,19 +19,15 @@ updated: 2026-05-27 14:06:25
 
 
 ### Markweb
-* [ ] Add Markweb instances to the list of uibuilder apps/urls.
+* [_] Add Markweb instances to the list of uibuilder apps/urls. Started, needs app index page and the listApps function node utility updating to show them along with the new `type` property.
 * [ ] Reduce the chattiness of the markweb client library.
 
 ### Documentation
 * [ ] Document the CSP overrides and how to use them.
-* [ ] Remove docsify-darklight-theme dependency as it is dated and not being used. Will remove a bunch of audit failures.
+* [_] Remove docsify-darklight-theme dependency as it is dated and not being used. Will remove a bunch of audit failures. JS already not used, needs consolidation of the CSS.
 
 ### uibuilder node
 * [ ] Deploy of new uibuilder node sometimes results in `🌐⚠️[uibuilder:web:setupInstanceStatic:nojs-charts] Cannot show default page, index.html does not exist in D:\src\uibRoot\nojs-charts\src.`.  Likely because the reload option is on so as the default folders & files being created, the node tries to reload the page. Maybe suspend watcher for initial deployment somehow?
-* [ ] Move the fs processing in the startup of the uibuilder node into the runtime plugin. Including the setup of the fslib.
-
-### CSS
-* [ ] Add `font-variant-numeric: tabular-nums` to the table CSS to make numbers line up better in tables. (NB: only affects numbers so can be for all cells).
 
 ## In Progress
 
@@ -109,3 +105,5 @@ updated: 2026-05-27 14:06:25
 
   Other possibles: Instagram, Blog, LinkedIn, NR Forum, BlueSky, Mastodon.
 
+## Other
+Please see the [roadmap section of the UIBUILDER documentation](roadmap/readme.md) for the latest information on what is being worked on for the next release and beyond.

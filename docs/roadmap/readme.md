@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2026-05-04 13:12:23
+updated: 2026-05-31 13:54:27
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -37,6 +37,7 @@ For more information about the future of UIBUILDER, please see the [Futures page
 * Server no-/low-code conversion`uib-html` - [/roadmap/nodes/uib-html](/roadmap/nodes/uib-html)
 * Instance file save `uib-save` - [/roadmap/nodes/uib-save](/roadmap/nodes/uib-save)
 * `uib-sender` - [/roadmap/nodes/uib-sender](/roadmap/nodes/uib-sender)
+* `uib-sidebar` - [/roadmap/nodes/uib-sidebar](/roadmap/nodes/uib-sidebar)
 * No-code `uib-tag` - [/roadmap/nodes/uib-tag](/roadmap/nodes/uib-tag)
 * No-code `uib-update` - [/roadmap/nodes/uib-update](/roadmap/nodes/uib-update)
 * `uibuilder` - [/roadmap/nodes/uibuilder](/roadmap/nodes/uibuilder)
@@ -354,7 +355,16 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 ## UIBUILDER v8 planned breaking changes
 
-* [ ] Node.js min version v22 LTS - to match Node-RED v5
+Planned release date: To coincide with Node-RED v5. 2026.
+
+* [ ] Node.js min version v22 LTS - to match Node-RED v5.
+* [ ] Uplift `degit` to v3.x (requires node.js v20 minimum).
+
+## UIBUILDER v9 planned breaking changes
+
+Planned release date: To coincide with Node-RED v6.
+
+* [ ] None as yet
 
 ## Ideas for releases further out
 
