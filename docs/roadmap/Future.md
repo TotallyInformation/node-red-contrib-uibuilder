@@ -1,7 +1,7 @@
 ---
 title: UIBUILDER Futures
 created: 2023-12-30 20:11:21
-updated: 2023-12-30 20:15:44
+updated: 2026-05-04 17:19:18
 author: Julian Knight (Totally Information)
 ---
 
@@ -15,8 +15,7 @@ UIBUILDER will continue to be independent of front-end frameworks though it will
 
 ### Longer term focus
 
-There remains a desire to build a page-builder feature so that people with no coding skills can build great data-driven web apps.
+There remains a desire to build a page-builder feature so that people with no coding skills can build great data-driven web apps with or without (mostly without) the need for any front-end complex web fr
 
 * The documentation quality will continue to improve.
-* The number of 3rd-party module dependencies will be reduced. Starting with the eventual removal of `fs-extra` in favour of the native promisified fs library. Followed most likely by `arun`.
-* Once Node.js v18 or 20 is the base, the code is likely to be refactored into multiple sub-packages in a mono-repo.
+* The number of 3rd-party module dependencies will be reduced.

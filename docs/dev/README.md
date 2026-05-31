@@ -3,7 +3,7 @@ title: Developer Documentation
 description: |
   Deep dives into the internals of UIBUILDER. This is where to go if you need to understand how things work. These documents may lag behind the actual code however, so it is always worth also referencing the current codebase.
 created: 2019-06-16 16:16:00
-updated: 2026-03-24 21:03:01
+updated: 2026-05-04 19:35:22
 ---
 
 > [!NOTE]
@@ -34,29 +34,41 @@ Check `src/components/` and `src/front-end-module/` folders for the client libra
 
 These are required to run UIBUILDER, they are installed automatically when you install uibuilder via npm or the Node-RED palette manager.
 
-* [degit](https://www.npmjs.com/package/degit) - Used to enable external uibuilder templates to be utilised from Git repositories - notably GitHub or GitLab.
-* [ExpressJS](https://www.npmjs.com/package/express) - Node.js standard web server. Also used by Node-RED.
-* [fast-glob](https://www.npmjs.com/package/fast-glob) - Fast file find and traversal. Used in `libs/fs.js` only. **TO BE REMOVED IN THE FUTURE**
-* [fs-extra](https://www.npmjs.com/package/fs-extra) - Additional filing system methods. Only now used in the `libs/fs.js` module. **IN THE PROCESS OF BEING REMOVED**
-* [jsdom](https://www.npmjs.com/package/jsdom) - Industry standard Node.js module to simulate the browser DOM on the server. Used for the `uib-html` node to hydrate uibuilder's low-code JSON to HTML.
-* [Socket.IO](https://www.npmjs.com/package/socket.io) - Enhanced websockets. Required for real-time communications between the client and Node-RED server.
+* [**degit**](https://www.npmjs.com/package/degit) - Used to enable external uibuilder templates to be utilised from Git repositories - notably GitHub or GitLab.
+* [**ExpressJS**](https://www.npmjs.com/package/express) - Node.js standard web server. Also used by Node-RED.
+* [**jsdom**](https://www.npmjs.com/package/jsdom) - Industry standard Node.js module to simulate the browser DOM on the server. Used for the `uib-html` node to hydrate uibuilder's low-code JSON to HTML.
+* [**Socket.IO**](https://www.npmjs.com/package/socket.io) - Enhanced websockets. Required for real-time communications between the client and Node-RED server.
 
-Additionally, the following are provided by a workspace private package - these are updated and bundled when uibuilder is updated.
+Additionally, the following are provided by a workspace private package - these are updated and bundled when UIBUILDER is updated.
 
-* `@totallyinformation/uib-md-utils` (`packages/uib-md-utils/`) - A private utility package for uibuilder that bundles libraries for Markdown processing.
-  * Markdown-IT. Used to convert Markdown to HTML in the `markweb` node.
-  * [front-matter](https://www.npmjs.com/package/front-matter) - A library to parse YAML front-matter from text files. Used in the `markweb` node to extract metadata from Markdown files.
+* `uib-md-utils` (`packages/uib-md-utils/`) - A private utility package for UIBUILDER that bundles libraries for Markdown processing.
+  * [**Markdown-IT**](https://www.npmjs.com/package/markdown-it). Used to convert Markdown to HTML in the `markweb` node.
+  * [**front-matter**](https://www.npmjs.com/package/front-matter) - A library to parse YAML front-matter from text files. Used in the `markweb` node to extract metadata from Markdown files.
+  * [**highlight.js**](https://www.npmjs.com/package/highlight.js) - Highlights code-blocks with support for many languages.
+  * [**markdown-it-anchor**](https://www.npmjs.com/package/markdown-it-anchor) - Auto-creates anchor links on paragraph headings.
+  * [**markdown-it-attrs**](https://github.com/arve0/markdown-it-attrs) - Adds classes, identifiers and attributes to markdown with `{}` curly brackets, similar to pandoc's header attributes.
+  * [**markdown-it-github-alerts**](https://github.com/antfu/markdown-it-github-alerts) - Allows GitHub Flavored Markdown (GFM) style callouts/alert blocks.
+  * NOT YET LIVE **mermaid** - Creates visual diagrams based on text configurations.
+  * Several other Markdown-IT plugins have been created by me:
+    * **Task lists** - GFM-style task lists (with tickboxes instead of bullets).
+    * **Directives** - `%%....%%` named directives. Used in Markweb's HTML templates.
+    * **Front-matter variables** - `{{....}}` named variables. Used in Markdown pages, they are dynamically replaced by their front-matter values on display.
+    * **Details/Summary** - Wraps `Hn` headings in details/summary HTML tags allowing text to be folded for easier reading.
+* `uib-fs-utils` (`packages/uib-fs-utils/`) - A private utility package for UIBUILDER that bundles specialist libraries for server filing system handling.
+  * **Chokidar** - used for watching for and reacting to changes to folders and files. Used in both the core uibuilder and Markweb nodes.
+  * **fast-glob** - Used to help include/exclude lists of folders and files for further processing. Used in `libs/fs.js` only. **TO BE REMOVED IN THE FUTURE** - when node.js v24+ is baseline for Node-RED, since node.js will have a native library.
+
 
 These are optional peer dependencies
 
-* [ejs](https://www.npmjs.com/package/ejs) - Embedded JavaScript Templates - an option in uibuilder that allows server-side templating. You should install it using the uibuilder library manager.
+* [**ejs**](https://www.npmjs.com/package/ejs) - Embedded JavaScript Templates - an option in uibuilder that allows server-side templating. You should install it using the uibuilder library manager.
 
 In addition, these are required for developing UIBUILDER, they are not required to run it
 
-* [ESbuild]() - Used to build runtime IIFE & ESM versions of client libraries. Called from Gulp tasks.
-* [ESLint]() - Used to validate and standardise code. Various extensions are used.
-* [execa](https://www.npmjs.com/package/execa) - Process execution, used to run some scripts from Gulp.
-* [Gulp]() - Task automation. A set of extensions are also used.
+* [**ESbuild**]() - Used to build runtime IIFE & ESM versions of client libraries. Called from Gulp tasks.
+* [**ESLint**]() - Used to validate and standardise code. Various extensions are used.
+* [**execa**](https://www.npmjs.com/package/execa) - Process execution, used to run some scripts from Gulp. **TO BE REMOVED IN THE FUTURE**
+* [**Gulp**]() - Task automation. A set of extensions are also used. **TO BE REMOVED IN THE FUTURE** - v7.7+ has a native build tool.
 
 
 ## Server Libraries
@@ -83,8 +95,9 @@ In addition, these are required for developing UIBUILDER, they are not required 
   These libraries support client (browser) HTML interactions with Node-RED.
 
   * [`uibrouter.mjs`](client-docs/fe-router) - The front-end router library for Single Page Apps (SPA's).
-  * [`uibuilder.module.mjs`](dev/client-libs/uibuilder-module) - The main front-end client library.
+  * [`uibuilder.module.mjs`](dev/client-libs/uibuilder-module) - The main front-end client library source file.
   * [`ui.mjs`](dev/client-libs/ui) - Client and server low-code to HTML conversion. This is built into the main client library.
+  * `markweb.mjs` - The front-end library for the Markweb features.
   
 ## Node-RED Editor Libraries
 
@@ -138,7 +151,8 @@ For details, see the Client Libraries list above.
 
 Some information on testing uibuilder. Unfortunately, I have no real clue about automated testing and TLD, if you would like to contribute something, please do!
 
-* [Regression Tests](processes/regression-tests.md)
+* [Regression Tests](processes/regression-tests.md).
+* For Markweb, the `[DEMO]` site is effectively the test site.
 
 ## Node edit panel global variable
 

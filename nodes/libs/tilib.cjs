@@ -19,9 +19,43 @@
  */
 'use strict'
 
-const path = require('path')
+const path = require('node:path')
+const { types, } = require('node:util')
 
 const mylog = (process.env.TI_ENV === 'debug') ? console.log : function() {}
+
+/** Return a normalised type label for any JavaScript value.
+ * NB: If updating this, consider updating the equivalent in json-viewer
+ * @param {*} value - Any JavaScript value
+ * @returns {string} Type label
+ */
+function typeOf(value) {
+    if (value === null) return 'null'
+    if (value === undefined) return 'undefined'
+    if (typeof value === 'string' || value instanceof String) return 'string'
+    if (typeof value === 'boolean') return 'boolean'
+    if (typeof value === 'symbol') return 'symbol'
+    if (typeof value === 'bigint') return 'bigint'
+    if (typeof value === 'function') return 'function'
+    if (Number.isFinite(value)) return 'number'
+    if (Number.isNaN(value)) return 'nan'
+    if (Array.isArray(value)) return 'array'
+    // Use util.types rather than instanceof in Node.js where the appropriate type is available
+    if (types.isDate(value)) return 'date'
+    if (types.isRegExp(value)) return 'regexp'
+    if (types.isPromise(value)) return 'promise'
+    if (types.isNativeError(value)) return 'error'
+    if (types.isMap(value)) return 'map'
+    if (types.isSet(value)) return 'set'
+    if (types.isWeakMap(value)) return 'weakmap'
+    if (types.isWeakSet(value)) return 'weakset'
+    if (types.isArrayBuffer(value)) return 'arraybuffer'
+    if (types.isTypedArray(value)) return 'typedarray'
+    if (Buffer.isBuffer(value)) return 'buffer' // generic buffer - put after the ArrayBuffer/TypedArray checks
+    if (value instanceof URL || value instanceof URLSearchParams) return 'urllike'
+    if (!Number.isFinite(value) && typeof value === 'number') return 'infinity'
+    return typeof value
+}
 
 module.exports = {
     /** The name of the package.json file 'package.json' */
@@ -251,11 +285,120 @@ module.exports = {
         return true
     },
 
+    /** A safer version of JSON.stringify that handles various JavaScript issues
+     * - Circular references (replaced with '[Circular]')
+     * - Function references (replaced with '[Function]')
+     * - Symbol references (replaced with the string value of the symbol, e.g., 'Symbol(description)')
+     * - BigInt references (represented as the string value of the BigInt with an 'n' suffix, e.g., '123n')
+     * - RegExp references (represented as their string form, e.g., '/pattern/flags')
+     * - Map references (represented as an array of [key, value] entry pairs)
+     * - Set references (represented as an array of their values)
+     * - Error references (represented as { name, message, stack })
+     * - WeakMap and WeakSet references (represented as '[WeakMap]' or '[WeakSet]')
+     * - ArrayBuffer references (represented as an array of byte values)
+     * - TypedArray references (represented as arrays of their values)
+     * - URL and URLSearchParams references (represented as their string form)
+     * - undefined values (represented as '[undefined]')
+     * - NaN and Infinity numbers (represented as 'NaN', 'Infinity', or '-Infinity')
+     * @param {any} obj The object to serialize
+     * @returns {string} A JSON string representation of the object, with circular references handled
+     */
+    saferSerialize: function(obj) {
+        // Try to use JSON.stringify first, as it will handle most cases and is MUCH faster than the custom replacer
+        try {
+            return JSON.stringify(obj)
+        } catch (e) { /* Fall through to custom replacer on failure (e.g., circular reference) */ }
+
+        // NOTE: JSON.stringify calls value.toJSON() on each value before invoking the replacer function.
+        const cache = new Set()
+        const str = JSON.stringify(obj, (key, value) => {
+            const objType = typeOf(value)
+            if (objType === 'object' && value !== null) {
+                if (cache.has(value)) {
+                    return '[Circular ↺]'
+                }
+                cache.add(value)
+            }
+            switch (objType) {
+                case 'undefined': { // Otherwise the entry is dropped
+                    return '[undefined]'
+                }
+                case 'function': {
+                    const fnName = value.name || 'anonymous'
+                    const kindMap = { AsyncFunction: 'async', GeneratorFunction: 'generator', AsyncGeneratorFunction: 'async-generator', }
+                    const kind = kindMap[value.constructor.name] ?? '' // std sync fns will have empty string
+                    const src = value.toString()
+                        .trimStart()
+                        .slice(0, 20)
+                    const arrow = !src.startsWith('function') && !src.startsWith('async function') ? 'arrow ' : ''
+                    const type = kind || arrow ? `{${`${arrow}${kind}`.trim()}}` : ''
+                    return `[f ${fnName} ${type} ]`
+                }
+                case 'symbol': {
+                    return `[${value.toString()}]`
+                }
+
+                case 'regexp': {
+                    return `[${value.toString()}]`
+                }
+                case 'bigint': {
+                    return `[${value.toString()}n]`
+                }
+                // Would never be hit because JSON.stringify calls value.toJSON() FIRST which for Date objects returns a string
+                // case 'date': {
+                //     return `[Date: ${value.toISOString()}]`
+                // }
+                case 'nan': {
+                    return `[NaN]`
+                }
+                case 'promise': {
+                    return `[Promise]`
+                }
+                case 'infinity': {
+                    return `[${value > 0 ? 'Infinity' : '-Infinity'}]`
+                }
+                case 'map': {
+                    return { '[Map]': Array.from(value.entries()), } // [[k,v], ...] — replacer recurses into each k and v
+                }
+                case 'set': {
+                    return { '[Set]': Array.from(value), } // [...values] — replacer recurses into each value
+                }
+                case 'error': {
+                    // return `[${value.name}: ${value.message}]` // ignoring value.stack for now
+                    return [value.name, value.message, value.stack]
+                }
+                case 'weakmap': {
+                    return '[WeakMap]'
+                }
+                case 'weakset': {
+                    return '[WeakSet]'
+                }
+                case 'arraybuffer': {
+                    return Array.from(new Uint8Array(value))
+                }
+                case 'typedarray': {
+                    return Array.from(value)
+                }
+                case 'urllike': {
+                    return `[URL: ${value.toString()}]`
+                }
+
+                default: {
+                    break
+                }
+            }
+            return value
+        })
+        cache.clear()
+        return str
+    },
+
     /** Utility function to html pretty-print JSON
      * @param {*} json JSON to pretty-print
+     * @param {number} [maxLength] Maximum length of the output string. Default=10000. Longer strings will be truncated with '...truncated...'. Since v7.7.0
      * @returns {string} HTML
      */
-    syntaxHighlight: function(json) {
+    syntaxHighlight: function(json, maxLength = 10000) {
         /*
             pre .string { color: orange; }
             .number { color: white; }
@@ -264,9 +407,9 @@ module.exports = {
             .key { color: #069fb3;}
         */
         json = JSON.stringify(json, undefined, 4)
-        // Trim to maximum of 10k characters
-        if (json.length > 10000) {
-            json = json.substring(0, 10000) + '...truncated...'
+        // Trim to maximum of maxLength characters
+        if (json.length > maxLength) {
+            json = json.substring(0, maxLength) + '...truncated...'
         }
         json = json
             .replace(/&/g, '&amp;')

@@ -65,7 +65,13 @@
 
  * See https://github.com/runem/web-component-analyzer?tab=readme-ov-file#-how-to-document-your-components-using-jsdoc
  */
-class TiBaseComponent extends HTMLElement {
+
+// Guard allows this module to be imported in Node.js/SSR contexts (e.g. for
+// components that expose a pure renderToHTML export) without a DOM being present.
+// In a browser, HTMLElement is always defined so behaviour is unchanged.
+const _HTMLElement = typeof HTMLElement !== 'undefined' ? HTMLElement : class {}
+
+class TiBaseComponent extends _HTMLElement {
     /** Component version */
     static baseVersion = '2025-09-20'
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable jsdoc/valid-types */
 /* eslint-disable jsdoc/check-param-names */
 /* eslint-disable @stylistic/no-multi-spaces */
@@ -13,7 +14,7 @@
  *   See Uib._meta for client version string
  * @license Apache-2.0
  * @author Julian Knight (Totally Information)
- * @copyright (c) 2022-2025 Julian Knight (Totally Information)
+ * @copyright (c) 2022-2026 Julian Knight (Totally Information)
  */
 
 const perf = new Map()
@@ -56,7 +57,7 @@ import { formatDate } from './libs/format-date-time.mjs'
 // Incorporate the logger module - NB: This sets a global `log` object for use if it can.
 // import logger from './logger'
 
-const version = '7.6.2-src'
+const version = '7.7.0-src'
 
 // #region --- Module-level utility functions --- //
 
@@ -270,34 +271,42 @@ log.level = log.default
 // }
 
 /** Convert JSON to Syntax Highlighted HTML
+ * If the `json-viewer` custom element is registered, delegates to its static
+ * `renderToHTML` method. Otherwise falls back to the built-in regex renderer.
  * @param {object} json A JSON/JavaScript Object
  * @returns {html} Object reformatted as highlighted HTML
  */
 function syntaxHighlight(json) {
     if (json === undefined) {
-        json = '<span class="undefined">undefined</span>'
-    } else {
-        try {
-            json = JSON.stringify(json, undefined, 4)
-            // json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // eslint-disable-line newline-per-chained-call
-            json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
-                let cls = 'number'
-                if ((/^"/).test(match)) {
-                    if ((/:$/).test(match)) {
-                        cls = 'key'
-                    } else {
-                        cls = 'string'
-                    }
-                } else if ((/true|false/).test(match)) {
-                    cls = 'boolean'
-                } else if ((/null/).test(match)) {
-                    cls = 'null'
+        return '<span class="undefined">undefined</span>'
+    }
+
+    // Use the json-viewer component's pure renderer if it is loaded
+    try {
+        if (JsonViewer) return JsonViewer.renderToHTML(json, { includeStyles: false, })
+    } catch (e) { /* Fall through to built-in renderer on failure */ }
+
+    // Built-in regex-based fallback renderer
+    try {
+        json = JSON.stringify(json, undefined, 4)
+        // json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // eslint-disable-line newline-per-chained-call
+        json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
+            let cls = 'number'
+            if ((/^"/).test(match)) {
+                if ((/:$/).test(match)) {
+                    cls = 'key'
+                } else {
+                    cls = 'string'
                 }
-                return `<span class="${cls}">${match}</span>`
-            })
-        } catch (e) {
-            json = `Syntax Highlight ERROR: ${e.message}`
-        }
+            } else if ((/true|false/).test(match)) {
+                cls = 'boolean'
+            } else if ((/null/).test(match)) {
+                cls = 'null'
+            }
+            return `<span class="${cls}">${match}</span>`
+        })
+    } catch (e) {
+        json = `Syntax Highlight ERROR: ${e.message}`
     }
     return json
 }
@@ -341,6 +350,10 @@ export const Uib = class Uib {
      * @type {number|null}
      */
     #timerid = null
+    /** True when disconnect() was called intentionally - prevents _onDisconnect from triggering auto-reconnect
+     * @type {boolean}
+     */
+    #manualDisconnect = false
     // Holds the reference ID for the internal msg change event handler so that it can be cancelled
     #MsgHandler
     // Placeholder for io.socket - can't make a # var until # fns allowed in all browsers
@@ -2401,6 +2414,7 @@ export const Uib = class Uib {
                                     onclick: 'uibuilder.copyToClipboard("msg")',
                                     class: 'compact',
                                     style: 'right:3em;',
+                                    title: 'Copy message to clipboard',
                                 },
                                 slot: '📋',
                             },
@@ -2410,6 +2424,7 @@ export const Uib = class Uib {
                                     onclick: 'uibuilder.showMsg()',
                                     class: 'compact',
                                     style: 'right:.5em;',
+                                    title: 'Turn off message display',
                                 },
                                 slot: '⛔',
                             },
@@ -2671,6 +2686,7 @@ export const Uib = class Uib {
      */
     _ctrlMsgFromServer(receivedCtrlMsg) {
         this._dispatchCustomEvent('uibuilder:ctrlMsgReceived', receivedCtrlMsg)
+        this.set('serverShutdown', false) // obviously, since we got a msg from the server, it can't be shutdown. This is reset to true if we get a shutdown msg.
 
         // track received high-res timestamp
         const ts = performance.now()
@@ -2699,8 +2715,12 @@ export const Uib = class Uib {
         switch (receivedCtrlMsg.uibuilderCtrl) {
             // Node-RED is shutting down
             case 'shutdown': {
-                log('info', `Uib:ioSetup:${this._ioChannels.control}`, '❌ Received "shutdown" from server')()
-                this.set('serverShutdown', undefined)
+                this.set('serverShutdown', true)
+                // Turn off socket.io auto-reconnect for 30 seconds to allow Node-RED to restart without the client trying to reconnect to the old server
+                this.disconnect('❌ Received "shutdown" from server')
+                setTimeout( () => {
+                    this.connect('Re-enabled socket.io auto-reconnect after shutdown')
+                }, 30000)
                 break
             }
 
@@ -3697,15 +3717,22 @@ export const Uib = class Uib {
 
     /** Called by _ioSetup when Socket.IO disconnects from Node-RED
      * @param {string} reason Disconnection title
+     * @param {object} details Any details about the disconnection
      * @private
      */
-    _onDisconnect(reason) {
+    _onDisconnect(reason, details) {
         // reason === 'io server disconnect' - redeploy of Node instance
         // reason === 'transport close' - Node-RED terminating
         // reason === 'ping timeout' - didn't receive a pong response?
-        log('info', 'Uib:ioSetup:socket-disconnect', `⛔ Socket Disconnected. Reason: ${reason}`)()
+        log('info', 'Uib:ioSetup:socket-disconnect', `⛔ Socket Disconnected. Reason: ${reason}`, details)()
 
-        this._dispatchCustomEvent('uibuilder:socket:disconnected', reason)
+        this._dispatchCustomEvent('uibuilder:socket:disconnected', { reason, details, })
+
+        // Only attempt auto-reconnect if this was NOT a manual disconnect
+        if (this.#manualDisconnect) {
+            this.#manualDisconnect = false
+            return
+        }
 
         /** A workaround for SIO's failure to reconnect after a disconnection */
         this._checkConnect()
@@ -3766,7 +3793,9 @@ export const Uib = class Uib {
         // Socket.io connection error - probably the wrong ioPath - or client is offline
         this._socket.on('connect_error', (err) => {
             if ( navigator.onLine === false ) return // Don't bother with an error if we know we are offline
-            log('error', 'Uib:ioSetup:connect_error', `❌ Socket.IO Connect Error. Reason: ${err.message}`, err)()
+            if (!err.message.startsWith('xhr poll error')) {
+                log('error', 'Uib:ioSetup:connect_error', `❌ Socket.IO Connect Error. Reason: ${err.message}`, err)()
+            }
             this.set('ioConnected', false)
             this.set('socketError', err)
             this._dispatchCustomEvent('uibuilder:socket:disconnected', err)
@@ -3846,17 +3875,36 @@ export const Uib = class Uib {
         })
     }
 
-    /** Manually (re)connect socket.io */
-    connect() {
-        // ? Should I use this._checkConnect()?
+    /** Manually (re)connect socket.io
+     * @param {string} [reason] Optional reason text for manual connection, used for logging
+     */
+    connect(reason = 'Manual connect') {
+        this.#manualDisconnect = false
+        log('info', `Uib:connect`, reason)()
+        // Re-enable the Manager's built-in reconnection before connecting
+        this._socket.io.reconnection(true)
+        if (this._socketGlobal) this._socketGlobal.connect()
         this._socket.connect()
     }
 
-    /** Manually disconnect socket.io and stop any auto-reconnect timer */
-    disconnect() {
+    /** Manually disconnect socket.io and stop any auto-reconnect timer
+     * @param {string} [reason] Optional reason text for manual disconnection, used for logging
+     */
+    disconnect(reason = 'Manual disconnect') {
+        log('info', `Uib:disconnect`, reason)()
+        // Flag set before disconnecting so that _onDisconnect skips the auto-reconnect workaround
+        this.#manualDisconnect = true
+        // Disable the Manager's built-in reconnection so it doesn't keep polling after disconnect
+        this._socket.io.reconnection(false)
+        // Disconnect both namespaces - _socketGlobal shares the same Manager and will keep it
+        // alive (and polling) if not disconnected alongside _socket
+        if (this._socketGlobal) this._socketGlobal.disconnect()
         this._socket.disconnect()
         // As this is a manual disconnect, stop any reconnect timers
-        if (this.#timerid) window.clearTimeout(this.#timerid)
+        if (this.#timerid) {
+            window.clearTimeout(this.#timerid)
+            this.#timerid = null
+        }
     }
 
     // #endregion -------- ------------ -------- //

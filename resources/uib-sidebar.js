@@ -1,6 +1,7 @@
 // NOTE: window.uibuilder is added - see `resources` folder
-;(function () {
+(function () {
     'use strict'
+    // console.log('📊 [uib-sidebar] Initialising uib-sidebar node')
 
     // #region --------- module variables for the panel --------- //
 
@@ -8,46 +9,99 @@
     const uibuilder = window['uibuilder']
     const log = uibuilder.log
     /** Module name must match this nodes html file @constant {string} moduleName */
-    const moduleName  = 'uib-sidebar'
+    const moduleName = 'uib-sidebar'
 
-    // Create a new set to hold all saved node instances oneditsave
-    if (!window['uibSidebarNodes']) {
-        window['uibSidebarNodes'] = new Set()
-    }
+    // Create a new count of uib-sidebar nodes
+    if (!window['uibSidebarNodeCount']) window['uibSidebarNodeCount'] = 0
 
     const purifyOpts = {
-        USE_PROFILES: { html: true, svg: true, svgFilters: true },
+        USE_PROFILES: { html: true, svg: true, svgFilters: true, },
     }
 
     // #endregion ------------------------------------------------- //
 
     /** Send a message via the node's runtime (API call)
-     * @param {*} node -
-     * @param {*} msg -
+     * @param {string} nodeid The id of the node to send the message to
+     * @param {object} msg The message to send to the runtime - will be stringified before sending
      */
-    function sendToNode(node, msg) {
-        msg = JSON.stringify(msg)  // needs try/catch
-        const postUrl = '/uibuilder/sidebarui/' + node.id
-        // console.log('📊 [uib-sidebar:sidebar] Sending to node runtime:', postUrl, msg, node.id, node)
+    function sendToNode(nodeid, msg) {
+        msg = JSON.stringify(msg) // needs try/catch
+        const postUrl = '/uibuilder/sidebarui/' + nodeid
+        // console.log('🌐📊[uib-sidebar:sidebar] Sending to node runtime:', postUrl, msg, node.id, node)
         $.ajax({
-            url: './uibuilder/sidebarui/' + node.id,
+            url: './uibuilder/uib-sidebar/' + nodeid,
             type: 'POST',
             data: msg,
             contentType: 'application/json; charset=utf-8',
             success: function (resp) {
                 RED.notify(
-                    '📊 Sidebar UI send success',
-                    { type: 'success', id: moduleName, timeout: 2000 }
+                    '🌐📊Sidebar UI send success',
+                    { type: 'success', id: moduleName, timeout: 2000, }
                 )
             },
             error: function (jqXHR, textStatus, errorThrown) {
-                console.error('📊 ❌ [uib-sidebar:sidebar] POST failed. ', postUrl, errorThrown, textStatus)
+                console.error('🌐📊❌ [uib-sidebar:sidebar] POST failed. ', postUrl, errorThrown, textStatus)
                 RED.notify(
-                    '📊 Failed to send from sidebar UI',
-                    { type: 'error', id: moduleName }
+                    '🌐📊Failed to send from sidebar UI',
+                    { type: 'error', id: moduleName, }
                 )
-            }
+            },
         })
+    }
+
+    function sidebarListener(evt) {
+        // console.log('🌐📊[uib-sidebar] Input change event:', evt)
+        const target = evt.target
+        // Deal with stupid checkboxes and radios
+        let value = target.value
+        if (target.localName === 'input' && (target.type === 'checkbox' || target.type === 'radio')) {
+            value = target.checked
+        }
+        const nodeId = target.closest(`[id^="UIB-SB-"]`)?.id?.replace('UIB-SB-', '')
+        // TODO if target is in a form, get all the form data - consider requiring a submit button
+        const msg = {
+            payload: value,
+            topic: `${moduleName}/${target.localName}${target.id ? `/${target.id}` : target.name ? `/${target.name}` : ''}`,
+            from: moduleName,
+            sourceNode: nodeId,
+            id: target.id,
+            name: target.name,
+            attributes: {}, // target.attributes,
+            data: target.dataset,
+            willValidate: target.willValidate,
+            type: target.type,
+            value: value,
+            checked: target.checked,
+            localName: target.localName,
+            modifierKeys: {
+                altKey: evt.altKey,
+                ctrlKey: evt.ctrlKey,
+                metaKey: evt.metaKey,
+                shiftKey: evt.shiftKey,
+            },
+        }
+        for (const attr of target.attributes) {
+            msg.attributes[attr.name] = attr.value
+        }
+        // TODO specials for checkboxes and radios
+        if (!isNaN(target.valueAsNumber)) {
+            msg.valueAsNumber = target.valueAsNumber
+        }
+        if (target.localName === 'select') {
+            msg.multiple = target.multiple
+        }
+        if (target.localName === 'textarea') {
+            msg.selectionStart = target.selectionStart
+            msg.selectionEnd = target.selectionEnd
+            // msg.rows = target.rows
+        }
+        log('🌐📊[uib-sidebar] Input changed:', target, msg)
+        if (nodeId) {
+            msg.topic = `${moduleName}/${nodeId}/${target.localName}${target.id ? `/${target.id}` : target.name ? `/${target.name}` : ''}`
+            sendToNode(nodeId, msg)
+        } else {
+            log('🌐📊[uib-sidebar] No node id found for input event', msg)
+        }
     }
 
     const sbMasterEl = document.createElement('section')
@@ -58,113 +112,84 @@
     // Keep track of the number of uib-sidebar nodes - used for sending msgs from the sidebar
     RED.events.on('nodes:add', function(node) {
         if (node.type === moduleName) {
+            // console.log(`🌐📊[uib-sidebar] Node added: ${node.id}`, node.html)
+            window['uibSidebarNodeCount']++
             // When the first uib-sidebar node is added ...
-            if (window['uibSidebarNodes'].size === 0) {
-                log('📊 [uib-sidebar] FIRST uib-sidebar added - ADDING SIDEBAR')
-                // Set the default HTML for the sidebar UI
-                window['uibSidebarHTML'] = node.html ?? '<p>Sidebar UI</p>'
-                // Add the current node's html to the sbMasterEl
-                sbMasterEl.innerHTML = window['uibSidebarHTML']
+            if (window['uibSidebarNodeCount'] === 1) {
+                log('🌐📊[uib-sidebar] FIRST uib-sidebar added - ADDING SIDEBAR')
                 // Add the sidebar tab
-                RED.sidebar.addTab({
-                    id: 'uibuilder-sidebar-ui',
-                    label: 'uib UI',
-                    name: 'UIBUILDER Sidebar UI',
-                    content: sbMasterEl,
-                    // toolbar: uiComponents.footer,
-                    enableOnEdit: true,
-                    iconClass: 'fa fa-globe uib-blue',
-                })
-                // Get a reference to the sidebar UI element because node-red doesn't add a proper id (as of nr v4.0.8)
-                sbEl = document.getElementById('uib-sidebar-ui')
+                if (!RED.sidebar.containsTab('uibuilder-sidebar-ui')) {
+                    RED.sidebar.addTab({
+                        id: 'uibuilder-sidebar-ui',
+                        label: 'uib UI',
+                        name: 'UIBUILDER Sidebar UI',
+                        content: sbMasterEl,
+                        // toolbar: uiComponents.footer,
+                        enableOnEdit: true,
+                        iconClass: 'fa fa-globe uib-blue',
+                    })
+                }
             }
-            window['uibSidebarNodes'].add(node)
-            sbEl.addEventListener('change', function(evt) {
-                // console.log('📊 [uib-sidebar] Input change event:', evt)
-                const target = evt.target
-                // Deal with stupid checkboxes and radios
-                let value = target.value
-                if (target.localName === 'input' && (target.type === 'checkbox' || target.type === 'radio')) {
-                    value = target.checked
-                }
-                // TODO if target is in a form, get all the form data - consider requiring a submit button
-                const msg = {
-                    payload: value,
-                    topic: `${moduleName}/${target.localName}${target.id ? `/${target.id}` : target.name ? `/${target.name}` : ''}`,
-                    from: moduleName,
-                    id: target.id,
-                    name: target.name,
-                    attributes: {}, //target.attributes,
-                    data: target.dataset,
-                    willValidate: target.willValidate,
-                    type: target.type,
-                    value: value,
-                    checked: target.checked,
-                    localName: target.localName,
-                    modifierKeys: {
-                        altKey: evt.altKey,
-                        ctrlKey: evt.ctrlKey,
-                        metaKey: evt.metaKey,
-                        shiftKey: evt.shiftKey,
-                    },
-                }
-                for (const attr of target.attributes) {
-                    msg.attributes[attr.name] = attr.value;
-                }
-                // TODO specials for checkboxes and radios
-                if (!isNaN(target.valueAsNumber)) {
-                    msg.valueAsNumber = target.valueAsNumber
-                }
-                if (target.localName === 'select') {
-                    msg.multiple = target.multiple
-                }
-                if (target.localName === 'textarea') {
-                    msg.selectionStart = target.selectionStart
-                    msg.selectionEnd = target.selectionEnd
-                    // msg.rows = target.rows
-                }
-                log('📊 [uib-sidebar] Input changed:', target, msg)
-                sendToNode(node, msg)
-            })
+            // Get a reference to the sidebar UI element (only once)
+            if (!sbEl) sbEl = document.getElementById('uib-sidebar-ui')
+            // Add the instance section to the sidebar UI
+            sbEl.insertAdjacentHTML('beforeend', `<section id="UIB-SB-${node.id}"></section>`)
+            // with the HTML from the node config (or a placeholder if empty)
+            if (node.html) {
+                updateTab(node.html, node.id)
+            } else {
+                updateTab(`{${node.id} No content}`, node.id)
+            }
+            // Listen for any inputs and send to the output of the node
+            document.getElementById(`UIB-SB-${node.id}`)?.addEventListener('change', sidebarListener)
         }
     })
     RED.events.on('nodes:remove', function(node) {
         if (node.type === moduleName) {
-            // Remove the node from the set
-            window['uibSidebarNodes'].delete(node)
+            // console.log(`🌐📊[uib-sidebar] Node removed: ${node.id}`)
+            window['uibSidebarNodeCount']--
+            const el = document.getElementById(`UIB-SB-${node.id}`)
+            el?.removeEventListener('change', sidebarListener)
+            el?.remove()
             // If there are no more uib-sidebar nodes, remove the sidebar tab
-            if (window['uibSidebarNodes'].size === 0) {
-                log('📊 [uib-sidebar] LAST uib-sidebar removed - REMOVING SIDEBAR UI')
+            if (window['uibSidebarNodeCount'] === 0) {
+                log('🌐📊[uib-sidebar] LAST uib-sidebar removed - REMOVING SIDEBAR UI')
                 RED.sidebar.removeTab('uibuilder-sidebar-ui')
             }
         }
     })
+    // RED.events.on('deploy', function(node) {
+    //     console.log('🌐📊[uib-sidebar] Deploy event', node)
+    //     // RED.nodes.dirty()
+    // })
 
     /** Update the sidebar UI tab with new HTML content
      * @param {string} html - The new HTML to display in the sidebar UI
+     * @param {string} id - The node id of the HTML to update
      */
-    function updateTab(html) {
-        // Empty the current sidebar UI master element
-        sbEl.innerHTML = ''
-        // TODO: Needs better config
-        // Replace with the new HTML - but sanitise it first
-        // sbEl.innerHTML = DOMPurify.sanitize(html, purifyOpts) // eslint-disable-line no-undef
-        sbEl.innerHTML = html
+    function updateTab(html, id) {
+        // TODO Sanitise the HTML before adding it to the sidebar UI - DOMPurify is loaded by Node-RED core
+        // html = DOMPurify.sanitize(wrappedHtml, purifyOpts)
+
+        // See if the <div id="${id}"> already exists in the sidebar UI, then update if possible
+        const el = document.getElementById(`UIB-SB-${id}`)
+        if (el) el.innerHTML = html
+        else console.warn(`🌐📊[uib-sidebar] No existing element with id UIB-SB-${id} found`)
     }
 
     // Subscribe to notifications from the runtime
-    RED.comms.subscribe('notification/uibuilder/uib-sidebar/#', function(topic, payload) {
-        log('📊 [uib-sidebar] Message Received from Sidebar: ', { topic, payload })
+    RED.comms.subscribe('UIBUILDER/uib-sidebar/#', function(topic, payload) {
+        log('🌐📊[uib-sidebar] Message Received from Sidebar: ', { topic, payload, })
         const msg = payload
         if ('reset' in msg) {
-            log('📊 [uib-sidebar] Resetting sidebar UI')
+            log('🌐📊[uib-sidebar] Resetting sidebar UI')
             // Reset the sidebar UI
-            updateTab(window['uibSidebarHTML'])
+            updateTab(window['uibSidebarHTML'], payload.srcId)
         }
         if (msg.sidebar) {
             // for each entry in msg.sidebar, update the sidebar UI
             for (const key in msg.sidebar) {
-                // log('📊 [uib-sidebar] key:', key, sbEl)
+                // log('🌐📊[uib-sidebar] key:', key, sbEl)
                 // get a reference to the element with the id of key
                 /** @type {HTMLElement} */
                 const el = sbEl.querySelector(`#${key}`)
@@ -188,8 +213,8 @@
                                     // el[prop] = clean
                                     el[prop] = msg.sidebar[key][prop]
                                 } catch (e) {
-                                    // log('📊 [uib-sidebar] DOMPurify error:', e)
-                                    log(`📊 [uib-sidebar] InnerHTML assignment error for "${key}":`, e)
+                                    // log('🌐📊[uib-sidebar] DOMPurify error:', e)
+                                    log(`🌐📊[uib-sidebar] InnerHTML assignment error for "${key}":`, e)
                                 }
                                 break
                             }
@@ -198,13 +223,15 @@
                                 try {
                                     el.setAttribute(prop, msg.sidebar[key][prop])
                                 } catch (e) {
-                                    log(`📊 [uib-sidebar] Attribute assignment error for "${key}":`, e)
+                                    log(`🌐📊[uib-sidebar] Attribute assignment error for "${key}":`, e)
                                 }
                                 // el[prop] = msg.sidebar[key][prop]
                                 break
                             }
                         }
                     }
+                } else {
+                    log(`🌐📊[uib-sidebar] No element with id "${key}" found in sidebar UI`)
                 }
                 // if (Object.hasOwnProperty.call(msg.sidebar, key)) {
                 //     const html = msg.sidebar[key]
@@ -215,23 +242,20 @@
         // TODO Unpack the payload and apply to the sidebar UI
     })
 
-    //#region --------- module functions for the panel --------- //
+    // #region --------- module functions for the panel --------- //
 
-    /** Prep for edit
+    /** Prep for edit - also run on editor load to set up the editor for any existing nodes
      * @param {*} node -
      */
     function onEditPrepare(node) {
-        // log('📊 [uib-sidebar] Edit prepare: node', node)
-
-        // In case the html was changed by another uib-sidebar node
-        if (node.html !== window['uibSidebarHTML']) node.html = window['uibSidebarHTML']
+        // log('🌐📊[uib-sidebar] Edit prepare: node', node)
 
         const stateId = RED.editor.generateViewStateId('node', node, '')
         node.editor = RED.editor.createEditor({
             id: 'node-input-editor',
             mode: 'ace/mode/html',
             stateId: stateId,
-            value: node.html
+            value: node.html,
         })
         // const mod = 'ace/mode/html'
         // node.editor.getSession().setMode({
@@ -242,7 +266,6 @@
         uibuilder.doTooltips('.ti-edit-panel') // Do this at the end
     }
 
-    // TODO html from editor has to be GLOBAL, not local to the node
     /** Handles the save event when editing a node in the Node-RED editor.
      * @param {object} node - The node being edited.
      * @description
@@ -254,10 +277,10 @@
         // console.log('uibuilder: uib-sidebar: Edit save: node', node)
 
         // Update both the node's html property and the global window['uibSidebarHTML'] (for other uib-sidebar nodes)
-        const html = window['uibSidebarHTML'] = node.editor.getValue()
+        const html = node.editor.getValue()
         $('#node-input-html').val(html)
 
-        updateTab(html)
+        updateTab(html, node.id)
 
         node.editor.destroy()
         delete node.editor
@@ -287,14 +310,14 @@
         node.editor.resize()
     }
 
-    //#endregion ------------------------------------------------- //
+    // #endregion ------------------------------------------------- //
 
     // Register the node type, defaults and set up the edit fns
     RED.nodes.registerType(moduleName, {
-        //#region --- options --- //
+        // #region --- options --- //
         defaults: {
-            name: { value: '' },
-            html: { value: '' },
+            name: { value: '', },
+            html: { value: '', },
             // topic: { value: '' },
         },
         inputs: 1,
@@ -311,7 +334,7 @@
         paletteLabel: 'uib sidebar',
         category: uibuilder.paletteCategory,
         color: 'var(--uib-node-colour)', // '#E6E0F8' '"hsl(248 100% 91%)"'
-        //#endregion --- options --- //
+        // #endregion --- options --- //
 
         /** Prepares the Editor panel */
         oneditprepare: function() { onEditPrepare(this) },

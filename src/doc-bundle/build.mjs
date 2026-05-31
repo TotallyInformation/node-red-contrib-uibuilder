@@ -6,6 +6,9 @@ import { build } from 'esbuild' // eslint-disable-line n/no-unpublished-import
 import { join, resolve } from 'path'
 import { readdir, readFile, writeFile } from 'fs/promises'
 
+const args = new Set(process.argv.slice(2))
+const mermaidOnly = args.has('--mermaid-only')
+
 console.log('-------------------------------')
 
 // get the current execution folder
@@ -46,46 +49,47 @@ async function updateTipsFiles() {
 
 // add an async iife and await the build calls if you need to sequence them
 (async () => {
-
     console.log('-------------------------------')
 
-    /** Build a single output app.js from docsify & all needed plugins */
-    try {
-        console.log('Starting ESBUILD for app.js ...', appOutpath)
-        await build({
-            entryPoints: [
-                'src/doc-bundle/bundle-input.mjs'
-            ],
-            format: 'iife',
-            bundle: true,
-            minify: true,
-            sourcemap: true,
-            logLevel: 'info',
-            outfile: appOutpath,
-            // outdir: resolve('../../docs/.config/',),
-            platform: 'browser',
-            target: [
-                // Start of 2019
-                'chrome73',
-                'firefox66',
-                'opera60',
-                'safari12.1',
-                'ios12.2',
-                'edge79',
-            ],
-            supported: {
-                destructuring: true,
-            },
-        })
-        console.log('... app bundle completed')
-    } catch (error) {
-        console.error('... Error building app bundle:', error)
-        process.exit(1) // eslint-disable-line n/no-process-exit
+    if (!mermaidOnly) {
+        /** Build a single output app.js from docsify & all needed plugins */
+        try {
+            console.log('Starting ESBUILD for docs app.js ...', appOutpath)
+            await build({
+                entryPoints: [
+                    'src/doc-bundle/bundle-input.mjs'
+                ],
+                format: 'iife',
+                bundle: true,
+                minify: true,
+                sourcemap: true,
+                logLevel: 'info',
+                outfile: appOutpath,
+                // outdir: resolve('../../docs/.config/',),
+                platform: 'browser',
+                target: [
+                    // Start of 2019
+                    'chrome73',
+                    'firefox66',
+                    'opera60',
+                    'safari12.1',
+                    'ios12.2',
+                    'edge79',
+                ],
+                supported: {
+                    destructuring: true,
+                },
+            })
+            console.log('... app bundle completed')
+        } catch (error) {
+            console.error('... Error building app bundle:', error)
+            process.exit(1) // eslint-disable-line n/no-process-exit
+        }
+
+        console.log('-------------------------------')
     }
 
-    console.log('-------------------------------')
-
-    /** Build a single output mermaid.js from docsify & all needed plugins */
+    /** Build a single output mermaid.js from npm installed mermaid package */
     try {
         console.log('Starting ESBUILD for mermaid.js ...', mermaidOutpath)
         await build({
@@ -121,34 +125,36 @@ async function updateTipsFiles() {
 
     console.log('-------------------------------')
 
-    /** Use separate outputs for CSS because we need to be able to
-     *  specify alternate stylesheets for light/dark.
-     *  Doesn't work if we bundle into a single app.css output.
-     */
-    try {
-        console.log('Starting ESBUILD for app.css ...', cssOutPath)
-        await build({
-            entryPoints: [
-                'docsify-darklight-theme/dist/docsify-themeable/style.min.css',
-                'docsify-themeable/dist/css/theme-simple.css',
-                'docsify-themeable/dist/css/theme-simple-dark.css',
-            ],
-            bundle: true,
-            minify: true,
-            logLevel: 'info',
-            // outfile: resolve('../../docs/.config/app.css',),
-            outdir: cssOutPath,
-        })
-        console.log('... CSS bundle completed')
-    } catch (error) {
-        console.error('... CSS bundle failed', error)
-        process.exit(1) // eslint-disable-line n/no-process-exit
+    if (!mermaidOnly) {
+        /** Use separate outputs for CSS because we need to be able to
+         *  specify alternate stylesheets for light/dark.
+         *  Doesn't work if we bundle into a single app.css output.
+         */
+        try {
+            console.log('Starting ESBUILD for docs app.css ...', cssOutPath)
+            await build({
+                entryPoints: [
+                    'docsify-darklight-theme/dist/docsify-themeable/style.min.css',
+                    'docsify-themeable/dist/css/theme-simple.css',
+                    'docsify-themeable/dist/css/theme-simple-dark.css',
+                ],
+                bundle: true,
+                minify: true,
+                logLevel: 'info',
+                // outfile: resolve('../../docs/.config/app.css',),
+                outdir: cssOutPath,
+            })
+            console.log('... CSS bundle completed')
+        } catch (error) {
+            console.error('... CSS bundle failed', error)
+            process.exit(1) // eslint-disable-line n/no-process-exit
+        }
+
+        console.log('-------------------------------')
+
+        // Update tips files in docs/.config/index.js
+        await updateTipsFiles()
     }
-
-    console.log('-------------------------------')
-
-    // Update tips files in docs/.config/index.js
-    await updateTipsFiles()
 
     console.log('-------------------------------')
 })()

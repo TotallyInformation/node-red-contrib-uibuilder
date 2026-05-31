@@ -1,6 +1,6 @@
 ---
 created: 2026-01-02 13:03:58
-updated: 2026-04-28 15:26:29
+updated: 2026-04-28 17:15:35
 ---
 Those marked with `*` can be triggered with a command message from Node-RED flows. Those marked with `§` are low-code _ui functions and so can be triggered from Node-RED using messages containing [suitable `_ui` properties](client-docs/config-driven-ui).
 

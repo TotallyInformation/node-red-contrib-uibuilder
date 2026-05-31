@@ -1,3 +1,4 @@
+/** @file Bundled Markdown utilities for uibuilder (CJS) - includes marked and front-matter */
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -54945,7 +54946,7 @@ var require_utils = __commonJS({
       let parsingKey = true;
       let valueInsideQuotes = false;
       for (let i = start + options.leftDelimiter.length; i < str.length; i++) {
-        if (str.slice(i, i + options.rightDelimiter.length) === options.rightDelimiter) {
+        if (!valueInsideQuotes && str.slice(i, i + options.rightDelimiter.length) === options.rightDelimiter) {
           if (key !== "") {
             attrs2.push([key, value]);
           }
@@ -54971,11 +54972,11 @@ var require_utils = __commonJS({
           parsingKey = false;
           continue;
         }
-        if (char_ === '"' && value === "" && !valueInsideQuotes) {
+        if (isUnescapedDoubleQuote(str, i) && value === "" && !valueInsideQuotes) {
           valueInsideQuotes = true;
           continue;
         }
-        if (char_ === '"' && valueInsideQuotes) {
+        if (isUnescapedDoubleQuote(str, i) && valueInsideQuotes) {
           valueInsideQuotes = false;
           continue;
         }
@@ -54998,14 +54999,29 @@ var require_utils = __commonJS({
         }
         value += char_;
       }
-      if (options.allowedAttributes && options.allowedAttributes.length) {
+      const needsFilterAttributes = options.allowedAttributes && options.allowedAttributes.length;
+      const needsFilterAttributeValues = options.allowedAttributeValues && options.allowedAttributeValues.length;
+      if (needsFilterAttributes || needsFilterAttributeValues) {
         const allowedAttributes = options.allowedAttributes;
+        const allowedAttributeValues = options.allowedAttributeValues;
         return attrs2.filter(function(attrPair) {
           const attr = attrPair[0];
+          const attrValue = attrPair[1];
+          let attrPassed = !needsFilterAttributes;
+          let attrValuePassed = !needsFilterAttributeValues;
+          function isAllowedAttributeValue(allowedAttributeValue) {
+            return attrValue === allowedAttributeValue || allowedAttributeValue instanceof RegExp && allowedAttributeValue.test(attrValue);
+          }
           function isAllowedAttribute(allowedAttribute) {
             return attr === allowedAttribute || allowedAttribute instanceof RegExp && allowedAttribute.test(attr);
           }
-          return allowedAttributes.some(isAllowedAttribute);
+          if (needsFilterAttributes) {
+            attrPassed = allowedAttributes.some(isAllowedAttribute);
+          }
+          if (needsFilterAttributeValues) {
+            attrValuePassed = allowedAttributeValues.some(isAllowedAttributeValue);
+          }
+          return attrPassed && attrValuePassed;
         });
       }
       return attrs2;
@@ -55018,7 +55034,7 @@ var require_utils = __commonJS({
         } else if (key === "css-module") {
           token.attrJoin("css-module", attrs2[j][1]);
         } else {
-          token.attrPush(attrs2[j]);
+          token.attrSet(key, attrs2[j][1]);
         }
       }
       return token;
@@ -55043,15 +55059,15 @@ var require_utils = __commonJS({
           case "start":
             slice = str.slice(0, options.leftDelimiter.length);
             start = slice === options.leftDelimiter ? 0 : -1;
-            end = start === -1 ? -1 : str.indexOf(options.rightDelimiter, rightDelimiterMinimumShift);
+            end = start === -1 ? -1 : findRightDelimiter(str, rightDelimiterMinimumShift, options);
             nextChar = str.charAt(end + options.rightDelimiter.length);
             if (nextChar && options.rightDelimiter.indexOf(nextChar) !== -1) {
               end = -1;
             }
             break;
           case "end":
-            start = str.lastIndexOf(options.leftDelimiter);
-            end = start === -1 ? -1 : str.indexOf(options.rightDelimiter, start + rightDelimiterMinimumShift);
+            start = findLeftDelimiter(str, options);
+            end = start === -1 ? -1 : findRightDelimiter(str, start + rightDelimiterMinimumShift, options);
             end = end === str.length - options.rightDelimiter.length ? end : -1;
             break;
           case "only":
@@ -55067,13 +55083,16 @@ var require_utils = __commonJS({
       };
     };
     exports2.removeDelimiter = function(str, options) {
-      const start = escapeRegExp(options.leftDelimiter);
-      const end = escapeRegExp(options.rightDelimiter);
-      const curly = new RegExp(
-        "[ \\n]?" + start + "[^" + start + end + "]+" + end + "$"
-      );
-      const pos = str.search(curly);
-      return pos !== -1 ? str.slice(0, pos) : str;
+      const start = findLeftDelimiter(str, options);
+      if (start === -1) {
+        return str;
+      }
+      const end = findRightDelimiter(str, start + options.leftDelimiter.length, options);
+      if (end !== str.length - options.rightDelimiter.length) {
+        return str;
+      }
+      const prefix = str.slice(0, start);
+      return /[ \n]$/.test(prefix) ? prefix.slice(0, -1) : prefix;
     };
     function escapeRegExp(s) {
       return s.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
@@ -55112,6 +55131,44 @@ var require_utils = __commonJS({
       }
       return str;
     };
+    function findRightDelimiter(str, start, options) {
+      let valueInsideQuotes = false;
+      for (let i = start; i < str.length; i++) {
+        if (isUnescapedDoubleQuote(str, i)) {
+          valueInsideQuotes = !valueInsideQuotes;
+          continue;
+        }
+        if (!valueInsideQuotes && str.slice(i, i + options.rightDelimiter.length) === options.rightDelimiter) {
+          return i;
+        }
+      }
+      return -1;
+    }
+    function findLeftDelimiter(str, options) {
+      let start = -1;
+      let valueInsideQuotes = false;
+      for (let i = 0; i < str.length; i++) {
+        if (isUnescapedDoubleQuote(str, i)) {
+          valueInsideQuotes = !valueInsideQuotes;
+          continue;
+        }
+        if (!valueInsideQuotes && str.slice(i, i + options.leftDelimiter.length) === options.leftDelimiter) {
+          start = i;
+        }
+      }
+      return start;
+    }
+    exports2.findLeftDelimiter = findLeftDelimiter;
+    function isUnescapedDoubleQuote(str, i) {
+      if (str.charAt(i) !== '"') {
+        return false;
+      }
+      let slashCount = 0;
+      for (let n = i - 1; n >= 0 && str.charAt(n) === "\\"; n--) {
+        slashCount++;
+      }
+      return slashCount % 2 === 0;
+    }
   }
 });
 
@@ -55140,7 +55197,7 @@ var require_patterns = __commonJS({
           ],
           transform: (tokens, i) => {
             const token = tokens[i];
-            const start = token.info.lastIndexOf(options.leftDelimiter);
+            const start = utils.findLeftDelimiter(token.info, options);
             const attrs2 = utils.getAttrs(token.info, start, options);
             utils.addAttrs(attrs2, token);
             token.info = utils.removeDelimiter(token.info, options);
@@ -55284,7 +55341,7 @@ var require_patterns = __commonJS({
           transform: (tokens, i) => {
             let idx = i - 2;
             while (idx > 0 && "tbody_open" !== tokens[--idx].type) ;
-            const calc = tokens[idx].meta.colsnum >> 0;
+            const calc = (tokens[idx].meta && tokens[idx].meta.colsnum) >> 0;
             if (calc < 2) {
               return;
             }
@@ -55496,9 +55553,9 @@ var require_patterns = __commonJS({
           transform: (tokens, i, j) => {
             const token = tokens[i].children[j];
             const content = token.content;
-            const attrs2 = utils.getAttrs(content, content.lastIndexOf(options.leftDelimiter), options);
+            const attrs2 = utils.getAttrs(content, utils.findLeftDelimiter(content, options), options);
             utils.addAttrs(attrs2, tokens[i - 2]);
-            const trimmed = content.slice(0, content.lastIndexOf(options.leftDelimiter));
+            const trimmed = content.slice(0, utils.findLeftDelimiter(content, options));
             token.content = last(trimmed) !== " " ? trimmed : trimmed.slice(0, -1);
           }
         },
@@ -55577,28 +55634,28 @@ var require_patterns = __commonJS({
         {
           /**
            * end of {.block}
+           *
+           * Also handles the case where a navigation plugin (e.g. heading anchors)
+           * adds non-text tokens after the heading text before curly_attributes runs.
+           * In that case the last meaningful text child (skipping trailing whitespace-only
+           * text tokens and balanced inline-tag sequences such as link_open/link_close)
+           * is used instead of the absolute last child.
            */
           name: "end of block",
           tests: [
             {
               shift: 0,
               type: "inline",
-              children: [
-                {
-                  position: -1,
-                  content: utils.hasDelimiters("end", options),
-                  type: (t) => t !== "code_inline" && t !== "math_inline"
-                }
-              ]
+              children: (arr) => endOfBlockSearch(arr, options) !== null
             }
           ],
-          /**
-           * @param {!number} j
-           */
-          transform: (tokens, i, j) => {
-            const token = tokens[i].children[j];
+          transform: (tokens, i) => {
+            const token = endOfBlockSearch(tokens[i].children, options);
+            if (!token) {
+              return;
+            }
             const content = token.content;
-            const attrs2 = utils.getAttrs(content, content.lastIndexOf(options.leftDelimiter), options);
+            const attrs2 = utils.getAttrs(content, utils.findLeftDelimiter(content, options), options);
             let ii = i + 1;
             do
               if (tokens[ii] && tokens[ii].nesting === -1) {
@@ -55607,7 +55664,7 @@ var require_patterns = __commonJS({
             while (ii++ < tokens.length);
             const openingToken = utils.getMatchingOpeningToken(tokens, ii);
             utils.addAttrs(attrs2, openingToken);
-            const trimmed = content.slice(0, content.lastIndexOf(options.leftDelimiter));
+            const trimmed = content.slice(0, utils.findLeftDelimiter(content, options));
             token.content = last(trimmed) !== " " ? trimmed : trimmed.slice(0, -1);
           }
         }
@@ -55615,6 +55672,37 @@ var require_patterns = __commonJS({
     };
     function last(arr) {
       return arr.slice(-1)[0];
+    }
+    function endOfBlockSearch(arr, options) {
+      let depth = 0;
+      for (let k = arr.length - 1; k >= 0; k--) {
+        const child = arr[k];
+        if (child.type === "code_inline" || child.type === "math_inline") {
+          return null;
+        }
+        if (child.nesting === -1) {
+          depth++;
+          continue;
+        }
+        if (child.nesting === 1) {
+          depth--;
+          if (depth < 0) {
+            return null;
+          }
+          continue;
+        }
+        if (depth > 0) {
+          continue;
+        }
+        if (child.type !== "text") {
+          continue;
+        }
+        if (child.content.trim() === "") {
+          continue;
+        }
+        return utils.hasDelimiters("end", options)(child.content) ? child : null;
+      }
+      return null;
     }
     function hidden(token) {
       token.hidden = true;
@@ -55631,7 +55719,8 @@ var require_markdown_it_attrs = __commonJS({
     var defaultOptions2 = {
       leftDelimiter: "{",
       rightDelimiter: "}",
-      allowedAttributes: []
+      allowedAttributes: [],
+      allowedAttributeValues: []
     };
     module2.exports = function attributes(md2, options_) {
       let options = Object.assign({}, defaultOptions2);
@@ -55884,6 +55973,7 @@ var import_front_matter = __toESM(require_front_matter(), 1);
 var utils_exports = {};
 __export(utils_exports, {
   arrayReplaceAt: () => arrayReplaceAt,
+  asciiTrim: () => asciiTrim,
   assign: () => assign,
   escapeHtml: () => escapeHtml,
   escapeRE: () => escapeRE,
@@ -55891,6 +55981,7 @@ __export(utils_exports, {
   has: () => has,
   isMdAsciiPunct: () => isMdAsciiPunct,
   isPunctChar: () => isPunctChar,
+  isPunctCharCode: () => isPunctCharCode,
   isSpace: () => isSpace,
   isString: () => isString,
   isValidEntityCode: () => isValidEntityCode,
@@ -56718,6 +56809,9 @@ var xmlDecoder = getDecoder(decode_data_xml_default);
 function decodeHTML(str, mode = DecodingMode.Legacy) {
   return htmlDecoder(str, mode);
 }
+function decodeHTMLStrict(str) {
+  return htmlDecoder(str, DecodingMode.Strict);
+}
 
 // node_modules/markdown-it/node_modules/entities/lib/esm/generated/encode-html.js
 function restoreDiff(arr) {
@@ -56943,6 +57037,9 @@ function isWhiteSpace(code2) {
 function isPunctChar(ch) {
   return regex_default4.test(ch) || regex_default5.test(ch);
 }
+function isPunctCharCode(code2) {
+  return isPunctChar(fromCodePoint2(code2));
+}
 function isMdAsciiPunct(ch) {
   switch (ch) {
     case 33:
@@ -56988,6 +57085,24 @@ function normalizeReference(str) {
     str = str.replace(/ẞ/g, "\xDF");
   }
   return str.toLowerCase().toUpperCase();
+}
+function isAsciiTrimmable(c) {
+  return c === 32 || c === 9 || c === 10 || c === 13;
+}
+function asciiTrim(str) {
+  let start = 0;
+  for (; start < str.length; start++) {
+    if (!isAsciiTrimmable(str.charCodeAt(start))) {
+      break;
+    }
+  }
+  let end = str.length - 1;
+  for (; end >= start; end--) {
+    if (!isAsciiTrimmable(str.charCodeAt(end))) {
+      break;
+    }
+  }
+  return str.slice(start, end + 1);
 }
 var lib = { mdurl: mdurl_exports, ucmicro: uc_exports };
 
@@ -57741,12 +57856,27 @@ function replace(state) {
 var QUOTE_TEST_RE = /['"]/;
 var QUOTE_RE = /['"]/g;
 var APOSTROPHE = "\u2019";
-function replaceAt(str, index, ch) {
-  return str.slice(0, index) + ch + str.slice(index + 1);
+function addReplacement(replacements, tokenIdx, pos, ch) {
+  if (!replacements[tokenIdx]) {
+    replacements[tokenIdx] = [];
+  }
+  replacements[tokenIdx].push({ pos, ch });
+}
+function applyReplacements(str, replacements) {
+  let result = "";
+  let lastPos = 0;
+  replacements.sort((a, b) => a.pos - b.pos);
+  for (let i = 0; i < replacements.length; i++) {
+    const replacement = replacements[i];
+    result += str.slice(lastPos, replacement.pos) + replacement.ch;
+    lastPos = replacement.pos + 1;
+  }
+  return result + str.slice(lastPos);
 }
 function process_inlines(tokens, state) {
   let j;
   const stack = [];
+  const replacements = {};
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
     const thisLevel = tokens[i].level;
@@ -57759,9 +57889,9 @@ function process_inlines(tokens, state) {
     if (token.type !== "text") {
       continue;
     }
-    let text2 = token.content;
+    const text2 = token.content;
     let pos = 0;
-    let max = text2.length;
+    const max = text2.length;
     OUTER:
       while (pos < max) {
         QUOTE_RE.lastIndex = pos;
@@ -57795,8 +57925,8 @@ function process_inlines(tokens, state) {
             break;
           }
         }
-        const isLastPunctChar = isMdAsciiPunct(lastChar) || isPunctChar(String.fromCharCode(lastChar));
-        const isNextPunctChar = isMdAsciiPunct(nextChar) || isPunctChar(String.fromCharCode(nextChar));
+        const isLastPunctChar = isMdAsciiPunct(lastChar) || isPunctCharCode(lastChar);
+        const isNextPunctChar = isMdAsciiPunct(nextChar) || isPunctCharCode(nextChar);
         const isLastWhiteSpace = isWhiteSpace(lastChar);
         const isNextWhiteSpace = isWhiteSpace(nextChar);
         if (isNextWhiteSpace) {
@@ -57824,7 +57954,7 @@ function process_inlines(tokens, state) {
         }
         if (!canOpen && !canClose) {
           if (isSingle) {
-            token.content = replaceAt(token.content, t.index, APOSTROPHE);
+            addReplacement(replacements, i, t.index, APOSTROPHE);
           }
           continue;
         }
@@ -57845,18 +57975,8 @@ function process_inlines(tokens, state) {
                 openQuote = state.md.options.quotes[0];
                 closeQuote = state.md.options.quotes[1];
               }
-              token.content = replaceAt(token.content, t.index, closeQuote);
-              tokens[item.token].content = replaceAt(
-                tokens[item.token].content,
-                item.pos,
-                openQuote
-              );
-              pos += closeQuote.length - 1;
-              if (item.token === i) {
-                pos += openQuote.length - 1;
-              }
-              text2 = token.content;
-              max = text2.length;
+              addReplacement(replacements, i, t.index, closeQuote);
+              addReplacement(replacements, item.token, item.pos, openQuote);
               stack.length = j;
               continue OUTER;
             }
@@ -57870,10 +57990,13 @@ function process_inlines(tokens, state) {
             level: thisLevel
           });
         } else if (canClose && isSingle) {
-          token.content = replaceAt(token.content, t.index, APOSTROPHE);
+          addReplacement(replacements, i, t.index, APOSTROPHE);
         }
       }
   }
+  Object.keys(replacements).forEach(function(tokenIdx) {
+    tokens[tokenIdx].content = applyReplacements(tokens[tokenIdx].content, replacements[tokenIdx]);
+  });
 }
 function smartquotes(state) {
   if (!state.md.options.typographer) {
@@ -59062,10 +59185,13 @@ function html_block(state, startLine, endLine, silent) {
     return HTML_SEQUENCES[i][2];
   }
   let nextLine = startLine + 1;
+  const endsOnBlankLine = HTML_SEQUENCES[i][1].test("");
   if (!HTML_SEQUENCES[i][1].test(lineText)) {
     for (; nextLine < endLine; nextLine++) {
       if (state.sCount[nextLine] < state.blkIndent) {
-        break;
+        if (endsOnBlankLine || !state.isEmpty(nextLine)) {
+          break;
+        }
       }
       pos = state.bMarks[nextLine] + state.tShift[nextLine];
       max = state.eMarks[nextLine];
@@ -59118,7 +59244,7 @@ function heading(state, startLine, endLine, silent) {
   token_o.markup = "########".slice(0, level);
   token_o.map = [startLine, state.line];
   const token_i = state.push("inline", "", 0);
-  token_i.content = state.src.slice(pos, max).trim();
+  token_i.content = asciiTrim(state.src.slice(pos, max));
   token_i.map = [startLine, state.line];
   token_i.children = [];
   const token_c = state.push("heading_close", "h" + String(level), -1);
@@ -59171,9 +59297,10 @@ function lheading(state, startLine, endLine) {
     }
   }
   if (!level) {
+    state.parentType = oldParentType;
     return false;
   }
-  const content = state.getLines(startLine, nextLine, state.blkIndent, false).trim();
+  const content = asciiTrim(state.getLines(startLine, nextLine, state.blkIndent, false));
   state.line = nextLine + 1;
   const token_o = state.push("heading_open", "h" + String(level), 1);
   token_o.markup = String.fromCharCode(marker);
@@ -59212,7 +59339,7 @@ function paragraph(state, startLine, endLine) {
       break;
     }
   }
-  const content = state.getLines(startLine, nextLine, state.blkIndent, false).trim();
+  const content = asciiTrim(state.getLines(startLine, nextLine, state.blkIndent, false));
   state.line = nextLine;
   const token_o = state.push("paragraph_open", "p", 1);
   token_o.map = [startLine, state.line];
@@ -59351,15 +59478,37 @@ StateInline.prototype.push = function(type, tag, nesting) {
 StateInline.prototype.scanDelims = function(start, canSplitWord) {
   const max = this.posMax;
   const marker = this.src.charCodeAt(start);
-  const lastChar = start > 0 ? this.src.charCodeAt(start - 1) : 32;
+  let lastChar;
+  if (start === 0) {
+    lastChar = 32;
+  } else if (start === 1) {
+    lastChar = this.src.charCodeAt(0);
+    if ((lastChar & 63488) === 55296) {
+      lastChar = 65533;
+    }
+  } else {
+    lastChar = this.src.charCodeAt(start - 1);
+    if ((lastChar & 64512) === 56320) {
+      const highSurr = this.src.charCodeAt(start - 2);
+      lastChar = (highSurr & 64512) === 55296 ? 65536 + (highSurr - 55296 << 10) + (lastChar - 56320) : 65533;
+    } else if ((lastChar & 64512) === 55296) {
+      lastChar = 65533;
+    }
+  }
   let pos = start;
   while (pos < max && this.src.charCodeAt(pos) === marker) {
     pos++;
   }
   const count = pos - start;
-  const nextChar = pos < max ? this.src.charCodeAt(pos) : 32;
-  const isLastPunctChar = isMdAsciiPunct(lastChar) || isPunctChar(String.fromCharCode(lastChar));
-  const isNextPunctChar = isMdAsciiPunct(nextChar) || isPunctChar(String.fromCharCode(nextChar));
+  let nextChar = pos < max ? this.src.charCodeAt(pos) : 32;
+  if ((nextChar & 64512) === 55296) {
+    const lowSurr = this.src.charCodeAt(pos + 1);
+    nextChar = (lowSurr & 64512) === 56320 ? 65536 + (nextChar - 55296 << 10) + (lowSurr - 56320) : 65533;
+  } else if ((nextChar & 64512) === 56320) {
+    nextChar = 65533;
+  }
+  const isLastPunctChar = isMdAsciiPunct(lastChar) || isPunctCharCode(lastChar);
+  const isNextPunctChar = isMdAsciiPunct(nextChar) || isPunctCharCode(nextChar);
   const isLastWhiteSpace = isWhiteSpace(lastChar);
   const isNextWhiteSpace = isWhiteSpace(nextChar);
   const left_flanking = !isNextWhiteSpace && (!isNextPunctChar || isLastWhiteSpace || isLastPunctChar);
@@ -60112,7 +60261,7 @@ function entity(state, silent) {
   } else {
     const match2 = state.src.slice(pos).match(NAMED_RE);
     if (match2) {
-      const decoded = decodeHTML(match2[0]);
+      const decoded = decodeHTMLStrict(match2[0]);
       if (decoded !== match2[0]) {
         if (!silent) {
           const token = state.push("text_special", "", 0);
@@ -60465,10 +60614,6 @@ var defaultSchemas = {
 };
 var tlds_2ch_src_re = "a[cdefgilmnoqrstuwxz]|b[abdefghijmnorstvwyz]|c[acdfghiklmnoruvwxyz]|d[ejkmoz]|e[cegrstu]|f[ijkmor]|g[abdefghilmnpqrstuwy]|h[kmnrtu]|i[delmnoqrst]|j[emop]|k[eghimnprwyz]|l[abcikrstuvy]|m[acdeghklmnopqrstuvwxyz]|n[acefgilopruz]|om|p[aefghklmnrstwy]|qa|r[eosuw]|s[abcdeghijklmnortuvxyz]|t[cdfghjklmnortvwz]|u[agksyz]|v[aceginu]|w[fs]|y[et]|z[amw]";
 var tlds_default = "biz|com|edu|gov|net|org|pro|web|xxx|aero|asia|coop|info|museum|name|shop|\u0440\u0444".split("|");
-function resetScanCache(self) {
-  self.__index__ = -1;
-  self.__text_cache__ = "";
-}
 function createValidator(re) {
   return function(text2, pos) {
     const tail = text2.slice(pos);
@@ -60496,8 +60641,11 @@ function compile(self) {
     return tpl.replace("%TLDS%", re.src_tlds);
   }
   re.email_fuzzy = RegExp(untpl(re.tpl_email_fuzzy), "i");
+  re.email_fuzzy_global = RegExp(untpl(re.tpl_email_fuzzy), "ig");
   re.link_fuzzy = RegExp(untpl(re.tpl_link_fuzzy), "i");
+  re.link_fuzzy_global = RegExp(untpl(re.tpl_link_fuzzy), "ig");
   re.link_no_ip_fuzzy = RegExp(untpl(re.tpl_link_no_ip_fuzzy), "i");
+  re.link_no_ip_fuzzy_global = RegExp(untpl(re.tpl_link_no_ip_fuzzy), "ig");
   re.host_fuzzy_test = RegExp(untpl(re.tpl_host_fuzzy_test), "i");
   const aliases = [];
   self.__compiled__ = {};
@@ -60552,23 +60700,15 @@ function compile(self) {
     "(" + self.re.schema_test.source + ")|(" + self.re.host_fuzzy_test.source + ")|@",
     "i"
   );
-  resetScanCache(self);
 }
-function Match(self, shift) {
-  const start = self.__index__;
-  const end = self.__last_index__;
-  const text2 = self.__text_cache__.slice(start, end);
-  this.schema = self.__schema__.toLowerCase();
-  this.index = start + shift;
-  this.lastIndex = end + shift;
-  this.raw = text2;
-  this.text = text2;
-  this.url = text2;
-}
-function createMatch(self, shift) {
-  const match2 = new Match(self, shift);
-  self.__compiled__[match2.schema].normalize(match2, self);
-  return match2;
+function Match(text2, schema, index, lastIndex) {
+  const raw = text2.slice(index, lastIndex);
+  this.schema = schema.toLowerCase();
+  this.index = index;
+  this.lastIndex = lastIndex;
+  this.raw = raw;
+  this.text = raw;
+  this.url = raw;
 }
 function LinkifyIt(schemas, options) {
   if (!(this instanceof LinkifyIt)) {
@@ -60581,10 +60721,6 @@ function LinkifyIt(schemas, options) {
     }
   }
   this.__opts__ = assign2({}, defaultOptions, options);
-  this.__index__ = -1;
-  this.__last_index__ = -1;
-  this.__schema__ = "";
-  this.__text_cache__ = "";
   this.__schemas__ = assign2({}, defaultSchemas, schemas);
   this.__compiled__ = {};
   this.__tlds__ = tlds_default;
@@ -60602,55 +60738,34 @@ LinkifyIt.prototype.set = function set(options) {
   return this;
 };
 LinkifyIt.prototype.test = function test(text2) {
-  this.__text_cache__ = text2;
-  this.__index__ = -1;
   if (!text2.length) {
     return false;
   }
-  let m, ml, me, len, shift, next, re, tld_pos, at_pos;
+  let m, re;
   if (this.re.schema_test.test(text2)) {
     re = this.re.schema_search;
     re.lastIndex = 0;
     while ((m = re.exec(text2)) !== null) {
-      len = this.testSchemaAt(text2, m[2], re.lastIndex);
-      if (len) {
-        this.__schema__ = m[2];
-        this.__index__ = m.index + m[1].length;
-        this.__last_index__ = m.index + m[0].length + len;
-        break;
+      if (this.testSchemaAt(text2, m[2], re.lastIndex)) {
+        return true;
       }
     }
   }
   if (this.__opts__.fuzzyLink && this.__compiled__["http:"]) {
-    tld_pos = text2.search(this.re.host_fuzzy_test);
-    if (tld_pos >= 0) {
-      if (this.__index__ < 0 || tld_pos < this.__index__) {
-        if ((ml = text2.match(this.__opts__.fuzzyIP ? this.re.link_fuzzy : this.re.link_no_ip_fuzzy)) !== null) {
-          shift = ml.index + ml[1].length;
-          if (this.__index__ < 0 || shift < this.__index__) {
-            this.__schema__ = "";
-            this.__index__ = shift;
-            this.__last_index__ = ml.index + ml[0].length;
-          }
-        }
+    if (text2.search(this.re.host_fuzzy_test) >= 0) {
+      if (text2.match(this.__opts__.fuzzyIP ? this.re.link_fuzzy : this.re.link_no_ip_fuzzy) !== null) {
+        return true;
       }
     }
   }
   if (this.__opts__.fuzzyEmail && this.__compiled__["mailto:"]) {
-    at_pos = text2.indexOf("@");
-    if (at_pos >= 0) {
-      if ((me = text2.match(this.re.email_fuzzy)) !== null) {
-        shift = me.index + me[1].length;
-        next = me.index + me[0].length;
-        if (this.__index__ < 0 || shift < this.__index__ || shift === this.__index__ && next > this.__last_index__) {
-          this.__schema__ = "mailto:";
-          this.__index__ = shift;
-          this.__last_index__ = next;
-        }
+    if (text2.indexOf("@") >= 0) {
+      if (text2.match(this.re.email_fuzzy) !== null) {
+        return true;
       }
     }
   }
-  return this.__index__ >= 0;
+  return false;
 };
 LinkifyIt.prototype.pretest = function pretest(text2) {
   return this.re.pretest.test(text2);
@@ -60663,16 +60778,87 @@ LinkifyIt.prototype.testSchemaAt = function testSchemaAt(text2, schema, pos) {
 };
 LinkifyIt.prototype.match = function match(text2) {
   const result = [];
-  let shift = 0;
-  if (this.__index__ >= 0 && this.__text_cache__ === text2) {
-    result.push(createMatch(this, shift));
-    shift = this.__last_index__;
+  const type_schemed = [];
+  const type_fuzzy_link = [];
+  const type_fuzzy_email = [];
+  let m, len, re;
+  function choose(a, b) {
+    if (!a) {
+      return b;
+    }
+    if (!b) {
+      return a;
+    }
+    if (a.index !== b.index) {
+      return a.index < b.index ? a : b;
+    }
+    return a.lastIndex >= b.lastIndex ? a : b;
   }
-  let tail = shift ? text2.slice(shift) : text2;
-  while (this.test(tail)) {
-    result.push(createMatch(this, shift));
-    tail = tail.slice(this.__last_index__);
-    shift += this.__last_index__;
+  if (!text2.length) {
+    return null;
+  }
+  if (this.re.schema_test.test(text2)) {
+    re = this.re.schema_search;
+    re.lastIndex = 0;
+    while ((m = re.exec(text2)) !== null) {
+      len = this.testSchemaAt(text2, m[2], re.lastIndex);
+      if (len) {
+        type_schemed.push({
+          schema: m[2],
+          index: m.index + m[1].length,
+          lastIndex: m.index + m[0].length + len
+        });
+      }
+    }
+  }
+  if (this.__opts__.fuzzyLink && this.__compiled__["http:"]) {
+    re = this.__opts__.fuzzyIP ? this.re.link_fuzzy_global : this.re.link_no_ip_fuzzy_global;
+    re.lastIndex = 0;
+    while ((m = re.exec(text2)) !== null) {
+      type_fuzzy_link.push({
+        schema: "",
+        index: m.index + m[1].length,
+        lastIndex: m.index + m[0].length
+      });
+    }
+  }
+  if (this.__opts__.fuzzyEmail && this.__compiled__["mailto:"]) {
+    re = this.re.email_fuzzy_global;
+    re.lastIndex = 0;
+    while ((m = re.exec(text2)) !== null) {
+      type_fuzzy_email.push({
+        schema: "mailto:",
+        index: m.index + m[1].length,
+        lastIndex: m.index + m[0].length
+      });
+    }
+  }
+  const indexes = [0, 0, 0];
+  let lastIndex = 0;
+  for (; ; ) {
+    const candidates = [
+      type_schemed[indexes[0]],
+      type_fuzzy_email[indexes[1]],
+      type_fuzzy_link[indexes[2]]
+    ];
+    const candidate = choose(choose(candidates[0], candidates[1]), candidates[2]);
+    if (!candidate) {
+      break;
+    }
+    if (candidate === candidates[0]) {
+      indexes[0]++;
+    } else if (candidate === candidates[1]) {
+      indexes[1]++;
+    } else {
+      indexes[2]++;
+    }
+    if (candidate.index < lastIndex) {
+      continue;
+    }
+    const match2 = new Match(text2, candidate.schema, candidate.index, candidate.lastIndex);
+    this.__compiled__[match2.schema].normalize(match2, this);
+    result.push(match2);
+    lastIndex = candidate.lastIndex;
   }
   if (result.length) {
     return result;
@@ -60680,17 +60866,14 @@ LinkifyIt.prototype.match = function match(text2) {
   return null;
 };
 LinkifyIt.prototype.matchAtStart = function matchAtStart(text2) {
-  this.__text_cache__ = text2;
-  this.__index__ = -1;
   if (!text2.length) return null;
   const m = this.re.schema_at_start.exec(text2);
   if (!m) return null;
   const len = this.testSchemaAt(text2, m[2], m[0].length);
   if (!len) return null;
-  this.__schema__ = m[2];
-  this.__index__ = m.index + m[1].length;
-  this.__last_index__ = m.index + m[0].length + len;
-  return createMatch(this, 0);
+  const match2 = new Match(text2, m[2], m.index + m[1].length, m.index + m[0].length + len);
+  this.__compiled__[match2.schema].normalize(match2, this);
+  return match2;
 };
 LinkifyIt.prototype.tlds = function tlds(list2, keepOld) {
   list2 = Array.isArray(list2) ? list2 : [list2];
@@ -61119,6 +61302,282 @@ function capitalize(str) {
 var import_markdown_it_attrs = __toESM(require_markdown_it_attrs(), 1);
 var import_markdown_it_anchor = __toESM(require_markdownItAnchor(), 1);
 
+// node_modules/markdown-it-footnote/index.mjs
+function render_footnote_anchor_name(tokens, idx, options, env) {
+  const n = Number(tokens[idx].meta.id + 1).toString();
+  let prefix = "";
+  if (typeof env.docId === "string") prefix = `-${env.docId}-`;
+  return prefix + n;
+}
+function render_footnote_caption(tokens, idx) {
+  let n = Number(tokens[idx].meta.id + 1).toString();
+  if (tokens[idx].meta.subId > 0) n += `:${tokens[idx].meta.subId}`;
+  return `[${n}]`;
+}
+function render_footnote_ref(tokens, idx, options, env, slf) {
+  const id = slf.rules.footnote_anchor_name(tokens, idx, options, env, slf);
+  const caption = slf.rules.footnote_caption(tokens, idx, options, env, slf);
+  let refid = id;
+  if (tokens[idx].meta.subId > 0) refid += `:${tokens[idx].meta.subId}`;
+  return `<sup class="footnote-ref"><a href="#fn${id}" id="fnref${refid}">${caption}</a></sup>`;
+}
+function render_footnote_block_open(tokens, idx, options) {
+  return (options.xhtmlOut ? '<hr class="footnotes-sep" />\n' : '<hr class="footnotes-sep">\n') + '<section class="footnotes">\n<ol class="footnotes-list">\n';
+}
+function render_footnote_block_close() {
+  return "</ol>\n</section>\n";
+}
+function render_footnote_open(tokens, idx, options, env, slf) {
+  let id = slf.rules.footnote_anchor_name(tokens, idx, options, env, slf);
+  if (tokens[idx].meta.subId > 0) id += `:${tokens[idx].meta.subId}`;
+  return `<li id="fn${id}" class="footnote-item">`;
+}
+function render_footnote_close() {
+  return "</li>\n";
+}
+function render_footnote_anchor(tokens, idx, options, env, slf) {
+  let id = slf.rules.footnote_anchor_name(tokens, idx, options, env, slf);
+  if (tokens[idx].meta.subId > 0) id += `:${tokens[idx].meta.subId}`;
+  return ` <a href="#fnref${id}" class="footnote-backref">\u21A9\uFE0E</a>`;
+}
+function footnote_plugin(md2) {
+  const parseLinkLabel2 = md2.helpers.parseLinkLabel;
+  const isSpace2 = md2.utils.isSpace;
+  md2.renderer.rules.footnote_ref = render_footnote_ref;
+  md2.renderer.rules.footnote_block_open = render_footnote_block_open;
+  md2.renderer.rules.footnote_block_close = render_footnote_block_close;
+  md2.renderer.rules.footnote_open = render_footnote_open;
+  md2.renderer.rules.footnote_close = render_footnote_close;
+  md2.renderer.rules.footnote_anchor = render_footnote_anchor;
+  md2.renderer.rules.footnote_caption = render_footnote_caption;
+  md2.renderer.rules.footnote_anchor_name = render_footnote_anchor_name;
+  function footnote_def(state, startLine, endLine, silent) {
+    const start = state.bMarks[startLine] + state.tShift[startLine];
+    const max = state.eMarks[startLine];
+    if (start + 4 > max) return false;
+    if (state.src.charCodeAt(start) !== 91) return false;
+    if (state.src.charCodeAt(start + 1) !== 94) return false;
+    let pos;
+    for (pos = start + 2; pos < max; pos++) {
+      if (state.src.charCodeAt(pos) === 32) return false;
+      if (state.src.charCodeAt(pos) === 93) {
+        break;
+      }
+    }
+    if (pos === start + 2) return false;
+    if (pos + 1 >= max || state.src.charCodeAt(++pos) !== 58) return false;
+    if (silent) return true;
+    pos++;
+    if (!state.env.footnotes) state.env.footnotes = {};
+    if (!state.env.footnotes.refs) state.env.footnotes.refs = {};
+    const label = state.src.slice(start + 2, pos - 2);
+    state.env.footnotes.refs[`:${label}`] = -1;
+    const token_fref_o = new state.Token("footnote_reference_open", "", 1);
+    token_fref_o.meta = { label };
+    token_fref_o.level = state.level++;
+    state.tokens.push(token_fref_o);
+    const oldBMark = state.bMarks[startLine];
+    const oldTShift = state.tShift[startLine];
+    const oldSCount = state.sCount[startLine];
+    const oldParentType = state.parentType;
+    const posAfterColon = pos;
+    const initial = state.sCount[startLine] + pos - (state.bMarks[startLine] + state.tShift[startLine]);
+    let offset = initial;
+    while (pos < max) {
+      const ch = state.src.charCodeAt(pos);
+      if (isSpace2(ch)) {
+        if (ch === 9) {
+          offset += 4 - offset % 4;
+        } else {
+          offset++;
+        }
+      } else {
+        break;
+      }
+      pos++;
+    }
+    state.tShift[startLine] = pos - posAfterColon;
+    state.sCount[startLine] = offset - initial;
+    state.bMarks[startLine] = posAfterColon;
+    state.blkIndent += 4;
+    state.parentType = "footnote";
+    if (state.sCount[startLine] < state.blkIndent) {
+      state.sCount[startLine] += state.blkIndent;
+    }
+    state.md.block.tokenize(state, startLine, endLine, true);
+    state.parentType = oldParentType;
+    state.blkIndent -= 4;
+    state.tShift[startLine] = oldTShift;
+    state.sCount[startLine] = oldSCount;
+    state.bMarks[startLine] = oldBMark;
+    const token_fref_c = new state.Token("footnote_reference_close", "", -1);
+    token_fref_c.level = --state.level;
+    state.tokens.push(token_fref_c);
+    return true;
+  }
+  function footnote_inline(state, silent) {
+    const max = state.posMax;
+    const start = state.pos;
+    if (start + 2 >= max) return false;
+    if (state.src.charCodeAt(start) !== 94) return false;
+    if (state.src.charCodeAt(start + 1) !== 91) return false;
+    const labelStart = start + 2;
+    const labelEnd = parseLinkLabel2(state, start + 1);
+    if (labelEnd < 0) return false;
+    if (!silent) {
+      if (!state.env.footnotes) state.env.footnotes = {};
+      if (!state.env.footnotes.list) state.env.footnotes.list = [];
+      const footnoteId = state.env.footnotes.list.length;
+      const tokens = [];
+      state.md.inline.parse(
+        state.src.slice(labelStart, labelEnd),
+        state.md,
+        state.env,
+        tokens
+      );
+      const token = state.push("footnote_ref", "", 0);
+      token.meta = { id: footnoteId };
+      state.env.footnotes.list[footnoteId] = {
+        content: state.src.slice(labelStart, labelEnd),
+        tokens
+      };
+    }
+    state.pos = labelEnd + 1;
+    state.posMax = max;
+    return true;
+  }
+  function footnote_ref(state, silent) {
+    const max = state.posMax;
+    const start = state.pos;
+    if (start + 3 > max) return false;
+    if (!state.env.footnotes || !state.env.footnotes.refs) return false;
+    if (state.src.charCodeAt(start) !== 91) return false;
+    if (state.src.charCodeAt(start + 1) !== 94) return false;
+    let pos;
+    for (pos = start + 2; pos < max; pos++) {
+      if (state.src.charCodeAt(pos) === 32) return false;
+      if (state.src.charCodeAt(pos) === 10) return false;
+      if (state.src.charCodeAt(pos) === 93) {
+        break;
+      }
+    }
+    if (pos === start + 2) return false;
+    if (pos >= max) return false;
+    pos++;
+    const label = state.src.slice(start + 2, pos - 1);
+    if (typeof state.env.footnotes.refs[`:${label}`] === "undefined") return false;
+    if (!silent) {
+      if (!state.env.footnotes.list) state.env.footnotes.list = [];
+      let footnoteId;
+      if (state.env.footnotes.refs[`:${label}`] < 0) {
+        footnoteId = state.env.footnotes.list.length;
+        state.env.footnotes.list[footnoteId] = { label, count: 0 };
+        state.env.footnotes.refs[`:${label}`] = footnoteId;
+      } else {
+        footnoteId = state.env.footnotes.refs[`:${label}`];
+      }
+      const footnoteSubId = state.env.footnotes.list[footnoteId].count;
+      state.env.footnotes.list[footnoteId].count++;
+      const token = state.push("footnote_ref", "", 0);
+      token.meta = { id: footnoteId, subId: footnoteSubId, label };
+    }
+    state.pos = pos;
+    state.posMax = max;
+    return true;
+  }
+  function footnote_tail(state) {
+    let tokens;
+    let current;
+    let currentLabel;
+    let insideRef = false;
+    const refTokens = {};
+    if (!state.env.footnotes) {
+      return;
+    }
+    state.tokens = state.tokens.filter(function(tok) {
+      if (tok.type === "footnote_reference_open") {
+        insideRef = true;
+        current = [];
+        currentLabel = tok.meta.label;
+        return false;
+      }
+      if (tok.type === "footnote_reference_close") {
+        insideRef = false;
+        refTokens[":" + currentLabel] = current;
+        return false;
+      }
+      if (insideRef) {
+        current.push(tok);
+      }
+      return !insideRef;
+    });
+    if (!state.env.footnotes.list) {
+      return;
+    }
+    const list2 = state.env.footnotes.list;
+    state.tokens.push(new state.Token("footnote_block_open", "", 1));
+    for (let i = 0, l = list2.length; i < l; i++) {
+      const token_fo = new state.Token("footnote_open", "", 1);
+      token_fo.meta = { id: i, label: list2[i].label };
+      state.tokens.push(token_fo);
+      if (list2[i].tokens) {
+        tokens = [];
+        const token_po = new state.Token("paragraph_open", "p", 1);
+        token_po.block = true;
+        tokens.push(token_po);
+        const token_i = new state.Token("inline", "", 0);
+        token_i.children = list2[i].tokens;
+        token_i.content = list2[i].content;
+        tokens.push(token_i);
+        const token_pc = new state.Token("paragraph_close", "p", -1);
+        token_pc.block = true;
+        tokens.push(token_pc);
+      } else if (list2[i].label) {
+        tokens = refTokens[`:${list2[i].label}`];
+      }
+      if (tokens) state.tokens = state.tokens.concat(tokens);
+      let lastParagraph;
+      if (state.tokens[state.tokens.length - 1].type === "paragraph_close") {
+        lastParagraph = state.tokens.pop();
+      } else {
+        lastParagraph = null;
+      }
+      const t = list2[i].count > 0 ? list2[i].count : 1;
+      for (let j = 0; j < t; j++) {
+        const token_a = new state.Token("footnote_anchor", "", 0);
+        token_a.meta = { id: i, subId: j, label: list2[i].label };
+        state.tokens.push(token_a);
+      }
+      if (lastParagraph) {
+        state.tokens.push(lastParagraph);
+      }
+      state.tokens.push(new state.Token("footnote_close", "", -1));
+    }
+    state.tokens.push(new state.Token("footnote_block_close", "", -1));
+  }
+  md2.block.ruler.before("reference", "footnote_def", footnote_def, { alt: ["paragraph", "reference"] });
+  md2.inline.ruler.after("image", "footnote_inline", footnote_inline);
+  md2.inline.ruler.after("footnote_inline", "footnote_ref", footnote_ref);
+  md2.core.ruler.after("inline", "footnote_tail", footnote_tail);
+}
+
+// packages/uib-md-utils/src/pluginMermaid.mjs
+function markdownItMermaid(md2) {
+  const defaultFenceRenderer = md2.renderer.rules.fence || function(tokens, idx, options, env, self) {
+    return self.renderToken(tokens, idx, options);
+  };
+  md2.renderer.rules.fence = function(tokens, idx, options, env, self) {
+    const token = tokens[idx];
+    const langName = token.info.trim().split(/\s+/g)[0];
+    if (langName === "mermaid") {
+      return `<pre class="mermaid">${md2.utils.escapeHtml(token.content.trim())}</pre>
+`;
+    }
+    return defaultFenceRenderer(tokens, idx, options, env, self);
+  };
+  return md2;
+}
+
 // packages/uib-md-utils/src/tasklist.mjs
 var disableCheckboxes = true;
 var useLabelWrapper = false;
@@ -61435,7 +61894,7 @@ var md = lib_default({
     return "";
   }
 });
-md.use(import_markdown_it_attrs.default).use(import_markdown_it_anchor.default, { permalink: import_markdown_it_anchor.default.permalink.headerLink() }).use(MarkdownItGitHubAlerts).use(taskLists, { enabled: false, label: true }).use(detailsSummaryPlugin);
+md.use(markdownItMermaid).use(import_markdown_it_attrs.default).use(import_markdown_it_anchor.default, { permalink: import_markdown_it_anchor.default.permalink.headerLink() }).use(footnote_plugin).use(MarkdownItGitHubAlerts).use(taskLists, { enabled: false, label: true }).use(detailsSummaryPlugin);
 var mdParse = md.render.bind(md);
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

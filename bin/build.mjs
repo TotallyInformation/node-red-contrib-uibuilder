@@ -16,6 +16,7 @@
  *   node bin/build.mjs css          Build CSS only
  *   node bin/build.mjs docs         Build docs bundle only
  *   node bin/build.mjs versions     Update all version strings only (no build)
+ *   node bin/build.mjs tag          Create and push a GitHub release tag
  *   node bin/build.mjs fe css       Build front-end and CSS
  *   node bin/build.mjs fe --watch   Build front-end and watch for changes
  *
@@ -28,10 +29,13 @@ import * as esbuild from 'esbuild' // eslint-disable-line n/no-unpublished-impor
 import { browserslistToTargets, transform } from 'lightningcss' // eslint-disable-line n/no-unpublished-import
 import browserslist from 'browserslist' // eslint-disable-line n/no-unpublished-import
 import { readFile, writeFile, stat } from 'node:fs/promises'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { resolve, dirname, join, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { spawn } from 'node:child_process'
+import { spawn, execFile } from 'node:child_process'
+import { promisify } from 'node:util'
+
+const execFileAsync = promisify(execFile)
 
 // #region ---- Bootstrap ----
 
@@ -196,12 +200,13 @@ const VERSION_FILES = [
 
 /** Type: FEBuildConfig
  * @typedef {object} FEBuildConfig
- * @property {string}   name         Human-readable name used in log output
- * @property {string}   entryPoint   Relative path from root to the source entry point
- * @property {string}   outBase      Base path for output files (format + extension suffixes are appended)
- * @property {RegExp}   versionRegex Regex matching the version string in esbuild output files
- * @property {string}   [nodeOut]    If provided, also builds a Node.js CJS bundle to this path
- * @property {string[]} watchFiles   Glob patterns of source files that trigger a rebuild when changed
+ * @property {string}   name          Human-readable name used in log output
+ * @property {string}   entryPoint    Relative path from root to the source entry point
+ * @property {string}   outBase       Base path for output files (format + extension suffixes are appended)
+ * @property {RegExp}   versionRegex  Regex matching the version string in esbuild output files
+ * @property {string}   [versionFile] Relative path from root of the source file whose embedded version is stamped before each build
+ * @property {string}   [nodeOut]     If provided, also builds a Node.js CJS bundle to this path
+ * @property {string[]} watchFiles    Glob patterns of source files that trigger a rebuild when changed
  */
 
 /** Front-end module build configurations.
@@ -220,6 +225,7 @@ const FE_BUILDS = [
         entryPoint:   `${FE_SRC}/uibuilder.module.mjs`,
         outBase:      `${FE_OUT}/uibuilder`,
         versionRegex: /version = "([\d.]+-src)"/,
+        versionFile:  `${FE_SRC}/uibuilder.module.mjs`,
         watchFiles: [
             `${FE_SRC}/uibuilder.module.mjs`,
             `${FE_SRC}/ui.mjs`,
@@ -239,6 +245,7 @@ const FE_BUILDS = [
         entryPoint:   `${FE_SRC}/ui.mjs`,
         outBase:      `${FE_OUT}/ui`,
         versionRegex: /version = "([\d.]+-src)"/,
+        versionFile:  `${FE_SRC}/ui.mjs`,
         nodeOut:      'nodes/libs/ui.cjs',
         watchFiles: [
             `${FE_SRC}/ui.mjs`,
@@ -250,8 +257,19 @@ const FE_BUILDS = [
         entryPoint:   `${FE_SRC}/uibrouter.mjs`,
         outBase:      `${FE_OUT}/utils/uibrouter`,
         versionRegex: /version = "([\d.]+-src)"/,
+        versionFile:  `${FE_SRC}/uibrouter.mjs`,
         watchFiles:   [
             `${FE_SRC}/uibrouter.mjs`
+        ],
+    },
+    {
+        name:       'json-viewer',
+        entryPoint: `${COMPONENTS_SRC}/json-viewer/json-viewer.mjs`,
+        outBase:    `${FE_OUT}/utils/json-viewer`,
+        nodeOut:    `${FE_OUT}/utils/json-viewer.cjs`,
+        watchFiles: [
+            `${COMPONENTS_SRC}/json-viewer/json-viewer.mjs`,
+            `${COMPONENTS_SRC}/ti-base-component.mjs`,
         ],
     },
 ]
@@ -308,6 +326,22 @@ const NODE_BUILDS = [
         ],
     },
 ]
+
+/** Configuration for the mermaid browser bundle builds.
+ * Both IIFE and ESM outputs are produced and written to FE_OUT/utils/.
+ * The build is delegated to the uib-md-utils package's own build script so that
+ * mermaid is always resolved from the same node_modules tree as the md utilities.
+ * @type {{ name: string, outDir: string, watchFiles: string[] }}
+ */
+const MERMAID_BUILD = {
+    name:       'mermaid-browser-bundle',
+    outDir:     `${FE_OUT}/utils`,
+    // Watch the mermaid dist file in node_modules — rebuilt when mermaid is installed/updated
+    watchFiles: [
+        'node_modules/mermaid/dist/mermaid.esm.min.mjs',
+        'packages/uib-md-utils/node_modules/mermaid/dist/mermaid.esm.min.mjs',
+    ],
+}
 
 /** CSS build configuration.
  * The source is the unminified brand CSS; the build produces a minified file and source map.
@@ -438,6 +472,12 @@ const FE_LOADER = { '.mjs': 'js', '.cjs': 'js', }
  * @throws {Error} If any individual sub-build fails
  */
 async function buildFEModule(config) {
+    // Stamp the embedded version string in the source file before compiling
+    if (config.versionFile) {
+        const vEntry = VERSION_FILES.find(e => e.file === config.versionFile)
+        if (vEntry) await updateVersionInSourceFile(vEntry)
+    }
+
     const entryPoint = join(ROOT, config.entryPoint)
     const outBase = join(ROOT, config.outBase)
 
@@ -545,9 +585,15 @@ async function buildExperimental() {
  * @returns {Promise<void>}
  */
 async function buildAllFE() {
+    // markweb.mjs lives directly in FE_OUT and has no dedicated build entry;
+    // stamp its version string here whenever any FE build runs.
+    const markwebEntry = VERSION_FILES.find(e => e.file === `${FE_OUT}/utils/markweb.mjs`)
+    if (markwebEntry) await updateVersionInSourceFile(markwebEntry)
+
     const tasks = [
         ...FE_BUILDS.map(cfg => buildFEModule(cfg)),
         buildExperimental(),
+        buildMermaid(),
     ]
     const results = await Promise.allSettled(tasks)
     for (const result of results) {
@@ -600,6 +646,10 @@ async function buildNodePackage(config) {
             ...common,
             format:  'esm',
             outfile: join(ROOT, `${config.outBase}.mjs`),
+            // CJS dependencies bundled into ESM use esbuild's __require shim, which throws
+            // at runtime because `require` is not defined in native ESM. Injecting a
+            // createRequire polyfill at the top of the bundle makes __require work correctly.
+            banner:  { js: "import { createRequire } from 'module';\nconst require = createRequire(import.meta.url);\n", },
         })
     } catch (err) {
         throw new Error(`[${config.name}] ESM build failed: ${err.message}`)
@@ -625,7 +675,44 @@ async function buildAllNode() {
 
 // #endregion ---- Node.js Package Builds ----
 
-// #region ---- CSS Build ----
+// #region ---- Mermaid Browser Bundle Build ----
+
+/**
+ * Build mermaid as self-contained browser bundles (IIFE + ESM) by delegating to the
+ * uib-md-utils package build script.  This ensures mermaid is resolved from the same
+ * node_modules tree used by the markdown utilities.
+ *
+ * Outputs:
+ *   front-end/utils/mermaid.iife.min.js   IIFE, minified
+ *   front-end/utils/mermaid.esm.min.js    ESM,  minified
+ * @async
+ * @returns {Promise<void>}
+ */
+async function buildMermaid() {
+    /** Run a node script in a child process and reject if it exits non-zero.
+     * @param {string} scriptRelPath Relative script path from repository root
+    * @param {string[]} [scriptArgs] Optional CLI arguments for the script
+     * @returns {Promise<void>}
+     */
+    const runNodeScript = (scriptRelPath, scriptArgs = []) => new Promise((resolve, reject) => {
+        const child = spawn(
+            process.execPath,
+            [join(ROOT, scriptRelPath), ...scriptArgs],
+            { cwd: ROOT, stdio: 'inherit', }
+        )
+        child.on('close', (code) => {
+            if (code === 0) resolve()
+            else reject(new Error(`[${MERMAID_BUILD.name}] ${scriptRelPath} exited with code ${code}`))
+        })
+        child.on('error', reject)
+    })
+
+    // Keep uib-md-utils and the docs mermaid bundle aligned whenever mermaid changes.
+    await runNodeScript('packages/uib-md-utils/build.mjs')
+    await runNodeScript('src/doc-bundle/build.mjs', ['--mermaid-only'])
+}
+
+// #endregion ---- Mermaid Browser Bundle Build ----
 
 /**
  * Build and minify the uib-brand CSS file using LightningCSS.
@@ -719,6 +806,45 @@ async function buildDocBundle() {
 
 // #endregion ---- Docs Bundle Build ----
 
+// #region ---- Git Tag ----
+
+/**
+ * Create and push a GitHub tag for the current release version.
+ *
+ * Reads the current version from {@link PKG_VERSION} and the most-recent git tag via
+ * `git describe --tags --abbrev=0`.  If the versions differ, a new tag `v{PKG_VERSION}`
+ * is created locally and pushed to the remote with `--follow-tags` and `origin --tags`.
+ * No-op (with an informational log) when the tag already exists.
+ * @async
+ * @returns {Promise<void>}
+ */
+async function createGitTag() {
+    let lastTag = ''
+    try {
+        const { stdout, } = await execFileAsync('git', ['describe', '--tags', '--abbrev=0'])
+        lastTag = stdout.trim()
+    } catch (_err) {
+        // No tags exist yet — treat as empty string
+    }
+
+    console.log(`[tag] Last committed tag : ${lastTag || '(none)'}`)
+    console.log(`[tag] Current version    : v${PKG_VERSION}`)
+
+    if (lastTag.replace(/^v/, '') === PKG_VERSION) {
+        console.log('[tag] Tag already exists — nothing to do.')
+        return
+    }
+
+    const tagName = `v${PKG_VERSION}`
+    console.log(`[tag] Creating tag ${tagName} ...`)
+    await execFileAsync('git', ['tag', tagName])
+    await execFileAsync('git', ['push', '--follow-tags'])
+    await execFileAsync('git', ['push', 'origin', '--tags'])
+    console.log(`[tag] ✓ Tag ${tagName} created and pushed.`)
+}
+
+// #endregion ---- Git Tag ----
+
 // #region ---- Watch Mode ----
 
 /**
@@ -740,8 +866,7 @@ async function safeRebuild(buildFn, label) {
 /**
  * Start chokidar file watchers for all configured build targets.
  * Each module has its own dedicated watcher so only the affected output(s) are rebuilt
- * when a source file changes.  The initial build must have been completed before calling
- * this function.
+ * when a source file changes.  No initial build is performed — only file changes trigger builds.
  * @async
  * @returns {Promise<void>}
  */
@@ -754,6 +879,10 @@ async function startWatch() {
     // non-watch invocation (e.g. `node bin/build.mjs versions`).
     const { chokidar, } = await import('../packages/uib-fs-utils/index.mjs')
 
+    // Chokidar v5 removed glob pattern support — it only accepts real filesystem paths.
+    // picomatch is used to filter change events against the original patterns.
+    const { default: picomatch, } = await import('picomatch') // eslint-disable-line n/no-extraneous-import
+
     /**
      * Strip the project root from a path for cleaner log lines.
      * @param {string} p - Absolute file path
@@ -761,49 +890,126 @@ async function startWatch() {
      */
     const rel = (p) => p.replace(ROOT + '\\', '').replace(ROOT + '/')
 
+    /**
+     * Normalise a path to forward slashes for consistent cross-platform comparisons.
+     * @param {string} p - Path, potentially containing backslashes
+     * @returns {string} Path with all backslashes replaced by forward slashes
+     */
+    const toFwdSlash = (p) => p.replace(/\\/g, '/')
+
+    /** Regex that matches any glob special character */
+    const GLOB_CHARS_RE = /[*?[\]{!@+]/
+
+    /**
+     * Resolve an array of watchFiles patterns into chokidar-compatible filesystem paths
+     * and a combined picomatch filter function.
+     *
+     * Chokidar v5 no longer resolves glob patterns — passing a pattern like
+     * `src/**\/*.mjs` results in an empty watcher.  Instead we watch the deepest
+     * concrete ancestor directory of each glob pattern so chokidar picks up all
+     * descendant changes, then filter emitted paths with picomatch to avoid
+     * spurious rebuilds from unrelated files in the same directory.
+     *
+     * @param {string[]} patterns - Relative watchFiles pattern strings
+     * @returns {{ watchPaths: string[], isMatch: (p: string) => boolean }} Resolved watch paths and a combined pattern matcher
+     */
+    function resolveWatchEntries(patterns) {
+        /** @type {string[]} */
+        const watchPaths = []
+        /** @type {Array<(p: string) => boolean>} */
+        const matchers = []
+
+        for (const pattern of patterns) {
+            const absPattern = toFwdSlash(join(ROOT, pattern))
+
+            if (GLOB_CHARS_RE.test(pattern)) {
+                // Glob pattern: derive the base directory (everything before the first glob char)
+                const globIdx = absPattern.search(GLOB_CHARS_RE)
+                const baseDir = absPattern.slice(0, absPattern.lastIndexOf('/', globIdx))
+                watchPaths.push(baseDir)
+                matchers.push(picomatch(absPattern))
+            } else {
+                // Plain file path: watch directly; match by exact normalised path
+                watchPaths.push(absPattern)
+                matchers.push((p) => toFwdSlash(p) === absPattern)
+            }
+        }
+
+        const isMatch = (p) => matchers.some(m => m(toFwdSlash(p)))
+        return { watchPaths, isMatch, }
+    }
+
     // ── Front-end modules (one watcher per config) ──────────────────────
     for (const config of FE_BUILDS) {
+        const { watchPaths, isMatch, } = resolveWatchEntries(config.watchFiles)
         chokidar
-            .watch(config.watchFiles.map(f => join(ROOT, f)), { ignoreInitial: true, })
+            .watch(watchPaths, { ignoreInitial: true, })
             .on('change', (p) => {
+                if (!isMatch(p)) return
                 console.log(`[watch] Changed: ${rel(p)}`)
                 safeRebuild(() => buildFEModule(config), config.name)
             })
             .on('add',    (p) => {
+                if (!isMatch(p)) return
                 console.log(`[watch] Added:   ${rel(p)}`)
                 safeRebuild(() => buildFEModule(config), config.name)
             })
     }
 
     // ── Experimental module ──────────────────────────────────────────────
-    chokidar
-        .watch(EXPERIMENTAL_BUILD.watchFiles.map(f => join(ROOT, f)), { ignoreInitial: true, })
-        .on('change', (p) => {
-            console.log(`[watch] Changed: ${rel(p)}`)
-            safeRebuild(buildExperimental, EXPERIMENTAL_BUILD.name)
-        })
+    {
+        const { watchPaths, isMatch, } = resolveWatchEntries(EXPERIMENTAL_BUILD.watchFiles)
+        chokidar
+            .watch(watchPaths, { ignoreInitial: true, })
+            .on('change', (p) => {
+                if (!isMatch(p)) return
+                console.log(`[watch] Changed: ${rel(p)}`)
+                safeRebuild(buildExperimental, EXPERIMENTAL_BUILD.name)
+            })
+    }
 
     // ── Node.js packages (one watcher per config) ────────────────────────
     for (const config of NODE_BUILDS) {
+        const { watchPaths, isMatch, } = resolveWatchEntries(config.watchFiles)
         chokidar
-            .watch(config.watchFiles.map(f => join(ROOT, f)), { ignoreInitial: true, })
+            .watch(watchPaths, { ignoreInitial: true, })
             .on('change', (p) => {
+                if (!isMatch(p)) return
                 console.log(`[watch] Changed: ${rel(p)}`)
                 safeRebuild(() => buildNodePackage(config), config.name)
             })
             .on('add',    (p) => {
+                if (!isMatch(p)) return
                 console.log(`[watch] Added:   ${rel(p)}`)
                 safeRebuild(() => buildNodePackage(config), config.name)
             })
     }
 
     // ── CSS source ───────────────────────────────────────────────────────
-    chokidar
-        .watch(CSS_BUILD.watchFiles.map(f => join(ROOT, f)), { ignoreInitial: true, })
-        .on('change', (p) => {
-            console.log(`[watch] Changed: ${rel(p)}`)
-            safeRebuild(buildCSS, CSS_BUILD.name)
-        })
+    {
+        const { watchPaths, isMatch, } = resolveWatchEntries(CSS_BUILD.watchFiles)
+        chokidar
+            .watch(watchPaths, { ignoreInitial: true, })
+            .on('change', (p) => {
+                if (!isMatch(p)) return
+                console.log(`[watch] Changed: ${rel(p)}`)
+                safeRebuild(buildCSS, CSS_BUILD.name)
+            })
+    }
+
+    // ── Mermaid browser bundle (rebuilds when mermaid dist is updated) ───
+    {
+        // Watch whichever mermaid dist file actually exists on disk
+        const candidates = MERMAID_BUILD.watchFiles.map(f => join(ROOT, f)).filter(f => existsSync(f))
+        if (candidates.length > 0) {
+            chokidar
+                .watch(candidates, { ignoreInitial: true, })
+                .on('change', (p) => {
+                    console.log(`[watch] mermaid updated: ${rel(p)}`)
+                    safeRebuild(buildMermaid, MERMAID_BUILD.name)
+                })
+        }
+    }
 
     console.log('[watch] Watching for changes. Press Ctrl+C to stop.\n')
 }
@@ -815,7 +1021,7 @@ async function startWatch() {
 /**
  * Parse process.argv to determine which build targets to run and whether to enable watch mode.
  *
- * Flags:  --watch | -w  Enable watch mode after the initial build
+ * Flags:  --watch | -w  Skip initial build; enter watch mode immediately (only changed files are rebuilt)
  * Targets (positional args, any combination):
  *   all      Build everything (default when no positional arg is given)
  *   fe       Front-end modules
@@ -823,6 +1029,7 @@ async function startWatch() {
  *   css      CSS files
  *   docs     Docsify documentation bundle
  *   versions Update all version strings without building
+ *   tag      Create and push a GitHub release tag for the current version
  *
  * @returns {{ targets: string[], watch: boolean }} Parsed build targets and watch mode flag
  */
@@ -839,9 +1046,9 @@ function parseArgs() {
  *
  * 1. Parses CLI arguments.
  * 2. Prints a startup banner with version and target information.
- * 3. Updates semantic version strings in source files before building.
- * 4. Runs the selected builds concurrently.
- * 5. Optionally enters watch mode to rebuild on file changes.
+ * 3. Runs the selected builds concurrently (skipped in watch mode).
+ *    Version strings are stamped inside each build function, just before compilation.
+ * 4. Optionally enters watch mode; only changed files trigger a rebuild (no initial build).
  * @async
  * @returns {Promise<void>}
  */
@@ -855,6 +1062,10 @@ async function main() {
     const buildCss      = buildAll || targets.includes('css')
     const buildDocs     = buildAll || targets.includes('docs')
     const updateVersions = targets.includes('versions')
+    const tagOnly       = targets.length === 1 && targets.includes('tag')
+    const buildTagTarget = targets.includes('tag')
+    // Named FE module builds (e.g. `node bin/build.mjs json-viewer`)
+    const namedFEBuilds = targets.filter(t => FE_BUILDS.some(cfg => cfg.name === t))
 
     // ── Startup banner ───────────────────────────────────────────────────
     const SEP = '─'.repeat(60)
@@ -877,37 +1088,46 @@ async function main() {
         console.log()
     }
 
-    // ── Pre-build: update semantic version strings in FE source files ────
-    // Date-type entries (CSS @version) are handled by their own build functions.
-    // Skipped when 'versions' already ran above (avoids duplicate updates).
-    if (buildFE && !updateVersions) {
-        const semanticEntries = VERSION_FILES.filter(e => e.type === 'semantic')
-        await Promise.all(semanticEntries.map(e => updateVersionInSourceFile(e)))
-        console.log()
-    }
-
-    // ── Run selected builds ──────────────────────────────────────────────
-    /** @type {Array<[string, () => Promise<void>]>} */
-    const tasks = []
-    if (buildFE)   tasks.push(['front-end modules',  buildAllFE])
-    if (buildNode) tasks.push(['node packages',       buildAllNode])
-    if (buildCss)  tasks.push(['CSS',                 buildCSS])
-    if (buildDocs) tasks.push(['docs bundle',         buildDocBundle])
-
-    if (tasks.length === 0) {
-        console.warn('[build] No recognised build targets. Use: all | fe | node | css | docs')
+    // ── Standalone tag-only target ───────────────────────────────────────
+    if (tagOnly) {
+        await createGitTag()
+        console.log('\n[build] Done.')
         return
     }
 
-    // Run all tasks concurrently; individual failures are caught inside each function
-    const results = await Promise.allSettled(tasks.map(([, fn]) => fn()))
-    for (let i = 0; i < results.length; i++) {
-        if (results[i].status === 'rejected') {
-            console.error(`\n[main] ✗ ${tasks[i][0]}: ${results[i].reason}`)
+    // ── Run selected builds (skipped entirely in watch mode — only changes trigger builds) ──
+    if (!watch) {
+        /** @type {Array<[string, () => Promise<void>]>} */
+        const tasks = []
+        if (buildFE)         tasks.push(['front-end modules',  buildAllFE])
+        if (buildNode)       tasks.push(['node packages',       buildAllNode])
+        if (buildCss)        tasks.push(['CSS',                 buildCSS])
+        if (buildDocs)       tasks.push(['docs bundle',         buildDocBundle])
+        // 'tag' is intentionally excluded from 'all' — must be invoked explicitly
+        if (buildTagTarget)  tasks.push(['git tag',             createGitTag])
+        // Individual named FE module builds (e.g. `node bin/build.mjs json-viewer`)
+        if (!buildFE && namedFEBuilds.length > 0) {
+            for (const name of namedFEBuilds) {
+                const cfg = FE_BUILDS.find(c => c.name === name)
+                tasks.push([cfg.name, () => buildFEModule(cfg)])
+            }
         }
-    }
 
-    console.log('\n[build] Build complete.')
+        if (tasks.length === 0) {
+            console.warn('[build] No recognised build targets. Use: all | fe | node | css | docs | <module-name>')
+            return
+        }
+
+        // Run all tasks concurrently; individual failures are caught inside each function
+        const results = await Promise.allSettled(tasks.map(([, fn]) => fn()))
+        for (let i = 0; i < results.length; i++) {
+            if (results[i].status === 'rejected') {
+                console.error(`\n[main] ✗ ${tasks[i][0]}: ${results[i].reason}`)
+            }
+        }
+
+        console.log('\n[build] Build complete.')
+    }
 
     // ── Optionally enter watch mode ──────────────────────────────────────
     if (watch) {

@@ -3,7 +3,7 @@ title: Live Request-Response capability
 description: |
   Design notes for a uibuilder "live" request/response feature. Mirroring core http-in/-response nodes but with uibuilder features.
 created: 2025-02-17 11:15:27
-updated: 2025-03-26 11:19:01
+updated: 2026-05-30 13:14:50
 ---
 
 ## Thoughts/Ideas for consideration

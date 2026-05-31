@@ -33,14 +33,16 @@
 
 const { join, parse, } = require('path')
 const express = require('express')
-const socketjs = require('./socket.cjs')
-// const { getNs } = require('./socket.js') // NO! This gives an error because of incorrect `this` binding
-const { getClientId, sortApps, } = require('./uiblib.cjs')
 const { accessSync, existsSync, fgSync, mkdirSync, readFile, } = require('./fs.cjs')
 const { mylog, urlJoin, } = require('./tilib.cjs') // dumpReq, mylog
-// WARNING: Don't try to deconstruct this, if you do the initial uibPackageJson access fails for some reason
+
+// WARNING: Don't try to deconstruct these, if you do, some things fail because they lose the correct `this` binding
 const packageMgt = require('./package-mgt.cjs')
-const path = require('path')
+const socketjs = require('./socket.cjs')
+const uiblib = require('./uiblib.cjs')
+
+/** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
+const uib = require('../libs/uibGlobalConfig.cjs')
 
 // Filename for default web page
 const defaultPageName = 'index.html'
@@ -92,6 +94,9 @@ class UibWeb {
     /** ExpressJS Route Metadata */
     routers = { admin: [], user: [], instances: {}, config: {}, }
 
+    /** Track active connections to allow them to be closed on shutdown or redeploy */
+    connections = new Set()
+
     /** Called when class is instantiated */
     constructor() {
         /** Set up a dummy ExpressJS Middleware Function
@@ -106,11 +111,9 @@ class UibWeb {
      *  This makes them available wherever this MODULE is require'd.
      *  Because JS passess objects by REFERENCE, updates to the original
      *    variables means that these are updated as well.
-     * @param {uibConfig} uib reference to uibuilder 'global' configuration object
-     * param {Object} server reference to ExpressJS server being used by uibuilder
      */
-    setup( uib ) {
-        if ( !uib ) throw new Error('[uibuilder:web.js:setup] Called without required uib parameter or uib is undefined.')
+    setup() {
+        // if ( !uib ) throw new Error('[uibuilder:web.js:setup] Called without required uib parameter or uib is undefined.')
         if ( uib.RED === null ) throw new Error('[uibuilder:web.js:setup] uib.RED is null')
 
         // Prevent setup from being called more than once
@@ -286,7 +289,13 @@ class UibWeb {
                 this.server = require('http').createServer(this.app)
             }
 
-            // Connect the server to the requested port, domain is the same as Node-RED
+            // ONLY FOR CUSTOM WEB: Track the web server connections to allow them to be force closed on shutdown or redeploy
+            this.server.on('connection', (socket) => {
+                this.connections.add(socket)
+                socket.on('close', () => this.connections.delete(socket))
+            })
+
+            // Handle server errors, particularly EADDRINUSE which is common when using a custom port
             this.server.on('error', (err) => {
                 if (err.code === 'EADDRINUSE') {
                     this.server.close()
@@ -301,6 +310,7 @@ class UibWeb {
                 }
             })
 
+            // Connect the server to the requested port, domain is the same as Node-RED
             this.server.listen(uib.customServer.port, () => {
                 // uib.customServer.host = this.server.address().address // not very useful. Typically returns `::`
             })
@@ -394,7 +404,7 @@ class UibWeb {
             if ( Object.keys(this.uib.instances).length === 0 ) {
                 page += '<p>Instance list not yet ready, please try again</p>'
             } else {
-                for ( let [url, data] of sortApps(Object.entries(this.uib.apps)) ) { // eslint-disable-line prefer-const
+                for ( let [url, data] of uiblib.sortApps(Object.entries(this.uib.apps)) ) { // eslint-disable-line prefer-const
                     const title = data.title.length === 0 ? '' : `: ${data.title}`
                     const descr = data.descr.length === 0 ? '' : `<div>${data.descr}</div>`
                     page += `
@@ -752,6 +762,12 @@ class UibWeb {
 
         const qSec = uib.customServer.type === 'https' // true if using https else false
 
+        // Compile CSP string here so we don't have to do it for every request in the middleware - default defined in uibGlobalConfig.cjs
+        const cspObj = uib.customServer?.contentSecurityPolicy
+        const csp = Object.keys(cspObj ?? {}).length
+            ? Object.entries(cspObj)
+                .map(([k, v]) => `${k} ${String(v).trim().endsWith(';') ? String(v).trim() : `${String(v).trim()};`}`).join(' ') // eslint-disable-line @stylistic/newline-per-chained-call
+            : "default-src 'self' 'unsafe-inline' data: blob: https:; connect-src 'self'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; frame-src 'self' https:;"
         const that = this
 
         /** Return a middleware handler
@@ -761,22 +777,15 @@ class UibWeb {
          */
         function masterMiddleware (req, res, next) {
             // Check for client id from client - if it exists, reuse it otherwise create one
-            const clientId = getClientId(req)
+            const clientId = uiblib.getClientId(req)
 
-            // TODO: X-XSS-Protection only needed for html (and js?), not for css, etc
             res
                 // Headers only accessible in the browser via web workers
                 .header({
                     // Help reduce risk of XSS and other attacks
                     'X-XSS-Protection': '1;mode=block',
                     'X-Content-Type-Options': 'nosniff',
-                    'Content-Security-Policy':
-                        "default-src 'self' 'unsafe-inline' data: blob: https:; "
-                        + "connect-src 'self'; "
-                        + "img-src 'self' data: blob: https:; "
-                        + "font-src 'self' data: https:; "
-                        + "style-src 'self' 'unsafe-inline' data: blob: https:; "
-                        + "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; ",
+                    'Content-Security-Policy': csp,
                     // 'X-Frame-Options': 'SAMEORIGIN',
                     // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
                     'x-powered-by': 'uibuilder',

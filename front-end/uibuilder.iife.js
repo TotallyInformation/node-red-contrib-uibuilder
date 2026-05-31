@@ -158,7 +158,7 @@
      */
     constructor(win, extLog, jsonHighlight) {
       // #region --- Class variables ---
-      __publicField(this, "version", "7.6.2-src");
+      __publicField(this, "version", "7.7.0-src");
       // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
       __publicField(this, "sanitiseExtraTags", ["uib-var"]);
       __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -2493,8 +2493,8 @@
     /**
      * Sends data.
      *
-     * @param {String} data to send.
-     * @param {Function} called upon flush.
+     * @param {String} data - data to send.
+     * @param {Function} fn - called upon flush.
      * @private
      */
     doWrite(data, fn) {
@@ -3258,7 +3258,7 @@
     /**
      * Sends a packet.
      *
-     * @param {String} type: packet type.
+     * @param {String} type - packet type.
      * @param {String} data.
      * @param {Object} options.
      * @param {Function} fn - callback function.
@@ -5145,7 +5145,9 @@
   });
 
   // src/components/ti-base-component.mjs
-  var _TiBaseComponent = class _TiBaseComponent extends HTMLElement {
+  var _HTMLElement = typeof HTMLElement !== "undefined" ? HTMLElement : class {
+  };
+  var _TiBaseComponent = class _TiBaseComponent extends _HTMLElement {
     // get id() {
     //     return this.id
     // }
@@ -6851,7 +6853,7 @@
     window.__uibHeaders = h;
     return h;
   });
-  var version = "7.6.2-iife";
+  var version = "7.7.0-iife";
   var isMinified = !/param/.test(function(param) {
   });
   function log() {
@@ -7006,33 +7008,36 @@
   log.level = log.default;
   function syntaxHighlight(json) {
     if (json === void 0) {
-      json = '<span class="undefined">undefined</span>';
-    } else {
-      try {
-        json = JSON.stringify(json, void 0, 4);
-        json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function(match) {
-          let cls = "number";
-          if (/^"/.test(match)) {
-            if (/:$/.test(match)) {
-              cls = "key";
-            } else {
-              cls = "string";
-            }
-          } else if (/true|false/.test(match)) {
-            cls = "boolean";
-          } else if (/null/.test(match)) {
-            cls = "null";
+      return '<span class="undefined">undefined</span>';
+    }
+    try {
+      if (JsonViewer) return JsonViewer.renderToHTML(json, { includeStyles: false });
+    } catch (e) {
+    }
+    try {
+      json = JSON.stringify(json, void 0, 4);
+      json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function(match) {
+        let cls = "number";
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = "key";
+          } else {
+            cls = "string";
           }
-          return '<span class="'.concat(cls, '">').concat(match, "</span>");
-        });
-      } catch (e) {
-        json = "Syntax Highlight ERROR: ".concat(e.message);
-      }
+        } else if (/true|false/.test(match)) {
+          cls = "boolean";
+        } else if (/null/.test(match)) {
+          cls = "null";
+        }
+        return '<span class="'.concat(cls, '">').concat(match, "</span>");
+      });
+    } catch (e) {
+      json = "Syntax Highlight ERROR: ".concat(e.message);
     }
     return json;
   }
   var _ui = new ui_default(window, log, syntaxHighlight);
-  var _a2, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _uniqueElID, _extCommands, _managedVars, _showStatus, _uiObservers, _uibAttrSel;
+  var _a2, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _manualDisconnect, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _uniqueElID, _extCommands, _managedVars, _showStatus, _uiObservers, _uibAttrSel;
   var Uib = (_a2 = class {
     // #endregion -------- ------------ -------- //
     // #region Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
@@ -7122,6 +7127,10 @@
        * @type {number|null}
        */
       __privateAdd(this, _timerid, null);
+      /** True when disconnect() was called intentionally - prevents _onDisconnect from triggering auto-reconnect
+       * @type {boolean}
+       */
+      __privateAdd(this, _manualDisconnect, false);
       // Holds the reference ID for the internal msg change event handler so that it can be cancelled
       __privateAdd(this, _MsgHandler);
       // Placeholder for io.socket - can't make a # var until # fns allowed in all browsers
@@ -8863,7 +8872,8 @@
                   attributes: {
                     onclick: 'uibuilder.copyToClipboard("msg")',
                     class: "compact",
-                    style: "right:3em;"
+                    style: "right:3em;",
+                    title: "Copy message to clipboard"
                   },
                   slot: "\u{1F4CB}"
                 },
@@ -8872,7 +8882,8 @@
                   attributes: {
                     onclick: "uibuilder.showMsg()",
                     class: "compact",
-                    style: "right:.5em;"
+                    style: "right:.5em;",
+                    title: "Turn off message display"
                   },
                   slot: "\u26D4"
                 },
@@ -9087,6 +9098,7 @@
      */
     _ctrlMsgFromServer(receivedCtrlMsg) {
       this._dispatchCustomEvent("uibuilder:ctrlMsgReceived", receivedCtrlMsg);
+      this.set("serverShutdown", false);
       const ts = performance.now();
       if (receivedCtrlMsg === null) {
         receivedCtrlMsg = {};
@@ -9103,8 +9115,11 @@
       switch (receivedCtrlMsg.uibuilderCtrl) {
         // Node-RED is shutting down
         case "shutdown": {
-          log("info", "Uib:ioSetup:".concat(this._ioChannels.control), '\u274C Received "shutdown" from server')();
-          this.set("serverShutdown", void 0);
+          this.set("serverShutdown", true);
+          this.disconnect('\u274C Received "shutdown" from server');
+          setTimeout(() => {
+            this.connect("Re-enabled socket.io auto-reconnect after shutdown");
+          }, 3e4);
           break;
         }
         /** We are connected to the server - 1st msg from server */
@@ -9840,11 +9855,16 @@
     }
     /** Called by _ioSetup when Socket.IO disconnects from Node-RED
      * @param {string} reason Disconnection title
+     * @param {object} details Any details about the disconnection
      * @private
      */
-    _onDisconnect(reason) {
-      log("info", "Uib:ioSetup:socket-disconnect", "\u26D4 Socket Disconnected. Reason: ".concat(reason))();
-      this._dispatchCustomEvent("uibuilder:socket:disconnected", reason);
+    _onDisconnect(reason, details) {
+      log("info", "Uib:ioSetup:socket-disconnect", "\u26D4 Socket Disconnected. Reason: ".concat(reason), details)();
+      this._dispatchCustomEvent("uibuilder:socket:disconnected", { reason, details });
+      if (__privateGet(this, _manualDisconnect)) {
+        __privateSet(this, _manualDisconnect, false);
+        return;
+      }
       this._checkConnect();
     }
     /** Setup Socket.io
@@ -9881,7 +9901,9 @@
       this._socket.on("disconnect", this._onDisconnect.bind(this));
       this._socket.on("connect_error", (err) => {
         if (navigator.onLine === false) return;
-        log("error", "Uib:ioSetup:connect_error", "\u274C Socket.IO Connect Error. Reason: ".concat(err.message), err)();
+        if (!err.message.startsWith("xhr poll error")) {
+          log("error", "Uib:ioSetup:connect_error", "\u274C Socket.IO Connect Error. Reason: ".concat(err.message), err)();
+        }
         this.set("ioConnected", false);
         this.set("socketError", err);
         this._dispatchCustomEvent("uibuilder:socket:disconnected", err);
@@ -9917,14 +9939,29 @@
         this.set("globalMsg", args.slice(0, -1));
       });
     }
-    /** Manually (re)connect socket.io */
-    connect() {
+    /** Manually (re)connect socket.io
+     * @param {string} [reason] Optional reason text for manual connection, used for logging
+     */
+    connect(reason = "Manual connect") {
+      __privateSet(this, _manualDisconnect, false);
+      log("info", "Uib:connect", reason)();
+      this._socket.io.reconnection(true);
+      if (this._socketGlobal) this._socketGlobal.connect();
       this._socket.connect();
     }
-    /** Manually disconnect socket.io and stop any auto-reconnect timer */
-    disconnect() {
+    /** Manually disconnect socket.io and stop any auto-reconnect timer
+     * @param {string} [reason] Optional reason text for manual disconnection, used for logging
+     */
+    disconnect(reason = "Manual disconnect") {
+      log("info", "Uib:disconnect", reason)();
+      __privateSet(this, _manualDisconnect, true);
+      this._socket.io.reconnection(false);
+      if (this._socketGlobal) this._socketGlobal.disconnect();
       this._socket.disconnect();
-      if (__privateGet(this, _timerid)) window.clearTimeout(__privateGet(this, _timerid));
+      if (__privateGet(this, _timerid)) {
+        window.clearTimeout(__privateGet(this, _timerid));
+        __privateSet(this, _timerid, null);
+      }
     }
     /** Start up Socket.IO comms and listeners
      * This has to be done separately because if running from a web page in a sub-folder of src/dist, uibuilder cannot
@@ -10020,7 +10057,7 @@
       perf.set("start finished", performance.now());
     }
     // #endregion -------- ------------ -------- //
-  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _uniqueElID = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), _uibAttrSel = new WeakMap(), // #region --- Static variables ---
+  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _manualDisconnect = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _uniqueElID = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), _uibAttrSel = new WeakMap(), // #region --- Static variables ---
   __publicField(_a2, "_meta", {
     version,
     type: "module",
@@ -10209,5 +10246,5 @@
  *   See Uib._meta for client version string
  * @license Apache-2.0
  * @author Julian Knight (Totally Information)
- * @copyright (c) 2022-2025 Julian Knight (Totally Information)
+ * @copyright (c) 2022-2026 Julian Knight (Totally Information)
  */

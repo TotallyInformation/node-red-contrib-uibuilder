@@ -3,7 +3,7 @@ title: UIBUILDER REST API's
 description: |
   UIBUILDER exposes a number of REST API's. This is an index of them.
 created: 2023-09-14 19:39:52
-updated: 2024-09-08 15:41:30
+updated: 2026-05-09 11:08:18
 ---
 
 Most of UIBUILDER's standard REST API's are common across all instances of `uibuilder` nodes added to your Node-RED flows. However, see below for the instance API's features.
@@ -17,7 +17,7 @@ In all examples below, `<url>` refers to a uibuilder instance URL setting.
 > [!NOTE]
 > At some point, it is expected that these v2 API's will be folded into the v3 API's.
 
-These are the oldest API's built into uibuilder. They are provided by `nodes/libs/admin-api-v3.js` which returns an ExpressJS router function. The router is added to Node-RED's admin ExpressJS server in `libs/web.js` in the function `_adminApiSetup` which is called from `setup` which, in turn is called as `web.setup(uib)` from the main uibuilder runtime setup function.
+These are the oldest API's built into uibuilder. They are provided by `nodes/libs/admin-api-v3.js` which returns an ExpressJS router function. The router is added to Node-RED's admin ExpressJS server in `libs/web.js` in the function `_adminApiSetup` which is called from `setup` which, in turn is called as `web.setup()` from the main uibuilder runtime setup function.
 
 All of the endpoints are only accessible from the Node-RED Editor. Note that each API has a specified endpoint URL that is relative to the Editor's URL.
 
@@ -33,7 +33,7 @@ All of the endpoints are only accessible from the Node-RED Editor. Note that eac
 
 ## v3 Admin API's
 
-The newer v3 API's are provided by `nodes/libs/admin-api-v3.js` which returns an ExpressJS router function. The router is added to Node-RED's admin ExpressJS server in `libs/web.js` in the function `_adminApiSetup` which is called from `setup` which, in turn is called as `web.setup(uib)` from the main uibuilder runtime setup function.
+The newer v3 API's are provided by `nodes/libs/admin-api-v3.js` which returns an ExpressJS router function. The router is added to Node-RED's admin ExpressJS server in `libs/web.js` in the function `_adminApiSetup` which is called from `setup` which, in turn is called as `web.setup()` from the main uibuilder runtime setup function.
 
 Unlike the the v2 API's, the v3 are provided by a master set of `all`, `get`, `put`, `post`, and `delete` handlers.
 

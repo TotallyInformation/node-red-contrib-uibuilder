@@ -3,8 +3,7 @@ title: General, non-uibuilder-specific function Library
 description: |
   Utility library containing methods that are reusable, not just specific to UIBUILDER.
 created: 2021-06-27 21:35:00
-lastUpdated: 2023-09-30 17:00:40
-updated: 2023-12-30 17:01:42
+updated: 2026-05-04 17:17:04
 ---
 
 `nodes/libs/tilib.js`
@@ -12,7 +11,6 @@ updated: 2023-12-30 17:01:42
 ## Dependencies
 
 * path
-* fs-extra
 
 ## Variables
 

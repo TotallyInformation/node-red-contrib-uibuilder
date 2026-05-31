@@ -345,10 +345,10 @@ function detailsPage(urlPrefix) {
         </dl>
 
         <h4>Dump of all uib master configuration settings</h4>
-        <pre>${tilib.syntaxHighlight( uibSummary )}</pre>
+        <pre>${tilib.syntaxHighlight( uibSummary, 100000 )}</pre>
 
         <h4>Dump of all uib settings.js entries</h4>
-        <pre>${tilib.syntaxHighlight( RED.settings.uibuilder ? RED.settings.uibuilder : 'NOT DEFINED' )}</pre>
+        <pre>${tilib.syntaxHighlight( RED.settings.uibuilder ? RED.settings.uibuilder : 'NOT DEFINED', 100000 )}</pre>
 
         <h3>Node-RED</h3>
         <p>See the <code>&lt;userDir&gt;/settings.js</code> file and the 

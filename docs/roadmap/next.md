@@ -4,14 +4,34 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-04-28 16:53:24
+updated: 2026-05-31 14:35:20
 ---
 
-## To Fix
+## Possible issues/improvements
+* [ ] Remove gulp dependencies once we are sure that the new build/watch script is working well and we have no need for the old gulp tasks. This will remove a bunch of audit failures.
+* [ ] Code smells:
+  * [ ] this.uib, this.log, this.RED - should be using the global config module instead.
+  * [ ] (uib) - passing uib object instead of using the module.
+  * [ ] check that hooks are in uib?
+* [ ] Alter uibuilder where we have `JSON.stringify` to use saferSerialize instead.
+* [ ] Add app type to nr admin index page to make it easier to identify uibuilder and markweb nodes.
+* [ ] Add size trap to saferSerialize to prevent very large objects from being serialized and crashing the system.
 
-* [ ] Deploy of new uibuilder node sometimes results in `Cannot show default page, index.html does not exist in `
+
+### Markweb
+* [_] Add Markweb instances to the list of uibuilder apps/urls. Started, needs app index page and the listApps function node utility updating to show them along with the new `type` property.
+* [ ] Reduce the chattiness of the markweb client library.
+
+### Documentation
+* [ ] Document the CSP overrides and how to use them.
+* [_] Remove docsify-darklight-theme dependency as it is dated and not being used. Will remove a bunch of audit failures. JS already not used, needs consolidation of the CSS.
+
+### uibuilder node
+* [ ] Deploy of new uibuilder node sometimes results in `🌐⚠️[uibuilder:web:setupInstanceStatic:nojs-charts] Cannot show default page, index.html does not exist in D:\src\uibRoot\nojs-charts\src.`.  Likely because the reload option is on so as the default folders & files being created, the node tries to reload the page. Maybe suspend watcher for initial deployment somehow?
 
 ## In Progress
+
+* Make sure that Markweb nodes remove web routes and socket.io namespaces when deleted.
 
 ### Ongoing work
 
@@ -22,9 +42,10 @@ updated: 2026-04-28 16:53:24
 * Force close socket.io connections on node-red close to prevent hanging connections and allow clean restarts.
 * If using a custom Express server, force close it on node-red close to prevent hanging connections and allow clean restarts.
 
+* [ ] Review all instances of `this.RED = RED` or `mod.RED = RED`. The reference is now created in the global config by the runtime plugin. It should not be needed anywhere else unless the global config cannot be required.
+
 * Background rework (may take several releases):
   * [ ] Changing `uib-brand.css` to use more modern CSS, leaving it up to LightningCSS to build for older browsers. In particular, using nested definitions.
-  * [ ] Remove remaining ~~5~~ 4 fsextra functions from fs lib. `ensureDirSync` is completed.
   * [ ] Rename all .js node.js files to .cjs to avoid confusion with ESM modules. (libs now all done).
   * [ ] No need to pass uib var now it is in a module, can simply require it. (Except for libs/fs which is already used by the uib module).
 
@@ -74,6 +95,11 @@ updated: 2026-04-28 16:53:24
 * Markweb:
   * Video.
   * Allow `readme.md` or `README.md` to be used as folder default pages as well as `index.md`, `.index.md`, and `_index.md`.
+* Editor:
+  * uib-sidebar - add markdown support.
+* router
+  * Add icon support to the router menu system.
+  * Add vertical support to the router menu system.
 
 ## Communications
 
@@ -83,3 +109,5 @@ updated: 2026-04-28 16:53:24
 
   Other possibles: Instagram, Blog, LinkedIn, NR Forum, BlueSky, Mastodon.
 
+## Other
+Please see the [roadmap section of the UIBUILDER documentation](roadmap/readme.md) for the latest information on what is being worked on for the next release and beyond.

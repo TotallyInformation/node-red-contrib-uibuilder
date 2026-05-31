@@ -51,7 +51,7 @@ const uib = require('../libs/uibGlobalConfig.cjs')
 const { serialize, } = require('v8')
 
 // Import my utility packages using npm workspaces
-const { md, mdParse: _mdParseRaw, directivePlugin, fmVariablesPlugin, fm, mermaid, } = require('../../packages/uib-md-utils')
+const { md, mdParse: _mdParseRaw, directivePlugin, fmVariablesPlugin, fm, } = require('../../packages/uib-md-utils')
 const { chokidar, } = require('../../packages/uib-fs-utils')
 
 /** The node context for the current mdParse call. Set before each synchronous md.render() call.
@@ -161,13 +161,11 @@ const mod = {
 // #endregion ----- Module level variables ---- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
+ * As a module-level named function, it will inherit `mod` and other module-level variables
  * @param {runtimeRED} RED The Node-RED runtime object
  */
 function ModuleDefinition(RED) {
-    // As a module-level named function, it will inherit `mod` and other module-level variables
-
-    // Save a reference to the RED runtime for convenience
-    if (!uib.RED) uib.RED = RED
+    // NB: A reference to the RED object (uib.RED) is defined in the runtime plugin and passed to the uibGlobalConfig module, so it can be accessed from any module that requires it.
 
     /** Register a new instance of the specified node type (2) */
     RED.nodes.registerType(mod.nodeName, nodeInstance, {
@@ -201,6 +199,10 @@ function nodeInstance(config) {
     this.name = config.name ?? ''
     this.configFolder = config.configFolder ?? ''
     this.sourceFolder = '' // Used in web.instanceSetup(), should be ''
+    // TODO: Add option to set title and description in the editor, which can then be used in the FE for display and SEO purposes. For now, just use the url as the title.
+    this.title = config.title ?? ''
+    this.descr = config.descr ?? ''
+
 
     // Make sure the url is valid & prefix with nodeRoot if needed
     this.url = urlJoin(uib.nodeRoot, this.url.trim())
@@ -233,6 +235,17 @@ function nodeInstance(config) {
     } catch (err) {
         this.error(`🌐🕸️🛑[uibuilder:markweb] Source folder must be readable. Please check permissions. Source="${this.instanceFolder}"`)
         return
+    }
+
+    // Keep a log of the active instances
+    uib.mwinstances[this.id] = this.url
+    log.trace(`🌐🕸️[markweb:nodeInstance:${this.url}] Node uib.mwinstances registered: ${JSON.stringify(uib.mwinstances)}`)
+    uib.apps[this.url] = {
+        node: this.id,
+        url: this.url,
+        title: this.title,
+        descr: this.descr,
+        type: 'markweb',
     }
 
     // if config folder is a relative path, make it relative to userDir
@@ -1759,7 +1772,7 @@ function renderPrescript(key, attributes, node, options) {
     //   1. processTemplates replacing {{...}} / %%...%% patterns found inside the JSON
     //   2. </script> or other HTML-breaking sequences in the content
     const b64 = Buffer.from(JSON.stringify(attributes)).toString('base64')
-    const content = Buffer.from(mdParse(node, attributes.content, attributes)).toString('base64')
+    const content = Buffer.from(mdParse(node, attributes.content || '', attributes)).toString('base64')
     // atob() returns a binary (Latin-1) string, not UTF-8 — multi-byte characters like emoji
     // are corrupted unless we decode via TextDecoder which handles UTF-8 correctly.
     return `<script>

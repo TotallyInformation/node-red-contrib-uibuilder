@@ -1,26 +1,26 @@
 ---
 title: uib-sidebar - Creates a UI in the Node-RED Editor sidebar
 description: |
-  Usage and configuration.
+  While it is best to avoid using the Node-RED Editor as a general UI or dashboard, this node allows you to quickly and easily create a simple UI in the sidebar of the Editor. The UI also allows inputs which are returned back to the source node as messages.
+since: v7.2.0
+author: Julian Knight (Totally Information)
 created: 2025-03-29 13:16:09
-updated: 2025-03-29 16:38:32
+updated: 2026-05-30 13:18:19
 ---
-
-Available since uibuilder v7.2.
-
-While it is best to avoid using the Node-RED Editor as a general UI or dashboard, this node allows you to quickly and easily create a simple UI in the sidebar of the Editor.
 
 ## Overview
 
-The `uib-sidebar` node is a single node that creates a sidebar UI in the Node-RED Editor. It uses the built-in ACE/Monaco editor with a default HTML template to create the main layout. The node automatically creates the sidebar when added to your flows.
+The `uib-sidebar` node creates a sidebar UI in the Node-RED Editor. It uses the built-in ACE/Monaco editor with a default HTML template to create the main layout. The node automatically creates the sidebar when added to your flows.
 
-> [!NOTE]
-> Only a single sidebar can be created. If you add multiple `uib-sidebar` nodes, they should all show the same HTML in the editor config.
+> [!TIP]
+> You don't specify a full HTML page in the node's configuration. Instead, you just specify the HTML that you want to have appear in the sidebar.
 
 The node automatically sends any data from input HTML elements (`<input>`, `<textarea>`, `<select>`, `<button>`, etc) back to the node's output port as soon as the user changes a value.
 
 > [!NOTE]
 > A future enhancement will allow you to wrap inputs in a `<form>` element and only send the data when the form is submitted. At present, each input sends a message immediately it gets a new value.
+
+You can have multiple `uib-sidebar` nodes in your flows. Each one will add its defined HTML to the sidebar. This allows you to easily modularise your sidebar content and have different nodes responsible for different parts of the sidebar. Each sidebar node has its own input and output so they can be updated and respond to messages independently. The content from each sidebar node is added to the sidebar in the order that the nodes are listed in the Node-RED editor. The ID of the node that created the content is returned as part of the message when an input element is changed. This allows you to easily identify which sidebar node the message came from.
 
 ## Configuring
 
@@ -30,15 +30,22 @@ The main configuration is simply the HTML content of the sidebar.
 > Changes to the HTML in the config are reflected in the sidebar immediately (e.g. before deploy is pressed). This allows easy prototyping of the sidebar UI. Changes are not saved until the flow is deployed.
 
 > [!WARNING]
-> Inputs of type `file` are not current supported in the sidebar. A message is sent back containing the file meta-data but currently the file is not. This will be added in a future release.
+> Inputs of type `file` are not current supported in the sidebar. A message is sent back containing the file meta-data but currently the file is not. This may be added in a future release.
 
 ## Sending Data to the Node
 
-The node supports using `msg.sidebar.<html-id>` properties that will automatically update id'd HTML elements. For example, `msg.sidebar.div1.innerHTML` with a value of some HTML will change the HTML content of the div with an id of `div1`.
+The node supports using `msg.sidebar.<html-id>` message properties that will automatically update id'd HTML elements. For example, `msg.sidebar.div1.innerHTML` with a value of some HTML will change the HTML content of the div with an id of `div1`.
 
 Each sub-property should be a valid HTML attribute for the element. The most common attributes are likely to be `innerHTML`, `innerText`, `style`, and `class` along with `value` for inputs. HTML attributes are always character strings. However, any attribute name will be added even if it makes no sense.
 
-Here is an example message content that updates the visible HTML of a paragraph, changes its visual style. For an input element, it sets the value of the input to "42".
+Given this example sidebar HTML:
+
+```html
+<p id="p1">{...waiting for input...}</p>
+<input id="in1" type="number" />
+```
+
+Here is an example message content that updates the visible HTML of the paragraph, changes its visual style and sets the value of the input to "42".
 
 ```json
 {
@@ -56,7 +63,7 @@ Here is an example message content that updates the visible HTML of a paragraph,
 ```
 
 > [!NOTE]
-> Only `msg.sidebar` properties are processed at present. Other properties will be ignored.
+> Only `msg.sidebar` properties are processed at present. Other properties are ignored.
 
 ## Output Messages
 The node sends a message back to the output port whenever an input element changes. The value of the input is contained in both the msg.payload and msg.value (or msg.checked for checkbox inputs).
@@ -66,8 +73,9 @@ Each message contains a set of meta-data properties that describe the input elem
 ```json
 {
   "payload": "some value",
-  "topic": "uib-sidebar/input/in1",
+  "topic": "uib-sidebar/1234567890abcdef/input/in1",
   "from": "uib-sidebar",
+  "sourceNode": "1234567890abcdef",
   "id": "in1",
   "name": "",
   "attributes": {
@@ -106,16 +114,5 @@ The sidebar node was created in response to a request on the [GitHub](https://gi
 * [x] Documentation
 * [x] Add an example flow.
 
-* Future possible enhancements:
-  * [ ] Create a node-red action to display the tab.
-  * [ ] If an input element is part of a form, only send the form data when the form is submitted rather than immediately. 
-  * [ ] Add a link to the help sidebar that has an `onclick` handler to show the uib sidebar.
-  * [ ] Add file-upload support to the sidebar. This is not currently supported in the sidebar. A message is sent back containing the file meta-data but currently the file is not.
-  * [ ] Allow file uploads larger than the max message size by splitting the file into chunks and reassembling on the server.
-  * [ ] Add processing for fieldsets/radiobuttons.
-  * [ ] Allow processing of content editable divs.
-  
-  * [ ] May want an alternative simpler input msg (as well as the full msg type) with just topic/payload that uses topic for html-id and payload for `value` if it exists on the element or innerText/HTML.
-  * [ ] May want to have multiple tabs possible by adding a name setting to the node. Restricting to a single sidebar for now.
-  * [ ] Might need a flag in the uibuilder setting.js prop that allows/disallows HTML content. Or maybe turns off DOMPurify.
-  * [ ] Maybe cross-check with my dom/tinyDOM library to see if it can be used to simplify the code.
+## Future possible enhancements
+See the [roadmap](roadmap/nodes/uib-sidebar.md) for the sidebar node for possible future enhancements.

@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2026-04-28 15:07:58
+updated: 2026-05-10 17:53:50
 ---
 
 Functions accessible in client-side user code.
@@ -757,6 +757,9 @@ Use as:
 const eMsg = $('#msg')    // or  document.getElementById('msg') if you prefer
 if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 ```
+
+> [!NOTE]
+> If the `json-viewer` component library is loaded, this will be used instead of the internal function. This provides a much nicer output with collapsible objects and arrays.
 
 ### `tblAddRow(tbl, rowData, options)` - Add or replace a row of data in a table :id=tblAddRow
 

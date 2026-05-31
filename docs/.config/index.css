@@ -272,8 +272,13 @@ figcaption::before {
     transition: background-color 0.2s;
 }
 .sidebar-resize-handle:hover::after,
-.sidebar-resize-handle.is-dragging::after {
+.sidebar-resize-handle.is-dragging::after,
+.sidebar-resize-handle:focus-visible::after {
     background: var(--uib-blue, hsl(204 89% 55% / 70%));
+}
+.sidebar-resize-handle:focus-visible {
+    outline: 2px solid var(--uib-blue, hsl(204 89% 55%));
+    outline-offset: 2px;
 }
 
 /* === Sidebar Tabs === */

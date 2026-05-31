@@ -177,7 +177,7 @@ window.$docsify = {
                                     <div class="alert callout tip">
                                         <p class="title"><span class="icon icon-tip"></span>Tip <span style="color:darkgrey;font-size:small;">&nbsp;&nbsp;(Changes every 15sec)</span></p>
                                         <p>
-                                            <em>${randomTip.replace('.md', '').replace('uibuilder','<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')}</em>
+                                            <em>${randomTip.replace('.md', '').replace('uibuilder', '<span class="uib-name"><span class="uib-red">UI</span>BUILDER</span>')}</em>
                                         </p><p>
                                             ${window.marked(tipMarkdown)}
                                         </p>
@@ -198,7 +198,7 @@ window.$docsify = {
                 }
 
                 // Look for tip shortcodes: [tip] or [tip:filename] or [tip:random] or [tip:rotate]
-                const tipRegex = /\[tip(?::([^\]]+))?\]/g
+                const tipRegex = /\[tip(?::([^\]]+))?\]/g // eslint-disable-line security/detect-unsafe-regex
                 let match
                 const replacements = []
 
@@ -394,7 +394,7 @@ window.$docsify = {
                     const STORAGE_KEY = 'uib-docs-sidebar-state'
 
                     /** Get saved sidebar state from localStorage
-                     * @returns {Object} Saved state object or empty object
+                     * @returns {object} Saved state object or empty object
                      */
                     const getSavedState = () => {
                         try {
@@ -451,12 +451,12 @@ window.$docsify = {
                             // Create details/summary structure
                             const details = document.createElement('details')
                             const summary = document.createElement('summary')
-                            summaryContent.forEach((node) => summary.appendChild(node))
+                            summaryContent.forEach(node => summary.appendChild(node))
 
                             // Generate section ID and check saved state
                             const sectionId = getSectionId(summary)
                             // Default to open if no saved state exists
-                            const isOpen = savedState.hasOwnProperty(sectionId) ? savedState[sectionId] : true
+                            const isOpen = Object.prototype.hasOwnProperty.call(savedState, sectionId) ? savedState[sectionId] : true
                             details.open = isOpen
 
                             // Add toggle event listener to save state
@@ -494,15 +494,19 @@ window.$docsify = {
         function sidebarEnhancementsPlugin(hook) {
             const STORAGE_KEY_WIDTH = 'uib-docs-sidebar-width'
             const STORAGE_KEY_TAB = 'uib-docs-sidebar-tab'
+            const SIDEBAR_MIN = 160
+            const SIDEBAR_MAX = 640
 
             // ---- Resize Handle ----
 
             /** Apply a sidebar width in pixels, optionally persisting it
              * @param {number} widthPx - Width in pixels
-             * @param {boolean} [persist=false] - Whether to save to localStorage
+             * @param {boolean} [persist] - Whether to save to localStorage (Default: false)
              */
             const applySidebarWidth = (widthPx, persist = false) => {
                 document.documentElement.style.setProperty('--sidebar-width', `${widthPx}px`)
+                const resizeHandle = document.querySelector('.sidebar-resize-handle')
+                if (resizeHandle) resizeHandle.setAttribute('aria-valuenow', String(Math.round(widthPx)))
                 if (persist) localStorage.setItem(STORAGE_KEY_WIDTH, `${widthPx}px`)
             }
 
@@ -514,8 +518,15 @@ window.$docsify = {
                 // Create the draggable resize handle between sidebar and content
                 const handle = document.createElement('div')
                 handle.className = 'sidebar-resize-handle'
-                handle.setAttribute('title', 'Drag to resize sidebar')
-                handle.setAttribute('aria-hidden', 'true')
+                handle.setAttribute('role', 'separator')
+                handle.setAttribute('tabindex', '0')
+                handle.setAttribute('aria-label', 'Sidebar resize handle. Use left/right arrow keys or mouse to resize.')
+                handle.setAttribute('title', 'Sidebar resize handle. Use left/right arrow keys or mouse to resize.')
+                handle.setAttribute('aria-orientation', 'vertical')
+                handle.setAttribute('aria-valuemin', String(SIDEBAR_MIN))
+                handle.setAttribute('aria-valuemax', String(SIDEBAR_MAX))
+                const initialWidth = savedWidth ? parseInt(savedWidth, 10) : SIDEBAR_MIN
+                handle.setAttribute('aria-valuenow', String(initialWidth))
                 document.body.appendChild(handle)
 
                 let isDragging = false
@@ -535,8 +546,28 @@ window.$docsify = {
 
                 handle.addEventListener('pointermove', (e) => {
                     if (!isDragging) return
-                    const newWidth = Math.max(160, Math.min(640, dragStartWidth + (e.clientX - dragStartX)))
+                    const newWidth = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, dragStartWidth + (e.clientX - dragStartX)))
                     applySidebarWidth(newWidth)
+                })
+
+                handle.addEventListener('keydown', (e) => {
+                    const sidebar = document.querySelector('.sidebar')
+                    if (!sidebar) return
+                    const currentWidth = sidebar.getBoundingClientRect().width
+                    let newWidth = currentWidth
+                    if (e.key === 'ArrowRight') {
+                        newWidth = Math.min(SIDEBAR_MAX, currentWidth + 10)
+                    } else if (e.key === 'ArrowLeft') {
+                        newWidth = Math.max(SIDEBAR_MIN, currentWidth - 10)
+                    } else if (e.key === 'Home') {
+                        newWidth = SIDEBAR_MIN
+                    } else if (e.key === 'End') {
+                        newWidth = SIDEBAR_MAX
+                    } else {
+                        return
+                    }
+                    e.preventDefault()
+                    applySidebarWidth(newWidth, true)
                 })
 
                 handle.addEventListener('pointerup', () => {

@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-require */
 /* eslint-disable jsdoc/valid-types */
 /** Manage Socket.IO on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
@@ -27,12 +28,154 @@
  * @typedef {import('express')} Express
  */
 
-const { join, } = require('path')
-const { existsSync, getFileMeta, } = require('./fs.cjs')
+const { join, } = require('node:path')
 const socketio = require('socket.io')
+const { existsSync, getFileMeta, } = require('./fs.cjs')
 const { urlJoin, } = require('./tilib.cjs') // General purpose library (by Totally Information)
-const { setNodeStatus, } = require('./uiblib.cjs') // Utility library for uibuilder
-// const security = require('./sec-lib') // uibuilder security module
+
+// WARNING: Don't try to deconstruct this, if you do, some things fail because they lose the correct `this` binding
+const uiblib = require('./uiblib.cjs') // Utility library for uibuilder
+
+/** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
+const uib = require('./uibGlobalConfig.cjs')
+
+/** Convert a request header value to a single string.
+ * @param {string|string[]|undefined} value Header value from Node.js request headers
+ * @returns {string|undefined} First string value if available
+ */
+function getHeaderString(value) {
+    if (Array.isArray(value)) return value[0]
+    if (typeof value === 'string') return value
+    return undefined
+}
+
+/** Parse browser family/version from Client Hints headers when available.
+ * @param {string|undefined} secChUa Value of `sec-ch-ua` header
+ * @param {boolean} isMobile Whether `sec-ch-ua-mobile` indicates a mobile client
+ * @returns {{family:string, version:string}|null} Parsed browser details or null
+ */
+function parseBrowserFromClientHints(secChUa, isMobile) {
+    if ( !secChUa || typeof secChUa !== 'string' ) return null
+
+    /** @type {Array<{brand:string, version:string}>} */
+    const brands = []
+    const re = /"([^"]+)";v="([^"]+)"/g
+    let match
+    while ( (match = re.exec(secChUa)) !== null ) {
+        if (match[1] && match[2]) {
+            brands.push({ brand: match[1], version: match[2], })
+        }
+    }
+    if (brands.length === 0) return null
+
+    const ignored = new Set(['Not.A/Brand', 'Not A;Brand', 'Not/A)Brand', 'Chromium'])
+    const pick = brands.find(b => ignored.has(b.brand) === false) || brands[0]
+
+    let family = 'Other'
+    switch (pick.brand) {
+        case 'Brave':
+            family = 'Brave'
+            break
+        case 'Vivaldi': // currently reports as Chrome
+            family = 'Vivaldi'
+            break
+        case 'Microsoft Edge':
+            family = 'Edge'
+            break
+        case 'Opera':
+            family = 'Opera'
+            break
+        case 'Samsung Internet':
+            family = 'Samsung Internet'
+            break
+        case 'Google Chrome':
+        case 'Chromium':
+            family = 'Chrome'
+            break
+        case 'Firefox': // FF does not currently support Client Hints
+            family = 'Firefox'
+            break
+        case 'Safari': // Safari does not currently support Client Hints
+            family = 'Safari'
+            break
+        default:
+            family = pick.brand
+    }
+
+    if (isMobile && family !== 'Samsung Internet') family = `${family} Mobile`
+
+    return {
+        family: family,
+        version: String(pick.version)
+            .split('.')
+            .slice(0, 2)
+            .join('.'),
+    }
+}
+
+/** Parse a User-Agent string into a browser family/version tuple.
+ * This is intentionally lightweight to avoid another runtime dependency.
+ * @param {string|undefined} userAgent Browser user-agent header value
+ * @param {boolean} [mobileHint] Value from Client Hints mobile indicator (`sec-ch-ua-mobile`)
+ * @returns {{family:string, version:string}|null} Parsed browser details or null if unavailable
+ */
+function parseBrowserFromUserAgent(userAgent, mobileHint = false) {
+    if ( !userAgent || typeof userAgent !== 'string' ) return null
+
+    const isMobile = mobileHint || /Mobile|Android|iP(?:hone|od|ad)|Windows Phone/i.test(userAgent)
+
+    /** @type {Array<{family:string, regex:RegExp}>} */
+    const browsers = [
+        { family: 'Edge', regex: /(?:EdgiOS|EdgA|Edg)\/([\d.]+)/, },
+        { family: 'Opera', regex: /(?:OPR|OPiOS)\/([\d.]+)/, },
+        { family: 'Vivaldi', regex: /Vivaldi\/([\d.]+)/, },
+        { family: 'Brave', regex: /Brave\/([\d.]+)/, },
+        { family: 'Samsung Internet', regex: /SamsungBrowser\/([\d.]+)/, },
+        { family: 'Chrome', regex: /(?:Chrome|CriOS)\/([\d.]+)/, },
+        { family: 'Firefox', regex: /(?:Firefox|FxiOS)\/([\d.]+)/, },
+        { family: 'Safari', regex: /Version\/([\d.]+).*Safari\//, },
+        { family: 'Internet Explorer', regex: /(?:MSIE\s|Trident\/.*rv:)([\d.]+)/, },
+    ]
+
+    for (const browser of browsers) {
+        const match = browser.regex.exec(userAgent)
+        if ( match && match[1] ) {
+            const family = browser.family === 'Samsung Internet'
+                ? browser.family
+                : isMobile ? `${browser.family} Mobile` : browser.family
+
+            return {
+                family: family,
+                // Keep version granularity small to reduce cardinality in telemetry storage.
+                version: String(match[1])
+                    .split('.')
+                    .slice(0, 2)
+                    .join('.'),
+            }
+        }
+    }
+
+    return { family: isMobile ? 'Other Mobile' : 'Other', version: '0', }
+}
+
+/** Parse browser details from request headers, preferring Client Hints where available.
+ * NOTE: Client hints only available in secure contexts and not from all browsers
+ * @param {import('http').IncomingHttpHeaders|undefined} headers Request headers
+ * @returns {{family:string, version:string}|null} Parsed browser details or null
+ */
+function parseBrowserFromHeaders(headers) {
+    const secChUa = getHeaderString(headers?.['sec-ch-ua'])
+    const secChUaMobile = getHeaderString(headers?.['sec-ch-ua-mobile'])
+    // const secChUaPlatform = getHeaderString(headers?.['sec-ch-ua-platform'])
+    const userAgent = getHeaderString(headers?.['user-agent'])
+
+    const isMobileHint = secChUaMobile === '?1'
+
+    const hinted = parseBrowserFromClientHints(secChUa, isMobileHint)
+    if (hinted) return hinted
+
+    return parseBrowserFromUserAgent(userAgent, isMobileHint)
+}
 
 /** Parse x-forwarded-for headers.
  * Borrowed from https://github.com/pbojinov/request-ip/blob/master/src/index.js
@@ -128,7 +271,7 @@ function getClientRealIpAddress(socket) {
 
     // else get ip from socket.handshake that is a object that contains handshake details
     return socket.handshake.address
-} // --- End of getClientRealIpAddress --- //
+}
 
 /** Get client real ip address - NB: Optional chaining (?.) is node.js v14 not v12
  * @param {socketio.Socket} socket Socket.IO socket object
@@ -156,18 +299,10 @@ class UibSockets {
         // setup() has not yet been run
         this._isConfigured = false
 
-        // #region ---- References to core Node-RED & uibuilder objects ---- //
-        /** @type {runtimeRED|undefined} */
-        this.RED = undefined
-        /** @type {uibConfig|undefined} Reference link to uibuilder.js global configuration object */
-        this.uib = undefined
-        /** Reference to uibuilder's global log functions */
-        this.log = undefined
         /** Reference to ExpressJS server instance being used by uibuilder
          * Used to enable the Socket.IO client code to be served to the front-end
          */
         this.server = undefined
-        // #endregion ---- References to core Node-RED & uibuilder objects ---- //
 
         // #region ---- Common variables ---- //
 
@@ -189,31 +324,74 @@ class UibSockets {
          */
         this.ioNamespaces = {}
 
+        /** Debounce handle for writing telemetry browser aggregates to disk. */
+        this.telemetrySaveTimer = undefined
+
         // #endregion ---- ---- //
     } // --- End of constructor() --- //
+
+    /** Debounced save of telemetry data to avoid writing on every single connection.
+     * @returns {void}
+     */
+    queueTelemetrySave() {
+        if ( this.telemetrySaveTimer ) clearTimeout(this.telemetrySaveTimer)
+
+        this.telemetrySaveTimer = setTimeout(async() => {
+            try {
+                await uiblib.fileTelemetry()
+            } catch (err) {
+                if (uib.RED?.log) {
+                    uib.RED.log.trace(`🌐[uibuilder:socket:queueTelemetrySave] Telemetry save skipped/failed. ${err.message}`)
+                }
+            }
+        }, 5000)
+    }
+
+    /** Aggregate browser telemetry from the current socket connection.
+     * @param {socketio.Socket} socket Reference to client socket connection
+     */
+    updateBrowserTelemetry(socket) {
+        const parsed = parseBrowserFromHeaders(socket.request?.headers)
+        if (!parsed) return
+
+        if ( !uib.telemetry || typeof uib.telemetry !== 'object' ) uib.telemetry = {}
+        if ( !Array.isArray(uib.telemetry.browsers) ) uib.telemetry.browsers = []
+
+        const existing = uib.telemetry.browsers.find(b => b.family === parsed.family && b.version === parsed.version)
+        if (existing) {
+            existing.count = (Number(existing.count) || 0) + 1
+        } else {
+            uib.telemetry.browsers.push({ family: parsed.family, version: parsed.version, count: 1, })
+        }
+
+        // Optional cap/prune rule (disabled for now): keep only top-N browser tuples by count.
+        // const MAX_BROWSER_TUPLES = 50
+        // if (uib.telemetry.browsers.length > MAX_BROWSER_TUPLES) {
+        //     uib.telemetry.browsers.sort((a, b) => (Number(b.count) || 0) - (Number(a.count) || 0))
+        //     uib.telemetry.browsers = uib.telemetry.browsers.slice(0, MAX_BROWSER_TUPLES)
+        // }
+
+        this.queueTelemetrySave()
+    }
 
     /** Assign uibuilder and Node-RED core vars to Class static vars.
      *  This makes them available wherever this MODULE is require'd.
      *  Because JS passess objects by REFERENCE, updates to the original
      *    variables means that these are updated as well.
-     * @param {uibConfig} uib reference to uibuilder 'global' configuration object
      * @param {Express} server reference to ExpressJS server being used by uibuilder
      */
-    setup( uib, server ) {
-        if ( !uib || !server ) throw new Error('[uibuilder:socket.js:setup] Called without required parameters or uib and/or server are undefined.')
+    setup( server ) {
+        if (!server) throw new Error('[uibuilder:socket.js:setup] Called without required parameter. Web server is undefined.')
         if (uib.RED === null) throw new Error('[uibuilder:socket.js:setup] uib.RED is null')
+        const log = uib.RED.log
 
         // Prevent setup from being called more than once
         if ( this._isConfigured === true ) {
-            uib.RED.log.warn('🌐⚠️[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
+            log.warn('🌐⚠️[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
             return
         }
 
         /** reference to Core Node-RED runtime object */
-        this.RED = uib.RED
-
-        this.uib = uib
-        this.log = uib.RED.log
         this.server = server
 
         // TODO: Replace _XXX with #XXX once node.js v14 is the minimum supported version
@@ -230,12 +408,12 @@ class UibSockets {
                 const sioMsgOut = require( mwfile )
                 if ( typeof sioMsgOut === 'function' ) { // if exported, has to be a function
                     this.outboundMsgMiddleware = sioMsgOut
-                    this.log.trace('🌐[uibuilder:socket:setup] sioMsgOut Middleware loaded successfully.')
+                    log.trace('🌐[uibuilder:socket:setup] sioMsgOut Middleware loaded successfully.')
                 } else {
-                    this.log.warn('🌐⚠️[uibuilder:socket:setup] sioMsgOut Middleware failed to load - check that uibRoot/.config/sioMsgOut.js has a valid exported fn.')
+                    log.warn('🌐⚠️[uibuilder:socket:setup] sioMsgOut Middleware failed to load - check that uibRoot/.config/sioMsgOut.js has a valid exported fn.')
                 }
             } catch (e) {
-                this.log.warn(`🌐⚠️[uibuilder:socket:setup] sioMsgOut middleware Failed to load. Reason: ${e.message}`)
+                log.warn(`🌐⚠️[uibuilder:socket:setup] sioMsgOut middleware Failed to load. Reason: ${e.message}`)
             }
         }
 
@@ -251,12 +429,10 @@ class UibSockets {
      */
     _socketIoSetup() {
         // Reference static vars
-        const uib = this.uib
-        const RED = this.RED
-        const log = this.log
+        const RED = uib.RED
+        const log = uib.RED.log
         const server = this.server
 
-        if (uib === undefined) throw new Error('uib is undefined')
         if (RED === undefined) throw new Error('RED is undefined')
         if (log === undefined) throw new Error('log is undefined')
 
@@ -323,11 +499,11 @@ class UibSockets {
      * @returns {boolean} True to allow message flow, false to block
      */
     hooks(hookName, data) {
-        if (!this.uib) throw new Error('uib is undefined')
-
-        const RED = this.RED
+        const RED = uib.RED
+        const log = uib.RED.log
         let out = true
 
+        // TODO: Settings are in uib already
         if (!RED?.settings?.uibuilder?.hooks?.[hookName]) return undefined
 
         const hook = RED.settings.uibuilder.hooks[hookName]
@@ -335,7 +511,7 @@ class UibSockets {
             try {
                 out = RED.settings.uibuilder.hooks[hookName](data)
             } catch (e) {
-                this.log.warn(`🌐⚠️[uibuilder:socket:hooks] Could not run 'uibuilder.hooks.${hookName}' hook in settings.js. ${e.message}`, { e, data, })
+                log.warn(`🌐⚠️[uibuilder:socket:hooks] Could not run 'uibuilder.hooks.${hookName}' hook in settings.js. ${e.message}`, { e, data, })
             }
         }
 
@@ -351,13 +527,10 @@ class UibSockets {
      * @param {boolean} [debug] Optional. If true, extra debug info is logged. Default false
      */
     sendToFe( msg, node, channel, debug = false ) {
-        const uib = this.uib
-        const log = this.log
+        const log = uib.RED.log
         const dType = debug ? 'info' : 'trace'
-
         const url = node.url
 
-        if (!uib) throw new Error('uib is undefined. UibSockets:sendToFe')
         if (!log) throw new Error('log is undefined. UibSockets:sendToFe')
         if (!url) throw new Error('url is undefined. UibSockets:sendToFe')
 
@@ -402,26 +575,24 @@ class UibSockets {
      * @param {string=} socketId Optional. If included, only send to specific client id (mostly expecting this to be on msg._socketID so not often required)
      */
     sendToFe2(msg, node, socketId) {
-        const uib = this.uib
-
         const ioNs = this.ioNamespaces[node.url]
 
-        if (uib === undefined) throw new Error('uib is undefined')
-        if (this.log === undefined) throw new Error('this.log is undefined')
+        const log = uib.RED.log
+        if (log === undefined) throw new Error('log is undefined')
 
         if (socketId) msg._socketId = socketId
 
         // Run uibuilder.hooks.msgSending hook - NOTE: msg might be amended by the hook
         if (this.hooks('msgSending', { msg, node, }) === false) {
-            this.log.warn(`🌐⚠️[uibuilder:socket:sendToFe2] outbound msg blocked for "${node.url}" by "uibuilder.hooks.msgSending" hook in settings.js`)
+            log.warn(`🌐⚠️[uibuilder:socket:sendToFe2] outbound msg blocked for "${node.url}" by "uibuilder.hooks.msgSending" hook in settings.js`)
         }
 
         // TODO: This should have some safety validation on it
         if (msg._socketId) {
-            this.log.trace(`🌐[uibuilder[:socket:sendToFe2:${node.url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
+            log.trace(`🌐[uibuilder[:socket:sendToFe2:${node.url}] msg sent on to client ${msg._socketId}. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.to(msg._socketId).emit(uib.ioChannels.server, msg)
         } else {
-            this.log.trace(`🌐[uibuilder[:socket:sendToFe2:${node.url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
+            log.trace(`🌐[uibuilder[:socket:sendToFe2:${node.url}] msg sent on to ALL clients. Channel: ${uib.ioChannels.server}. ${JSON.stringify(msg)}`)
             ioNs.emit(uib.ioChannels.server, msg)
         }
     } // ---- End of sendToFe2 ---- //
@@ -434,11 +605,12 @@ class UibSockets {
      * @param {string} [from] Optional. Trace what source fn triggered the send
      */
     sendCtrlMsg(msg, node, from = '') {
-        this.log.trace(`🌐[uibuilder[:sendCtrlMsg] FROM: '${from}'`)
+        const log = uib.RED.log
+        log.trace(`🌐[uibuilder[:sendCtrlMsg] FROM: '${from}'`)
 
         // Run uibuilder.hooks.msgReceived hook - NOTE: msg might be amended by the hook
         if (this.hooks('msgReceived', { msg, node, }) === false) {
-            this.log.warn(`🌐⚠️[uibuilder:socket:sendToFe] Control msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
+            log.warn(`🌐⚠️[uibuilder:socket:sendToFe] Control msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
             return
         }
 
@@ -551,16 +723,14 @@ class UibSockets {
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     sendIt(msg, node) {
-        const RED = this.RED
-
         // Run uibuilder.hooks.msgReceived hook - NOTE: msg might be amended by the hook
         if (this.hooks('msgReceived', { msg, node, }) === false) {
-            this.log.warn(`🌐⚠️[uibuilder:socket:sendToFe] msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
+            uib.RED.log.warn(`🌐⚠️[uibuilder:socket:sendToFe] msg output blocked for "${node.url}" by "uibuilder.hooks.msgReceived" hook in settings.js`)
             return
         }
 
         if ( msg?._uib?.originator && (typeof msg._uib.originator === 'string') ) {
-            RED.events.emit(`UIBUILDER/return-to-sender/${msg._uib.originator}`, msg)
+            uib.RED.events.emit(`UIBUILDER/return-to-sender/${msg._uib.originator}`, msg)
         } else {
             node.send(msg)
         }
@@ -574,7 +744,7 @@ class UibSockets {
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     listenFromClientStd(msg, socket, node) {
-        const log = this.log
+        const log = uib.RED.log
         if (log === undefined) throw new Error('log is undefined')
 
         node.rcvMsgCount++
@@ -620,7 +790,7 @@ class UibSockets {
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     listenFromClientCtrl(msg, socket, node) {
-        const log = this.log
+        const log = uib.RED.log
         if (log === undefined) throw new Error('log is undefined')
 
         node.rcvMsgCount++
@@ -659,7 +829,7 @@ class UibSockets {
                             _socketId: msg._socketId,
                             topic: msg.topic,
                         }
-                        this.sendToFe( newMsg, node, this.uib.ioChannels.control )
+                        this.sendToFe( newMsg, node, uib.ioChannels.control )
                         return fstats
                     })
                     .catch( (err) => {
@@ -697,11 +867,9 @@ class UibSockets {
      * @param {uibNode} node Reference to the uibuilder node instance
      */
     addNS(node) {
-        const log = this.log
-        const uib = this.uib
+        const log = uib.RED.log
 
         if (log === undefined) throw new Error('log is undefined')
-        if (uib === undefined) throw new Error('uib is undefined')
         if (this.io === undefined) throw new Error('this.io is undefined')
 
         const ioNs = this.ioNamespaces[node.url] = this.io.of(node.url)
@@ -779,7 +947,7 @@ class UibSockets {
                     `🌐[uibuilder:socket:${url}:disconnect] Client disconnected, clientCount: ${ioNs.sockets.size}, Reason: ${reason}, ID: ${socket.id}, IP Addr: ${getClientRealIpAddress(socket)}, Client ID: ${socket.handshake.auth.clientId}. For node ${node.id}`
                 )
                 node.statusDisplay.text = 'connected ' + ioNs.sockets.size
-                setNodeStatus( node )
+                uiblib.setNodeStatus( node )
 
                 // Let the control output port know a client has disconnected
                 const { _uib, _client, } = this.getClientDetails(socket, node)
@@ -801,7 +969,7 @@ class UibSockets {
                 that.sendCtrlMsg(ctrlMsg, node, 'addNS:disconnect')
 
                 // Let other nodes know a client is disconnecting (via custom event manager)
-                this.RED.events.emit(`UIBUILDER/${node.url}/clientDisconnect`, ctrlMsg)
+                uib.RED.events.emit(`UIBUILDER/${node.url}/clientDisconnect`, ctrlMsg)
             }) // --- End of on-connection::on-disconnect() --- //
 
             // Listen for msgs from clients on standard channel
@@ -883,7 +1051,7 @@ class UibSockets {
             }
 
             node.statusDisplay.text = `connected ${ioNs.sockets.size}`
-            setNodeStatus( node )
+            uiblib.setNodeStatus( node )
 
             // Initial connect message to client
             const msgClient = {
@@ -911,6 +1079,10 @@ class UibSockets {
 
             // Send initial client connect control msg (via port #2)
             const { _uib, _client, } = this.getClientDetails(socket, node)
+
+            // Update in-memory browser telemetry aggregate and persist (debounced) to telemetry.json.
+            this.updateBrowserTelemetry(socket)
+
             const ctrlMsg = {
                 ...{
                     uibuilderCtrl: 'client connect',
@@ -925,7 +1097,7 @@ class UibSockets {
             that.sendCtrlMsg(ctrlMsg, node, 'addNS:connection')
 
             // Let other nodes know a client is connecting (via custom event manager)
-            this.RED.events.emit(`UIBUILDER/${node.url}/clientConnect`, ctrlMsg)
+            uib.RED.events.emit(`UIBUILDER/${node.url}/clientConnect`, ctrlMsg)
 
             // #endregion ---- run when client connects ---- //
 
@@ -936,8 +1108,8 @@ class UibSockets {
             // Not bothering with a tabId room - gets filtered at client anyway
             // rooms for pathName not needed as each path has own namespace
             // #endregion ---- ---- ----
-        }) // --- End of on-connection() --- //
-    } // --- End of addNS() --- //
+        })
+    }
 
     /** Remove the current clients and namespace for this node.
      *  Called from uiblib.processClose.
@@ -965,7 +1137,5 @@ try { // Wrap in a try in case any errors creep into the class
     const uibsockets = new UibSockets()
     module.exports = uibsockets
 } catch (e) {
-    console.error(`[uibuilder:socket.js] Unable to create class instance. Error: ${e.message}`)
+    uib.RED.log.error(`🌐🛑[uibuilder:socket.js] Unable to create class instance. Error: ${e.message}`)
 }
-
-// EOF

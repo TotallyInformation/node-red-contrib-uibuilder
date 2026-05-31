@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 /* eslint-disable jsdoc/require-param */
 /* eslint-disable n/no-unpublished-require */
 // @ts-nocheck
@@ -56,7 +57,9 @@ const execa = require('execa')
 // import * as esbuild from 'esbuild'
 const esbuild = require('esbuild')
 
-const { fsextra, } = require('./packages/uib-fs-utils')
+// const { fsextra, } = require('./packages/uib-fs-utils')
+const { readFileSync, } = require('fs')
+const { readFile, writeFile, } = require('fs/promises')
 // const { default: esm } = require('socket.io-client')
 
 // const { promisify } = require('util')
@@ -76,44 +79,13 @@ const nodeSrcRoot = 'src/editor'
 const stdio = 'inherit'
 
 // @ts-ignore Find the module version in the package.json
-const { version, } = JSON.parse(fsextra.readFileSync('package.json'))
+const { version, } = JSON.parse(readFileSync('package.json'))
 // Desired release version
-const release = '7.6.1'
+const release = '7.7.0'
 // Wanted node.js version - used for ESBUILD
 const nodeVersion = 'node18'
 
 console.log(`Current Version: ${version}. Requested Version: ${release}. Node.js Build Version: ${nodeVersion}`)
-
-// const readline = require('readline')
-/** Create a new node from the template */
-// function createNewNode(cb) {
-//     const rl = readline.createInterface({
-//         input: process.stdin,
-//         output: process.stdout
-//     })
-//     rl.question('Enter the name of the new node to create: ', async function (nodeName) {
-//         console.log(`\nNew node will be called '${nodeName}'`)
-//         try {
-//             fsextra.copy('new-node-template/nodes/node-name', `nodes/${nodeName}`)
-//             console.log(`Template runtime copied to 'nodes/${nodeName}'`)
-//         } catch (e) {
-//             cb(e)
-//         }
-//         try {
-//             fsextra.copy('new-node-template/src/nodes-html/node-name', `src/editor/${nodeName}`)
-//             console.log(`Template Editor source copied to 'src/editor/${nodeName}'`)
-//         } catch (e) {
-//             cb(e)
-//         }
-
-//         rl.close()
-//     })
-//     rl.on('close', function () {
-//         console.log('New node created.\n')
-//         // setName(cb)
-//         cb()
-//     })
-// }
 
 /** todo
  * TODO
@@ -151,11 +123,11 @@ const esbTarget = [
  */
 async function buildFeModule() {
     const entryPoint = `${feModuleSrc}/uibuilder.module.mjs`
-    const fileContent = await fsextra.readFile(entryPoint, 'utf8')
+    const fileContent = await readFile(entryPoint, 'utf8')
     const v = fileContent.match(/const version = '(.*)-src'/)
     if (v[1] !== release) {
         console.warn(`WARNING: Version in ${entryPoint} does not match requested release version. Expected '${release}-src' but found '${v[1]}-src'.`)
-        // await fsextra.writeFile(entryPoint, fileContent.replace(/const version = '(.*)-src'/, `const version = '${release}-src'`), 'utf8')
+        // await writeFile(entryPoint, fileContent.replace(/const version = '(.*)-src'/, `const version = '${release}-src'`), 'utf8')
     }
 
     try { // IIFE minified
@@ -172,10 +144,13 @@ async function buildFeModule() {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife.min"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife.min"'), 'utf8')
     } catch (e) {
         throw new Error(`UIB Library IIFE (minimised) Build failed. ${e.message}`)
     }
@@ -193,10 +168,13 @@ async function buildFeModule() {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife"'), 'utf8')
     } catch (e) {
         throw new Error(`UIB Library IIFE (unminified) Build failed. ${e.message}`)
     }
@@ -215,10 +193,13 @@ async function buildFeModule() {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm.min"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm.min"'), 'utf8')
     } catch (e) {
         throw new Error(`UIB Library ESM (minified) Build failed. ${e.message}`)
     }
@@ -236,10 +217,13 @@ async function buildFeModule() {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm"'), 'utf8')
     } catch (e) {
         throw new Error(`UIB Library ESM (unminified) Build failed. ${e.message}`)
     }
@@ -249,11 +233,11 @@ async function buildFeModule() {
 // #region -- ESbuild UI client library ---
 async function buildUiModule() {
     const entryPoint = `${feModuleSrc}/ui.mjs`
-    const fileContent = await fsextra.readFile(entryPoint, 'utf8')
+    const fileContent = await readFile(entryPoint, 'utf8')
     const v = fileContent.match(/version = '(.*)-src'/)
     if (v[1] !== release) {
         console.warn(`WARNING: Version in ${entryPoint} does not match requested release version. Expected '${release}-src' but found '${v[1]}-src'.`)
-        // await fsextra.writeFile(entryPoint, fileContent.replace(/const version = '(.*)-src'/, `const version = '${release}-src'`), 'utf8')
+        // await writeFile(entryPoint, fileContent.replace(/const version = '(.*)-src'/, `const version = '${release}-src'`), 'utf8')
     }
 
     try { // IIFE minified
@@ -270,10 +254,13 @@ async function buildUiModule() {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife.min"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife.min"'), 'utf8')
     } catch (e) {
         throw new Error(`UI Library IIFE (minimised) Build failed. ${e.message}`)
     }
@@ -291,10 +278,13 @@ async function buildUiModule() {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife"'), 'utf8')
     } catch (e) {
         throw new Error(`UI Library IIFE (unminified) Build failed. ${e.message}`)
     }
@@ -313,10 +303,13 @@ async function buildUiModule() {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm.min"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm.min"'), 'utf8')
     } catch (e) {
         throw new Error(`UI Library ESM (minified) Build failed. ${e.message}`)
     }
@@ -334,10 +327,13 @@ async function buildUiModule() {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm"'), 'utf8')
     } catch (e) {
         throw new Error(`UI Library ESM (unminified) Build failed. ${e.message}`)
     }
@@ -360,10 +356,13 @@ async function buildUiModule() {
             mainFields: ['module', 'main'],
             external: [], // Explicitly set to empty array to bundle everything
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-node"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-node"'), 'utf8')
     } catch (e) {
         throw new Error(`UI Library node version build failed. ${e.message}`)
     }
@@ -394,11 +393,11 @@ async function buildModule(config) {
     const entryPoint = config.entryPoint
     const outPoint = config.outPoint
 
-    const fileContent = await fsextra.readFile(entryPoint, 'utf8')
+    const fileContent = await readFile(entryPoint, 'utf8')
     const v = fileContent.match(config.versionSource)
     if (v[1] !== release) {
         console.warn(`[${config.name} Library] WARNING: Version in ${entryPoint} does not match requested release version. Expected '${release}-src' but found '${v[1]}-src'.`)
-        // await fsextra.writeFile(entryPoint, fileContent.replace(/static version = '(.*)-src'/, `static version = '${release}-src'`), 'utf8')
+        // await writeFile(entryPoint, fileContent.replace(/static version = '(.*)-src'/, `static version = '${release}-src'`), 'utf8')
     }
 
     try { // IIFE minified
@@ -415,10 +414,13 @@ async function buildModule(config) {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife.min"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife.min"'), 'utf8')
     } catch (e) {
         throw new Error(`[${config.name} Library] IIFE (minimised) Build failed. ${e.message}`)
     }
@@ -436,10 +438,13 @@ async function buildModule(config) {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-iife"'), 'utf8')
     } catch (e) {
         throw new Error(`[${config.name} Library] IIFE (unminified) Build failed. ${e.message}`)
     }
@@ -458,10 +463,13 @@ async function buildModule(config) {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm.min"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm.min"'), 'utf8')
     } catch (e) {
         throw new Error(`[${config.name} Library] ESM (minified) Build failed. ${e.message}`)
     }
@@ -479,10 +487,13 @@ async function buildModule(config) {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm"'), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(/version = "(.*)-src"/, 'version = "$1-esm"'), 'utf8')
     } catch (e) {
         throw new Error(`[${config.name} Library] ESM (unminified) Build failed. ${e.message}`)
     }
@@ -509,11 +520,11 @@ async function buildExperimentalModule() {
     const entryPoint = config.entryPoint
     const outPoint = config.outPoint
 
-    const fileContent = await fsextra.readFile(entryPoint, 'utf8')
+    const fileContent = await readFile(entryPoint, 'utf8')
     const v = fileContent.match(config.versionSource)
     if (v[1] !== release) {
         console.warn(`[${config.name} Library] WARNING: Version in ${entryPoint} does not match requested release version. Expected '${release}-src' but found '${v[1]}-src'.`)
-        // await fsextra.writeFile(entryPoint, fileContent.replace(/static version = '(.*)-src'/, `static version = '${release}-src'`), 'utf8')
+        // await writeFile(entryPoint, fileContent.replace(/static version = '(.*)-src'/, `static version = '${release}-src'`), 'utf8')
     }
 
     try { // ESM not-minified
@@ -530,10 +541,13 @@ async function buildExperimentalModule() {
                 '.mjs': 'js',
             },
             target: esbTarget,
+            supported: {
+                destructuring: true,
+            },
         })
         // Update the output version string if build was successful
-        const fileContent = await fsextra.readFile(outFilePath, 'utf8')
-        await fsextra.writeFile(outFilePath, fileContent.replace(config.versionSource, config.versionTarget), 'utf8')
+        const fileContent = await readFile(outFilePath, 'utf8')
+        await writeFile(outFilePath, fileContent.replace(config.versionSource, config.versionTarget), 'utf8')
     } catch (e) {
         throw new Error(`[${config.name} Library] ESM (unminified) Build failed. ${e.message}`)
     }
@@ -556,7 +570,10 @@ const lightningcss_options = {
  * @param {Function} cb Callback
  */
 function minifyBrandCSS(cb) {
-    const currentDate = new Date().toISOString().split('T')[0]
+    const currentDate
+        = new Date()
+            .toISOString()
+            .split('T')[0]
     src(`${feDest}/uib-brand.css`)
         .pipe(once())
         .pipe(greplace(/(^ \* @version: )[\d-]+$/gm, `$1${currentDate}`))

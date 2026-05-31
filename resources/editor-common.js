@@ -3,7 +3,7 @@
  * Note that RED is available here
  */
 
-/** @typedef {Object} UibEditorObject
+/** @typedef {object} UibEditorObject
  * @property {string} paletteCategory - Standard palette category for all uibuilder nodes
  * @property {string} typedInputWidth - Standard width for typed input fields
  * @property {boolean} localHost - Are we running on a local device?
@@ -11,8 +11,8 @@
  * @property {string} nodeRoot - URL root if needed (set to '' if using a custom uib server)
  * @property {string} urlPrefix - URL prefix for all uib nodes
  * @property {string} serverType - uib server type ('Node-RED\'s' or 'a custom')
- * @property {Object.<string,string>} editorUibInstances - Tracks ALL uibuilder editor instance URL's by node id (includes undeployed and disabled nodes)
- * @property {Object.<string,string>} deployedUibInstances - Tracks all DEPLOYED uibuilder instances url's by node id
+ * @property {Object<string, string>} editorUibInstances - Tracks ALL uibuilder editor instance URL's by node id (includes undeployed and disabled nodes)
+ * @property {Object<string, string>} deployedUibInstances - Tracks all DEPLOYED uibuilder instances url's by node id
  * @property {Array} packages - Tracks uibuilder's installed front-end packages
  * @property {string[]} uibNodeTypes - List of uib node names
  * @property {boolean} debug - Debug output via log() - turn on/off with true/false
@@ -60,7 +60,19 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
             /** Tracks uibuilder's installed front-end packages - changes as packages added/removed (in uibuilder node) */
             packages: [],
             /** List of uib node names */
-            uibNodeTypes: ['uibuilder', 'uib-cache', 'uib-element', 'uib-file-list', 'uib-html', 'markweb', 'uib-save', 'uib-sender', 'uib-sidebar', 'uib-tag', 'uib-update'],
+            uibNodeTypes: [
+                'uibuilder',
+                'markweb',
+                'uib-cache',
+                'uib-element',
+                'uib-file-list',
+                'uib-html',
+                'uib-save',
+                'uib-sender',
+                'uib-sidebar',
+                'uib-tag',
+                'uib-update'
+            ],
 
             // Debug output via log() - turn on/off with true/false
             get debug() { return _dbg },
@@ -369,6 +381,106 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 },
             })
         }
+
+        // #region --- Add Monaco type declarations for RED.util.uib ---
+        // ! NOTE: See the uib-runtime-plugin.js file for the actual implementations of these functions. If updating one, update the other.
+        /** Wait for Monaco to be available then inject RED.util.uib type declarations
+         * so function nodes get IntelliSense for uibuilder server-side utilities.
+         * Uses Object.defineProperty to detect when window.monaco is assigned, with
+         * a polling fallback in case the property is non-configurable.
+         */
+        ;(function addUibMonacoTypes() { // eslint-disable-line @stylistic/no-extra-semi
+            const typeDeclarations = `
+declare namespace RED {
+    namespace util {
+        /** uibuilder server-side utilities available in function nodes */
+        namespace uib {
+            /** Recursive object deep find
+             * @param obj The object to be searched
+             * @param matcher If returns true, cb(obj) is called
+             * @param cb Callback receiving the matching object
+             */
+            function deepObjFind(obj: any, matcher: (obj: any) => boolean, cb: (obj: any) => void): void
+            /** Format a number to a given locale and decimal places
+             * @param inp Input number
+             * @param dp Decimal places (default=1)
+             * @param locale Locale string (default='en-GB')
+             */
+            function dp(inp: number, dp?: number, locale?: string): string
+            /** Returns true/false or a default for truthy/falsy inputs
+             * @param val The value to test
+             * @param deflt Default if value is neither truthy nor falsy
+             */
+            function truthy(val: string | number | boolean | any, deflt?: any): boolean | any
+            /** Return a list of all deployed uibuilder instances */
+            function listAllApps(): object
+            /** Send a message to a specific uibuilder instance
+             * @param uibName The URL name of the target uibuilder instance
+             * @param msg Message to send to the front-end
+             */
+            function send(uibName: string, msg: object): void
+            /** Render data to an HTML string using the json-viewer component renderer
+             * @param data Any JavaScript value to render
+             * @param opts Rendering options
+             * @returns HTML string representing the data tree
+             */
+            function renderToHTML(data: any, opts?: {
+                /** Maximum auto-expand depth (default=2) */
+                maxDepth?: number
+                /** Start all nodes collapsed (default=false) */
+                collapsed?: boolean
+                /** Allow scalar leaf values to be edited (default=false) */
+                editable?: boolean
+                /** Include search/collapse controls (default=false) */
+                interactive?: boolean
+                /** Embed component CSS in output (default=true) */
+                includeStyles?: boolean
+            }): string
+            /** Safer JSON.stringify with circular reference handling */
+            function saferSerialize(data: any): string
+        }
+    }
+}`
+
+            /** Inject the type declarations into Monaco for RED.util.uib as soon as Monaco is available,
+             * so that function nodes get IntelliSense for uibuilder server-side utilities.
+             */
+            function inject() {
+                window.monaco.languages.typescript.javascriptDefaults.addExtraLib(
+                    typeDeclarations,
+                    'file://types/uibuilder/uib-util.d.ts'
+                )
+            }
+
+            if (window.monaco) {
+                inject()
+                return
+            }
+            try {
+                Object.defineProperty(window, 'monaco', {
+                    configurable: true,
+                    enumerable: true,
+                    set(value) {
+                        Object.defineProperty(window, 'monaco', {
+                            configurable: true,
+                            writable: true,
+                            enumerable: true,
+                            value,
+                        })
+                        inject()
+                    },
+                })
+            } catch(_) {
+                // Property is non-configurable; fall back to polling
+                const t = setInterval(() => {
+                    if (window.monaco) {
+                        clearInterval(t)
+                        inject()
+                    }
+                }, 500)
+            }
+        })()
+        // #endregion ---- ---- ----
 
         // TODO: EXPERIMENTAL - Maybe dynamically add things to the help panel?
         // // Create a mutation observer to watch for changes to the inner text of any element with the class '.red-ui-help.title'

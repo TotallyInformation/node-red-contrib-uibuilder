@@ -93,6 +93,12 @@
   * [Details](dev/README.md)
   * [REST API's](apis/readme.md)
   * [Runtime events](dev/uib-event-comms.md "Node-RED runtime events used in UIBUILDER")
+* Changes
+  * [Live changelog <sup>🔗</sup>](changelog "List of all changes for the current major version")
+  * [Coming next](roadmap/next.md "Things being worked on and due soon")
+  * [Roadmap](roadmap/readme.md "The full backlog of things to do")
+  * [Archived changelogs](archived/changelog-archive.md "Lists of changes from previous major versions")
+* [UIBUILDER Privacy policy <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/PRIVACY.md)
 * [Glossary of terms](glossary.md)
 * [Main readme <sup>🔗</sup>](uibhome)
 * [Apache v2 license <sup>🔗</sup>](https://github.com/TotallyInformation/node-red-contrib-uibuilder/blob/main/LICENSE)
@@ -100,8 +106,3 @@
 * [TotallyInformation Blog <sup>🔗</sup>](https://www.totallyinformation.com "My current blog")
 * [Much Ado About IT (Blog) <sup>🔗</sup>](https://it.knightnet.org.uk "My old blog")
 * [Node-RED <sup>🔗</sup>](https://nodered.org/)
-* Changes
-  * [Live changelog <sup>🔗</sup>](changelog "List of all changes for the current major version")
-  * [Coming next](roadmap/next.md "Things being worked on and due soon")
-  * [Roadmap](roadmap/readme.md "The full backlog of things to do")
-  * [Archived changelogs](archived/changelog-archive.md "Lists of changes from previous major versions")

@@ -1,0 +1,510 @@
+[
+    {
+        "id": "a5f7da18de4517b5",
+        "type": "tab",
+        "label": "json-viewer",
+        "disabled": false,
+        "info": "Example and testing of the uibuilder\r\n`<json-viewer>` web component.\r\n\r\nThis component shows a JavaScript Object or\r\nJSON string syntax-highlighted and searchable\r\nas HTML.\r\n\r\nThere is also an exposed server-side rendering\r\nexport which outputs the HTML.\r\n\r\nSee [designs/json-viewer](uibuilder/docs/#/designs/json-viewer)\r\nfor details.",
+        "env": []
+    },
+    {
+        "id": "945fe4db357d15ad",
+        "type": "group",
+        "z": "a5f7da18de4517b5",
+        "name": "Rendered in Node-RED. The output is not reactive except for collapse/expand.",
+        "style": {
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "f36bb7ae236e891d",
+            "a4ca3f4509d2497e",
+            "e317e0becc983b2a",
+            "2c072f96fa3c741a",
+            "3ca0c7031a281e7a"
+        ],
+        "x": 34,
+        "y": 499,
+        "w": 762,
+        "h": 122
+    },
+    {
+        "id": "5d033b4c16302181",
+        "type": "group",
+        "z": "a5f7da18de4517b5",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "88a27c9daafb2bfb",
+            "5cdc25e405d966d4"
+        ],
+        "x": 754,
+        "y": 339,
+        "w": 302,
+        "h": 82
+    },
+    {
+        "id": "ebf91e61a795a855",
+        "type": "group",
+        "z": "a5f7da18de4517b5",
+        "name": "Just sending some data. This gets rendered by the client browser",
+        "style": {
+            "fill": "#ffffff",
+            "fill-opacity": "0.18",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "ed9863b941e984dc",
+            "e71a4190f6ec53f0",
+            "579844511218cab8"
+        ],
+        "x": 34,
+        "y": 339,
+        "w": 512,
+        "h": 142
+    },
+    {
+        "id": "4a7b15dd3d479f47",
+        "type": "group",
+        "z": "a5f7da18de4517b5",
+        "name": "RUN ONCE: Initialise Front-end Code - Run after the uibuilder node has been deployed. \\n REMEMBER to change the uib node name before use \\n Sets up FE code, reloads connected clients. \\n ",
+        "style": {
+            "label": true,
+            "stroke": "#a4a4a4",
+            "fill-opacity": "0.33",
+            "color": "#000000",
+            "fill": "#bfdbef"
+        },
+        "nodes": [
+            "a0b67e0560969ff9",
+            "b82299cfa3c37048",
+            "52e4367f2c7f69a8",
+            "69cbf5bab6034f07",
+            "3ab8ca24f7237e87",
+            "230740a06cd72ff4"
+        ],
+        "x": 24,
+        "y": 151,
+        "w": 554,
+        "h": 170
+    },
+    {
+        "id": "88a27c9daafb2bfb",
+        "type": "uibuilder",
+        "z": "a5f7da18de4517b5",
+        "g": "5d033b4c16302181",
+        "name": "",
+        "topic": "",
+        "url": "json-viewer",
+        "instancePath": "",
+        "okToGo": true,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "7.7.0",
+        "showMsgUib": false,
+        "title": "",
+        "descr": "",
+        "editurl": "vscode://file/D:/src\\uibRoot/json-viewer/?windowId=_blank",
+        "x": 860,
+        "y": 380,
+        "wires": [
+            [
+                "5cdc25e405d966d4"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "5cdc25e405d966d4",
+        "type": "debug",
+        "z": "a5f7da18de4517b5",
+        "g": "5d033b4c16302181",
+        "name": "debug 35",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 995,
+        "y": 380,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "ed9863b941e984dc",
+        "type": "inject",
+        "z": "a5f7da18de4517b5",
+        "g": "ebf91e61a795a855",
+        "name": "Inject JSON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"ROW1\":{\"COL1\":\"R1C1\",\"COL2\":\"R1C2\",\"odd-prop-name\":42},\"ROW2\":{\"COL1\":\"R2C1\",\"COL2\":\"R2C2\",\"i-am\":true}}",
+        "payloadType": "json",
+        "x": 150,
+        "y": 380,
+        "wires": [
+            [
+                "579844511218cab8"
+            ]
+        ]
+    },
+    {
+        "id": "f36bb7ae236e891d",
+        "type": "inject",
+        "z": "a5f7da18de4517b5",
+        "g": "945fe4db357d15ad",
+        "name": "Inject JSON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\t   \"ROW1\":{\t       \"COL1\":\"R1C1\",\t       \"COL2\":\"R1C2\",\t       \"odd-prop-name\": $random()\t   },\t   \"ROW2\":{\"COL1\":\"R2C1\",\"COL2\":\"R2C2\",\"i-am\":true}\t}",
+        "payloadType": "jsonata",
+        "x": 150,
+        "y": 560,
+        "wires": [
+            [
+                "a4ca3f4509d2497e"
+            ]
+        ]
+    },
+    {
+        "id": "a4ca3f4509d2497e",
+        "type": "function",
+        "z": "a5f7da18de4517b5",
+        "g": "945fe4db357d15ad",
+        "name": "Convert input JSON to HTML",
+        "func": "/** NOTE: THere are various configuration options available\n * as a 2nd parameter to renderToHTML. However, only 1 is\n * valid when used to purely render:\n * \n * includeStles - adds <style> before the output (boolean)\n */\n\n// The render fn is supplied by uibuilder\nconst renderToHTML = RED.util.uib.renderToHTML\n\n// Convert the input payload\nconst out = msg.payload = renderToHTML(msg.payload)\n\n// Output 2 differe variations\nreturn [\n    // Send this to a uib-element node set to HTML output\n    // and then on to a uibuilder node\n    msg,\n\n    // Send this one to a uib-sidebar node containing\n    // a <div id=\"more\">\n    {\n        sidebar: {\n            more: {\n                innerHTML: out,\n            },\n        },\n    },\n]",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "jv",
+                "module": "/src/node-red-contrib-uibuilder/front-end/utils/json-viewer.cjs"
+            }
+        ],
+        "x": 360,
+        "y": 560,
+        "wires": [
+            [
+                "e317e0becc983b2a"
+            ],
+            [
+                "2c072f96fa3c741a"
+            ]
+        ]
+    },
+    {
+        "id": "e317e0becc983b2a",
+        "type": "uib-element",
+        "z": "a5f7da18de4517b5",
+        "g": "945fe4db357d15ad",
+        "name": "",
+        "topic": "",
+        "elementtype": "html",
+        "parent": "#more",
+        "parentSource": "",
+        "parentSourceType": "str",
+        "elementid": "jv1",
+        "elementId": "",
+        "elementIdSourceType": "str",
+        "heading": "",
+        "headingSourceType": "str",
+        "headingLevel": "h2",
+        "data": "payload",
+        "dataSourceType": "msg",
+        "position": "last",
+        "positionSourceType": "str",
+        "passthrough": false,
+        "confData": {},
+        "x": 600,
+        "y": 540,
+        "wires": [
+            [
+                "88a27c9daafb2bfb"
+            ]
+        ]
+    },
+    {
+        "id": "2c072f96fa3c741a",
+        "type": "uib-sidebar",
+        "z": "a5f7da18de4517b5",
+        "g": "945fe4db357d15ad",
+        "name": "",
+        "html": "<div id=\"more\">{...waiting for input...}</div>",
+        "x": 590,
+        "y": 580,
+        "wires": [
+            [
+                "3ca0c7031a281e7a"
+            ]
+        ]
+    },
+    {
+        "id": "da9c3664c149d595",
+        "type": "comment",
+        "z": "a5f7da18de4517b5",
+        "name": "Example of using UIBUILDER's built-in <json-viewer> web component \\n The component is most commonly used in the front-end where you load it as an optional library. \\n However, as shown, it can also be used in Node.js and hence in Node-RED",
+        "info": "",
+        "x": 350,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "f9cdd09d1c90d567",
+        "type": "comment",
+        "z": "a5f7da18de4517b5",
+        "name": "Example updated: 2026-05-23. Available since v7.7.0",
+        "info": "",
+        "x": 220,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "3ca0c7031a281e7a",
+        "type": "debug",
+        "z": "a5f7da18de4517b5",
+        "g": "945fe4db357d15ad",
+        "name": "debug 36",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "counter",
+        "x": 735,
+        "y": 580,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "e71a4190f6ec53f0",
+        "type": "comment",
+        "z": "a5f7da18de4517b5",
+        "g": "ebf91e61a795a855",
+        "name": "This method is fully reactive. Search, etc all works",
+        "info": "",
+        "x": 340,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "a0b67e0560969ff9",
+        "type": "inject",
+        "z": "a5f7da18de4517b5",
+        "g": "4a7b15dd3d479f47",
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "setup all FE files",
+        "x": 85,
+        "y": 240,
+        "wires": [
+            [
+                "3ab8ca24f7237e87",
+                "230740a06cd72ff4"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "b82299cfa3c37048",
+        "type": "template",
+        "z": "a5f7da18de4517b5",
+        "g": "4a7b15dd3d479f47",
+        "name": "index.html",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "plain",
+        "template": "<!doctype html>\n<html lang=\"en\"><head>\n\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <link rel=\"icon\" href=\"../uibuilder/images/uib-world.svg\" type=\"image/svg+xml\">\n\n    <title>JSON Viewer - Node-RED UIBUILDER</title>\n    <meta name=\"description\" content=\"Node-RED UIBUILDER - JSON Viewer\">\n\n    <!-- Your own CSS (defaults to loading uibuilders css)-->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\">\n        /* THE UIBUILDER LIBRARY MUST BE IN THE HTML! DO NOT REMOVE */\n    </script>\n    <script defer src=\"../uibuilder/utils/json-viewer.iife.min.js\"></script>\n    <script defer src=\"./index.js\"></script>\n    <!-- #endregion -->\n\n</head><body>\n\n    <h1 class=\"with-subtitle\">JSON Viewer</h1>\n    <div role=\"doc-subtitle\">Using UIBUILDER for Node-RED</div>\n\n    <article>\n        <h2>Intro</h2>\n        <p>\n            Uses the <code>&lt;json-viewer&gt;</code> custom web component provided by uibuilder.\n            The input data is sent to the browser from Node-RED.\n        </p>\n    </article>\n\n    <article>\n        <h2>Viewer examples</h2>\n        <h3>Example 1 - Complex JS Object, collapsed</h3>\n        <json-viewer id=\"jv1\" collapsed></json-viewer>\n        <h3>Example 2 - Complex JS Object, Editable</h3>\n        <json-viewer id=\"jv2\" editable></json-viewer>\n        <h3>Example 3 - Complex JS Object, send from Node-RED</h3>\n        <json-viewer id=\"jv3\"></json-viewer>\n    </article>\n\n    <!-- '#more' is used as a parent for dynamic HTML content in examples\n         Also, send {topic:\"more\", payload:\"Hello from <b>Node-RED</b>\"} to auto-display the payload -->\n    <div id=\"more\" uib-topic=\"more\"></div>\n\n</body></html>",
+        "output": "str",
+        "x": 290,
+        "y": 240,
+        "wires": [
+            [
+                "52e4367f2c7f69a8"
+            ]
+        ]
+    },
+    {
+        "id": "52e4367f2c7f69a8",
+        "type": "uib-save",
+        "z": "a5f7da18de4517b5",
+        "g": "4a7b15dd3d479f47",
+        "url": "json-viewer",
+        "uibId": "88a27c9daafb2bfb",
+        "folder": "src",
+        "fname": "",
+        "createFolder": false,
+        "reload": true,
+        "usePageName": false,
+        "encoding": "utf8",
+        "mode": 438,
+        "name": "",
+        "topic": "",
+        "x": 470,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "69cbf5bab6034f07",
+        "type": "template",
+        "z": "a5f7da18de4517b5",
+        "g": "4a7b15dd3d479f47",
+        "name": "index.js",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "javascript",
+        "syntax": "plain",
+        "template": "// Give VS Code IntelliSense for uibuilder\n/// <reference path=\"../types/uibuilder.d.ts\" />\n\nconst defaultData = {\n    standard: {\n        string: \"R1C1\",\n        \"odd-prop-name\": 42,\n        \"i-am\": true,\n        \"date\": new Date(),\n        \"array\": [1, \"a\", 2, true, 3],\n    },\n    functions: {\n        myCustomFn: function aDifferentName() { return true },\n        arrowFn: () => { return true },\n        asyncFn: async function aDifferentName2() { return true },\n        asyncArrowFn: async () => { return true },\n        generatorFn: function* mygeny() { yield 'Hello' },\n        asyncGeneratorFn: async function* mygeny2() { yield 'Goodby' },\n    },\n    specials: {\n        \"null\": null,\n        \"undefined\": undefined,\n        \"NaN\": NaN,\n        \"Infinity\": Infinity,\n        \"bigint\": 9007199254740992n, // Larger than Number.MAX_SAFE_INTEGER\n        \"symbol\": Symbol(\"mySymbol\"),\n        \"map\": new Map([['key', 'value']]),\n        \"set\": new Set([1, 2, 3]),\n        \"weakmap\": new WeakMap([[{ id: 2 }, 'metadata']]),\n        \"weakset\": new WeakSet([{ id: 1 }, { id: 2 }]),\n        \"regex\": /test/gi,\n        \"error\": new Error('Process failed'),\n        \"arrayBuffer\": new ArrayBuffer(8), // a buffer of 8 bytes\n        \"uint8array\": new Uint8Array([10, 20, 30]), // typed array buffer\n        \"url\": new URL('https://example.come/some/path?x=this,y=that'),\n        \"promise\": new Promise(() => { }),\n    },\n    // Circular reference example\n    circular: {}\n}\ndefaultData.circular.self = defaultData\n\n// Get a reference to the json-viewer element\nconst jv1 = document.getElementById('jv1')\nconst jv2 = document.getElementById('jv2')\n// console.log('JsonViewer element', jv1)\n\n/** For some things, we need to wait for everything to be loaded before using components from JavaScript */\naddEventListener(\"DOMContentLoaded\", (event) => {\n    // What version are we using? This is static so we use the class global reference\n    console.log('Json Viewer version: ', JsonViewer.version)\n\n    // Load some initial test data into the viewer\n    jv1.data = defaultData\n    jv2.data = defaultData\n})\n\n// Listen for incoming messages from Node-RED and action\nuibuilder.onChange('msg', (msg) => {\n    console.log('Data received', msg)\n    jv3.data = JSON.parse(msg.payload)\n})\n\n// NB: You could also use uibuilder's syntaxHighlight fn which will automatically use the JsonViewer renderer if available.\n// $('#more').innerHTML = `<pre><code>${uib.syntaxHighlight(defaultData)}</code></pre>`\n\n// We don't need this if using with uibuilder, included for information only. Listen for changes to the viewer and log them to the console\n// Only fires if the component is set to be editable, and a change is made by the user.\naddEventListener('json-viewer:change', (evt) => {\n    // evt.detail.data contains the updated data, and evt.detail.id contains the id of the viewer that was changed.\n    console.log('json-viewer:change event', evt.detail)\n    // This is the one we set to be editable, so we know the change came from that one.\n    if (evt.detail.id === 'jv2') {\n        // Note that the ORIGINAL data as well as the element's data variable are BOTH CHANGED\n        // by any edits.\n        console.log('Updated data from jv2', jv2.data, defaultData)\n    }\n})\n",
+        "output": "str",
+        "x": 300,
+        "y": 280,
+        "wires": [
+            [
+                "52e4367f2c7f69a8"
+            ]
+        ]
+    },
+    {
+        "id": "3ab8ca24f7237e87",
+        "type": "change",
+        "z": "a5f7da18de4517b5",
+        "g": "4a7b15dd3d479f47",
+        "name": "index.html",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.html",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 175,
+        "y": 240,
+        "wires": [
+            [
+                "b82299cfa3c37048"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "230740a06cd72ff4",
+        "type": "change",
+        "z": "a5f7da18de4517b5",
+        "g": "4a7b15dd3d479f47",
+        "name": "index.js",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.js",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 175,
+        "y": 280,
+        "wires": [
+            [
+                "69cbf5bab6034f07"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "579844511218cab8",
+        "type": "function",
+        "z": "a5f7da18de4517b5",
+        "g": "ebf91e61a795a855",
+        "name": "function 8",
+        "func": "const defaultData = {\n    standard: {\n        string: \"R1C1\",\n        \"odd-prop-name\": 42,\n        \"i-am\": true,\n        \"date\": new Date(),\n        \"array\": [1, \"a\", 2, true, 3],\n    },\n    functions: {\n        myCustomFn: function aDifferentName() { return true },\n        arrowFn: () => { return true },\n        asyncFn: async function aDifferentName2() { return true },\n        asyncArrowFn: async () => { return true },\n        generatorFn: function* mygeny() { yield 'Hello' },\n        asyncGgeneratorFn: async function* mygeny2() { yield 'Goodby' },\n    },\n    specials: {\n        \"null\": null,\n        \"undefined\": undefined,\n        \"NaN\": NaN,\n        \"Infinity\": Infinity,\n        \"bigint\": 9007199254740992n, // Larger than Number.MAX_SAFE_INTEGER\n        \"symbol\": Symbol(\"mySymbol\"),\n        // @ts-ignore\n        \"map\": new Map([['key', 'value'], ['key-2', 42]]),\n        \"set\": new Set([1, 2, 3]),\n        \"weakmap\": new WeakMap([[{ id: 2 }, 'metadata']]),\n        \"weakset\": new WeakSet([{ id: 1 }, { id: 2 }]),\n        \"regex\": /test/gi,\n        \"error\": new Error('Process failed'),\n        \"arrayBuffer\": new ArrayBuffer(8),\n        \"uint8array\": new Uint8Array([10, 20, 30]), // typed array\n        \"url\": new URL('https://example.come/some/path?x=this,y=that'),\n        \"promise\": new Promise(() => { }),\n    },\n    // Circular reference example\n    circular: {}\n}\ndefaultData.circular.self = defaultData\nmsg.payload = RED.util.uib.saferSerialize(defaultData)\nreturn msg",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 380,
+        "wires": [
+            [
+                "88a27c9daafb2bfb"
+            ]
+        ]
+    },
+    {
+        "id": "1dda86c590fdc386",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-uibuilder": "7.7.0"
+        }
+    }
+]

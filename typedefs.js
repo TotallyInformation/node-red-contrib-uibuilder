@@ -69,6 +69,10 @@
  * @property {object} [uibuilder.socketOptions] Override Socket.IO options if desired. See https://socket.io/docs/v4/server-options/
  * @property {boolean} [uibuilder.instanceApiAllowed] Allow instance-level custom API's to be loaded. Could be a security issue so it is controlled in settings.js
  * @property {Function} [uibuilder.hooks] Provide hook functions
+ * @property {object} [uibuilder.contentSecurityPolicy] Override the default Content Security Policy (CSP) header for uibuilder ExpressJS routes.
+ *   Defined as an object with CSP directive names as keys (e.g. 'default-src', 'script-src') and values as strings of allowed sources (include a trailing ';' for each directive, e.g. "'self' https:;").
+ *   See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy for details of the policy format and options.
+ * @property {boolean} [uibuilder.telemetryEnabled] Allow telemetry data to be collected and sent to the telemetry endpoint. See uibGlobalConfig for the endpoint URL and data collection details.
  *
  * @property {string} coreNodesDir Folder containing Node-RED core nodes
  * @property {string} version Node-RED version
@@ -183,12 +187,14 @@
  * @property {Function} util.parseContextStore : [Function: parseContextStore]
  * @property {Function} util.getSetting ??
  *
- * @property {object} util.uib : Added by uibuilder.js - utility functions made available to function nodes
+ * @property {object} util.uib : Added by uibuilder.js - utility functions made available to function nodes via RED.util.uib
  * @property {Function} util.uib.deepObjFind : Recursive object deep find - https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/config-driven-ui?id=manipulating-msg_ui
  * @property {Function} util.uib.listAllApps : Return a list of all uibuilder instances
  * @property {Function} util.uib.dp : Return a formatted number using a specified locale and number of decimal places
  * @property {Function} util.uib.send : Send a message to a client via a uibuilder instance
  * @property {Function} util.uib.truthy : Returns true/false or a default value for truthy/falsy and other values
+ * @property {Function} util.uib.renderToHTML : Render a JavaScript value/object to an HTML string using the json-viewer component's pure renderer
+ * @property {Function} util.uib.saferSerialize : Safer JSON.stringify with circular reference handling
  *
  * @property {object} plugins Node-RED plugins
  * @property {Function} plugins.registerPlugin : [Function: registerPlugin],
@@ -349,12 +355,16 @@
  *
  *  Default `empty string`.
  * @property {object} deployments Track across redeployments
- * @property {object} instances When nodeInstance is run, add the node.id as a key with the value being the
+ * @property {object} instances For uibuilder nodes, when nodeInstance is run, add the node.id as a key with the value being the
  *  url then add processing to ensure that the URL's are unique.
  *
  *  Schema: `{<node.id>: <url>}`
- * @property {object} apps Instance details
- *  Schema: `{url: {node.id, node.url, node.title, node.desc}}
+ * @property {object} mwinstances For markweb nodes, when nodeInstance is run, add the node.id as a key with the value being the
+ *  url then add processing to ensure that the URL's are unique.
+ *
+ *  Schema: `{<node.id>: <url>}`
+ * @property {object} apps Instance details (uibuilder and markweb)
+ *  Schema: `{url: {node.id, node.url, node.title, node.descr, node.type}}`
  * @property {string} masterTemplateFolder Location of master template folders (containing default front-end code).
  *
  *  Default `../template`
@@ -395,6 +405,7 @@
  * @property {undefined|string} customServer.hostName The host name of the Node-RED server
  * @property {boolean}          customServer.isCustom Is uibuilder using a custom ExpressJS server?
  * @property {object}           customServer.serverOptions Optional ExpressJS server options
+ * @property {object}           customServer.contentSecurityPolicy Optional deconstructed Content Security Policy settings for custom server. See https://helmetjs.github.io/docs/csp/
  *
  * @property {undefined|object} degitEmitter Event emitter for degit, populated on 1st use. See POST admin API
  * @property {runtimeRED|null} RED Keep a reference to RED for convenience. Set at the start of Uib
@@ -402,6 +413,12 @@
  * @property {string=} httpRoot Copy of RED.settings.httpRoot for ease of use
  * @property {string=} reDeployNeeded If the last deployed version is this version or earlier and the current version is greater than this, tell the Editor that a redeploy is needed
  * @property {boolean} instanceApiAllowed Are instance-level API's allowed to be loaded? Could be a security issue so controlled from settings.js uibuilder.instanceApiAllowed. Default=false
+ * @property {boolean} telemetryEnabled Is telemetry enabled? Set from settings.js uibuilder.telemetryEnabled. Default=true
+ * @property {string} telemetryFilename Name of the telemetry file in the config folder. Default 'telemetry.json'
+ * @property {string} telemetryEndpoint URL of the uibuilder Cloudflare Worker telemetry endpoint.
+ *   Either 'http://localhost:8787/telemetry' for local testing or https://uibtelemetry.totallyinformation.net/telemetry for production.
+ * @property {number} telemetrySendInterval How often to send telemetry data to the endpoint, in seconds. Default 30d
+ * @property {object} [telemetry] Telemetry data for the uibuilder instance. Loaded from and saved to `<uibRoot>/.config/telemetry.json`.
  */
 
 /** senderNode1

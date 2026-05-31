@@ -3,15 +3,14 @@ title: UIBUILDER's Filing System Library
 description: |
   Manages everything to do with the server filing system.
 created: 2023-09-30 15:58:31
-lastUpdated: 2023-09-30 18:13:43
-updated: 2023-12-30 17:01:42
+updated: 2026-05-04 17:14:10
 ---
 
 TBC
 
 A singleton class. `UibFs`, exports `uibFs`.
 
-Aim is to use this for all server file/folder handling eventually, helping facilitate the elimination of the `fs-extra` external library.
+Aim is to use this for all server file/folder handling eliminating the `fs-extra` external library.
 
 ## Library references
 

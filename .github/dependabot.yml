@@ -26,46 +26,22 @@ updates:
       interval: monthly
 
   - package-ecosystem: npm
-    directory: /templates/esm-blank-client
+    directory: /packages/telemetry
     schedule:
       interval: monthly
 
   - package-ecosystem: npm
-    directory: /templates/esm-vue3-nobuild
+    directory: /packages/uib-fs-utils
     schedule:
       interval: monthly
 
   - package-ecosystem: npm
-    directory: /templates/iife-blank-client
+    directory: /packages/uib-md-utils
     schedule:
       interval: monthly
 
   - package-ecosystem: npm
-    directory: /templates/iife-vue3-nobuild
+    directory: /packages/uib-docsify-bundle
     schedule:
       interval: monthly
 
-  - package-ecosystem: npm
-    directory: /templates/old-blank-client
-    schedule:
-      interval: monthly
-
-  - package-ecosystem: npm
-    directory: /templates/svelte-basic
-    schedule:
-      interval: monthly
-
-  - package-ecosystem: npm
-    directory: /templates/vue2-bootstrap
-    schedule:
-      interval: monthly
-
-  - package-ecosystem: npm
-    directory: /templates/vue2-simple
-    schedule:
-      interval: monthly
-
-  - package-ecosystem: npm
-    directory: /templates/vue3-sfc-load
-    schedule:
-      interval: monthly

@@ -1,0 +1,22 @@
+{
+    "name": "uibuilder-telemetry",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Cloudflare Workers + D1 telemetry service for uibuilder",
+    "type": "module",
+    "scripts": {
+        "dev": "wrangler dev",
+        "deploy": "wrangler deploy",
+        "test": "vitest run --reporter=verbose",
+        "test:watch": "vitest --reporter=verbose",
+        "stats": "node scripts/stats.mjs",
+        "clear": "node scripts/clear.mjs"
+    },
+    "devDependencies": {
+        "vitest": "^3.0.0",
+        "wrangler": "^4.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}
