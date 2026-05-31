@@ -24,7 +24,6 @@
     "listbin": "ls ./node_modules/bin",
     "docs": "docsify serve ./docs",
     "edit-docs": "%LOCALAPPDATA%/Programs/Typora/Typora.exe ./",
-    "buildSidebar": "node ./bin/docsify-auto-sidebar.js",
     "buildUibMdUtils": "npm run build --workspace=uib-md-utils",
     "buildUibFsUtils": "npm run build --workspace=uib-fs-utils",
     "graph": "madge --image ./docs/dev/runtime-deps.svg ./nodes",
