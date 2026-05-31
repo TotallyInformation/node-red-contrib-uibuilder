@@ -33,6 +33,8 @@ It includes many helper features that can reduce or eliminate the need to write 
 
 UIBUILDER is best installed using Node-RED's Palette Manager.
 
+Note that UIBUILDER requires at least node.js v18 and Node-RED v4. You _should_ be using a current LTS version of node.js. If you want to help develop UIBUILDER, you will need at least node.js v24 LTS and the latest release of Node-RED. UIBUILDER will release a new _major_ version when the baseline node.js and/or Node-RED versions are increased.
+
 <details><summary>Manual installs and other versions</summary>
 
 To install manually, from a command line on your Node-RED server:
