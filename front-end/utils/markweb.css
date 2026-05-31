@@ -561,6 +561,10 @@ main {
     user-select: none;
     z-index: 20;
 }
+#sidebar-resizer:focus-visible {
+    outline: 2px solid hsl(var(--brand-hue), 80%, 55%);
+    outline-offset: -2px;
+}
 
 /* Tree view styles (e.g. %%index%% index listings) */
 .tree {
