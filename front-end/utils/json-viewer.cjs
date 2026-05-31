@@ -707,7 +707,6 @@ function renderNode(val, opts) {
     const valContent = renderLeafValue(val, type, canEdit);
     const editAttrs = canEdit ? ` contenteditable="true" spellcheck="false" data-jv-editable="true" data-jv-type="${type}" aria-label="Edit ${type} value"` : "";
     const valHtml = `<span class="jv-val jv-${type}"${editAttrs}>${valContent}</span>`;
-    const copyKind = canEdit ? "value" : "value";
     return `<div class="jv-node jv-leaf jv-${type}" role="treeitem" tabindex="0" data-jv-path="${pathAttr}" data-jv-type="${type}">${keyHtml}${valHtml}` + (interactive ? `<button class="jv-copy" data-jv-copy="value" aria-label="Copy value to clipboard" title="Copy value to clipboard" tabindex="-1">\u2398</button>` : "") + (interactive && editable ? `<button class="jv-delete" aria-label="Delete entry" title="Delete entry" tabindex="-1">\xD7</button>` : "") + `</div>`;
   }
   const isOpen = !collapsed && depth < maxDepth;

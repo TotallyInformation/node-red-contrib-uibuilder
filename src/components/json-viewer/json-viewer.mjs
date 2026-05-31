@@ -536,7 +536,6 @@ function renderNode(val, opts) {
             ? ` contenteditable="true" spellcheck="false" data-jv-editable="true" data-jv-type="${type}" aria-label="Edit ${type} value"`
             : ''
         const valHtml = `<span class="jv-val jv-${type}"${editAttrs}>${valContent}</span>`
-        const copyKind = canEdit ? 'value' : 'value'
 
         return (
             `<div class="jv-node jv-leaf jv-${type}" role="treeitem" tabindex="0" data-jv-path="${pathAttr}" data-jv-type="${type}">`
