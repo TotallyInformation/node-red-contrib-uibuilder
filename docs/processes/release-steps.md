@@ -13,9 +13,9 @@ This assumes all main updates have been done for this release and that local tes
 
 When working on the dev branch, it may be necessary to release a new bug-fix release from `main`. At that point, you should then incorporate the changes into your feature branch(es).
 
-Firstly commit or stash any outstanding changes in your `dev` branch.
-
-Then, from the VSCode command line, do:
+1. MAKE SURE THAT WATCH SCRIPTS AND OBSIDIAN ARE _**NOT RUNNING**_.
+2. Firstly commit or stash any outstanding changes in your `dev` branch.
+3. From the VSCode command line, do:
 
 ```bash
 git switch main
@@ -23,11 +23,11 @@ git pull origin main
 git switch dev
 git merge main
 ```
-Now the Source Control panel in VSCode will have any files with conflicts marked. Click on them to view the conflict and resolve. Then do another commit and push.
 
-If you did a stash, do `git stash pop` now to re-apply your changes.
+4. Now the Source Control panel in VSCode will have any files with conflicts marked. Click on them to view the conflict and resolve. Then do another commit and push.
+5. If you did a stash, do `git stash pop` now to re-apply your changes.
 
-## Creating a feature branch
+## ~~Creating a feature branch~~
 
 No longer needed - work is done directly on the `dev` branch.
 
@@ -55,25 +55,18 @@ Make sure version numbers are correct and aligned:
 
 ## 03) Do a dependency update
 
+NB: Restart the watch script first.
+
+* Make sure that the terminal is in the package root folder.
 * `npm outdated` & `npm update`.
 
-Needs to be run against:
-* Root folder (uibuilder).
-* `packages/uib-md-utils` folder.
-* `templates/blank` folder.
+## 03a) Update the docs and packages bundles if needed
 
-## 03a) Update the docs bundle
-
-* Run `npm run buildDocBundle` to update the docs bundle.
+* Run `npm run build` to update everything.
 
 ## 03b) Update the client library typescript definitions
 
 These are in `templates\blank\types` AND `src\front-end-module\types`. They are updated by asking Copilot _"Update the typescript descripion files in `./templates/blank/types` and `src\front-end-module\types` to match the updated version of `./src/front-end-module/uibuilder.module.mjs`"_.
-
-## 03c) Build the uib-md-utils & uib-fs-utils packages
-
-Run `npm run buildUibMdUtils` to build the package.
-Run `npm run buildUibFsUtils` to build the package.
 
 ## 04) Do a final commit & push to the dev branch
 
