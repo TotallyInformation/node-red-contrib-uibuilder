@@ -88,6 +88,7 @@ If loaded in your `index.html` file, it not only provides the new element but al
 * [Mermaid diagrams](https://mermaid.ai/open-source/intro/) are now supported as code blocks in markdown files.
 * Markdown footnotes are now also supported. See the Footnotes page in the `[DEMO]` Markweb for details and examples. We use the [markdown-it-footnote](https://github.com/markdown-it/markdown-it-footnote) plugin for this.
 * Markweb nodes are now tracked in the uibuilder global configuration.
+* The sidebar resizer is now more accessible and works with the keyboard.
 
 ### Sidebar node
 
@@ -104,6 +105,12 @@ If loaded in your `index.html` file, it not only provides the new element but al
 * Improved shutdown processing, especially when using a custom Express server. Socket.IO and web connections are now terminated if Node-RED recieves a SIGINT. In addition, each instance's close function has been tidied up & the "shutdown" control message is now sent to connected clients earlier. This also updates the web and uiblib libraries.
 
 * Started to move initialisation processing into the runtime plugin. This allows the uibuilder global configuration to be available earlier in the startup process since plugins are loaded before nodes. This is a work in progress and will continue over several releases. This also simplifies the uibuilder node's code and should make it easier to maintain and extend in the future. This is also important now that we have Markweb as well as uibuilder nodes that need to share the global configuration and filing system setup.
+
+### Documentation
+
+* The sidebar resizer is now more accessible and works with the keyboard.
+* New design docs added. These are directions or ideas for future development.
+* Some additional process documents added. The process documents are aimed at clarifying the internal workings of uibuilder.
 
 ### Runtime plugin
 
