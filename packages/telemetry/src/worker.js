@@ -10,9 +10,7 @@
  */
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-// const RATE_LIMIT_SECONDS = 3600 // one report per instance per hour
-const RATE_LIMIT_SECONDS = 60 // one report per instance per minute (for testing purposes)
-
+const RATE_LIMIT_SECONDS = 3600 // one report per instance per hour
 /**
  * Sanitize a string input — truncate and reject non-strings.
  * @param {unknown} val - The value to sanitize.
