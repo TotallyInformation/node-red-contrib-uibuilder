@@ -3,7 +3,7 @@
  * Note that RED is available here
  */
 
-/** @typedef {Object} UibEditorObject
+/** @typedef {object} UibEditorObject
  * @property {string} paletteCategory - Standard palette category for all uibuilder nodes
  * @property {string} typedInputWidth - Standard width for typed input fields
  * @property {boolean} localHost - Are we running on a local device?
@@ -11,8 +11,8 @@
  * @property {string} nodeRoot - URL root if needed (set to '' if using a custom uib server)
  * @property {string} urlPrefix - URL prefix for all uib nodes
  * @property {string} serverType - uib server type ('Node-RED\'s' or 'a custom')
- * @property {Object.<string,string>} editorUibInstances - Tracks ALL uibuilder editor instance URL's by node id (includes undeployed and disabled nodes)
- * @property {Object.<string,string>} deployedUibInstances - Tracks all DEPLOYED uibuilder instances url's by node id
+ * @property {Object<string, string>} editorUibInstances - Tracks ALL uibuilder editor instance URL's by node id (includes undeployed and disabled nodes)
+ * @property {Object<string, string>} deployedUibInstances - Tracks all DEPLOYED uibuilder instances url's by node id
  * @property {Array} packages - Tracks uibuilder's installed front-end packages
  * @property {string[]} uibNodeTypes - List of uib node names
  * @property {boolean} debug - Debug output via log() - turn on/off with true/false
@@ -389,7 +389,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
          * Uses Object.defineProperty to detect when window.monaco is assigned, with
          * a polling fallback in case the property is non-configurable.
          */
-        ;(function addUibMonacoTypes() {
+        ;(function addUibMonacoTypes() { // eslint-disable-line @stylistic/no-extra-semi
             const typeDeclarations = `
 declare namespace RED {
     namespace util {
