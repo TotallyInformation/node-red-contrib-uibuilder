@@ -763,10 +763,11 @@ class UibWeb {
         const qSec = uib.customServer.type === 'https' // true if using https else false
 
         // Compile CSP string here so we don't have to do it for every request in the middleware - default defined in uibGlobalConfig.cjs
-        const csp
-            = Object.entries(uib.customServer?.contentSecurityPolicy ?? {})
-                .map(([k, v]) => `${k} ${v}`).join(' ') // eslint-disable-line @stylistic/newline-per-chained-call
-
+        const cspObj = uib.customServer?.contentSecurityPolicy
+        const csp = Object.keys(cspObj ?? {}).length
+            ? Object.entries(cspObj)
+                .map(([k, v]) => `${k} ${String(v).trim().endsWith(';') ? String(v).trim() : `${String(v).trim()};`}`).join(' ') // eslint-disable-line @stylistic/newline-per-chained-call
+            : "default-src 'self' 'unsafe-inline' data: blob: https:; connect-src 'self'; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; frame-src 'self' https:;"
         const that = this
 
         /** Return a middleware handler
