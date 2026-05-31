@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-05-31 13:20:42
+updated: 2026-05-31 14:35:20
 ---
 
 ## Possible issues/improvements
@@ -97,6 +97,10 @@ updated: 2026-05-31 13:20:42
   * Allow `readme.md` or `README.md` to be used as folder default pages as well as `index.md`, `.index.md`, and `_index.md`.
 * Editor:
   * uib-sidebar - add markdown support.
+* router
+  * Add icon support to the router menu system.
+  * Add vertical support to the router menu system.
+
 ## Communications
 
 * Use IFTTT to cross-post:
