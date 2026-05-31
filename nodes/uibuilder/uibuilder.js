@@ -33,7 +33,6 @@
 // uibuilder custom
 const uiblib = require('../libs/uiblib.cjs') // Utility library for uibuilder
 const tilib = require('../libs/tilib.cjs') // General purpose library (by Totally Information)
-const packageMgt = require('../libs/package-mgt.cjs')
 const fslib = require('../libs/fs.cjs') // File/folder handling library (by Totally Information)
 // Template configuration metadata
 const templateConf = require('../../templates/template_dependencies.js')
