@@ -70,7 +70,7 @@
  * @property {boolean} [uibuilder.instanceApiAllowed] Allow instance-level custom API's to be loaded. Could be a security issue so it is controlled in settings.js
  * @property {Function} [uibuilder.hooks] Provide hook functions
  * @property {object} [uibuilder.contentSecurityPolicy] Override the default Content Security Policy (CSP) header for uibuilder ExpressJS routes.
- *   Defined as an object with the same keys as the CSP directives (e.g. defaultSrc, scriptSrc, etc.) and values as strings of the allowed sources for that directive (e.g. "'self' 'unsafe-inline' data: blob: https:").
+ *   Defined as an object with CSP directive names as keys (e.g. 'default-src', 'script-src') and values as strings of allowed sources (include a trailing ';' for each directive, e.g. "'self' https:;").
  *   See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy for details of the policy format and options.
  * @property {boolean} [uibuilder.telemetryEnabled] Allow telemetry data to be collected and sent to the telemetry endpoint. See uibGlobalConfig for the endpoint URL and data collection details.
  *

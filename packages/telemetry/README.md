@@ -142,9 +142,8 @@ Receives a telemetry report from a Node-RED instance. Rate-limited to one accept
   "uib_count":     3,
   "markweb_count": 1,
   "browsers": [
-    { "family": "Chrome",  "major": 124, "count": 5 },
-    { "family": "Firefox", "major": 125, "count": 2 }
-  ]
+    { "family": "Chrome",  "version": "124", "count": 5 },
+    { "family": "Firefox", "version": "125", "count": 2 }
 }
 ```
 
@@ -184,8 +183,8 @@ curl -H "Authorization: Bearer <your-token>" \
     "total_markweb_nodes": 3104
   },
   "browsers": [
-    { "browser_family": "Chrome",  "browser_major_version": 124, "total": 42100 },
-    { "browser_family": "Firefox", "browser_major_version": 125, "total": 8300 }
+    { "browser_family": "Chrome",  "browser_version": "124", "total": 42100 },
+    { "browser_family": "Firefox", "browser_version": "125", "total": 8300 }
   ],
   "uib_versions": [
     { "uib_version": "7.0.0", "instances": 5200 }
