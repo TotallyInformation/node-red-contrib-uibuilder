@@ -239,7 +239,7 @@ function nodeInstance(config) {
 
     // Keep a log of the active instances
     uib.mwinstances[this.id] = this.url
-    log.trace(`🌐[uibuilder[:nodeInstance:${this.url}] Node uib.MWInstances Registered: ${JSON.stringify(uib.mwinstances)}`)
+    log.trace(`🌐🕸️[markweb:nodeInstance:${this.url}] Node uib.mwinstances registered: ${JSON.stringify(uib.mwinstances)}`)
     uib.apps[this.url] = {
         node: this.id,
         url: this.url,
