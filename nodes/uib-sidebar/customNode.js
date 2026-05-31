@@ -85,9 +85,11 @@ function nodeInstance(config) {
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)
 
+    // Set up an HTTP endpoint for this node instance to receive posts from the Editor UI
     RED.log.trace(`📊 [uib-sidebar] Listening for posts to /uibuilder/uib-sidebar/${this.id}`)
     RED.httpAdmin.post(`/uibuilder/uib-sidebar/${this.id}`, (req, res) => {
         RED.log.trace(`📊 [uib-sidebar] POST request for /uibuilder/uib-sidebar/${this.id}`, req.body)
+        console.log(`📊 [uib-sidebar] POST request for /uibuilder/uib-sidebar/${this.id}`, req.body)
         // res.status(200).send( { 'response': 'ok', 'id': this.id } )
         res.status(200).json( { response: 'ok', id: this.id, } )
         this.send({

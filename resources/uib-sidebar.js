@@ -132,8 +132,8 @@
             }
             // Get a reference to the sidebar UI element (only once)
             if (!sbEl) sbEl = document.getElementById('uib-sidebar-ui')
-            // Add the instance div to the sidebar UI
-            sbEl.insertAdjacentHTML('beforeend', `<div id="UIB-SB-${node.id}"></div>`)
+            // Add the instance section to the sidebar UI
+            sbEl.insertAdjacentHTML('beforeend', `<section id="UIB-SB-${node.id}"></section>`)
             // with the HTML from the node config (or a placeholder if empty)
             if (node.html) {
                 updateTab(node.html, node.id)
