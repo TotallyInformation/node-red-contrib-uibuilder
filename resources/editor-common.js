@@ -446,10 +446,11 @@ declare namespace RED {
              * so that function nodes get IntelliSense for uibuilder server-side utilities.
              */
             function inject() {
-                monaco.languages.typescript.javascriptDefaults.addExtraLib( // eslint-disable-line no-undef
+                window.monaco.languages.typescript.javascriptDefaults.addExtraLib(
                     typeDeclarations,
                     'file://types/uibuilder/uib-util.d.ts'
                 )
+            }
             }
 
             if (window.monaco) {
