@@ -1,10 +1,9 @@
-/* eslint-disable no-undef, jsdoc/check-property-names */
 // @ts-nocheck
 /** A simple, vanilla JavaScript front-end router class
  * Included in node-red-contrib-uibuilder but is not dependent on it.
  * May be used in other contexts as desired.
  *
- * Copyright (c) 2023-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -58,7 +57,7 @@
 class UibRouter {
     // #region --- Variables ---
     /** Class version */
-    static version = '7.7.0-src'
+    static version = '7.7.1-src'
     /** Ensures only 1 class instance on a page */
     static #instanceExists = false
     /** Options for Markdown-IT if available (set in constructor) */
@@ -161,7 +160,7 @@ class UibRouter {
     }
 
     /** Save a reference to, and create if necessary, the HTML element to hold routes
-     * @throws if the route container could not be set
+     * @throws {Error} if the route container could not be set
      */
     _setRouteContainer() {
         // Add a default route container if needed
@@ -318,7 +317,7 @@ class UibRouter {
                         } finally { } // eslint-disable-line no-empty
                     }
                 }
-                return `<pre><code class="border">${Ui.md.utils.escapeHtml(str).trim()}</code></pre>`
+                return `<pre><code class="border">${Ui.md.utils.escapeHtml(str).trim()}</code></pre>` // eslint-disable-line no-undef
             },
         }
         UibRouter.md = window['markdownit'](UibRouter.mdOpts)
