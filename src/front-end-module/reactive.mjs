@@ -4,7 +4,7 @@
  * @description Reactive proxy implementation for uibuilder (Loosely based on Vue.js v3 reactivity)
  * @license Apache-2.0
  * @author Julian Knight (Totally Information)
- * @copyright (c) 2025 Julian Knight (Totally Information)
+ * @copyright (c) 2026 Julian Knight (Totally Information)
  */
 
 /**
@@ -29,7 +29,7 @@
  * proxy.cancelChange(ref)
  */
 export class Reactive {
-    static version = '2025-06-14' // Version of the reactive module
+    static version = '2026-06-01' // Version of the reactive module
 
     /** Create a new Reactive instance
      * @param {*} srcvar The source variable to wrap
@@ -72,7 +72,7 @@ export class Reactive {
     /** Helper function to make an object reactive with property path tracking
      * @param {*} obj Object to make reactive
      * @param {string} basePath Base property path for nested objects
-     * @returns {Proxy} Reactive proxy object
+     * @returns {Proxy|*} Reactive proxy object
      * @private
      */
     _createReactiveObject(obj, basePath = '') {
@@ -92,7 +92,7 @@ export class Reactive {
 
                 // Add onChange method to the proxy - simplified to watch all changes
                 if (key === 'onChange') {
-                    return (callback) => {
+                    return (/** @type {Function} */ callback) => {
                         if (typeof callback !== 'function') {
                             throw new Error('[uibuilder:reactive] onChange callback must be a function')
                         }
@@ -112,7 +112,7 @@ export class Reactive {
 
                 // Add cancelChange method to the proxy
                 if (key === 'cancelChange') {
-                    return (listenerRef) => {
+                    return (/** @type {{ cancel: () => void; }} */ listenerRef) => { // eslint-disable-line jsdoc/valid-types
                         if (!listenerRef || typeof listenerRef.cancel !== 'function') {
                             console.warn('[uibuilder:reactive] Invalid listener reference provided to cancelChange')
                             return false
