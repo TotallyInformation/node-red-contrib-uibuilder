@@ -44,7 +44,7 @@ const __uibHeadersPromise = fetch(location.href, { method: 'HEAD', cache: 'no-st
 // We need the Socket.IO & ui libraries & the uib-var component  --- //
 // @ts-ignore - Note: Only works when using esbuild to bundle
 import Ui from './ui.mjs'
-import io from 'socket.io-client' // eslint-disable-line import/no-named-as-default
+import io from 'socket.io-client' // eslint-disable-line import-x/no-named-as-default
 import UibVar from '../components/uib-var.mjs'
 import UibMeta from '../components/uib-meta.mjs'
 import ApplyTemplate from '../components/apply-template.mjs'
@@ -57,7 +57,7 @@ import { formatDate } from './libs/format-date-time.mjs'
 // Incorporate the logger module - NB: This sets a global `log` object for use if it can.
 // import logger from './logger'
 
-const version = '7.7.0-src'
+const version = '7.7.1-src'
 
 // #region --- Module-level utility functions --- //
 

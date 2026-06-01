@@ -1,6 +1,4 @@
-/* eslint-disable jsdoc/valid-types */
 /* eslint-disable n/no-unpublished-import */
-/* eslint-disable import/no-unresolved */
 // @ts-nocheck
 /**
  * https://www.npmjs.com/search?q=eslint-config
@@ -17,92 +15,20 @@
 import { defineConfig } from 'eslint/config'
 import globals from 'globals' // https://www.npmjs.com/package/globals
 // @ts-ignore
-import pluginImport from 'eslint-plugin-import' // https://www.npmjs.com/package/eslint-plugin-import
+import { importX } from 'eslint-plugin-import-x' // https://www.npmjs.com/package/eslint-plugin-import-x
 import pluginPromise from 'eslint-plugin-promise' // https://www.npmjs.com/package/eslint-plugin-promise
-import jsdoc from 'eslint-plugin-jsdoc'// https://github.com/gajus/eslint-plugin-jsdoc
+// https://github.com/gajus/eslint-plugin-jsdoc
+import jsdoc from 'eslint-plugin-jsdoc' // eslint-disable-line import-x/no-named-as-default
 // import sonarjs from 'eslint-plugin-sonarjs' // https://www.npmjs.com/package/eslint-plugin-sonarjs, for code quality and security issues
 import node from 'eslint-plugin-n' // https://www.npmjs.com/package/eslint-plugin-n, node.js only
 import pluginSecurity from 'eslint-plugin-security' // https://www.npmjs.com/package/eslint-plugin-security, node.js only
 import stylistic from '@stylistic/eslint-plugin' // https://eslint.style
 import js from '@eslint/js'
+import { jsdocRules, stylisticRules, generalRules } from './eslint-shared-config.mjs' // Shared rules for all ESLINT configs
 
 // Folder/file lists - eslint flat config is WEIRD!
 // You have to override the top-level config (e.g. **/*.js) and then exclude the folders/files you don't want.
 
-// Shared rules
-const jsdocRules = {
-    'jsdoc/check-alignment': 'off',
-    // "jsdoc/check-indentation": ["warn", {"excludeTags":['example', 'description']}],
-    'jsdoc/check-indentation': 'off',
-    'jsdoc/check-param-names': 'warn',
-    'jsdoc/check-tag-names': ['warn', {
-        definedTags: ['typicalname', 'element', 'memberOf', 'slot', 'csspart'],
-    }],
-    'jsdoc/multiline-blocks': ['error', {
-        noZeroLineText: false,
-    }],
-    'jsdoc/no-multi-asterisk': 'off',
-    'jsdoc/no-undefined-types': ['error', {
-        definedTypes: ['JQuery', 'NodeListOf', 'ProxyHandler'],
-    }],
-    'jsdoc/reject-any-type': 'off',
-    'jsdoc/reject-function-type': 'off',
-    'jsdoc/tag-lines': 'off',
-}
-const stylisticRules = {
-    '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: true, }],
-    '@stylistic/comma-dangle': ['error', {
-        arrays: 'only-multiline',
-        objects: 'always',
-        imports: 'never',
-        exports: 'always-multiline',
-        functions: 'never',
-        importAttributes: 'never',
-        dynamicImports: 'never',
-    }],
-    '@stylistic/eol-last': ['error', 'always'],
-    '@stylistic/indent': ['error', 4, {
-        SwitchCase: 1,
-    }],
-    '@stylistic/indent-binary-ops': ['error', 4],
-    '@stylistic/linebreak-style': ['error', 'unix'],
-    '@stylistic/lines-between-class-members': 'off',
-    '@stylistic/newline-per-chained-call': ['error', {
-        ignoreChainWithDepth: 2,
-    }],
-    '@stylistic/no-confusing-arrow': 'error',
-    '@stylistic/no-extra-semi': 'error',
-    '@stylistic/no-mixed-spaces-and-tabs': 'error',
-    '@stylistic/no-trailing-spaces': 'error',
-    '@stylistic/semi': ['error', 'never'],
-    '@stylistic/space-before-function-paren': 'off',
-    '@stylistic/spaced-comment': ['error', 'always', {
-        line: {
-            exceptions: ['*', '#region', '#endregion'],
-        },
-        block: {
-            exceptions: ['*'],
-        },
-    }],
-    '@stylistic/space-in-parens': 'off',
-    '@stylistic/quotes': ['error', 'single', {
-        avoidEscape: true,
-        allowTemplateLiterals: 'always',
-    }],
-}
-const generalRules = {
-    'new-cap': 'error',
-    'no-else-return': 'error',
-    'no-empty': ['error', {
-        allowEmptyCatch: true,
-    }],
-    'no-unused-vars': 'off',
-    'no-useless-escape': 'off',
-    'no-var': 'warn',
-    'prefer-const': 'error',
-}
-
-/** @type {import('eslint').Linter.Config[]} */
 export default defineConfig([
 
     // Browser (ES2019) script, no-build
@@ -133,7 +59,7 @@ export default defineConfig([
             '@stylistic': stylistic,
         },
         extends: [
-            js.configs.recommended,
+            'js/recommended',
             jsdoc.configs['flat/recommended'],
             stylistic.configs.recommended,
             pluginPromise.configs['flat/recommended'],
@@ -174,16 +100,16 @@ export default defineConfig([
         plugins: {
             'js': js,
             'pluginPromise': pluginPromise,
-            'pluginImport': pluginImport,
+            'import-x': importX,
             'jsdoc': jsdoc,
             '@stylistic': stylistic,
         },
         extends: [
-            js.configs.recommended,
+            'js/recommended',
             jsdoc.configs['flat/recommended'],
             stylistic.configs.recommended,
             pluginPromise.configs['flat/recommended'],
-            pluginImport.flatConfigs.recommended,
+            'import-x/flat/recommended',
         ],
         settings: {
             jsdoc: { mode: 'jsdoc', },
@@ -214,7 +140,7 @@ export default defineConfig([
         },
         plugins: {
             'js': js,
-            'pluginImport': pluginImport,
+            // 'import-x': importX,
             'pluginPromise': pluginPromise,
             'jsdoc': jsdoc,
             '@stylistic': stylistic,
@@ -223,7 +149,7 @@ export default defineConfig([
             // 'sonarjs': sonarjs, // <= eslint-plugin-sonarjs for code quality and security issues
         },
         extends: [
-            js.configs.recommended,
+            'js/recommended',
             jsdoc.configs['flat/recommended'],
             stylistic.configs.recommended,
             pluginPromise.configs['flat/recommended'],
@@ -262,7 +188,7 @@ export default defineConfig([
         },
         plugins: {
             'js': js,
-            'pluginImport': pluginImport,
+            'import-x': importX,
             'pluginPromise': pluginPromise,
             'jsdoc': jsdoc,
             '@stylistic': stylistic,
@@ -270,11 +196,11 @@ export default defineConfig([
             'pluginSecurity': pluginSecurity, // <= eslint-plugin-security for Node.js security best practices
         },
         extends: [
-            js.configs.recommended,
+            'js/recommended',
             jsdoc.configs['flat/recommended'],
             stylistic.configs.recommended,
             pluginPromise.configs['flat/recommended'],
-            pluginImport.flatConfigs.recommended,
+            'import-x/flat/recommended',
             node.configs['flat/recommended-module'], // <= module/ESM
             pluginSecurity.configs.recommended,
         ],

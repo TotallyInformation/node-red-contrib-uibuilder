@@ -7,7 +7,7 @@
  * @version 1.0.0
  * @license Apache-2.0
  * @author Julian Knight (Totally Information)
- * @copyright (c) 2025-2025 Julian Knight (Totally Information)
+ * @copyright (c) 2025-2026 Julian Knight (Totally Information)
  */
 
 /** TODO:
@@ -71,10 +71,10 @@ function handlerReturnfunction (prop, ...args) {
         // If the first argument is an object (but not a Node or an Array),
         // treat it as an attributes/properties map.
         if (
-            first &&
-            typeof first === 'object' &&
-            !Array.isArray(first) &&
-            !(first instanceof Node)
+            first
+            && typeof first === 'object'
+            && !Array.isArray(first)
+            && !(first instanceof Node)
         ) {
             // ! Consider forcing attr containing a dash to camelCase
             Object.entries(first).forEach(([attr, value]) => {
@@ -93,7 +93,7 @@ function handlerReturnfunction (prop, ...args) {
         }
 
         // Append each subsequent argument as a child.
-        rest.forEach(child => {
+        rest.forEach((child) => {
             if (child instanceof Node) {
                 element.appendChild(child)
             } else if (typeof child === 'string') {
@@ -115,7 +115,7 @@ function handlerReturnfunction (prop, ...args) {
  */
 const tinyDomHandler = {
     // @ts-ignore
-    version: '2025-02-02',
+    version: '2026-06-01',
 
     /** Update an existing HTML element with new attributes.
      * @example dom.update('more', { className: 'myClass', innerHTML: '<span style="color:red;">Hello</span> World!'} )
