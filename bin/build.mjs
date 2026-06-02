@@ -45,8 +45,10 @@ const __dirname = dirname(__filename)
 /** @type {string} Absolute path to the project root directory */
 const ROOT = resolve(__dirname, '..')
 
-/** @type {string} Current package version read from package.json at startup */
-const PKG_VERSION = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).version
+/** @type {string} Current package version — read from package.json at startup and refreshed by the
+ * package.json watcher in watch mode whenever the version field changes.
+ */
+let PKG_VERSION = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).version
 
 // #endregion ---- Bootstrap ----
 
@@ -1009,6 +1011,25 @@ async function startWatch() {
                     safeRebuild(buildMermaid, MERMAID_BUILD.name)
                 })
         }
+    }
+
+    // ── package.json — refresh PKG_VERSION when version is bumped ────────────
+    {
+        const pkgJsonPath = join(ROOT, 'package.json')
+        chokidar
+            .watch(pkgJsonPath, { ignoreInitial: true, })
+            .on('change', async () => {
+                try {
+                    const newVersion = JSON.parse(await readFile(pkgJsonPath, 'utf8')).version // eslint-disable-line security/detect-non-literal-fs-filename
+                    if (newVersion !== PKG_VERSION) {
+                        PKG_VERSION = newVersion
+                        console.log(`[watch] package.json version → ${PKG_VERSION} — re-stamping version files`)
+                        await safeRebuild(updateAllVersions, 'version stamps')
+                    }
+                } catch (err) {
+                    console.warn(`[watch] Could not refresh version from package.json: ${err.message}`)
+                }
+            })
     }
 
     console.log('[watch] Watching for changes. Press Ctrl+C to stop.\n')

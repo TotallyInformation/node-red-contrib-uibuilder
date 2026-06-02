@@ -158,7 +158,7 @@
      */
     constructor(win, extLog, jsonHighlight) {
       // #region --- Class variables ---
-      __publicField(this, "version", "7.7.0-src");
+      __publicField(this, "version", "7.7.2-src");
       // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
       __publicField(this, "sanitiseExtraTags", ["uib-var"]);
       __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -6648,7 +6648,7 @@
     /** Helper function to make an object reactive with property path tracking
      * @param {*} obj Object to make reactive
      * @param {string} basePath Base property path for nested objects
-     * @returns {Proxy} Reactive proxy object
+     * @returns {Proxy|*} Reactive proxy object
      * @private
      */
     _createReactiveObject(obj, basePath = "") {
@@ -6769,7 +6769,7 @@
       this.changeListeners.clear();
     }
   };
-  __publicField(Reactive, "version", "2025-06-14");
+  __publicField(Reactive, "version", "2026-06-01");
   function reactive(srcvar) {
     const reactiveInstance = new Reactive(srcvar);
     return reactiveInstance.create();
@@ -6853,7 +6853,7 @@
     window.__uibHeaders = h;
     return h;
   });
-  var version = "7.7.0-iife";
+  var version = "7.7.2-iife";
   var isMinified = !/param/.test(function(param) {
   });
   function log() {
@@ -10233,7 +10233,7 @@
  * @description Reactive proxy implementation for uibuilder (Loosely based on Vue.js v3 reactivity)
  * @license Apache-2.0
  * @author Julian Knight (Totally Information)
- * @copyright (c) 2025 Julian Knight (Totally Information)
+ * @copyright (c) 2026 Julian Knight (Totally Information)
  */
 /** This is the source main file for the uibuilder client library
  * @kind module
