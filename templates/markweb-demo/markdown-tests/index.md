@@ -1,8 +1,8 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-01-01 21:35:51
-updated: 2026-02-02 15:32:04
-status: 1st Draft
+updated: 2026-06-02 13:52:43
+status: complete
 tags: 
   - markdown
   - tests

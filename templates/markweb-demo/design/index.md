@@ -9,9 +9,9 @@ tags:
   - Node-RED
   - demo
   - design
-status: Published
+status: complete
 created: 2026-04-09 16:16:08
-updated: 2026-04-09 17:25:21
+updated: 2026-06-02 14:15:00
 ---
 
 ## Overview
@@ -22,7 +22,7 @@ It is designed to be easy to use for simple use cases, but also highly configura
 
 It was always intended to be built on top of existing UIBUILDER capabilities. However, its purpose is specifically focused on servicing _information_ heavy websites rather than the _data-driven_ or _dashboard_ style web applications that UIBUILDER is often used for. It is designed to be a "content server" rather than an "app server".
 
-It was also indended to have _no to minimal configuration_, you should be able to generate a nice looking website with just a few markdown files.
+It was also intended to have _no to minimal configuration_, you should be able to generate a nice looking website with just a few markdown files.
 
 As a UIBUILDER node though, it still needed to support the same dynamic capabilities as other UIBUILDER nodes. This means that it needed to be able to send messages to the front-end to update the content dynamically, and also to receive messages from the front-end to allow for interactivity. This is a key differentiator from other markdown servers which are typically _either_ static or dynamic via heavy-duty front-end frameworks. As always with UIBUILDER, no front-end framework is required.
 

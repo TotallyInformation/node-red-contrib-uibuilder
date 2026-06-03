@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2026-05-10 17:53:50
+updated: 2026-06-02 17:22:48
 ---
 
 Functions accessible in client-side user code.
@@ -757,6 +757,9 @@ Use as:
 const eMsg = $('#msg')    // or  document.getElementById('msg') if you prefer
 if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 ```
+
+> [!TIP]
+> A CSS variable `--syntax-highlight-height` is used to set the height of the syntax-highlighted blocks. This is set to a default value of `22em` in the `uib-brand.css` file but can be overridden in your own CSS. Remembering that CSS variables are inherited, so you can set this variable on a parent element to have different heights in different parts of the page if needed.
 
 > [!NOTE]
 > If the `json-viewer` component library is loaded, this will be used instead of the internal function. This provides a much nicer output with collapsible objects and arrays.

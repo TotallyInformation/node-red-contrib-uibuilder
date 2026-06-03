@@ -1,8 +1,8 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-03-20 11:41:53
-updated: 2026-04-09 14:05:23
-status: Complete
+updated: 2026-06-02 15:40:46
+status: complete
 title: Variables
 description: >
     Rendered variable values in markdown files.
@@ -97,6 +97,42 @@ The `{{variable}}` syntax can also include optional arguments in square brackets
 > [!NOTE]
 > Text/HTML values are just that and cannot contain Markdown.
 
+## Potentially useful uibuilder variables
+The uibuilder front-end client maintains a number of variables that may be useful to render in your markdown content.
+
+They can be accessed using the uibuilder custom web component `<uib-var>` or the `uib-var` custom HTML attribute in your markdown content, as detailed in the [technical details](#technical-details) section below. They can also be accessed in your own custom client-side JavaScript code using `uibuilder.get('variableName')` or using the `uibuilder.onChange('variableName', callback)` function to react to changes in variable values.
+
+These include:
+- `markwebEvent` - An object containing details of the most recent Markweb event, such as page navigation or content update events. This can be useful for triggering custom behaviors in response to these events, e.g., updating the page layout or content based on the new page data after a navigation event.
+
+  This is especially useful in custom client-side JavaScript code where you can use `uibuilder.onChange('markwebEvent', callback)` to react to Markweb events and update your page content or layout accordingly.
+
+  Possible event names:
+   - `page-navigation` - Triggered when the server responds to a page navigation request from the client, or when the server detects that a page refresh is needed (e.g., after a configuration change). The event object includes details such as the old and new URLs.
+
+     ```json
+     { "type": "page-navigation", "oldUrl": "<previousPageUrl>", "newUrl": "<newUrl>" }
+     ```
+     Example:
+     ```markdown
+     <uib-var variable="markwebEvent.type" data-before="Type: <code>" data-after="</code>"></uib-var>, <uib-var variable="markwebEvent.oldUrl" data-before="Old URL: <code>" data-after="</code>"></uib-var>, <uib-var variable="markwebEvent.newUrl" data-before="New URL: <code>" data-after="</code>"></uib-var>
+     ```
+     <uib-var variable="markwebEvent.type" data-before="Type: <code>" data-after="</code>"></uib-var>, <uib-var variable="markwebEvent.oldUrl" data-before="Old URL: <code>" data-after="</code>"></uib-var>, <uib-var variable="markwebEvent.newUrl" data-before="New URL: <code>" data-after="</code>"></uib-var>.
+
+     Alternatively: `<uib-var variable="markwebEvent" type="json"></uib-var>`:
+     <uib-var variable="markwebEvent" type="json" style="--syntax-highlight-height: 9em;"></uib-var>
+
+     > [!TIP]
+     > The [`<uib-var>`](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/custom-components?id=uib-var) component supports a `filter` attribute. While this is meant for formatting variable values, you can also use it to apply any custom JavaScript function that returns a value. Additionally, the component also supports `data-before`, `data-after` and `type` attributes
+
+- `clientId` - The unique client ID for the current client session.
+- `logLevel` - The current log level of the uibuilder client library, which can be useful for debugging purposes. Can also be _set_.
+- `online` - Whether the client is currently connected to the server.
+- `pageData` - All the current page variables, including those defined in the page front-matter and any global attributes. This can be useful for rendering multiple variables in a more complex way, e.g., as a table or list, or for applying custom formatting to variable values before rendering.
+- `serverTimeOffset` - The difference between the browser's local time and the current server time, which can be useful for displaying timestamps or calculating time differences.
+- `tabId` - The ID of the current browser tab, which can be useful for tracking user sessions or implementing tab-specific functionality.
+- `version` - The current version of the uibuilder client library.
+
 ## Technical details
 When `markweb` renders a markdown file, it processes the content and replaces any `{{variable}}` placeholders with a _dummy_ web component `<fm-var></fm-var>`.
 
@@ -109,7 +145,7 @@ There are however, actually 3 technical methods for rendering variables in markd
    These capabilities are provided by a custom Markdown-IT plugin and loaded automatically by the markweb client library.
 
 
-2. The `<uib-var>` custom web component from uibuilder can be used directly in markdown content for more flexible variable rendering. This allows different output formats and filter functions to be applied before rendering. Variable names have to be prefixed with `pageData.` to access page variables, e.g., `<uib-var name="pageData.title"></uib-var>`. Great for rendering variables in more complex ways, e.g. as tables, lists, or with custom formatting.
+2. The [`<uib-var>` custom web component from uibuilder](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/custom-components?id=uib-var) can be used directly in markdown content for more flexible variable rendering. This allows different output formats and filter functions to be applied before rendering. Variable names have to be prefixed with `pageData.` to access page variables, e.g., `<uib-var name="pageData.title"></uib-var>`. Great for rendering variables in more complex ways, e.g. as tables, lists, or with custom formatting.
 
 3. The `uib-var` custom HTML attribute, also from uibuilder, can be added to any HTML element to render a variable value as the content of that element.
 
@@ -144,4 +180,4 @@ Available variables are stored in the uibuilder managed `pageData` object, which
 
 {{missing1 [default="Missing variable fallback"]}}
 
-{{missing2 [default="<i>Missing variable fallback</i>", before=">> ", after=" <<"]}}
+{{missing2 [default="<i>Default Title</i>", before=">> ", after=" <<"]}}
