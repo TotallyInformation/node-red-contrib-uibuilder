@@ -13,7 +13,7 @@ import mermaid from './mermaid.esm.min.js'
 // mermaid.initialize({ startOnLoad: false, theme: 'redux-dark-color', })
 mermaid.initialize({ startOnLoad: false, theme: 'dark', darkMode: true, })
 
-const clientVersion = '7.7.0-src' // NB: This is replaced with the actual version during the build process by bin/build.mjs
+const clientVersion = '7.7.2-src' // NB: This is replaced with the actual version during the build process by bin/build.mjs
 
 /** The uibuilder.pageData object is set on load and when navigating
  * You can use it to do your own processing if desired
@@ -1123,7 +1123,10 @@ document.addEventListener('click', (e) => {
             const targetElement = document.getElementById(targetId)
             if (targetElement) {
                 targetElement.scrollIntoView({ behavior: 'smooth', block: 'start', })
-                // Add to history so back/fwd browser nav works - preserve the current page path
+                // Always push a new history entry for each anchor click so that the back button
+                // navigates through each visited anchor position individually.
+                // The popstate handler handles the case where the element is not in the DOM
+                // (e.g. after navigating away) by re-loading the page with the hash fragment.
                 const currentPath = location.pathname + location.search
                 history.pushState({ hash: href, path: currentPath, }, '', currentPath + href)
             }
@@ -1148,12 +1151,29 @@ window.addEventListener('popstate', (evt) => {
         const targetId = evt.state.hash.slice(1)
         const targetElement = document.getElementById(targetId)
         if (targetElement) {
+            // Element exists in current content - we're on the right page, just scroll
             targetElement.scrollIntoView({ behavior: 'smooth', block: 'start', })
+        } else {
+            // Element not found - the user navigated back to a page+anchor entry but the
+            // content for that page isn't loaded yet. Navigate to load it; the response
+            // handler will scroll to the hash once content is rendered.
+            isHandlingPopstate = true
+            navigate(window.location.pathname + window.location.search + window.location.hash, false)
         }
     } else if (evt.state?.path) {
-        // Handle full page navigation
-        isHandlingPopstate = true
-        navigate(evt.state.path, false)
+        // Check whether this is a back/forward to the same page content (e.g. the user pressed
+        // back after clicking a first anchor, returning to the no-hash state for the current page).
+        // In that case, just scroll to top — no server round-trip needed.
+        const targetPath = evt.state.path.split('#')[0]
+        const loadedPath = pageData?.path ? (baseUrl.replace(/\/$/, '') + pageData.path) : ''
+        if (loadedPath && normalizePath(targetPath.replace(baseUrl, '')) === normalizePath(loadedPath.replace(baseUrl, ''))) {
+            const scrollContainer = document.querySelector('main > section') || document.documentElement
+            scrollContainer.scrollTo({ top: 0, behavior: 'smooth', })
+        } else {
+            // Different page — trigger SPA navigation
+            isHandlingPopstate = true
+            navigate(evt.state.path, false)
+        }
     }
 })
 
@@ -1410,6 +1430,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             break
         }
 
+        // Received when server responds to a page navigation request from the client, or when server detects a page refresh is needed (e.g. after config change)
         case '_page-navigation-result': {
             // What is the current page url?
             const currentPageUrl = window.location.pathname
@@ -1490,6 +1511,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                 sidebarController.update(data)
             }
 
+            uibuilder.set('markwebEvent', { type: 'page-navigation', oldUrl: currentPageUrl, newUrl: newUrl, })
             break
         }
 
