@@ -19,7 +19,7 @@
         "highlight.js": "^11.11.1",
         "markdown-it": "^14.1.0",
         "markdown-it-anchor": "^9.2.0",
-        "markdown-it-attrs": "^4.3.1",
+        "markdown-it-attrs": "^5.0.0",
         "markdown-it-footnote": "^4.0.0",
         "markdown-it-github-alerts": "^1.0.1",
         "mermaid": "^11.12.2"
