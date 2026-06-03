@@ -4,10 +4,16 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-05-31 14:35:20
+updated: 2026-06-02 11:36:45
 ---
 
 ## Possible issues/improvements
+* [ ] When using Node-RED projects, the `uibuilder` folder is not in the project folder as it should be. But rather in the user data folder. Need to investigate how to fix this. [ref](https://discourse.nodered.org/t/uibuilder-new-release-v7-7-1-new-features-and-bug-fixes-extra-bugfix/101164/7?u=totallyinformation).
+* Markweb
+  * [ ] Markweb demo reporting 0 files for some people. [ref](https://discourse.nodered.org/t/uibuilder-markweb-too-dark/101168/13?u=totallyinformation). Problem appears to be in lines 1107 to 1109 of the markweb customNode.js file with the `ignore` parameter.
+  * [ ] navigation with anchor hashes
+  * [ ] `uibuilder.markwebEvent` variable.
+
 * [ ] Remove gulp dependencies once we are sure that the new build/watch script is working well and we have no need for the old gulp tasks. This will remove a bunch of audit failures.
 * [ ] Code smells:
   * [ ] this.uib, this.log, this.RED - should be using the global config module instead.

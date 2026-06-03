@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-05-31 13:17:17
+updated: 2026-06-02 17:32:24
 ---
 
 # Changelog
@@ -17,6 +17,36 @@ UIBUILDER aims to be compatible with the current major release of Node-RED. That
 On the browser side, UIBUILDER aims to be compatible with over 99% of browsers actively seen on the Internet. This includes Chrome, Firefox, Edge, Safari and Opera. It also includes current mobile browsers on Android and iOS. The target compatibility date is early 2019. [Minimum versions: 'chrome73', 'firefox66', 'opera60', 'safari12.1', 'ios12.2', 'edge79']
 
 I did sneak in 1 change to this release. Some updates to the layout of the UIBUILDER documentation. There is now only a dark-mode since the light-mode was not really usable. More importantly, the sidebar is now **resizable** _and_ now includes the **page Table of Contents**. This means that there is now a lot more room for the actual documentation content.
+
+## v7.7.2
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.7.1...v7.7.2).
+
+(Mostly) A bug fix release.
+
+### New features
+
+* A new `--syntax-highlight-height` CSS variable has been added to allow the maximum height of syntax-highlighted blocks to be set. If the content exceeds this height, it becomes scrollable. This is useful for preventing very large blocks of content from taking up too much space on the page. The default value is `22em`, but you can set it to whatever you like in your CSS. You can check out its use on the Variables page in the Markweb demo where the height is reduced to `9em`.
+
+* For Markweb, there is a new `uibuilder.markwebEvent` variable. Currently, this is only set/updated on page-navigation. It shows the old and new URL's. The Variables page in the Markweb demo has been updated to show how to use this. 
+
+### Bug fixes & tweaks
+
+* When the runtime plugin is loaded by Node-RED, the `uibRoot` folder should be in 1 of 3 possible places. An overridden location (`uibuilder.uibRoot` in `settings.js` if provided), `<userDir>/<uib.moduleName>` (e.g. commonly `~/.node-red/uibuilder`), or `<userDir>/projects/<currProject>/<uib.moduleName>` if Node-RED projects are being used. The last of these was not working correctly. This is now fixed. In addition, the logic for determining the `uibRoot` location has been tidied up and made more robust. [Reference](https://discourse.nodered.org/t/uibuilder-new-release-v7-7-1-new-features-and-bug-fixes-extra-bugfix/101164/7?u=totallyinformation).
+
+* Markweb:
+  * Various demo page content clarified and tidied up.
+  * The navigation menu shows a left-hand border for the current page. This was appearing outside a folder twisty icon which looked odd. Now improved, the border is inside the icon.
+  * Navigation and index lists were showing folders that had no index.md file and so clicking on the folder would result in a 404 not found page. Now fixed, folders with no index page are hidden as per the design requirements. 
+  * Navigating with the back button to a URL containing an anchor hash link was not working consistently. Now fixed.
+
+* For some users, the Markweb was reporting 0 files to be indexed. This appears to be due to the `ignore` parameter passed to `fgSync` (which uses fast-glob). [Ref](https://discourse.nodered.org/t/uibuilder-markweb-too-dark/101168/13?u=totallyinformation).
+
+## v7.7.1
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.7.0...v7.7.1).
+
+Bug fix release. Forces markweb websites to use uibuilder's dark mode by updating the page template. If you already have a custom page template, simply add `class="dark"` to the `<html>` tag to get the same effect.
 
 ## v7.7.0
 
