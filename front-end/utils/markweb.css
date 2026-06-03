@@ -373,7 +373,16 @@ main {
     left: calc(5px + 1.5em);
 }
 
-.active-link {
+/* Active link indicator for leaf pages (not folder summary elements) */
+.active-link:not(summary) {
+    border-left: 3px solid var(--sidebar-active-border-color);
+    padding-left: calc(0.75rem - 3px);
+    font-style: italic;
+}
+
+/* For folder items (details/summary), put the border after the disclosure triangle */
+summary.active-link > a {
+    display: inline-block;
     border-left: 3px solid var(--sidebar-active-border-color);
     padding-left: calc(0.75rem - 3px);
     font-style: italic;
