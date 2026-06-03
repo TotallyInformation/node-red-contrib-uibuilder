@@ -768,6 +768,8 @@ function renderSidebarTree(map, options, _level = 0) {
     for (const entry of sortedEntries) {
         // Skip entries with no valid path to avoid generating href="undefined" in HTML
         if (!entry.path) continue
+        // Skip folder entries that have no index.md - clicking them would result in a 404
+        if (entry.path.endsWith('/') && !entry.hasIndex) continue
         const hasChildren = entry.children && entry.children.size > 0
         const isCurrentPage = options.currentPath === entry.path
             || options.currentPath === entry.path.replace(/\/$/, '')
@@ -826,6 +828,7 @@ function createTree(currentStart, attributes, indexOptions, node) {
                     title,
                     description: doc.description || '',
                     sortPriority: doc.sortPriority || '',
+                    hasIndex: true,
                     children: new Map(),
                 })
             } else {
@@ -843,11 +846,13 @@ function createTree(currentStart, attributes, indexOptions, node) {
             const isLast = i === segments.length - 1
 
             if (!current.has(segment)) {
+                const folderPath = '/' + segments.slice(0, i + 1).join('/') + '/'
                 current.set(segment, {
-                    path: isLast ? path : '/' + segments.slice(0, i + 1).join('/') + '/',
+                    path: isLast ? path : folderPath,
                     title: isLast ? title : segment,
                     description: isLast ? (doc.description || '') : '',
                     sortPriority: isLast ? (doc.sortPriority || '') : '',
+                    hasIndex: isLast ? true : node.index.has(folderPath),
                     children: new Map(),
                 })
             } else if (isLast) {
@@ -856,6 +861,7 @@ function createTree(currentStart, attributes, indexOptions, node) {
                 nodeEntry.title = title
                 nodeEntry.description = doc.description || ''
                 nodeEntry.sortPriority = doc.sortPriority || ''
+                nodeEntry.hasIndex = true
             }
             current = current.get(segment).children
         }
@@ -1101,12 +1107,19 @@ async function buildIndexes(node) {
     node.isIndexing = true
 
     // TODO: Use async fg
+    const prefix = `${indexFolder}/**`
     let files
     try {
         // Get all regular .md files, excluding _ and . prefixed files/folders
-        const regularFiles = fgSync(`${indexFolder}/**/*.md`, { ignore: ['**/_*/**', '**/_*', '**/.*/**', '**/.*'], })
-        // Also include _index.md files specifically (Hugo/Obsidian compatibility), but not inside _* folders
-        const indexFiles = fgSync(`${indexFolder}/**/_index.md`, { ignore: ['**/_*/**', '**/.*/**', '**/.*'], })
+        const regularFiles = fgSync(
+            `${prefix}/*.md`,
+            { ignore: [`${prefix}/_*/**`, `${prefix}/.*`, `${prefix}**/_*`, `${prefix}**/.*/**`, `${prefix}**/.*`], }
+        )
+        // Also include _index.md files specifically (Hugo/Obsidian compatibility), but not inside _* or .* folders
+        const indexFiles = fgSync(
+            `${prefix}/_index.md`,
+            { ignore: [`${prefix}/_*/**`, `${prefix}/.*`, `${prefix}**/_*`, `${prefix}**/.*/**`, `${prefix}**/.*`], }
+        )
         // Merge and deduplicate
         files = [...new Set([...regularFiles, ...indexFiles])]
     } catch (e) {
@@ -2009,6 +2022,8 @@ function renderTree(map, options, sameLevel = false, nav = false, _level = 0, cu
     for (const entry of sortedEntries) {
         // Skip entries with no valid path to avoid generating href="undefined" in HTML
         if (!entry.path) continue
+        // Skip folder entries that have no index.md - clicking them would result in a 404
+        if (entry.path.endsWith('/') && !entry.hasIndex) continue
         // Ignore samelevel in recursive calls
         const childHtml = renderTree(entry.children, null, false, nav, _level + 1, currentPath)
         // If same level, skip folder entries (show only files)
@@ -2021,12 +2036,12 @@ function renderTree(map, options, sameLevel = false, nav = false, _level = 0, cu
         const isActive = currentPath && (currentPath === entry.path || currentPath === entry.path.replace(/\/$/, ''))
         const titleAttr = entry.description ? ` title="${entry.description.replace(/"/g, '&quot;')}"` : ''
         if (hasChildren) {
-            const folderClass = isActive ? 'tree-folder active-link' : 'tree-folder'
+            const summaryActiveClass = isActive ? ' class="active-link"' : ''
             // Use details/summary for collapsible folder sections
             html += `
-            <li class="${folderClass}">
+            <li class="tree-folder">
                 <details open data-path="${entry.path}">
-                    <summary${titleAttr}><a href="${entry.path}">${entry.title}</a></summary>
+                    <summary${summaryActiveClass}${titleAttr}><a href="${entry.path}">${entry.title}</a></summary>
                     ${childHtml}
                 </details>
             </li>
