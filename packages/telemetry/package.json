@@ -13,7 +13,7 @@
         "clear": "node scripts/clear.mjs"
     },
     "devDependencies": {
-        "vitest": "^3.0.0",
+        "vitest": "^4.1.7",
         "wrangler": "^4.0.0"
     },
     "engines": {
