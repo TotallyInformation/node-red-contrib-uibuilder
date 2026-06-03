@@ -1274,7 +1274,7 @@ button.compact {
     font-size: smaller;
     white-space: pre;
     width: 99%;
-    height: 22em;
+    height: var(--syntax-highlight-height, 22em);
     overflow: auto;
     resize: both;
 }
