@@ -74,7 +74,7 @@ var _UibRouter = class _UibRouter {
     __privateSet(_UibRouter, _instanceExists, true);
   }
   /** Save a reference to, and create if necessary, the HTML element to hold routes
-   * @throws if the route container could not be set
+   * @throws {Error} if the route container could not be set
    */
   _setRouteContainer() {
     if (!this.config.routeContainer) {
@@ -677,7 +677,7 @@ _instanceExists = new WeakMap();
 _startDone = new WeakMap();
 // #region --- Variables ---
 /** Class version */
-__publicField(_UibRouter, "version", "7.7.0-src");
+__publicField(_UibRouter, "version", "7.7.2-src");
 /** Ensures only 1 class instance on a page */
 __privateAdd(_UibRouter, _instanceExists, false);
 /** Options for Markdown-IT if available (set in constructor) */

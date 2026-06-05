@@ -1,8 +1,8 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-03-18 16:01:31
-updated: 2026-03-27 20:27:00
-status: Draft
+updated: 2026-06-02 14:29:26
+status: complete
 title: Tables
 description: Different table layouts in markdown.
 ---

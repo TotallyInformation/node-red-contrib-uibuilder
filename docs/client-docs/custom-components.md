@@ -3,7 +3,7 @@ title: Custom web components
 description: |
   Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2026-05-23 14:13:41
+updated: 2026-06-02 17:22:59
 since: v6.6.0
 ---
 
@@ -272,7 +272,7 @@ Generally, it will be best to define your own function. Further standard filters
     
     ```html
     <uib-var topic="mytopic" filter="yen"></uib-var>
-    <uib-var filter="lang" before="You are using the language: "></uib-var>
+    <uib-var filter="lang" data-before="You are using the language: "></uib-var>
     ```
     
     

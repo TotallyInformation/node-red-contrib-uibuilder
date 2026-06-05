@@ -1,8 +1,8 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-03-20 11:41:53
-updated: 2026-03-27 20:36:00
-status: Draft
+updated: 2026-06-02 14:16:34
+status: complete
 title: Directives
 description: >
     Showing how to use directives in markdown files.

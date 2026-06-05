@@ -373,7 +373,16 @@ main {
     left: calc(5px + 1.5em);
 }
 
-.active-link {
+/* Active link indicator for leaf pages (not folder summary elements) */
+.active-link:not(summary) {
+    border-left: 3px solid var(--sidebar-active-border-color);
+    padding-left: calc(0.75rem - 3px);
+    font-style: italic;
+}
+
+/* For folder items (details/summary), put the border after the disclosure triangle */
+summary.active-link > a {
+    display: inline-block;
     border-left: 3px solid var(--sidebar-active-border-color);
     padding-left: calc(0.75rem - 3px);
     font-style: italic;
@@ -592,40 +601,49 @@ main {
 
 /* Main content collapsible sections */
 .collapsible-section:not(ul) {
+    /* --collapsible-marker: '\00a0'; */
     position: relative;
     margin-top: 0.5em;
     margin-bottom: 0.75em;
-    /* Swap margin for padding to allow for an expander icon in "margin" if desired */
-    margin-left: -1.5em;
-    padding-left: 1.5em;
+    /* Marker sits inside the container's left padding; content indented to align with heading text */
+    padding-left: 1.2em;
+
+    /* Cancel the parent's padding-left for nested sections so all levels align */
+    & .collapsible-section:not(ul) {
+        margin-left: -1.2em;
+    }
 
     > summary {
+        /* list-style: var(--collapsible-marker, none); */
         list-style: none;
-
-        &::-webkit-details-marker {
-            display: none;
-        }
+        cursor: pointer;
+        position: relative;
+        display: flex;
+        align-items: center;
 
         h2, h3, h4, h5, h6 {
-            display: inline;
+            margin: 0;
             border-bottom: none;
         }
 
-        /* &::before {
-            content: '▶';
+        &::before {
+            content: var(--collapsible-marker, '▶');
+            /* content: var(--collapsible-marker, ''); */
             font-family: system-ui, sans-serif;
             position: absolute;
-            right: 0.5rem;
-            width: 1.5em;
+            left: -2em;
+            width: 1em;
+            text-align: center;
             font-size: 0.65em;
-            line-height: 2.5;
-            color: var(--text3);
-            transition: transform 0.2s ease;
-        } */
+            top: 50%;
+            translate: 0 -50%;
+            transition: rotate 0.2s ease;
+        }
     }
-    /* &[open] > summary::before {
-        transform: rotate(90deg);
-    } */
+
+    &[open] > summary::before {
+        rotate: 90deg;
+    }
 
     /* --cs-start-hue: 203; */
     --cs-start-hue: 41;

@@ -8,9 +8,9 @@ tags:
   - Node-RED
   - demo
   - testing
-status: Published
+status: complete
 created: 2026-03-23 17:04:49
-updated: 2026-04-07 16:03:34
+updated: 2026-06-02 13:13:49
 ---
 
 The main purpose of this demo site is to demonstrate the features of UIBUILDER for Node-RED's _MarkWeb_ features in a variety of markdown files. It serves as a testbed for features and as a reference.
@@ -72,6 +72,9 @@ Between the 2 columns is a margin area that lets you resize the columns. There i
 
 ## Markdown "frontmatter"
 The markdown source files support a "frontmatter" section at the top of the file which uses YAML syntax to specify metadata about the page. This is used to set the page title, description and other attributes. The content of the markdown file is then rendered as HTML and displayed in the main content area. See the page on [Variables](markdown-tests/variables.md) for more details on how to use frontmatter and the variables it provides.
+
+> [!TIP]
+> This file has been marked as _high_ sort priority by setting `sortPriority: high` in the front matter. This means that it will appear before any pages/folders that do not have a sort priority set or have it set to "low".
 
 ## Variables & directives
 Markweb also has its own dynamic features in the form of "variables" and "directives" that can be used in markdown files to create dynamic content. See the [Variables](markdown-tests/variables.md) and [Directives](markdown-tests/directives.md) pages for more details on how to use these features. Each markdown file allows "frontmatter" data to be specified, this translates into variables that can be used in the markdown content. For example, the `title` and `description` fields in the frontmatter of a markdown file become available as variables that can be used in the content of that file.

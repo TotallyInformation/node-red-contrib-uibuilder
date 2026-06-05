@@ -1,8 +1,8 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-03-18 16:01:31
-updated: 2026-03-25 17:17:55
-status: Complete
+updated: 2026-06-02 14:15:48
+status: complete
 title: Code Blocks
 description: Different code block scenarios in markdown.
 ---

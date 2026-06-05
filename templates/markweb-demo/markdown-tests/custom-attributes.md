@@ -1,8 +1,8 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-03-22 14:10:53
-updated: 2026-03-25 17:21:34
-status: In Progress
+updated: 2026-06-02 14:16:10
+status: complete
 title: Custom HTML Attributes
 description: >
     Markweb supports custom attributes on markdown elements. This allows you to add any valid HTML attribute to the rendered HTML elements generated from your markdown content. This can be used to add classes, styles, data attributes, or any other attributes that are supported by HTML.

@@ -3,8 +3,8 @@ title: Footnotes
 description: Different footnote scenarios in markdown.
 author: Julian Knight (Totally Information)
 created: 2026-01-01 21:35:51
-updated: 2026-05-07 16:26:59
-status: Complete
+updated: 2026-06-02 14:17:02
+status: complete
 since: "v7.7.0, 2026-05-07"
 ---
 

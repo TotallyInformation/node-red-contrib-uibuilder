@@ -1,8 +1,8 @@
 ---
 author: Julian Knight (Totally Information)
 created: 2026-01-07 15:41:19
-updated: 2026-03-26 18:08:33
-status: In Progress
+updated: 2026-06-02 17:24:52
+status: complete
 title: General Markdown Tests
 shortTitle: General Tests
 sortPriority: high
@@ -19,7 +19,7 @@ description: Testing various Commonmark and other Markdown features in markdown 
 
 ## Supported Markdown Features
 
-Rendering uses the Markdown-IT library, which supports Commonmark and some GitHub Flavored Markdown (GFM) extensions.
+Rendering uses the Markdown-IT library, which supports Commonmark and some GitHub Flavored Markdown (GFM) extensions along with Mermaid diagram support.
 
 Embedded HTML is also supported. Note that no sanitization is currently performed, so be cautious when using untrusted content. This is likely to be improved in the future.
 
@@ -52,13 +52,13 @@ See [Directives](markdown-tests/directives.md) for details on how to use special
 - Crossed-out text using `~~strikethrough~~` syntax.
 - [Syntax highlighting in code blocks](markdown-tests/code-blocks.md) using triple backticks and language specifier via highlight.js.
 - [Frontmatter values](markdown-tests/variables.md) via the `{{variable}}` syntax.
-- Embedded HTML tags, including UIBUILDER's custom web components.
+- [Footnotes](https://www.npmjs.com/package/marked-footnote).
+- [Mermaid diagrams](markdown-tests/mermaid-diagrams.md).
+- Embedded HTML tags, including UIBUILDER's [custom web components](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/custom-components) and [custom attributes](https://totallyinformation.github.io/node-red-contrib-uibuilder/#/client-docs/reactive).
 
 ### Markdown extensions to be added in future
 
-- [Footnotes](https://www.npmjs.com/package/marked-footnote).
 - DL's (Definition Lists).
-- Mermaid diagrams.
 
 ## Headings
 
@@ -88,7 +88,7 @@ Text under heading 6.
 ```markdown
 *Italic text* or _italic text_
 **Bold text** or __bold text__
-***Bold and italic*** or ___bold and italic___
+***Bold and italic*** or ___bold and italic___ or _**Italic & Bold**_ or **_Bold & Italic_**
 ~~strikethrough~~
 ```
 
@@ -96,7 +96,7 @@ Text under heading 6.
 
 **Bold text** or __bold text__
 
-***Bold and italic*** or ___bold and italic___
+***Bold and italic*** or ___bold and italic___ or _**Italic & Bold**_ or **_Bold & Italic_**
 
 ~~Strikethrough~~ (GFM Extension)
 
@@ -150,7 +150,7 @@ This creates a line break.
 Alternatively, use a backslash `\` at the end.\
 This also creates a line break.
 
-Or use the HTML `<br>` tag for<br>a line break.
+Or use the HTML `<br>` tag for<br>a line break. Only this form works inside table cells.
 
 ## Tables (GFM Extension)
 
@@ -197,3 +197,12 @@ It continues on the next line but is part of the same paragraph.
 
 This is a new paragraph separated by a blank line in the Markdown.
 
+## JavaScript
+
+Markdown does not execute embedded JavScript (e.g. in `<script>` tags) for security reasons. However, you can include JavaScript code as a code block for display purposes.
+
+However, you do have a number of options for including dynamic content in your markdown files:
+- Use the `{{variable}}` syntax to include frontmatter variables in your markdown content. These can be set in the frontmatter of your markdown file or passed in from the HTML template.
+- Use custom processing directives in your markdown files to perform special processing. See [Directives](markdown-tests/directives.md) for details.
+- Use UIBUILDER's custom web components and custom attributes to include dynamic content and interactivity in your markdown files. See [Custom Attributes](markdown-tests/attributes.md) for details.
+- Add JavaScript code to your HTML page template. This can listen for events or even be called directly from markdown by using the uibuilder `<uib-var>` component with its `filter` attribute.

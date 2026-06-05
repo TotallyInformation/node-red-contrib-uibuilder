@@ -46,18 +46,13 @@ const uib = require('./libs/uibGlobalConfig.cjs')
 function setupUibGlobalConfig(RED) {
     // Save a reference to the RED object so we can access it in other functions
     uib.RED = RED
-    // Save reference to the uibuilder root folder
-    uib.rootFolder = path.join(RED.settings.userDir, uib.moduleName)
     // Record the httpNodeRoot for later use
     uib.nodeRoot = RED.settings.httpNodeRoot
 
     // Get and record uibuilder settings from settings.js into the `uib` master object - these apply to all instances of uibuilder & Markweb
     if ( RED.settings.uibuilder ) {
         const settings = RED.settings.uibuilder
-        // Change the root folder
-        if ( settings.uibRoot && typeof settings.uibRoot === 'string') {
-            uib.rootFolder = settings.uibRoot
-        }
+        // Change the root folder - moved to setupUibFs()
         // Get web-relavent uibuilder settings from settings.js
         uib.customServer.port = Number(RED.settings.uiPort)
         // Note the system host name
@@ -88,24 +83,32 @@ function setupUibGlobalConfig(RED) {
             uib.telemetryEnabled = settings.telemetryEnabled
         }
     }
-
-    /** Locations for uib config can common folders */
-    uib.configFolder = path.join(uib.rootFolder, uib.configFolderName)
-    uib.commonFolder = path.join(uib.rootFolder, uib.commonFolderName)
 }
 
 /** Set up the uibuilder global filing system config, checking permissions and initialising the fs class */
 function setupUibFs() {
     const RED = uib.RED
 
-    // @ts-ignore Are Node-RED projects enabled?
-    if ( RED.settings?.editorTheme?.projects?.enabled === true ) {
-        // @ts-ignore If so, we need the root to be relative to the project folder
-        const currProject = RED.settings?.editorTheme?.projects?.activeProject ?? ''
-        if ( currProject !== '' ) {
-            uib.rootFolder = path.join(RED.settings.userDir, 'projects', currProject, uib.moduleName)
+    // Save reference to the default uibuilder root folder location (may be overridden by settings.js or project root)
+    uib.rootFolder = path.join(RED.settings.userDir, uib.moduleName)
+
+    // Allow to be overridden by settings.js
+    if ( RED.settings?.uibuilder?.uibRoot && typeof RED.settings.uibuilder.uibRoot === 'string') {
+        uib.rootFolder = RED.settings.uibuilder.uibRoot
+    } else {
+        // @ts-ignore Are Node-RED projects enabled? Only apply if no explicit uibRoot override was set in settings.js
+        if ( RED.settings?.editorTheme?.projects?.enabled === true ) {
+            // @ts-ignore If so, we need the root to be relative to the project folder
+            const currProject = RED.settings?.editorTheme?.projects?.activeProject ?? ''
+            if ( currProject !== '' ) {
+                uib.rootFolder = path.join(RED.settings.userDir, 'projects', currProject, uib.moduleName)
+            }
         }
     }
+
+    /** Locations for uib config can common folders */
+    uib.configFolder = path.join(uib.rootFolder, uib.configFolderName)
+    uib.commonFolder = path.join(uib.rootFolder, uib.commonFolderName)
 
     // Check that the Node-RED userDir folder is writable - completely error if not
     try {
