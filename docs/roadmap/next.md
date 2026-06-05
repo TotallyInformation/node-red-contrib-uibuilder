@@ -9,11 +9,6 @@ updated: 2026-06-02 11:36:45
 
 ## Possible issues/improvements
 * [ ] When using Node-RED projects, the `uibuilder` folder is not in the project folder as it should be. But rather in the user data folder. Need to investigate how to fix this. [ref](https://discourse.nodered.org/t/uibuilder-new-release-v7-7-1-new-features-and-bug-fixes-extra-bugfix/101164/7?u=totallyinformation).
-* Markweb
-  * [ ] Markweb demo reporting 0 files for some people. [ref](https://discourse.nodered.org/t/uibuilder-markweb-too-dark/101168/13?u=totallyinformation). Problem appears to be in lines 1107 to 1109 of the markweb customNode.js file with the `ignore` parameter.
-  * [ ] navigation with anchor hashes
-  * [ ] `uibuilder.markwebEvent` variable.
-
 * [ ] Remove gulp dependencies once we are sure that the new build/watch script is working well and we have no need for the old gulp tasks. This will remove a bunch of audit failures.
 * [ ] Code smells:
   * [ ] this.uib, this.log, this.RED - should be using the global config module instead.
@@ -22,6 +17,8 @@ updated: 2026-06-02 11:36:45
 * [ ] Alter uibuilder where we have `JSON.stringify` to use saferSerialize instead.
 * [ ] Add app type to nr admin index page to make it easier to identify uibuilder and markweb nodes.
 * [ ] Add size trap to saferSerialize to prevent very large objects from being serialized and crashing the system.
+* [ ] Move `degit` dependency to a workplace package and use it for the template cloning process. Should allow us to move to the latest version.
+* [ ] Check out next release of `markdown-it-attrs` and use if possible in `uib-md-utils`. Also check out the npm version strings.
 
 
 ### Markweb

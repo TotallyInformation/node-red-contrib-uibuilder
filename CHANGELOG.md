@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-06-02 17:32:24
+updated: 2026-06-05 20:34:50
 ---
 
 # Changelog
@@ -39,6 +39,7 @@ I did sneak in 1 change to this release. Some updates to the layout of the UIBUI
   * The navigation menu shows a left-hand border for the current page. This was appearing outside a folder twisty icon which looked odd. Now improved, the border is inside the icon.
   * Navigation and index lists were showing folders that had no index.md file and so clicking on the folder would result in a 404 not found page. Now fixed, folders with no index page are hidden as per the design requirements. 
   * Navigating with the back button to a URL containing an anchor hash link was not working consistently. Now fixed.
+  * The main content prose now has a collapsible twisty marker by default (as requested by Colin in the forum). To remove it, simply add a style of `--collapsible-marker: none;` to the page template or as a stylesheet. You can also set it to any text or emoji you like. Just remember that the marker is rotated by 90 degrees when the content is expanded so it should look right in either orientation.
 
 * For some users, the Markweb was reporting 0 files to be indexed. This appears to be due to the `ignore` parameter passed to `fgSync` (which uses fast-glob). [Ref](https://discourse.nodered.org/t/uibuilder-markweb-too-dark/101168/13?u=totallyinformation).
 
