@@ -1054,7 +1054,6 @@ function postDataUpdate(data) {
             }
         }
     })
-
 }
 
 /** Handle SPA navigation
@@ -1546,7 +1545,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                     unprocessed.push(node)
                 }
                 // Or it may contain mermaid pres deeper in the subtree
-                node.querySelectorAll?.('pre.mermaid:not([data-processed])').forEach((el) => unprocessed.push(el))
+                node.querySelectorAll?.('pre.mermaid:not([data-processed])').forEach(el => unprocessed.push(el))
             }
         }
         if (unprocessed.length > 0) {

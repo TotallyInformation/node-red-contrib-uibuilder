@@ -203,7 +203,6 @@ function nodeInstance(config) {
     this.title = config.title ?? ''
     this.descr = config.descr ?? ''
 
-
     // Make sure the url is valid & prefix with nodeRoot if needed
     this.url = urlJoin(uib.nodeRoot, this.url.trim())
 

@@ -3,10 +3,10 @@
  */
 
 // NOTE: window.uibuilder is added - see `resources` folder
-;(function () {
+;(function () { // eslint-disable-line @stylistic/no-extra-semi
     'use strict'
 
-    const uibuilder = window['uibuilder'] // eslint-disable-line no-redeclare
+    const uibuilder = window['uibuilder']
     const log = uibuilder.log
 
     /** Module name must match this nodes html file @constant {string} moduleName */
