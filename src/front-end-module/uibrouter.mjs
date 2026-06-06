@@ -57,7 +57,7 @@
 class UibRouter {
     // #region --- Variables ---
     /** Class version */
-    static version = '7.7.2-src'
+    static version = '7.7.3-src'
     /** Ensures only 1 class instance on a page */
     static #instanceExists = false
     /** Options for Markdown-IT if available (set in constructor) */

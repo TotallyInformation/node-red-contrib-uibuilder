@@ -62,7 +62,7 @@ function setupUibGlobalConfig(RED) {
         if ( settings.port && settings.port != RED.settings.uiPort) {
             uib.customServer.isCustom = true
             uib.customServer.port = Number(settings.port)
-            // Override the httpNodeRoot setting, has to be empty string. Use reverse proxy to change instead if needed.
+            // Override the httpNodeRoot setting, has to be empty string for custom server. Use reverse proxy to change instead if needed.
             uib.nodeRoot = ''
         }
         // http, https or http2 (default=http)

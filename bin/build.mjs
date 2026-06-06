@@ -1025,6 +1025,10 @@ async function startWatch() {
                         PKG_VERSION = newVersion
                         console.log(`[watch] package.json version → ${PKG_VERSION} — re-stamping version files`)
                         await safeRebuild(updateAllVersions, 'version stamps')
+                        // markweb.mjs has no esbuild step so it is never re-stamped by a FE build.
+                        // Stamp it explicitly here so a running watch always keeps it current,
+                        // even if the VERSION_FILES entry was added after this process started.
+                        await updateVersionInSourceFile({ file: `${FE_OUT}/utils/markweb.mjs`, regex: /version = '[\d.]+-src'/, type: 'semantic', })
                     }
                 } catch (err) {
                     console.warn(`[watch] Could not refresh version from package.json: ${err.message}`)

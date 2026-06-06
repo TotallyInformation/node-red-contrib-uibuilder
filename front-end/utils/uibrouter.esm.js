@@ -677,7 +677,7 @@ _instanceExists = new WeakMap();
 _startDone = new WeakMap();
 // #region --- Variables ---
 /** Class version */
-__publicField(_UibRouter, "version", "7.7.2-src");
+__publicField(_UibRouter, "version", "7.7.3-src");
 /** Ensures only 1 class instance on a page */
 __privateAdd(_UibRouter, _instanceExists, false);
 /** Options for Markdown-IT if available (set in constructor) */
