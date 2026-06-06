@@ -105,6 +105,12 @@ function setupUibFs() {
             }
         }
     }
+    console.log(
+        `🌐[uibuilder:runtimeSetup] uibRoot folder set to: ${uib.rootFolder}`,
+        RED.settings?.editorTheme?.projects?.enabled,
+        RED.settings?.editorTheme?.projects?.activeProject,
+        RED.settings.userDir
+    )
 
     /** Locations for uib config can common folders */
     uib.configFolder = path.join(uib.rootFolder, uib.configFolderName)
