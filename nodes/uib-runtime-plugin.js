@@ -49,6 +49,19 @@ function setupUibGlobalConfig(RED) {
     // Record the httpNodeRoot for later use
     uib.nodeRoot = RED.settings.httpNodeRoot
 
+    // Get and record standardised project data
+    const projects = RED.settings.get('projects')
+    uib.projData = {
+        // flowFile: RED.settings.flowFile,
+        // userDir: RED.settings.userDir,
+        enabled: RED.settings.editorTheme?.projects?.enabled,
+        activeProject: projects?.activeProject,
+        workflow: RED.settings.editorTheme?.projects?.workflow,
+        projects: projects?.projects,
+        projects_clean1: projects?.projects?.clean1,
+    }
+    // console.log(`🌐[uibuilder:runtimeSetup:setupUibGlobalConfig]`, { projData: uib.projData, })
+
     // Get and record uibuilder settings from settings.js into the `uib` master object - these apply to all instances of uibuilder & Markweb
     if ( RED.settings.uibuilder ) {
         const settings = RED.settings.uibuilder
@@ -79,7 +92,7 @@ function setupUibGlobalConfig(RED) {
             uib.customServer.contentSecurityPolicy = settings.contentSecurityPolicy
         }
         // Allow override of the telemetry service
-        if ( settings.telemetryEnabled && typeof settings.telemetryEnabled === 'boolean' ) {
+        if ( 'telemetryEnabled' in settings && typeof settings.telemetryEnabled === 'boolean' ) {
             uib.telemetryEnabled = settings.telemetryEnabled
         }
     }
@@ -96,21 +109,21 @@ function setupUibFs() {
     if ( RED.settings?.uibuilder?.uibRoot && typeof RED.settings.uibuilder.uibRoot === 'string') {
         uib.rootFolder = RED.settings.uibuilder.uibRoot
     } else {
+        /** Projects are a PAIN!
+         * - Settings are in 2 places: RED.settings?.editorTheme?.projects and RED.settings.get('projects')
+         * - Removing and disabling projects DOES NOT remove the RED.settings.get('projects') object, it just sets projectsEnabled to false.
+         * - The additional project settings are in .config.projects.json.
+         * - Enabling projects does NOT create a default project - everything is left pointing at userDir until you create a project and set it active.
+         */
         // @ts-ignore Are Node-RED projects enabled? Only apply if no explicit uibRoot override was set in settings.js
-        if ( RED.settings?.editorTheme?.projects?.enabled === true ) {
+        if ( uib.projData.enabled === true ) {
             // @ts-ignore If so, we need the root to be relative to the project folder
-            const currProject = RED.settings?.editorTheme?.projects?.activeProject ?? ''
+            const currProject = uib.projData.activeProject ?? ''
             if ( currProject !== '' ) {
                 uib.rootFolder = path.join(RED.settings.userDir, 'projects', currProject, uib.moduleName)
             }
         }
     }
-    console.log(
-        `🌐[uibuilder:runtimeSetup] uibRoot folder set to: ${uib.rootFolder}`,
-        RED.settings?.editorTheme?.projects?.enabled,
-        RED.settings?.editorTheme?.projects?.activeProject,
-        RED.settings.userDir
-    )
 
     /** Locations for uib config can common folders */
     uib.configFolder = path.join(uib.rootFolder, uib.configFolderName)
@@ -282,6 +295,10 @@ function onAdd() {
  */
 function pluginDefinition(RED) {
     RED.log.trace('🌐[uibuilder:runtimeSetup] ----------------- global config started -----------------')
+    // RED.events.on('runtime-event', function(event) {
+    //     console.log(`🌐[uibuilder:runtimeSetup:runtime-event] ID: ${event.id}`)
+    // })
+
     setupUibGlobalConfig(RED)
 
     /** (a) Filing system checks and library setup */
@@ -324,11 +341,23 @@ function pluginDefinition(RED) {
 
     // Show the base uibuilder config on startup in the log
     let initialised = false
-    // RED.events.on('runtime-event', function(event) {
-    //     if (event.id === 'runtime-state' && initialised === false ) {
-    //         initialised = true
-    //     }
-    // })
+    RED.events.on('runtime-event', function(event) {
+        if (event.id === 'project-update') {
+            if ( uib.projData.enabled !== RED.settings.editorTheme?.projects?.enabled || uib.projData.activeProject !== RED.settings.get('projects').projects?.activeProject) {
+                // MUST RESTART NODE-RED TO PICK UP PROJECT CHANGE
+                RED.log.error(`🌐🛑[uibuilder:runtimeSetup] Detected change in Node-RED project state or active project. UIBUILDER will not work correctly until Node-RED is restarted.`)
+                RED.events.emit('runtime-event', {
+                    id: 'uibuilder-project-change-warning',
+                    payload: {
+                        text: 'Detected change in Node-RED project state or active project. UIBUILDER will not work correctly until Node-RED is restarted. After restarting, reload the Editor to remove this message.',
+                        type: 'error',
+                        // timeout: 2000,
+                    },
+                })
+            }
+        }
+        // console.log(`🌐[uibuilder:runtimeSetup:runtime-event] ID: ${event.id}`)
+    })
     RED.events.on('flows:started', async function(event) {
         // Parse the telemetry file to load the telemetry data into the global uib object
         // (ensures the file exists & sends data to cloudflare if needed)
@@ -338,32 +367,45 @@ function pluginDefinition(RED) {
         if (initialised === false ) { // make sure we only log this once, not on every deploy (flows:started is emitted on every deploy)
             initialised = true
             const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
-            RED.log.info('+-----------------------------------------------------')
-            RED.log.info(`| 🌐 ${uib.moduleName} v${uib.version} initialised`)
-            RED.log.info(`| root folder: ${uib.rootFolder}`)
-            RED.log.info(`| Telemetry: ${uib.telemetryEnabled === true ? `On, uuid: ${uib.telemetry?.uuid}` : 'Off'}`)
-            if ( uib.customServer.isCustom === true ) {
-                RED.log.info('| Using custom ExpressJS webserver at:')
-                RED.log.info(`|   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot} or ${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`)
-            } else {
-                RED.log.info('| Using Node-RED\'s webserver at:')
-                RED.log.info(`|   ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`)
+            RED.log.info('┌─────────────────────────────────────────────────────────────────────────')
+
+            RED.log.info(`│ 🌐 ${uib.moduleName} v${uib.version} initialised`)
+
+            if ( uib.projData.enabled === true ) {
+                if ( uib.projData.activeProject ) {
+                    RED.log.info(`│ Node-RED Projects enabled, using active project: "${uib.projData.activeProject}"`)
+                } else {
+                    RED.log.info(`│ Node-RED Projects enabled, no active project. Using default location.`)
+                }
             }
-            RED.log.info(`| Instances: ${uib.telemetry?.uib_count} uibuilder, ${uib.telemetry?.markweb_count} markweb`)
+            RED.log.info(`│ Root folder: ${uib.rootFolder}`)
+
+            RED.log.info(`│ Telemetry: ${uib.telemetryEnabled === true ? `On, uuid: ${uib.telemetry?.uuid}` : 'Off'}`)
+            if ( uib.customServer.isCustom === true ) {
+                RED.log.info('│ Using custom ExpressJS webserver at:')
+                RED.log.info(`│   ${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot} or ${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`)
+            } else {
+                RED.log.info('│ Using Node-RED\'s webserver at:')
+                RED.log.info(`│   ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`)
+            }
+
+            RED.log.info(`│ Instances: ${uib.telemetry?.uib_count} uibuilder, ${uib.telemetry?.markweb_count} markweb`)
+
             const pkgs = Object.keys(packageMgt.uibPackageJson.uibuilder.packages)
-            RED.log.info('| Installed packages:')
+            RED.log.info('│ Installed packages:')
             if (pkgs.length === 0) {
-                RED.log.info('|   No packages installed')
+                RED.log.info('│   No packages installed')
             } else {
                 for (let i = 0; i < pkgs.length; i += 4) {
                     const k = []
                     for (let j = 0; j <= 3; j++) {
                         if ( pkgs[i + j] ) k.push(pkgs[i + j])
                     }
-                    RED.log.info(`|   ${k.join(', ')}`)
+                    RED.log.info(`│   ${k.join(', ')}`)
                 }
             }
-            RED.log.info('+-----------------------------------------------------')
+
+            RED.log.info('└─────────────────────────────────────────────────────────────────────────')
         }
     })
     RED.log.trace('🌐[uibuilder:runtimeSetup] ----------------- global config complete -----------------')
