@@ -13,7 +13,7 @@ import mermaid from './mermaid.esm.min.js'
 // mermaid.initialize({ startOnLoad: false, theme: 'redux-dark-color', })
 mermaid.initialize({ startOnLoad: false, theme: 'dark', darkMode: true, })
 
-const clientVersion = '7.8.0-src' // NB: This is replaced with the actual version during the build process by bin/build.mjs
+const clientVersion = '7.7.3-src' // NB: This is replaced with the actual version during the build process by bin/build.mjs
 
 /** The uibuilder.pageData object is set on load and when navigating
  * You can use it to do your own processing if desired
