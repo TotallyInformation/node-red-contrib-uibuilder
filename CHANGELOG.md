@@ -18,6 +18,29 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 I did sneak in 1 change to this release. Some updates to the layout of the UIBUILDER documentation. There is now only a dark-mode since the light-mode was not really usable. More importantly, the sidebar is now **resizable** _and_ now includes the **page Table of Contents**. This means that there is now a lot more room for the actual documentation content.
 
+## v7.7.3
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.7.2...v7.7.3).
+
+A bug fix release.
+
+* Runtime startup was not correctly recognising the `uibuilder.telemetryEnabled` setting in `settings.js`. This meant that telemetry was always enabled even if the setting was set to false. Now fixed.
+* The "fix" for projects in v7.7.2 was not quite correct. Now corrected
+* Node-RED project changes to a new project were not being recognised by uibuilder.
+
+> **CRITICAL NOTE**
+> 
+> When changing Node-RED projects, it is critical to restart Node-RED after switching. This will reset the uibuilder runtime settings to the new project locations.
+> 
+> **Failing to restart will cause uibuilder work fail to work correctly and may cause data loss.**
+>
+> To support this, uibuilder now shows an error in the log and the Editor telling you to restart Node-RED if it detects a project change.
+>
+> In addition, the uibuilder initialisation log block now shows if projects are in use and which is the current project (if any).
+> 
+> Also note that a new project will get a completely "clean" uibuilder environment (other than any configuration in settings.js).
+> Front-end libraries will need to be installed and any changes to uibuilder's `.config` or `common` folders will need to be manually copied over.
+
 ## v7.7.2
 
 [Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.7.1...v7.7.2).
