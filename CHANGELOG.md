@@ -32,7 +32,7 @@ A bug fix release.
 > 
 > When changing Node-RED projects, it is critical to restart Node-RED after switching. This will reset the uibuilder runtime settings to the new project locations.
 > 
-> **Failing to restart will cause uibuilder work fail to work correctly and may cause data loss.**
+> **Failing to restart will cause uibuilder to fail to work correctly and may cause data loss.**
 >
 > To support this, uibuilder now shows an error in the log and the Editor telling you to restart Node-RED if it detects a project change.
 >
