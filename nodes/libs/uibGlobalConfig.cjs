@@ -116,6 +116,9 @@ const uibGlobalConfig = {
      */
     nodeRoot: null,
 
+    /* Copy of Node-RED projects data for convenience since NR puts it into multiple places. Set in runtime plugin*/
+    projData: {},
+
     /** Are uibuilder node instances allowed to create their own API endpoints?
      * Updated in uibuilder.js from settings.js if it contains a uibuilder property
      */

@@ -57,7 +57,7 @@ import { formatDate } from './libs/format-date-time.mjs'
 // Incorporate the logger module - NB: This sets a global `log` object for use if it can.
 // import logger from './logger'
 
-const version = '7.7.2-src'
+const version = '7.7.3-src'
 
 // #region --- Module-level utility functions --- //
 

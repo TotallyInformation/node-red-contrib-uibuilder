@@ -156,7 +156,7 @@ var Ui = (_a = class {
    */
   constructor(win, extLog, jsonHighlight) {
     // #region --- Class variables ---
-    __publicField(this, "version", "7.7.2-src");
+    __publicField(this, "version", "7.7.3-src");
     // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
     __publicField(this, "sanitiseExtraTags", ["uib-var"]);
     __publicField(this, "sanitiseExtraAttribs", ["variable", "report", "undefined"]);
@@ -6850,7 +6850,7 @@ var __uibHeadersPromise = fetch(location.href, { method: "HEAD", cache: "no-stor
   window.__uibHeaders = h;
   return h;
 });
-var version = "7.7.2-esm";
+var version = "7.7.3-esm";
 var isMinified = !/param/.test(function(param) {
 });
 function log() {

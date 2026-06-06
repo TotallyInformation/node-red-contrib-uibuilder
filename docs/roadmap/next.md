@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-06-02 11:36:45
+updated: 2026-06-06 17:38:30
 ---
 
 ## Possible issues/improvements
@@ -19,6 +19,9 @@ updated: 2026-06-02 11:36:45
 * [ ] Add size trap to saferSerialize to prevent very large objects from being serialized and crashing the system.
 * [ ] Move `degit` dependency to a workplace package and use it for the template cloning process. Should allow us to move to the latest version.
 * [ ] Check out next release of `markdown-it-attrs` and use if possible in `uib-md-utils`. Also check out the npm version strings.
+* [ ] Update Markweb docs for the new collapse marker and the new folder hiding behaviour.
+* [ ] Add ability to turn off collapsible prose. Needs to be an option in the Markweb node and will need to generate slightly different HTML on rendering Markdown.
+* [ ] Find places in documentation (and maybe the readme) to document the Node-RED projects issues.
 
 
 ### Markweb

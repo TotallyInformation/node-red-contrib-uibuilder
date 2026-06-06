@@ -52,7 +52,7 @@
  * @property {Function} webSocketNodeVerifyClient : [Getter/Setter],
  * @property {Function} exportGlobalContextKeys : [Getter/Setter],
  * @property {Function} contextStorage : [Getter/Setter],
- * @property {Function} editorTheme : [Getter/Setter],
+ * @property {object} editorTheme : [Getter/Setter] theme, tours, palette, projects, codeEditor, page, menu, markdownEditor, multiplayer.
  * @property {string} settingsFile : [Getter/Setter],
  * @property {string} httpRoot : [Getter/Setter],
  * @property {Function} disableEditor : [Getter/Setter],
@@ -419,6 +419,7 @@
  *   Either 'http://localhost:8787/telemetry' for local testing or https://uibtelemetry.totallyinformation.net/telemetry for production.
  * @property {number} telemetrySendInterval How often to send telemetry data to the endpoint, in seconds. Default 30d
  * @property {object} [telemetry] Telemetry data for the uibuilder instance. Loaded from and saved to `<uibRoot>/.config/telemetry.json`.
+ * @property {object} projData Node-RED projects data for convenience since NR puts it into multiple places.
  */
 
 /** senderNode1
