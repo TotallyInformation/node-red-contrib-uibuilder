@@ -1,3 +1,4 @@
+// https://nodered.org/docs/api/ui/sidebar/
 // NOTE: window.uibuilder is added - see `resources` folder
 (function () {
     'use strict'
@@ -117,18 +118,24 @@
             // When the first uib-sidebar node is added ...
             if (window['uibSidebarNodeCount'] === 1) {
                 log('🌐📊[uib-sidebar] FIRST uib-sidebar added - ADDING SIDEBAR')
+                // Bug in node-red core, RED.sidebar.containsTab is not working.
+                // I don't really need this anyway as the sidebar tab should only be added when the first node is added, but I'll leave it in for now as a sanity check and in case I need to add functionality to it later.
+                // let uibSb = false
+                // try {
+                //     uibSb = RED.sidebar.containsTab('uibuilder-sidebar-ui')
+                // } catch (e) {
+                //     // Ignore - this just means the sidebar tab doesn't exist yet - workaround for a bug in node-red core
+                // }
                 // Add the sidebar tab
-                if (!RED.sidebar.containsTab('uibuilder-sidebar-ui')) {
-                    RED.sidebar.addTab({
-                        id: 'uibuilder-sidebar-ui',
-                        label: 'uib UI',
-                        name: 'UIBUILDER Sidebar UI',
-                        content: sbMasterEl,
-                        // toolbar: uiComponents.footer,
-                        enableOnEdit: true,
-                        iconClass: 'fa fa-globe uib-blue',
-                    })
-                }
+                RED.sidebar.addTab({
+                    id: 'uibuilder-sidebar-ui',
+                    label: 'uib UI',
+                    name: 'UIBUILDER Sidebar UI',
+                    content: sbMasterEl,
+                    // toolbar: uiComponents.footer,
+                    enableOnEdit: true,
+                    iconClass: 'fa fa-globe uib-blue',
+                })
             }
             // Get a reference to the sidebar UI element (only once)
             if (!sbEl) sbEl = document.getElementById('uib-sidebar-ui')
