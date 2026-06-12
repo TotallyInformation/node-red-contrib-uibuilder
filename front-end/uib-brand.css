@@ -19,7 +19,7 @@
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
  * NB: The version is updated automatically by the build process to the current date - see gulpfile.js
- * @version: 2026-06-05
+ * @version: 2026-06-12
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -74,6 +74,13 @@
 
     /* For the show/hide elements in PWA mode */
     --pwa-display-mode: block;
+
+    /* #region Fix link colours when using dark mode in a light mode browser and visa versa */
+    --a-link: blue;
+    --a-visited: purple;
+    --a-hover: red; /* Hover state (must be after link/visited) Hover doesn't seem to be defined in Chromium */
+    --a-active: orange; /* Active state (must be after hover) This is when you hold mouse down on the link */
+    /* #endregion --- Fix link colours --- */
 
     /* #region --- Colour Prep --- */
     --brand-hue: 200;
@@ -429,6 +436,13 @@
 
     --surfaces-factor: var(--dark-surfaces-factor);
     --surfaces-lightness: var(--dark-surfaces-lightness);
+
+    /* #region Fix link colours when using dark mode in a light mode browser and visa versa */
+    --a-link: hsl(240, 100%, 81%);
+    --a-visited: hsl(271, 69%, 81%);
+    --a-hover: hsl(0, 100%, 70%); /* Hover state (must be after link/visited) Hover doesn't seem to be defined in Chromium */
+    --a-active: hsl(30, 100%, 50%); /* Active state (must be after hover) This is when you hold mouse down on the link */
+    /* #endregion --- Fix link colours --- */
 }
 
 /*#region --- Surface & std colour classes --- */
@@ -677,6 +691,27 @@ summary {
 summary > h2, summary > h3, summary > h4, summary > div, summary > p {
     display: inline-block;
 }
+
+/* #region Fix link colours when using dark mode in a light mode browser and visa versa */
+  /* Default and visited states */
+  a:link {
+    color: var(--a-link, blue);
+  }
+  a:visited {
+    color: var(--a-visited, purple);
+  }
+  /* Hover doesn't seem to be defined in Chromium */
+  /* Hover state (must be after link/visited) */
+  a:hover {
+    color: var(--a-hover, red);
+    text-decoration-style: double;
+  }
+  /* This is when you hold mouse down on the link */
+  /* Active state (must be after hover) */
+  a:active {
+    color: var(--a-active, orange);
+  }
+/* #endregion --- Fix link colours --- */
 
 /*#endregion --- Basic reset --- */
 
