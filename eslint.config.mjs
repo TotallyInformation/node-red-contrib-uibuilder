@@ -24,7 +24,7 @@ import node from 'eslint-plugin-n' // https://www.npmjs.com/package/eslint-plugi
 import pluginSecurity from 'eslint-plugin-security' // https://www.npmjs.com/package/eslint-plugin-security, node.js only
 import stylistic from '@stylistic/eslint-plugin' // https://eslint.style
 import js from '@eslint/js'
-import { jsdocRules, stylisticRules, generalRules } from './eslint-shared-config.mjs' // Shared rules for all ESLINT configs
+import { jsdocRules, stylisticRules, generalRules, nodeVersion, } from './eslint-shared-config.mjs' // Shared rules for all ESLINT configs
 
 // Folder/file lists - eslint flat config is WEIRD!
 // You have to override the top-level config (e.g. **/*.js) and then exclude the folders/files you don't want.
@@ -161,7 +161,7 @@ export default defineConfig([
             jsdoc: { mode: 'jsdoc', },
             // Better to pick up from package.json unless needing to override
             // package.json is restricted to >=v18 to match Node-RED. We want at least v18.4
-            node: { version: '18.4.0', },
+            node: { version: nodeVersion, },
         },
         rules: {
             ...jsdocRules,
@@ -208,7 +208,7 @@ export default defineConfig([
             jsdoc: { mode: 'jsdoc', },
             // Override for node.js current LTS (assuming the use of ESBUILD)
             // Better to pick up from package.json unless needing to override
-            node: { version: 'lts', },
+            node: { version: nodeVersion, },
         },
         rules: {
             ...jsdocRules,
