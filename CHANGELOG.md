@@ -18,6 +18,15 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 I did sneak in 1 change to this release. Some updates to the layout of the UIBUILDER documentation. There is now only a dark-mode since the light-mode was not really usable. More importantly, the sidebar is now **resizable** _and_ now includes the **page Table of Contents**. This means that there is now a lot more room for the actual documentation content.
 
+## v7.7.4
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.7.3...v7.7.4).
+
+A bug fix release.
+
+* Added a fix to `uib-sidebar` for what appears to be a bug in node-red core. [Ref](https://discourse.nodered.org/t/error-when-trying-to-add-a-custom-sidebar-tab/101267).
+* When using UIBUILDER brand styles (including Markweb defaults), if the users browser was set to light mode, the unvisited link colour was too dark. Added link colour overrides that use CSS Variables with defaults for both light and dark modes. Fixed in uib-brand.css. The new variables are: `--a-link`, `--a-visited`, `--a-hover`, and `--a-active`. You can set these in your own CSS to override the defaults if needed. Double underline also added to the hover state to make it more obvious. [Ref](https://discourse.nodered.org/t/uibuilder-markweb-too-dark/101168/41).
+
 ## v7.7.3
 
 [Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.7.2...v7.7.3).
