@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-06-06 17:38:30
+updated: 2026-06-12 14:25:14
 ---
 
 ## Possible issues/improvements
@@ -22,11 +22,24 @@ updated: 2026-06-06 17:38:30
 * [ ] Update Markweb docs for the new collapse marker and the new folder hiding behaviour.
 * [ ] Add ability to turn off collapsible prose. Needs to be an option in the Markweb node and will need to generate slightly different HTML on rendering Markdown.
 * [ ] Find places in documentation (and maybe the readme) to document the Node-RED projects issues.
+* [ ] Fix dark mode link colours:
+  * [ ] :link: rgb(158, 158, 255). :visited: rgb(208, 173, 240) 
+
+## Next release requirements
+* [ ] v8.0.0 to recognise the node.js and node-red baseline version changes.
+* [ ] Bump Degit version - new versions fix the git requirement bug. Node.js v20 is now minimum versiion.
+* [ ] **Begin migration of runtime modules to ESM**. Now supported by Node-RED v5.
+* [ ] Update baseline to node-red v5 and node v22. pacakge.json, docs, eslint.
+* [ ] Update docs to show that front-end code targets release-date - 7 years.
 
 
 ### Markweb
 * [_] Add Markweb instances to the list of uibuilder apps/urls. Started, needs app index page and the listApps function node utility updating to show them along with the new `type` property.
 * [ ] Reduce the chattiness of the markweb client library.
+* [ ] Add open and vscode shortcuts to the config.
+* [ ] Add option to turn off the collapsible prose feature.
+* [ ] Add site title and icon to the sidebar.
+* [ ] Allow `[[...]]` cross-page links. [Ref](https://discourse.nodered.org/t/uibuilder-markweb-too-dark/101168/38?u=totallyinformation)
 
 ### Documentation
 * [ ] Document the CSP overrides and how to use them.
@@ -34,6 +47,10 @@ updated: 2026-06-06 17:38:30
 
 ### uibuilder node
 * [ ] Deploy of new uibuilder node sometimes results in `🌐⚠️[uibuilder:web:setupInstanceStatic:nojs-charts] Cannot show default page, index.html does not exist in D:\src\uibRoot\nojs-charts\src.`.  Likely because the reload option is on so as the default folders & files being created, the node tries to reload the page. Maybe suspend watcher for initial deployment somehow?
+
+### uibuilder library
+
+* [ ] Add data-before and data-after attribute processing to the `uib-var` custom attribute. E.g. to extend ability of Markweb to add the site title to the browser title.
 
 ## In Progress
 
@@ -101,8 +118,11 @@ updated: 2026-06-06 17:38:30
 * Markweb:
   * Video.
   * Allow `readme.md` or `README.md` to be used as folder default pages as well as `index.md`, `.index.md`, and `_index.md`.
+  * Add an editor.
+  * New `markweb-save` node to dynamically convert markdown to HTML and save to the filesystem. Listens for changes and automatically updates. Possibly connect to GIT and allow an upstream to be set for pushing changes to a remote repository. Would need an Internet-facing link to the Mermaid library. Might possibly offer some settings to enable the uibuilder library to connect back to the Node-RED server over the Internet.
 * Editor:
   * uib-sidebar - add markdown support.
+  * The default palette categories now have description tooltips, and custom categories can provide their own descriptions via a theme plugin or node ([#5769](https://github.com/node-red/node-red/pull/5769)).
 * router
   * Add icon support to the router menu system.
   * Add vertical support to the router menu system.

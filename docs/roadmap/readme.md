@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2026-05-30 13:16:39
+updated: 2026-06-11 18:44:20
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -374,12 +374,8 @@ Planned release date: To coincide with Node-RED v6.
 
 #### Node.js v14 features - code updates to leverage the latest features
 
-* [x] ~~Replace `||` default value tests with `??` . Replace checks for if a property exists with `?.` - [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining), [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining), [Nullish Coalescing](https://wiki.developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_Coalescing_Operator)~~ - started using
-* [x] ~~Object.fromEntries (helps make an object either from Map or from a key/value array)~~ - already in use
-* [ ] **==Private Class methods==** (v14.5.1+)
+* [x] **==Private Class methods==** (v14.5.1+)
 * [ ] **==Optional catch binding==**
-* [ ] [Intl.DisplayNames](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisplayNames)
-* [ ] [calendar &amp; numberingSystem for Intl.DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat)
 * [ ] WeakReferences (v14.5.1+)
 * [ ] Array flat and flat map
 * [ ] `fs.rm` (with recursive and force options)
@@ -479,7 +475,6 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
 
   * Permission model (experimental in v20)
 
-  * `URLPattern` (experimental) - enables `new URLPattern({ pathname: '/users/:id' })`
 
 #### v23
 
@@ -491,15 +486,13 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
 
 #### v24
 
-* `dirent.path` -> `dirent.parentPath`
-* The `fs` module introduced a runtime deprecation for `F_OK`, `R_OK`, `W_OK`, and `X_OK` getters exposed directly on `node:fs`. Get them from `fs.constants` or `fs.promises.constants` instead.
-* `process.assert` -> `node:assert` module.
+* [x] `dirent.path` -> `dirent.parentPath`
+* [x] The `fs` module introduced a runtime deprecation for `F_OK`, `R_OK`, `W_OK`, and `X_OK` getters exposed directly on `node:fs`. Get them from `fs.constants` or `fs.promises.constants` instead.
+* [x] `process.assert` -> `node:assert` module.
 * `Float16Array`: a typed array for 16-bit floating-point numbers, useful in performance-sensitive numerical computations.
 * `RegExp.escape()`: a utility to safely escape strings for use within regular expressions.
 
 * `Error.isError()`: a static method to determine if an object is an instance of an error.
-
-* **WebAssembly Memory64 support**: enabling 64-bit memory addressing in WebAssembly modules.
 
 * Support for `using` and `await using` declarations for deterministic resource management.
 
@@ -516,6 +509,49 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
   * Native implementations of `ReadableStream`, `WritableStream`, and `TransformStream` support the Web Streams specification, facilitating composable and interoperable stream processing.
   * The `structuredClone()` function is provided globally to perform deep cloning of complex data structures, consistent with the browser environment.
   * The introduction of `MessagePort` facilitates message passing and worker thread communication.
+
+##### Key Breaking Changes and Major Updates
+
+* **V8 Engine and Native Modules**: The upgrade to **V8 13.6** introduces a **V8-owned CppHeap**, which significantly alters C++ object management and garbage collection. This has caused a reported **57% performance regression** for native modules like `better-sqlite3` that frequently cross the JS/C++ boundary, whereas v22 (V8 12.4) showed only a minor 7-9% regression. Native addons may require rebuilding, and **C++20** support is now recommended where C++17 was previously sufficient. 
+* **Security and OpenSSL**: Pre-built binaries now use **OpenSSL 3.5** with a default security level of **2**. This prohibits **RSA, DSA, and DH keys shorter than 2048 bits** and **ECC keys shorter than 224 bits**, as well as any **RC4** cipher suites. Additionally, Node.js v24 stabilizes a **permission model** (using flags like `--allow-fs-read`) to restrict third-party dependency access, enhancing supply chain security. 
+* **Deprecated and Removed APIs**:
+  * [x] **Crypto**: Legacy methods `crypto.createCipher` and `crypto.createDecipher` are removed; users must migrate to `createCipheriv`/`createDecipheriv`.
+  * [x] **File System**: The `dirent.path` property is deprecated in favor of `dirent.parentPath`. Direct access to `fs.F_OK`, `R_OK`, etc., is deprecated in favor of `fs.constants`. `fs.truncate` with a file descriptor is deprecated in favor of `ftruncate`.
+  * [x] **HTTP/2**: Priority-related options and methods are removed as priority signaling is deprecated.
+  * [x] **Process**: `process.assert` is removed in favor of the `assert` module.
+* **Platform and Binary Support**:
+  * Pre-built binaries are no longer provided for **32-bit Windows (x86)** or **32-bit Linux on armv7**.
+  * macOS pre-built binaries now require a minimum of **macOS 13.5**.
+  * Linux builds continue to require **glibc 2.28+**. 
+* **Developer Experience and Features**:
+  * **TypeScript**: Native **type stripping** is stable, allowing direct execution of `.ts` files without a build step for scripts and CLIs.
+  * **Web APIs**: `URLPattern` is globally available (enables `new URLPattern({ pathname: '/users/:id' })`), and **Undici 7** is the bundled HTTP client, providing production-ready **HTTP/3** support and improved `require(esm)` compatibility.
+  * **New JavaScript Features**: Support for `Float16Array`, `Error.isError()`, `RegExp.escape()`, and explicit resource management. 
+
+##### Migration Recommendations
+
+* **Benchmark Native Workloads**: If your application relies heavily on native modules (e.g., SQLite), benchmark performance carefully, as v24 may exhibit significant slowdowns due to V8 heap changes. 
+* **Update Codebases**: Use provided **codemods** (e.g., `@nodejs/crypto-rsa-pss-update`, `@nodejs/dirent-path-to-parent-path`) to automate updates for deprecated APIs. 
+* **Check Security Constraints**: Ensure all cryptographic keys meet the new minimum bit-length requirements (2048-bit RSA/DH/DH, 224-bit ECC). 
+* **Compiler Toolchains**: If building from source, update your toolchain to **gcc 12.2+** (Linux/AIX) or **Xcode 16.1+** (macOS). 
+
+#### v26 (LTS in Oct 2026)
+
+##### Major New Features
+
+* **Temporal API Stabilization**: The Temporal API is now **enabled by default** as a global, replacing the legacy `Date` object with immutable, time-zone-aware date handling. This allows dropping external libraries like `date-fns` or `Luxon` for many use cases.
+* **V8 14.6 Engine**: Node.js 26 ships with **V8 14.6** (from Chromium 146), up from V8 13.6 in Node 24. This brings performance improvements and new JavaScript features like **Float16Array** and **Error.isError()**.
+* **Map Upsert Methods**: New `Map.getOrInsert()` and `Map.getOrInsertComputed()` methods allow atomic check-and-insert operations, simplifying caching and memoization patterns. 
+* **Iterator Concatenation**: The static `Iterator.concat()` method enables lazy composition of multiple iterators without intermediate array allocations. 
+* **Undici 8**: The bundled HTTP client is upgraded to version 8, bringing fetch() performance and compatibility improvements. 
+
+##### Breaking Changes
+
+* **Removed Internal Stream Modules**: Internal modules like `_stream_readable` are **completely removed**. Code directly requiring these (e.g., `require('_stream_readable')`) will break; it must be replaced with `require('stream').Readable`.
+* **Readable Stream Behavior**: Readable streams now **read one buffer at a time** instead of reading ahead. Applications relying on the old buffering behavior may experience **throughput changes**. 
+* **Removed `writeHeader()`**: `http.Server.prototype.writeHeader()` is removed; use `writeHead()` instead. 
+* **Removed `--experimental-transform-types`**: This flag is gone. **TypeScript type stripping** is now stable and enabled by default, but support for TypeScript enums via this flag is lost (only erasable syntax remains). 
+* **Removed `localStorage`**: The `localStorage` API now returns `undefined` without a backing file, effectively removing browser-like storage support in the core runtime. 
 
 
 ### Other Ideas
