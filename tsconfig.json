@@ -16,8 +16,8 @@
         "lib": [
             "ES2022"
         ],
-        "module": "commonjs",
-        "moduleResolution": "node",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
         "target": "es2022",
         "noEmit": true,
         "typeRoots": [
