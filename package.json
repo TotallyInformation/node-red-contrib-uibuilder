@@ -34,7 +34,6 @@
     "degit": "3.*",
     "express": "^4.17.1",
     "jsdom": "^29.0.1",
-    "markdown-it-attrs": "^5.0.0",
     "socket.io": "^4.3.2"
   },
   "devDependencies": {
