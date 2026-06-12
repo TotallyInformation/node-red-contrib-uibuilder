@@ -136,7 +136,7 @@ function showOverlay(options = {}) {
 // src/front-end-module/ui.mjs
 var Ui = class Ui2 {
   // #region --- Class variables ---
-  version = "8.8.0-node";
+  version = "8.0.0-node";
   // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
   sanitiseExtraTags = ["uib-var"];
   sanitiseExtraAttribs = ["variable", "report", "undefined"];
