@@ -34,7 +34,7 @@ import { showOverlay } from './libs/show-overlay.mjs'
 
 const Ui = class Ui {
     // #region --- Class variables ---
-    version = '8.8.0-src'
+    version = '8.0.0-src'
 
     // List of tags and attributes not in sanitise defaults but allowed in uibuilder.
     sanitiseExtraTags = ['uib-var']
