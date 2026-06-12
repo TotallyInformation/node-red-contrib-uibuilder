@@ -1,5 +1,7 @@
 /** Shared ESLINT rules (Import into ESLINT config files) */
 
+const nodeVersion = '22.9.0' // Minimum Node version to support (matches Node-RED minimum)
+
 const jsdocRules = {
     'jsdoc/check-alignment': 'off',
     // "jsdoc/check-indentation": ["warn", {"excludeTags":['example', 'description']}],
@@ -74,4 +76,5 @@ export {
     jsdocRules,
     stylisticRules,
     generalRules,
+    nodeVersion,
 }
