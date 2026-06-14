@@ -16,7 +16,22 @@ UIBUILDER aims to be compatible with the current major release of Node-RED. That
 
 On the browser side, UIBUILDER aims to be compatible with over 99% of browsers actively seen on the Internet. This includes Chrome, Firefox, Edge, Safari and Opera. It also includes current mobile browsers on Android and iOS. The target compatibility date is early 2019. [Minimum versions: 'chrome73', 'firefox66', 'opera60', 'safari12.1', 'ios12.2', 'edge79']
 
-I did sneak in 1 change to this release. Some updates to the layout of the UIBUILDER documentation. There is now only a dark-mode since the light-mode was not really usable. More importantly, the sidebar is now **resizable** _and_ now includes the **page Table of Contents**. This means that there is now a lot more room for the actual documentation content.
+## v8.0.0
+
+[Code commits since last release](https://github.com/TotallyInformation/node-red-contrib-uibuilder/compare/v7.7.4...v8.0.0).
+
+### 📌 Highlights
+
+* Potentially breaking changes - please make sure that you can meet the new baseline requirements before upgrading.:
+  * Baselined to Node-RED v5+.
+  * Baselined to Node.js v22.9+.
+* DEGIT has been updated to the latest release now that the baseline node version is v20+. This should fix the git requirement bug and allow us to use the latest features and fixes in degit. For reference, DEGIT is used for installing front-end templates.
+
+### Development and maintenance
+
+* Bump to v8.0.0, baseline to node.js v22.9, NR v5, degit 3.*. Remove gulp and dependencies, execa
+* Browser Telemetry capture moved to uiblib from socket library for consistency.
+* Browser telemetry data improved to eliminate more "Not a brand" issues.
 
 ## v7.7.4
 

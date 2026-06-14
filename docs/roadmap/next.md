@@ -18,18 +18,16 @@ updated: 2026-06-12 14:25:14
 * [ ] Add app type to nr admin index page to make it easier to identify uibuilder and markweb nodes.
 * [ ] Add size trap to saferSerialize to prevent very large objects from being serialized and crashing the system.
 * [ ] Move `degit` dependency to a workplace package and use it for the template cloning process. Should allow us to move to the latest version.
-* [ ] Check out next release of `markdown-it-attrs` and use if possible in `uib-md-utils`. Also check out the npm version strings.
+* [x] Check out next release of `markdown-it-attrs` and use if possible in `uib-md-utils`. Also check out the npm version strings.
 * [ ] Update Markweb docs for the new collapse marker and the new folder hiding behaviour.
 * [ ] Add ability to turn off collapsible prose. Needs to be an option in the Markweb node and will need to generate slightly different HTML on rendering Markdown.
 * [ ] Find places in documentation (and maybe the readme) to document the Node-RED projects issues.
-* [ ] Fix dark mode link colours:
-  * [ ] :link: rgb(158, 158, 255). :visited: rgb(208, 173, 240) 
 
 ## Next release requirements
-* [ ] v8.0.0 to recognise the node.js and node-red baseline version changes.
-* [ ] Bump Degit version - new versions fix the git requirement bug. Node.js v20 is now minimum versiion.
+* [x] v8.0.0 to recognise the node.js and node-red baseline version changes.
+* [x] Bump Degit version - new versions fix the git requirement bug. Node.js v20 is now minimum versiion.
+* [x] Update baseline to node-red v5 and node v22. pacakge.json, docs, eslint.
 * [ ] **Begin migration of runtime modules to ESM**. Now supported by Node-RED v5.
-* [ ] Update baseline to node-red v5 and node v22. pacakge.json, docs, eslint.
 * [ ] Update docs to show that front-end code targets release-date - 7 years.
 
 
