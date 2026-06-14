@@ -39,144 +39,6 @@ const uiblib = require('./uiblib.cjs') // Utility library for uibuilder
 /** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
 const uib = require('./uibGlobalConfig.cjs')
 
-/** Convert a request header value to a single string.
- * @param {string|string[]|undefined} value Header value from Node.js request headers
- * @returns {string|undefined} First string value if available
- */
-function getHeaderString(value) {
-    if (Array.isArray(value)) return value[0]
-    if (typeof value === 'string') return value
-    return undefined
-}
-
-/** Parse browser family/version from Client Hints headers when available.
- * @param {string|undefined} secChUa Value of `sec-ch-ua` header
- * @param {boolean} isMobile Whether `sec-ch-ua-mobile` indicates a mobile client
- * @returns {{family:string, version:string}|null} Parsed browser details or null
- */
-function parseBrowserFromClientHints(secChUa, isMobile) {
-    if ( !secChUa || typeof secChUa !== 'string' ) return null
-
-    /** @type {Array<{brand:string, version:string}>} */
-    const brands = []
-    const re = /"([^"]+)";v="([^"]+)"/g
-    let match
-    while ( (match = re.exec(secChUa)) !== null ) {
-        if (match[1] && match[2]) {
-            brands.push({ brand: match[1], version: match[2], })
-        }
-    }
-    if (brands.length === 0) return null
-
-    const ignored = new Set(['Not.A/Brand', 'Not A;Brand', 'Not/A)Brand', 'Chromium'])
-    const pick = brands.find(b => ignored.has(b.brand) === false) || brands[0]
-
-    let family = 'Other'
-    switch (pick.brand) {
-        case 'Brave':
-            family = 'Brave'
-            break
-        case 'Vivaldi': // currently reports as Chrome
-            family = 'Vivaldi'
-            break
-        case 'Microsoft Edge':
-            family = 'Edge'
-            break
-        case 'Opera':
-            family = 'Opera'
-            break
-        case 'Samsung Internet':
-            family = 'Samsung Internet'
-            break
-        case 'Google Chrome':
-        case 'Chromium':
-            family = 'Chrome'
-            break
-        case 'Firefox': // FF does not currently support Client Hints
-            family = 'Firefox'
-            break
-        case 'Safari': // Safari does not currently support Client Hints
-            family = 'Safari'
-            break
-        default:
-            family = pick.brand
-    }
-
-    if (isMobile && family !== 'Samsung Internet') family = `${family} Mobile`
-
-    return {
-        family: family,
-        version: String(pick.version)
-            .split('.')
-            .slice(0, 2)
-            .join('.'),
-    }
-}
-
-/** Parse a User-Agent string into a browser family/version tuple.
- * This is intentionally lightweight to avoid another runtime dependency.
- * @param {string|undefined} userAgent Browser user-agent header value
- * @param {boolean} [mobileHint] Value from Client Hints mobile indicator (`sec-ch-ua-mobile`)
- * @returns {{family:string, version:string}|null} Parsed browser details or null if unavailable
- */
-function parseBrowserFromUserAgent(userAgent, mobileHint = false) {
-    if ( !userAgent || typeof userAgent !== 'string' ) return null
-
-    const isMobile = mobileHint || /Mobile|Android|iP(?:hone|od|ad)|Windows Phone/i.test(userAgent)
-
-    /** @type {Array<{family:string, regex:RegExp}>} */
-    const browsers = [
-        { family: 'Edge', regex: /(?:EdgiOS|EdgA|Edg)\/([\d.]+)/, },
-        { family: 'Opera', regex: /(?:OPR|OPiOS)\/([\d.]+)/, },
-        { family: 'Vivaldi', regex: /Vivaldi\/([\d.]+)/, },
-        { family: 'Brave', regex: /Brave\/([\d.]+)/, },
-        { family: 'Samsung Internet', regex: /SamsungBrowser\/([\d.]+)/, },
-        { family: 'Chrome', regex: /(?:Chrome|CriOS)\/([\d.]+)/, },
-        { family: 'Firefox', regex: /(?:Firefox|FxiOS)\/([\d.]+)/, },
-        { family: 'Safari', regex: /Version\/([\d.]+).*Safari\//, },
-        { family: 'Internet Explorer', regex: /(?:MSIE\s|Trident\/.*rv:)([\d.]+)/, },
-    ]
-
-    for (const browser of browsers) {
-        const match = browser.regex.exec(userAgent)
-        if ( match && match[1] ) {
-            const family = browser.family === 'Samsung Internet'
-                ? browser.family
-                : isMobile ? `${browser.family} Mobile` : browser.family
-
-            return {
-                family: family,
-                // Keep version granularity small to reduce cardinality in telemetry storage.
-                version: String(match[1])
-                    .split('.')
-                    .slice(0, 2)
-                    .join('.'),
-            }
-        }
-    }
-
-    return { family: isMobile ? 'Other Mobile' : 'Other', version: '0', }
-}
-
-/** Parse browser details from request headers, preferring Client Hints where available.
- * NOTE: Client hints only available in secure contexts and not from all browsers
- * @param {import('http').IncomingHttpHeaders|undefined} headers Request headers
- * @returns {{family:string, version:string}|null} Parsed browser details or null
- */
-function parseBrowserFromHeaders(headers) {
-    const secChUa = getHeaderString(headers?.['sec-ch-ua'])
-    const secChUaMobile = getHeaderString(headers?.['sec-ch-ua-mobile'])
-    // const secChUaPlatform = getHeaderString(headers?.['sec-ch-ua-platform'])
-    const userAgent = getHeaderString(headers?.['user-agent'])
-
-    const isMobileHint = secChUaMobile === '?1'
-
-    const hinted = parseBrowserFromClientHints(secChUa, isMobileHint)
-    if (hinted) return hinted
-
-    return parseBrowserFromUserAgent(userAgent, isMobileHint)
-}
-
 /** Parse x-forwarded-for headers.
  * Borrowed from https://github.com/pbojinov/request-ip/blob/master/src/index.js
  * @param {string|string[]} value - The value to be parsed.
@@ -319,7 +181,7 @@ class UibSockets {
          * The namespace is stored in the this.ioNamespaces object against a property name matching the URL so that it can be referenced later.
          * Because this is a Singleton object, any reference to this module can access all of the namespaces (by url).
          * The namespace has some uib extensions that track the originating node id (searchable in Node-RED), the number of connected clients
-         *   and the number of messages recieved.
+         *   and the number of messages received.
          * @type {!Object<string, socketio.Namespace>}
          */
         this.ioNamespaces = {}
@@ -329,50 +191,6 @@ class UibSockets {
 
         // #endregion ---- ---- //
     } // --- End of constructor() --- //
-
-    /** Debounced save of telemetry data to avoid writing on every single connection.
-     * @returns {void}
-     */
-    queueTelemetrySave() {
-        if ( this.telemetrySaveTimer ) clearTimeout(this.telemetrySaveTimer)
-
-        this.telemetrySaveTimer = setTimeout(async() => {
-            try {
-                await uiblib.fileTelemetry()
-            } catch (err) {
-                if (uib.RED?.log) {
-                    uib.RED.log.trace(`🌐[uibuilder:socket:queueTelemetrySave] Telemetry save skipped/failed. ${err.message}`)
-                }
-            }
-        }, 5000)
-    }
-
-    /** Aggregate browser telemetry from the current socket connection.
-     * @param {socketio.Socket} socket Reference to client socket connection
-     */
-    updateBrowserTelemetry(socket) {
-        const parsed = parseBrowserFromHeaders(socket.request?.headers)
-        if (!parsed) return
-
-        if ( !uib.telemetry || typeof uib.telemetry !== 'object' ) uib.telemetry = {}
-        if ( !Array.isArray(uib.telemetry.browsers) ) uib.telemetry.browsers = []
-
-        const existing = uib.telemetry.browsers.find(b => b.family === parsed.family && b.version === parsed.version)
-        if (existing) {
-            existing.count = (Number(existing.count) || 0) + 1
-        } else {
-            uib.telemetry.browsers.push({ family: parsed.family, version: parsed.version, count: 1, })
-        }
-
-        // Optional cap/prune rule (disabled for now): keep only top-N browser tuples by count.
-        // const MAX_BROWSER_TUPLES = 50
-        // if (uib.telemetry.browsers.length > MAX_BROWSER_TUPLES) {
-        //     uib.telemetry.browsers.sort((a, b) => (Number(b.count) || 0) - (Number(a.count) || 0))
-        //     uib.telemetry.browsers = uib.telemetry.browsers.slice(0, MAX_BROWSER_TUPLES)
-        // }
-
-        this.queueTelemetrySave()
-    }
 
     /** Assign uibuilder and Node-RED core vars to Class static vars.
      *  This makes them available wherever this MODULE is require'd.
@@ -1080,8 +898,8 @@ class UibSockets {
             // Send initial client connect control msg (via port #2)
             const { _uib, _client, } = this.getClientDetails(socket, node)
 
-            // Update in-memory browser telemetry aggregate and persist (debounced) to telemetry.json.
-            this.updateBrowserTelemetry(socket)
+            // Update in-memory browser telemetry aggregate and persist (debounced) to uib.telemetry.json.
+            uiblib.updateBrowserTelemetry(socket.request?.headers)
 
             const ctrlMsg = {
                 ...{

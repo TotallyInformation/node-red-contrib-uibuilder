@@ -647,7 +647,7 @@ const UibLib = {
             throw new Error(`Telemetry endpoint returned ${res.status} ${res.statusText}`)
         } catch (err) {
             // Network errors are expected (e.g. air-gapped installs). Log as trace, not warn.
-            throw new Error(`Could not reach telemetry endpoint: ${err.message}`)
+            throw new Error(`Could not reach telemetry endpoint: ${err.message}`, { cause: err, })
         }
     },
 
@@ -670,12 +670,12 @@ const UibLib = {
      * @throws {Error} If there is an error stringifying the telemetry data or writing the file, an error is thrown with a message describing the issue.
      */
     fileTelemetry: async function fileTelemetry() {
-        let json = '{}\n'
+        let json = '{}\n' // eslint-disable-line no-useless-assignment
 
         try {
             json = JSON.stringify(uib.telemetry, null, 2) + '\n'
         } catch (err) {
-            throw new Error(`Invalid telemetry data. ${err.message} [UibFs:fileTelemetry]`, err)
+            throw new Error(`Invalid telemetry data. ${err.message} [UibFs:fileTelemetry]`, { cause: err, })
         }
 
         // Write the telemetry object to the telemetry file (will create the file if needed but not the folder)
@@ -683,7 +683,7 @@ const UibLib = {
         try {
             await fslib.writeFile(telemetryFile, json, 'utf8')
         } catch (err) {
-            throw new Error(`Could not write telemetry file '${telemetryFile}'. ${err.message} [UibFs:fileTelemetry]`, err)
+            throw new Error(`Could not write telemetry file '${telemetryFile}'. ${err.message} [UibFs:fileTelemetry]`, { cause: err, })
         }
     },
 
@@ -730,7 +730,7 @@ const UibLib = {
             try {
                 result = await this.sendTelemetry()
             } catch (err) {
-                log.error(`🌐[uiblib:sendTelemetry] Error sending telemetry (uuid=${tel.uuid}): ${err.message}`)
+                log.error(`🌐[uiblib:sendTelemetry] Error sending telemetry (uuid=${tel.uuid}): ${err.message}`, { cause: err, })
             }
         }
 
@@ -746,7 +746,7 @@ const UibLib = {
         try {
             await this.fileTelemetry()
         } catch (err) {
-            log.error(`🌐[uiblib:fileTelemetry] Error writing telemetry file: ${err.message}`)
+            log.error(`🌐[uiblib:fileTelemetry] Error writing telemetry file: ${err.message}`, { cause: err, })
         }
     },
 
@@ -766,7 +766,7 @@ const UibLib = {
                 const raw = await fslib.readFile(telemetryFile, 'utf8')
                 parsed = JSON.parse(raw)
             } catch (err) {
-                throw new Error(`Could not read or parse telemetry file '${telemetryFile}'. ${err.message} [uiblib:parseTelemetryFile]`)
+                throw new Error(`Could not read or parse telemetry file '${telemetryFile}'. ${err.message} [uiblib:parseTelemetryFile]`, { cause: err, })
             }
             uib.telemetry = parsed
         }
@@ -776,10 +776,195 @@ const UibLib = {
         try {
             await this.updateTelemetryData()
         } catch (err) {
-            log.error(`🌐[uiblib:updateTelemetryData] Error updating telemetry data: ${err.message}`)
+            log.error(`🌐[uiblib:updateTelemetryData] Error updating telemetry data: ${err.message}`, { cause: err, })
         }
     },
 
+    /** Parse browser family/version from Client Hints headers when available.
+     * @param {string|undefined} secChUa Value of `sec-ch-ua` header
+     * @param {boolean} isMobile Whether `sec-ch-ua-mobile` indicates a mobile client
+     * @returns {{family:string, version:string}|null} Parsed browser details or null
+     */
+    parseBrowserFromClientHints: function parseBrowserFromClientHints(secChUa, isMobile) {
+        if ( !secChUa || typeof secChUa !== 'string' ) return null
+
+        /** @type {Array<{brand:string, version:string}>} */
+        const brands = []
+        const re = /"([^"]+)";v="([^"]+)"/g
+        let match
+        while ( (match = re.exec(secChUa)) !== null ) {
+            if (match[1] && match[2]) {
+                brands.push({ brand: match[1], version: match[2], })
+            }
+        }
+        if (brands.length === 0) return null
+
+        // Matches 'Chromium' or variations of 'Not A Brand' (e.g., 'Not_A Brand', 'Not.A/Brand') case-insensitively
+        const ignoreRegex = /chromium|not[-.__ \/;)]?a[-.__ \/;)]?brand/i
+        const pick = brands.find(b => !ignoreRegex.test(b.brand)) || brands[0]
+
+        let family
+        switch (pick.brand) {
+            case 'Firefox': // FF does not currently support Client Hints
+                family = 'Firefox'
+                break
+            case 'Safari': // Safari does not currently support Client Hints
+                family = 'Safari'
+                break
+            case 'Opera':
+                family = 'Opera'
+                break
+            case 'Samsung Internet':
+                family = 'Samsung Internet'
+                break
+
+            case 'Brave':
+                family = 'Brave'
+                break
+            case 'Vivaldi': // currently reports as Chrome
+                family = 'Vivaldi'
+                break
+            case 'Microsoft Edge':
+                family = 'Edge'
+                break
+            case 'Google Chrome':
+            case 'Chromium':
+                family = 'Chrome'
+                break
+
+            default:
+                family = pick.brand ?? 'Other'
+        }
+
+        if (isMobile && family !== 'Samsung Internet') family = `${family} Mobile`
+
+        return {
+            family: family,
+            version: String(pick.version)
+                .split('.')
+                .slice(0, 2)
+                .join('.'),
+        }
+    },
+
+    /** Parse a User-Agent string into a browser family/version tuple.
+     * This is intentionally lightweight to avoid another runtime dependency.
+     * @param {string|undefined} userAgent Browser user-agent header value
+     * @param {boolean} [mobileHint] Value from Client Hints mobile indicator (`sec-ch-ua-mobile`)
+     * @returns {{family:string, version:string}|null} Parsed browser details or null if unavailable
+     */
+    parseBrowserFromUserAgent: function parseBrowserFromUserAgent(userAgent, mobileHint = false) {
+        if ( !userAgent || typeof userAgent !== 'string' ) return null
+
+        const isMobile = mobileHint || /Mobile|Android|iP(?:hone|od|ad)|Windows Phone/i.test(userAgent)
+
+        /** @type {Array<{family:string, regex:RegExp}>} */
+        const browsers = [
+            { family: 'Edge', regex: /(?:EdgiOS|EdgA|Edg)\/([\d.]+)/, },
+            { family: 'Opera', regex: /(?:OPR|OPiOS)\/([\d.]+)/, },
+            { family: 'Vivaldi', regex: /Vivaldi\/([\d.]+)/, },
+            { family: 'Brave', regex: /Brave\/([\d.]+)/, },
+            { family: 'Samsung Internet', regex: /SamsungBrowser\/([\d.]+)/, },
+            { family: 'Chrome', regex: /(?:Chrome|CriOS)\/([\d.]+)/, },
+            { family: 'Firefox', regex: /(?:Firefox|FxiOS)\/([\d.]+)/, },
+            { family: 'Safari', regex: /Version\/([\d.]+).*Safari\//, },
+            { family: 'Internet Explorer', regex: /(?:MSIE\s|Trident\/.*rv:)([\d.]+)/, },
+        ]
+
+        for (const browser of browsers) {
+            const match = browser.regex.exec(userAgent)
+            if ( match && match[1] ) {
+                const family = browser.family === 'Samsung Internet'
+                    ? browser.family
+                    : isMobile ? `${browser.family} Mobile` : browser.family
+
+                return {
+                    family: family,
+                    // Keep version granularity small to reduce cardinality in telemetry storage.
+                    version: String(match[1])
+                        .split('.')
+                        .slice(0, 2)
+                        .join('.'),
+                }
+            }
+        }
+
+        return { family: isMobile ? 'Other Mobile' : 'Other', version: '0', }
+    },
+
+    /** Convert a request header value to a single string.
+     * @param {string|string[]|undefined} value Header value from Node.js request headers
+     * @returns {string|undefined} First string value if available
+     */
+    getHeaderString: function getHeaderString(value) {
+        if (Array.isArray(value)) return value[0]
+        if (typeof value === 'string') return value
+        return undefined
+    },
+
+    /** Parse browser details from request headers, preferring Client Hints where available.
+     * NOTE: Client hints only available in secure contexts and not from all browsers
+     * @param {import('http').IncomingHttpHeaders|undefined} headers Request headers
+     * @returns {{family:string, version:string}|null} Parsed browser details or null
+     */
+    parseBrowserFromHeaders: function parseBrowserFromHeaders(headers) {
+        const secChUa = this.getHeaderString(headers?.['sec-ch-ua'])
+        const secChUaMobile = this.getHeaderString(headers?.['sec-ch-ua-mobile'])
+        // const secChUaPlatform = this.getHeaderString(headers?.['sec-ch-ua-platform'])
+        const userAgent = this.getHeaderString(headers?.['user-agent'])
+
+        const isMobileHint = secChUaMobile === '?1'
+
+        const hinted = this.parseBrowserFromClientHints(secChUa, isMobileHint)
+        if (hinted) return hinted
+
+        return this.parseBrowserFromUserAgent(userAgent, isMobileHint)
+    },
+
+    /** Debounced save of telemetry data to avoid writing on every single connection.
+     * @returns {void}
+     */
+    queueTelemetrySave: function queueTelemetrySave() {
+        if ( this.telemetrySaveTimer ) clearTimeout(this.telemetrySaveTimer)
+
+        this.telemetrySaveTimer = setTimeout(async() => {
+            try {
+                await this.fileTelemetry()
+            } catch (err) {
+                if (uib.RED?.log) {
+                    uib.RED.log.trace(`🌐[uibuilder:socket:queueTelemetrySave] Telemetry save skipped/failed. ${err.message}`)
+                }
+            }
+        }, 5000)
+    },
+
+    /** Aggregate browser telemetry from the current socket connection.
+     * @param {import('http').IncomingHttpHeaders|undefined} headers Request headers
+     */
+    updateBrowserTelemetry: function updateBrowserTelemetry(headers) {
+        const parsed = this.parseBrowserFromHeaders(headers)
+        if (!parsed) return
+
+        if ( !uib.telemetry || typeof uib.telemetry !== 'object' ) uib.telemetry = {}
+        if ( !Array.isArray(uib.telemetry.browsers) ) uib.telemetry.browsers = []
+
+        const existing = uib.telemetry.browsers.find(b => b.family === parsed.family && b.version === parsed.version)
+        if (existing) {
+            existing.count = (Number(existing.count) || 0) + 1
+        } else {
+            uib.telemetry.browsers.push({ family: parsed.family, version: parsed.version, count: 1, })
+        }
+
+        // Optional cap/prune rule (disabled for now): keep only top-N browser tuples by count.
+        // const MAX_BROWSER_TUPLES = 50
+        // if (uib.telemetry.browsers.length > MAX_BROWSER_TUPLES) {
+        //     uib.telemetry.browsers.sort((a, b) => (Number(b.count) || 0) - (Number(a.count) || 0))
+        //     uib.telemetry.browsers = uib.telemetry.browsers.slice(0, MAX_BROWSER_TUPLES)
+        // }
+
+        // Debounced save
+        this.queueTelemetrySave()
+    },
     // #endregion ----- Telemetry functions ----- //
 
 } // ---- End of module.exports ---- //
