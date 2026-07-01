@@ -64,7 +64,7 @@
     "globals": "17.*",
     "gulp": "5.*",
     "gulp-clean-css": "4.*",
-    "gulp-esbuild": "^0.14",
+    "gulp-esbuild": "^0.15",
     "gulp-htmlmin": "5.*",
     "gulp-include": "2.*",
     "gulp-json-editor": "2.*",
