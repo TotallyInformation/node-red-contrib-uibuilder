@@ -27,9 +27,18 @@
  */
 
 const path = require('node:path')
-const fslib = require('./fs.cjs') // File/folder handling library (by Totally Information)
 
-const pkgJson = fslib.readJSONSync(path.join( __dirname, '..', '..', 'package.json' ))
+// Avoid use of fs.cjs here so as to avoid circular references
+const { readFileSync, } = require('node:fs')
+const pjName = path.join( __dirname, '..', '..', 'package.json' )
+let pkgJson
+// If uibuilder's package.json can't be read, that is catestrophic and we can't continue
+try {
+    pkgJson = JSON.parse(readFileSync(pjName, 'utf8'))
+} catch (e) {
+    e.message = `${pjName}: ${e.message} [uibGlobalConfig:readPackageJson]`
+    throw e
+}
 
 /** @type {uibConfig} */
 const uibGlobalConfig = {
