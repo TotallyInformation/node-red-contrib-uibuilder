@@ -4,10 +4,11 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-06-12 14:25:14
+updated: 2026-07-20 11:57:27
 ---
 
 ## Possible issues/improvements
+
 * [ ] When using Node-RED projects, the `uibuilder` folder is not in the project folder as it should be. But rather in the user data folder. Need to investigate how to fix this. [ref](https://discourse.nodered.org/t/uibuilder-new-release-v7-7-1-new-features-and-bug-fixes-extra-bugfix/101164/7?u=totallyinformation).
 * [ ] Remove gulp dependencies once we are sure that the new build/watch script is working well and we have no need for the old gulp tasks. This will remove a bunch of audit failures.
 * [ ] Code smells:
@@ -22,8 +23,10 @@ updated: 2026-06-12 14:25:14
 * [ ] Update Markweb docs for the new collapse marker and the new folder hiding behaviour.
 * [ ] Add ability to turn off collapsible prose. Needs to be an option in the Markweb node and will need to generate slightly different HTML on rendering Markdown.
 * [ ] Find places in documentation (and maybe the readme) to document the Node-RED projects issues.
+* [ ] In uibuilder `this.oldUrl` check. If the move fails, check if the old folder is still there. If not, clear the oldUrl property. This will prevent the error message on a failed move from being repeated on every deploy.
 
 ## Next release requirements
+
 * [x] v8.0.0 to recognise the node.js and node-red baseline version changes.
 * [x] Bump Degit version - new versions fix the git requirement bug. Node.js v20 is now minimum versiion.
 * [x] Update baseline to node-red v5 and node v22. pacakge.json, docs, eslint.
@@ -32,23 +35,30 @@ updated: 2026-06-12 14:25:14
 
 
 ### Markweb
+
 * [_] Add Markweb instances to the list of uibuilder apps/urls. Started, needs app index page and the listApps function node utility updating to show them along with the new `type` property.
 * [ ] Reduce the chattiness of the markweb client library.
 * [ ] Add open and vscode shortcuts to the config.
 * [ ] Add option to turn off the collapsible prose feature.
 * [ ] Add site title and icon to the sidebar.
-* [ ] Allow `[[...]]` cross-page links. [Ref](https://discourse.nodered.org/t/uibuilder-markweb-too-dark/101168/38?u=totallyinformation)
+* [ ] Allow `[[...]]` cross-page links. [Ref](https://discourse.nodered.org/t/uibuilder-markweb-too-dark/101168/38)
+* [ ] Add copy button to code blocks. [Ref](https://discourse.nodered.org/t/uibuilder-markweb-too-dark/101305/4)
+* [ ] Add schema.org option. Would add `<script type="application/ld+json">` to the page template.
+* [ ] Wrap code blocks in details/summary to allow them to be collapsed/expanded.
 
 ### Documentation
+
 * [ ] Document the CSP overrides and how to use them.
 * [_] Remove docsify-darklight-theme dependency as it is dated and not being used. Will remove a bunch of audit failures. JS already not used, needs consolidation of the CSS.
 
 ### uibuilder node
+
 * [ ] Deploy of new uibuilder node sometimes results in `🌐⚠️[uibuilder:web:setupInstanceStatic:nojs-charts] Cannot show default page, index.html does not exist in D:\src\uibRoot\nojs-charts\src.`.  Likely because the reload option is on so as the default folders & files being created, the node tries to reload the page. Maybe suspend watcher for initial deployment somehow?
 
 ### uibuilder library
 
 * [ ] Add data-before and data-after attribute processing to the `uib-var` custom attribute. E.g. to extend ability of Markweb to add the site title to the browser title.
+* [ ] Re-test running uibuilder.start() in index.js
 
 ## In Progress
 
@@ -79,7 +89,7 @@ updated: 2026-06-12 14:25:14
   * [ ] Make more use of AsyncLocalStorage to allow async functions to be wrapped in sync callers.
 
 * [ ] Script run
-  * [x]  Retain at least the link to the run id so that the panel can be exited and returned to and still allow cancelling the script. 
+  * [x]  Retain at least the link to the run id so that the panel can be exited and returned to and still allow cancelling the script.
   * [ ]  Consider also retaining the complete xhr request and streamed output.
 
 * Back-end
@@ -118,12 +128,20 @@ updated: 2026-06-12 14:25:14
   * Allow `readme.md` or `README.md` to be used as folder default pages as well as `index.md`, `.index.md`, and `_index.md`.
   * Add an editor.
   * New `markweb-save` node to dynamically convert markdown to HTML and save to the filesystem. Listens for changes and automatically updates. Possibly connect to GIT and allow an upstream to be set for pushing changes to a remote repository. Would need an Internet-facing link to the Mermaid library. Might possibly offer some settings to enable the uibuilder library to connect back to the Node-RED server over the Internet.
+  * Consider addint a meta-library feature allowing a parent folder to hold multiple Markweb folders. And/or, a meta-library JSON file that lists multiple Markweb folders and creates instances for each.
+  * Edit mode
+    * Add a new edit mode to the Markweb node. When enabled, the Markweb node will allow editing of the markdown files directly in the browser. This will require a new editor to be added to the Markweb node. The editor will need to support markdown syntax highlighting and possibly a preview mode. The editor will also need to support saving changes back to the filesystem and possibly pushing changes to a remote repository.
+    * Add new folders with auto-generated `index.md` files.
+    * Add new pages with auto-generated templates.
 * Editor:
   * uib-sidebar - add markdown support.
   * The default palette categories now have description tooltips, and custom categories can provide their own descriptions via a theme plugin or node ([#5769](https://github.com/node-red/node-red/pull/5769)).
 * router
   * Add icon support to the router menu system.
   * Add vertical support to the router menu system.
+* Core
+  * Consider use of env files (stable in node.js v22) - https://nodejs.org/docs/latest-v22.x/api/environment_variables.html#cli-options
+  * Do we still need to maintain library metadata in `<uibRoot>/package.json`? It is re-created on each startup anyway so maybe just retain in memory?
 
 ## Communications
 
@@ -134,4 +152,5 @@ updated: 2026-06-12 14:25:14
   Other possibles: Instagram, Blog, LinkedIn, NR Forum, BlueSky, Mastodon.
 
 ## Other
+
 Please see the [roadmap section of the UIBUILDER documentation](roadmap/readme.md) for the latest information on what is being worked on for the next release and beyond.

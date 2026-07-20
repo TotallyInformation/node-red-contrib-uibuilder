@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-06-05 20:34:50
+updated: 2026-07-10 13:54:33
 ---
 
 # Changelog
@@ -27,11 +27,16 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
   * Baselined to Node.js v22.9+.
 * DEGIT has been updated to the latest release now that the baseline node version is v20+. This should fix the git requirement bug and allow us to use the latest features and fixes in degit. For reference, DEGIT is used for installing front-end templates.
 
+### Potential breaking changes
+
+* Baselined to Node-RED v5+ and Node.js v22.9+. Please make sure that you can meet these requirements before upgrading.
+
 ### Development and maintenance
 
 * Bump to v8.0.0, baseline to node.js v22.9, NR v5, degit 3.*. Remove gulp and dependencies, execa
 * Browser Telemetry capture moved to uiblib from socket library for consistency.
 * Browser telemetry data improved to eliminate more "Not a brand" issues.
+* GULP is no longer used for build processes, there is now a unified custom node.js script that handles watches and builds. GULP dev-dependencies have been removed.
 
 ## v7.7.4
 
@@ -53,15 +58,15 @@ A bug fix release.
 * Node-RED project changes to a new project were not being recognised by uibuilder.
 
 > **CRITICAL NOTE**
-> 
+>
 > When changing Node-RED projects, it is critical to restart Node-RED after switching. This will reset the uibuilder runtime settings to the new project locations.
-> 
+>
 > **Failing to restart will cause uibuilder to fail to work correctly and may cause data loss.**
 >
 > To support this, uibuilder now shows an error in the log and the Editor telling you to restart Node-RED if it detects a project change.
 >
 > In addition, the uibuilder initialisation log block now shows if projects are in use and which is the current project (if any).
-> 
+>
 > Also note that a new project will get a completely "clean" uibuilder environment (other than any configuration in settings.js).
 > Front-end libraries will need to be installed and any changes to uibuilder's `.config` or `common` folders will need to be manually copied over.
 
@@ -76,7 +81,7 @@ A bug fix release.
 * A new `--syntax-highlight-height` CSS variable has been added to allow the maximum height of syntax-highlighted blocks to be set. If the content exceeds this height, it becomes scrollable. This is useful for preventing very large blocks of content from taking up too much space on the page. The default value is `22em`, but you can set it to whatever you like in your CSS. You can check out its use on the Variables page in the Markweb demo where the height is reduced to `9em`.
 
 * For Markweb:
-  * There is a new `uibuilder.markwebEvent` variable. Currently, this is only set/updated on page-navigation. It shows the old and new URL's. The Variables page in the Markweb demo has been updated to show how to use this. 
+  * There is a new `uibuilder.markwebEvent` variable. Currently, this is only set/updated on page-navigation. It shows the old and new URL's. The Variables page in the Markweb demo has been updated to show how to use this.
   * The main text section of the page now shows collapse twisties (as requested by @colin :smiley: ) So I've tweaked the layout very slightly.
     If you don't want to see the markers, simply add `style="--collapsible-marker: none;"` to the `<body>` tag of the page template. You can also set it to any text or emoji you like. Just remember that the marker is rotated by 90 degrees when the content is expanded so it should look right in either orientation.
 
@@ -87,7 +92,7 @@ A bug fix release.
 * Markweb:
   * Various demo page content clarified and tidied up.
   * The navigation menu shows a left-hand border for the current page. This was appearing outside a folder twisty icon which looked odd. Now improved, the border is inside the icon.
-  * Navigation and index lists were showing folders that had no index.md file and so clicking on the folder would result in a 404 not found page. Now fixed, folders with no index page are hidden as per the design requirements. 
+  * Navigation and index lists were showing folders that had no index.md file and so clicking on the folder would result in a 404 not found page. Now fixed, folders with no index page are hidden as per the design requirements.
   * Navigating with the back button to a URL containing an anchor hash link was not working consistently. Now fixed.
   * For some users, the Markweb was reporting 0 files to be indexed. This appears to be due to the `ignore` parameter passed to `fgSync` (which uses fast-glob). [Ref](https://discourse.nodered.org/t/uibuilder-markweb-too-dark/101168/13?u=totallyinformation). Fixed.
 
@@ -408,7 +413,7 @@ See the [node documentation](./docs/nodes/markweb.md) for full details.
   
   * Added minimum package age requirements to help prevent supply chain attacks.
   * Default Content-Security-Policy (CSP) header updated for improved browser security. You can override it in your settings.js file if needed. New default is:
-    
+
     ```
     default-src 'self' 'unsafe-inline' data: blob: https:; connect-src 'self' ws: wss:; img-src 'self' data: blob: https:; font-src 'self' data: https:; style-src 'self' 'unsafe-inline' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; 
     ```
@@ -1065,7 +1070,7 @@ Most of these changes will *not* impact most people but you should check through
 
   If using the module based client library, you should not be loading the Socket.IO client yourself since it is already built into the client library. If you are still using the old `uibuilderfe` client, you should replace that and remove the socket.io client library from your html files.
 
-* **Removed the *css auto-load* from the client library** 
+* **Removed the *css auto-load* from the client library**
   
   This automatically loads the `uib-brand.css` if no css is provided at all. Since all of the standard templates include some CSS and have for a long time, this should not impact anyone.
 
@@ -1095,7 +1100,7 @@ Most of these changes will *not* impact most people but you should check through
 
 * Markdown improvements.
   
-  Both the main uibuilder node (via the `ui.js` library) and the `uibrouter` library both accept markdown content (via the external Markdown-IT library) and now they both support *Markdown-IT plugins* so that you can add features such as checkbox lists, GitHub style callouts, Mermaid diagrams and much more. 
+  Both the main uibuilder node (via the `ui.js` library) and the `uibrouter` library both accept markdown content (via the external Markdown-IT library) and now they both support *Markdown-IT plugins* so that you can add features such as checkbox lists, GitHub style callouts, Mermaid diagrams and much more.
   
   There is also a new documentation page dedicated to using Markdown.
 
@@ -1141,7 +1146,7 @@ Most of these changes will *not* impact most people but you should check through
 * For anyone even vaguely comfortable with HTML or front-end development:
   
   * You can now add a `uib-topic="mytopic"` attribute to _ANY_ HTML element. Doing so makes that element responsive to messages from Node-RED.
-    
+
     For a message with the correct `msg.topic`. The `msg.payload` will replace the inner HTML of the element. `msg.attributes` will update corresponding element attributes. Making this now one of the easiest ways to define dynamic updates in your UI.
 
   * The built-in `<uib-var>` web component has been updated to be able to directly output HTML _tables_ and _lists_, simply send the appropriate data & set the `type` attribute.
@@ -1149,20 +1154,20 @@ Most of these changes will *not* impact most people but you should check through
   * A new library example has been added to illustrate the different ways to easily update your web pages using this component and the `uib-topic` attribute.
 
   * New built in *web components* which can be used in your HTML without the need for writing JavaScript
-    
-    *  `<uib-meta>` Display's facts about the current page such as its file size, when it was created and when it was last updated.
-    *  `<apply-template>` Takes the content of a `<template>` HTML tag and appends that content as children of itself. Allowing you to re-use standard, repeatable HTML without the need for JavaScript coding and without the need of sending potentially lengthy HTML from Node-RED every time it is needed.
+
+    * `<uib-meta>` Display's facts about the current page such as its file size, when it was created and when it was last updated.
+    * `<apply-template>` Takes the content of a `<template>` HTML tag and appends that content as children of itself. Allowing you to re-use standard, repeatable HTML without the need for JavaScript coding and without the need of sending potentially lengthy HTML from Node-RED every time it is needed.
 
   * The `$` function now allows a second parameter to change the output. Previously the output would always be the DOM Element. Now you can return the inner text, inner HTML or a list of attributes of the element. e.g. `$('.myelement', 'text')`. Remember though that `$()` returns a DOM element by default so all DOM element API's are available, e.g. `$('#myid').dataset` will return all `data-*` attributes.
   
   * Lots of extensions and improvements to the `uibrouter` front-end routing library in this release:
 
     * You can now define a set of external html files (that can include scripts and css just like routes) that are immediately loaded to the page. These can be defined in the initial router config when they will be loaded immediately (before routes) or can be manually loaded later. Use these for things like menu's or other fixed parts of the UI.
-    
+
     * You can now define route content as Markdown instead of HTML. This makes Notion/Obsidian-like applications feasible using UIBUILDER.
-    
+
     * You can now use Markdown-IT plugins to enhance your Markdown content.
-    
+
     * You can start with an empty routing list to allow dynamic creation of routes later on.
 
   * There are many new functions added to the `uibuilder` front-end library. Some are standard utility functions such as fast but accurate number rounding or conversion of primitives into objects. Others simplify the use of the DOM.
@@ -1215,7 +1220,7 @@ The following are only used for _**developing**_ UIBUILDER:
   * Tweaks to Docsify layout and UX for improved readability. A Table of Contents sidebar added that lists h2/h3 headings. The menu is simplified and only shows h1 entries.
   * Lots of minor updates and standardisation.
 
-* URL's are now _case sensitive_ when using the custom ExpressJS server feature. 
+* URL's are now _case sensitive_ when using the custom ExpressJS server feature.
   
   This can be [turned off in `settings.js`](uib-configuration#settingsjs) using property `uibuilder.serverOptions['case sensitive routing']` set to `false`.
   
@@ -1237,7 +1242,7 @@ The `filter` and `exclude` settings use simple or advanced search specifications
 The `URL Output?` setting will change the output from a folder/file list to a relative URL list (with all entries prefixed with `./` and any `index.html` file names hidden - this allows you to use them in an index or menu listing in the browser).
 
 > [!TIP]
-> 
+>
 > Use with the front-end router library. Use this node to dynamically create a navigation menu or sidebar index for example.
 
 ### uibuilder front-end library
@@ -1366,17 +1371,17 @@ The `old-blank-client` template and all associated documentation has also been r
   * `body > main` is now defined as a grid.
   * `main > article` and `main .left` are set to grid column 1. `main > aside` and `main .right` are set to grid column 2.
   * `article` given a border with rounded corners and same max-width as above.
-    
+
     It is also given the `--surface3` background colour instead of the default `--surface2`. `h2`-`h4` immediately inside the article have reduced margins and a bottom border. This lets you use `article` as a "card" style visual. `div > article` gets additional left/right margins, same as `div > p` - allows for indented nesting/grouping.
-    
+
   * Block elements (h2-4, div, p) inside a summary element are now rendered as inline-blocks. Because a summary already creates a block and you usually don't want the other tags to also create nested blocks.
   * Input, button, textarea and select tags given a minimum width of 2em to allow for more flexible form layouts.
   * Minor tweaks to forms for better vertical alignment for check and radio input labels. Also include `form fieldset` and `form output` along with inputs.
   * `*:focus` & `*:focus-visible` given `--secondary-fg` colour variable `:focus` is used as a fallback if `:focus-visible` not supported by the browser.
   * Major improvements to the `nav` menus. Especially `nav.horizontal`.
-    
+
     `nav` menus now use `flex` for layouts.
-    
+
     Horizontal menus now have the option of including a form for things like search boxes. They also collapse to vertical on screens smaller than 600px wide.
 
 ### Example Flows
@@ -1392,7 +1397,7 @@ The `old-blank-client` template and all associated documentation has also been r
 
   Using a full code editor or IDE with your front-end code is MUCH easier than using uibuilder's built in Monaco (or ACE) web editor and also allows for extensions, better linting and automations.
 
-* If router loaded (`uibuilder.uibrouterinstance` exists), Add routeId to control messages and to `msg._uib` for standard msgs. 
+* If router loaded (`uibuilder.uibrouterinstance` exists), Add routeId to control messages and to `msg._uib` for standard msgs.
   
   NB: Cant send route id with initial connect msg since router instance is added later. So cache control must happen on route change messages.
 
