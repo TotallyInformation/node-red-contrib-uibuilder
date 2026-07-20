@@ -145,3 +145,4 @@ _workspaces/VSCode User settings.json
 packages/telemetry/.wrangler/*
 packages/telemetry/.env.test.local
 packages/telemetry/wrangler.toml
+packages/telemetry/local/*
