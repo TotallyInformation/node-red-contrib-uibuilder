@@ -296,6 +296,7 @@ function pluginDefinition(RED) {
     //     console.log(`🌐[uibuilder:runtimeSetup:runtime-event] ID: ${event.id}`)
     // })
 
+    // THIS MUST BE FIRST!
     setupUibGlobalConfig(RED)
 
     /** (a) Filing system checks and library setup */
