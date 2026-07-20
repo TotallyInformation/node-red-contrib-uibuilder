@@ -39,6 +39,9 @@ const {
     accessSync, closeSync, cpSync, constants: fsConstants, existsSync, mkdirSync, openSync, // eslint-disable-line n/no-unsupported-features/node-builtins
     readdirSync, readFileSync, renameSync, rmSync, } = require('node:fs')
 
+/** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
+const uib = require('./uibGlobalConfig.cjs')
+
 const { fg, } = require('../../packages/uib-fs-utils')
 
 // ! WARNING: Take care not to end up with circular requires. e.g. libs/socket.js or uiblib.js cannot be required here
@@ -82,25 +85,6 @@ class UibFs {
     }
 
     // #region ---- Utility methods ----
-
-    /** Configure this class with uibuilder module specifics
-     * @param {uibConfig} uib uibuilder module-level configuration
-     */
-    setup(uib) {
-        if ( uib.RED === null ) throw new Error('uib.RED is null, check setup order [UibFs:setup]')
-
-        // Prevent setup from being called more than once
-        if ( this.#isConfigured === true ) {
-            uib.RED.log.warn('🌐⚠️[uibuilder:UibFs:setup] Setup has already been called, it cannot be called again.')
-            return
-        }
-
-        this.RED = uib.RED
-        this.uib = uib
-        this.log = uib.RED.log
-
-        this.log.trace('🌐[uibuilder:fs.js:setup] Setup completed', this.uib)
-    } // ---- End of setup ---- //
 
     /** returns true if the filename contains / or \ else false
      * @param {string} fname filename to test
@@ -161,7 +145,7 @@ class UibFs {
     } // -- End of walk -- //
 
     get uibRootFolder() {
-        return this.uib.rootFolder
+        return uib.rootFolder
     }
     // #endregion ---- ---- ----
 
@@ -231,10 +215,10 @@ class UibFs {
      * @returns {Promise<string[]>} List of discovered html files with their folder if needed
      */
     async getInstanceLiveHtmlFiles(url) {
-        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:writeInstanceFile]')
-        if ( this.uib.RED === null ) throw new Error('uib.RED is null. Check setup order [UibFs:writeInstanceFile]')
+        if ( !uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:writeInstanceFile]')
+        if ( uib.RED === null ) throw new Error('uib.RED is null. Check setup order [UibFs:writeInstanceFile]')
 
-        const RED = this.uib.RED
+        const RED = uib.RED
 
         // Get the node id of the instance
         const node = this.getInstanceNode(url)
@@ -264,11 +248,11 @@ class UibFs {
      * @returns {uibNode|null} The instance node or null if not found
      */
     getInstanceNode(url) {
-        const RED = this.uib.RED
+        const RED = uib.RED
 
         // Get the node id of the instance
         let node
-        for (const [key, value] of Object.entries(this.uib.instances)) {
+        for (const [key, value] of Object.entries(uib.instances)) {
             if (value === url) node = RED.nodes.getNode(key)
         }
 
@@ -426,9 +410,9 @@ class UibFs {
      * @returns {Promise<any>} List of found files
      */
     async searchInstance(uibId, live, filter, exclude, urlOut, fullPrefix) {
-        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:searchInstance]')
-        if ( this.uib.RED === null ) throw new Error('uib.RED is null, check setup order [UibFs:searchInstance] ')
-        const RED = this.uib.RED
+        if ( !uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:searchInstance]')
+        if ( uib.RED === null ) throw new Error('uib.RED is null, check setup order [UibFs:searchInstance] ')
+        const RED = uib.RED
 
         // Get node instance paths
         const uibnode = RED.nodes.getNode(uibId)
@@ -455,13 +439,13 @@ class UibFs {
 
         const srch = await fg.async(filter, opts)
 
-        const isCustom = this.uib.customServer.isCustom
+        const isCustom = uib.customServer.isCustom
 
         let prefix = ''
         if (urlOut) {
             if (fullPrefix) {
-                if (isCustom || (!isCustom && !this.uib.httpRoot)) prefix = `./${uibnode.url}/`
-                else prefix = `./${this.uib.httpRoot}/${uibnode.url}/`
+                if (isCustom || (!isCustom && !uib.httpRoot)) prefix = `./${uibnode.url}/`
+                else prefix = `./${uib.httpRoot}/${uibnode.url}/`
             } else {
                 prefix = './'
             }
@@ -502,9 +486,9 @@ class UibFs {
             },
         }
         if (!isCustom) {
-            out.config.uibuilder.httpRoot = this.uib.httpRoot
+            out.config.uibuilder.httpRoot = uib.httpRoot
         } else {
-            out.config.uibuilder.customServer = this.uib.customServer
+            out.config.uibuilder.customServer = uib.customServer
         }
 
         return out
@@ -529,10 +513,10 @@ class UibFs {
      * @returns {Promise} Success if write is successful
      */
     async writeInstanceFile(url, folder, fname, data, createFolder = false, reload = false) {
-        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:writeInstanceFile]')
-        if ( this.uib.RED === null ) throw new Error('uib.RED is null, check setup order [UibFs:writeInstanceFile] ')
+        if ( !uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:writeInstanceFile]')
+        if ( uib.RED === null ) throw new Error('uib.RED is null, check setup order [UibFs:writeInstanceFile] ')
 
-        const log = this.uib.RED.log
+        const log = uib.RED.log
 
         // Make sure that the inputs don't include folder traversal
         this.throwOnFolderEscape(folder, 'writeInstanceFile, folder')
@@ -545,7 +529,7 @@ class UibFs {
             folder = join(folder, ...splitFname)
         }
 
-        const uib = this.uib
+        // const uib = this.uib
 
         // TODO check parameters
         // TODO check if uib.rootFolder/url folder exists
