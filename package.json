@@ -112,7 +112,9 @@
     "website",
     "data-driven",
     "webpage",
-    "web-app"
+    "web-app",
+    "markdown",
+    "content-management"
   ],
   "homepage": "https://totallyinformation.github.io/node-red-contrib-uibuilder/#/",
   "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
