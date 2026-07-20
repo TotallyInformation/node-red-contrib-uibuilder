@@ -1001,7 +1001,7 @@ class UibWeb {
 
         const ns = socketjs.getNs(node.url)
 
-        page += `
+        page += /* html */ `
             <!doctype html><html lang="en"><head>
                 <title>uibuilder Instance Debug Page</title>
                 <link rel="icon" href="${urlRoot}/common/images/node-blue.ico">
