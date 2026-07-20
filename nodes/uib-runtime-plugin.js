@@ -137,9 +137,6 @@ function setupUibFs() {
         throw new Error(`🌐🛑[uibuilder:runtimeSetup] UIBUILDER cannot be configured,\n  Node-RED userDir folder "${RED.settings.userDir}" is not writable.`, e)
     }
 
-    // (a) Configure the UibFs handler class (requires uib.RED - now using the uibGlobalConfig module)
-    fslib.setup(uib) // Cannot required uib in fs module as it creates a circular dependency
-
     // #region ----- Set up uibuilder root, root/.config & root/common folders ----- //
 
     /** Check uib root folder: create if needed, writable? */
