@@ -37,7 +37,7 @@ const uib = require('./uibGlobalConfig.cjs') // UIBUILDER's global config object
 
 const errUibRootFldr = new Error('uib.rootFolder is null')
 
-const v2AdminRouter = express.Router() // eslint-disable-line new-cap
+const v2AdminRouter = express.Router()
 
 // #region === REST API Validation functions === //
 

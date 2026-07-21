@@ -130,7 +130,6 @@ class UibPackages {
      */
     setup() {
         const uib = uibGlobalConfig
-        if ( !uib ) throw new Error('[uibuilder:UibPackages.js:setup] Called without required uib parameter or uib is undefined.')
         if ( uib.RED === null ) throw new Error('[uibuilder:UibPackages.js:setup] uib.RED is null')
         if ( uib.rootFolder === null ) throw this.#rootFldrNullError
 
@@ -164,7 +163,10 @@ class UibPackages {
         if (this.dependencyProblems) {
             setTimeout(() => {
                 this.log.warn('------------------------------------------------------')
-                this.log.warn([`🌐⚠️[uibuilder:package-mgt:setup] Problems with uibuilder root package.json.\nRoot folder: ${this.uib.rootFolder}\nPlease resolve before continuing.`, this.dependencyProblems])
+                this.log.warn([
+                    `🌐⚠️[uibuilder:package-mgt:setup] Problems with uibuilder root package.json.\nRoot folder: ${this.uib.rootFolder}\nPlease resolve before continuing.`,
+                    this.dependencyProblems
+                ])
                 this.log.warn('------------------------------------------------------\n \n')
             }, 3000)
         }
@@ -437,7 +439,7 @@ class UibPackages {
     }
 
     /** Get the root folder for a uibuilder instance
-     * @throws Error if setup has not been called
+     * @throws {Error} if setup has not been called
      * @param {string} url The URL of the uibuilder instance
      * @returns {string|null} The root folder path or null if not found
      */
@@ -560,6 +562,7 @@ class UibPackages {
     async npmInstallPackage(url, pkgName, tag = '', toLocation = '', action = 'install') {
         if ( this.log === undefined ) throw this.#logUndefinedError
 
+        // FIXME: No longer needed
         if ( this.#isConfigured !== true ) {
             this.log.warn('🌐⚠️[uibuilder:UibPackages:npmInstallPackage] Cannot run. Setup has not been called.')
             return ''
@@ -609,6 +612,8 @@ class UibPackages {
             myerr.command = out.command
             throw myerr
         }
+
+        // TODO: If location = uibRoot, update the metadata (remove from admin-api-v2)
 
         this.log.info(`🌐📘[uibuilder:UibPackages:npmInstallPackage] npm output: \n ${out.all}\n `)
 
