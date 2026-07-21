@@ -27,6 +27,12 @@
 const path = require('node:path')
 
 const { saferSerialize, } = require('./libs/tilib.cjs') // Safer JSON.stringify with circular reference handling
+
+/** Load this first out of the uibuilder-specific libraries. The uibuilder global configuration object, used throughout all nodes and libraries.
+ * @type {uibConfig}
+ */
+const uib = require('./libs/uibGlobalConfig.cjs')
+
 // const { parseTelemetryFile, } = require('./libs/uiblib.cjs')
 const fslib = require('./libs/fs.cjs') // File/folder handling library (by Totally Information)
 const packageMgt = require('./libs/package-mgt.cjs')
@@ -36,9 +42,6 @@ const { renderToHTML, } = require('../front-end/utils/json-viewer.cjs')
 
 // WARNING: Don't try to deconstruct this, if you do, some things fail because they lose the correct `this` binding
 const uiblib = require('./libs/uiblib.cjs')
-
-/** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
-const uib = require('./libs/uibGlobalConfig.cjs')
 
 /** Set up the global uibuilder configuration
  * @param {runtimeRED} RED Node-RED's runtime object
