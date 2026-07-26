@@ -4,13 +4,12 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-07-20 11:57:27
+updated: 2026-07-23 17:47:33
 ---
 
 ## Possible issues/improvements
 
-* [ ] When using Node-RED projects, the `uibuilder` folder is not in the project folder as it should be. But rather in the user data folder. Need to investigate how to fix this. [ref](https://discourse.nodered.org/t/uibuilder-new-release-v7-7-1-new-features-and-bug-fixes-extra-bugfix/101164/7?u=totallyinformation).
-* [ ] Remove gulp dependencies once we are sure that the new build/watch script is working well and we have no need for the old gulp tasks. This will remove a bunch of audit failures.
+* [ ] uibRoot folder may not update fast enough when changing projects in the Node-RED editor. [Ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/647)
 * [ ] Code smells:
   * [ ] this.uib, this.log, this.RED - should be using the global config module instead.
   * [ ] (uib) - passing uib object instead of using the module.
@@ -19,18 +18,18 @@ updated: 2026-07-20 11:57:27
 * [ ] Add app type to nr admin index page to make it easier to identify uibuilder and markweb nodes.
 * [ ] Add size trap to saferSerialize to prevent very large objects from being serialized and crashing the system.
 * [ ] Move `degit` dependency to a workplace package and use it for the template cloning process. Should allow us to move to the latest version.
-* [x] Check out next release of `markdown-it-attrs` and use if possible in `uib-md-utils`. Also check out the npm version strings.
 * [ ] Update Markweb docs for the new collapse marker and the new folder hiding behaviour.
 * [ ] Add ability to turn off collapsible prose. Needs to be an option in the Markweb node and will need to generate slightly different HTML on rendering Markdown.
 * [ ] Find places in documentation (and maybe the readme) to document the Node-RED projects issues.
 * [ ] In uibuilder `this.oldUrl` check. If the move fails, check if the old folder is still there. If not, clear the oldUrl property. This will prevent the error message on a failed move from being repeated on every deploy.
+* [ ] Replacing (not importing) a flow file containing an invalid uibuilder node (and when the node's folder doesn't yet exist) may prevent that node from being corrected in the Editor. The startup process will create the folder and then say that the node's URL is a duplicate. [Ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/646).
 
 ## Next release requirements
 
 * [x] v8.0.0 to recognise the node.js and node-red baseline version changes.
 * [x] Bump Degit version - new versions fix the git requirement bug. Node.js v20 is now minimum versiion.
 * [x] Update baseline to node-red v5 and node v22. pacakge.json, docs, eslint.
-* [ ] **Begin migration of runtime modules to ESM**. Now supported by Node-RED v5.
+* [x] ~~Begin migration of runtime modules to ESM. Now supported by Node-RED v5.~~ Cancelled due to issues in Node-RED.
 * [ ] Update docs to show that front-end code targets release-date - 7 years.
 
 
@@ -78,7 +77,8 @@ updated: 2026-07-20 11:57:27
 * Background rework (may take several releases):
   * [ ] Changing `uib-brand.css` to use more modern CSS, leaving it up to LightningCSS to build for older browsers. In particular, using nested definitions.
   * [ ] Rename all .js node.js files to .cjs to avoid confusion with ESM modules. (libs now all done).
-  * [ ] No need to pass uib var now it is in a module, can simply require it. (Except for libs/fs which is already used by the uib module).
+  * [ ] No need to pass uib var now it is in a module, can simply require it.
+    * [x] fs.cjs
 
 * Update library manager to use the same processes as the scripts tab.
   * [ ] More robust updates.
@@ -111,6 +111,10 @@ updated: 2026-07-20 11:57:27
   * [ ] Add new classes for LAYOUTs.
   * [ ] Add SVGAnimate class to web components package.
   * [ ] `resources\uib-sidebar.js` - add markdown support using RED.utils.renderMarkdown().
+
+* [ ] AI Issue review
+  * [ ] Libs
+    * [/] [package-mgt](roadmap/libs/package-mgt.md)
 
 
 ## Next
