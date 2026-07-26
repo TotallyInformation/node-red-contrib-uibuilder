@@ -108,7 +108,7 @@ const walkFolderStructure = async (dirPath, _startPath, _level = 0) => {
     try {
         entries = readdirSync(dirPath, { withFileTypes: true, })
     } catch (err) {
-        throw new Error(`Unable to read directory: ${dirPath}`)
+        throw new Error(`Unable to read directory: ${dirPath}`, { cause: err, })
     }
     // Ignore entries starting with _ or .
     entries = entries.filter(e => !shouldIgnore(e.name))
@@ -1391,8 +1391,7 @@ function doSearch(index, query) {
         } else if (descMatch) {
             snippet = `Description: ${doc.description}`
         } else if (contentMatch) {
-            let idx = -1
-            idx = doc.content.toLowerCase().indexOf(query)
+            const idx = doc.content.toLowerCase().indexOf(query)
             if (idx >= 0) {
                 const start = Math.max(0, idx - MAXSNIPPETLENGTH)
                 const end = Math.min(doc.content.length, idx + query.length + MAXSNIPPETLENGTH)
@@ -1582,7 +1581,7 @@ async function getMarkdownFile(node, file, morePath, parsedPath, from) {
     }
     if (needToUpd) {
         // TODO Move file processing to separate fn that returns the attributes needed for indexing & showing
-        let content = ''
+        let content = '' // eslint-disable-line no-useless-assignment
         try {
             content = await readFile(file, 'utf8')
             log.trace(`🌐🕸️[markweb:getMarkdownFile:${url}] Read markdown file successfully: "${file}"`)
@@ -1595,7 +1594,7 @@ async function getMarkdownFile(node, file, morePath, parsedPath, from) {
                 content: `<h1>Error</h1><p>There was an error reading the requested markdown file.</p><pre>${err.message}</pre>`,
             }
         }
-        let parsed = { }
+        let parsed = { } // eslint-disable-line no-useless-assignment
         try {
             parsed = fm(content)
         } catch (err) {
@@ -1805,7 +1804,7 @@ function renderPrescript(key, attributes, node, options) {
 function processConfig(node) {
     const RED = uib.RED
     const log = RED.log
-    let ans = null
+    let ans = null // eslint-disable-line no-useless-assignment
 
     if (node.configFolder && node.configFolder.length > 0) {
         // if configFolder is a relative path, make it relative to userDir
