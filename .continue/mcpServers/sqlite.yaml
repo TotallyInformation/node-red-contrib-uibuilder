@@ -1,0 +1,10 @@
+name: SQLite MCP
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: SQLite MCP
+    command: npx
+    args:
+      - "-y"
+      - "mcp-sqlite"
+      - "/path/to/your/database.db"

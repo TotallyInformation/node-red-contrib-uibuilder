@@ -1,0 +1,1 @@
+ Find errors, security issues, inconsistencies and other bugs in the referenced node.js library. Document them as a markdown document, listing the issues, reason and possible fix. Only document the possible fix if it is easily known, otherwise just mark it as "Fix unknown".
