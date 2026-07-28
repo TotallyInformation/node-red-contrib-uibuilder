@@ -26,8 +26,9 @@ function directivePlugin(md, handlers = {}) {
         if (!argsStr || !argsStr.trim()) return {}
 
         const args = {}
-        // key=value where value is: double-quoted, single-quoted, or an unquoted non-whitespace token
-        const re = /(\w+)=(?:"([^"]*)"|'([^']*)'|(\S+))/g // eslint-disable-line security/detect-unsafe-regex
+        // key=value where value is double-quoted, single-quoted,
+        // or unquoted and terminated by a comma or whitespace
+        const re = /(?:^|[,\s]+)(\w+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^,\s]*))/g // eslint-disable-line security/detect-unsafe-regex
         let match
         while ((match = re.exec(argsStr)) !== null) {
             // groups: 1=key, 2=double-quoted, 3=single-quoted, 4=unquoted
