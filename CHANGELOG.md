@@ -31,6 +31,11 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 * Baselined to Node-RED v5+ and Node.js v22.9+. Please make sure that you can meet these requirements before upgrading.
 
+### Markweb
+
+* Improved processing of `%%index%%` directive. Attributes now correctly work if the values surrounding quotes are missed off.
+* Added page updated date to the title of index listing links.
+
 ### Development and maintenance
 
 * Bump to v8.0.0, baseline to node.js v22.9, NR v5, degit 3.*. Remove gulp and dependencies, execa
