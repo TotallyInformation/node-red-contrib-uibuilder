@@ -30,6 +30,58 @@
  * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs').runtimeNode} runtimeNode
  * @typedef {import('../../typedefs').uibMwNode} uibMwNode
+ *
+ * Index options
+ * @typedef {object} IndexOptions Optional options passed to the %%nav [options]%% instruction enhanced with extras
+ *   @property {string|number} [start] The starting depth level (0 = root), if not provided = current level
+ *   @property {string|number} [end] The ending depth level (0 = root)
+ *   @property {string|number} [depth] The ending depth level (0 = root)
+ *   @property {string} [from] Start date/time for filtering (any JS Date() format)
+ *   @property {string} [to] End date/time for filtering (any JS Date() format, or 'now')
+ *   @property {string} [duration] Duration offset from from/to (e.g. '1w', '-2d', '3m')
+ *   @property {string|number} [latest] Return only the N most recent pages (sorted by updated/created date)
+ *   @property {boolean} [nav] Is this a listing for the main navigation? False or undefined
+ *   @property {'articles'|'files'|'folders'|'both'} [type] Type of listing: 'articles', 'files', 'folders', or 'both'. Default=both
+ *   @property {object} [sort] Sort options
+ *
+ * Hierarchical tree map. Keys are folder/file path segments
+ * @typedef {object} TreeMapValue Hierarchical tree map values
+ *   @property {string} path The path to the page
+ *   @property {string} title The normalised title of the page
+ *   @property {string} description The description of the page
+ *   @property {"high"|"low"} [sortPriority] Sort priority. High, low or undefined
+ *   @property {boolean} hasIndex Entry is present in index?
+ *   @property {string} updated Last-updated date in "YYYY-MM-DD. " format or empty string
+ *   @property {TreeMap} children The children of the page
+ *
+ * @typedef {Map<string, TreeMapValue>} TreeMap
+ *
+ * A page stored in the Markweb search and navigation index.
+ * Frontmatter and global attributes may add additional properties.
+ * @typedef {object} MarkwebIndexEntry
+ *   @property {string} title Page title
+ *   @property {string} shortTitle Optional abbreviated title
+ *   @property {string} description Page description
+ *   @property {string} content Raw Markdown content
+ *   @property {string[]} tags Page tags
+ *   @property {string} category Page category
+ *   @property {string} author Page author
+ *   @property {string} sortPriority Sorting priority
+ *   @property {string} path Canonical URL path used as the index key
+ *   @property {number} fsMtimeMs Filesystem modification timestamp in milliseconds
+ *   @property {string} created Creation date in ISO or frontmatter-defined format
+ *   @property {string} updated Last-updated date in ISO or frontmatter-defined format
+ *   @property {'folder'|'file'} type Page type
+ *   @property {string} file Source Markdown filename
+ *   @property {number} depth URL hierarchy depth, where the root is zero
+ *   @property {string} toUrl Relative source URL including the Markdown filename
+ *   @property {string|undefined} from Name of the operation that loaded the entry
+ *   @property {boolean} [error] Whether loading or parsing the page failed
+ *   @property {string} [reqType] Request type assigned while serving the page
+ *   @property {*} [key] Additional global or frontmatter attributes
+ *
+ * Markweb page index keyed by canonical URL path.
+ * @typedef {Map<string, MarkwebIndexEntry>} MarkwebIndex
  */
 
 // #region ----- Module level variables ---- //
@@ -61,12 +113,12 @@ let _mdCurrentNode = null
 /** Wrapper around mdParse that sets the current node context for directive handlers
  * @param {runtimeNode & uibMwNode} node The node instance to use for directive resolution
  * @param {string} content The markdown content to render
- * @param {object} env The environment/attributes object passed to markdown-it
+ * @param {object} pageEnv The page environment/attributes object passed to markdown-it
  * @returns {string} The rendered HTML
  */
-const mdParse = (node, content, env) => {
+const mdParse = (node, content, pageEnv) => {
     _mdCurrentNode = node
-    const result = _mdParseRaw(content, env)
+    const result = _mdParseRaw(content, pageEnv)
     _mdCurrentNode = null
     return result
 }
@@ -252,7 +304,7 @@ function nodeInstance(config) {
     // Check if configFolder exists and is readable - set watcher. Config will use default fldr if not
     processConfig(this)
 
-    // Holder for page index - Map
+    /** Holder for page index - Map @type {MarkwebIndex} */
     this.index = new Map()
     // Build page index asynchronously
     buildIndexes(this)
@@ -398,7 +450,7 @@ function internalControlMsgHooks(node, log) {
                     id: 'sidebar-nav',
                     title: 'Sidebar navigation index',
                 }
-                const tree = createTree(false, { path: currentPath, }, indexOptions, node)
+                const tree = createTree(false, { path: currentPath, }, indexOptions, node.index)
                 navIndexHtml = renderSidebarTree(tree, { currentPath, })
             }
 
@@ -588,92 +640,86 @@ function parseDuration(durationStr) {
 /** Create an HTML list of links to pages the current level or between the given levels
  * If start/end not provided, assume only the current level
  * @param {'index'} key The special key being processed
- * @param {object} attributes The current pages attributes
+ * @param {object} pageEnv The current pages attributes
  * @param {runtimeNode & uibMwNode} node The current node instance
- * @param {object} [options] Optional options passed to the %%nav [options]%% instruction
- * @param {string|number} [options.start] The starting depth level (0 = root)
- * @param {string|number} [options.end] The ending depth level (0 = root)
- * @param {string} [options.from] Start date/time for filtering (any JS Date() format)
- * @param {string} [options.to] End date/time for filtering (any JS Date() format, or 'now')
- * @param {string} [options.duration] Duration offset from from/to (e.g. '1w', '-2d', '3m')
- * @param {string|number} [options.latest] Return only the N most recent pages (sorted by updated/created date)
+ * @param {IndexOptions} [indexOptions] Optional options passed to the %%nav [options]%% instruction enhanced with extras
  * @returns {string} The generated navigation HTML
  */
-function indexListing(key, attributes, node, options) {
+function indexListing(key, pageEnv, node, indexOptions = {}) {
     // Max depth default
     const maxDepth = 5
-
     let currentStart = false
-    if (!options) options = {}
-
-    if (!('nav' in options)) options.nav = false
+    if (!('nav' in indexOptions)) indexOptions.nav = false
 
     // Check if latest is specified - it changes default behavior for path/depth
-    const hasLatest = 'latest' in options
-    const hasExplicitStart = 'start' in options
-    const hasExplicitEnd = 'end' in options || 'depth' in options
-    const hasExplicitDateRange = 'from' in options || 'to' in options || 'duration' in options
+    const hasLatest = 'latest' in indexOptions
+    const hasExplicitStart = 'start' in indexOptions
+    const hasExplicitEnd = 'end' in indexOptions || 'depth' in indexOptions
+    const hasExplicitDateRange = 'from' in indexOptions || 'to' in indexOptions || 'duration' in indexOptions
 
+    // Work out the required starting depth
     if (hasExplicitStart) {
-        options.start = Number(options.start)
+        indexOptions.start = Number(indexOptions.start)
     } else {
         // No start given so assume current level
-        options.start = Number(attributes.depth)
+        indexOptions.start = Number(pageEnv.depth)
         currentStart = true
     }
 
-    // if ('depth' in options) options.end = Number(options.depth)
-
-    if ('end' in options) {
-        options.end = Number(options.end)
-    } else if ('depth' in options) {
-        options.end = Number(options.start) + Number(options.depth)
+    // Work out the required ending depth
+    if ('end' in indexOptions) {
+        indexOptions.end = Number(indexOptions.end)
+    } else if ('depth' in indexOptions) {
+        indexOptions.end = Number(indexOptions.start) + Number(indexOptions.depth)
     } else if (hasLatest) {
         // When latest is specified without explicit end or depth, use current page depth + max depth
-        options.end = Number(attributes.depth) + maxDepth
+        indexOptions.end = Number(pageEnv.depth) + maxDepth
     } else if (currentStart) {
         // When currentStart is specified without explicit end or depth, use start + max depth
-        options.end = Number(attributes.depth) + maxDepth
+        indexOptions.end = Number(pageEnv.depth) + maxDepth
         // options.end = Number(attributes.depth)
     } else {
-        options.end = maxDepth // Max depth default
+        indexOptions.end = maxDepth // Max depth default
     }
 
-    if (!('type' in options)) {
-        // type can be 'files', 'folders', or 'both'
-        options.type = 'both'
+    /** Types to include in listing ('articles', 'files', 'folders', or 'both') default=both
+     * 'articles' excludes folder default pages (e.g. index.md)
+     */
+    if (!('type' in indexOptions)) {
+        indexOptions.type = 'both'
     }
 
-    // Process date/time range filtering options (only if explicitly provided)
-    // `from` and `to` accept date/time strings in any JS Date() recognized format
-    // `to` can also be 'now' representing current date/time
-    // `duration` can be used with either `from` or `to` (not both) as an offset
-    // Duration format: number + type, e.g. '1w' (week), '1d' (day), '1m' (month), '1y' (year), '1h' (hour)
-    // Number can be negative, e.g. '-1w' for 1 week ago
+    /** Process date/time range filtering options (only if explicitly provided)
+     * `from` and `to` accept date/time strings in any JS Date() recognized format
+     * `to` can also be 'now' representing current date/time
+     * `duration` can be used with either `from` or `to` (not both) as an offset
+     * Duration format: number + type, e.g. '1w' (week), '1d' (day), '1m' (month), '1y' (year), '1h' (hour)
+     * Number can be negative, e.g. '-1w' for 1 week ago
+     */
     if (hasExplicitDateRange) {
         const now = new Date()
         let fromDate = null
         let toDate = null
 
         // Parse 'to' first (may be 'now')
-        if ('to' in options) {
-            if (options.to.toLowerCase() === 'now') {
+        if ('to' in indexOptions) {
+            if (indexOptions.to.toLowerCase() === 'now') {
                 toDate = now
             } else {
-                toDate = new Date(options.to)
+                toDate = new Date(indexOptions.to)
                 if (isNaN(toDate.getTime())) toDate = null
             }
         }
 
         // Parse 'from'
-        if ('from' in options) {
-            fromDate = new Date(options.from)
+        if ('from' in indexOptions) {
+            fromDate = new Date(indexOptions.from)
             if (isNaN(fromDate.getTime())) fromDate = null
         }
 
         // Handle duration offset (only if one of from/to is missing)
-        if ('duration' in options && !(fromDate && toDate)) {
-            const offset = parseDuration(options.duration)
+        if ('duration' in indexOptions && !(fromDate && toDate)) {
+            const offset = parseDuration(indexOptions.duration)
             if (offset !== null) {
                 if (fromDate && !toDate) {
                     // from + duration = to
@@ -691,24 +737,24 @@ function indexListing(key, attributes, node, options) {
         }
 
         // Store parsed dates in options for filteredIndex
-        if (fromDate) options.fromDate = fromDate
-        if (toDate) options.toDate = toDate
+        if (fromDate) indexOptions.fromDate = fromDate
+        if (toDate) indexOptions.toDate = toDate
     }
 
     // Parse latest option - returns only the N most recent pages
-    if ('latest' in options) {
-        options.latest = Number(options.latest)
-        if (isNaN(options.latest) || options.latest < 1) {
-            delete options.latest // Invalid value, ignore
+    if ('latest' in indexOptions) {
+        indexOptions.latest = Number(indexOptions.latest)
+        if (isNaN(indexOptions.latest) || indexOptions.latest < 1) {
+            delete indexOptions.latest // Invalid value, ignore
         }
     }
 
-    const tree = createTree(currentStart, attributes, options, node)
+    const tree = createTree(currentStart, pageEnv, indexOptions, node.index)
 
     // If start and end levels are the same, omit folder (index) entries
-    const sameLevel = options.start === options.end
+    const sameLevel = indexOptions.start === indexOptions.end
 
-    return renderTree(tree, options, sameLevel, options.nav, 0, attributes.path)
+    return renderTree(tree, indexOptions, sameLevel, indexOptions.nav, 0, pageEnv.path)
 }
 
 /** Create search results wrapper HTML
@@ -795,21 +841,27 @@ function renderSidebarTree(map, options, _level = 0) {
 
 /** Create a hierarchical tree structure from the filtered index for sidebar or nav rendering
  * @param {boolean} currentStart Whether to use the current page's depth as the start level (true) or use options.start (false)
- * @param {object} attributes The current pages attributes
- * @param {object} indexOptions Options for filtering the index
- * @param {runtimeNode & uibMwNode} node The current node instance
- * @returns {Map<string, {path: string, title: string, description: string, children: Map<string, any>}>} The hierarchical tree structure
+ * @param {object} pageEnv The current pages attributes
+ * @param {IndexOptions} indexOptions Options for filtering the index
+ * @param {MarkwebIndex} idx The index of markdown files
+ * @returns {TreeMap} The hierarchical tree structure. Key's are folder/file path segments
  */
-function createTree(currentStart, attributes, indexOptions, node) {
-    const filtered = filteredIndex(currentStart, attributes, indexOptions, node)
+function createTree(currentStart, pageEnv, indexOptions, idx) {
+    const filtered = filteredIndex(currentStart, pageEnv, indexOptions, idx)
     // if (!indexOptions.sidebar) console.log(`  >>🌐🕸️[markweb:createTree] Filtered index for ${attributes.toUrl}`, { currentStart, indexOptions, filtered, })
-    // Build hierarchical tree from filtered index (similar to indexListing)
+
+    /** @type {TreeMap>} Build hierarchical tree from filtered index (similar to indexListing) */
     const tree = new Map()
     for (const [path, doc] of filtered) {
         // Determine title - prefer shortTitle over title
         let title = doc.shortTitle || doc.title
+        // Create shortened date from doc.updated with formwat "DDD YYYY-MM-DD"
+        const updated = doc?.updated
+            ? formatDateIntl(new Date(doc.updated), 'YYYY-MM-DD. ')
+            : ''
+
         if (doc.path === '/') title = 'Home'
-        else if (doc.type === 'folder' && (!title || title === 'index')) {
+        else if (doc.type === 'folder') {
             const segments = doc.path.replace(/\/$/, '').split('/')
                 .filter(Boolean)
             const rawTitle = segments[segments.length - 1] || doc.path.slice(1, -1)
@@ -825,16 +877,18 @@ function createTree(currentStart, attributes, indexOptions, node) {
                 tree.set('/', {
                     path: '/',
                     title,
-                    description: doc.description || '',
-                    sortPriority: doc.sortPriority || '',
+                    description: doc?.description || '',
+                    sortPriority: doc?.sortPriority || '',
                     hasIndex: true,
+                    updated: updated,
                     children: new Map(),
                 })
             } else {
                 const rootEntry = tree.get('/')
                 rootEntry.title = title
-                rootEntry.description = doc.description || ''
-                rootEntry.sortPriority = doc.sortPriority || ''
+                rootEntry.description = doc?.description || ''
+                rootEntry.sortPriority = doc?.sortPriority || ''
+                rootEntry.updated = updated
             }
             continue
         }
@@ -849,18 +903,20 @@ function createTree(currentStart, attributes, indexOptions, node) {
                 current.set(segment, {
                     path: isLast ? path : folderPath,
                     title: isLast ? title : segment,
-                    description: isLast ? (doc.description || '') : '',
-                    sortPriority: isLast ? (doc.sortPriority || '') : '',
-                    hasIndex: isLast ? true : node.index.has(folderPath),
+                    description: isLast ? (doc?.description || '') : '',
+                    sortPriority: isLast ? (doc?.sortPriority || '') : '',
+                    hasIndex: isLast ? true : idx.has(folderPath),
+                    updated: updated,
                     children: new Map(),
                 })
             } else if (isLast) {
                 const nodeEntry = current.get(segment)
                 nodeEntry.path = path
                 nodeEntry.title = title
-                nodeEntry.description = doc.description || ''
-                nodeEntry.sortPriority = doc.sortPriority || ''
+                nodeEntry.description = doc?.description || ''
+                nodeEntry.sortPriority = doc?.sortPriority || ''
                 nodeEntry.hasIndex = true
+                nodeEntry.updated = updated
             }
             current = current.get(segment).children
         }
@@ -870,7 +926,7 @@ function createTree(currentStart, attributes, indexOptions, node) {
 
 /** Create sidebar HTML with navigation index, TOC, and search
  * @param {'sidebar'} key The special key being processed
- * @param {object} attributes The current pages attributes
+ * @param {object} pageEnv The current pages attributes
  * @param {runtimeNode & uibMwNode} node The current node instance
  * @param {object} [options] Optional options passed to the %%sidebar [options]%% instruction
  * @param {string} [options.search] Whether to include search box (default: 'true')
@@ -881,9 +937,9 @@ function createTree(currentStart, attributes, indexOptions, node) {
  * @param {string} [options.position] Sidebar position - 'left' or 'right' (default: 'left')
  * @returns {string} The generated sidebar HTML
  */
-function createSidebar(key, attributes, node, options) {
+function createSidebar(key, pageEnv, node, options) {
     const log = uib.RED.log
-    log.trace(`🌐🕸️[createSidebar] Creating sidebar for ${attributes.path}`, options)
+    log.trace(`🌐🕸️[createSidebar] Creating sidebar for ${pageEnv.path}`, options)
 
     if (!options) options = {}
 
@@ -899,7 +955,7 @@ function createSidebar(key, attributes, node, options) {
     let navIndexHtml
     if (sidebarOverride && Array.isArray(sidebarOverride)) {
         // Build tree from sidebar.json structure
-        navIndexHtml = buildSidebarFromJson(sidebarOverride, attributes.path)
+        navIndexHtml = buildSidebarFromJson(sidebarOverride, pageEnv.path)
     } else {
         // Build the navigation index using filtered index
         const indexOptions = {
@@ -910,9 +966,9 @@ function createSidebar(key, attributes, node, options) {
             id: 'sidebar-nav',
             title: 'Sidebar navigation index',
         }
-        const tree = createTree(false, attributes, indexOptions, node)
+        const tree = createTree(false, pageEnv, indexOptions, node.index)
         // Render the tree with collapsible sections
-        navIndexHtml = renderSidebarTree(tree, { currentPath: attributes.path, })
+        navIndexHtml = renderSidebarTree(tree, { currentPath: pageEnv.path, })
     }
 
     // Generate data attributes for client-side use
@@ -928,7 +984,7 @@ function createSidebar(key, attributes, node, options) {
                     >
                 </form>
             </search>
-            ${searchResultsWrapper(key, attributes, node, { head: 'short', })}
+            ${searchResultsWrapper(key, pageEnv, node, { head: 'short', })}
         `
         : ''
 
@@ -1040,10 +1096,14 @@ function mdExtension(node) {
      * Uses _mdCurrentNode (set by the mdParse wrapper) for node-specific data.
      */
     const directiveHandlers = {
-        // Return an index list of pages from the current page level
-        index: (args, env) => {
-            const il = indexListing('index', env, _mdCurrentNode, args)
-            // console.log('🌐🕸️[mdExtension:index] ', {il, args, env})
+        /** Return an index list of pages from the current page level
+         * @param {object} args The %%index [args]%% object passed from the markdown content
+         * @param {object} pageEnv The page attributes, AKA the page's frontmatter variables
+         * @returns {string} The HTML for the index list
+         */
+        index: (args, pageEnv) => {
+            const il = indexListing('index', pageEnv, _mdCurrentNode, args)
+            // console.log('  >>🌐🕸️[mdExtension:index] ', { /* il, */ args, pageEnv, })
             return il
         },
     }
@@ -1051,12 +1111,12 @@ function mdExtension(node) {
      * This allows using frontmatter variables anywhere in markdown content AND in Templates
      * Supported arguments (inside [...]): before, after, prefix (alias for before), default
      * @param {object} args The [args] object passed from the markdown content
-     * @param {object} env The page attributes, AKA the page's frontmatter variables
+     * @param {object} pageEnv The page attributes, AKA the page's frontmatter variables
      * @returns {string} The rendered HTML for the fm variable
      */
-    const fmVariablesHandler = (args, env) => {
+    const fmVariablesHandler = (args, pageEnv) => {
         const varName = args.varName
-        let value = env[varName]
+        let value = pageEnv[varName]
         let errClass = ''
         if (value === undefined) {
             if (args.default !== undefined) {
@@ -1100,6 +1160,7 @@ async function buildIndexes(node) {
     const url = node.url
     const instanceFolder = node.instanceFolder
 
+    /** @type {MarkwebIndex} */
     const index = node.index
     const indexFolder = instanceFolder.replace(/\\/g, '/')
 
@@ -1158,7 +1219,8 @@ async function buildIndexes(node) {
     }, node, uib.ioChannels.control)
 
     // ! TEMPORARY - for debugging convenience
-    // globalThis._uibuilder_.markweb.indexes[url] = node.index
+    globalThis._uibIndexes = {}
+    globalThis._uibIndexes[url] = node.index
 
     log.info(`🌐🕸️[markweb:buildIndex:${url}] Indexed "${instanceFolder}" in ${Math.round(performance.now() - strt)}ms. ${files.length} files, ${(serialize(node.index).byteLength / 1024).toFixed(0)}kb`)
 }
@@ -1436,37 +1498,39 @@ function doSearch(index, query) {
     return results
 }
 
-/** Filter the index based on options
+/** Filter the index based on options - uses node.index as the input
  * @param {boolean} currentStart Whether to limit to current start path
- * @param {object} attributes The current pages attributes
- * @param {object} options Filtering options
- *   @param {object} [options.sort] Sorting options
- * @param {runtimeNode & uibMwNode} node The current node instance
- * @returns {Array} Filtered index entries
+ * @param {object} pageEnv The current pages attributes
+ * @param {IndexOptions} indexOptions Filtering options
+ * @param {MarkwebIndex} idx The index of markdown pages
+ * @returns {[string, MarkwebIndexEntry][]} Filtered index entries
  */
-function filteredIndex(currentStart, attributes, options, node) {
-    const sorted = [...node.index]
+function filteredIndex(currentStart, pageEnv, indexOptions, idx) {
+    // console.log('filteredIndex', { currentStart, attributes: pageEnv, indexOptions, })
+    /** @type {[string, MarkwebIndexEntry][]} index entries sorted by path */
+    const sorted = [...idx]
         .sort((a, b) => a[1].path.localeCompare(b[1].path))
 
     // For file pages, use the parent folder as the path prefix so sibling entries are included
     const pathPrefix = currentStart
-        ? (attributes.path.endsWith('/')
-            ? attributes.path
-            : attributes.path.substring(0, attributes.path.lastIndexOf('/') + 1))
+        ? (pageEnv.path.endsWith('/')
+            ? pageEnv.path
+            : pageEnv.path.substring(0, pageEnv.path.lastIndexOf('/') + 1))
         : ''
 
+    // Filter out unwanted entries
     let filtered = sorted
         .filter( ([key, value]) => {
             // Depth filtering
-            if (value.depth < options.start || value.depth > options.end) return false
+            if (value.depth < indexOptions.start || value.depth > indexOptions.end) return false
             // Path prefix filtering
             if (currentStart && !value.path.startsWith(pathPrefix)) return false
             // Type filtering
-            if (options.type === 'folders' && value.type !== 'folder') return false
-            if (options.type === 'files' && value.type !== 'file') return false
+            if (indexOptions.type === 'folders' && value.type !== 'folder') return false
+            if (indexOptions.type === 'files' && value.type !== 'file') return false
 
             // Date range filtering (uses 'updated' or 'created' attribute)
-            if (options.fromDate || options.toDate) {
+            if (indexOptions.fromDate || indexOptions.toDate) {
                 // Prefer 'updated', fall back to 'created'
                 const docDateStr = value.updated || value.created
                 if (!docDateStr) return false // No date to filter on
@@ -1474,13 +1538,12 @@ function filteredIndex(currentStart, attributes, options, node) {
                 const docDate = new Date(docDateStr)
                 if (isNaN(docDate.getTime())) return false // Invalid date
 
-                if (options.fromDate && docDate < options.fromDate) return false
-                if (options.toDate && docDate > options.toDate) return false
+                if (indexOptions.fromDate && docDate < indexOptions.fromDate) return false
+                if (indexOptions.toDate && docDate > indexOptions.toDate) return false
             }
 
             return true
         })
-    // console.log(`  >>🌐🕸️[filteredIndex] Filtering index for ${attributes.path} with options`, { filtered, sorted, options, })
 
     /** Map sortPriority string to a numeric rank (high=0, medium/none=1, low=2)
      * @param {string} priority - The sortPriority frontmatter value
@@ -1493,7 +1556,8 @@ function filteredIndex(currentStart, attributes, options, node) {
     }
 
     // If latest option specified, sort by date descending (within priority groups) and limit results
-    if (options.latest) {
+    if (indexOptions.latest) {
+        console.warn(indexOptions.latest)
         filtered.sort((a, b) => {
             const rankA = priorityRank(a[1].sortPriority)
             const rankB = priorityRank(b[1].sortPriority)
@@ -1504,7 +1568,7 @@ function filteredIndex(currentStart, attributes, options, node) {
             return dateB.getTime() - dateA.getTime()
         })
         // Limit to the specified number
-        filtered = filtered.slice(0, options.latest)
+        filtered = filtered.slice(0, indexOptions.latest)
     } else {
         // Sort by priority group first, then by shortTitle/title/filename within each group
         filtered.sort((a, b) => {
@@ -1517,6 +1581,8 @@ function filteredIndex(currentStart, attributes, options, node) {
             return titleA.localeCompare(titleB)
         })
     }
+
+    // console.log(`>>🌐🕸️[filteredIndex] Filtered index for ${attributes.path} with options`, { filtered, sorted, options, })
 
     return filtered
 }
@@ -1989,16 +2055,16 @@ function readConfigFile(node, fileName, optional = false) {
 }
 
 /** Render a Map tree as nested UL HTML
- * @param {Map} map The tree map to render
- * @param {object} [options] Optional options for rendering
+ * @param {TreeMap} treeMap The tree map to render
+ * @param {IndexOptions} [indexOptions] Optional options for rendering
  * @param {boolean} [sameLevel] Whether to render only files at the same level (skip folders)
  * @param {boolean} [nav] Whether this is for the nav directive, default=false
  * @param {number} [_level] Current recursion level (internal use)
  * @param {string} [currentPath] Current page path for active link highlighting
  * @returns {string} Nested HTML unordered lists
  */
-function renderTree(map, options, sameLevel = false, nav = false, _level = 0, currentPath = '') {
-    if (!map || map.size === 0) return ''
+function renderTree(treeMap, indexOptions, sameLevel = false, nav = false, _level = 0, currentPath = '') {
+    if (!treeMap || treeMap.size === 0) return ''
 
     const priorityRank = (priority) => {
         if (priority === 'high') return 0
@@ -2006,7 +2072,7 @@ function renderTree(map, options, sameLevel = false, nav = false, _level = 0, cu
         return 1
     }
 
-    const sortedEntries = [...map.values()].sort((a, b) => {
+    const sortedEntries = [...treeMap.values()].sort((a, b) => {
         const rankA = priorityRank(a.sortPriority)
         const rankB = priorityRank(b.sortPriority)
         if (rankA !== rankB) return rankA - rankB
@@ -2016,7 +2082,22 @@ function renderTree(map, options, sameLevel = false, nav = false, _level = 0, cu
         return titleA.localeCompare(titleB)
     })
 
-    let html = _level > 0 ? '<ul>' : '<ul class="tree">'
+    // If indexOptions.id not provided, create an ID now
+    let id
+    if (!indexOptions?.id) id = `tree-${_level}-${Date.now()}`
+    else {
+        // Make sure that the id string stops at a comma
+        id = indexOptions.id.split(',')[0]
+    }
+
+    /** Get the first entry of the map @type {TreeMapValue} */
+    const vals = treeMap.values().next().value
+    let html = ''
+    if (_level < 1) {
+        html += `<ul id="${id}" class="tree">`
+    } else {
+        html += `<ul data-level="${_level}">`
+    }
     for (const entry of sortedEntries) {
         // Skip entries with no valid path to avoid generating href="undefined" in HTML
         if (!entry.path) continue
@@ -2032,7 +2113,7 @@ function renderTree(map, options, sameLevel = false, nav = false, _level = 0, cu
         }
         const hasChildren = entry.children && entry.children.size > 0
         const isActive = currentPath && (currentPath === entry.path || currentPath === entry.path.replace(/\/$/, ''))
-        const titleAttr = entry.description ? ` title="${entry.description.replace(/"/g, '&quot;')}"` : ''
+        const titleAttr = entry.description ? ` title="${entry.updated}${entry.description.replace(/"/g, '&quot;')}"` : ''
         if (hasChildren) {
             const summaryActiveClass = isActive ? ' class="active-link"' : ''
             // Use details/summary for collapsible folder sections
