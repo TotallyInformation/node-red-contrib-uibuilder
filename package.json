@@ -76,7 +76,7 @@
     "gulp-sourcemaps": "3.*",
     "gulp-uglify": "3.*",
     "lightningcss": "1.*",
-    "mermaid": "11.*",
+    "mermaid": "12.*",
     "prismjs": "1.*",
     "socket.io-client": "4.*",
     "stylelint": "^17.4.0",
