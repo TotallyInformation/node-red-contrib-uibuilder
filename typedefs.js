@@ -420,6 +420,8 @@
  * @property {number} telemetrySendInterval How often to send telemetry data to the endpoint, in seconds. Default 30d
  * @property {object} [telemetry] Telemetry data for the uibuilder instance. Loaded from and saved to `<uibRoot>/.config/telemetry.json`.
  * @property {object} projData Node-RED projects data for convenience since NR puts it into multiple places.
+ * @property {boolean} nrStarted Has Node-RED completed initial startup?
+ * @property {number} nrDeploys How many times has Node-RED had a deploy?
  */
 
 /** singleTemplateConf - Individual template configuration object in `templates/template_dependencies.js`
