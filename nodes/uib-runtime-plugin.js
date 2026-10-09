@@ -360,6 +360,14 @@ function pluginDefinition(RED) {
         // console.log(`🌐[uibuilder:runtimeSetup:runtime-event] ID: ${event.id}`)
     })
     RED.events.on('flows:started', async function(event) {
+        // Track initial start and the number of restarts
+        if (uib.nrStarted === true) {
+            uib.nrDeploys++
+        } else {
+            uib.nrStarted = true
+            uib.nrDeploys = 0
+        }
+
         // Parse the telemetry file to load the telemetry data into the global uib object
         // (ensures the file exists & sends data to cloudflare if needed)
         // NB: Runs every time the flows are (re)started
@@ -369,9 +377,7 @@ function pluginDefinition(RED) {
             initialised = true
             const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
             RED.log.info('┌─────────────────────────────────────────────────────────────────────────')
-
             RED.log.info(`│ 🌐 ${uib.moduleName} v${uib.version} initialised`)
-
             if ( uib.projData.enabled === true ) {
                 if ( uib.projData.activeProject ) {
                     RED.log.info(`│ Node-RED Projects enabled, using active project: "${uib.projData.activeProject}"`)
@@ -380,7 +386,6 @@ function pluginDefinition(RED) {
                 }
             }
             RED.log.info(`│ Root folder: ${uib.rootFolder}`)
-
             RED.log.info(`│ Telemetry: ${uib.telemetryEnabled === true ? `On, uuid: ${uib.telemetry?.uuid}` : 'Off'}`)
             if ( uib.customServer.isCustom === true ) {
                 RED.log.info('│ Using custom ExpressJS webserver at:')
@@ -389,7 +394,6 @@ function pluginDefinition(RED) {
                 RED.log.info('│ Using Node-RED\'s webserver at:')
                 RED.log.info(`│   ${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`)
             }
-
             RED.log.info(`│ Instances: ${uib.telemetry?.uib_count} uibuilder, ${uib.telemetry?.markweb_count} markweb`)
 
             const pkgs = Object.keys(packageMgt.uibPackageJson.uibuilder.packages)
