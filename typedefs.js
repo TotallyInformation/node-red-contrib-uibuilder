@@ -422,6 +422,15 @@
  * @property {object} projData Node-RED projects data for convenience since NR puts it into multiple places.
  */
 
+/** singleTemplateConf - Individual template configuration object in `templates/template_dependencies.js`
+ * @typedef {object} singleTemplateConf
+ * @property {string} name The name of the template
+ * @property {string} folder The relative server filing system folder containing the template (for internal templates only)
+ * @property {string=} location The location of the template, for external templates only. Should be a valid DEGIT compatible location
+ * @property {string[]} dependencies Array of npm package names for dependent packages required by this template. e.g. ['vue']
+ * @property {string} description The description of the template
+ */
+
 /** senderNode1
  * @typedef {{
  *   name: string;
