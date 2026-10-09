@@ -55,14 +55,15 @@ const uib = uibGlobalConfig
  * @type {Object<string, Function>}
  */
 const dummyLog = {
-    fatal: function() {}, // fatal - only those errors which make the application unusable should be recorded
-    error: function() {}, // error - record errors which are deemed fatal for a particular request + fatal errors
-    warn: function() {}, // warn - record problems which are non fatal + errors + fatal errors
-    info: function() {}, // info - record information about the general running of the application + warn + error + fatal errors
-    debug: function() {}, // debug - record information which is more verbose than info + info + warn + error + fatal errors
-    trace: function() {}, // trace - record very detailed logging + debug + info + warn + error + fatal errors
+    fatal: function() { throw new Error('Logging not initialised') }, // fatal - only those errors which make the application unusable should be recorded
+    error: function() { throw new Error('Logging not initialised') }, // error - record errors which are deemed fatal for a particular request + fatal errors
+    warn: function() { throw new Error('Logging not initialised') }, // warn - record problems which are non fatal + errors + fatal errors
+    info: function() { throw new Error('Logging not initialised') }, // info - record information about the general running of the application + warn + error + fatal errors
+    debug: function() { throw new Error('Logging not initialised') }, // debug - record information which is more verbose than info + info + warn + error + fatal errors
+    trace: function() { throw new Error('Logging not initialised') }, // trace - record very detailed logging + debug + info + warn + error + fatal errors
 }
-let log = dummyLog // reset to RED.log or anything else you fancy at any point
+// Reset to RED.log or anything else you fancy at any point
+let log = dummyLog // eslint-disable-line prefer-const
 
 // We need to define chokidar here - it is required later - only if reload is true and it has native dependencies which can cause install issues
 let chokidar
@@ -133,6 +134,7 @@ function Uib(RED) {
 function nodeInstance(config) {
     if ( uib.RED === null ) return
     const RED = uib.RED
+    const log = RED.log
 
     // If someone deploys but ignored the error about blank URL's - don't set up the node.
     if (!config.url || config.okToGo === false ) {
@@ -222,14 +224,22 @@ function nodeInstance(config) {
      *   Files in this folder are also served to URL but take preference
      *   over those in the nodes folders (which act as defaults) @type {string}
      */
-    this.instanceFolder = path.join(/** @type {string} */ (uib.rootFolder), this.instancePath)
-    // ! TODO Need to find a way to make this more robust for when folder rename fails
-    // Check whether the url has been changed. If so, rename the folder
-    if ( this.oldUrl !== undefined && this.oldUrl !== '' && this.url !== this.oldUrl ) {
+    this.instanceFolder = path.join(uib.rootFolder, this.instancePath)
+    // Check if the instanceFolder exists already
+    let instanceFolderExists = false
+    if ( fslib.existsSync(this.instanceFolder) ) {
+        instanceFolderExists = true
+        log.trace(`🌐[uibuilder:nodeInstance:${this.url}] Instance folder already exists at start: "${this.instanceFolder}"`)
+    } else {
+        log.trace(`🌐🛑[uibuilder:nodeInstance:${this.url}] Instance folder does not exist at start`)
+    }
+
+    // Check whether the url has been changed. If so, rename the folder - but only if the old folder exists
+    if ( this.oldUrl !== undefined && this.oldUrl !== '' && this.url !== this.oldUrl && instanceFolderExists === true) {
         // rename (move) folder if possible - but don't overwrite
         try {
             fslib.moveSync(path.join(/** @type {string} */ (uib.rootFolder), this.oldUrl), this.instanceFolder, { overwrite: false, })
-            log.trace(`🌐[uibuilder:nodeInstance:${this.url}] Folder renamed from ${this.oldUrl} to ${this.url}`)
+            log.info(`🌐[uibuilder:nodeInstance:${this.url}] Folder renamed from ${this.oldUrl} to ${this.url}`)
             // Notify other nodes
             RED.events.emit('UIBUILDER/URL-change', { oldURL: this.oldUrl, newURL: this.url, folder: this.instanceFolder, } )
             RED.events.emit(`UIBUILDER/URL-change/${this.oldUrl}`, { oldURL: this.oldUrl, newURL: this.url, folder: this.instanceFolder, } )
@@ -245,23 +255,32 @@ function nodeInstance(config) {
         delete web.routers.instances[this.oldUrl]
         delete web.instanceRouters[this.oldUrl]
         // we continue to do the normal checks in case something failed or if this is an initial deploy (so no original folder exists)
+    } else {
+        log.trace(`🌐[uibuilder:nodeInstance:${this.url}] No rename needed`)
     }
 
     // Does the instance folder exist? If not, create it and copy requested template to it. Otherwise make sure it is accessible.
     let instanceFoldersOK = true
-    if ( !fslib.existsSync(this.instanceFolder) ) {
+    if ( instanceFolderExists === false ) {
         // Folder does not exist so create it
         try {
             fslib.ensureDirSync(this.instanceFolder) // creates the folder if it doesn't exist
+            instanceFolderExists = true
+            log.trace(`🌐[uibuilder:nodeInstance:${this.url}] Instance folder created: "${this.instanceFolder}"`)
         } catch (e) {
-            log.error(`🌐🛑[uibuilder:nodeInstance] CREATE OF INSTANCE FOLDER '${this.instanceFolder}' FAILED. Fatal. Error=${e.message}`, e)
+            log.error(`🌐🛑[uibuilder:nodeInstance:${this.url}] CREATE OF INSTANCE FOLDER '${this.instanceFolder}' FAILED. Fatal. Error=${e.message}`, e)
+            this.statusDisplay = { fill: 'red', shape: 'dot', text: 'ERROR:NOT CONFIGURED - Could not create instance folder', }
             instanceFoldersOK = false
         }
 
-        // Copy the template files to the instance folder (replaceTemplate is async, we don't care about result) - only if create succeded
+        /** Copy the template files to the instance folder
+         * replaceTemplate has to be async because of degit, we don't care about result here - only whether create succeded
+         * This is only for new instances - further template changes happen from the Editor via a call to the v3 admin API
+         */
         if (instanceFoldersOK === true) {
             (async () => {
                 try {
+                    // Returns status msg if successful but outputs log.info anyway
                     await fslib.replaceTemplate({
                         url: this.url,
                         template: this.templateFolder,
@@ -271,8 +290,10 @@ function nodeInstance(config) {
                         uib,
                         log,
                     })
+                    log.info(`🌐[uibuilder:nodeInstance:${this.url}] Template replaced`)
                 } catch (e) {
-                    log.error(`🌐🛑[uibuilder:nodeInstance] COPY OF TEMPLATE '${this.templateFolder}' FAILED. Fatal. Error=${e.message}`, e)
+                    log.error(`🌐🛑[uibuilder:nodeInstance:${this.url}] COPY OF TEMPLATE '${this.templateFolder}' FAILED. Fatal. Error=${e.message}`, e)
+                    this.statusDisplay = { fill: 'red', shape: 'dot', text: 'ERROR:NOT CONFIGURED - Could not copy template', }
                     instanceFoldersOK = false
                 }
             })()
@@ -283,24 +304,20 @@ function nodeInstance(config) {
             fslib.accessSync(this.instanceFolder, 'w')
         } catch (e) {
             log.error(`🌐🛑[uibuilder:nodeInstance:${this.url}] Local custom folder ERROR`, e.message)
+            this.statusDisplay = { fill: 'red', shape: 'dot', text: 'ERROR:NOT CONFIGURED - Cannot access instance folder', }
             instanceFoldersOK = false
         }
     }
 
-    // We've checked that the custom folder is there and has the correct structure
-    // TODO Add check for src folder?
-    if ( instanceFoldersOK === true ) {
-        // local custom folders are there ...
-        log.trace(`🌐[uibuilder:nodeInstance:${this.url}] Using local front-end folders in: ${this.instanceFolder}` )
-    } else {
-        // Local custom folders are not right!
-        log.error(`🌐🛑[uibuilder:nodeInstance:${this.url}] Wanted to use local front-end folders in ${this.instanceFolder} but could not`)
-    }
+    // We've checked that the instance folder is there and is accessible
+    if ( instanceFoldersOK === true && uib.nrStarted === true ) { // Report only after initial NR startup
+        log.info(`🌐[uibuilder:nodeInstance:${this.url}] Using local folder: ${this.instanceFolder}` )
+    } // else - we've already logged the reason
+
+    // NOTE: We cannot check for a valid template folder structure because the template application is async so might
+    //       not yet be complete here.
 
     // #endregion ====== End of Local folder structure ====== //
-
-    // If security turned on, set up security for this instance - NB: most sec processing done from socket.js
-    // if ( this.useSecurity === true ) security.setupInstance(this)
 
     // Set up web services for this instance (static folders, middleware, etc)
     web.instanceSetup(this)
@@ -313,9 +330,8 @@ function nodeInstance(config) {
 
     log.trace(`🌐[uibuilder:nodeInstance:${this.url}] URL . . . . .  : ${tilib.urlJoin( uib.nodeRoot, this.url )}`)
     log.trace(`🌐[uibuilder:nodeInstance:${this.url}] Source files . : ${this.instanceFolder}`)
+    if ( instanceFoldersOK === true ) this.statusDisplay.text = 'Node Initialised'
 
-    // We only do the following if io is not already assigned (e.g. after a redeploy)
-    this.statusDisplay.text = 'Node Initialised'
     uiblib.setNodeStatus( this )
 
     // 3) Add event handler to process inbound messages
@@ -403,6 +419,7 @@ function nodeInstance(config) {
  */
 function inputMsgHandler (msg, send, done) {
     // const RED = uib.RED
+    const log = uib.RED.log
 
     log.trace(`🌐[uibuilder[:${this.url}] nodeInstance:nodeInputHandler - emit received msg - Namespace: ${this.url}`) // debug
 
