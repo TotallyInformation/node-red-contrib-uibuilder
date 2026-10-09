@@ -37,7 +37,7 @@ const fs = require('node:fs/promises')
 const { cp, watch, writeFile, } = require('node:fs')
 // Sync
 const {
-    accessSync, closeSync, cpSync, constants: fsConstants, existsSync, mkdirSync, openSync, // eslint-disable-line n/no-unsupported-features/node-builtins
+    accessSync, closeSync, cpSync, constants: fsConstants, existsSync, mkdirSync, openSync,
     readdirSync, readFileSync, renameSync, rmSync, } = require('node:fs')
 
 /** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
@@ -57,7 +57,7 @@ class UibFs {
     /** PRIVATE Flag to indicate whether setup() has been run (ignore the false eslint error)
      * @type {boolean}
      */
-    #isConfigured = false
+    #isConfigured = false // eslint-disable-line no-unused-private-class-members
 
     /** @type {Array<string>} Updated by updateMergedPackageList which is called first in setup and then in various updates */
     mergedPkgMasterList = []
@@ -176,9 +176,9 @@ class UibFs {
         if (Array.isArray(dest)) dest = join(dest)
 
         try {
-            await fs.cp(src, dest, opts) // eslint-disable-line n/no-unsupported-features/node-builtins
+            await fs.cp(src, dest, opts)
         } catch (e) {
-            throw new Error(`Could not copy '${src}' to '${dest}'. ${e.message} [UibFs:copy]`)
+            throw new Error(`Could not copy '${src}' to '${dest}'. ${e.message} [UibFs:copy]`, { cause: e, })
         }
     }
 
@@ -227,7 +227,7 @@ class UibFs {
         }
 
         // Get the served folder from the instance node
-        let folder = ''
+        let folder = '' // eslint-disable-line no-useless-assignment
         const allFiles = []
 
         folder = join(node.customFolder, node.sourceFolder)
@@ -284,7 +284,7 @@ class UibFs {
      */
     readFile = fs.readFile
 
-    /** Removes a file or directory. The directory can have contents. 
+    /** Removes a file or directory. The directory can have contents.
      * If the path does not exist, rm does nothing.
      * https://nodejs.org/docs/latest-v22.x/api/fs.html#fspromisesrmpath-options
      * @param {string} path Folder/File to remove
@@ -363,7 +363,7 @@ class UibFs {
         return statusMsg
     }
 
-    /** Replace template in front-end instance folder
+    /** Replace template in front-end instance folder (has to be async because degit is async)
      * @param {templateProcessingOpts} opts Options object
      * @returns {Promise<string|Error>} statusMessage or error object
      */
@@ -407,7 +407,6 @@ class UibFs {
         /** Source template folder name */
         const srcTemplate = join( uib.masterTemplateFolder, template )
         try {
-            // NB: fs.cp is still experimental even in node.js v20 - but seems stable since v16
             await fs.cp(srcTemplate, fullname, fsOpts)
             const statusMsg = `Successfully copied template ${template} to ${url}.`
             log.info(`🌐📘[uibuilder:fs:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
@@ -615,7 +614,7 @@ class UibFs {
             // @ts-ignore
             cp(src, dest, opts, cb)
         } catch (e) {
-            throw new Error(`Could not copy '${src}' to '${dest}'. ${e.message} [UibFs:copyCb]`)
+            throw new Error(`Could not copy '${src}' to '${dest}'. ${e.message} [UibFs:copyCb]`, { cause: e, })
         }
     }
 
@@ -686,7 +685,7 @@ class UibFs {
             if (Array.isArray(dest)) dest = join(...dest)
             cpSync(src, dest, opts)
         } catch (e) {
-            throw new Error(`Could not copy '${src}' to '${dest}'. ${e.message} [UibFs:copySync]`)
+            throw new Error(`Could not copy '${src}' to '${dest}'. ${e.message} [UibFs:copySync]`, { cause: e, })
         }
     }
 
