@@ -91,7 +91,10 @@ const CSS_QUERY = '>=0.12%, not ie > 0, not ios_saf < 12.2, not safari < 12.1, n
  * Increase to 'node22' when Node-RED v4 becomes the baseline.
  * @type {string}
  */
-const NODE_TARGET = 'node18'
+const NODE_TARGET = 'node22'
+
+// Node-RED baseline
+const NR_TARGET = 'v5'
 
 // ─── Directory paths ───────────────────────────────────────────────────────
 
@@ -1093,7 +1096,7 @@ async function main() {
     console.log(SEP)
     console.log('  uibuilder build script')
     console.log(`  Package version : ${PKG_VERSION}`)
-    console.log(`  Node.js target  : ${NODE_TARGET}  (Node-RED ≥v3 baseline)`)
+    console.log(`  Node.js target  : ${NODE_TARGET}  (Node-RED ${NR_TARGET} baseline)`)
     console.log(`  Browser target  : ${ESBUILD_BROWSER_TARGETS_HARDCODED.join(', ')}`)
     console.log(`  Targets         : ${targets.join(', ')}${watch ? '  [watch mode]' : ''}`)
     console.log(SEP)
