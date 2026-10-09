@@ -186,6 +186,10 @@ const uibGlobalConfig = {
     me: pkgJson,
     // Reference to Node-RED runtime object. Will be set in uibuilder.js createNode
     RED: null,
+
+    // Track initial Node-RED startup and how many times it has been deployed (updated in the runtime plugin)
+    nrStarted: false,
+    nrDeploys: 0,
 }
 
 module.exports = uibGlobalConfig
