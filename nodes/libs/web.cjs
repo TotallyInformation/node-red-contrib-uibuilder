@@ -157,7 +157,7 @@ class UibWeb {
             return
         }
 
-        this.adminRouter = express.Router(this.#routerOptions) // eslint-disable-line new-cap
+        this.adminRouter = express.Router(this.#routerOptions)
 
         /** Serve up the v3 admin apis on /<httpAdminRoot>/uibuilder/admin/ */
         this.adminRouterV3 = require('./admin-api-v3.cjs')(this.uib, this.log)
@@ -275,7 +275,7 @@ class UibWeb {
                         this.server = require('https').createServer(RED.settings.uibuilder.https, this.app)
                     } catch (e) {
                         // Throw error - we don't want to continue if https is needed but we can't create the server
-                        throw new Error(`🌐🛑[uibuilder:web:webSetup:CreateServer]\n\t Cannot create uibuilder custom ExpressJS server.\n\t Check uibuilder.https in settings.js,\n\t make sure the key and cert files exist and are accessible.\n\t ${e.message}\n \n `)
+                        throw new Error(`🌐🛑[uibuilder:web:webSetup:CreateServer]\n\t Cannot create uibuilder custom ExpressJS server.\n\t Check uibuilder.https in settings.js,\n\t make sure the key and cert files exist and are accessible.\n\t ${e.message}\n \n `, { cause: e, })
                     }
                 } else {
                     if ( RED.settings.https !== undefined ) {
@@ -336,7 +336,7 @@ class UibWeb {
         // Note: Keep the router vars separate so that they can be used for reporting
 
         // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/`
-        this.uibRouter = express.Router(this.#routerOptions) // eslint-disable-line new-cap
+        this.uibRouter = express.Router(this.#routerOptions)
 
         // Add auto-generated index page to uibRouter showing all uibuilder user app endpoints at `../uibuilder/apps`
         this._serveUserUibIndex()
@@ -454,7 +454,7 @@ class UibWeb {
             log.trace(`🌐[uibuilder[:web:setMasterStaticFolder] Using master production build folder. '${uib.masterStaticFeFolder}'`)
             this.masterStatic = uib.masterStaticFeFolder
         } catch (e) {
-            throw new Error(`setMasterStaticFolder: Cannot serve master production build folder, cannot access to read: '${uib.masterStaticFeFolder}'`)
+            throw new Error(`setMasterStaticFolder: Cannot serve master production build folder, cannot access to read: '${uib.masterStaticFeFolder}'`, { cause: e, })
         }
     } // --- End of setMasterStaticFolder() --- //
 
@@ -511,7 +511,7 @@ class UibWeb {
         /** Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/vendor/`
          * @type {ExpressRouter & {myname?: string}}
          */
-        this.vendorRouter = express.Router(this.#routerOptions) // eslint-disable-line new-cap
+        this.vendorRouter = express.Router(this.#routerOptions)
         this.vendorRouter.myname = 'uibVendorRouter'
 
         // Remove the vendor router if it already exists - we will recreate it. `some` stops once it has found a result
@@ -631,7 +631,7 @@ class UibWeb {
         node.commonStaticLoaded = false
 
         // Create router for this node instance
-        this.instanceRouters[node.url] = express.Router(this.#routerOptions) // eslint-disable-line new-cap
+        this.instanceRouters[node.url] = express.Router(this.#routerOptions)
         this.routers.instances[node.url].push( { name: `${node.type} Instance Router`, path: `${this.uib.httpRoot}/${node.url}/`, desc: 'Other routes hang off this', type: 'Router', folder: '--', } )
 
         /** We want to add services in the right order - first load takes preference:
@@ -678,7 +678,7 @@ class UibWeb {
         if (fullRoutes) this.instanceRouters[node.url].use( (req, res, next) => {
             const pathRoot = join(node.instanceFolder, 'views')
             const requestedView = parse(req.path)
-            let filePath = join(pathRoot, requestedView.base)
+            let filePath = join(pathRoot, requestedView.base) // eslint-disable-line no-useless-assignment
 
             if (this.app.get('view engine')) {
                 filePath = join(pathRoot, `${requestedView.name}.ejs`)
@@ -884,7 +884,7 @@ class UibWeb {
                 if ( !existsSync(indexFile) ) {
                     node.warn(`🌐⚠️[uibuilder:web:setupInstanceStatic:${node.url}] Cannot show default page, index.html does not exist in ${customFull}.`)
                 }
-            }, 100)
+            }, 1000)
         }
 
         // Track the route
@@ -1210,7 +1210,7 @@ class UibWeb {
         const routeFiles = fgSync(`${node.instanceFolder}/routes/*.js`)
         routeFiles.forEach( (routeFilePath) => {
             let instanceRouteFile = {}
-            let routeKeys = []
+            let routeKeys = [] // eslint-disable-line no-useless-assignment
             try {
                 instanceRouteFile = require(routeFilePath) // eslint-disable-line security/detect-non-literal-require
                 routeKeys = Object.keys(instanceRouteFile)
@@ -1288,7 +1288,7 @@ class UibWeb {
     dumpInstanceRoutes(print = true, url = null) {
         const instances = {}
 
-        let urls = []
+        let urls = [] // eslint-disable-line no-useless-assignment
         if ( url === null ) {
             urls = Object.keys(this.instanceRouters)
         } else {
