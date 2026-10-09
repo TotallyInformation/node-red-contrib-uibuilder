@@ -87,7 +87,8 @@ const UibLib = {
         // const RED = /** @type {runtimeRED} */ uib.RED
         const log = uib.RED.log
 
-        log.info(`🌐[uibuilder[:uiblib:instanceClose:${node.url}] Running instance close. Node removed? ${removed}`)
+        // We only want to visibly log if the instance is being removed
+        log[removed === true ? 'info' : 'trace'](`🌐[uibuilder[:uiblib:instanceClose:${node.url}] Running instance close. Node removed? ${removed}`)
 
         /** @type {object} instances[] Reference to the currently defined instances of uibuilder */
         const instances = uib.instances
@@ -111,7 +112,7 @@ const UibLib = {
         // Remove url folder if requested
         if ( removed && uib.deleteOnDelete[node.url] === true ) {
             const removePath = path.join(uib.rootFolder, node.url)
-            log.info(`🌐[uibuilder:uiblib:instanceClose:${node.url}] Deleting instance folder "${removePath}"`)
+            log.trace(`🌐[uibuilder:uiblib:instanceClose:${node.url}] Deleting instance folder "${removePath}"`)
             const deleted = fslib.removeSync(removePath)
             // Remove the flag in case someone recreates the same url!
             if (deleted) {
@@ -630,7 +631,6 @@ const UibLib = {
         const payload = uib.telemetry
 
         try {
-            // eslint-disable-next-line n/no-unsupported-features/node-builtins -- fetch is experimental in Node.js v18 but available; stable from v21+
             const res = await fetch(uib.telemetryEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', },
