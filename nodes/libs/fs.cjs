@@ -806,12 +806,19 @@ class UibFs {
         }
     }
 
-    /** Removes a file or directory. The directory can have contents. If the path does not exist, silently does nothing.
+    /** Removes a file or directory. The directory can have contents. If path does not exist, silently does nothing.
      * Uses Node.js v14.14+ rmSync with recursive and force flags.
      * @param {string} path Folder/file path to remove
+     * @returns {boolean} True if the path no longer exists, false if the remove failed
      */
     removeSync(path) {
         rmSync(path, { recursive: true, force: true, })
+        // Check if path still exists, report
+        if (existsSync(path)) { // eslint-disable-line security/detect-non-literal-fs-filename
+            return false
+        } else {
+            return true
+        }
     }
 
     /** Writes an object to a JSON file.
