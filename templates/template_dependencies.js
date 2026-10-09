@@ -24,7 +24,9 @@ module.exports = {
     },
     'ext-extended-iife': {
         name: 'Extended example using the IIFE client (external)',
+        // Redundant, no longer needed for external templates
         folder: 'ext-extended-iife',
+        // Location only used for external templates - must be a degit compatible URL
         location: 'totallyinformation/uib-extended-template', // GitHub
         dependencies: [],
         description:
