@@ -87,7 +87,7 @@ const UibLib = {
         // const RED = /** @type {runtimeRED} */ uib.RED
         const log = uib.RED.log
 
-        log.trace(`🌐[uibuilder[:uiblib:instanceClose:${node.url}] Running instance close.`)
+        log.info(`🌐[uibuilder[:uiblib:instanceClose:${node.url}] Running instance close. Node removed? ${removed}`)
 
         /** @type {object} instances[] Reference to the currently defined instances of uibuilder */
         const instances = uib.instances
@@ -95,11 +95,11 @@ const UibLib = {
         node.statusDisplay.text = 'CLOSED'
         this.setNodeStatus(node)
 
-        // Cancel the file watcher if it exists
+        // Cancel the auto-page-reload watcher if it exists
         if ( node.watcher ) {
             // @ts-ignore
             node.watcher.close()
-            log.trace(`🌐[uibuilder[:nodeInstance:close:${node.url}] File watcher closed`)
+            log.trace(`🌐[uibuilder:nodeInstance:close:${node.url}] File watcher closed`)
         }
 
         // Tidy up the ExpressJS routes if a node is removed
@@ -108,21 +108,18 @@ const UibLib = {
             delete web.instanceRouters[node.url]
         }
 
-        try {
-            // Remove url folder if requested
-            if ( removed && uib.deleteOnDelete[node.url] === true ) {
-                log.trace(`🌐[uibuilder:uiblib:instanceClose] Deleting instance folder. URL: ${node.url}`)
-
-                fslib.remove(path.join(uib.rootFolder, node.url))
-                    .catch((err) => {
-                        log.error(`🌐🛑[uibuilder:uiblib:processClose] Deleting instance folder failed. URL=${node.url}, Error: ${err.message}`)
-                    })
-
-                // Remove the flag in case someone recreates the same url!
+        // Remove url folder if requested
+        if ( removed && uib.deleteOnDelete[node.url] === true ) {
+            const removePath = path.join(uib.rootFolder, node.url)
+            log.info(`🌐[uibuilder:uiblib:instanceClose:${node.url}] Deleting instance folder "${removePath}"`)
+            const deleted = fslib.removeSync(removePath)
+            // Remove the flag in case someone recreates the same url!
+            if (deleted) {
                 delete uib.deleteOnDelete[node.url]
+                log.info(`🌐[uibuilder:uiblib:instanceClose:${node.url}] Deleted instance folder "${removePath}"`)
+            } else {
+                log.error(`🌐🛑[uibuilder:uiblib:instanceClose:${node.url}] Deleting instance folder "${removePath}" failed`)
             }
-        } catch (err) {
-            log.error(`🌐🛑[uibuilder:uiblib:instanceClose] Failed to remove instance folder for URL="${node.url}". Error: ${err.message}`, err)
         }
 
         // Keep a log of the active instances @since 2019-02-02
@@ -132,7 +129,7 @@ const UibLib = {
             // Disconnect all Socket.IO clients for this node instance
             sockets.removeNS(node)
         } catch (err) {
-            log.error(`🌐🛑[uibuilder:uiblib:instanceClose] Error in closure. Error: ${err.message}`, err)
+            log.error(`🌐🛑[uibuilder:uiblib:instanceClose:${node.url}] Error in closure. Error: ${err.message}`, err)
         }
 
         // This should be executed last if present. `done` is the data returned from the 'close'
