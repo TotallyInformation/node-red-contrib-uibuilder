@@ -26,6 +26,7 @@
  * @typedef {import('../../typedefs.js').uibNode} uibNode
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
  * @typedef {import('../../typedefs.js').uibPackageJson} uibPackageJson
+ * @typedef {import('../../typedefs.js').singleTemplateConf} singleTemplateConf
  */
 
 const { join, relative, normalize, dirname, } = require('node:path')
@@ -33,7 +34,7 @@ const { join, relative, normalize, dirname, } = require('node:path')
 // Async
 const fs = require('node:fs/promises')
 // cb
-const { cp, watch, writeFile, } = require('node:fs') // eslint-disable-line n/no-unsupported-features/node-builtins
+const { cp, watch, writeFile, } = require('node:fs')
 // Sync
 const {
     accessSync, closeSync, cpSync, constants: fsConstants, existsSync, mkdirSync, openSync, // eslint-disable-line n/no-unsupported-features/node-builtins
@@ -45,10 +46,6 @@ const uib = require('./uibGlobalConfig.cjs')
 const { fg, } = require('../../packages/uib-fs-utils')
 
 // ! WARNING: Take care not to end up with circular requires. e.g. libs/socket.js or uiblib.js cannot be required here
-// ! We cannot use uibGlobalConfig here because it causes circular requires (its module uses this fs library)
-//   So it is passed in the setup function and stored as this.uib
-// The uibuilder global configuration object, used throughout all nodes and libraries.
-// const uibGlobalConfig = require('./uibGlobalConfig.cjs')
 
 // Holder for degit which is only loaded when needed
 let degit = null
@@ -287,28 +284,91 @@ class UibFs {
      */
     readFile = fs.readFile
 
-    /** Removes a file or directory. The directory can have contents. If the path does not exist, silently does nothing.
+    /** Removes a file or directory. The directory can have contents. 
+     * If the path does not exist, rm does nothing.
+     * https://nodejs.org/docs/latest-v22.x/api/fs.html#fspromisesrmpath-options
      * @param {string} path Folder/File to remove
+     * @returns {Promise<boolean>} True if removed,
      */
     async remove(path) {
         await fs.rm(path, { force: true, recursive: true, })
+        // Check if path still exists, report
+        if (existsSync(path)) { // eslint-disable-line security/detect-non-literal-fs-filename
+            return false
+        } else {
+            return true
+        }
     }
 
-    // TODO Move degit processing to its own function. Don't need the emitter on uib
+    /** Template processing options
+     * @typedef {object} templateProcessingOpts
+     * @property {string} url The uib instance URL
+     * @property {string} template Name of one of the built-in templates including 'blank' and 'external'
+     * @property {string|undefined} extTemplate Optional external template name to be passed to degit. See degit options for details.
+     * @property {string} cmd 'replaceTemplate' if called from admin-router:POST, otherwise can be anything descriptive & unique by caller
+     * @property {{ [key: string]: singleTemplateConf}} templateConf All defined template configurations
+     * @property {object} uib uibuilder's master variables
+     * @property {object} log uibuilder's Log functions (normally points to RED.log)
+
+     */
+    /** Process an external template request using DEGIT library
+     * Don't need the emitter on uib
+     * @param {singleTemplateConf} templateDef Template definition object
+     * @param {string} fullname Destination folder name
+     * @param {templateProcessingOpts} opts Options object
+     * @returns {Promise<string|Error>} statusMessage or error object
+     */
+    async doDegit(templateDef, fullname, opts) {
+        const { url, template, cmd, templateConf, uib, log, } = opts
+        let { extTemplate, } = opts
+        const { folder, location, dependencies, } = templateDef
+
+        // If both location and extTemplate are not set or blank, throw error
+        if ( (location === undefined || location.length === 0) && (extTemplate === undefined || extTemplate.length === 0) ) {
+            const e = new Error(`External template selected but no template location provided. Cannot procede. url=${url}, cmd=${cmd} [UibFs:doDegit]`)
+            e.name = 'NONAME'
+            throw e
+        }
+
+        // If extTemplate is set, use that over location
+        if ( extTemplate === undefined || extTemplate.length === 0 ) {
+            extTemplate = location
+        }
+        extTemplate = extTemplate.trim()
+
+        // We only need to get degit once (not needed at all unless we come here)
+        if (degit === null) degit = require('degit')
+
+        const degitEmitter = degit(extTemplate, {
+            cache: false, // Fix for Issue #155 part 3 - degit error
+            force: true,
+            verbose: false,
+        })
+
+        degitEmitter.on('info', (info) => {
+            log.trace(`🌐[uibuilder:fs:doDegit] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
+        })
+
+        try {
+            await degitEmitter.clone(fullname)
+        } catch (err) {
+            const e = new Error(`Failed to copy template from '${extTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message} [UibFs:doDegit]`)
+            e.name = 'TEMPLATECOPYFAIL'
+            e.cause = err
+            throw e
+        }
+
+        const statusMsg = `Degit successfully copied template '${extTemplate}' to '${fullname}'.`
+        log.info(`🌐📘[uibuilder:fs:replaceTemplate] ${statusMsg} cmd=${cmd}`)
+        return statusMsg
+    }
+
     /** Replace template in front-end instance folder
-     * @param {object} opts Options object
-     * @param {string} opts.url The uib instance URL
-     * @param {string} opts.template Name of one of the built-in templates including 'blank' and 'external'
-     * @param {string|undefined} opts.extTemplate Optional external template name to be passed to degit. See degit options for details.
-     * @param {string} opts.cmd 'replaceTemplate' if called from admin-router:POST, otherwise can be anything descriptive & unique by caller
-     * @param {object} opts.templateConf Template configuration object
-     * @param {object} opts.uib uibuilder's master variables
-     * @param {object} opts.log uibuilder's Log functions (normally points to RED.log)
+     * @param {templateProcessingOpts} opts Options object
      * @returns {Promise<string|Error>} statusMessage or error object
      */
     async replaceTemplate(opts) {
         const { url, template, cmd, templateConf, uib, log, } = opts
-        let { extTemplate, } = opts
 
         // Check for external template name if template is 'external'
         // if ( template === 'external' && ( (!extTemplate) || extTemplate.length === 0) ) {
@@ -330,53 +390,14 @@ class UibFs {
             e.name = 'TEMPLATENOTEXIST'
             throw e
         }
-
-        const { folder, location, dependencies, } = templateDef
+        const { folder, location, } = templateDef
 
         /** Destination folder name */
         const fullname = join(uib.rootFolder, url)
 
-        // TODO Move degit processing to its own function
         /** If external - use degit to load - we have to use `location`, not just `folder` to allow for external std templates @since v7.3.0 */
         if ( folder === 'external' || location ) {
-            // If both location and extTemplate are not set or blank, throw error
-            if ( (location === undefined || location.length === 0) && (extTemplate === undefined || extTemplate.length === 0) ) {
-                const e = new Error(`External template selected but no template location provided. Cannot procede. url=${url}, cmd=${cmd} [UibFs:replaceTemplate]`)
-                e.name = 'NONAME'
-                throw e
-            }
-
-            // If extTemplate is set, use that over location
-            if ( extTemplate === undefined || extTemplate.length === 0 ) {
-                extTemplate = location
-            }
-            extTemplate = extTemplate.trim()
-
-            // We only need to get degit once (not needed at all unless we come here)
-            if (degit === null) degit = require('degit')
-
-            const degitEmitter = degit(extTemplate, {
-                cache: false, // Fix for Issue #155 part 3 - degit error
-                force: true,
-                verbose: false,
-            })
-
-            degitEmitter.on('info', (info) => {
-                log.trace(`🌐[uibuilder:fs:replaceTemplate] Degit: '${extTemplate}' to '${fullname}': ${info.message}`)
-            })
-
-            try {
-                await degitEmitter.clone(fullname)
-            } catch (err) {
-                const e = new Error(`Failed to copy template from '${extTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message} [UibFs:replaceTemplate]`)
-                e.name = 'TEMPLATECOPYFAIL'
-                e.cause = err
-                throw e
-            }
-
-            const statusMsg = `Degit successfully copied template '${extTemplate}' to '${fullname}'.`
-            log.info(`🌐📘[uibuilder:uiblib:replaceTemplate] ${statusMsg} cmd=${cmd}`)
-            return statusMsg
+            return await this.doDegit(templateDef, fullname, opts)
         }
 
         // If here, must be an internal template & we know the config exists
@@ -387,9 +408,9 @@ class UibFs {
         const srcTemplate = join( uib.masterTemplateFolder, template )
         try {
             // NB: fs.cp is still experimental even in node.js v20 - but seems stable since v16
-            await fs.cp(srcTemplate, fullname, fsOpts) // eslint-disable-line n/no-unsupported-features/node-builtins
+            await fs.cp(srcTemplate, fullname, fsOpts)
             const statusMsg = `Successfully copied template ${template} to ${url}.`
-            log.info(`🌐📘[UibFs:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
+            log.info(`🌐📘[uibuilder:fs:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
             return statusMsg
         } catch (err) {
             const e = new Error(`Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message} [UibFs:replaceTemplate]`)
