@@ -659,7 +659,15 @@ function adminRouterV3(uib, log) {
             params.type = 'post'
 
             if ( params.cmd === 'replaceTemplate' ) {
-                fslib.replaceTemplate({ url: params.url, template: params.template, extTemplate: params.extTemplate, cmd: params.cmd, templateConf, uib, log, })
+                fslib.replaceTemplate({
+                    url: params.url,
+                    template: params.template,
+                    extTemplate: params.extTemplate,
+                    cmd: params.cmd,
+                    templateConf,
+                    uib,
+                    log,
+                })
                     .then( (statusMessage) => {
                         // @ts-ignore
                         res.statusMessage = statusMessage
@@ -689,6 +697,7 @@ function adminRouterV3(uib, log) {
                             statusMsg = `Replace template error. ${err.message}. url=${params.url}. ${params.template}${mystr}`
                         }
                         log.error(`🌐🛑[uibuilder:adminapi:POST:replaceTemplate] ${statusMsg}`, err)
+                        // console.log(err.stack)
                         res.statusMessage = statusMsg
                         res.status(500).end()
                     } )
