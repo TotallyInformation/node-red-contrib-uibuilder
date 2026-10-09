@@ -1,7 +1,0 @@
-name: DeepWiki
-version: 0.0.1
-schema: v1
-mcpServers:
-  - name: DeepWiki
-    type: streamable-http
-    url: https://mcp.deepwiki.com/mcp

@@ -1,0 +1,21 @@
+name: MCPServers
+version: 0.0.1
+schema: v1
+mcpServers:
+
+  - name: Context7
+    command: npx
+    args:
+      - -y
+      - '@upstash/context7-mcp@latest'
+
+  - name: DeepWiki
+    type: streamable-http
+    url: https://mcp.deepwiki.com/mcp
+
+  - name: SQLite MCP
+    command: npx
+    args:
+      - "-y"
+      - "mcp-sqlite"
+      - "/path/to/your/database.db"
