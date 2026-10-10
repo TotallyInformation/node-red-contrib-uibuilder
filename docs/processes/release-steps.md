@@ -3,7 +3,7 @@ title: How to release a new version of UIBUILDER
 description: |
   Several steps are needed, in the right order, to be able to release a new version.
 created: 2024-09-01 11:34:53
-updated: 2026-07-31 15:56:31
+updated: 2026-10-10 14:22:57
 author: Julian Knight (Totally Information)
 ---
 
@@ -17,12 +17,16 @@ When working on the dev branch, it may be necessary to release a new bug-fix rel
 2. Firstly commit or stash any outstanding changes in your `dev` branch.
 3. From the VSCode command line, do:
 
-```bash
-git switch main
-git pull origin main
-git switch dev
-git merge main
-```
+   ```bash
+   git switch main
+   git pull origin main
+   git switch dev
+   git merge main
+   
+   # To grab an online created branch
+   git fetch origin
+   git checkout fixes-2610
+   ```
 
 4. Now the Source Control panel in VSCode will have any files with conflicts marked. Click on them to view the conflict and resolve. Then do another commit and push.
 5. If you did a stash, do `git stash pop` now to re-apply your changes.
@@ -93,6 +97,7 @@ git pull origin main
 git switch dev
 git merge main
 ```
+
 Now the Source Control panel in VSCode will have any files with conflicts marked. Click on them to view the conflict and resolve. Then do another commit and push.
 
 Remember to switch branches to the version branch in VS Code before continuing.
