@@ -19,7 +19,7 @@
         "fast-glob": "^3.2.7"
     },
     "engines": {
-        "node": ">=18.5"
+        "node": ">=22.9"
     },
     "author": {
         "name": "Julian Knight (TotallyInformation)",
