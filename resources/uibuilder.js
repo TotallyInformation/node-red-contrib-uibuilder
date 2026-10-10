@@ -1,12 +1,17 @@
 /* eslint-disable @stylistic/newline-per-chained-call */
 // NOTE: window.uibuilder is added - see `resources` folder
-;(function () {
+
+/** --- Type Defs ---
+ * @typedef {import('../typedefs.js').UibEditorCommon} UibEditorCommon
+ */
+
+;(function () { // eslint-disable-line @stylistic/no-extra-semi
     'use strict'
 
     // #region --------- module variables for the panel --------- //
 
     // NOTE: window.uibuilder is added by editor-common.js - see `resources` folder
-    const uibuilder = window['uibuilder']
+    const uibuilder = /** @type {UibEditorCommon} */ (window['uibuilder'])
     const log = uibuilder.log
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName = 'uibuilder'
@@ -44,8 +49,8 @@
      * Allows tracking and returning to them even if the Edit panel is closed
      * and later re-opened.
      */
-    if (!window['uibuilder'].runningScripts) window['uibuilder'].runningScripts = {}
-    const runningScripts = window['uibuilder'].runningScripts
+    if (!uibuilder.runningScripts) uibuilder.runningScripts = {}
+    const runningScripts = uibuilder.runningScripts
 
     // #endregion ------------------------------------------------- //
 
@@ -145,8 +150,8 @@
      * @param {string|object} data data object for the row. {} if add button pressed, else data passed to addItem method
      */
     function addPackageRow(node, element, index, data) {
-        let hRow = ''
-        let pkgSpec = null
+        let hRow = '' // eslint-disable-line no-useless-assignment
+        let pkgSpec = null // eslint-disable-line no-useless-assignment
 
         if (Object.entries(data).length === 0) { // Add button was pressed so we have no packageName, create an input form instead
             hRow = `
@@ -295,7 +300,7 @@
 
     /** RemoveItem function for package list
      * @param {string} packageName Name of the npm package to remove
-     * @returns {string|null} Result text
+     * @return {string|null} Result text
      */
     function removePackageRow(packageName) {
         // If package name is an empty object - user removed an add row so ignore
@@ -395,7 +400,7 @@
     /** Return a file type from a file name (or default to txt)
      *  ftype can be used in ACE editor modes
      * @param {string} fname File name for which to return the type
-     * @returns {string} File type
+     * @return {string} File type
      */
     function fileType(fname) {
         let ftype = 'text'
@@ -605,7 +610,7 @@
                 // Persist the folder selection
                 localStorage.setItem('uibuilder.' + url + '.folder', folder)
 
-                let files = []
+                let files = [] // eslint-disable-line no-useless-assignment
                 files = data[folder]
 
                 $.each(files, function (i, filename) {
@@ -641,9 +646,15 @@
             })
     } // --- End of getFileList --- //
 
-    /** Get a full list of instance folders (minus protected ones). Updates folders global var. */
-    function getFolders() {
-        const url = /** @type {string} */ ($('#node-input-url').val())
+    /** Get a full list of instance folders (minus protected ones). Updates folders global var.
+     * @param {object} node -
+     */
+    function getFolders(node) {
+        const url = /** @type {string} */ ($('#node-input-url').val() || node.url)
+        if (!url) {
+            RED.notify('uibuilder: No URL set')
+            return
+        }
 
         const data = $.ajax({
             async: false,
@@ -675,9 +686,10 @@
 
     /** Call v3 admin API to create a new folder
      * @param {string} folder Name of new folder to create (combines with current uibuilder url)
+     * @param {object} node The node object
      * returns {string} Status message
      */
-    function createNewFolder(folder) {
+    function createNewFolder(folder, node) {
         // Also get the current url
         const url = $('#node-input-url').val()
 
@@ -701,7 +713,7 @@
                 // Rebuild the file list
                 getFileList()
                 // Rebuild the folder list
-                getFolders()
+                getFolders(node)
 
                 return 'Create folder succeeded'
             })
@@ -914,7 +926,7 @@
     /** Create the wrapping HTML string that provides a link to open the instance folder in vscode
      * Since v7.6.0, we try to update the existing link if the url changes rather than creating a new one each time
      * @param {object} node A reference to the panel's `this` object
-     * @returns {{pre,post,url,icon}} Prefix and postfix for link + vscode url scheme & icon
+     * @return {{pre,post,url,icon}} Prefix and postfix for link + vscode url scheme & icon
      */
     function vscodeLink(node) {
         if (!node.url) return '' // We can only create a link if we have a url to link to
@@ -969,7 +981,7 @@
 
     /** Find out if a server folder exists for this url
      * @param {string} url URL to check
-     * @returns {boolean} Whether the folder exists
+     * @return {boolean} Whether the folder exists
      */
     function queryFolderExists(url) {
         if (url === undefined) return false
@@ -1103,7 +1115,7 @@
     /** Live URL Validation Function: Validate the url property
      * Max 20 chars, can't contain any of ['..', ]
      * @param {string} value The url value to validate
-     * @returns {boolean} true = valid
+     * @return {boolean} true = valid
      * @this {object}
      */
     function validateUrl(value) {
@@ -1115,6 +1127,7 @@
         // this.urlValid = false
         this.urlErrors = {}
 
+        // Has the url changed?
         this.urlDeployedChanged = uibuilder.deployedUibInstances[this.id] !== value //  || (this.oldUrl !== undefined && this.url !== this.oldUrl)
         this.urlChanged = (this.url !== value)
 
@@ -1123,6 +1136,7 @@
          * Subflow id's have a `-` in them so we need to check for that too.
          */
 
+        // Is the url already deployed?
         let f = Object.values(uibuilder.deployedUibInstances).indexOf(value)
         if (f > -1) {
             let fId = Object.keys(uibuilder.deployedUibInstances)[f]
@@ -1136,6 +1150,7 @@
             this.urlDeployedDup = false
         }
 
+        // Has the url already been added to another un-deployed uibuilder instance?
         f = Object.values(editorInstances).indexOf(value)
         if (f > -1) {
             let fId = Object.keys(editorInstances)[f]
@@ -1153,8 +1168,8 @@
             this.urlErrors.config = 'Not yet configured, valid URL needed'
         }
 
-        // Must be >0 chars
-        if ( value === undefined || value === '' ) {
+        // Must be >0 chars, not null or undefined & ...other checks... (see under else)
+        if ( !value ) {
             this.urlErrors.none = 'Must not be empty'
         } else { // These will fail for empty value
             // Max 20 chars
@@ -1174,6 +1189,8 @@
             }
             // Cannot contain spaces
             if ( value.indexOf(' ') !== -1 ) this.urlErrors.sp = 'Cannot contain spaces'
+            // Must be valid (repeats some of above but more generic)
+            if (uibuilder.sanitizeUrl(value) === null) this.urlErrors.invalid = 'Invalid URL path string'
             // Cannot start with _ or .
             if ( value.substring(0, 1) === '_' ) this.urlErrors.strtU = 'Cannot start with <code>_</code> (underscore)'
             if ( value.substring(0, 1) === '.' ) this.urlErrors.strtDot = 'Cannot start with <code>.</code> (dot)'
@@ -1247,7 +1264,7 @@
 
     /** Validation Function: Validate the session length property
      * If security is on, must contain a number
-     * @returns {boolean} true = valid, false = not valid
+     * @return {boolean} true = valid, false = not valid
      * @this {object}
      */
     // function validateSessLen() {
@@ -1265,7 +1282,7 @@
 
     /** Validation Function: Validate the jwtSecret property
      * If security is on, must contain text
-     * @returns {boolean} true = valid, false = not valid
+     * @return {boolean} true = valid, false = not valid
      */
     // function validateSecret() { // eslint-disable-line no-unused-vars
     //     // NB: `this` is the node instance configuration as at last press of Done
@@ -1283,7 +1300,7 @@
     /** Validation function: Was this node last deployed with a safe version?
      * In uibuilder.js, can change uib.reDeployNeeded to be the last version before the v that made a breaking change.
      * @example If the node was last deployed with v4.1.2 and the current version is now v5.0.0, set uib.reDeployNeeded to '4.1.2'
-     * @returns {boolean} True if valid
+     * @return {boolean} True if valid
      * @this {object}
      */
     function validateVersion() {
@@ -1309,7 +1326,7 @@
     /** Populate the template selection dropdown
      * Uses a file that is `require`d in uibuilder.js
      * @param {object} node Pass in this
-     * @returns {string} Template folder name
+     * @return {string} Template folder name
      */
     function populateTemplateDropdown(node) {
         let templateFolder = node.templateFolder
@@ -1346,7 +1363,7 @@
 
     /** Check whether the currently selected template's npm dependencies are installed
      * If not, warn the user to install them.
-     * @returns {object|null} The template object or null if not found
+     * @return {object|null} The template object or null if not found
      */
     function checkDependencies() {
         const folder = /** @type {string} */ ($('#node-input-templateFolder').val())
@@ -1570,7 +1587,7 @@
         // Save the old url
         node.oldUrl = node.url
 
-        const newUrl = /** @type {string} */ ($('#node-input-url').val())
+        const newUrl = uibuilder.sanitiseUrl($('#node-input-url').val())
         node.url = newUrl
 
         // Update the IDE edit link (editurl)
@@ -1596,23 +1613,25 @@
     }
 
     /** Return the correct height of the libraries list
-     * @returns {number} Calculated height of the libraries list
+     * @return {number} Calculated height of the libraries list
      */
     function getLibrariesListHeight() {
         return ($('.red-ui-tray-footer').position()).top - ($('#package-list-container').offset()).top + 25
     }
 
-    /** File Editor */
-    function fileEditor() {
+    /** File Editor
+     * @param {UibNode} node The node instance
+     */
+    function fileEditor(node) {
         // Mark edit save/reset buttons as disabled by default
         fileIsClean(true)
 
         // Handle the file editor change of folder/file (1st built on click of show edit button)
-        $('#node-input-folder').change(function() { // (e) {
+        $('#node-input-folder').on('change', function() { // (e) {
             // Rebuild the file list
             getFileList()
         })
-        $('#node-input-filename').change(function() { // (e) {
+        $('#node-input-filename').on('change', function() { // (e) {
             // Get the content of the file via the admin API
             getFileContents()
         })
@@ -1642,7 +1661,7 @@
                     click: function() {
                         // NB: Button is disabled unless name.length > 0 so don't need to check here
                         // Call the new file API
-                        createNewFolder( /** @type {string} */ ($('#fldr-input-newname').val()) )
+                        createNewFolder( /** @type {string} */ ($('#fldr-input-newname').val()), node )
                         $('#fldr-input-newname').val(null)
                             .addClass('input-error')
                         $('#fldr-new-dialog_new').addClass('input-error')
@@ -2286,7 +2305,7 @@
         $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${node.url}`)
         $('#uibinstanceconf').prop('href', `./uibuilder/instance/${node.url}?cmd=showinstancesettings`)
 
-        getFolders()
+        // getFolders(node)
 
         // Show uibuilder version
         $('#uib_version').text(RED.settings.uibuilderCurrentVersion)
@@ -2318,7 +2337,9 @@
         if ( node.url === undefined || node.url === '' )
             enableEdit(node.urlErrors, Object.keys(node.urlErrors).length < 1)
 
-        fileEditor()
+        fileEditor(node)
+
+        getFolders(node)
 
         uibuilder.doTooltips('.ti-edit-panel') // Do this at the end
     } // ---- End of oneditprepare ---- //
