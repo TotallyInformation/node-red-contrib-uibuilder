@@ -3,23 +3,8 @@
  * Note that RED is available here
  */
 
-/** @typedef {object} UibEditorObject
- * @property {string} paletteCategory - Standard palette category for all uibuilder nodes
- * @property {string} typedInputWidth - Standard width for typed input fields
- * @property {boolean} localHost - Are we running on a local device?
- * @property {string} nrServer - Server address of the Node-RED server
- * @property {string} nodeRoot - URL root if needed (set to '' if using a custom uib server)
- * @property {string} urlPrefix - URL prefix for all uib nodes
- * @property {string} serverType - uib server type ('Node-RED\'s' or 'a custom')
- * @property {Object<string, string>} editorUibInstances - Tracks ALL uibuilder editor instance URL's by node id (includes undeployed and disabled nodes)
- * @property {Object<string, string>} deployedUibInstances - Tracks all DEPLOYED uibuilder instances url's by node id
- * @property {Array} packages - Tracks uibuilder's installed front-end packages
- * @property {string[]} uibNodeTypes - List of uib node names
- * @property {boolean} debug - Debug output via log() - turn on/off with true/false
- * @property {Function} log - Console log function (only active when debug is true)
- * @property {Function} doTooltips - Add jQuery UI formatted tooltips
- * @property {Function} getDeployedUrls - Get all of the currently deployed uibuilder URL's
- * @property {Function} sortInstances - Sort an instances object by url
+/** --- Type Defs ---
+ * @typedef {import('../typedefs.js').UibEditorCommon} UibEditorCommon
  */
 
 // Register the plugin
@@ -30,9 +15,9 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
 
         /** Add a "uibuilder" object to the Node-RED Editor
          * To contain common functions, variables and constants for UIBUILDER nodes
-         * @type {UibEditorObject}
+         * @type {UibEditorCommon}
          */
-        const uibuilder = window['uibuilder'] = /** @type {UibEditorObject} */ ({
+        const uibuilder = window['uibuilder'] = /** @type {UibEditorCommon} */ ({
             // Standard palette category for all uibuilder nodes
             paletteCategory: 'uibuilder',
             // Common node color for all uibuilder nodes - set in each node to avoid v4.1.7 custom var bug
@@ -82,7 +67,6 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 else _dbg = dbg
                 this.log = _dbg ? console.log : function() {}
             },
-            // @ts-ignore
             log: function(...args) {},
 
             /** Add jQuery UI formatted tooltips - add as the last line of oneditprepare in a node
@@ -108,7 +92,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
             },
             /** Get all of the currently deployed uibuilder URL's & updates this.deployedUibInstances
              * NOTE that the uibuilder.editorUibInstances cannot be used as that includes disabled nodes/flows
-             * @returns {{string,string}} URLs by node id of deployed uibuilder nodes
+             * @return {{string,string}} URLs by node id of deployed uibuilder nodes
              */
             getDeployedUrls: function getDeployedUrls() {
                 $.ajax({
@@ -134,10 +118,10 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                     },
                 })
                 return this.deployedUibInstances
-            }, // ---- end of getDeployedUrls ---- //
+            },
             /** Sort an instances object by url instead of the natural order added
              * @param {*} instances The instances object to sort
-             * @returns {*} instances sorted by url
+             * @return {*} instances sorted by url
              */
             sortInstances: function sortInstances(instances) {
                 return Object.fromEntries(
@@ -149,6 +133,19 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                         return 0
                     })
                 )
+            },
+            /** Ensure that a UIB "url" is a valid and safe url path
+             * Rejects path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls
+             * @param {string} urlPath The url path to sanitise
+             * @return {string|null} The sanitised url or null if path is invalid
+             */
+            sanitiseUrl: function sanitiseUrl(urlPath) {
+                if ( !urlPath || typeof urlPath !== 'string' || urlPath.length > 255 || !/^[a-z\d_-]+(?:\/[a-z\d_-]+)*$/i.test(urlPath) ) {
+                    console.error(`🌐🛑[uibuilder:sanitiseUrl] Invalid URL path "${urlPath}"`)
+                    // throw new Error('Invalid URL path')
+                    return null
+                }
+                return urlPath.trim()
             },
         })
 
