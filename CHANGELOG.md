@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-10-09 12:12:36
+updated: 2026-10-10 13:50:38
 ---
 
 # Changelog
@@ -24,7 +24,7 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 * Potentially breaking changes - please make sure that you can meet the new baseline requirements before upgrading.:
   * Baselined to Node-RED v5+.
   * Baselined to Node.js v22.9+.
-* DEGIT has been updated to the latest release now that the baseline node version is v20+. This should fix the git requirement bug and allow us to use the latest features and fixes in degit. For reference, DEGIT is used for installing front-end templates.
+* DEGIT has been updated to the latest release now that the baseline node version is v20+. This should fix the git requirement bug and allow us to use the latest features and fixes in degit. It is also now wrapped into a local version which allows us to continue using as a CommonJS version (Degit v3 is ESM only). _For reference, DEGIT is used for installing front-end templates_.
 
 ### Potential breaking changes
 
@@ -37,7 +37,7 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 ## uibuilder
 
-* When adding a new node, the Editor checks for an index.html file in the designated start folder. Previously, only a warning was given to the Editor browser console, there is now a notification with instructions on how to correct (reload the template or create the file)
+* When adding a new node, the Editor checks for an index.html file in the designated start folder. Previously, only a warning was given to the Editor browser console, there is now a notification with instructions on how to correct (reload the template or create the file). The check is delayed by 1 second to allow time for creation.
 
 ### Development and maintenance
 
@@ -46,11 +46,19 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 * Browser telemetry data improved to eliminate more "Not a brand" issues.
 * GULP is no longer used for build processes, there is now a unified custom node.js script that handles watches and builds. GULP dev-dependencies have been removed.
 * The build script is updated to match requirements for Node.js v22 LTS.
+* DEGIT external dependency has been moved to a separate `uib-degit` sub-package to allow the ESM-only latest versions to be used.
 
 * `fs.cjs`
   * Async `remove(path)` function now returns true if the path was removed, false if it was not.
+  * Async `removeSync(path)` function now returns true if the path was removed, false if it was not.
   * Async `replaceTemplate` function now uses new function `doDegit` for external template processing.
+  * `doDegit` updated to use the uib-degit sub-package.
 
+* `uiblib.cjs`
+  * `instanceClose` function now uses a sync folder remove to ensure the folder is removed before Node-RED restarts the flows. This was previously occasionally causing issues. Log output also improved.
+
+* Editor plugin (`editor-common.js`)
+  * Added `uibuilder.sanitizeUrl(urlPath)` function to allow url paths (e.g. the "url" name of a uibuilder node) to be made safe for use in URLs. Returns `null` if path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls are included in the path. Else returns the path.
 
 ## Older changes
 

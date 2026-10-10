@@ -4,25 +4,46 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-07-23 17:47:33
+updated: 2026-10-10 19:21:05
 ---
 
 ## Possible issues/improvements
 
-* [ ] uibRoot folder may not update fast enough when changing projects in the Node-RED editor. [Ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/647)
-* [ ] Code smells:
+* [ ] _STARTED_ Critical: Apply fixes for security advisories.
+* [ ] If using a custom uibRoot folder with projects - add startup warning that the folder is SHARED.
+* [x] Move `degit` dependency to a workplace package and use it for the template cloning process. Should allow us to move to the latest version.
+* [ ] Add app type to nr admin index page to make it easier to identify uibuilder and markweb nodes.
+* [ ] Add size trap to saferSerialize to prevent very large objects from being serialized and crashing the system.
+* [ ] Replacing (not importing) a flow file containing an invalid uibuilder node (and when the node's folder doesn't yet exist) may prevent that node from being corrected in the Editor. The startup process will create the folder and then say that the node's URL is a duplicate. [Ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/646).
+* [ ] Rationalise node descriptions (1st para of help).
+
+* Code smells:
   * [ ] this.uib, this.log, this.RED - should be using the global config module instead.
   * [ ] (uib) - passing uib object instead of using the module.
   * [ ] check that hooks are in uib?
-* [ ] Alter uibuilder where we have `JSON.stringify` to use saferSerialize instead.
-* [ ] Add app type to nr admin index page to make it easier to identify uibuilder and markweb nodes.
-* [ ] Add size trap to saferSerialize to prevent very large objects from being serialized and crashing the system.
-* [ ] Move `degit` dependency to a workplace package and use it for the template cloning process. Should allow us to move to the latest version.
-* [ ] Update Markweb docs for the new collapse marker and the new folder hiding behaviour.
-* [ ] Add ability to turn off collapsible prose. Needs to be an option in the Markweb node and will need to generate slightly different HTML on rendering Markdown.
-* [ ] Find places in documentation (and maybe the readme) to document the Node-RED projects issues.
-* [ ] In uibuilder `this.oldUrl` check. If the move fails, check if the old folder is still there. If not, clear the oldUrl property. This will prevent the error message on a failed move from being repeated on every deploy.
-* [ ] Replacing (not importing) a flow file containing an invalid uibuilder node (and when the node's folder doesn't yet exist) may prevent that node from being corrected in the Editor. The startup process will create the folder and then say that the node's URL is a duplicate. [Ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/646).
+
+* Runtime plugin
+  * [ ] Corrupted Telemetry file uncaught exception (Issue #648)
+  * [ ] uibRoot folder may not update fast enough when changing projects in the Node-RED editor. [Ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/647)
+
+* Documentation
+  * [ ] Find places in documentation (and maybe the readme) to document the Node-RED projects issues.
+
+* Client library
+  * [ ] Ensure that route change control msg is sent by uibuilder client library not uib-router library.
+
+* `uibuilder`
+  * [ ] Alter uibuilder where we have `JSON.stringify` to use saferSerialize instead.
+  * [ ] In uibuilder `this.oldUrl` check. If the move fails, check if the old folder is still there. If not, clear the oldUrl property. This will prevent the error message on a failed move from being repeated on every deploy.
+
+* `uib-cache`
+  * [ ] partial clearing of data.
+  * [ ] changing data.
+
+* `markweb`
+  * [ ] Update Markweb docs for the new collapse marker and the new folder hiding behaviour.
+  * [ ] Add ability to turn off collapsible prose. Needs to be an option in the Markweb node and will need to generate slightly different HTML on rendering Markdown.
+
 
 ## Next release requirements
 
@@ -137,6 +158,8 @@ updated: 2026-07-23 17:47:33
     * Add a new edit mode to the Markweb node. When enabled, the Markweb node will allow editing of the markdown files directly in the browser. This will require a new editor to be added to the Markweb node. The editor will need to support markdown syntax highlighting and possibly a preview mode. The editor will also need to support saving changes back to the filesystem and possibly pushing changes to a remote repository.
     * Add new folders with auto-generated `index.md` files.
     * Add new pages with auto-generated templates.
+* uibuilder node
+  * Add links to docs and default page to editor context menu [Ref](https://github.com/node-red/node-red/pull/5332).
 * Editor:
   * uib-sidebar - add markdown support.
   * The default palette categories now have description tooltips, and custom categories can provide their own descriptions via a theme plugin or node ([#5769](https://github.com/node-red/node-red/pull/5769)).
@@ -146,6 +169,7 @@ updated: 2026-07-23 17:47:33
 * Core
   * Consider use of env files (stable in node.js v22) - https://nodejs.org/docs/latest-v22.x/api/environment_variables.html#cli-options
   * Do we still need to maintain library metadata in `<uibRoot>/package.json`? It is re-created on each startup anyway so maybe just retain in memory?
+  * Investigate use of `files` property in `package.json` to potentially make the deployed package smaller. [Ref](https://github.com/windkh/node-red-contrib-telegrambot/blob/master/package.json#L5-L10).
 
 ## Communications
 
