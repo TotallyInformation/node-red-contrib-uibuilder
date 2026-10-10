@@ -337,7 +337,13 @@ class UibFs {
         extTemplate = extTemplate.trim()
 
         // We only need to get degit once (not needed at all unless we come here)
-        if (degit === null) degit = require('degit')
+        if (degit === null) {
+            try {
+                degit = require('../../packages/uib-degit')
+            } catch (err) {
+                log.error(`[uibuilder:fs:doDegit] Failed to load degit: ${err.message}`)
+            }
+        }
 
         const degitEmitter = degit(extTemplate, {
             cache: false, // Fix for Issue #155 part 3 - degit error
