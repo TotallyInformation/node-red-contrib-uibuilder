@@ -27,6 +27,30 @@
  *
  */
 
+/** The uibuilder shared object loaded into the NR Editor as `window.uibuilder` by the editor-common.js plugin
+ * @typedef {object} UibEditorCommon
+ *
+ * @property {string} paletteCategory - Standard palette category for all uibuilder nodes
+ * @property {string} typedInputWidth - Standard width for typed input fields
+ * @property {boolean} localHost - Are we running on a local device?
+ * @property {string} nrServer - Server address of the Node-RED server
+ * @property {string} nodeRoot - URL root if needed (set to '' if using a custom uib server)
+ * @property {string} urlPrefix - URL prefix for all uib nodes
+ * @property {string} serverType - uib server type ('Node-RED\'s' or 'a custom')
+ * @property {Object<string, string>} editorUibInstances - Tracks ALL uibuilder editor instance URL's by node id (includes undeployed and disabled nodes)
+ * @property {Object<string, string>} deployedUibInstances - Tracks all DEPLOYED uibuilder instances url's by node id
+ * @property {Array} packages - Tracks uibuilder's installed front-end packages
+ * @property {string[]} uibNodeTypes - List of uib node names
+ * @property {boolean} debug - Debug output via log() - turn on/off with true/false
+ * @property {Function} log - Console log function (only active when debug is true)
+ * @property {Function} doTooltips - Add jQuery UI formatted tooltips
+ * @property {Function} getDeployedUrls - Get all of the currently deployed uibuilder URL's
+ * @property {Function} sortInstances - Sort an instances object by url
+ * @property {Function} sanitizeUrl - Ensure that a UIB "url" is a valid and safe url path
+ *   Rejects path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls
+ * @property {object} runningScripts - tracks running npm scripts so they can be returned to even after the edit panel is closed
+ */
+
 /** Node-RED runtimeSettings - See settings.js for static settings.
  * @typedef {object} runtimeSettings Static and Dynamic settings for Node-RED runtime
  *
