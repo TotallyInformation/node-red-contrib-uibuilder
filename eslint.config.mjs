@@ -65,7 +65,8 @@ export default defineConfig([
             pluginPromise.configs['flat/recommended'],
         ],
         settings: {
-            jsdoc: { mode: 'jsdoc', },
+            // jsdoc: { mode: 'jsdoc', },
+            jsdoc: { mode: 'permissive', }, // or 'typescript' or closure
         },
         rules: {
             ...jsdocRules,
