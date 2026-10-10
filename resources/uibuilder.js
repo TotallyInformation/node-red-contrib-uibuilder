@@ -3,6 +3,7 @@
 
 /** --- Type Defs ---
  * @typedef {import('../typedefs.js').UibEditorCommon} UibEditorCommon
+ * @typedef {import('../typedefs.js').uibNode} uibNode
  */
 
 ;(function () { // eslint-disable-line @stylistic/no-extra-semi
@@ -144,7 +145,7 @@
     }
 
     /** AddItem function for package list
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      * @param {JQuery<HTMLElement>} element the jQuery DOM element to which any row content should be added
      * @param {number} index the index of the row
      * @param {string|object} data data object for the row. {} if add button pressed, else data passed to addItem method
@@ -647,7 +648,7 @@
     } // --- End of getFileList --- //
 
     /** Get a full list of instance folders (minus protected ones). Updates folders global var.
-     * @param {object} node -
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function getFolders(node) {
         const url = /** @type {string} */ ($('#node-input-url').val() || node.url)
@@ -686,7 +687,7 @@
 
     /** Call v3 admin API to create a new folder
      * @param {string} folder Name of new folder to create (combines with current uibuilder url)
-     * @param {object} node The node object
+     * @param {uibNode} node The node object
      * returns {string} Status message
      */
     function createNewFolder(folder, node) {
@@ -925,7 +926,7 @@
 
     /** Create the wrapping HTML string that provides a link to open the instance folder in vscode
      * Since v7.6.0, we try to update the existing link if the url changes rather than creating a new one each time
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      * @return {{pre,post,url,icon}} Prefix and postfix for link + vscode url scheme & icon
      */
     function vscodeLink(node) {
@@ -972,7 +973,7 @@
     // Use `$('#node-input-url').length > 0` to check if form exists
 
     /** Update the deployed instances list
-     * @param {object} node Pass in this
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function updateDeployedInstances(node) {
         uibuilder.deployedUibInstances = uibuilder.getDeployedUrls()
@@ -1091,7 +1092,7 @@
     } // ---- End of enableEdit ---- //
 
     /** Show key data for URL changes
-     * @param {object} node Reference to node definition
+     * @param {uibNode} node A reference to the panel's `this` object
      * @param {*} value Value
      */
     function debugUrl(node, value) {
@@ -1325,7 +1326,7 @@
 
     /** Populate the template selection dropdown
      * Uses a file that is `require`d in uibuilder.js
-     * @param {object} node Pass in this
+     * @param {uibNode} node A reference to the panel's `this` object
      * @return {string} Template folder name
      */
     function populateTemplateDropdown(node) {
@@ -1506,7 +1507,7 @@
     }
 
     /** Configure the template dropdown & setup button handlers (called from onEditPrepare)
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function templateSettings(node) {
         $('#adv-templ').hide()
@@ -1546,7 +1547,7 @@
     // #region ==== Misc Functions ==== //
 
     /** Set initial hidden & checkbox states (called from onEditPrepare)
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function setInitialStates(node) {
         // initial checkbox states
@@ -1563,7 +1564,7 @@
     }
 
     /** Show what server is in use
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function showServerInUse(node) {
         $('#uib-svr-type').text(uibuilder.serverType)
@@ -1581,7 +1582,7 @@
 
     /** Handle URL changes
      * See also validateUrl.
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function urlChange(node) {
         // Save the old url
@@ -1620,7 +1621,7 @@
     }
 
     /** File Editor
-     * @param {UibNode} node The node instance
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function fileEditor(node) {
         // Mark edit save/reset buttons as disabled by default
@@ -1891,7 +1892,7 @@
 
     /** Add uibuilder's custom buttons to the node-red editor node config panel's top button bar
      * Currently, open, docs and vscode buttons are added after the Delete button.
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function customButtonBar(node) {
         // Add open and docs buttons to top button bar, next to Delete button
@@ -1919,7 +1920,7 @@
     }
 
     /** Kill a running npm script for this uibuilder instance
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      * @param {string} processId The process ID of the npm script to kill
      */
     function killNpmScript(node, processId) {
@@ -1959,7 +1960,7 @@
     /** Run an npm script for this uibuilder instance
      * Uses the admin-api-v3 to run the script. Output from running the script is streamed back to the panel.
      * The script must be defined in the package.json file for the uibuilder instance.
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      * @param {string} scriptName Name of the npm script to run
      */
     function runNpmScript(node, scriptName) {
@@ -2129,7 +2130,7 @@
     // #region ==== Tab display functions ==== //
 
     /** Run when switching to the Files tab
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function tabFiles(node) {
         // Build the file list
@@ -2182,7 +2183,7 @@
     }
 
     /** Run when switching to the Libraries tab
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function tabLibraries(node) {
         // ! TODO Improve feedback
@@ -2214,7 +2215,7 @@
     }
 
     /** Run when switching to the Run NPM Scripts tab
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function tabRunNpmScripts(node) {
         getInstanceNpmScriptNames(node.url) // Sets npmScriptNames
@@ -2246,7 +2247,7 @@
     }
 
     /** Prep tabs
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function prepTabs(node) {
         const tabs = RED.tabs.create({
@@ -2296,7 +2297,7 @@
     // #endregion ==== Tab display functions ==== //
 
     /** Prep for edit
-     * @param {object} node A reference to the panel's `this` object
+     * @param {uibNode} node A reference to the panel's `this` object
      */
     function onEditPrepare(node) {
         customButtonBar(node)
@@ -2346,7 +2347,7 @@
 
     /** Handles the save event when editing a node in the Node-RED editor.
      *
-     * @param {object} node - The node being edited.
+     * @param {uibNode} node A reference to the panel's `this` object
      *
      * @description
      * This function performs the following tasks:
