@@ -854,7 +854,7 @@ function createTree(currentStart, pageEnv, indexOptions, idx) {
     const tree = new Map()
     for (const [path, doc] of filtered) {
         // Determine title - prefer shortTitle over title
-        let title = doc.shortTitle || doc.title
+        let title = doc?.shortTitle || doc?.title
         // Create shortened date from doc.updated with formwat "DDD YYYY-MM-DD"
         const updated = doc?.updated
             ? formatDateIntl(new Date(doc.updated), 'YYYY-MM-DD. ')
