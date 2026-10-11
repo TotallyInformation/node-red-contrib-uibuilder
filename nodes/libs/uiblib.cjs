@@ -189,7 +189,7 @@ const UibLib = {
             }
         }
         return ans || defaultAnswer
-    }, // ---- End of getProps ---- //
+    },
 
     /** Get an individual value for a typed input field and save to supplied node object - REQUIRES standardised node property names
      * Use propnameSource and propnameSourceType as standard input field names
@@ -537,6 +537,20 @@ const UibLib = {
         return out
     },
 
+    /** Ensure that a UIB "url" is a valid and safe url path
+     * Rejects path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls
+     * @param {string} urlPath The url path to sanitise
+     * @returns {string|null} The sanitised url or null if path is invalid
+     */
+    sanitiseUrl: function sanitiseUrl(urlPath) {
+        if ( !urlPath || typeof urlPath !== 'string' || urlPath.length > 255 || !/^[a-z\d_-]+(?:\/[a-z\d_-]+)*$/i.test(urlPath) ) { // eslint-disable-line security/detect-unsafe-regex
+            // uib.RED.log.error(`🌐🛑[uibuilder:uiblib:sanitiseUrl] Invalid URL path "${urlPath}"`)
+            // throw new Error('Invalid URL path')
+            return null
+        }
+        return urlPath.trim()
+    },
+
     /** Simple fn to set a node status in the admin interface
      * fill: red, green, yellow, blue or grey
      * shape: ring, dot
@@ -544,7 +558,7 @@ const UibLib = {
      */
     setNodeStatus: function( node ) {
         node.status(node.statusDisplay)
-    }, // ---- End of setNodeStatus ---- //
+    },
 
     /** Escape an array of strings for safe use in a shell command
      * Based on https://github.com/nodejs/help/issues/5063#issuecomment-3211961369
