@@ -860,11 +860,11 @@ function createTree(currentStart, pageEnv, indexOptions, idx) {
             ? formatDateIntl(new Date(doc.updated), 'YYYY-MM-DD. ')
             : ''
 
-        if (doc.path === '/') title = 'Home'
-        else if (doc.type === 'folder') {
-            const segments = doc.path.replace(/\/$/, '').split('/')
+        if (doc?.path === '/') title = 'Home'
+        else if (doc?.type === 'folder') {
+            const segments = doc?.path.replace(/\/$/, '').split('/')
                 .filter(Boolean)
-            const rawTitle = segments[segments.length - 1] || doc.path.slice(1, -1)
+            const rawTitle = segments[segments.length - 1] || doc?.path.slice(1, -1)
             title = rawTitle.replace(/[_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
         }
         // Split path into segments
