@@ -2,7 +2,7 @@
 /* eslint-disable jsdoc/valid-types */
 /** Manage npm packages
  *
- * Copyright (c) 2021-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -810,6 +810,12 @@ class UibPackages {
 
         if ( !scriptName || scriptName === '' ) {
             throw new Error(`runOsCmd/npmRunScript failed for url="${url}". No script name provided.`)
+        }
+
+        // Security check: If scriptName contains any of: ; # / \ & | $ < > * ? ~ ` ! @ % ^ ( ) [ ] { } ' " then throw
+        const invalidChars = [';', '#', '/', '\\', '&', '|', '$', '<', '>', '*', '?', '~', '`', '!', '@', '%', '^', '(', ')', '[', ']', '{', '}', "'", '"']
+        if ( invalidChars.some(c => scriptName.includes(c)) ) {
+            throw new Error(`runOsCmd/npmRunScript failed for url="${url}". Invalid, possibly dangerous script name provided.`)
         }
 
         // Get the instance root folder
