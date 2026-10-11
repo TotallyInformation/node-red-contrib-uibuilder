@@ -792,7 +792,7 @@ class UibPackages {
 
     /** Run an npm script in the context of a specific URL (uibuilder instance)
      * @param {string} scriptName The name of the npm script to run
-     * @param {string} url The URL (name) of the uibuilder instance
+     * @param {string} uibUrl The URL (name) of the uibuilder instance
      * @param {Function} [streamOutput] Optional. If provided, will be called with each chunk of output as soon as it arrives
      * @returns {Promise<{all:string, code:number, command:string, pid?: number}>} Combined stdout/stderr, return code of the executed command, with .kill() method
      * @throws {Error} If this.log is undefined (setup not called)
@@ -801,27 +801,27 @@ class UibPackages {
      * // To kill:
      * promise.kill()
      */
-    npmRunScript(scriptName, url, streamOutput) {
+    npmRunScript(scriptName, uibUrl, streamOutput) {
         if ( this.log === undefined ) throw this.#logUndefinedError
 
         if ( this.#isConfigured !== true ) {
-            throw new Error(`runOsCmd/npmRunScript failed for url="${url}". Cannot run. Setup has not been called`)
+            throw new Error(`runOsCmd/npmRunScript failed for url="${uibUrl}". Cannot run. Setup has not been called`)
         }
 
         if ( !scriptName || scriptName === '' ) {
-            throw new Error(`runOsCmd/npmRunScript failed for url="${url}". No script name provided.`)
+            throw new Error(`runOsCmd/npmRunScript failed for url="${uibUrl}". No script name provided.`)
         }
 
         // Security check: If scriptName contains any of: ; # / \ & | $ < > * ? ~ ` ! @ % ^ ( ) [ ] { } ' " then throw
         const invalidChars = [';', '#', '/', '\\', '&', '|', '$', '<', '>', '*', '?', '~', '`', '!', '@', '%', '^', '(', ')', '[', ']', '{', '}', "'", '"']
         if ( invalidChars.some(c => scriptName.includes(c)) ) {
-            throw new Error(`runOsCmd/npmRunScript failed for url="${url}". Invalid, possibly dangerous script name provided.`)
+            throw new Error(`runOsCmd/npmRunScript failed for url="${uibUrl}". Invalid, possibly dangerous script name provided.`)
         }
 
         // Get the instance root folder
-        const rootFolder = this.getInstanceRootFolder(url)
+        const rootFolder = this.getInstanceRootFolder(uibUrl)
         if (!rootFolder) {
-            throw new Error(`runOsCmd/npmRunScript failed for url="${url}". No root folder`)
+            throw new Error(`runOsCmd/npmRunScript failed for url="${uibUrl}". No root folder`)
         }
 
         const opts = { ...this.npmCmdOpts, }
@@ -838,7 +838,8 @@ class UibPackages {
         }
 
         const args = [
-            !['outdated', 'update', 'install'].includes(scriptName) ? 'run' : '',
+            // forces unknown script names to use npm run so only pre-defined scripts can run
+            ['outdated', 'update', 'install'].includes(scriptName) ? '' : 'run',
             scriptName,
             '--long',
             '--no-fund',
@@ -856,7 +857,7 @@ class UibPackages {
             runOsCmd('npm', args, opts)
                 .then((result) => {
                     if (result.code > 1) {
-                        const myerr = new Error(`Run script failed for url="${url}". Code: ${result.code}`)
+                        const myerr = new Error(`Run script failed for url="${uibUrl}". Code: ${result.code}`)
                         // @ts-ignore
                         myerr.all = result.all
                         // @ts-ignore
@@ -870,7 +871,7 @@ class UibPackages {
                     return
                 })
                 .catch((e) => {
-                    const myerr = new Error(`runOsCmd/npmRunScript failed for url="${url}". ${e.message}`)
+                    const myerr = new Error(`runOsCmd/npmRunScript failed for url="${uibUrl}". ${e.message}`)
                     // @ts-ignore
                     myerr.all = ''
                     // @ts-ignore
