@@ -24,6 +24,8 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 * Potentially breaking changes - please make sure that you can meet the new baseline requirements before upgrading.:
   * Baselined to Node-RED v5+.
   * Baselined to Node.js v22.9+.
+
+* The `uibuiler` node now has a button to open a web page (controlled by admin access) that shows _ALL_ uibuilder & Markweb instances with their type, title & description where provided (by the inputs on an instances advanced tab) and the link to the home page.
 * DEGIT has been updated to the latest release now that the baseline node version is v20+. This should fix the git requirement bug and allow us to use the latest features and fixes in degit. It is also now wrapped into a local version which allows us to continue using as a CommonJS version (Degit v3 is ESM only). _For reference, DEGIT is used for installing front-end templates_.
 
 ### Potential breaking changes
@@ -37,7 +39,12 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 ## uibuilder
 
+* Now has a button to open a web page (controlled by admin access) that shows _ALL_ uibuilder & Markweb instances with their type, title & description where provided (by the inputs on an instances advanced tab) and the link to the home page.
 * When adding a new node, the Editor checks for an index.html file in the designated start folder. Previously, only a warning was given to the Editor browser console, there is now a notification with instructions on how to correct (reload the template or create the file). The check is delayed by 1 second to allow time for creation.
+
+## Brand CSS styling
+
+* Fixed an edge case for links that could use light mode colours in dark mode.
 
 ### Development and maintenance
 
@@ -56,9 +63,16 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 * `uiblib.cjs`
   * `instanceClose` function now uses a sync folder remove to ensure the folder is removed before Node-RED restarts the flows. This was previously occasionally causing issues. Log output also improved.
+  * New function `sanitiseUrl(urlPath)` - matches the editor plugin function, see below. Used in API and npm processing.
 
 * Editor plugin (`editor-common.js`)
-  * Added `uibuilder.sanitizeUrl(urlPath)` function to allow url paths (e.g. the "url" name of a uibuilder node) to be made safe for use in URLs. Returns `null` if path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls are included in the path. Else returns the path.
+  * Added `uibuilder.sanitiseUrl(urlPath)` function to allow url paths (e.g. the "url" name of a uibuilder node) to be made safe for use in URLs. Returns `null` if path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls are included in the path. Else returns the path.
+
+* `adminRouterV2.cjs`
+  * New route GET `/apps` - returns a list of all installed apps with details. Used from button in uibuilder node.
+
+* `adminRouterV3.cjs`
+  * Additional safety/security checks on user input.
 
 ## Older changes
 

@@ -4,12 +4,14 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-10-10 19:21:05
+updated: 2026-10-13 15:30:43
 ---
 
 ## Possible issues/improvements
 
 * [ ] _STARTED_ Critical: Apply fixes for security advisories.
+* [x] Finish apps admin route - sort apps list
+* [ ] Add admin auth middleware
 * [ ] If using a custom uibRoot folder with projects - add startup warning that the folder is SHARED.
 * [x] Move `degit` dependency to a workplace package and use it for the template cloning process. Should allow us to move to the latest version.
 * [ ] Add app type to nr admin index page to make it easier to identify uibuilder and markweb nodes.
