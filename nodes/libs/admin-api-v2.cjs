@@ -168,6 +168,23 @@ function chkParamFldr(params) {
 
 // #endregion === End of API validation functions === //
 
+/** Get the actual URL prefix for uibuilder admin pages
+ * @param {express.Request} req ExpressJS request object
+ * @returns {string} The URL prefix
+ */
+function getUrlPrefix(req) {
+    // If using own Express server, correct the URL's
+    let url = new URL(`${req.protocol}://${req.headers.host}${req.originalUrl}`)
+    if (req.headers.referer) url = new URL(req.headers.referer)
+    else if (req.headers.origin) new URL(req.headers.origin)
+    url.pathname = ''
+    if (uib.customServer.port) {
+        // @ts-expect-error ts(2322)
+        url.port = uib.customServer.port
+    }
+    return url.href
+}
+
 /** uibuilder detailed information page
  * @param {string} urlPrefix The URL href prefix
  * @returns {string} HTML string output
@@ -460,7 +477,55 @@ function diagnostics() {
     }
 }
 
-/** Return a router but allow parameters to be passed in
+/** Return an HTML page listing all uib instances (apps) with details
+ * @param {string} urlPrefix The URL href prefix
+ * @returns {string} HTML string output
+ */
+function appsPage(urlPrefix) {
+    const apps = uib.apps
+    const urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/', '')}`
+
+    let page = `
+        <!doctype html><html lang="en"><head>
+            <title>UIBUILDER Instances (Apps)</title>
+            <link rel="icon" href="${urlRoot}${uib.moduleName}/common/images/node-blue.ico">
+            <link type="text/css" rel="stylesheet" href="${urlRoot}${uib.moduleName}/uib-brand.min.css" media="screen">
+            <style type="text/css" rel="stylesheet" media="all">
+                h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
+                .col3i tbody>tr>:nth-child(3){ font-style:italic; }
+            </style>
+        </head><body><main>
+            <h1 class="with-subtitle">UIBUILDER Instances (Apps)</h1>
+            <div role="doc-subtitle">Note that this page is only accessible to users with Node-RED admin authority</div>
+            <table>
+    `
+
+    Object.keys(apps).forEach( (app) => {
+        const detail = apps[app]
+        // If detail.type = 'uibuilder' then set style to bold, else set style to italic
+        // const style = detail.type === 'uibuilder' ? 'font-weight:bold' : 'font-style: italic'
+        page += `
+           <tr>
+               <td>
+                   <a href="${urlRoot}${detail.url}">${app}</a>
+               </td>
+               <td>
+                   ${detail.title}
+                   ${detail.descr ? `<br><i>${detail.descr}</i>` : ''}
+               </td>
+               <td>
+                   ${detail.type}
+               </td>
+           </tr>
+        `
+    })
+
+    page += `</table></main></body></html>`
+
+    return page
+}
+
+/** Return a router but allow parameters to be passed in - mounted to `./uibuilder/<name>`
  * @param {*} log Reference to uibuilder's log functions
  * @returns {express.Router} The v3 admin API ExpressJS router
  */
@@ -621,15 +686,7 @@ function adminRouterV2(log) {
         log.trace('🌐[uibuilder:apiv2:uibindex] User Page/API. List all available uibuilder endpoints')
 
         // If using own Express server, correct the URL's
-        let url = new URL(`http://${req.headers.host}${req.originalUrl}`)
-        if (req.headers.referer) url = new URL(req.headers.referer)
-        else if (req.headers.origin) new URL(req.headers.origin)
-        url.pathname = ''
-        if (uib.customServer.port) {
-            // @ts-expect-error ts(2322)
-            url.port = uib.customServer.port
-        }
-        const urlPrefix = url.href
+        const urlPrefix = getUrlPrefix(req)
 
         /** Return full details based on type parameter */
         switch (req.query.type) {
@@ -653,6 +710,15 @@ function adminRouterV2(log) {
             }
         }
     }) // ---- End of uibindex ---- //
+
+    /** Return a web page containing all uibuilder instances with descriptions */
+    v2AdminRouter.get('/apps', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+        // If using own Express server, correct the URL's
+        const urlPrefix = getUrlPrefix(req)
+
+        res.send( appsPage(urlPrefix) )
+        // res.json( uib.apps )
+    }) // ---- End of uibvendorpackages ---- //
 
     /** Check & update installed front-end library packages, return list as JSON - this runs when NR Editor is loaded if a uib instance deployed */
     v2AdminRouter.get('/uibvendorpackages', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
