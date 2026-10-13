@@ -368,11 +368,8 @@ const UibLib = {
     nanoId(length) {
         length = Math.max(length | 0, 0) || 21
         const size = (length * 5 + 7) >>> 3
-
         const buffer = Buffer.allocUnsafeSlow(size)
-
         randomFillSync(buffer, 0, size)
-
         return encodeNanoId(buffer, length, size)
     },
 
@@ -535,20 +532,6 @@ const UibLib = {
         }
         out.command = cmdOut
         return out
-    },
-
-    /** Ensure that a UIB "url" is a valid and safe url path
-     * Rejects path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls
-     * @param {string} urlPath The url path to sanitise
-     * @returns {string|null} The sanitised url or null if path is invalid
-     */
-    sanitiseUrl: function sanitiseUrl(urlPath) {
-        if ( !urlPath || typeof urlPath !== 'string' || urlPath.length > 255 || !/^[a-z\d_-]+(?:\/[a-z\d_-]+)*$/i.test(urlPath) ) { // eslint-disable-line security/detect-unsafe-regex
-            // uib.RED.log.error(`🌐🛑[uibuilder:uiblib:sanitiseUrl] Invalid URL path "${urlPath}"`)
-            // throw new Error('Invalid URL path')
-            return null
-        }
-        return urlPath.trim()
     },
 
     /** Simple fn to set a node status in the admin interface
