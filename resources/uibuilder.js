@@ -1191,7 +1191,7 @@
             // Cannot contain spaces
             if ( value.indexOf(' ') !== -1 ) this.urlErrors.sp = 'Cannot contain spaces'
             // Must be valid (repeats some of above but more generic)
-            if (uibuilder.sanitizeUrl(value) === null) this.urlErrors.invalid = 'Invalid URL path string'
+            if (uibuilder.sanitiseUrl(value) === null) this.urlErrors.invalid = 'Invalid URL path string'
             // Cannot start with _ or .
             if ( value.substring(0, 1) === '_' ) this.urlErrors.strtU = 'Cannot start with <code>_</code> (underscore)'
             if ( value.substring(0, 1) === '.' ) this.urlErrors.strtDot = 'Cannot start with <code>.</code> (dot)'
@@ -1600,7 +1600,7 @@
             // Show the root URL
             $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${newUrl}`)
             // Show the apps list URL
-            $('#uib-apps-list').prop('href', `${uibuilder.urlPrefix}uibuilder/apps`)
+            // $('#uib-apps-list').prop('href', `${uibuilder.urlPrefix}apps`)
             // Show this instances details URL
             $('#uibinstanceconf').prop('href', `./uibuilder/instance/${newUrl}?cmd=showinstancesettings`)
             // update the vscode input value
