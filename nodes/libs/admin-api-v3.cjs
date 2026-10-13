@@ -3,7 +3,7 @@
  *
  * See: https://expressjs.com/en/4x/api.html#router, https://expressjs.com/en/guide/routing.html
  *
- * Copyright (c) 2021-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -40,8 +40,12 @@ const { killTree, } = require('./uiblib.cjs')
 const templateConf = require('../../templates/template_dependencies.js') // Template configuration metadata
 const elements = require('../elements/elements.js')
 
-const v3AdminRouter = express.Router() // eslint-disable-line new-cap
 const asyncLocalStorage = new AsyncLocalStorage()
+
+/** NB: This creates an ExpressJS router object that is mounted to `./uibuilder/admin` (e.g. `http://localhost:1880/red/uibuilder/admin`)
+ * So all routes stem from that root. It is mounted by `nodes/libs/web.cjs:_adminApiSetup()`
+ */
+const v3AdminRouter = express.Router()
 
 const errUibRootFldr = new Error('uib.rootFolder is null [uibuilder:admin-api-v3]')
 
@@ -60,27 +64,28 @@ function chkParamUrl(params) {
     const res = { statusMessage: '', status: 0, }
 
     // We have to have a url to work with - the url defines the start folder
-    if ( params.url === undefined ) {
-        res.statusMessage = 'url parameter not provided'
+    if ( !params.url ) {
+        res.statusMessage = 'uibuilder instance url parameter not provided'
         res.status = 500
         return res
     }
     // Make sure that params.url is a string, not an array
     if ( Array.isArray(params.url) ) params.url = params.url[0]
 
-    // Trim the url
+    // If present, must be a string thanks to ExpressJS
+
     params.url = params.url.trim()
 
-    // URL must not exceed 20 characters
+    // uibuilder instance URL must not exceed 20 characters
     if ( params.url.length > 20 ) {
-        res.statusMessage = `url parameter is too long. Max 20 characters: ${params.url}`
+        res.statusMessage = `uibuilder instance url parameter is too long. Max 20 characters: ${params.url}`
         res.status = 500
         return res
     }
 
     // URL must be more than 0 characters
     if ( params.url.length < 1 ) {
-        res.statusMessage = 'url parameter is empty, please provide a value'
+        res.statusMessage = 'uibuilder instance url parameter is empty, please provide a value'
         res.status = 500
         return res
     }
@@ -88,6 +93,13 @@ function chkParamUrl(params) {
     // URL cannot contain .. to prevent escaping sub-folder structure
     if ( params.url.includes('..') ) {
         res.statusMessage = `url parameter may not contain "..": ${params.url}`
+        res.status = 500
+        return res
+    }
+
+    // Final safety check - Rejects path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls
+    if ( !/^[a-z\d_-]+(?:\/[a-z\d_-]+)*$/i.test(params.url) ) { // eslint-disable-line security/detect-unsafe-regex
+        res.statusMessage = 'uibuilder instance url parameter is invalid. Cannot include path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls'
         res.status = 500
         return res
     }
@@ -189,8 +201,8 @@ function chkParamFldr(params) {
 function doGetOneElement(params, rootFolder, req, res) {
     const rootPath = [__dirname, '..', 'elements']
 
-    let optsHtml = ''
-    let descHtml = ''
+    let optsHtml = '' // eslint-disable-line no-useless-assignment
+    let descHtml = '' // eslint-disable-line no-useless-assignment
 
     const availableLangs = ['en-US']
 
