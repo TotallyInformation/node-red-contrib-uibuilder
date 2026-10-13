@@ -4,7 +4,7 @@
  *
  * See: https://expressjs.com/en/4x/api.html#router, https://expressjs.com/en/guide/routing.html
  *
- * Copyright (c) 2021-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -500,25 +500,27 @@ function appsPage(urlPrefix) {
             <table>
     `
 
-    Object.keys(apps).forEach( (app) => {
-        const detail = apps[app]
-        // If detail.type = 'uibuilder' then set style to bold, else set style to italic
-        // const style = detail.type === 'uibuilder' ? 'font-weight:bold' : 'font-style: italic'
-        page += `
-           <tr>
-               <td>
-                   <a href="${urlRoot}${detail.url}">${app}</a>
-               </td>
-               <td>
-                   ${detail.title}
-                   ${detail.descr ? `<br><i>${detail.descr}</i>` : ''}
-               </td>
-               <td>
-                   ${detail.type}
-               </td>
-           </tr>
-        `
-    })
+    Object.keys(apps)
+        .sort()
+        .forEach( (app) => {
+            const detail = apps[app]
+            // If detail.type = 'uibuilder' then set style to bold, else set style to italic
+            // const style = detail.type === 'uibuilder' ? 'font-weight:bold' : 'font-style: italic'
+            page += `
+            <tr>
+                <td>
+                    <a href="${urlRoot}${detail.url}">${app}</a>
+                </td>
+                <td>
+                    ${detail.title}
+                    ${detail.descr ? `<br><i>${detail.descr}</i>` : ''}
+                </td>
+                <td>
+                    ${detail.type}
+                </td>
+            </tr>
+            `
+        })
 
     page += `</table></main></body></html>`
 
