@@ -47,15 +47,11 @@ No longer needed - work is done directly on the `dev` branch.
 
 ## 02) Check version numbers
 
-Make sure version numbers are correct and aligned:
+Make sure version number is correct:
 
 * package.json
-* gulpfile.js
   
-  Make sure that `gulp watch` is running for these:
-
-* src\front-end-module\ui.js
-* src\front-end-module\uibuilder.module.js
+  Make sure that `npm run watch` is running to update other files
 
 ## 03) Do a dependency update
 
