@@ -11,6 +11,8 @@
 RED.plugins.registerPlugin('uib-editor-plugin', {
     type: 'uibuilder-editor-plugin', // optional plugin type
     onadd: function() {
+        console.time('editor-common:onadd')
+        console.timeLog('editor-common:onadd', 'Start')
         let _dbg = false
 
         /** Add a "uibuilder" object to the Node-RED Editor
@@ -92,12 +94,15 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
             },
             /** Get all of the currently deployed uibuilder URL's & updates this.deployedUibInstances
              * NOTE that the uibuilder.editorUibInstances cannot be used as that includes disabled nodes/flows
+             * See nodes/libs/admin-api-v3.cjs
              * @return {{string,string}} URLs by node id of deployed uibuilder nodes
              */
             getDeployedUrls: function getDeployedUrls() {
+                console.timeLog('editor-common:onadd', 'Start getDeployedUrls')
                 $.ajax({
                     type: 'GET',
                     async: false,
+                    timeout: 500, // 1/2 second
                     dataType: 'json',
                     url: './uibuilder/admin/dummy',
                     data: {
@@ -116,7 +121,12 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                         if (Object.keys(this.editorUibInstances).length === 0) this.editorUibInstances = this.deployedUibInstances
                         // uibuilder.log('🌐[uibuilder] Deployed Instances >>', instances, this )
                     },
+                    error: function(xhr, textStatus, err) {
+                        console.error(`🌐🛑[uibuilder:common:uibvendorpackages] ERROR: ${textStatus}`, err)
+                        // if (textStatus === 'timeout') {}
+                    },
                 })
+                console.timeLog('editor-common:onadd', 'Finish getDeployedUrls')
                 return this.deployedUibInstances
             },
             /** Sort an instances object by url instead of the natural order added
@@ -172,12 +182,13 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
         }
 
         /** Get initial list of installed FE packages via v2 API - save to master list */
+        console.timeLog('editor-common:onadd', 'Start get vendor packages')
         $.ajax({
-
             dataType: 'json',
-            method: 'get',
-            url: 'uibuilder/uibvendorpackages',
+            method: 'GET',
+            url: './uibuilder/uibvendorpackages',
             async: false,
+            timeout: 500, // 1/2 second
             // data: { url: node.url},
 
             beforeSend: function(jqXHR) {
@@ -191,10 +202,12 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 uibuilder.packages = vendorPaths
             },
 
-            error: function(err) {
-                console.error('ERROR', err)
+            error: function(xhr, textStatus, err) {
+                console.error(`🌐🛑[uibuilder:common:uibvendorpackages] ERROR: ${textStatus}`, err)
+                // if (textStatus === 'timeout') {}
             },
         })
+        console.timeLog('editor-common:onadd', 'Finish get vendor packages')
 
         /** Get initial list of deployed uibuilder instances */
         uibuilder.getDeployedUrls()
@@ -324,14 +337,16 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
             }, 1500)
         }
 
-        // Check if the user has seen this version before - if not, show the changes
+        // Check if the user has seen this version before - if not, show the changes - See nodes/libs/admin-api-v3.cjs
         const isSeen = localStorage.getItem('uibuilder.lastSeenVersion') || 'none'
         if (isSeen !== RED.settings.uibuilderCurrentVersion) {
             // Get the contents of the changelog-highlights.md file and log to console
+            console.timeLog('editor-common:onadd', 'Start getChangeSummary')
             $.ajax({
                 type: 'GET',
                 dataType: 'text',
-                url: 'uibuilder/admin/isseen',
+                url: './uibuilder/admin/dummy',
+                timeout: 500, // 1/2 second
                 data: {
                     cmd: 'getChangeSummary',
                 },
@@ -373,10 +388,12 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                         }
                     }
                 },
-                error: function(err) {
-                    console.error('ERROR', err)
+                error: function(xhr, textStatus, err) {
+                    console.error(`🌐🛑[uibuilder:common:isseen] ERROR: ${textStatus}`, err)
+                    // if (textStatus === 'timeout') {}
                 },
             })
+            console.timeLog('editor-common:onadd', 'Finish getChangeSummary')
         }
 
         // #region --- Add Monaco type declarations for RED.util.uib ---
@@ -508,6 +525,7 @@ declare namespace RED {
         // } else {
         //     console.warn('🌐 MutationObserver: No red-ui-help element found to observe.')
         // }
+        console.timeEnd('editor-common:onadd')
     },
     // onremove: function() {},
 })
