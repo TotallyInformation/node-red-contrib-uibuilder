@@ -36,7 +36,7 @@ const uib = require('./libs/uibGlobalConfig.cjs')
 // const { parseTelemetryFile, } = require('./libs/uiblib.cjs')
 const fslib = require('./libs/fs.cjs') // File/folder handling library (by Totally Information)
 const packageMgt = require('./libs/package-mgt.cjs')
-const web = require('./libs/web.cjs')
+// const web = require('./libs/web.cjs')
 const sockets = require('./libs/socket.cjs')
 const { renderToHTML, } = require('../front-end/utils/json-viewer.cjs')
 
@@ -309,6 +309,7 @@ function pluginDefinition(RED) {
     packageMgt.setup()
 
     /** (c) We need an ExpressJS web server to serve the page, socket.io and vendor packages. */
+    const web = require('./libs/web.cjs')
     web.setup()
 
     /** (d) Pass web server reference to the Socket.IO handler module */
