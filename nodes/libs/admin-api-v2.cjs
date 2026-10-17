@@ -29,7 +29,7 @@ const express = require('express')
 const path = require('path')
 const fslib = require('./fs.cjs')
 // const uiblib = require('./uiblib')  // Utility library for uibuilder
-const web = require('./web.cjs')
+// const web = require('./web.cjs') // Avoid circular ref issues by late loading for any specific fn that required web
 const sockets = require('./socket.cjs')
 const packageMgt = require('./package-mgt.cjs')
 const tilib = require('./tilib.cjs') // General purpose library (by Totally Information)
@@ -38,6 +38,13 @@ const uib = require('./uibGlobalConfig.cjs') // UIBUILDER's global config object
 const errUibRootFldr = new Error('uib.rootFolder is null')
 
 const v2AdminRouter = express.Router()
+// v2AdminRouter.use((req, res, next) => {
+//     // Node-RED populates req.user if a session exists
+//     uib.RED.log.info(`[admin-api-v2:API Debug] User accessing endpoint: ${JSON.stringify(req.user || 'Unauthenticated')}`)
+//     next()
+// })
+/** Force ALL endpoints to use Node-RED auth permission */
+// v2AdminRouter.use(uib.RED.auth.needsPermission('flows.write'))
 
 // #region === REST API Validation functions === //
 
@@ -195,6 +202,7 @@ function detailsPage(urlPrefix) {
 
     const RED = uib.RED
     const log = RED.log
+    const web = require('./web.cjs')
     const routes = web.dumpRoutes(false)
     const urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/', '')}${uib.moduleName}`
 
@@ -527,353 +535,349 @@ function appsPage(urlPrefix) {
     return page
 }
 
-/** Return a router but allow parameters to be passed in - mounted to `./uibuilder/<name>`
- * @param {*} log Reference to uibuilder's log functions
- * @returns {express.Router} The v3 admin API ExpressJS router
+/** Better to use uibuilder v3 unified Admin API router - new API commands should be added here */
+// admin_Router_V3.route('/:url')
+
+const RED = uib.RED
+const log = uib.RED.log
+
+/** Create a simple NR admin API to return the content of a file in the `<userLib>/uibuilder/<url>/src` folder
+ * @param {string} url The admin api url to create
+ * @param {object} permissions The permissions required for access
+ * @param {Function} cb
  */
-function adminRouterV2(log) {
-    /** uibuilder v3 unified Admin API router - new API commands should be added here */
-    // admin_Router_V3.route('/:url')
-
-    const RED = uib.RED
-
-    /** Create a simple NR admin API to return the content of a file in the `<userLib>/uibuilder/<url>/src` folder
-     * @param {string} url The admin api url to create
-     * @param {object} permissions The permissions required for access
-     * @param {Function} cb
+v2AdminRouter.get('/uibgetfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    // #region --- Parameter validation ---
+    /** req.query parameters
+     * url
+     * fname
+     * folder
      */
-    v2AdminRouter.get('/uibgetfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-        // #region --- Parameter validation ---
-        /** req.query parameters
-         * url
-         * fname
-         * folder
-         */
-        const params = req.query
+    const params = req.query
 
-        // @ts-ignore
-        const chkUrl = chkParamUrl(params)
-        if ( chkUrl.status !== 0 ) {
-            log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. ${chkUrl.statusMessage}`)
-            res.statusMessage = chkUrl.statusMessage
-            res.status(chkUrl.status).end()
-            return
-        }
+    // @ts-ignore
+    const chkUrl = chkParamUrl(params)
+    if ( chkUrl.status !== 0 ) {
+        log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. ${chkUrl.statusMessage}`)
+        res.statusMessage = chkUrl.statusMessage
+        res.status(chkUrl.status).end()
+        return
+    }
 
-        // @ts-ignore
-        const chkFname = chkParamFname(params)
-        if ( chkFname.status !== 0 ) {
-            log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
-            res.statusMessage = chkFname.statusMessage
-            res.status(chkFname.status).end()
-            return
-        }
+    // @ts-ignore
+    const chkFname = chkParamFname(params)
+    if ( chkFname.status !== 0 ) {
+        log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+        res.statusMessage = chkFname.statusMessage
+        res.status(chkFname.status).end()
+        return
+    }
 
-        // @ts-ignore
-        const chkFldr = chkParamFldr(params)
-        if ( chkFldr.status !== 0 ) {
-            log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
-            res.statusMessage = chkFldr.statusMessage
-            res.status(chkFldr.status).end()
-            return
-        }
-        // #endregion ---- ----
+    // @ts-ignore
+    const chkFldr = chkParamFldr(params)
+    if ( chkFldr.status !== 0 ) {
+        log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+        res.statusMessage = chkFldr.statusMessage
+        res.status(chkFldr.status).end()
+        return
+    }
+    // #endregion ---- ----
 
-        log.trace(`🌐[uibuilder[:apiv2:uibgetfile] Admin API. File get requested. url=${params.url}, file=${params.folder}/${params.fname}`)
+    log.trace(`🌐[uibuilder[:apiv2:uibgetfile] Admin API. File get requested. url=${params.url}, file=${params.folder}/${params.fname}`)
 
-        // if fldr = root, no folder
-        if ( params.folder === 'root' ) params.folder = ''
+    // if fldr = root, no folder
+    if ( params.folder === 'root' ) params.folder = ''
 
-        // @ts-ignore
-        const filePathRoot = path.join(uib.rootFolder, params.url, params.folder)
-        // @ts-ignore
-        const filePath = path.join(filePathRoot, params.fname)
+    // @ts-ignore
+    const filePathRoot = path.join(uib.rootFolder, params.url, params.folder)
+    // @ts-ignore
+    const filePath = path.join(filePathRoot, params.fname)
 
-        // Does the file exist?
-        if ( fslib.existsSync(filePath) ) {
-            // Send back a plain text response body containing content of the file
-            res.type('text/plain').sendFile(
-                // @ts-ignore
-                req.query.fname,
-                {
-                    // Prevent injected relative paths from escaping `src` folder
-                    root: filePathRoot,
-                    // Turn off caching
-                    lastModified: false,
-                    cacheControl: false,
-                    dotfiles: 'allow',
-                }
-            )
-        } else {
-            log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. File does not exist '${filePath}'. url=${params.url}`)
-            res.statusMessage = 'File does not exist'
-            res.status(500).end()
-        }
-    }) // ---- End of uibgetfile ---- //
-
-    /** Create a simple NR admin API to UPDATE the content of a file in the `<userLib>/uibuilder/<url>/<folder>` folder
-     * @param {string} url The admin api url to create
-     * @param {object} permissions The permissions required for access (Express middleware)
-     * @param {Function} cb
-     */
-    v2AdminRouter.post('/uibputfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-        // #region ====== Parameter validation ====== //
-        const params = req.body
-
-        const chkUrl = chkParamUrl(params)
-        if ( chkUrl.status !== 0 ) {
-            log.error(`🌐🛑[uibuilder:apiv2:uibputfile] Admin API v2. ${chkUrl.statusMessage}`)
-            res.statusMessage = chkUrl.statusMessage
-            res.status(chkUrl.status).end()
-            return
-        }
-
-        const chkFname = chkParamFname(params)
-        if ( chkFname.status !== 0 ) {
-            log.error(`🌐🛑[uibuilder:apiv2:uibputfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
-            res.statusMessage = chkFname.statusMessage
-            res.status(chkFname.status).end()
-            return
-        }
-
-        const chkFldr = chkParamFldr(params)
-        if ( chkFldr.status !== 0 ) {
-            log.error(`🌐🛑[uibuilder:apiv2:uibputfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
-            res.statusMessage = chkFldr.statusMessage
-            res.status(chkFldr.status).end()
-            return
-        }
-        // #endregion ====== ====== //
-
-        log.trace(`🌐[uibuilder[:apiv2:uibputfile] Admin API. File put requested. url=${params.url}, file=${params.folder}/${params.fname}, reload? ${params.reload}`)
-
-        // Fix for Issue #155 - if fldr = root, no folder
-        if ( params.folder === 'root' ) params.folder = '.'
-
-        const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
-
-        fslib.writeFileCb(fullname, req.body.data, function (err) {
-            if (err) {
-                // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
-                log.error(`🌐🛑[uibuilder:apiv2:uibputfile] Admin API. File write FAIL. url=${params.url}, file=${params.folder}/${params.fname}. ${err.message}`, err)
-                res.statusMessage = err.message
-                res.status(500).end()
-            } else {
-                // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
-                log.trace(`🌐[uibuilder:apiv2:uibputfile] Admin API. File write SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
-                res.statusMessage = 'File written successfully'
-                res.status(200).end()
-                // Reload connected clients if required by sending them a reload msg
-                // if ( params.reload === 'true' ) {
-                //     sockets.sendToFe2(
-                //         {
-                //             _uib: {
-                //                 reload: true,
-                //             },
-                //         },
-                //         // @ts-ignore
-                //         {
-                //             url: params.url,
-                //         }
-                //     )
-                // }
-            }
-        })
-    }) // ---- End of uibputfile ---- //
-
-    /** Create an index web page or JSON return listing all uibuilder endpoints
-     * Also allows confirmation of whether a url is in use ('check' parameter) or a simple list of urls in use.
-     */
-    v2AdminRouter.get('/uibindex', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-        log.trace('🌐[uibuilder:apiv2:uibindex] User Page/API. List all available uibuilder endpoints')
-
-        // If using own Express server, correct the URL's
-        const urlPrefix = getUrlPrefix(req)
-
-        /** Return full details based on type parameter */
-        switch (req.query.type) {
-            case 'diagnostics': {
-                res.json(diagnostics())
-                break
-            }
-            case 'json': {
-                res.json(uib.instances)
-                break
-            }
-            case 'urls': {
-                res.json(Object.values(uib.instances))
-                break
-            }
-            // default to 'html' output type
-            default: {
-                const page = detailsPage(urlPrefix)
-                res.send(page)
-                break
-            }
-        }
-    }) // ---- End of uibindex ---- //
-
-    /** Return a web page containing all uibuilder instances with descriptions */
-    v2AdminRouter.get('/apps', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-        // If using own Express server, correct the URL's
-        const urlPrefix = getUrlPrefix(req)
-
-        res.send( appsPage(urlPrefix) )
-        // res.json( uib.apps )
-    }) // ---- End of uibvendorpackages ---- //
-
-    /** Check & update installed front-end library packages, return list as JSON - this runs when NR Editor is loaded if a uib instance deployed */
-    v2AdminRouter.get('/uibvendorpackages', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-        // Update the installed packages list
-        // web.serveVendorPackages()
-
-        res.json( packageMgt.uibPackageJson.uibuilder.packages )
-    }) // ---- End of uibvendorpackages ---- //
-
-    /** Call npm. Schema: {name:{(url),cmd}}
-     * If url parameter not provided, uibPath = <userDir>, else uibPath = <uib.rootFolder>/<url>
-     * Valid commands:
-     *    install, remove, update
-     *    * = run as npm command with --json output
-     * @param {string} [req.query.url=userDir] Optional. If present, CWD is set to the uibuilder folder for that instance. Otherwise CWD is set to the userDir.
-     * @param {string} req.query.cmd Command to run (see notes for this function)
-     */
-    v2AdminRouter.get('/uibnpmmanage', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-        // #region --- Parameter validation (cmd, package) ---
-
-        const params = req.query
-
-        // Validate the npm command to be used.
-        if ( params.cmd === undefined ) {
-            log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] uibuilder Admin API. No command provided for npm management.')
-            res.statusMessage = 'npm command parameter not provided'
-            res.status(500).end()
-            return
-        }
-        if ( Array.isArray(params.cmd) ) params.cmd = params.cmd[0]
-        switch (params.cmd) {
-            case 'install':
-            case 'remove':
-            case 'update':
-                break
-
-            default:
-                log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. Invalid command provided for npm management.')
-                res.statusMessage = 'npm command parameter is invalid'
-                res.status(500).end()
-                return
-        }
-
-        // package name must not exceed 255 characters
-        // we have to have a package name
-        if ( params.package === undefined ) {
-            log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package parameter not provided')
-            res.statusMessage = 'package parameter not provided'
-            res.status(500).end()
-            return
-        }
-        // If params.package is an array (multiple package names provided), just take the first one
-        if ( Array.isArray(params.package) ) params.package = params.package[0]
-        // @ts-ignore package name must be >0 in length
-        if ( params.package.length < 1 ) {
-            log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package name parameter is empty')
-            res.statusMessage = 'package name parameter is empty'
-            res.status(500).end()
-            return
-        }
-        // @ts-ignore package name must not exceed 255 characters
-        if ( params.package.length > 255 ) {
-            log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package name parameter is too long (>255 characters)')
-            res.statusMessage = 'package name parameter is too long. Max 255 characters'
-            res.status(500).end()
-            return
-        }
-
-        // If install/update, we need the node instance as well
-        if ( params.cmd !== 'remove' ) {
+    // Does the file exist?
+    if ( fslib.existsSync(filePath) ) {
+        // Send back a plain text response body containing content of the file
+        res.type('text/plain').sendFile(
             // @ts-ignore
-            const chkUrl = chkParamUrl(params)
-            if ( chkUrl.status !== 0 ) {
-                log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. ${chkUrl.statusMessage}`)
-                res.statusMessage = chkUrl.statusMessage
-                res.status(chkUrl.status).end()
-                return
+            req.query.fname,
+            {
+                // Prevent injected relative paths from escaping `src` folder
+                root: filePathRoot,
+                // Turn off caching
+                lastModified: false,
+                cacheControl: false,
+                dotfiles: 'allow',
             }
+        )
+    } else {
+        log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. File does not exist '${filePath}'. url=${params.url}`)
+        res.statusMessage = 'File does not exist'
+        res.status(500).end()
+    }
+}) // ---- End of uibgetfile ---- //
+
+/** Create a simple NR admin API to UPDATE the content of a file in the `<userLib>/uibuilder/<url>/<folder>` folder
+ * @param {string} url The admin api url to create
+ * @param {object} permissions The permissions required for access (Express middleware)
+ * @param {Function} cb
+ */
+v2AdminRouter.post('/uibputfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    // #region ====== Parameter validation ====== //
+    const params = req.body
+
+    const chkUrl = chkParamUrl(params)
+    if ( chkUrl.status !== 0 ) {
+        log.error(`🌐🛑[uibuilder:apiv2:uibputfile] Admin API v2. ${chkUrl.statusMessage}`)
+        res.statusMessage = chkUrl.statusMessage
+        res.status(chkUrl.status).end()
+        return
+    }
+
+    const chkFname = chkParamFname(params)
+    if ( chkFname.status !== 0 ) {
+        log.error(`🌐🛑[uibuilder:apiv2:uibputfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+        res.statusMessage = chkFname.statusMessage
+        res.status(chkFname.status).end()
+        return
+    }
+
+    const chkFldr = chkParamFldr(params)
+    if ( chkFldr.status !== 0 ) {
+        log.error(`🌐🛑[uibuilder:apiv2:uibputfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+        res.statusMessage = chkFldr.statusMessage
+        res.status(chkFldr.status).end()
+        return
+    }
+    // #endregion ====== ====== //
+
+    log.trace(`🌐[uibuilder[:apiv2:uibputfile] Admin API. File put requested. url=${params.url}, file=${params.folder}/${params.fname}, reload? ${params.reload}`)
+
+    // Fix for Issue #155 - if fldr = root, no folder
+    if ( params.folder === 'root' ) params.folder = '.'
+
+    const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
+
+    fslib.writeFileCb(fullname, req.body.data, function (err) {
+        if (err) {
+            // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
+            log.error(`🌐🛑[uibuilder:apiv2:uibputfile] Admin API. File write FAIL. url=${params.url}, file=${params.folder}/${params.fname}. ${err.message}`, err)
+            res.statusMessage = err.message
+            res.status(500).end()
+        } else {
+            // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
+            log.trace(`🌐[uibuilder:apiv2:uibputfile] Admin API. File write SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
+            res.statusMessage = 'File written successfully'
+            res.status(200).end()
+            // Reload connected clients if required by sending them a reload msg
+            // if ( params.reload === 'true' ) {
+            //     sockets.sendToFe2(
+            //         {
+            //             _uib: {
+            //                 reload: true,
+            //             },
+            //         },
+            //         // @ts-ignore
+            //         {
+            //             url: params.url,
+            //         }
+            //     )
+            // }
         }
+    })
+}) // ---- End of uibputfile ---- //
 
-        // #endregion ---- ----
+/** Create an index web page or JSON return listing all uibuilder endpoints
+ * Also allows confirmation of whether a url is in use ('check' parameter) or a simple list of urls in use.
+ */
+v2AdminRouter.get('/uibindex', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    log.trace('🌐[uibuilder:apiv2:uibindex] User Page/API. List all available uibuilder endpoints')
 
-        const folder = RED.settings.userDir
+    // If using own Express server, correct the URL's
+    const urlPrefix = getUrlPrefix(req)
 
-        log.info(`🌐📘[uibuilder:apiv2:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} with tag/version '${params.tag ? params.tag : ''}'`)
-
-        // delete package lock file as it seems to mess up sometimes - no error if it fails
-        fslib.removeSync(path.join(folder, 'package-lock.json'))
-
-        // Formulate the command to be run
-        switch (params.cmd) {
-            case 'update':
-            case 'install': {
-                // @ts-expect-error
-                packageMgt.npmInstallPackage(params.url, params.package, params.tag, '', params.cmd)
-                    .then((npmOutput) => {
-                        // Get the updated package.json file into packageMgt.uibPackageJson
-                        packageMgt.uibPackageJson = packageMgt.pkgCheck()
-                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
-                        packageMgt.pkgsQuickUpd()
-                        // ASYNC - Update details and re-save the file
-                        packageMgt.updateInstalledPackageDetails()
-
-                        // Update the packageList
-                        web.serveVendorPackages()
-
-                        res.json({ success: true, result: [npmOutput, packageMgt.uibPackageJson.uibuilder.packages], })
-
-                        // return success
-                        return true
-                    })
-                    .catch((err) => {
-                        // err has extra props: {all:string, code:number, command:string}
-                        log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage:${params.cmd}] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
-                        res.json({ success: false, result: err.all, })
-                        return false
-                    })
-                break
-            }
-            case 'remove': {
-                // @ts-ignore
-                packageMgt.npmRemovePackage(params.package)
-                    .then((npmOutput) => {
-                        // Get the updated package.json file into packageMgt.uibPackageJson
-                        packageMgt.uibPackageJson = packageMgt.pkgCheck()
-                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
-                        packageMgt.pkgsQuickUpd()
-                        // ASYNC - Only need this to re-save the file
-                        packageMgt.updateInstalledPackageDetails()
-
-                        // Update the packageList
-                        web.serveVendorPackages()
-
-                        res.json({ success: true, result: npmOutput, })
-                        return true
-                    })
-                    .catch((err) => {
-                        log.warn(`🌐⚠️[uibuilder:apiv2:uibnpmmanage:remove] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
-                        res.json({ success: false, result: err.all, })
-                        return false
-                    })
-                break
-            }
-            default: {
-                log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. Command ${params.cmd} is not a valid command. Must be 'install', 'remove' or 'update'.`)
-                res.statusMessage = 'No valid npm command available'
-                res.status(500).end()
-                break
-            }
+    /** Return full details based on type parameter */
+    switch (req.query.type) {
+        case 'diagnostics': {
+            res.json(diagnostics())
+            break
         }
-    }) // ---- End of npmmanage ---- //
+        case 'json': {
+            res.json(uib.instances)
+            break
+        }
+        case 'urls': {
+            res.json(Object.values(uib.instances))
+            break
+        }
+        // default to 'html' output type
+        default: {
+            const page = detailsPage(urlPrefix)
+            res.send(page)
+            break
+        }
+    }
+}) // ---- End of uibindex ---- //
 
-    return v2AdminRouter
-}
+/** Return a web page containing all uibuilder instances with descriptions */
+v2AdminRouter.get('/apps', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    // If using own Express server, correct the URL's
+    const urlPrefix = getUrlPrefix(req)
 
-module.exports = adminRouterV2
+    res.send( appsPage(urlPrefix) )
+    // res.json( uib.apps )
+}) // ---- End of uibvendorpackages ---- //
+
+/** Check & update installed front-end library packages, return list as JSON - this runs when NR Editor is loaded if a uib instance deployed */
+v2AdminRouter.get('/uibvendorpackages', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    // Update the installed packages list
+    // web.serveVendorPackages()
+
+    res.json( packageMgt.uibPackageJson.uibuilder.packages )
+}) // ---- End of uibvendorpackages ---- //
+
+/** Call npm. Schema: {name:{(url),cmd}}
+ * If url parameter not provided, uibPath = <userDir>, else uibPath = <uib.rootFolder>/<url>
+ * Valid commands:
+ *    install, remove, update
+ *    * = run as npm command with --json output
+ * @param {string} [req.query.url=userDir] Optional. If present, CWD is set to the uibuilder folder for that instance. Otherwise CWD is set to the userDir.
+ * @param {string} req.query.cmd Command to run (see notes for this function)
+ */
+v2AdminRouter.get('/uibnpmmanage', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    // #region --- Parameter validation (cmd, package) ---
+
+    const params = req.query
+
+    // Validate the npm command to be used.
+    if ( params.cmd === undefined ) {
+        log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] uibuilder Admin API. No command provided for npm management.')
+        res.statusMessage = 'npm command parameter not provided'
+        res.status(500).end()
+        return
+    }
+    if ( Array.isArray(params.cmd) ) params.cmd = params.cmd[0]
+    switch (params.cmd) {
+        case 'install':
+        case 'remove':
+        case 'update':
+            break
+
+        default:
+            log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. Invalid command provided for npm management.')
+            res.statusMessage = 'npm command parameter is invalid'
+            res.status(500).end()
+            return
+    }
+
+    // package name must not exceed 255 characters
+    // we have to have a package name
+    if ( params.package === undefined ) {
+        log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package parameter not provided')
+        res.statusMessage = 'package parameter not provided'
+        res.status(500).end()
+        return
+    }
+    // If params.package is an array (multiple package names provided), just take the first one
+    if ( Array.isArray(params.package) ) params.package = params.package[0]
+    // @ts-ignore package name must be >0 in length
+    if ( params.package.length < 1 ) {
+        log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package name parameter is empty')
+        res.statusMessage = 'package name parameter is empty'
+        res.status(500).end()
+        return
+    }
+    // @ts-ignore package name must not exceed 255 characters
+    if ( params.package.length > 255 ) {
+        log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package name parameter is too long (>255 characters)')
+        res.statusMessage = 'package name parameter is too long. Max 255 characters'
+        res.status(500).end()
+        return
+    }
+
+    // If install/update, we need the node instance as well
+    if ( params.cmd !== 'remove' ) {
+        // @ts-ignore
+        const chkUrl = chkParamUrl(params)
+        if ( chkUrl.status !== 0 ) {
+            log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. ${chkUrl.statusMessage}`)
+            res.statusMessage = chkUrl.statusMessage
+            res.status(chkUrl.status).end()
+            return
+        }
+    }
+
+    // #endregion ---- ----
+
+    const folder = RED.settings.userDir
+
+    log.info(`🌐📘[uibuilder:apiv2:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} with tag/version '${params.tag ? params.tag : ''}'`)
+
+    // delete package lock file as it seems to mess up sometimes - no error if it fails
+    fslib.removeSync(path.join(folder, 'package-lock.json'))
+
+    // Formulate the command to be run
+    switch (params.cmd) {
+        case 'update':
+        case 'install': {
+            // @ts-expect-error
+            packageMgt.npmInstallPackage(params.url, params.package, params.tag, '', params.cmd)
+                .then((npmOutput) => {
+                    // Get the updated package.json file into packageMgt.uibPackageJson
+                    packageMgt.uibPackageJson = packageMgt.pkgCheck()
+                    // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
+                    packageMgt.pkgsQuickUpd()
+                    // ASYNC - Update details and re-save the file
+                    packageMgt.updateInstalledPackageDetails()
+
+                    // Update the packageList
+                    const web = require('./web.cjs') // late loading to avoid circular dependency
+                    web.serveVendorPackages()
+
+                    res.json({ success: true, result: [npmOutput, packageMgt.uibPackageJson.uibuilder.packages], })
+
+                    // return success
+                    return true
+                })
+                .catch((err) => {
+                    // err has extra props: {all:string, code:number, command:string}
+                    log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage:${params.cmd}] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+                    res.json({ success: false, result: err.all, })
+                    return false
+                })
+            break
+        }
+        case 'remove': {
+            // @ts-ignore
+            packageMgt.npmRemovePackage(params.package)
+                .then((npmOutput) => {
+                    // Get the updated package.json file into packageMgt.uibPackageJson
+                    packageMgt.uibPackageJson = packageMgt.pkgCheck()
+                    // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
+                    packageMgt.pkgsQuickUpd()
+                    // ASYNC - Only need this to re-save the file
+                    packageMgt.updateInstalledPackageDetails()
+
+                    // Update the packageList
+                    const web = require('./web.cjs') // late loading to avoid circular dependency
+                    web.serveVendorPackages()
+
+                    res.json({ success: true, result: npmOutput, })
+                    return true
+                })
+                .catch((err) => {
+                    log.warn(`🌐⚠️[uibuilder:apiv2:uibnpmmanage:remove] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+                    res.json({ success: false, result: err.all, })
+                    return false
+                })
+            break
+        }
+        default: {
+            log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. Command ${params.cmd} is not a valid command. Must be 'install', 'remove' or 'update'.`)
+            res.statusMessage = 'No valid npm command available'
+            res.status(500).end()
+            break
+        }
+    }
+}) // ---- End of npmmanage ---- //
+
+// module.exports = adminRouterV2
+module.exports = v2AdminRouter
