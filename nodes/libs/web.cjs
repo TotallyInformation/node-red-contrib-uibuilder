@@ -44,6 +44,9 @@ const uiblib = require('./uiblib.cjs')
 /** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
 const uib = require('../libs/uibGlobalConfig.cjs')
 
+const adminRouterV2 = require('./admin-api-v2.cjs')
+const adminRouterV3 = require('./admin-api-v3.cjs')
+
 // Filename for default web page
 const defaultPageName = 'index.html'
 
@@ -160,8 +163,9 @@ class UibWeb {
         this.adminRouter = express.Router(this.#routerOptions)
 
         /** Serve up the v3 admin apis on /<httpAdminRoot>/uibuilder/admin/ */
-        this.adminRouterV3 = require('./admin-api-v3.cjs')(this.uib, this.log)
-        this.adminRouter.use('/admin', this.adminRouterV3)
+        // this.adminRouterV3 = require('./admin-api-v3.cjs')()
+        // this.adminRouter.use('/admin', this.adminRouterV3)
+        this.adminRouter.use('/admin', adminRouterV3)
         this.routers.admin.push( { name: 'Admin API v3', path: `${this.RED.settings.httpAdminRoot}uibuilder/admin`, desc: 'Consolidated admin APIs used by the uibuilder Editor panel', type: 'Router', } )
 
         /** Serve up the package docs folder on /<httpAdminRoot>/uibuilder/techdocs (uses docsify) - also make available on /uibuilder/docs
@@ -191,11 +195,12 @@ class UibWeb {
         } )
 
         // TODO: Move v2 API's to V3
-        this.adminRouterV2 = require('./admin-api-v2.cjs')(this.log)
+        // this.adminRouterV2 = require('./admin-api-v2.cjs')()
         this.routers.admin.push( { name: 'Admin API v2', path: `${this.RED.settings.httpAdminRoot}uibuilder/*`, desc: 'Various older admin APIs used by the uibuilder Editor panel', type: 'Router', } )
 
         /** Serve up the admin root for uibuilder on /<httpAdminRoot>/uibuilder/ */
-        this.RED.httpAdmin.use('/uibuilder', this.adminRouter, this.adminRouterV2)
+        // this.RED.httpAdmin.use('/uibuilder', this.adminRouter, this.adminRouterV2)
+        this.RED.httpAdmin.use('/uibuilder', this.adminRouter, adminRouterV2)
     }
 
     /** Add routes for master user-facing APIs */
@@ -373,6 +378,14 @@ class UibWeb {
 
         // Assign the uibRouter to the ../uibuilder url path
         this.app.use( urlJoin(uib.moduleName), this.uibRouter )
+
+        // this.server.setTimeout(30000)
+        // console.log({
+        //     timeout: this.server.timeout,          // socket inactivity (default: 0 since v13)
+        //     headersTimeout: this.server.headersTimeout,   // max time to receive request headers (default: 60000)
+        //     keepAliveTimeout: this.server.keepAliveTimeout, // idle keep-alive connections (default: 5000)
+        //     requestTimeout: this.server.requestTimeout,   // max time to receive full request (default: 300000)
+        // })
     } // --- End of webSetup() --- //
 
     /** Return a dynamic index page of all uibuilder user-accessible endpoints on /uibuilder/apps
@@ -1324,8 +1337,8 @@ class UibWeb {
         // @ts-expect-error
         for ( const layer of this.RED.httpAdmin._router.stack) { this.summariseRoute(layer, routes.app) }
         if (this.adminRouter) for ( const layer of this.adminRouter.stack) { this.summariseRoute(layer, routes.admin) }
-        if (this.adminRouterV3) for ( const layer of this.adminRouterV3.stack) { this.summariseRoute(layer, routes.v3) }
-        if (this.adminRouterV2) for ( const layer of this.adminRouterV2.stack) { this.summariseRoute(layer, routes.v2) }
+        if (adminRouterV3) for ( const layer of adminRouterV3.stack) { this.summariseRoute(layer, routes.v3) }
+        if (adminRouterV2) for ( const layer of adminRouterV2.stack) { this.summariseRoute(layer, routes.v2) }
 
         if (print) {
             console.log(' \n---- Admin Facing Routes ----')
