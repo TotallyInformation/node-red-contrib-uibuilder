@@ -1,9 +1,32 @@
 [
     {
-        "id": "2305299d982b77b1",
+        "id": "024bb52501dc9d5c",
+        "type": "group",
+        "z": "4a3fcf357a20bf56",
+        "name": "Basic UIBUILDER Example - Updated: 2026-10-16",
+        "style": {
+            "fill": "#e3f3d3",
+            "fill-opacity": "0.11",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "fdd8dbb8b816808b",
+            "00e9ce80fb754ebd",
+            "967fb8696be7d54a",
+            "9eb05a4e3b866159"
+        ],
+        "x": 254,
+        "y": 2239,
+        "w": 692,
+        "h": 162
+    },
+    {
+        "id": "fdd8dbb8b816808b",
         "type": "inject",
-        "z": "b2f18a716bd20f99",
-        "name": "",
+        "z": "4a3fcf357a20bf56",
+        "g": "024bb52501dc9d5c",
+        "name": "Show Date/Time on web page",
         "props": [
             {
                 "p": "payload"
@@ -17,25 +40,26 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "topic": "uib",
-        "payload": "",
+        "topic": "more",
+        "payload": "iso",
         "payloadType": "date",
-        "x": 515,
-        "y": 920,
+        "x": 420,
+        "y": 2320,
         "wires": [
             [
-                "8f3dd60e03fdf577"
+                "00e9ce80fb754ebd"
             ]
-        ],
-        "l": false
+        ]
     },
     {
-        "id": "8f3dd60e03fdf577",
+        "id": "00e9ce80fb754ebd",
         "type": "uibuilder",
-        "z": "b2f18a716bd20f99",
-        "name": "",
+        "z": "4a3fcf357a20bf56",
+        "g": "024bb52501dc9d5c",
+        "name": "Minimal (default) Template",
         "topic": "",
-        "okToGo": false,
+        "url": "t2",
+        "okToGo": true,
         "fwdInMessages": false,
         "allowScripts": false,
         "allowStyles": false,
@@ -45,23 +69,27 @@
         "showfolder": false,
         "reload": true,
         "sourceFolder": "src",
-        "deployedVersion": "6.2.0-dev",
+        "deployedVersion": "7.7.4",
         "showMsgUib": true,
-        "x": 630,
-        "y": 920,
+        "title": "",
+        "descr": "",
+        "editurl": "vscode://vscode-remote/ssh-remote+knightnet.uk/home/home/nrmain/data/uibuilder/t2/?windowId=_blank",
+        "x": 690,
+        "y": 2320,
         "wires": [
             [
-                "b1fd8419bef3fbe5"
+                "967fb8696be7d54a"
             ],
             [
-                "6e22fd946cdf8088"
+                "9eb05a4e3b866159"
             ]
         ]
     },
     {
-        "id": "b1fd8419bef3fbe5",
+        "id": "967fb8696be7d54a",
         "type": "debug",
-        "z": "b2f18a716bd20f99",
+        "z": "4a3fcf357a20bf56",
+        "g": "024bb52501dc9d5c",
         "name": "Std output",
         "active": true,
         "tosidebar": true,
@@ -71,15 +99,16 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "counter",
-        "x": 745,
-        "y": 880,
+        "x": 885,
+        "y": 2280,
         "wires": [],
         "l": false
     },
     {
-        "id": "6e22fd946cdf8088",
+        "id": "9eb05a4e3b866159",
         "type": "debug",
-        "z": "b2f18a716bd20f99",
+        "z": "4a3fcf357a20bf56",
+        "g": "024bb52501dc9d5c",
         "name": "Ctrl output",
         "active": true,
         "tosidebar": true,
@@ -89,17 +118,17 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "counter",
-        "x": 745,
-        "y": 960,
+        "x": 885,
+        "y": 2360,
         "wires": [],
         "l": false
     },
     {
-        "id": "dc9ff4a730138964",
+        "id": "397f49ecfc20cc2b",
         "type": "global-config",
         "env": [],
         "modules": {
-            "node-red-contrib-uibuilder": "7.5.0"
+            "node-red-contrib-uibuilder": "7.7.4"
         }
     }
 ]
