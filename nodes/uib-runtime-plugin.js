@@ -28,9 +28,8 @@
 
 const path = require('node:path')
 
-// @ts-ignore
+// Will auto-enable if TI_ENV environment variable is set to "debug"
 const { /** @type {uibCustomLogger} */ log: clog, } = require('./libs/logger.mjs')
-clog.enabled = true
 clog.debug('Loading')
 
 const { saferSerialize, } = require('./libs/tilib.cjs') // Safer JSON.stringify with circular reference handling
@@ -214,6 +213,7 @@ function setupUibFs() {
 
 /** Called when the plugin is added to the editor - is passed the RED global object */
 function onAdd() {
+    clog.debug('onAdd started, uib.RED populated?', uib.RED !== null)
     if ( uib.RED === null ) return
     const RED = uib.RED
 
@@ -302,13 +302,17 @@ function onAdd() {
         // In case another plugin defines more of these and is processed first
         ...RED.util.uib,
     }
+
+    clog.debug('onAdd ended')
 }
 
 /** 1) The function that defines the plugin - we also set up the uibuilder global config and root folder here.
  * @param {runtimeRED} RED Node-RED's runtime object
  */
 function pluginDefinition(RED) {
-    RED.log.trace('🌐[uibuilder:runtimeSetup] ----------------- global config started -----------------')
+    // RED.log.trace('🌐[uibuilder:runtimeSetup] ----------------- global config started -----------------')
+    clog.debug('pluginDefinition started')
+
     // RED.events.on('runtime-event', function(event) {
     //     console.log(`🌐[uibuilder:runtimeSetup:runtime-event] ID: ${event.id}`)
     // })
@@ -430,6 +434,8 @@ function pluginDefinition(RED) {
     })
     RED.log.trace('🌐[uibuilder:runtimeSetup] ----------------- global config complete -----------------')
     RED.events.emit('UIBUILDER/runtimeSetupComplete', uib)
+
+    clog.debug('pluginDefinition completed')
 }
 
 // Export the plugin definition (1), this is consumed by Node-RED on startup.
