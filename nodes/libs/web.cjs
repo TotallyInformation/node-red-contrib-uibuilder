@@ -47,6 +47,26 @@ const uib = require('../libs/uibGlobalConfig.cjs')
 // Filename for default web page
 const defaultPageName = 'index.html'
 
+/** Get the layer stack of an ExpressJS app's base router (ExpressJS v4 or v5).
+ * v5 renamed `app._router` to `app.router`. On v4, reading `app.router` throws.
+ * @param {*} app ExpressJS app
+ * @returns {Array<*>} The router's layer stack (empty if none yet)
+ */
+function appStack(app) {
+    let router
+    try { router = app.router } catch (e) { router = undefined }
+    router = router || app._router
+    return router ? router.stack : []
+}
+
+/** Return a layer's ExpressJS v4 regexp as a string, or undefined on ExpressJS v5 (which has no layer.regexp)
+ * @param {*} layer ExpressJS router layer
+ * @returns {string|undefined} The regexp as a string
+ */
+function layerRegexp(layer) {
+    return layer && layer.regexp ? layer.regexp.toString() : undefined
+}
+
 class UibWeb {
     /** PRIVATE Flag to indicate whether setup() has been run (ignore the false eslint error)
      * @type {boolean}
@@ -90,6 +110,8 @@ class UibWeb {
      * @type {Object<string, express.Router>}
      */
     instanceRouters = {}
+    /** Routers mounted on the app, by url, so they can be removed on redeploy (ExpressJS v4 & v5) */
+    mountedRouters = {}
 
     /** ExpressJS Route Metadata */
     routers = { admin: [], user: [], instances: {}, config: {}, }
@@ -511,12 +533,13 @@ class UibWeb {
         /** Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/vendor/`
          * @type {ExpressRouter & {myname?: string}}
          */
+        const previousVendorRouter = this.vendorRouter
         this.vendorRouter = express.Router(this.#routerOptions) // eslint-disable-line new-cap
         this.vendorRouter.myname = 'uibVendorRouter'
 
         // Remove the vendor router if it already exists - we will recreate it. `some` stops once it has found a result
         this.uibRouter.stack.some((layer, i, aStack) => {
-            if ( layer.regexp.toString() === '/^\\/vendor\\/?(?=\\/|$)/i' ) {
+            if ( (previousVendorRouter && layer.handle === previousVendorRouter) || layerRegexp(layer) === '/^\\/vendor\\/?(?=\\/|$)/i' ) {
                 aStack.splice(i, 1)
                 return true
             }
@@ -599,11 +622,16 @@ class UibWeb {
      * @param {string} url The url of the router to remove
      */
     removeRouter(url) {
-        this.app._router.stack.forEach( (route, i, routes) => {
-            if (route.regexp.toString() === `/^\\/${url}\\/?(?=\\/|$)/i` ) {
-                routes.splice(i, 1)
+        const mounted = this.mountedRouters[url]
+        const stack = appStack(this.app)
+        // Walk backwards so splicing doesn't skip entries
+        for (let i = stack.length - 1; i >= 0; i--) {
+            const layer = stack[i]
+            if ( (mounted && layer.handle === mounted) || layerRegexp(layer) === `/^\\/${url}\\/?(?=\\/|$)/i` ) {
+                stack.splice(i, 1)
             }
-        })
+        }
+        delete this.mountedRouters[url]
     } // ---- End of removeRouter ---- //
 
     /** Setup the web resources for a specific uibuilder instance
@@ -713,6 +741,7 @@ class UibWeb {
 
         // Apply this instances router to the url path on `<httpNodeRoot>/<url>/`
         this.app.use( routeSpec, this.instanceRouters[node.url])
+        this.mountedRouters[node.url] = this.instanceRouters[node.url]
 
         // this.dumpUserRoutes(true)
         // this.dumpInstanceRoutes(true, node.url)
@@ -1242,6 +1271,21 @@ class UibWeb {
 
     // #region ==== ExpressJS Route & other Reporting ==== //
 
+    /** For ExpressJS v5 layers (no regexp): work out a display path from what uibuilder mounted
+     * @param {*} L Express Route Stack Layer
+     * @returns {string} Display path
+     */
+    layerPath(L) {
+        if (L.route) return L.route.path
+        for (const url of Object.keys(this.mountedRouters)) {
+            if (this.mountedRouters[url] === L.handle) return `/${url}/`
+        }
+        if (this.vendorRouter && L.handle === this.vendorRouter) return '/vendor/'
+        if (this.uibRouter && L.handle === this.uibRouter) return `/${this.uib.moduleName}/`
+        if (this.adminRouter && L.handle === this.adminRouter) return `/${this.uib.moduleName}/`
+        return '/'
+    }
+
     /** Summarise Express route properties
      * @param {*} L Express Route Stack Layer
      * @param {*} out Save to
@@ -1251,8 +1295,9 @@ class UibWeb {
 
         const x = {
             name: L.name,
-            path:
-                L.regexp.toString()
+            path: !L.regexp
+                ? this.layerPath(L)
+                : L.regexp.toString()
                     .replace('/^\\', '')
                     .replace('\\/?(?=\\/|$)/i', '/')
                     .replace('\\/?$/i', '/')
@@ -1264,7 +1309,7 @@ class UibWeb {
 
         if (L.route !== undefined) {
             if ( !L.route.stack[0].method ) x.route = Object.keys(L.route.methods).join(',')
-            else x.route = `${L.route.stack[0].method}:${L.route.stack[0].regexp}`
+            else x.route = `${L.route.stack[0].method}:${L.route.stack[0].regexp ?? L.route.path}`
         }
 
         const pkgs = packageMgt.uibPackageJson.uibuilder.packages
@@ -1321,8 +1366,7 @@ class UibWeb {
     dumpAdminRoutes(print = true) {
         const routes = { app: [], admin: [], v3: [], v2: [], }
 
-        // @ts-expect-error
-        for ( const layer of this.RED.httpAdmin._router.stack) { this.summariseRoute(layer, routes.app) }
+        for ( const layer of appStack(this.RED.httpAdmin)) { this.summariseRoute(layer, routes.app) }
         if (this.adminRouter) for ( const layer of this.adminRouter.stack) { this.summariseRoute(layer, routes.admin) }
         if (this.adminRouterV3) for ( const layer of this.adminRouterV3.stack) { this.summariseRoute(layer, routes.v3) }
         if (this.adminRouterV2) for ( const layer of this.adminRouterV2.stack) { this.summariseRoute(layer, routes.v2) }
@@ -1355,7 +1399,7 @@ class UibWeb {
         const routes = { app: [], uibRouter: [], vendorRouter: [], }
 
         // Get the client-facing routes
-        for ( const layer of this.app._router.stack) { this.summariseRoute(layer, routes.app) }
+        for ( const layer of appStack(this.app)) { this.summariseRoute(layer, routes.app) }
         if (this.uibRouter) for ( const layer of this.uibRouter.stack) { this.summariseRoute(layer, routes.uibRouter) }
         if (this.vendorRouter) for ( const layer of this.vendorRouter.stack) { this.summariseRoute(layer, routes.vendorRouter) }
 
