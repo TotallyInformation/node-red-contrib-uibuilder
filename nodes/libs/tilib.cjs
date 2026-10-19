@@ -1,6 +1,5 @@
 /* eslint-disable security/detect-non-literal-regexp */
-/**
- * General utility library for Node.JS
+/** General utility library for Node.JS
  *
  * Copyright (c) 2019-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk
@@ -27,7 +26,7 @@ const mylog = (process.env.TI_ENV === 'debug') ? console.log : function() {}
 /** Return a normalised type label for any JavaScript value.
  * NB: If updating this, consider updating the equivalent in json-viewer
  * @param {*} value - Any JavaScript value
- * @returns {string} Type label
+ * @return {string} Type label
  */
 function typeOf(value) {
     if (value === null) return 'null'
@@ -64,7 +63,7 @@ module.exports = {
     /** Compare 2 simple arrays, return array of arrays - additions and deletions
      * @param {Array} a1 First array
      * @param {Array} a2 Second array
-     * @returns {Array<Array,Array>} Array of 2 arrays. Inner array 1: Additions, 2: Deletions
+     * @return {Array<Array,Array>} Array of 2 arrays. Inner array 1: Additions, 2: Deletions
      */
     compareArrays: function(a1, a2) {
         const temp = [[], []]
@@ -94,7 +93,7 @@ module.exports = {
 
     /** Return only the most important parts of an ExpressJS `req` object
      * @param {object} req express.Request
-     * @returns {object} importantReq
+     * @return {object} importantReq
      */
     dumpReq: function(req) {
         return {
@@ -117,7 +116,7 @@ module.exports = {
     /** Escape a user input string to use in a regular expression
      * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
      * @param {string} string String to escape
-     * @returns {string} Input string escaped to use in a re
+     * @return {string} Input string escaped to use in a re
      */
     escapeRegExp: function(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
@@ -128,7 +127,7 @@ module.exports = {
      * @param {Date|string} date - The date to format or a string that can be parsed into a date
      * @param {string} format - Format string with tokens (default: 'YYYY-MM-DD')
      * @param {string} [locale] - Locale to use for formatting (default: server's locale)
-     * @returns {string} Formatted date string or the original input if it cannot be parsed as a date
+     * @return {string} Formatted date string or the original input if it cannot be parsed as a date
      * @example
      * // Example usage:
      * formatDateIntl(new Date('2026-02-07'), 'YYYY-MM-DD') // '2026-02-07'
@@ -238,7 +237,7 @@ module.exports = {
      * Used to check that restart and build scripts are available.
      * @param {string} chkPath - The path that should contain a package.json
      * @param {string} chkScript - OPTIONAL. If present return the script text if present
-     * @returns {object|string|undefined|null} undefined if file not found or list of script names/commands. If chkScript, null if not found or script text.
+     * @return {object|string|undefined|null} undefined if file not found or list of script names/commands. If chkScript, null if not found or script text.
      */
     getNpmRunScripts: function(chkPath, chkScript = '') {
         let pj
@@ -257,7 +256,7 @@ module.exports = {
     /** Merge and deduplicate multiple arrays
      * @see https://stackoverflow.com/a/27664971/1309986
      * @param {any[]} arr One or more arrays
-     * @returns {any[]} Deduplicated, merged single array
+     * @return {any[]} Deduplicated, merged single array
      */
     mergeDedupe: function(...arr) {
         return [...new Set([].concat(...arr))]
@@ -269,7 +268,7 @@ module.exports = {
     /** Compare 2 simple arrays, return false as soon as a difference is found
      * @param {Array} a1 First array
      * @param {Array} a2 Second array
-     * @returns {boolean} False if arrays are differnt, else True
+     * @return {boolean} False if arrays are differnt, else True
      */
     quickCompareArrays: function(a1, a2) {
         // for each a1 entry, if not in a2 then push to temp[0]
@@ -301,7 +300,7 @@ module.exports = {
      * - undefined values (represented as '[undefined]')
      * - NaN and Infinity numbers (represented as 'NaN', 'Infinity', or '-Infinity')
      * @param {any} obj The object to serialize
-     * @returns {string} A JSON string representation of the object, with circular references handled
+     * @return {string} A JSON string representation of the object, with circular references handled
      */
     saferSerialize: function(obj) {
         // Try to use JSON.stringify first, as it will handle most cases and is MUCH faster than the custom replacer
@@ -396,7 +395,7 @@ module.exports = {
     /** Utility function to html pretty-print JSON
      * @param {*} json JSON to pretty-print
      * @param {number} [maxLength] Maximum length of the output string. Default=10000. Longer strings will be truncated with '...truncated...'. Since v7.7.0
-     * @returns {string} HTML
+     * @return {string} HTML
      */
     syntaxHighlight: function(json, maxLength = 10000) {
         /*
@@ -442,7 +441,7 @@ module.exports = {
 
     /** Remove leading/trailing slashes from a string
      * @param {string} str String to trim
-     * @returns {string} Trimmed string
+     * @return {string} Trimmed string
      */
     trimSlashes: function(str) {
         return str.replace(/(^\/*)|(\/*$)/g, '')
@@ -451,7 +450,7 @@ module.exports = {
     /** Returns true/false or a default value for truthy/falsy and other values
      * @param {string|number|boolean|*} val The value to test
      * @param {any} deflt Default value to use if the value is not truthy/falsy
-     * @returns {boolean|any} The truth! Or the default
+     * @return {boolean|any} The truth! Or the default
      */
     truthy(val, deflt) {
         let ret
@@ -465,7 +464,7 @@ module.exports = {
      * @see http://stackoverflow.com/a/28592528/3016654
      * Since v7.6.0 this also normalizes backslashes to forward slashes
      * param {...string} [path] URL fragments (picked up via the arguments var)
-     * @returns {string} Joined path
+     * @return {string} Joined path
      */
     urlJoin: function() {
         /** @type {Array<string>} */
