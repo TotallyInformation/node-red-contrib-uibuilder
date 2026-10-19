@@ -1,5 +1,6 @@
-/* eslint-disable jsdoc/valid-types */
-/**
+/** Runtime Node-RED plugin for UIBUILDER
+ * This is the main runtime plugin that is loaded by Node-RED on start-up.
+ *
  * Copyright (c) 2024-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
@@ -22,9 +23,15 @@
  * @typedef {import('../typedefs.js').runtimeRED} runtimeRED
  * @typedef {import('../typedefs.js').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../typedefs.js').uibConfig} uibConfig
+ * @typedef {import('../typedefs.js').uibCustomLogger} uibCustomLogger
  */
 
 const path = require('node:path')
+
+// @ts-ignore
+const { /** @type {uibCustomLogger} */ log: clog, } = require('./libs/logger.mjs')
+clog.enabled = true
+clog.debug('Loading')
 
 const { saferSerialize, } = require('./libs/tilib.cjs') // Safer JSON.stringify with circular reference handling
 
@@ -68,6 +75,13 @@ function setupUibGlobalConfig(RED) {
     // Get and record uibuilder settings from settings.js into the `uib` master object - these apply to all instances of uibuilder & Markweb
     if ( RED.settings.uibuilder ) {
         const settings = RED.settings.uibuilder
+        // Allow control of custom logging
+        if ('logger' in settings) {
+            if (settings.logger.enabled) clog.enabled = settings.logger.enabled
+            if (settings.logger.level) clog.level = settings.logger.level
+            clog.debug('Custom logging settings loaded')
+            clog.warn('OK')
+        }
         // Change the root folder - moved to setupUibFs()
         // Get web-relavent uibuilder settings from settings.js
         uib.customServer.port = Number(RED.settings.uiPort)
@@ -226,14 +240,14 @@ function onAdd() {
          * @param {number} inp Input number
          * @param {number} dp Number of output decimal places required (default=1)
          * @param {string} int Locale to use for number format (default=en-GB)
-         * @returns {string} Formatted number as a string
+         * @return {string} Formatted number as a string
          */
         dp: (inp, dp = 1, int = 'en-GB') => {
             return inp.toLocaleString(int, { minimumFractionDigits: dp, maximumFractionDigits: dp, })
         },
 
         /** Return a list of all instances
-         * @returns {object} List of all registered uibuilder instances
+         * @return {object} List of all registered uibuilder instances
          */
         listAllApps: () => {
             return uib.apps
@@ -248,7 +262,7 @@ function onAdd() {
          * @param {boolean} [opts.editable] Whether scalar leaf values are editable. Default=false
          * @param {boolean} [opts.interactive] Whether to include search/collapse controls. Default=false
          * @param {boolean} [opts.includeStyles] Whether to embed the component CSS. Default=true
-         * @returns {string} An HTML string representing the data tree
+         * @return {string} An HTML string representing the data tree
          */
         renderToHTML: (data, opts = {}) => renderToHTML(data, opts),
 
@@ -268,14 +282,14 @@ function onAdd() {
         /** Safer JSON.stringify with circular reference handling
          * @param {*} obj The object to serialize
          * @param {number} [space] Number of spaces for indentation (default=2)
-         * @returns {string} JSON string
+         * @return {string} JSON string
          */
         saferSerialize: saferSerialize,
 
         /** Returns true/false or a default value for truthy/falsy and other values
          * @param {string|number|boolean|*} val The value to test
          * @param {any} deflt Default value to use if the value is not truthy/falsy
-         * @returns {boolean|any} The truth! Or the default
+         * @return {boolean|any} The truth! Or the default
          */
         truthy: (val, deflt) => {
             let ret
@@ -420,3 +434,4 @@ function pluginDefinition(RED) {
 
 // Export the plugin definition (1), this is consumed by Node-RED on startup.
 module.exports = pluginDefinition
+clog.debug('Loaded')
