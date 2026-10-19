@@ -113,29 +113,29 @@ Older changes can be found in the previous change documents: [CHANGELOG-V5](http
 
 ### Other links
 
-- ![uib](https://github.com/TotallyInformation/node-red-contrib-uibuilder/raw/main/front-end/images/node-blue.ico) [UIBUILDER for Node-RED](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
-  - ❓ [Ideas, questions & general help](https://discourse.nodered.org/tag/node-red-contrib-uibuilder) - Ask your question on the Node-RED forum using the node-red-contrib-uibuilder tag.
-  - 📁 [Documentation](https://totallyinformation.github.io/node-red-contrib-uibuilder) - Go to the latest documentation.
-  - 🧑‍💻 [Flows](https://flows.nodered.org/search?term=uibuilder) - Example flows, nodes and collections related to UIBUILDER.
-  - ℹ️ [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki) - More documentation and examples.
-  - 📂 [Example Svelte External Template](https://github.com/TotallyInformation/uib-template-svelte-simple) - In case you want to build your own svelte app.
-  - 📂 [Example Simple External Template](https://github.com/TotallyInformation/uib-template-test) - In case you want to build your own external template.
-  - 📊 [uPlot UIBUILDER extension](https://github.com/TotallyInformation/nr-uibuilder-uplot) - Useful charts but also demonstrates how to build your own extension.
+* ![uib](https://github.com/TotallyInformation/node-red-contrib-uibuilder/raw/main/front-end/images/node-blue.ico) [UIBUILDER for Node-RED](https://github.com/TotallyInformation/node-red-contrib-uibuilder)
+  * ❓ [Ideas, questions & general help](https://discourse.nodered.org/tag/node-red-contrib-uibuilder) - Ask your question on the Node-RED forum using the node-red-contrib-uibuilder tag.
+  * 📁 [Documentation](https://totallyinformation.github.io/node-red-contrib-uibuilder) - Go to the latest documentation.
+  * 🧑‍💻 [Flows](https://flows.nodered.org/search?term=uibuilder) - Example flows, nodes and collections related to UIBUILDER.
+  * ℹ️ [WIKI](https://github.com/TotallyInformation/node-red-contrib-uibuilder/wiki) - More documentation and examples.
+  * 📂 [Example Svelte External Template](https://github.com/TotallyInformation/uib-template-svelte-simple) - In case you want to build your own svelte app.
+  * 📂 [Example Simple External Template](https://github.com/TotallyInformation/uib-template-test) - In case you want to build your own external template.
+  * 📊 [uPlot UIBUILDER extension](https://github.com/TotallyInformation/nr-uibuilder-uplot) - Useful charts but also demonstrates how to build your own extension.
 
-- 🧪 [Web Components Library](https://github.com/TotallyInformation/web-components) - A growing library of useful HTML Web Components. Useable with or without Node-RED & UIBUILDER. Some having specific enhancements for Node-RED but will still work well stand-alone. These now have their own dedicated documentation, demo and test website at https://wc.totallyinformation.net. Please check them out there.
+* 🧪 [Web Components Library](https://github.com/TotallyInformation/web-components) - A growing library of useful HTML Web Components. Useable with or without Node-RED & UIBUILDER. Some having specific enhancements for Node-RED but will still work well stand-alone. These now have their own dedicated documentation, demo and test website at https://wc.totallyinformation.net. Please check them out there.
 
-- 🔨 [ui library module used by UIBUILDER](https://github.com/TotallyInformation/ui.js) - Can be used stand-alone for turning UI standard config JSON into HTML.
+* 🔨 [ui library module used by UIBUILDER](https://github.com/TotallyInformation/ui.js) - Can be used stand-alone for turning UI standard config JSON into HTML.
 
-- 🕜 [node-red-contrib-moment](https://github.com/TotallyInformation/node-red-contrib-moment) - Nodes to make use of the MomentJS date/time handling library in Node-RED.
+* 🕜 [node-red-contrib-moment](https://github.com/TotallyInformation/node-red-contrib-moment) - Nodes to make use of the MomentJS date/time handling library in Node-RED.
 
-- 🧙 [Alternate Node-RED installer](https://github.com/TotallyInformation/alternate-node-red-installer) - Some scripts and example configs for running Node-RED locally instead of globally and having the userDir as a child folder so that everything can be easily backed up and restored from a single project folder.
+* 🧙 [Alternate Node-RED installer](https://github.com/TotallyInformation/alternate-node-red-installer) - Some scripts and example configs for running Node-RED locally instead of globally and having the userDir as a child folder so that everything can be easily backed up and restored from a single project folder.
 
-- 🧪 [Testbed for Node-RED custom nodes](https://github.com/TotallyInformation/Node-RED-Testbed) - Embodying more up-to-date thinking than the test nodes, a blank playground.
-- 🧪 [Test Nodes for Node-RED](https://github.com/TotallyInformation/uib-template-test) - Some test nodes for Node-RED that help you understand how everything works.
+* 🧪 [Testbed for Node-RED custom nodes](https://github.com/TotallyInformation/Node-RED-Testbed) - Embodying more up-to-date thinking than the test nodes, a blank playground.
+* 🧪 [Test Nodes for Node-RED](https://github.com/TotallyInformation/uib-template-test) - Some test nodes for Node-RED that help you understand how everything works.
 
-- 🚤 [HotNipi Gauge Web Component](https://github.com/TotallyInformation/gauge-hotnipi) - A really nice looking gauge component. Works with Node-RED, UIBUILDER, or stand-alone.
+* 🚤 [HotNipi Gauge Web Component](https://github.com/TotallyInformation/gauge-hotnipi) - A really nice looking gauge component. Works with Node-RED, UIBUILDER, or stand-alone.
 
-- 🧪 [Array Grouper](https://github.com/TotallyInformation/groupit) - Stand-alone function to reshape an array of objects.
+* 🧪 [Array Grouper](https://github.com/TotallyInformation/groupit) - Stand-alone function to reshape an array of objects.
 
 ## Contributing
 
@@ -155,30 +155,32 @@ You can also support the development of UIBUILDER by sponsoring the development.
 
 ## Sponsors
 
-- [@MagicJF](https://github.com/MagicJF)
+* [@MagicJF](https://github.com/MagicJF)
 
 ## Developers/Contributors
 
-- [Julian Knight](https://github.com/TotallyInformation) - the designer and main author.
-- [Colin Law](https://github.com/colinl) - many thanks for testing, corrections and pull requests.
-- [Steve Rickus](https://github.com/shrickus) - many thanks for testing, corrections, contributed code and design ideas.
-- [Ellie Lee](https://github.com/ellieejlee) - many thanks for the PR fixing duplicate msgs.
-- [Thomas Wagner](https://github.com/Thomseeen) - thanks for the steer and PR on using projects folder if active.
-- [Arlena Derksen](https://github.com/boisei0) - thanks for suggestions, bug checks and Issue #59/PR #60.
-- [cflurin](https://discourse.nodered.org/u/cflurin) - thanks for the cache example.
-- [Scott Page - IndySoft](https://github.com/scottpageindysoft) - thanks for Issue #73/PR #74.
-- [Stephen McLaughlin - Steve-Mcl](https://discourse.nodered.org/u/Steve-Mcl) - thanks for the fix for [Issue #71](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/71) and for the enhancement idea [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/102).
-- [Sergio Rius](https://github.com/SergioRius) - thanks for reporting [Issue #121](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/121) and providing [PR #122](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/122) as a fix.
-- [Thorsten von Eicken](https://github.com/tve) - thanks for providing [PR #131](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/131) to improve CORS handling for Socket.IO.
-- [meeki007](https://github.com/meeki007) - thanks for supplying various documentation improvements and code fixes.
-- [Scott - talltechdude](https://github.com/talltechdude) - thanks for supplying PR #170.
-- [Calum Knott](https://github.com/calumk) - Thanks for the tidied up node-blue logo.
-- [Harold Peters Inskipp](https://github.com/HaroldPetersInskipp) - Thanks for the logging examples.
-- [dczysz](https://github.com/dczysz) - Thanks for reporting [Issue #186](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/186) and helping work through the complex async bug.
-- [Colin J (mudwalkercj)](https://github.com/mudwalkercj) - Thanks for helping with the documentation.
-- [Marcus Davies](https://discourse.nodered.org/u/marcus-j-davies) - Many thanks for the encouragement and for the 3d logo.
-- [Fabio Marzocca (fmarzocca)](https://discourse.nodered.org/u/fmarzocca)) - Many thanks for help with the design and testing of the uibrouter front-end router library.
-- [MysteryCode (mutec)](https://github.com/mutec)) - Thanks for the PR to fix up the standardised use of fast-glob for returning lists of files.
+* [Julian Knight](https://github.com/TotallyInformation) - the designer and main author.
+* [Colin Law](https://github.com/colinl) - Thanks for testing, corrections and pull requests.
+* [Steve Rickus](https://github.com/shrickus) - Thanks for testing, corrections, contributed code and design ideas.
+* [Ellie Lee](https://github.com/ellieejlee) - Thanks for the PR fixing duplicate msgs.
+* [Thomas Wagner](https://github.com/Thomseeen) - Thanks for the steer and PR on using projects folder if active.
+* [Arlena Derksen](https://github.com/boisei0) - Thanks for suggestions, bug checks and Issue #59/PR #60.
+* [cflurin](https://discourse.nodered.org/u/cflurin) - Thanks for the cache example.
+* [Scott Page - IndySoft](https://github.com/scottpageindysoft) - Thanks for Issue #73/PR #74.
+* [Stephen McLaughlin - Steve-Mcl](https://discourse.nodered.org/u/Steve-Mcl) - Thanks for the fix for [Issue #71](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/71) and for the enhancement idea [Issue #102](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/102).
+* [Sergio Rius](https://github.com/SergioRius) - Thanks for reporting [Issue #121](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/121) and providing [PR #122](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/122) as a fix.
+* [Thorsten von Eicken](https://github.com/tve) - Thanks for providing [PR #131](https://github.com/TotallyInformation/node-red-contrib-uibuilder/pull/131) to improve CORS handling for Socket.IO.
+* [meeki007](https://github.com/meeki007) - Thanks for supplying various documentation improvements and code fixes.
+* [Scott - talltechdude](https://github.com/talltechdude) - Thanks for supplying PR #170.
+* [Calum Knott](https://github.com/calumk) - Thanks for the tidied up node-blue logo.
+* [Harold Peters Inskipp](https://github.com/HaroldPetersInskipp) - Thanks for the logging examples.
+* [dczysz](https://github.com/dczysz) - Thanks for reporting [Issue #186](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/186) and helping work through the complex async bug.
+* [Colin J (mudwalkercj)](https://github.com/mudwalkercj) - Thanks for helping with the documentation.
+* [Marcus Davies](https://discourse.nodered.org/u/marcus-j-davies) - Thanks for the encouragement and for the 3d logo.
+* [Fabio Marzocca (fmarzocca)](https://discourse.nodered.org/u/fmarzocca) - Thanks for help with the design and testing of the uibrouter front-end router library.
+* [MysteryCode (mutec)](https://github.com/mutec) - Thanks for the PR to fix up the standardised use of fast-glob for returning lists of files.
+* [Salaheddine KALADA (halas98)](https://github.com/halas98) - Thanks for the valuable and detailed contribution.
+* [Ryan Murdoc](https://github.com/ryanmurdoc) - Thanks for the PR to make UIBUILDER ready for ExpressJS v5.
 
 Many other people have contributed ideas and suggestions, thanks to everyone who does, they are most welcome.
 
