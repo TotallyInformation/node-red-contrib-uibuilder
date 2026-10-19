@@ -55,7 +55,7 @@
 import fs from 'node:fs'
 import { format, styleText } from 'node:util' // eslint-disable-line n/no-unsupported-features/node-builtins
 
-const cons = console
+// const cons = console
 
 /** @type {uibCustomLogger} */
 class Logger {
@@ -97,7 +97,18 @@ class Logger {
 
         this.#stream = this.filePath ? fs.createWriteStream(this.filePath, { flags: 'a', }) : null
 
-        const coreLevels = ['log', 'info', 'warn', 'error', 'debug', 'trace']
+        // Default is output off. But setting TI_ENV to debug before starting Node-RED turns it on
+        if (process.env.TI_ENV === 'debug') this.enabled = true
+        // TI_LOGGER to a valid level string to turn on output up to the desired level
+        if (process.env.TI_LOGGER) {
+            const pel = process.env.TI_LOGGER.toLowerCase()
+            if (this.levelOrder[pel]) {
+                this.enabled = true
+                this.level = pel
+            }
+        }
+
+        const coreMethods = ['log', 'info', 'warn', 'error', 'debug', 'trace']
         const consoleMethods = Object.getOwnPropertyNames(console).filter(
             name => typeof console[name] === 'function'
         )
@@ -106,7 +117,7 @@ class Logger {
             this[method] = (...args) => {
                 if (!this.enabled) return
 
-                if (coreLevels.includes(method)) {
+                if (coreMethods.includes(method)) {
                     const methodWeight = this.levelOrder[method] || this.#defaultLogLevel
                     if (methodWeight > this.#logLevel) return
 
@@ -194,6 +205,9 @@ class Logger {
         this.#logLevel = this.#resolveLevel(opts.logLevel) || this.#logLevel
     }
 
+    /** Set the log level
+     * @param {string|number} setLevel Level string or number: error|warn|info|debug or 1-4
+     */
     set level(setLevel) {
         if (setLevel === this.#defaultLogLevel) return
         if (!setLevel) setLevel = this.#defaultLogLevel
