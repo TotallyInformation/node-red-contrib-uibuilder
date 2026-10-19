@@ -97,6 +97,7 @@
  *   Defined as an object with CSP directive names as keys (e.g. 'default-src', 'script-src') and values as strings of allowed sources (include a trailing ';' for each directive, e.g. "'self' https:;").
  *   See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy for details of the policy format and options.
  * @property {boolean} [uibuilder.telemetryEnabled] Allow telemetry data to be collected and sent to the telemetry endpoint. See uibGlobalConfig for the endpoint URL and data collection details.
+ * @property {object} [uibuilder.logger] Control uibuilder's custom logging module (see nodes/libs/logger.mjs)
  *
  * @property {string} coreNodesDir Folder containing Node-RED core nodes
  * @property {string} version Node-RED version
@@ -739,6 +740,21 @@
  *          };
  *      };
  * }} uibPackageJson
+ */
+
+/** uibCustomLogger
+ * @typedef {Console & {
+ *   enabled: boolean,
+ *   filePath: string,
+ *   levelMap: Record<string, string>,
+ *   showLocation: boolean,
+ *   supportsColor: boolean,
+ *   icon: string,
+ *   icons: string[],
+ *   colors: string[],
+ *   level: string|number,
+ * }} uibCustomLogger Custom logger object (nodes/libs/logger.mjs).
+ *   All console methods plus additional vars
  */
 
 /** routeDefinition
