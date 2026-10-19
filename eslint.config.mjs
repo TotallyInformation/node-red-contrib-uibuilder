@@ -65,7 +65,6 @@ export default defineConfig([
             pluginPromise.configs['flat/recommended'],
         ],
         settings: {
-            // jsdoc: { mode: 'jsdoc', },
             jsdoc: { mode: 'permissive', }, // or 'typescript' or closure
         },
         rules: {
@@ -113,7 +112,7 @@ export default defineConfig([
             'import-x/flat/recommended',
         ],
         settings: {
-            jsdoc: { mode: 'jsdoc', },
+            jsdoc: { mode: 'permissive', }, // or 'typescript' or closure
         },
         rules: {
             ...jsdocRules,
@@ -159,7 +158,7 @@ export default defineConfig([
             // sonarjs.configs.recommended
         ],
         settings: {
-            jsdoc: { mode: 'jsdoc', },
+            jsdoc: { mode: 'permissive', }, // or 'typescript' or closure
             // Better to pick up from package.json unless needing to override
             // package.json is restricted to >=v18 to match Node-RED. We want at least v18.4
             node: { version: nodeVersion, },
@@ -206,7 +205,7 @@ export default defineConfig([
             pluginSecurity.configs.recommended,
         ],
         settings: {
-            jsdoc: { mode: 'jsdoc', },
+            jsdoc: { mode: 'permissive', }, // or 'typescript' or closure
             // Override for node.js current LTS (assuming the use of ESBUILD)
             // Better to pick up from package.json unless needing to override
             node: { version: nodeVersion, },
