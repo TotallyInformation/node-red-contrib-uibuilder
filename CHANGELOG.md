@@ -72,6 +72,9 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
   * `instanceClose` function now uses a sync folder remove to ensure the folder is removed before Node-RED restarts the flows. This was previously occasionally causing issues. Log output also improved.
   * New function `sanitiseUrl(urlPath)` - matches the editor plugin function, see below. Used in API and npm processing.
 
+* `web.cjs`
+  * Many thanks to [ryanmurdoc](https://github.com/ryanmurdoc) for contributing 2 new methods: `appStack` and `layerRegexp` along with code to remove older ExpressJS v4 expressions, enabling this module and UIBUILDER to be ready for a switch to ExpressJS v5.
+
 * Editor plugin (`editor-common.js`)
   * Added `uibuilder.sanitiseUrl(urlPath)` function to allow url paths (e.g. the "url" name of a uibuilder node) to be made safe for use in URLs. Returns `null` if path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls are included in the path. Else returns the path.
 
@@ -80,6 +83,18 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 * `adminRouterV3.cjs`
   * Additional safety/security checks on user input.
+
+* New Module: `logger.mjs` - A custom logging class singleton with colourised output. Output is disabled by default. Setting the environment variable `TI_ENV` to "debug" before starting node-red will enable it. Otherwise control as shown below. Setting the environment variable `TI_LOGGER` not only enables output but also sets the output level, valid levels are error|warn|info|debug.
+  
+  Adds colour, timestamp and icons. Can be turned on/off. Gives correct traces. Passes through anything it doesn't enhance. Enhances 'log', 'info', 'warn', 'error', 'debug', and 'trace'. Can be set to _output to a file_ instead of stdout/stderr. Output levels can also be set to one of 'error', 'warn', 'info', 'debug'/'log' or 1-4 (default=4). Also has a level map function if needed in case you want to override a log level. This is used for internal logging.
+
+  The enhanced methods have colorised output with a timestamp, level indicator and icons.
+
+  Unlike Node-RED's native logging, this module allows multiple, complex outputs in a single log call.
+  
+  Default is for `enabled` to be false. But this can the `level` can be set in the uibuilder property of settings.js. e.g. `uibuilder{ logging: { enabled: true, level: 'debug'} },`. However, do note that the settings are loaded early in the runtime plugin and so output will not happen until after the settings are loaded. If needed earlier, set `log.enabled = true` manually.
+  
+  Manual settings are dynamic but they are global.
 
 ## Older changes
 

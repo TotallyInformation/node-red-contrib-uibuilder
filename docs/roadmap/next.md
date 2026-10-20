@@ -72,6 +72,7 @@ updated: 2026-10-13 15:30:43
 
 * [ ] Document the CSP overrides and how to use them.
 * [_] Remove docsify-darklight-theme dependency as it is dated and not being used. Will remove a bunch of audit failures. JS already not used, needs consolidation of the CSS.
+* [ ] Document the new logger.mjs module including actual use (uib-runtime-plugin.js) and JSDoc.
 
 ### uibuilder node
 
