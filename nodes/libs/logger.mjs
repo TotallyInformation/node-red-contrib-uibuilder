@@ -50,12 +50,13 @@
  * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger custom logger
  */
 
-// TODOL add options to turn on/off file-name/class-name/fn-name/line-location
+// TODO add options to turn on/off file-name/class-name/fn-name/line-location
+// TODO add local override - allowing a specific module, class or fn/method to be set to a different level or turned off
 
 import fs from 'node:fs'
 import { format, styleText } from 'node:util' // eslint-disable-line n/no-unsupported-features/node-builtins
 
-// const cons = console
+const cons = console
 
 /** @type {uibCustomLogger} */
 class Logger {
@@ -130,6 +131,42 @@ class Logger {
                     const chkStack = new Error()
                     chkStack.name = ''
                     Error.captureStackTrace(chkStack, this[method])
+
+                    // Collect *all* uibuilder frames, nearest caller first
+                    const stackLines = chkStack.stack.split('\n') // .slice(1) // only keeps current & immediate parent
+                    const uibRegEx = /\s*at\s(.*)\(.*node-red-contrib-uibuilder[\\/]nodes[\\/](.+)\)$/
+
+                    const uibFrames = stackLines.map((line) => {
+                        const m = line.match(uibRegEx)
+                        if (!m) return null
+                        const parts = m[2]
+                            .replace(/\\/g, '/')
+                            .replace(/\.(c|m)?js/, '')
+                            .split(':')
+                        const caller = m[1].trim() === 'Object.<anonymous>' ? '' : m[1].trim()
+                        return {
+                            caller: caller,
+                            file: parts[0], // e.g. 'modules/myModule'
+                            // line: parts[1],
+                            // col: parts[2],
+                            // chainIncr: caller ? 2 : 1,
+                        }
+                    }).filter(Boolean)
+                    const chainParts = []
+                    let lastFile = null
+                    for (const f of uibFrames) {
+                        const base = f.file.replace(/.*\//, '')
+                        // Caller always shown (method names are the "positions" in the chain)
+                        if (f.caller) chainParts.push(f.caller)
+                        // File only when it differs from the previously shown one
+                        if (base !== lastFile) {
+                            chainParts.push(base)
+                            lastFile = base
+                        }
+                    }
+                    const depth = chainParts.length
+                    const chainStr = ` [d${depth}: ${chainParts.join(' ← ')}]`
+                    cons.log({chainStr})
 
                     const stackLine = chkStack.stack.split('\n', 2)[1] || ''
                     let caller = ''
