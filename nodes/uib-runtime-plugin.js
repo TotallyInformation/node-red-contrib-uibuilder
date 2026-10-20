@@ -213,7 +213,7 @@ function setupUibFs() {
 
 /** Called when the plugin is added to the editor - is passed the RED global object */
 function onAdd() {
-    clog.debug('onAdd started, uib.RED populated?', uib.RED !== null)
+    // clog.debug('onAdd started, uib.RED populated?', uib.RED !== null)
     if ( uib.RED === null ) return
     const RED = uib.RED
 
@@ -303,7 +303,7 @@ function onAdd() {
         ...RED.util.uib,
     }
 
-    clog.debug('onAdd ended')
+    // clog.debug('onAdd ended')
 }
 
 /** 1) The function that defines the plugin - we also set up the uibuilder global config and root folder here.
@@ -311,7 +311,7 @@ function onAdd() {
  */
 function pluginDefinition(RED) {
     // RED.log.trace('🌐[uibuilder:runtimeSetup] ----------------- global config started -----------------')
-    clog.debug('pluginDefinition started')
+    clog.debug('+ started')
 
     // RED.events.on('runtime-event', function(event) {
     //     console.log(`🌐[uibuilder:runtimeSetup:runtime-event] ID: ${event.id}`)
@@ -324,7 +324,10 @@ function pluginDefinition(RED) {
     setupUibFs()
 
     /** (b) Do this before doing the web setup so that the packages can be served but after the folder/file setup */
+    // ! This is SLOW - ~800ms on a clean install with 1 uibuilder, no packages
+    clog.debug('>> packageMgt setup')
     packageMgt.setup()
+    clog.debug('<< packageMgt setup')
 
     /** (c) We need an ExpressJS web server to serve the page, socket.io and vendor packages. */
     const web = require('./libs/web.cjs')
@@ -435,7 +438,7 @@ function pluginDefinition(RED) {
     RED.log.trace('🌐[uibuilder:runtimeSetup] ----------------- global config complete -----------------')
     RED.events.emit('UIBUILDER/runtimeSetupComplete', uib)
 
-    clog.debug('pluginDefinition completed')
+    clog.debug('- completed')
 }
 
 // Export the plugin definition (1), this is consumed by Node-RED on startup.
