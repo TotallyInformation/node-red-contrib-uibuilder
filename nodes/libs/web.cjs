@@ -1,5 +1,4 @@
 /* eslint-disable @stylistic/max-statements-per-line */
-/* eslint-disable jsdoc/valid-types */
 /** Manage ExpressJS on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
  *
@@ -29,12 +28,16 @@
  * @typedef {import('express').Request} ExpressRequest
  * @typedef {import('express').NextFunction} ExpressNextFunction
  * @typedef {import('express').Router} ExpressRouter
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  */
+
+const { /** @type {uibCustomLogger} */ log: clog, } = require('./logger.mjs')
+clog.debug('Loading')
 
 const { join, parse, } = require('path')
 const express = require('express')
 const { accessSync, existsSync, fgSync, mkdirSync, readFile, } = require('./fs.cjs')
-const { mylog, urlJoin, } = require('./tilib.cjs') // dumpReq, mylog
+const { urlJoin, } = require('./tilib.cjs') // dumpReq
 
 // WARNING: Don't try to deconstruct these, if you do, some things fail because they lose the correct `this` binding
 const packageMgt = require('./package-mgt.cjs')
@@ -93,6 +96,9 @@ class UibWeb {
      * @type {Object<string, express.Router>}
      */
     instanceRouters = {}
+
+    /** Routers mounted on the app, by url, so they can be removed on redeploy (ExpressJS v4 & v5) PR #662 @ryanmurdoc */
+    mountedRouters = {}
 
     /** ExpressJS Route Metadata */
     routers = { admin: [], user: [], instances: {}, config: {}, }
@@ -379,13 +385,9 @@ class UibWeb {
         // Assign the uibRouter to the ../uibuilder url path
         this.app.use( urlJoin(uib.moduleName), this.uibRouter )
 
+        // TODO: Remove after debug
         // this.server.setTimeout(30000)
-        // console.log({
-        //     timeout: this.server.timeout,          // socket inactivity (default: 0 since v13)
-        //     headersTimeout: this.server.headersTimeout,   // max time to receive request headers (default: 60000)
-        //     keepAliveTimeout: this.server.keepAliveTimeout, // idle keep-alive connections (default: 5000)
-        //     requestTimeout: this.server.requestTimeout,   // max time to receive full request (default: 300000)
-        // })
+        this.debugExpressProps(this.server)
     } // --- End of webSetup() --- //
 
     /** Return a dynamic index page of all uibuilder user-accessible endpoints on /uibuilder/apps
@@ -521,6 +523,7 @@ class UibWeb {
         if (!pj) throw new Error('web.js:serveVendorPackages: pj is undefined or null')
         if ( pj.dependencies === undefined ) throw new Error('web.js:serveVendorPackages: pj.dependencies is undefined')
 
+        const previousVendorRouter = this.vendorRouter // PR #662 @ryanmurdoc
         /** Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/vendor/`
          * @type {ExpressRouter & {myname?: string}}
          */
@@ -529,7 +532,7 @@ class UibWeb {
 
         // Remove the vendor router if it already exists - we will recreate it. `some` stops once it has found a result
         this.uibRouter.stack.some((layer, i, aStack) => {
-            if ( layer.regexp.toString() === '/^\\/vendor\\/?(?=\\/|$)/i' ) {
+            if ( (previousVendorRouter && layer.handle === previousVendorRouter) || this.layerRegexp(layer) === '/^\\/vendor\\/?(?=\\/|$)/i' ) { // PR #662 @ryanmurdoc
                 aStack.splice(i, 1)
                 return true
             }
@@ -600,7 +603,7 @@ class UibWeb {
     // #endregion ==== End of Setup ==== //
 
     /** Allow the isConfigured flag to be read (not written) externally
-     * @returns {boolean} True if this class as been configured
+     * @return {boolean} True if this class as been configured
      */
     get isConfigured() {
         return this.#isConfigured
@@ -608,16 +611,21 @@ class UibWeb {
 
     // #region ====== Per-node instance processing ====== //
 
-    /** Remove an ExpressJS router from the stack
+    /** Remove an ExpressJS router from the stack - updated for Express v4/v5 by PR #662 @ryanmurdoc
      * @param {string} url The url of the router to remove
      */
     removeRouter(url) {
-        this.app._router.stack.forEach( (route, i, routes) => {
-            if (route.regexp.toString() === `/^\\/${url}\\/?(?=\\/|$)/i` ) {
-                routes.splice(i, 1)
+        const mounted = this.mountedRouters[url]
+        const stack = this.appStack(this.app)
+        // Walk backwards so splicing doesn't skip entries
+        for (let i = stack.length - 1; i >= 0; i--) {
+            const layer = stack[i]
+            if ( (mounted && layer.handle === mounted) || this.layerRegexp(layer) === `/^\\/${url}\\/?(?=\\/|$)/i` ) {
+                stack.splice(i, 1)
             }
-        })
-    } // ---- End of removeRouter ---- //
+        }
+        delete this.mountedRouters[url]
+    }
 
     /** Setup the web resources for a specific uibuilder instance
      * @param {uibNode} node Reference to the uibuilder node instance
@@ -726,6 +734,7 @@ class UibWeb {
 
         // Apply this instances router to the url path on `<httpNodeRoot>/<url>/`
         this.app.use( routeSpec, this.instanceRouters[node.url])
+        this.mountedRouters[node.url] = this.instanceRouters[node.url]
 
         // this.dumpUserRoutes(true)
         // this.dumpInstanceRoutes(true, node.url)
@@ -850,7 +859,7 @@ class UibWeb {
     /** (2b) Front-end code is mounted here - Add static ExpressJS route for an instance local resource files
      * Called on startup but may also be called if user changes setting Advanced/Serve
      * @param {uibNode} node Reference to the uibuilder node instance
-     * @returns {express.RequestHandler} serveStatic for the folder containing the front-end code
+     * @return {express.RequestHandler} serveStatic for the folder containing the front-end code
      */
     setupInstanceStatic(node) {
         // Reference static vars
@@ -909,7 +918,7 @@ class UibWeb {
 
     /** (1c) Load & return an ExpressJS Router from file(s) in <uibRoot>/<node.url>/api/*.js
      * @param {uibNode} node Reference to the uibuilder node instance
-     * @returns {object|undefined} Valid instance router or undefined
+     * @return {object|undefined} Valid instance router or undefined
      */
     addInstanceApiRouter(node) {
         // Reference static vars
@@ -975,7 +984,7 @@ class UibWeb {
     /** Create instance details web page
      * @param {ExpressRequest} req ExpressJS Request object
      * @param {uibNode} node configuration data for this instance
-     * @returns {string} page html
+     * @return {string} page html
      */
     showInstanceDetails(req, node) {
         // Reference static vars
@@ -1255,6 +1264,41 @@ class UibWeb {
 
     // #region ==== ExpressJS Route & other Reporting ==== //
 
+    /** Get the layer stack of an ExpressJS app's base router (ExpressJS v4 or v5). PR #662 @ryanmurdoc
+     * v5 renamed `app._router` to `app.router`. On v4, reading `app.router` throws.
+     * @param {*} app ExpressJS app
+     * @return {Array<*>} The router's layer stack (empty if none yet)
+     */
+    appStack(app) {
+        let router
+        try { router = app.router } catch (e) { router = undefined }
+        router = router || app._router
+        return router ? router.stack : []
+    }
+
+    /** For ExpressJS v5 layers (no regexp): work out a display path from what uibuilder mounted. PR #662 @ryanmurdoc
+     * @param {*} L Express Route Stack Layer
+     * @return {string} Display path
+     */
+    layerPath(L) {
+        if (L.route) return L.route.path
+        for (const url of Object.keys(this.mountedRouters)) {
+            if (this.mountedRouters[url] === L.handle) return `/${url}/`
+        }
+        if (this.vendorRouter && L.handle === this.vendorRouter) return '/vendor/'
+        if (this.uibRouter && L.handle === this.uibRouter) return `/${this.uib.moduleName}/`
+        if (this.adminRouter && L.handle === this.adminRouter) return `/${this.uib.moduleName}/`
+        return '/'
+    }
+
+    /** Return a layer's ExpressJS v4 regexp as a string, or undefined on ExpressJS v5 (which has no layer.regexp). PR #662 @ryanmurdoc
+     * @param {*} layer ExpressJS router layer
+     * @return {string|undefined} The regexp as a string
+     */
+    layerRegexp(layer) {
+        return layer && layer.regexp ? layer.regexp.toString() : undefined
+    }
+
     /** Summarise Express route properties
      * @param {*} L Express Route Stack Layer
      * @param {*} out Save to
@@ -1264,8 +1308,10 @@ class UibWeb {
 
         const x = {
             name: L.name,
-            path:
-                L.regexp.toString()
+            // Enhanced for ExpressJS v5 by PR #662 @ryanmurdoc
+            path: !L.regexp
+                ? this.layerPath(L)
+                : L.regexp.toString()
                     .replace('/^\\', '')
                     .replace('\\/?(?=\\/|$)/i', '/')
                     .replace('\\/?$/i', '/')
@@ -1277,7 +1323,7 @@ class UibWeb {
 
         if (L.route !== undefined) {
             if ( !L.route.stack[0].method ) x.route = Object.keys(L.route.methods).join(',')
-            else x.route = `${L.route.stack[0].method}:${L.route.stack[0].regexp}`
+            else x.route = `${L.route.stack[0].method}:${L.route.stack[0].regexp ?? L.route.path}` // PR #662 @ryanmurdoc
         }
 
         const pkgs = packageMgt.uibPackageJson.uibuilder.packages
@@ -1296,7 +1342,7 @@ class UibWeb {
     /** Return a summary of all the ExpressJS routes for a specific uibuilder instance & output to console if required
      * @param {boolean} print If true, output to console
      * @param {string|null} [url] Optional. If not null, only dump the given instance
-     * @returns {any} Summary object
+     * @return {any} Summary object
      */
     dumpInstanceRoutes(print = true, url = null) {
         const instances = {}
@@ -1329,13 +1375,13 @@ class UibWeb {
 
     /** Return a summary of all the admin-facing ExpressJS routes (not just uibuilder) & output to console if required
      * @param {boolean} print If true, output to console
-     * @returns {any} Summary object
+     * @return {any} Summary object
      */
     dumpAdminRoutes(print = true) {
         const routes = { app: [], admin: [], v3: [], v2: [], }
 
-        // @ts-expect-error
-        for ( const layer of this.RED.httpAdmin._router.stack) { this.summariseRoute(layer, routes.app) }
+        // Enhanced for ExpressJS v5 by PR #662 @ryanmurdoc
+        for ( const layer of this.appStack(this.RED.httpAdmin)) { this.summariseRoute(layer, routes.app) }
         if (this.adminRouter) for ( const layer of this.adminRouter.stack) { this.summariseRoute(layer, routes.admin) }
         if (adminRouterV3) for ( const layer of adminRouterV3.stack) { this.summariseRoute(layer, routes.v3) }
         if (adminRouterV2) for ( const layer of adminRouterV2.stack) { this.summariseRoute(layer, routes.v2) }
@@ -1362,13 +1408,13 @@ class UibWeb {
 
     /** Return a summary of all the user-facing uibuilder specific ExpressJS routes & output to console if required
      * @param {boolean} print If true, output to console
-     * @returns {any} Summary object
+     * @return {any} Summary object
      */
     dumpUserRoutes(print = true) {
         const routes = { app: [], uibRouter: [], vendorRouter: [], }
 
-        // Get the client-facing routes
-        for ( const layer of this.app._router.stack) { this.summariseRoute(layer, routes.app) }
+        // Get the client-facing routes. Enhanced for ExpressJS v5 by PR #662 @ryanmurdoc
+        for ( const layer of this.appStack(this.app)) { this.summariseRoute(layer, routes.app) }
         if (this.uibRouter) for ( const layer of this.uibRouter.stack) { this.summariseRoute(layer, routes.uibRouter) }
         if (this.vendorRouter) for ( const layer of this.vendorRouter.stack) { this.summariseRoute(layer, routes.vendorRouter) }
 
@@ -1390,7 +1436,7 @@ class UibWeb {
 
     /** Return a summary of all of the ExpressJS routes and output to console if required
      * @param {boolean} print If true, output to console
-     * @returns {any} Summary object
+     * @return {any} Summary object
      */
     dumpRoutes(print = true) {
         const o = {
@@ -1415,37 +1461,62 @@ class UibWeb {
         return o
     }
 
-    /** Dump to mylog important ExpressJS properties
-     * @param {object} req Express Request object
-     * @param {object} res Express Response Object
+    /** Dump to clog important ExpressJS properties
+     * @param {object} [server] Optional. The ExpressJS/http/https server object
+     * @param {object} [req] Optional. Express Request object
+     * @param {object} [res] Optional. Express Response Object
      */
-    dumpExpressReqAppRes(req, res) {
-        const log = mylog
-
-        const r = req
-
-        log('>> REQ >>', {
-            baseUrl: r.baseUrl,
-            body: r.body,
-            cookies: r.cookies,
-            fresh: r.fresh,
-            hostname: r.hostname,
-            httpVersion: r.httpVersion,
-            ip: r.ip, // remote ip of request, proxy dependent
-            ips: r.ips, // list of forwarded ips if proxy set
-            method: r.method,
-            originalUrl: r.originalUrl,
-            params: r.params,
-            path: r.path,
-            protocol: r.protocol,
-            query: r.query,
-            route: r.route,
-            secure: r.secure,
-            stale: r.stale, // opposite of fresh
-            subdomains: r.subdomains,
-            url: r.url, // from node.js url
-            xhr: r.xhr,
-        })
+    debugExpressProps(server, req, res) {
+        if (server) {
+            clog.debug('SERVER SETTINGS:', {
+                timeout: this.server.timeout, // socket inactivity (default: 0 since v13)
+                headersTimeout: this.server.headersTimeout, // max time to receive request headers (default: 60000)
+                keepAliveTimeout: this.server.keepAliveTimeout, // idle keep-alive connections (default: 5000)
+                requestTimeout: this.server.requestTimeout, // max time to receive full request (default: 300000)
+            })
+        }
+        if (req) {
+            const r = req
+            clog.debug('SERVER REQUEST PROPERTIES:', {
+                baseUrl: r.baseUrl,
+                body: r.body,
+                cookies: r.cookies,
+                fresh: r.fresh,
+                hostname: r.hostname,
+                httpVersion: r.httpVersion,
+                ip: r.ip, // remote ip of request, proxy dependent
+                ips: r.ips, // list of forwarded ips if proxy set
+                method: r.method,
+                originalUrl: r.originalUrl,
+                params: r.params,
+                path: r.path,
+                protocol: r.protocol,
+                query: r.query,
+                route: r.route,
+                secure: r.secure,
+                stale: r.stale, // opposite of fresh
+                subdomains: r.subdomains,
+                url: r.url, // from node.js url
+                xhr: r.xhr,
+                security: {
+                    'authInfo': req.authInfo,
+                    'isAuthenticated': req.isAuthenticated,
+                    'isUnauthenticated': req.isUnauthenticated,
+                    'user': req.user,
+                    'secure': req.secure,
+                    'socket.remoteAddress': req?.socket?.remoteAddress,
+                    'socket.handshake.auth': req?.socket?.handshake?.auth,
+                },
+                headers: req.headers,
+            })
+        }
+        if (res) {
+            const r = res
+            clog.debug('SERVER RESULT PROPERTIES:', {
+                statusMessage: r.statusMessage,
+                props: Object.keys(r),
+            })
+        }
     } // --- end of dumpReq --- //
 
     // #endregion ==== ExpressJS Route Reporting ==== //
@@ -1455,7 +1526,7 @@ class UibWeb {
     /** Build a raw HTML table from an input
      * @param {*} input Input object
      * @param {Array} [cols] List of columns
-     * @returns {string} HTML Table
+     * @return {string} HTML Table
      */
     htmlBuildTable(input, cols) {
         if (!cols) {
@@ -1476,7 +1547,7 @@ class UibWeb {
         /** The HTML for a single cell
          * @param {*} col _
          * @param {*} entry _
-         * @returns {string} HTML for a single cell
+         * @return {string} HTML for a single cell
          */
         function cell(col, entry) {
             let html = '<td>'
@@ -1515,3 +1586,5 @@ class UibWeb {
  */
 const uiweb = new UibWeb()
 module.exports = uiweb
+
+clog.debug('Loaded')
