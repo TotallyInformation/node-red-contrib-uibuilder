@@ -1,5 +1,4 @@
 /* eslint-disable jsdoc/no-multi-asterisks */
-/* eslint-disable jsdoc/valid-types */
 /** v2 Admin API ExpressJS Router Handler
  *
  * See: https://expressjs.com/en/4x/api.html#router, https://expressjs.com/en/guide/routing.html
@@ -23,7 +22,12 @@
 
 /** --- Type Defs ---
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  */
+
+// Will auto-enable if TI_ENV environment variable is set to "debug"
+const { /** @type {uibCustomLogger} */ log: clog, } = require('./logger.mjs')
+clog.debug('Loading')
 
 const express = require('express')
 const path = require('path')
@@ -51,7 +55,7 @@ const v2AdminRouter = express.Router()
 /** Validate url query parameter
  * @param {object} params The GET (res.query) or POST (res.body) parameters
  * @param {string} params.url The uibuilder url to check
- * @returns {{statusMessage: string, status: number}} Status message
+ * @return {{statusMessage: string, status: number}} Status message
  */
 function chkParamUrl(params) {
     const res = { statusMessage: '', status: 0, }
@@ -100,7 +104,7 @@ function chkParamUrl(params) {
 /** Validate fname (filename) query parameter
  * @param {object} params The GET (res.query) or POST (res.body) parameters
  * @param {string} params.fname The uibuilder url to check
- * @returns {{statusMessage: string, status: number}} Status message
+ * @return {{statusMessage: string, status: number}} Status message
  */
 function chkParamFname(params) {
     const res = { statusMessage: '', status: 0, }
@@ -138,7 +142,7 @@ function chkParamFname(params) {
 /** Validate folder query parameter
  * @param {object} params The GET (res.query) or POST (res.body) parameters
  * @param {string} params.folder The uibuilder url to check
- * @returns {{statusMessage: string, status: number}} Status message
+ * @return {{statusMessage: string, status: number}} Status message
  */
 function chkParamFldr(params) {
     const res = { statusMessage: '', status: 0, }
@@ -177,7 +181,7 @@ function chkParamFldr(params) {
 
 /** Get the actual URL prefix for uibuilder admin pages
  * @param {express.Request} req ExpressJS request object
- * @returns {string} The URL prefix
+ * @return {string} The URL prefix
  */
 function getUrlPrefix(req) {
     // If using own Express server, correct the URL's
@@ -194,7 +198,7 @@ function getUrlPrefix(req) {
 
 /** uibuilder detailed information page
  * @param {string} urlPrefix The URL href prefix
- * @returns {string} HTML string output
+ * @return {string} HTML string output
  */
 function detailsPage(urlPrefix) {
     if (uib.rootFolder === null) throw errUibRootFldr
@@ -458,7 +462,7 @@ function detailsPage(urlPrefix) {
 }
 
 /** Return diagnostics information as JSON
- * @returns {object} An object containing diagnostics information
+ * @return {object} An object containing diagnostics information
  */
 function diagnostics() {
     const RED = uib.RED
@@ -487,7 +491,7 @@ function diagnostics() {
 
 /** Return an HTML page listing all uib instances (apps) with details
  * @param {string} urlPrefix The URL href prefix
- * @returns {string} HTML string output
+ * @return {string} HTML string output
  */
 function appsPage(urlPrefix) {
     const apps = uib.apps
@@ -881,3 +885,5 @@ v2AdminRouter.get('/uibnpmmanage', function(/** @type {express.Request} */ req, 
 
 // module.exports = adminRouterV2
 module.exports = v2AdminRouter
+
+clog.debug('Loaded')

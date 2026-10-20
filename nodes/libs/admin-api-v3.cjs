@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/valid-types */
 /** v3 Admin API ExpressJS Router Handler
  *
  * See: https://expressjs.com/en/4x/api.html#router, https://expressjs.com/en/guide/routing.html
@@ -22,7 +21,12 @@
 
 /** --- Type Defs ---
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  */
+
+// Will auto-enable if TI_ENV environment variable is set to "debug"
+const { /** @type {uibCustomLogger} */ log: clog, } = require('./logger.mjs')
+clog.debug('Loading')
 
 const path = require('node:path')
 const { AsyncLocalStorage, } = require('node:async_hooks') // https://nodejs.org/docs/latest-v18.x/api/async_context.html#class-asynclocalstorage
@@ -59,7 +63,7 @@ const runningProcesses = new Map()
  * NB: The URL param only has to be a potentially valid name, it doesn't have to exist
  * @param {object} params The GET (res.query) or POST (res.body) parameters
  * @param {string} params.url The uibuilder url to check
- * @returns {{statusMessage: string, status: number}} Status message
+ * @return {{statusMessage: string, status: number}} Status message
  */
 function chkParamUrl(params) {
     const res = { statusMessage: '', status: 0, }
@@ -118,7 +122,7 @@ function chkParamUrl(params) {
 /** Validate fname (filename) query parameter
  * @param {object} params The GET (res.query) or POST (res.body) parameters
  * @param {string} params.fname The uibuilder url to check
- * @returns {{statusMessage: string, status: number}} Status message
+ * @return {{statusMessage: string, status: number}} Status message
  */
 function chkParamFname(params) {
     const res = { statusMessage: '', status: 0, }
@@ -156,7 +160,7 @@ function chkParamFname(params) {
 /** Validate folder query parameter
  * @param {object} params The GET (res.query) or POST (res.body) parameters
  * @param {string} params.folder The uibuilder url to check
- * @returns {{statusMessage: string, status: number}} Status message
+ * @return {{statusMessage: string, status: number}} Status message
  */
 function chkParamFldr(params) {
     const res = { statusMessage: '', status: 0, }
@@ -274,7 +278,7 @@ const log = uib.RED.log
  * @param {string} processId Process ID to kill
  * @param {string} url The URL of the request
  * @param {string} scriptName The name of the script to kill
- * @returns {boolean} True if the process was killed, else false
+ * @return {boolean} True if the process was killed, else false
  */
 function killRunningProcess(processId, url, scriptName) {
     const process = runningProcesses.get(processId)
@@ -370,7 +374,7 @@ v3AdminRouter.route('/:url')
             case 'checkurls': {
                 log.trace(`🌐[uibuilder[:adminRouterV3:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
 
-                /** @returns {boolean} True if the given url exists, else false */
+                /** @return {boolean} True if the given url exists, else false */
                 const chkInstances = Object.values(uib.instances).includes(params.url)
                 const chkFolders = fslib.existsSync(uib.rootFolder, params.url)
 
@@ -522,7 +526,7 @@ v3AdminRouter.route('/:url')
             case 'listinstances': {
                 log.trace('🌐[uibuilder:adminRouterV3:GET:listinstances] Returning a list of deployed URLs (instances of uib).')
 
-                /** @returns {boolean} True if the given url exists, else false */
+                /** @return {boolean} True if the given url exists, else false */
                 // let chkInstances = Object.values(uib.instances).includes(params.url)
                 // let chkFolders = fslib.existsSync(path.join(uib.rootFolder, params.url))
 
@@ -891,3 +895,5 @@ v3AdminRouter.route('/:url')
  */
 
 module.exports = v3AdminRouter
+
+clog.debug('Loaded')
