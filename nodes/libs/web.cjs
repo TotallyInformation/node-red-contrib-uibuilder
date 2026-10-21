@@ -396,7 +396,9 @@ class UibWeb {
      * param {Function} next Function to pass to next handler
      */
     _serveUserUibIndex() {
-        this.uibRouter.get('/apps', (req, res, next) => {
+        const instances = this.uib.instances
+        const apps = this.uib.apps
+        this.uibRouter.get('/apps', function userUibIndex(req, res, next) {
             // Build the web page
             let page = `
                 <!doctype html><html lang="en"><head>
@@ -416,10 +418,10 @@ class UibWeb {
                     <div><ul>
             `
 
-            if ( Object.keys(this.uib.instances).length === 0 ) {
+            if ( Object.keys(instances).length === 0 ) {
                 page += '<p>Instance list not yet ready, please try again</p>'
             } else {
-                for ( let [url, data] of uiblib.sortApps(Object.entries(this.uib.apps)) ) { // eslint-disable-line prefer-const
+                for ( let [url, data] of uiblib.sortApps(Object.entries(apps)) ) { // eslint-disable-line prefer-const
                     const title = data.title.length === 0 ? '' : `: ${data.title}`
                     const descr = data.descr.length === 0 ? '' : `<div>${data.descr}</div>`
                     page += `
@@ -594,7 +596,7 @@ class UibWeb {
     servePing() {
         if (this.uibRouter === undefined) throw new Error('this.uibRouter is undefined')
 
-        this.uibRouter.get('/ping', (req, res) => {
+        this.uibRouter.get('/ping', function servePing(req, res) {
             res.status(204).end()
         })
         this.routers.user.push( { name: 'Ping', path: `${this.uib.httpRoot}/uibuilder/ping`, desc: 'Ping/keep-alive endpoint, returns 201', type: 'Endpoint', } )
@@ -714,7 +716,7 @@ class UibWeb {
                 }
             }
             return next()
-        }) // --- End of render views --- //
+        })
 
         // (2b) THIS IS THE IMPORTANT ONE - It is the main instance handler
         this.instanceRouters[node.url].use( handler )
@@ -981,17 +983,21 @@ class UibWeb {
         return undefined
     } // ---- End of getInstanceApiRouter ---- //
 
-    /** Create instance details web page
+    /** Create instance details web page using either a reference to the node or the nodeId
      * @param {ExpressRequest} req ExpressJS Request object
-     * @param {uibNode} node configuration data for this instance
+     * @param {uibNode=} node configuration data for this instance
+     * @param {string=} nodeId A node's id instead of the node instance ref
      * @return {string} page html
      */
-    showInstanceDetails(req, node) {
+    showInstanceDetails(req, node, nodeId) {
         // Reference static vars
         const uib = this.uib
         const RED = this.RED
         const userDir = RED.settings.userDir
         // const log = this.log
+
+        // If !node, get a reference to the node using the nodeId
+        if ( !node ) node = RED.nodes.getNode(nodeId)
 
         let page = ''
 
@@ -1000,23 +1006,21 @@ class UibWeb {
         let url = {}
         try {
             url = new URL(req.headers.referer)
-        } catch (error) { }
-        url.pathname = ''
-        // @ts-expect-error
-        if (uib.customServer && uib.customServer.port && uib.customServer.port != RED.settings.uiPort ) {
-            // http://127.0.0.1:3001/uibuilder/vendor/bootstrap/dist/css/bootstrap.min.css
-            // customServer: { port: 3001, type: 'http', host: '::' }
-            url.port = uib.customServer.port.toString()
+        } catch (error) {
+            url = new URL(`${req.protocol}://${req.headers.host}${req.baseUrl}`)
         }
+        url.pathname = ''
+        // if (uib.customServer && uib.customServer.port && uib.customServer.port != RED.settings.uiPort ) {
+        //     // customServer: { port: 3001, type: 'http', host: '::' }
+        //     url.port = uib.customServer.port.toString()
+        // }
         const urlPrefix = url.href
-        // let urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/','')}${uib.moduleName}`
         const urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/', '')}${node.url}`
 
         const nodeKeys = [
             'id', 'type',
             'name', 'wires', '_wireCount', 'credentials', 'topic', 'url',
             'fwdInMessages', 'allowScripts', 'allowStyles', 'copyIndex', 'showfolder',
-            // 'useSecurity',
             'sessionLength', 'tokenAutoExtend', 'customFolder',
             'ioClientsCount', 'rcvMsgCount', 'ioNamespace'
         ]
@@ -1158,7 +1162,7 @@ class UibWeb {
         `
 
         return page
-    } // ---- End of showInstanceDetails ---- //
+    }
 
     /** 1) Creates a route for logging to NR from the front-end via HTTP Beacons
      * In FE code, use as: navigator.sendBeacon('./_clientLog', `pageshow. From Cache?: ${event.persisted}`)
@@ -1177,7 +1181,8 @@ class UibWeb {
         const logUrl = '/_clientLog' // e.g. https://red.local:1880/<httpRoot>/<url>/_clientLog
 
         // Only the text processor is useful since navigator.sendBeacon() only seems to send text no matter what MDN says. //express.json(), express.text(), express.urlencoded({extended: true}),
-        this.instanceRouters[node.url].post(logUrl, express.text(), (req, res) => {
+        this.instanceRouters[node.url].post(logUrl, express.text(), function beaconRoute(req, res) {
+            // NOTE: No `this` here
             log.trace(`🌐[uibuilder:web:addLogRoute:${node.url}] POST to client logger: ${req.body}`)
             res.status(204) // 204 = no content
 
@@ -1266,7 +1271,7 @@ class UibWeb {
 
     /** Get the layer stack of an ExpressJS app's base router (ExpressJS v4 or v5). PR #662 @ryanmurdoc
      * v5 renamed `app._router` to `app.router`. On v4, reading `app.router` throws.
-     * @param {*} app ExpressJS app
+     * @param {*} app ExpressJS app (this.RED.httpAdmin or this.app)
      * @return {Array<*>} The router's layer stack (empty if none yet)
      */
     appStack(app) {
