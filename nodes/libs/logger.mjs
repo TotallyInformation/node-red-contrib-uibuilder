@@ -132,41 +132,42 @@ class Logger {
                     chkStack.name = ''
                     Error.captureStackTrace(chkStack, this[method])
 
+                    // TODO Future option to show call hierarchy
                     // Collect *all* uibuilder frames, nearest caller first
-                    const stackLines = chkStack.stack.split('\n') // .slice(1) // only keeps current & immediate parent
-                    const uibRegEx = /\s*at\s(.*)\(.*node-red-contrib-uibuilder[\\/]nodes[\\/](.+)\)$/
+                    // const stackLines = chkStack.stack.split('\n') // .slice(1) // only keeps current & immediate parent
+                    // const uibRegEx = /\s*at\s(.*)\(.*node-red-contrib-uibuilder[\\/]nodes[\\/](.+)\)$/
 
-                    const uibFrames = stackLines.map((line) => {
-                        const m = line.match(uibRegEx)
-                        if (!m) return null
-                        const parts = m[2]
-                            .replace(/\\/g, '/')
-                            .replace(/\.(c|m)?js/, '')
-                            .split(':')
-                        const caller = m[1].trim() === 'Object.<anonymous>' ? '' : m[1].trim()
-                        return {
-                            caller: caller,
-                            file: parts[0], // e.g. 'modules/myModule'
-                            // line: parts[1],
-                            // col: parts[2],
-                            // chainIncr: caller ? 2 : 1,
-                        }
-                    }).filter(Boolean)
-                    const chainParts = []
-                    let lastFile = null
-                    for (const f of uibFrames) {
-                        const base = f.file.replace(/.*\//, '')
-                        // Caller always shown (method names are the "positions" in the chain)
-                        if (f.caller) chainParts.push(f.caller)
-                        // File only when it differs from the previously shown one
-                        if (base !== lastFile) {
-                            chainParts.push(base)
-                            lastFile = base
-                        }
-                    }
-                    const depth = chainParts.length
-                    const chainStr = ` [d${depth}: ${chainParts.join(' ← ')}]`
-                    cons.log({chainStr})
+                    // const uibFrames = stackLines.map((line) => {
+                    //     const m = line.match(uibRegEx)
+                    //     if (!m) return null
+                    //     const parts = m[2]
+                    //         .replace(/\\/g, '/')
+                    //         .replace(/\.(c|m)?js/, '')
+                    //         .split(':')
+                    //     const caller = m[1].trim() === 'Object.<anonymous>' ? '' : m[1].trim()
+                    //     return {
+                    //         caller: caller,
+                    //         file: parts[0], // e.g. 'modules/myModule'
+                    //         // line: parts[1],
+                    //         // col: parts[2],
+                    //         // chainIncr: caller ? 2 : 1,
+                    //     }
+                    // }).filter(Boolean)
+                    // const chainParts = []
+                    // let lastFile = null
+                    // for (const f of uibFrames) {
+                    //     const base = f.file.replace(/.*\//, '')
+                    //     // Caller always shown (method names are the "positions" in the chain)
+                    //     if (f.caller) chainParts.push(f.caller)
+                    //     // File only when it differs from the previously shown one
+                    //     if (base !== lastFile) {
+                    //         chainParts.push(base)
+                    //         lastFile = base
+                    //     }
+                    // }
+                    // const depth = chainParts.length
+                    // const chainStr = ` [d${depth}: ${chainParts.join(' ← ')}]`
+                    // cons.log(chainStr)
 
                     const stackLine = chkStack.stack.split('\n', 2)[1] || ''
                     let caller = ''
@@ -187,6 +188,7 @@ class Logger {
                         }
                     }
 
+                    // TODO Future option
                     // if (this.showLocation) {
 
                     // }
@@ -195,10 +197,8 @@ class Logger {
                         out = [chkStack.stack]
                     }
 
-                    // if (typeof out[0] !== 'string') out.unshift('') // we always want a string here
-                    // out[0] = `${timestamp}${this.icon}[${actualMethod.toUpperCase().padEnd(5)} ${this.icons[actualMethod]}] ${_file[0]}${caller}: ${out[0]} (${_file[1]}:${_file[2]})`
+                    // out.unshift(`${timestamp}${this.icon}[${actualMethod.toUpperCase().padEnd(5)} ${this.icons[actualMethod]}] ${' '.repeat(depth)}${_file[0]}${caller}(${_file[1]}:${_file[2]}):`)
                     out.unshift(`${timestamp}${this.icon}[${actualMethod.toUpperCase().padEnd(5)} ${this.icons[actualMethod]}] ${_file[0]}${caller}(${_file[1]}:${_file[2]}):`)
-                    // out.push(`(${_file[1]}:${_file[2]})`)
 
                     if (this.#stream) {
                         const message = format(...out)
