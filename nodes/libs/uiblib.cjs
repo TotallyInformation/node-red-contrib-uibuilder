@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable jsdoc/valid-types */
 /** Utility library for uibuilder
  *
@@ -48,7 +47,7 @@ const uib = require('./uibGlobalConfig.cjs')
  * @param {Buffer} buff - A buffer containing crypto random bytes
  * @param {number} length - Number of characters in the encoded string
  * @param {number} size - Number of bytes in `buffer` to encode
- * @returns {string} Encoded string
+ * @return {string} Encoded string
  */
 function encodeNanoId(buff, length, size) {
     let bits = 0
@@ -140,7 +139,7 @@ const UibLib = {
 
     /** Get the client id from req headers cookie string OR, create a new one and return that
      * @param {*} req ExpressJS request object
-     * @returns {string} The clientID
+     * @return {string} The clientID
      */
     getClientId: function getClientId(req) {
         const uidLen = 21
@@ -167,7 +166,7 @@ const UibLib = {
      *                               Can be nested, e.g. 'prop1.prop1a'
      *                               Stops searching when the first property is found
      * @param {any} defaultAnswer - if the prop can't be found, this is returned
-     * @returns {any} The first found property value or the default answer
+     * @return {any} The first found property value or the default answer
      */
     getProps: function(RED, myObj, props, defaultAnswer = []) {
         if ( (typeof props) === 'string' ) {
@@ -317,7 +316,7 @@ const UibLib = {
          * @param {object} tree tree of pids to process
          * @param {string} signal Signal to send
          * @param {Function} [callback] Optional callback fn
-         * @returns {void|Function} Nothing unless a callback is provided
+         * @return {void|Function} Nothing unless a callback is provided
          * @throws {Error} If an error occurs during the kill process
          */
         function killAll(tree, signal, callback) {
@@ -363,7 +362,7 @@ const UibLib = {
     /** Generates a secure and URL-friendly unique ID.
      * Based on https://github.com/luavixen/foxid
      * @param {number} [length] - Length of the generated ID, defaults to 21.
-     * @returns {string} Newly generated ID as a string.
+     * @return {string} Newly generated ID as a string.
      */
     nanoId(length) {
         length = Math.max(length | 0, 0) || 21
@@ -383,7 +382,7 @@ const UibLib = {
      *   @param {string} [opts.out] Optional. Set to 'bare' to return just the output string
      *   @param {boolean} [opts.verbose] Optional. Whether to include verbose output formatting
      *   @param {object|string} [opts.env] Optional. Whether to include environment variables object for the command, if a string, will use process.env
-     * @returns {Promise<{all:string, code:number, command:string, pid?: number}>} Promise with kill method for process control
+     * @return {Promise<{all:string, code:number, command:string, pid?: number}>} Promise with kill method for process control
      *
      * @example
      * // Kill a long-running process
@@ -508,7 +507,7 @@ const UibLib = {
      * @param {string} cmd The OS command to run
      * @param {Array<string>} args Array of argument strings to be passed to the command
      * @param {object} [opts] Optional. Array of argument strings to be passed to the command. If not present, defaults to running via an OS shell
-     * @returns {object} The stdout/stderr output (interleaved) or the commands error reason
+     * @return {object} The stdout/stderr output (interleaved) or the commands error reason
      */
     runOsCmdSync: function runOsCmdSync(cmd, args, opts) {
         if (!opts) opts = { windowsHide: true, }
@@ -546,7 +545,7 @@ const UibLib = {
     /** Escape an array of strings for safe use in a shell command
      * Based on https://github.com/nodejs/help/issues/5063#issuecomment-3211961369
      * @param {Array<string>} args Array of strings to escape
-     * @returns {string} The escaped string
+     * @return {string} The escaped string
      */
     shellescape: function shellescape(args) {
         const isWindows = process.platform === 'win32'
@@ -574,7 +573,7 @@ const UibLib = {
 
     /** Sort a uibuilder apps object by url instead of the natural order added
      * @param {*} apps The apps object to sort
-     * @returns {*} apps sorted by url
+     * @return {*} apps sorted by url
      */
     sortApps: function sortApps(apps) {
         return apps.sort((a, b) => {
@@ -588,7 +587,7 @@ const UibLib = {
 
     /** Sort a uibuilder instances object by url instead of the natural order added
      * @param {*} instances The instances object to sort
-     * @returns {*} instances sorted by url
+     * @return {*} instances sorted by url
      */
     sortInstances: function sortInstances(instances) {
         return Object.fromEntries(
@@ -609,7 +608,7 @@ const UibLib = {
      * On success, records the Unix send timestamp as `lastSent` in the telemetry file.
      * All errors are caught and logged; the function never rejects.
      * NOTE: Uses the native `fetch` global (requires Node.js ≥ 18; experimental in v18, stable in v21+).
-     * @returns {Promise<null|number>} Returns the Unix timestamp of the send if successful, or null if telemetry is disabled, uuid is missing, interval has not elapsed, or an error occurred.
+     * @return {Promise<null|number>} Returns the Unix timestamp of the send if successful, or null if telemetry is disabled, uuid is missing, interval has not elapsed, or an error occurred.
      * @throws {Error} If an error occurs during the fetch, an error is thrown with a message describing the issue. Network errors are expected and logged as trace, not warn.
      */
     sendTelemetry: async function sendTelemetry() {
@@ -660,7 +659,7 @@ const UibLib = {
      *     { family: string, version: string, count: number }
      *   ]
      * }
-     * @returns {Promise<void>}
+     * @return {Promise<void>}
      * @throws {Error} If there is an error stringifying the telemetry data or writing the file, an error is thrown with a message describing the issue.
      */
     fileTelemetry: async function fileTelemetry() {
@@ -746,7 +745,7 @@ const UibLib = {
 
     /** Read the telemetry config file on startup (`<uibRoot>/.config/telemetry.json`), with content from
      * global context telemetry if it does not already exist. Parsed contents are merged into `uibGlobalConfig.telemetry`.
-     * @returns {Promise<void>} If successful, uib.telemetry will have been updated with the parsed contents
+     * @return {Promise<void>} If successful, uib.telemetry will have been updated with the parsed contents
      *    of the telemetry file. Otherwise throws an error.
      */
     parseTelemetryFile: async function parseTelemetryFile() {
@@ -777,7 +776,7 @@ const UibLib = {
     /** Parse browser family/version from Client Hints headers when available.
      * @param {string|undefined} secChUa Value of `sec-ch-ua` header
      * @param {boolean} isMobile Whether `sec-ch-ua-mobile` indicates a mobile client
-     * @returns {{family:string, version:string}|null} Parsed browser details or null
+     * @return {{family:string, version:string}|null} Parsed browser details or null
      */
     parseBrowserFromClientHints: function parseBrowserFromClientHints(secChUa, isMobile) {
         if ( !secChUa || typeof secChUa !== 'string' ) return null
@@ -845,7 +844,7 @@ const UibLib = {
      * This is intentionally lightweight to avoid another runtime dependency.
      * @param {string|undefined} userAgent Browser user-agent header value
      * @param {boolean} [mobileHint] Value from Client Hints mobile indicator (`sec-ch-ua-mobile`)
-     * @returns {{family:string, version:string}|null} Parsed browser details or null if unavailable
+     * @return {{family:string, version:string}|null} Parsed browser details or null if unavailable
      */
     parseBrowserFromUserAgent: function parseBrowserFromUserAgent(userAgent, mobileHint = false) {
         if ( !userAgent || typeof userAgent !== 'string' ) return null
@@ -888,7 +887,7 @@ const UibLib = {
 
     /** Convert a request header value to a single string.
      * @param {string|string[]|undefined} value Header value from Node.js request headers
-     * @returns {string|undefined} First string value if available
+     * @return {string|undefined} First string value if available
      */
     getHeaderString: function getHeaderString(value) {
         if (Array.isArray(value)) return value[0]
@@ -899,7 +898,7 @@ const UibLib = {
     /** Parse browser details from request headers, preferring Client Hints where available.
      * NOTE: Client hints only available in secure contexts and not from all browsers
      * @param {import('http').IncomingHttpHeaders|undefined} headers Request headers
-     * @returns {{family:string, version:string}|null} Parsed browser details or null
+     * @return {{family:string, version:string}|null} Parsed browser details or null
      */
     parseBrowserFromHeaders: function parseBrowserFromHeaders(headers) {
         const secChUa = this.getHeaderString(headers?.['sec-ch-ua'])
@@ -916,7 +915,7 @@ const UibLib = {
     },
 
     /** Debounced save of telemetry data to avoid writing on every single connection.
-     * @returns {void}
+     * @return {void}
      */
     queueTelemetrySave: function queueTelemetrySave() {
         if ( this.telemetrySaveTimer ) clearTimeout(this.telemetrySaveTimer)
