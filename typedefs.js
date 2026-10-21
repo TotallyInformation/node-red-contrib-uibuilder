@@ -389,7 +389,7 @@
  *
  *  Schema: `{<node.id>: <url>}`
  * @property {object} apps Instance details (uibuilder and markweb)
- *  Schema: `{url: {node.id, node.url, node.title, node.descr, node.type}}`
+ *  Schema: `{url: {node: node.id, node.url, node.title, node.descr, node.type}}`
  * @property {string} masterTemplateFolder Location of master template folders (containing default front-end code).
  *
  *  Default `../template`
