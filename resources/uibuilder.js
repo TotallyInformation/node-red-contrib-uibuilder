@@ -1599,10 +1599,8 @@
         if (newUrl) {
             // Show the root URL
             $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${newUrl}`)
-            // Show the apps list URL
-            // $('#uib-apps-list').prop('href', `${uibuilder.urlPrefix}apps`)
             // Show this instances details URL
-            $('#uibinstanceconf').prop('href', `./uibuilder/instance/${newUrl}?cmd=showinstancesettings`)
+            $('#uibinstanceconf').prop('href', `./uibuilder/admin/${newUrl}?cmd=showinstancedetails`)
             // update the vscode input value
             $('#node-input-editurl').val(vsc.url)
         }
@@ -2304,7 +2302,7 @@
 
         // Update the open and node details buttons below the url
         $('#uibuilderurl').prop('href', `${uibuilder.urlPrefix}${node.url}`)
-        $('#uibinstanceconf').prop('href', `./uibuilder/instance/${node.url}?cmd=showinstancesettings`)
+        $('#uibinstanceconf').prop('href', `./uibuilder/admin/${node.url}?cmd=showinstancedetails`)
 
         // getFolders(node)
 

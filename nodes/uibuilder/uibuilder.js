@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/valid-types */
 /**
  * Copyright (c) 2017-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
@@ -24,11 +23,15 @@
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs.js').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs.js').uibuilderEditorVars} uibuilderEditorVars
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  */
 
 // #region ------ uibuilder module-level globals ------ //
 
 // #region ------ Require packages ------ //
+
+const { /** @type {uibCustomLogger} */ log: clog, } = require('../libs/logger.mjs')
+clog.debug('Loading')
 
 // uibuilder custom
 const uiblib = require('../libs/uiblib.cjs') // Utility library for uibuilder
@@ -397,12 +400,6 @@ function nodeInstance(config) {
         // done()
     })
 
-    // TODO Move to web
-    // Shows an instance details debug page
-    RED.httpAdmin.get(`/uibuilder/instance/${this.url}`, (req, res) => {
-        res.status(200).send( web.showInstanceDetails(req, this) )
-    })
-
     RED.events.emit('UIBUILDER/instanceSetupComplete', this)
     RED.events.emit(`UIBUILDER/instanceSetupComplete/${this.url}`, this)
 } // ----- end of nodeInstance ----- //
@@ -414,7 +411,7 @@ function nodeInstance(config) {
  * @param {object} msg The msg object received.
  * @param {Function} send Per msg send function, node-red v1+
  * @param {Function} done Per msg finish function, node-red v1+
- * @returns {undefined|null} Not a lot
+ * @return {undefined|null} Not a lot
  * @this {uibNode}
  */
 function inputMsgHandler (msg, send, done) {
@@ -471,3 +468,4 @@ function inputMsgHandler (msg, send, done) {
 
 /** Export the function that defines the node */
 module.exports = Uib
+clog.debug('Loaded')
