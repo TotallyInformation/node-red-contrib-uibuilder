@@ -241,6 +241,52 @@ function doGetOneElement(params, rootFolder, req, res) {
     res.status(200).json( { descHtml, optsHtml, } )
 }
 
+// ! Incomplete: We must recurse through sub-routers. Vendor routes missing for example.
+/** Return a hierarchical list of all routes
+ * @param {*} web Reference to uibuilder's web library
+ * @param {*} routerStack ExpressJS router stack
+ * @param {*} parentPath Parent path
+ * @return {object} route hierarchy
+ */
+function getAllRoutes(web, routerStack, parentPath = '') {
+    let route
+    const mw = []
+    routerStack.forEach( (layer) => { // Each is an Express route Layer
+        const layerName = layer.name
+        const layerPath = web.layerPath(layer)
+        // const r = layer.regexp.toString().replace('/^\\', '').replace('/?(?=\\/|$)/i', '').replace('\\', '')
+        const mwl = {
+            name: layerName,
+            layerPath: parentPath + layerPath,
+            route: layer.route,
+            routes: [],
+        }
+        if (layer.route) { // routes registered directly on the app
+            const path = layer.route.path
+            const methods = layer.route.methods
+            mwl.routes.push({ path: path, methods: Object.keys(methods).join(', '), type: 'direct', })
+        } else if (layer.name === 'router') { // router middleware
+            if (layer.handle?.stack) {
+                layer.handle?.stack.forEach(function(handler) {
+                    route = handler.route
+                    if (route) {
+                        mwl.routes.push({
+                            path: route.path,
+                            methods: Object.keys(route.methods).join(', '),
+                            // stack: route.stack.map(({ name, }) => name),
+                            stack: getAllRoutes(web, layer.handle.stack, `${layerPath}/${route.path}`),
+                        })
+                    }
+                })
+                // mwl.routes.push(getAllRoutes(web, layer.handle.stack, `${layerPath}/`))
+            }
+        }
+        mw.push(mwl)
+    })
+    return mw
+}
+
+// !incomplete
 /** Debug routes
  * @param {express.Request} req Request object
  * @param {express.Response} res Response object
@@ -250,7 +296,7 @@ function doDebug(req, res, next) {
     res.set('X-UIB-Admin-APIv3')
     res.statusMessage = 'UIB Admin API v3 Debug'
     // Node-RED populates req.user if a session exists
-    console.log ('[admin-api-v3:]', {
+    clog.debug({
         originalUrl: req.originalUrl,
         url: req.url,
         authInfo: req.authInfo,
@@ -296,12 +342,12 @@ function killRunningProcess(processId, url, scriptName) {
     return false
 }
 
-/** uibuilder v3 unified Admin API router - new API commands should be added here
+/** uibuilder v3 unified Admin API router (./uibuilder/admin/<url>) - new API commands should be added here
  * Typical URL is: http://127.0.0.1:1880/red/uibuilder/admin/nodeurl?cmd=listfolders
  */
 v3AdminRouter.route('/:url')
     // For all routes (this function is called before more specific ones)
-    .all(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) {
+    .all(function v3AdminAll(/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) {
         // @ts-ignore
         const params = res.allparams = Object.assign({}, req.query, req.body, req.params)
         params.type = 'all'
@@ -319,7 +365,7 @@ v3AdminRouter.route('/:url')
         next()
     })
     // Get something and return it
-    .get(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    .get(function v3AdminGet(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         if (uib.rootFolder === null) throw errUibRootFldr
 
         // @ts-ignore
@@ -537,28 +583,27 @@ v3AdminRouter.route('/:url')
             }
 
             // Return a list of all user urls in use by ExpressJS
+            // ! Incomplete: We must recurse through sub-routers. Vendor routes missing for example.
             case 'listurls': {
-                // TODO Not currently working
-                let route
                 const routes = []
+                // @ts-ignore
                 const web = require('./web.cjs') // late loading to avoid circular dependency
-                web.app._router.stack.forEach( (middleware) => {
-                    if (middleware.route) { // routes registered directly on the app
-                        const path = middleware.route.path
-                        const methods = middleware.route.methods
-                        routes.push({ path: path, methods: methods, })
-                    } else if (middleware.name === 'router') { // router middleware
-                        middleware.handle.stack.forEach(function(handler) {
-                            route = handler.route
-                            route && routes.push(route)
-                        })
-                    }
-                })
+                const routerStack = web.appStack(web.app)
+                // clog.info({routerStack})
+                const mw = getAllRoutes(web, routerStack)
 
                 log.trace('🌐[uibuilder:adminRouterV3:GET:listurls] Admin API. List of all user urls in use.')
                 res.statusMessage = 'URLs listed successfully'
-                res.status(200).json(web.app._router.stack)
+                res.status(200).json(mw)
 
+                break
+            }
+
+            // Shows the details page for a specific uibuilder instance
+            case 'showinstancedetails': {
+                // @ts-ignore
+                const web = require('./web.cjs') // late loading to avoid circular dependency
+                res.status(200).send( web.showInstanceDetails(req, null, uib.apps[params.url].node) )
                 break
             }
 
@@ -571,7 +616,7 @@ v3AdminRouter.route('/:url')
     })
 
     // Do something that has side-effects, e.g. update a file or run an npm script
-    .put(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    .put(function v3AdminPut(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         if (uib.rootFolder === null) throw errUibRootFldr
 
         // @ts-expect-error
@@ -696,7 +741,7 @@ v3AdminRouter.route('/:url')
     })
 
     // Load new template or Create a new folder or file
-    .post(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    .post(function v3AdminPost(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         if (uib.rootFolder === null) throw errUibRootFldr
 
         // @ts-ignore
@@ -816,7 +861,7 @@ v3AdminRouter.route('/:url')
     }) // --- End of POST processing --- //
 
     // Delete a folder or a file
-    .delete(function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+    .delete(function v3AdminDelete(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         if (uib.rootFolder === null) throw errUibRootFldr
 
         // @ts-ignore ts(2339)
