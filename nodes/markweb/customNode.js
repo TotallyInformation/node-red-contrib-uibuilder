@@ -114,7 +114,7 @@ let _mdCurrentNode = null
  * @param {runtimeNode & uibMwNode} node The node instance to use for directive resolution
  * @param {string} content The markdown content to render
  * @param {object} pageEnv The page environment/attributes object passed to markdown-it
- * @returns {string} The rendered HTML
+ * @return {string} The rendered HTML
  */
 const mdParse = (node, content, pageEnv) => {
     _mdCurrentNode = node
@@ -137,7 +137,7 @@ const mdParse = (node, content, pageEnv) => {
  * @param {string} dirPath - The root directory to start walking from
  * @param {string} [_startPath] - The initial starting path (used internally)
  * @param {number} [_level] - Current recursion depth (used internally to prevent infinite loops)
- * @returns {Promise<FolderTree|null>} Nested object representing the folder structure
+ * @return {Promise<FolderTree|null>} Nested object representing the folder structure
  * @throws {Error} If the directory cannot be read
  * @example
  * // Example usage:
@@ -151,7 +151,7 @@ const walkFolderStructure = async (dirPath, _startPath, _level = 0) => {
 
     /** Helper to check if a name should be ignored
      * @param {string} name - The name of the file or folder
-     * @returns {boolean} True if the name should be ignored
+     * @return {boolean} True if the name should be ignored
      */
     const shouldIgnore = name => (name.startsWith('_') && name !== '_index.md') || name.startsWith('.')
 
@@ -388,7 +388,7 @@ function inputMsgHandler(msg, send, done) {
 /** Define internal control message hooks for this node instance
  * @param {runtimeNode & uibMwNode} node The current node instance
  * @param {object} log The RED.log object for logging
- * @returns {object} An object containing internal control message handler functions
+ * @return {object} An object containing internal control message handler functions
  * @this {runtimeNode & uibMwNode}
  */
 function internalControlMsgHooks(node, log) {
@@ -472,7 +472,7 @@ function internalControlMsgHooks(node, log) {
  * @param {object} [options] Optional options passed to the %%date [options]%% instruction
  * @param {string} [options.type] Type of date to show: 'now' (default), 'created', 'updated', or any frontmatter date field
  * @param {string} [options.format] Date format string (default: 'YYYY-MM-DD'). Uses standard tokens. Underscore translates to space
- * @returns {string} Formatted date string
+ * @return {string} Formatted date string
  */
 function renderDate(key, attributes, node, options) {
     if (!options) options = {}
@@ -506,7 +506,7 @@ function renderDate(key, attributes, node, options) {
  * @param {object} attributes The current pages attributes
  * @param {runtimeNode & uibMwNode} node The current node instance
  * @param {object} [options] Optional options passed to the %%nav [options]%% instruction. Applied as html attributes to the wrapper div
- * @returns {string} Wrapped content as an html string
+ * @return {string} Wrapped content as an html string
  */
 // function bodyWrapper(key, attributes, node, options) {
 //     console.log('🌐🕸️[bodyWrapper] options=', options)
@@ -529,7 +529,7 @@ function renderDate(key, attributes, node, options) {
  * @param {object} attributes The current pages attributes
  * @param {runtimeNode & uibMwNode} node The current node instance
  * @param {object} options Optional options passed to the %%nav [options]%% instruction
- * @returns {string} The generated navigation HTML
+ * @return {string} The generated navigation HTML
  */
 function createNav(key, attributes, node, options) {
     // console.log('  >>🌐🕸️[createNav] ', key, options, attributes)
@@ -583,7 +583,7 @@ function createNav(key, attributes, node, options) {
  * Duration format: number + type, e.g. '1w' (week), '1d' (day), '1m' (month), '1y' (year), '1h' (hour)
  * Number can be negative, e.g. '-1w' for 1 week offset
  * @param {string} durationStr - Duration string like '1w', '-2d', '3m'
- * @returns {number|null} Duration in milliseconds or null if invalid
+ * @return {number|null} Duration in milliseconds or null if invalid
  */
 function parseDuration(durationStr) {
     if (!durationStr || typeof durationStr !== 'string') return null
@@ -643,7 +643,7 @@ function parseDuration(durationStr) {
  * @param {object} pageEnv The current pages attributes
  * @param {runtimeNode & uibMwNode} node The current node instance
  * @param {IndexOptions} [indexOptions] Optional options passed to the %%nav [options]%% instruction enhanced with extras
- * @returns {string} The generated navigation HTML
+ * @return {string} The generated navigation HTML
  */
 function indexListing(key, pageEnv, node, indexOptions = {}) {
     // Max depth default
@@ -762,7 +762,7 @@ function indexListing(key, pageEnv, node, indexOptions = {}) {
  * @param {object} attributes The current pages attributes
  * @param {runtimeNode & uibMwNode} node The current node instance
  * @param {object} [options] Optional options passed to the %%search-results [options]%% instruction.
- * @returns {string} The generated search results HTML
+ * @return {string} The generated search results HTML
  */
 function searchResultsWrapper(key, attributes, node, options) {
     let headTxt
@@ -788,7 +788,7 @@ function searchResultsWrapper(key, attributes, node, options) {
  * @param {object} options Sidebar rendering options
  * @param {string} options.currentPath The current page path for highlighting
  * @param {number} [_level] Current recursion level (internal use)
- * @returns {string} Nested HTML with details/summary for collapsible sections
+ * @return {string} Nested HTML with details/summary for collapsible sections
  */
 function renderSidebarTree(map, options, _level = 0) {
     if (map.size === 0) return ''
@@ -844,7 +844,7 @@ function renderSidebarTree(map, options, _level = 0) {
  * @param {object} pageEnv The current pages attributes
  * @param {IndexOptions} indexOptions Options for filtering the index
  * @param {MarkwebIndex} idx The index of markdown files
- * @returns {TreeMap} The hierarchical tree structure. Key's are folder/file path segments
+ * @return {TreeMap} The hierarchical tree structure. Key's are folder/file path segments
  */
 function createTree(currentStart, pageEnv, indexOptions, idx) {
     const filtered = filteredIndex(currentStart, pageEnv, indexOptions, idx)
@@ -935,7 +935,7 @@ function createTree(currentStart, pageEnv, indexOptions, idx) {
  * @param {string} [options.start] Start depth for nav index (default: '0')
  * @param {string} [options.end] End depth for nav index (default: '5')
  * @param {string} [options.position] Sidebar position - 'left' or 'right' (default: 'left')
- * @returns {string} The generated sidebar HTML
+ * @return {string} The generated sidebar HTML
  */
 function createSidebar(key, pageEnv, node, options) {
     const log = uib.RED.log
@@ -1026,7 +1026,7 @@ function createSidebar(key, pageEnv, node, options) {
 /** Build sidebar navigation from a sidebar.json override file
  * @param {Array<object>} items Array of sidebar items from sidebar.json
  * @param {string} currentPath The current page path for highlighting
- * @returns {string} HTML for the sidebar navigation
+ * @return {string} HTML for the sidebar navigation
  */
 function buildSidebarFromJson(items, currentPath) {
     if (!items || !Array.isArray(items) || items.length === 0) return ''
@@ -1062,7 +1062,7 @@ function buildSidebarFromJson(items, currentPath) {
  * @param {object} attributes The current pages attributes
  * @param {runtimeNode & uibMwNode} node The current node instance
  * @param {object} [options] Optional options (not used for copyright)
- * @returns {string} Formatted copyright HTML
+ * @return {string} Formatted copyright HTML
  */
 function renderCopyright(key, attributes, node, options) {
     // Read the copyright template file (with fallback to default)
@@ -1099,7 +1099,7 @@ function mdExtension(node) {
         /** Return an index list of pages from the current page level
          * @param {object} args The %%index [args]%% object passed from the markdown content
          * @param {object} pageEnv The page attributes, AKA the page's frontmatter variables
-         * @returns {string} The HTML for the index list
+         * @return {string} The HTML for the index list
          */
         index: (args, pageEnv) => {
             const il = indexListing('index', pageEnv, _mdCurrentNode, args)
@@ -1112,7 +1112,7 @@ function mdExtension(node) {
      * Supported arguments (inside [...]): before, after, prefix (alias for before), default
      * @param {object} args The [args] object passed from the markdown content
      * @param {object} pageEnv The page attributes, AKA the page's frontmatter variables
-     * @returns {string} The rendered HTML for the fm variable
+     * @return {string} The rendered HTML for the fm variable
      */
     const fmVariablesHandler = (args, pageEnv) => {
         const varName = args.varName
@@ -1152,7 +1152,7 @@ function mdExtension(node) {
 
 /** Build search & nav indexes from all markdown files asynchronously & notifies connected clients
  * @param {runtimeNode & uibMwNode} node Instance `this` context
- * @returns {Promise<void>}
+ * @return {Promise<void>}
  */
 async function buildIndexes(node) {
     const log = uib.RED.log
@@ -1227,7 +1227,7 @@ async function buildIndexes(node) {
 
 /** Build a list of navigable pages from all markdown files in the source folder
  * @param {string} sourcePath Source folder path
- * @returns {Array<{path: string, title: string, file: string}>} Array of navigation items
+ * @return {Array<{path: string, title: string, file: string}>} Array of navigation items
  */
 // function buildNavigationIndex(sourcePath) {
 //     try {
@@ -1254,7 +1254,7 @@ async function buildIndexes(node) {
  * @param {string} from What fn name called this fn, used for messages
  * @param {import('express').Response} [res] ExpressJS Result object. If used, previous 3 params are ignored
  * @param {boolean} [isAjax] Whether this request is an AJAX request (only used if res is provided) to determine response format
- * @returns {{resultCode:number, errorAttributes:object, morePath:string, fullPath:string, parsedPath:import('path').ParsedPath}} The full and corrected actual paths to be processed
+ * @return {{resultCode:number, errorAttributes:object, morePath:string, fullPath:string, parsedPath:import('path').ParsedPath}} The full and corrected actual paths to be processed
  */
 function checkNames(node, morePath, attributes, returnTopic, msg, from, res, isAjax) {
     const log = uib.RED.log
@@ -1428,7 +1428,7 @@ async function doNavigate(msg) {
 /** Process a search request against the index
  * @param {Map<string, object>} index The search index
  * @param {string} query The search query
- * @returns {Array} Array of search results
+ * @return {Array} Array of search results
  */
 function doSearch(index, query) {
     const results = []
@@ -1503,7 +1503,7 @@ function doSearch(index, query) {
  * @param {object} pageEnv The current pages attributes
  * @param {IndexOptions} indexOptions Filtering options
  * @param {MarkwebIndex} idx The index of markdown pages
- * @returns {[string, MarkwebIndexEntry][]} Filtered index entries
+ * @return {[string, MarkwebIndexEntry][]} Filtered index entries
  */
 function filteredIndex(currentStart, pageEnv, indexOptions, idx) {
     // console.log('filteredIndex', { currentStart, attributes: pageEnv, indexOptions, })
@@ -1547,7 +1547,7 @@ function filteredIndex(currentStart, pageEnv, indexOptions, idx) {
 
     /** Map sortPriority string to a numeric rank (high=0, medium/none=1, low=2)
      * @param {string} priority - The sortPriority frontmatter value
-     * @returns {number} Numeric rank for sorting
+     * @return {number} Numeric rank for sorting
      */
     const priorityRank = (priority) => {
         if (priority === 'high') return 0
@@ -1594,7 +1594,7 @@ function filteredIndex(currentStart, pageEnv, indexOptions, idx) {
  * @param {string} [morePath] Relative path or additional path info
  * @param {object} [parsedPath] Parsed path object
  * @param {string} [from] The name of the calling function for logging purposes
- * @returns {Promise<object>} Parsed attributes and HTML body
+ * @return {Promise<object>} Parsed attributes and HTML body
  */
 async function getMarkdownFile(node, file, morePath, parsedPath, from) {
     // fullPath, morePath, parsedPath
@@ -1729,7 +1729,7 @@ async function getMarkdownFile(node, file, morePath, parsedPath, from) {
  * @param {import('express').Request} req ExpressJS request object
  * @param {import('express').Response} res ExpressJS response object
  * @param {import('express').NextFunction} next ExpressJS next() function
- * @returns {Promise<void|import('express').Response|import('express').NextFunction>} Response or void
+ * @return {Promise<void|import('express').Response|import('express').NextFunction>} Response or void
  * @this {runtimeNode & uibMwNode}
  */
 async function handler(req, res, next) {
@@ -1821,7 +1821,7 @@ async function handler(req, res, next) {
 /** Get an HTML template and global attributes for markdown rendering
  * @param {runtimeNode & uibMwNode} node Instance `this` context
  * @param {object} [attributes] Attributes extracted from front-matter and other defaults
- * @returns {string} Full HTML page as a string
+ * @return {string} Full HTML page as a string
  */
 function htmlTemplate(node, attributes = {}) {
     // const log = uib.RED.log
@@ -1842,7 +1842,7 @@ function htmlTemplate(node, attributes = {}) {
  * @param {object} attributes The current pages attributes
  * @param {runtimeNode & uibMwNode} node The current node instance
  * @param {object} [options] Optional options (not used)
- * @returns {string} JavaScript code to embed in a script tag
+ * @return {string} JavaScript code to embed in a script tag
  */
 function renderPrescript(key, attributes, node, options) {
     // Base64 encode the JSON to avoid:
@@ -1865,7 +1865,7 @@ function renderPrescript(key, attributes, node, options) {
 
 /** Check if this.configFolder exists and is readable
  * @param {runtimeNode & uibMwNode} node Instance `this` context
- * @returns {boolean|null} True if configFolder exists and is readable, false if not, null if not set
+ * @return {boolean|null} True if configFolder exists and is readable, false if not, null if not set
  */
 function processConfig(node) {
     const RED = uib.RED
@@ -1908,7 +1908,7 @@ function processConfig(node) {
  * @param {runtimeNode & uibMwNode} node The current node instance
  * @param {object} [attributes] Attributes to use for replacements
  * @param {string} [calledFrom] Optional string indicating where this function was called from (for logging)
- * @returns {string} Processed text
+ * @return {string} Processed text
  */
 function processTemplates(htmlText, node, attributes = {}, calledFrom = '') {
     // Supported %%...%% special directives and their callback. The function is called with (key, attributes, node, options)
@@ -2007,7 +2007,7 @@ function processTemplates(htmlText, node, attributes = {}, calledFrom = '') {
  * @param {runtimeNode & uibMwNode} node Instance `this` context
  * @param {string} fileName The name of the file to read
  * @param {boolean} [optional] If true, will not log a warning if the file is not found or readable
- * @returns {string|null} The file contents or null if not found or not readable
+ * @return {string|null} The file contents or null if not found or not readable
  */
 function readConfigFile(node, fileName, optional = false) {
     const log = uib.RED.log
@@ -2061,7 +2061,7 @@ function readConfigFile(node, fileName, optional = false) {
  * @param {boolean} [nav] Whether this is for the nav directive, default=false
  * @param {number} [_level] Current recursion level (internal use)
  * @param {string} [currentPath] Current page path for active link highlighting
- * @returns {string} Nested HTML unordered lists
+ * @return {string} Nested HTML unordered lists
  */
 function renderTree(treeMap, indexOptions, sameLevel = false, nav = false, _level = 0, currentPath = '') {
     if (!treeMap || treeMap.size === 0) return ''
