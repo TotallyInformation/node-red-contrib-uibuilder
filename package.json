@@ -69,6 +69,10 @@
   },
   "node-red": {
     "version": ">=5",
+        "plugins": {
+      "uib-runtime-plugin": "nodes/uib-runtime-plugin.js",
+      "uib-editor-plugin": "nodes/uib-editor-plugin.html"
+    },
     "nodes": {
       "markweb": "nodes/markweb/customNode.js",
       "uibuilder": "nodes/uibuilder/uibuilder.js",
@@ -81,10 +85,6 @@
       "uib-sidebar": "nodes/uib-sidebar/customNode.js",
       "uib-tag": "nodes/uib-tag/customNode.js",
       "uib-update": "nodes/uib-update/customNode.js"
-    },
-    "plugins": {
-      "uib-runtime-plugin": "nodes/uib-runtime-plugin.js",
-      "uib-editor-plugin": "nodes/uib-editor-plugin.html"
     }
   },
   "engines": {
