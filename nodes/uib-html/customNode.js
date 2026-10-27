@@ -30,8 +30,8 @@
 const { /** @type {uibCustomLogger} */ log: clog, } = require('../libs/logger.mjs')
 clog.debug('Loading')
 
-const jsdom = require('jsdom')
-const { JSDOM, } = jsdom
+// NOTE: Since v8.0.0 lazy load jsdom since it is slow to load
+let JSDOM
 
 // Ui class copied from src/front-end-module/ui.js
 const Ui = require('../libs/ui.cjs').default // Grab default otherwise this fails thanks to ESBUILD
@@ -77,6 +77,10 @@ async function inputMsgHandler(msg, send, done) {
     }
 
     if (msg._ui) {
+        if (!JSDOM) { // Lazy load jsdom since it is slow to load
+            JSDOM = require('jsdom').JSDOM
+        }
+
         const dom = new JSDOM(template)
 
         // Create instance of ui class
