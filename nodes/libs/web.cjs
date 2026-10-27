@@ -385,10 +385,9 @@ class UibWeb {
         // Assign the uibRouter to the ../uibuilder url path
         this.app.use( urlJoin(uib.moduleName), this.uibRouter )
 
-        // TODO: Remove after debug
         // this.server.setTimeout(30000)
-        this.debugExpressProps(this.server)
-    } // --- End of webSetup() --- //
+        // this.debugExpressProps(this.server)
+    }
 
     /** Return a dynamic index page of all uibuilder user-accessible endpoints on /uibuilder/apps
      * param {express.Request} req Express request object
@@ -449,7 +448,7 @@ class UibWeb {
             type: 'Get',
             // folder: uib.commonFolder
         } )
-    } // --- End of serveUserUibIndex --- //
+    }
 
     /** Set folder to use for the central, static, front-end resources
      *  in the uibuilder module folders. Services standard images, ico file and fall-back index pages
@@ -473,7 +472,7 @@ class UibWeb {
         } catch (e) {
             throw new Error(`setMasterStaticFolder: Cannot serve master production build folder, cannot access to read: '${uib.masterStaticFeFolder}'`, { cause: e, })
         }
-    } // --- End of setMasterStaticFolder() --- //
+    }
 
     /** If using a custom server, serve the public root folder if it exists.*/
     _servePublicRoot() {
@@ -588,7 +587,7 @@ class UibWeb {
         })
 
         log.trace('🌐[uibuilder:web:serveVendorPackages] Serve Vendor Packages end')
-    } // ---- End of serveVendorPackages ---- //
+    }
 
     /** Add the ping endpoint to /uibuilder/ping
      * This just returns a 201 (No Content) response and can be used for a keepalive process from the client.
@@ -1522,7 +1521,7 @@ class UibWeb {
                 props: Object.keys(r),
             })
         }
-    } // --- end of dumpReq --- //
+    }
 
     // #endregion ==== ExpressJS Route Reporting ==== //
 
@@ -1584,7 +1583,7 @@ class UibWeb {
     }
 
     // #endregion ==== HTML helpers ==== //
-} // ==== End of Web Class Definition ==== //
+}
 
 /** Singleton model. Only 1 instance of UibWeb should ever exist.
  * Use as: `const web = require('./web.js')`
