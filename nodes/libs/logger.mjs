@@ -60,6 +60,7 @@ const cons = console
 
 /** @type {uibCustomLogger} */
 class Logger {
+    static prevTime = Date.now() // elapsed time tracker
     #stream
     enabled = false
     filePath = null
@@ -121,6 +122,10 @@ class Logger {
                 if (coreMethods.includes(method)) {
                     const methodWeight = this.levelOrder[method] || this.#defaultLogLevel
                     if (methodWeight > this.#logLevel) return
+
+                    const currTime = Date.now()
+                    const elapsedTime = currTime - Logger.prevTime
+                    Logger.prevTime = currTime
 
                     const actualMethod = this.levelMap[method] || method
                     const timestamp = (new Date().toISOString())
@@ -198,7 +203,7 @@ class Logger {
                     }
 
                     // out.unshift(`${timestamp}${this.icon}[${actualMethod.toUpperCase().padEnd(5)} ${this.icons[actualMethod]}] ${' '.repeat(depth)}${_file[0]}${caller}(${_file[1]}:${_file[2]}):`)
-                    out.unshift(`${timestamp}${this.icon}[${actualMethod.toUpperCase().padEnd(5)} ${this.icons[actualMethod]}] ${_file[0]}${caller}(${_file[1]}:${_file[2]}):`)
+                    out.unshift(`${timestamp}${this.icon}[${actualMethod.toUpperCase().padEnd(5)}${this.icons[actualMethod]}+${String(elapsedTime).padStart(4, '0')}] ${_file[0]}${caller}(${_file[1]}:${_file[2]}):`)
 
                     if (this.#stream) {
                         const message = format(...out)
