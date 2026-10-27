@@ -1,9 +1,8 @@
-/* eslint-disable jsdoc/valid-types */
 /** Takes a msg input and caches it then passes it through.
  *  If it receives a cache-replay control msg, it dumps the cache.
  *  If it receives a cache-empty control msg, it empties the cache.
  *
- * Copyright (c) 2022-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2022-2026 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +24,14 @@
  * @typedef {import('../../typedefs.js').runtimeNode} runtimeNode
  * @typedef {import('../../typedefs.js').senderNode1} senderNode
  * @typedef {import('../../typedefs.js').cacheNode1} cacheNode
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  * typedef {import('../typedefs.js').myNode} myNode
  */
 
 // #region ----- Module level variables ---- //
+
+const { /** @type {uibCustomLogger} */ log: clog, } = require('../libs/logger.mjs')
+clog.debug('Loading')
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -143,7 +146,7 @@ function addToCache(msg, node) {
 
     // Save the cache. @since v7.6.0 - debounced to improve performance under high load
     debouncedSave(node)
-    node.cacheCount++
+    // node.cacheCount++
 
     // @since v7.6.0 - throttled to improve performance under high load
     throttledStatus(node)
@@ -341,3 +344,4 @@ function inputMsgHandler(msg, send, done) {
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = UibCache
+clog.debug('Loaded')

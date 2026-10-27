@@ -1,7 +1,7 @@
 /** Takes a msg input and sends it to the chosen uibuilder instance
  *  Destructured to make for easier and more consistent logic.
  *
- * Copyright (c) 2021-2023 Julian Knight (Totally Information)
+ * Copyright (c) 2021-2026 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,15 @@
  * @typedef {import('../../typedefs.js').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs.js').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs.js').runtimeNode} runtimeNode
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  * @typedef {import('../../typedefs.js').senderNode1} senderNode
  * typedef {import('../typedefs.js').myNode} myNode
  */
 
-//#region ----- Module level variables ---- //
+// #region ----- Module level variables ---- //
+
+const { /** @type {uibCustomLogger} */ log: clog, } = require('../libs/logger.mjs')
+clog.debug('Loading')
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -39,9 +43,9 @@ const mod = {
     useEvents: true,
 }
 
-//#endregion ----- Module level variables ---- //
+// #endregion ----- Module level variables ---- //
 
-//#region ----- Module-level support functions ----- //
+// #region ----- Module-level support functions ----- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
  * @param {runtimeRED} RED The Node-RED runtime object
@@ -121,7 +125,7 @@ function nodeInstance(config) {
  * @param {Function} send Per msg send function, node-red v1+
  * @param {Function} done Per msg finish function, node-red v1+
  */
-function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
+function inputMsgHandler(msg, send, done) {
     // As a module-level named function, it will inherit `mod` and other module-level variables
 
     // If you need it - or just use mod.RED if you prefer:
@@ -145,7 +149,7 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
     } else {
         // Use events to send msg to uibuilder front-end.
         const eventName = `UIBUILDER/send/${this.url}`
-        RED.events.emit( eventName, { ...msg, ...{ _uib: { originator: this.id } } } )
+        RED.events.emit( eventName, { ...msg, ...{ _uib: { originator: this.id, }, }, } )
     }
 
     // If passthrough is enabled, send the msg
@@ -154,9 +158,8 @@ function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-var
     done()
 } // ----- end of inputMsgHandler ----- //
 
-//#endregion ----- Module-level support functions ----- //
+// #endregion ----- Module-level support functions ----- //
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = EventOut
-
-// EOF
+clog.debug('Loaded')

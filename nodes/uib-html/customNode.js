@@ -1,8 +1,7 @@
-/* eslint-disable jsdoc/valid-types */
 /** Send an update to a specific front-end element.
  * The FE library will update the UI accordingly.
  *
- * Copyright (c) 2023-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2026 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +21,14 @@
  * @typedef {import('../../typedefs').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs').runtimeNode} runtimeNode
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  * @typedef {import('../../typedefs').uibHtmlNode} uibHtmlNode <= Change this to be specific to this node
  */
 
 // #region ----- Module level variables ---- //
+
+const { /** @type {uibCustomLogger} */ log: clog, } = require('../libs/logger.mjs')
+clog.debug('Loading')
 
 const jsdom = require('jsdom')
 const { JSDOM, } = jsdom
@@ -151,5 +154,4 @@ function ModuleDefinition(RED) {
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = ModuleDefinition
-
-// EOF
+clog.debug('Loaded')

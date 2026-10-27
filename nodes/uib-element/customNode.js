@@ -1,8 +1,7 @@
-/* eslint-disable jsdoc/valid-types */
 /** Send a dynamic UI config to the uibuilder front-end library.
  * The FE library will update the UI accordingly.
  *
- * Copyright (c) 2022-2024 Julian Knight (Totally Information)
+ * Copyright (c) 2022-2026 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +21,14 @@
  * @typedef {import('../../typedefs').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs').runtimeNode} runtimeNode
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  * @typedef {import('../../typedefs').uibElNode} uibElNode <= Change this to be specific to this node
  */
 
 // #region ----- Module level variables ---- //
+
+const { /** @type {uibCustomLogger} */ log: clog, } = require('../libs/logger.mjs')
+clog.debug('Loading')
 
 const { getSource, } = require('../libs/uiblib.cjs')
 const elBuilder = require('../elements/elementBuilder')
@@ -191,5 +194,4 @@ function emitMsg(msg, node) {
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = ModuleDefinition
-
-// EOF
+clog.debug('Loaded')

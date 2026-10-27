@@ -1,8 +1,7 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 /** Send an update to a specific front-end element.
  * The FE library will update the UI accordingly.
  *
- * Copyright (c) 2023-2024 Julian Knight (Totally Information)
+ * Copyright (c) 2023-2026 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,14 +21,18 @@
  * @typedef {import('../../typedefs').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs').runtimeNode} runtimeNode
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  * @typedef {import('../../typedefs').uibSaveNode} uibSaveNode <= Change this to be specific to this node
  */
 
-//#region ----- Module level variables ---- //
+// #region ----- Module level variables ---- //
 
-const fslib  = require('../libs/fs.cjs')   // File/folder handling library (by Totally Information)
+const { /** @type {uibCustomLogger} */ log: clog, } = require('../libs/logger.mjs')
+clog.debug('Loading')
+
+const fslib = require('../libs/fs.cjs') // File/folder handling library (by Totally Information)
 // const uiblib = require('../libs/uiblib')  // Utility library for uibuilder
-const { setNodeStatus } = require('../libs/uiblib.cjs')  // Utility library for uibuilder
+const { setNodeStatus, } = require('../libs/uiblib.cjs') // Utility library for uibuilder
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -43,12 +46,12 @@ const mod = {
     nodeName: 'uib-save', // Note that 'uib-update' will be replaced with actual node-name. Do not forget to also add to package.json
 }
 
-//#endregion ----- Module level variables ---- //
+// #endregion ----- Module level variables ---- //
 
 // MAYBE?
 // - Add optional output msg?
 
-//#region ----- Module-level support functions ----- //
+// #region ----- Module-level support functions ----- //
 
 /** 3) Run whenever a node instance receives a new input msg
  * NOTE: `this` context is still the parent (nodeInstance).
@@ -58,9 +61,9 @@ const mod = {
  * @param {Function} done Per msg finish function, node-red v1+
  * @this {runtimeNode & uibSaveNode}
  */
-async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
+async function inputMsgHandler(msg, send, done) {
     const RED = mod.RED
-    let statusColor = 'blue'
+    let statusColor = 'blue' // eslint-disable-line no-useless-assignment
 
     if (!msg.payload) {
         this.counters.fail++
@@ -108,8 +111,8 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
                     // Reload connected clients if required by sending them a reload msg
                     srcNode.sendToFe(
                         {
-                            _ui: { 'method': 'reload' },
-                            topic: 'uib-save reload'
+                            _ui: { method: 'reload', },
+                            topic: 'uib-save reload',
                         },
                         this,
                         'uiBuilder'
@@ -129,7 +132,7 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
         }
     }
 
-    this.statusDisplay = { fill: statusColor, shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
+    this.statusDisplay = { fill: statusColor, shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}`, }
     setNodeStatus( this )
 
     // We are done
@@ -173,14 +176,14 @@ function nodeInstance(config) {
         success: 0,
         fail: 0,
     }
-    this.statusDisplay = { fill: 'blue', shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}` }
+    this.statusDisplay = { fill: 'blue', shape: 'dot', text: `Saved: ${this.counters.success}, Failed: ${this.counters.fail}`, }
     setNodeStatus( this )
 
     /** Handle incoming msg's - note that the handler fn inherits `this` */
     this.on('input', inputMsgHandler)
 } // ---- End of nodeInstance ---- //
 
-//#endregion ----- Module-level support functions ----- //
+// #endregion ----- Module-level support functions ----- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
  * @param {runtimeRED} RED The Node-RED runtime object
@@ -197,5 +200,4 @@ function ModuleDefinition(RED) {
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = ModuleDefinition
-
-// EOF
+clog.debug('Loaded')

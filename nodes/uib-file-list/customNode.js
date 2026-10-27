@@ -1,7 +1,7 @@
 /** Send an update to a specific front-end element.
  * The FE library will update the UI accordingly.
  *
- * Copyright (c) 2024-2024 Julian Knight (Totally Information)
+ * Copyright (c) 2024-2026 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,18 @@
  * @typedef {import('../../typedefs').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs').runtimeNode} runtimeNode
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  * @typedef {import('../../typedefs').uibFileListNode} uibFileListNode <= Change this to be specific to this node
  */
 
-//#region ----- Module level variables ---- //
+// #region ----- Module level variables ---- //
 
-const fslib  = require('../libs/fs.cjs')   // File/folder handling library (by Totally Information)
+const { /** @type {uibCustomLogger} */ log: clog, } = require('../libs/logger.mjs')
+clog.debug('Loading')
+
+const fslib = require('../libs/fs.cjs') // File/folder handling library (by Totally Information)
 // const uiblib = require('../libs/uiblib')  // Utility library for uibuilder
-const { setNodeStatus } = require('../libs/uiblib.cjs')  // Utility library for uibuilder
+const { setNodeStatus, } = require('../libs/uiblib.cjs') // Utility library for uibuilder
 
 /** Main (module) variables - acts as a configuration object
  *  that can easily be passed around.
@@ -42,7 +46,7 @@ const mod = {
     nodeName: 'uib-file-list',
 }
 
-//#endregion ----- Module level variables ---- //
+// #endregion ----- Module level variables ---- //
 
 /** 1) Complete module definition for our Node. This is where things actually start.
  * @param {runtimeRED} RED The Node-RED runtime object
@@ -58,12 +62,12 @@ function ModuleDefinition(RED) {
         // Makes these available to the editor as RED.settings.uibuilderxxxxxx
         settings: {
             // Tell the Editor where the uibuilder Root folder is
-            uibFileListRootFolder: { value: fslib.uibRootFolder, exportable: true },
+            uibFileListRootFolder: { value: fslib.uibRootFolder, exportable: true, },
             // The server's NODE_ENV environment var (e.g. PRODUCTION or DEVELOPMENT)
             // uibuilderNodeEnv: { value: process.env.NODE_ENV, exportable: true },
             // Custom server details
             // uibuilderCustomServer: { value: (uib.customServer), exportable: true },
-        }
+        },
     })
 }
 
@@ -112,12 +116,12 @@ function nodeInstance(config) {
  * @param {Function} done Per msg finish function, node-red v1+
  * @this {runtimeNode & uibFileListNode}
  */
-async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unused-vars
+async function inputMsgHandler(msg, send, done) {
     // const RED = mod.RED
 
     msg.payload = await fslib.searchInstance(this.uibId, this.live, this.filter, this.exclude, this.urlOut, this.fullPrefix)
 
-    this.statusDisplay = { fill: 'blue', shape: 'dot', text: `Found: ${msg.payload.length}` }
+    this.statusDisplay = { fill: 'blue', shape: 'dot', text: `Found: ${msg.payload.length}`, }
     setNodeStatus( this )
 
     if (this.topic) msg.topic = this.topic
@@ -130,3 +134,4 @@ async function inputMsgHandler(msg, send, done) { // eslint-disable-line no-unus
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = ModuleDefinition
+clog.debug('Loaded')

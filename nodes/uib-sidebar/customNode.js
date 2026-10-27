@@ -1,7 +1,6 @@
-/* eslint-disable jsdoc/valid-types */
 /** An example template for Node-RED custom nodes
  *
- * Copyright (c) 2025-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2025-2026 Julian Knight (Totally Information)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +20,13 @@
  * @typedef {import('../../typedefs').runtimeRED} runtimeRED
  * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs').runtimeNode} runtimeNode
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  */
 
 // #region ----- Module level variables ---- //
+
+const { /** @type {uibCustomLogger} */ log: clog, } = require('../libs/logger.mjs')
+clog.debug('Loading')
 
 // Uncomment this if you want to use the promisified version of evaluateNodeProperty
 // const { promisify } = require('util')
@@ -135,3 +138,4 @@ function sendToEditor(node, msg) {
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = ModuleDefinition
+clog.debug('Loaded')
