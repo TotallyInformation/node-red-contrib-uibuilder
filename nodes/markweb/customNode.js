@@ -30,6 +30,7 @@
  * @typedef {import('../../typedefs').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs').runtimeNode} runtimeNode
  * @typedef {import('../../typedefs').uibMwNode} uibMwNode
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  *
  * Index options
  * @typedef {object} IndexOptions Optional options passed to the %%nav [options]%% instruction enhanced with extras
@@ -85,6 +86,9 @@
  */
 
 // #region ----- Module level variables ---- //
+
+const { /** @type {uibCustomLogger} */ log: clog, } = require('../libs/logger.mjs')
+clog.debug('Loading')
 
 const { basename, dirname, join, isAbsolute, parse, relative, sep, } = require('path')
 const express = require('express')
@@ -2340,3 +2344,4 @@ function searchHandler(req, res) {
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = ModuleDefinition
+clog.debug('Loaded')
