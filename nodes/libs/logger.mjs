@@ -66,7 +66,7 @@ class Logger {
     filePath = null
     levelMap = {}
     showLocation = true
-    supportsColor = process.stdout.hasColors()
+    supportsColor = false
     #defaultLogLevel = 4
     #logLevel = 4
     levelOrder = {
@@ -95,6 +95,11 @@ class Logger {
     }
 
     constructor(opts) {
+        // method only exists when stdout is a TTY, so when Node-RED runs under systemd, Docker, pm2 or with its output redirected, call would error
+        if (process.stdout.hasColors() && typeof process.stdout.hasColors === 'function') {
+            this.supportsColor = process.stdout.hasColors()
+        }
+        // TODO Merge opts to other settings
         if (opts !== undefined) this.options = opts
 
         this.#stream = this.filePath ? fs.createWriteStream(this.filePath, { flags: 'a', }) : null
