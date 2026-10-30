@@ -1,0 +1,378 @@
+[
+    {
+        "id": "47ac12f779aeb262",
+        "type": "tab",
+        "label": "nojs-charts",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "32525a5fbe8c87fb",
+        "type": "group",
+        "z": "47ac12f779aeb262",
+        "name": "RUN ONCE: Initialise Front-end Code - Run after the uibuilder node has been deployed. \\n REMEMBER to change the uib node name before use \\n Sets up FE code, reloads connected clients. \\n ",
+        "style": {
+            "label": true,
+            "stroke": "#a4a4a4",
+            "fill-opacity": "0.33",
+            "color": "#000000",
+            "fill": "#ffffff"
+        },
+        "nodes": [
+            "5a67c8966c9c9b52",
+            "7ca1a91a76ea8738",
+            "e984cefed0e0f1a1",
+            "4a0b2d4c62668516",
+            "74267a32548ba4cc",
+            "d4b9d4d1f12ad72a"
+        ],
+        "x": 34,
+        "y": 191,
+        "w": 572,
+        "h": 170
+    },
+    {
+        "id": "d922faf8e29ff646",
+        "type": "group",
+        "z": "47ac12f779aeb262",
+        "name": "New data for the 3 different charts. Auto updates every 10 seconds",
+        "style": {
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "77e6e9067941d454",
+            "97fad63dc64436e9",
+            "61ceb395faef2732",
+            "852d331a3bf85184"
+        ],
+        "x": 34,
+        "y": 379,
+        "w": 542,
+        "h": 162
+    },
+    {
+        "id": "2a9f925e5c45d5c2",
+        "type": "uibuilder",
+        "z": "47ac12f779aeb262",
+        "name": "",
+        "topic": "",
+        "url": "nojs-charts",
+        "instancePath": "",
+        "okToGo": true,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": true,
+        "sourceFolder": "src",
+        "deployedVersion": "7.6.2",
+        "showMsgUib": false,
+        "title": "",
+        "descr": "",
+        "editurl": "vscode://file/D:/src\\uibRoot/nojs-charts/?windowId=_blank",
+        "x": 280,
+        "y": 140,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "1cd8784886d01a20",
+        "type": "link in",
+        "z": "47ac12f779aeb262",
+        "name": "link in 20",
+        "links": [
+            "97fad63dc64436e9"
+        ],
+        "x": 95,
+        "y": 140,
+        "wires": [
+            [
+                "2a9f925e5c45d5c2"
+            ]
+        ]
+    },
+    {
+        "id": "5a67c8966c9c9b52",
+        "type": "inject",
+        "z": "47ac12f779aeb262",
+        "g": "32525a5fbe8c87fb",
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "setup all FE files",
+        "x": 95,
+        "y": 280,
+        "wires": [
+            [
+                "74267a32548ba4cc",
+                "d4b9d4d1f12ad72a"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "7ca1a91a76ea8738",
+        "type": "template",
+        "z": "47ac12f779aeb262",
+        "g": "32525a5fbe8c87fb",
+        "name": "index.html",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "html",
+        "syntax": "plain",
+        "template": "<!doctype html>\n<html lang=\"en\"><head>\n\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <link rel=\"icon\" href=\"../uibuilder/images/uib-world.svg\" type=\"image/svg+xml\">\n\n    <title>Zero JavaScript Charts - Node-RED UIBUILDER</title>\n    <meta name=\"description\" content=\"Node-RED UIBUILDER - Zero JavaScript Charts - A simple example of how to create charts without writing any JavaScript.\">\n\n    <!-- Your own CSS (defaults to loading uibuilders css)-->\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"./index.css\" media=\"all\">\n\n    <!-- If NOT using a local install, load the font from Google Fonts -->\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Datatype:wght@100..900&display=swap\" rel=\"stylesheet\">\n\n    <!-- #region Supporting Scripts. These MUST be in the right order. Note no leading / -->\n    <script defer src=\"../uibuilder/uibuilder.iife.min.js\">/* THE UIBUILDER LIBRARY MUST BE IN THE HTML! DO NOT REMOVE */</script>\n    <!-- <script defer src=\"./index.js\">/* OPTIONAL: Put your custom code in that */</script> -->\n    <!-- #endregion -->\n\n</head><body>\n    \n    <h1 class=\"with-subtitle\">Zero JavaScript Charts</h1>\n    <div role=\"doc-subtitle\">Using UIBUILDER for Node-RED & the <a href=\"https://franktisellano.github.io/datatype/\" target=\"_blank\">Datatype font</a></div>\n\n    <p>\n        Check out the <code>index.css</code> file to see how to load and configure the Datatype font.\n        Check out this <code>index.html</code> file to see how to load from Google Fonts (if not loading locally).\n    </p>\n    <p>\n        The charts auto-update with data from Node-RED every 10 seconds in the example flow.\n    </p>\n    <article>\n        Send a message with a payload like this to display a chart:\n        <pre><code>{\n    \"topic\": \"my-chart-1\",\n    \"payload\": \"{b:30,70,20,90}\" // NB: Text content, not JSON\n}</code></pre>\n        <div>This is an inline bar chart: <uib-var topic=\"my-chart-1\" class=\"chart\"><i>{Waiting for data}</i></uib-var>.</div>\n    </article>\n\n    <article>\n        For a sparkline chart:\n        <pre><code>{\n    \"topic\": \"my-chart-2\",\n    \"payload\": \"{l:30,70,20,90}\" // NB: Text content, not JSON\n}</code></pre>\n        <div>This is an inline sparkline chart: <uib-var topic=\"my-chart-2\" class=\"chart\"><i>{Waiting for data}</i></uib-var>.</div>\n    </article>\n\n    <article>\n        For a pie chart:\n        <pre><code>{\n    \"topic\": \"my-chart-3\",\n    \"payload\": \"{p:70}\" // NB: Text content, not JSON\n}</code></pre>\n        <p>This is a pie chart:</p>\n        <div>\n            <uib-var topic=\"my-chart-3\" class=\"chart\"><i>{Waiting for data}</i></uib-var>\n        </div>\n    </article>\n\n    <!-- '#more' is used as a parent for dynamic HTML content in examples\n         Also, send {topic:\"more\", payload:\"Hello from <b>Node-RED</b>\"} to auto-display the payload -->\n    <div id=\"more\" uib-topic=\"more\"></div>\n\n</body></html>\n",
+        "output": "str",
+        "x": 300,
+        "y": 280,
+        "wires": [
+            [
+                "e984cefed0e0f1a1"
+            ]
+        ]
+    },
+    {
+        "id": "e984cefed0e0f1a1",
+        "type": "uib-save",
+        "z": "47ac12f779aeb262",
+        "g": "32525a5fbe8c87fb",
+        "url": "nojs-charts",
+        "uibId": "2a9f925e5c45d5c2",
+        "folder": "src",
+        "fname": "",
+        "createFolder": false,
+        "reload": true,
+        "usePageName": false,
+        "encoding": "utf8",
+        "mode": 438,
+        "name": "",
+        "topic": "",
+        "x": 510,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "4a0b2d4c62668516",
+        "type": "template",
+        "z": "47ac12f779aeb262",
+        "g": "32525a5fbe8c87fb",
+        "name": "index.css",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "css",
+        "syntax": "plain",
+        "template": "/* Load defaults from `<userDir>/node_modules/node-red-contrib-uibuilder/front-end/uib-brand.min.css`\n * This is optional but reasonably complete and allows for light/dark mode switching.\n */\n@import url(\"../uibuilder/uib-brand.min.css\");\n\n/* If NOT using Google Fonts, load the font locally */\n/* @font-face {\n  font-family: 'Datatype';\n  src: url('Datatype.woff2') format('woff2');\n  font-display: swap;\n} */\n\n/* Use it on chart expressions */\n.chart {\n    font-family: 'Datatype', monospace;\n    /* Optional: adjust axes */\n    font-variation-settings: 'wdth' 15;\n    font-weight: 400;\n    font-size: 24pt;\n}\n\nuib-var[topic=\"my-chart-3\"] {\n    font-size: 48pt;\n}\n\n/* Making the JSON view smaller for this page */\npre>code {\n    font-size: 12pt;\n    line-height: 1;\n}\n",
+        "output": "str",
+        "x": 310,
+        "y": 320,
+        "wires": [
+            [
+                "e984cefed0e0f1a1"
+            ]
+        ]
+    },
+    {
+        "id": "74267a32548ba4cc",
+        "type": "change",
+        "z": "47ac12f779aeb262",
+        "g": "32525a5fbe8c87fb",
+        "name": "index.html",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.html",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 185,
+        "y": 280,
+        "wires": [
+            [
+                "7ca1a91a76ea8738"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "d4b9d4d1f12ad72a",
+        "type": "change",
+        "z": "47ac12f779aeb262",
+        "g": "32525a5fbe8c87fb",
+        "name": "index.js",
+        "rules": [
+            {
+                "t": "set",
+                "p": "fname",
+                "pt": "msg",
+                "to": "index.css",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 185,
+        "y": 320,
+        "wires": [
+            [
+                "4a0b2d4c62668516"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "77e6e9067941d454",
+        "type": "inject",
+        "z": "47ac12f779aeb262",
+        "g": "d922faf8e29ff646",
+        "name": "Bar Chart",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "my-chart-1",
+        "payload": "\"{b:\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") \t& \"}\"",
+        "payloadType": "jsonata",
+        "x": 150,
+        "y": 420,
+        "wires": [
+            [
+                "97fad63dc64436e9"
+            ]
+        ]
+    },
+    {
+        "id": "97fad63dc64436e9",
+        "type": "link out",
+        "z": "47ac12f779aeb262",
+        "g": "d922faf8e29ff646",
+        "name": "link out 63",
+        "mode": "link",
+        "links": [
+            "1cd8784886d01a20"
+        ],
+        "x": 535,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "61ceb395faef2732",
+        "type": "inject",
+        "z": "47ac12f779aeb262",
+        "g": "d922faf8e29ff646",
+        "name": "Sparkline Chart",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "my-chart-2",
+        "payload": "\"{l:\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") & \",\" \t& $formatInteger($random()*100, \"0\") \t& \"}\"",
+        "payloadType": "jsonata",
+        "x": 170,
+        "y": 460,
+        "wires": [
+            [
+                "97fad63dc64436e9"
+            ]
+        ]
+    },
+    {
+        "id": "852d331a3bf85184",
+        "type": "inject",
+        "z": "47ac12f779aeb262",
+        "g": "d922faf8e29ff646",
+        "name": "Pie Chart",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "my-chart-3",
+        "payload": "\"{p:\" \t& $formatInteger($random()*100, \"0\") \t& \"}\"",
+        "payloadType": "jsonata",
+        "x": 150,
+        "y": 500,
+        "wires": [
+            [
+                "97fad63dc64436e9"
+            ]
+        ]
+    },
+    {
+        "id": "8c3c9ce3f77812d1",
+        "type": "comment",
+        "z": "47ac12f779aeb262",
+        "name": "Zero-JavaScript charting using the Datatype font. \\n Mostly useful for inline charts. \\n Limited to single colour. Easily updated using UIBUILDER's dynamic data features.",
+        "info": "",
+        "x": 330,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "4919b672d8fbae0e",
+        "type": "comment",
+        "z": "47ac12f779aeb262",
+        "name": "Updated: 2026-10-30",
+        "info": "",
+        "x": 740,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "48e4936a5c04424d",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-uibuilder": "8.0.0"
+        }
+    }
+]
