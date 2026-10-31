@@ -155,7 +155,7 @@ function chkParamFname(params) {
     }
     // fname cannot contain / to prevent escaping sub-folder structure
     if ( fname.includes('/') || fname.includes('\\') ) {
-        res.statusMessage = `file name may not contain "/" or "\": ${params.fname}`
+        res.statusMessage = `file name may not contain "/" or "\\": ${params.fname}`
         res.status = 500
         return res
     }
