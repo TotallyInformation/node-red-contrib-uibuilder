@@ -92,6 +92,35 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                     },
                 })
             },
+            /** Perform an API call to the admin v3 API
+             * @param {'GET'|'POST'} verb HTTP verb to use
+             * @param {string} url uibuilder/markweb url
+             * @param {Function} done Function to call on successful call
+             * @param {Function} fail Function to call on fail
+             * @param {object=} data Data to send (as query parameters)
+             * @param {Function=} always Optional function to run after success or fail
+             */
+            doAdminApiv3: function doAdminApiv3(verb, url, done, fail, data = {}, always) {
+                if (!always) always = () => {}
+                $.ajax({
+                    // url: 'uibuilder/uibgetfile', // api v2
+                    url: './uibuilder/admin/' + url, // api v3
+                    method: verb,
+                    // converted to URL query parameters
+                    data: data,
+                    beforeSend: function(jqXHR) {
+                        const authTokens = RED.settings.get('auth-tokens')
+                        if (authTokens) {
+                            jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+                        }
+                    },
+                })
+                    // .done(function(data, textStatus, jqXHR) {
+                    .done(done)
+                    // .fail(function(_jqXHR, textStatus, errorThrown) {
+                    .fail(fail)
+                    .always(always)
+            },
             /** Get all of the currently deployed uibuilder URL's & updates this.deployedUibInstances
              * NOTE that the uibuilder.editorUibInstances cannot be used as that includes disabled nodes/flows
              * See nodes/libs/admin-api-v3.cjs
@@ -460,7 +489,14 @@ declare namespace RED {
              * so that function nodes get IntelliSense for uibuilder server-side utilities.
              */
             function inject() {
-                window.monaco.languages.typescript.javascriptDefaults.addExtraLib(
+                // Seems to have moved with NR v5.0.9
+                let javascriptDefaults
+                if (window.monaco.languages.typescript) { // Prior to NR v5.0.9
+                    javascriptDefaults = window.monaco.languages.typescript.javascriptDefaults
+                } else { // NR v5.0.9+
+                    javascriptDefaults = window.monaco.typescript.javascriptDefaults
+                }
+                javascriptDefaults.addExtraLib(
                     typeDeclarations,
                     'file://types/uibuilder/uib-util.d.ts'
                 )
