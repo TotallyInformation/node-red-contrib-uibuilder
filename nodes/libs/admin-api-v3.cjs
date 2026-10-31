@@ -117,7 +117,7 @@ function chkParamUrl(params) {
     // }
 
     return res
-} // ---- End of fn chkParamUrl ---- //
+}
 
 /** Validate fname (filename) query parameter
  * @param {object} params The GET (res.query) or POST (res.body) parameters
@@ -153,9 +153,15 @@ function chkParamFname(params) {
         res.status = 500
         return res
     }
+    // fname cannot contain / to prevent escaping sub-folder structure
+    if ( fname.includes('/') || fname.includes('\\') ) {
+        res.statusMessage = `file name may not contain "/" or "\": ${params.fname}`
+        res.status = 500
+        return res
+    }
 
     return res
-} // ---- End of fn chkParamFname ---- //
+}
 
 /** Validate folder query parameter
  * @param {object} params The GET (res.query) or POST (res.body) parameters
@@ -193,7 +199,7 @@ function chkParamFldr(params) {
     }
 
     return res
-} // ---- End of fn chkParamFldr ---- //
+}
 
 // #endregion === End of API validation functions === //
 
@@ -376,18 +382,18 @@ v3AdminRouter.route('/:url')
         switch (params.cmd) {
             // See if a node's custom folder exists. Return true if it does, else false
             case 'checkfolder': {
-                log.trace(`🌐[uibuilder[:adminRouterV3:GET:checkfolder] See if a node's custom folder exists. URL: ${params.url}`)
+                log.trace(`🌐[uibuilder:adminRouterV3:GET:checkfolder] See if a node's custom folder exists. URL: ${params.url}`)
 
                 const folder = path.join( uib.rootFolder, params.url)
 
                 fslib.access(folder, fslib.constants.F_OK)
                     .then( () => {
-                        res.statusMessage = 'Folder checked'
+                        res.statusMessage = 'Folder checked, exists'
                         res.status(200).json( true )
                         return true
                     })
                     .catch( () => { // err) => {
-                        res.statusMessage = 'Folder checked'
+                        res.statusMessage = 'Folder checked, does not exist'
                         res.status(200).json( false )
                         return false
                     })
@@ -430,10 +436,54 @@ v3AdminRouter.route('/:url')
                 break
             }
 
+            // Get the docs/changelog-highlights.md file content
+            case 'getChangeSummary': {
+                log.trace('🌐[uibuilder:adminRouterV3:GET:getChangeSummary] Returning the contents of docs/changelog-highlights.md')
+                const fname = path.join(__dirname, '..', '..', 'docs', 'changelog-highlights.md')
+                const fileContent = fslib.readFileSync(fname, 'utf8')
+                res.statusMessage = 'Change summary returned'
+                res.status(200).send(fileContent)
+                break
+            }
+
             // Get list of all available no-code elements
             case 'getElements': {
                 res.statusMessage = 'No-code elements list returned'
                 res.status(200).json( elements )
+                break
+            }
+
+            // Return the content of a file in the `<uibRoot>/<url>/src` folder
+            case 'getfile': {
+                // if fldr = root, no folder
+                if ( params.folder === 'root' ) params.folder = ''
+
+                // @ts-ignore
+                const filePathRoot = path.join(uib.rootFolder, params.url, params.folder)
+                // @ts-ignore
+                const filePath = path.join(filePathRoot, params.fname)
+
+                // Does the file exist?
+                if ( fslib.existsSync(filePath) ) {
+                    // Send back a plain text response body containing content of the file
+                    res.type('text/plain').sendFile(
+                        // @ts-ignore
+                        req.query.fname,
+                        {
+                            // Prevent injected relative paths from escaping `src` folder
+                            root: filePathRoot,
+                            // Turn off caching
+                            lastModified: false,
+                            cacheControl: false,
+                            dotfiles: 'allow',
+                        }
+                    )
+                } else {
+                    log.error(`🌐🛑[uibuilder:adminRouterV3:GET:getfile] Admin API. File does not exist '${filePath}'. url=${params.url}`)
+                    res.statusMessage = 'File does not exist'
+                    res.status(500).end()
+                }
+
                 break
             }
 
@@ -449,16 +499,6 @@ v3AdminRouter.route('/:url')
                 const npmScriptNames = packageMgt.getInstanceNpmScriptNames(params.url)
                 res.statusMessage = 'NPM script names list returned'
                 res.status(200).json( npmScriptNames )
-                break
-            }
-
-            // Get the docs/changelog-highlights.md file content
-            case 'getChangeSummary': {
-                log.trace('🌐[uibuilder:adminRouterV3:GET:getChangeSummary] Returning the contents of docs/changelog-highlights.md')
-                const fname = path.join(__dirname, '..', '..', 'docs', 'changelog-highlights.md')
-                const fileContent = fslib.readFileSync(fname, 'utf8')
-                res.statusMessage = 'Change summary returned'
-                res.status(200).send(fileContent)
                 break
             }
 
