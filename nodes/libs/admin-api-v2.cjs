@@ -545,79 +545,80 @@ function appsPage(urlPrefix) {
 const RED = uib.RED
 const log = uib.RED.log
 
+// Since v8.0.0 MIGRATED TO V3
 /** Create a simple NR admin API to return the content of a file in the `<userLib>/uibuilder/<url>/src` folder
  * @param {string} url The admin api url to create
  * @param {object} permissions The permissions required for access
  * @param {Function} cb
  */
-v2AdminRouter.get('/uibgetfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-    // #region --- Parameter validation ---
-    /** req.query parameters
-     * url
-     * fname
-     * folder
-     */
-    const params = req.query
+// v2AdminRouter.get('/uibgetfile', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+//     // #region --- Parameter validation ---
+//     /** req.query parameters
+//      * url
+//      * fname
+//      * folder
+//      */
+//     const params = req.query
 
-    // @ts-ignore
-    const chkUrl = chkParamUrl(params)
-    if ( chkUrl.status !== 0 ) {
-        log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. ${chkUrl.statusMessage}`)
-        res.statusMessage = chkUrl.statusMessage
-        res.status(chkUrl.status).end()
-        return
-    }
+//     // @ts-ignore
+//     const chkUrl = chkParamUrl(params)
+//     if ( chkUrl.status !== 0 ) {
+//         log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. ${chkUrl.statusMessage}`)
+//         res.statusMessage = chkUrl.statusMessage
+//         res.status(chkUrl.status).end()
+//         return
+//     }
 
-    // @ts-ignore
-    const chkFname = chkParamFname(params)
-    if ( chkFname.status !== 0 ) {
-        log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
-        res.statusMessage = chkFname.statusMessage
-        res.status(chkFname.status).end()
-        return
-    }
+//     // @ts-ignore
+//     const chkFname = chkParamFname(params)
+//     if ( chkFname.status !== 0 ) {
+//         log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+//         res.statusMessage = chkFname.statusMessage
+//         res.status(chkFname.status).end()
+//         return
+//     }
 
-    // @ts-ignore
-    const chkFldr = chkParamFldr(params)
-    if ( chkFldr.status !== 0 ) {
-        log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
-        res.statusMessage = chkFldr.statusMessage
-        res.status(chkFldr.status).end()
-        return
-    }
-    // #endregion ---- ----
+//     // @ts-ignore
+//     const chkFldr = chkParamFldr(params)
+//     if ( chkFldr.status !== 0 ) {
+//         log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+//         res.statusMessage = chkFldr.statusMessage
+//         res.status(chkFldr.status).end()
+//         return
+//     }
+//     // #endregion ---- ----
 
-    log.trace(`🌐[uibuilder[:apiv2:uibgetfile] Admin API. File get requested. url=${params.url}, file=${params.folder}/${params.fname}`)
+//     log.trace(`🌐[uibuilder[:apiv2:uibgetfile] Admin API. File get requested. url=${params.url}, file=${params.folder}/${params.fname}`)
 
-    // if fldr = root, no folder
-    if ( params.folder === 'root' ) params.folder = ''
+//     // if fldr = root, no folder
+//     if ( params.folder === 'root' ) params.folder = ''
 
-    // @ts-ignore
-    const filePathRoot = path.join(uib.rootFolder, params.url, params.folder)
-    // @ts-ignore
-    const filePath = path.join(filePathRoot, params.fname)
+//     // @ts-ignore
+//     const filePathRoot = path.join(uib.rootFolder, params.url, params.folder)
+//     // @ts-ignore
+//     const filePath = path.join(filePathRoot, params.fname)
 
-    // Does the file exist?
-    if ( fslib.existsSync(filePath) ) {
-        // Send back a plain text response body containing content of the file
-        res.type('text/plain').sendFile(
-            // @ts-ignore
-            req.query.fname,
-            {
-                // Prevent injected relative paths from escaping `src` folder
-                root: filePathRoot,
-                // Turn off caching
-                lastModified: false,
-                cacheControl: false,
-                dotfiles: 'allow',
-            }
-        )
-    } else {
-        log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. File does not exist '${filePath}'. url=${params.url}`)
-        res.statusMessage = 'File does not exist'
-        res.status(500).end()
-    }
-}) // ---- End of uibgetfile ---- //
+//     // Does the file exist?
+//     if ( fslib.existsSync(filePath) ) {
+//         // Send back a plain text response body containing content of the file
+//         res.type('text/plain').sendFile(
+//             // @ts-ignore
+//             req.query.fname,
+//             {
+//                 // Prevent injected relative paths from escaping `src` folder
+//                 root: filePathRoot,
+//                 // Turn off caching
+//                 lastModified: false,
+//                 cacheControl: false,
+//                 dotfiles: 'allow',
+//             }
+//         )
+//     } else {
+//         log.error(`🌐🛑[uibuilder:apiv2:uibgetfile] Admin API. File does not exist '${filePath}'. url=${params.url}`)
+//         res.statusMessage = 'File does not exist'
+//         res.status(500).end()
+//     }
+// })
 
 /** Create a simple NR admin API to UPDATE the content of a file in the `<userLib>/uibuilder/<url>/<folder>` folder
  * @param {string} url The admin api url to create
