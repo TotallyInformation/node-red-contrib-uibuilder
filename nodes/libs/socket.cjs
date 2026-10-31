@@ -1,5 +1,4 @@
 /* eslint-disable security/detect-non-literal-require */
-/* eslint-disable jsdoc/valid-types */
 /** Manage Socket.IO on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
  *
@@ -42,7 +41,7 @@ const uib = require('./uibGlobalConfig.cjs')
 /** Parse x-forwarded-for headers.
  * Borrowed from https://github.com/pbojinov/request-ip/blob/master/src/index.js
  * @param {string|string[]} value - The value to be parsed.
- * @returns {string|null} First known IP address, if any.
+ * @return {string|null} First known IP address, if any.
  */
 function getClientIpFromXForwardedFor(value) {
     if (!value) return null
@@ -83,7 +82,7 @@ function getClientIpFromXForwardedFor(value) {
 /** Get client real ip address
  * Borrowed from https://github.com/pbojinov/request-ip/blob/master/src/index.js
  * @param {socketio.Socket} socket Socket.IO socket object
- * @returns {string | string[] | undefined} Best estimate of the client's real IP address
+ * @return {string | string[] | undefined} Best estimate of the client's real IP address
  */
 function getClientRealIpAddress(socket) {
     const headers = socket.request.headers
@@ -138,7 +137,7 @@ function getClientRealIpAddress(socket) {
 /** Get client real ip address - NB: Optional chaining (?.) is node.js v14 not v12
  * @param {socketio.Socket} socket Socket.IO socket object
  * @param {uibNode} node Reference to the uibuilder node instance
- * @returns {string | string[] | undefined} Best estimate of the client's real IP address
+ * @return {string | string[] | undefined} Best estimate of the client's real IP address
  */
 function getClientPageName(socket, node) {
     let pageName = socket.handshake.auth.pathName.replace(`/${node.url}/`, '')
@@ -304,7 +303,7 @@ class UibSockets {
     } // --- End of socketIoSetup() --- //
 
     /** Allow the isConfigured flag to be read (not written) externally
-     * @returns {boolean} True if this class as been configured
+     * @return {boolean} True if this class as been configured
      */
     get isConfigured() {
         return this._isConfigured
@@ -314,7 +313,7 @@ class UibSockets {
      * Hooks must be a function and must return true or false, if not present, return true
      * @param {string} hookName Name of the hook function to call
      * @param {object} data Data to pass to the hook fn. Content depends on which hook.
-     * @returns {boolean} True to allow message flow, false to block
+     * @return {boolean} True to allow message flow, false to block
      */
     hooks(hookName, data) {
         const RED = uib.RED
@@ -438,7 +437,7 @@ class UibSockets {
     /** Get client details for including in Node-RED messages
      * @param {socketio.Socket} socket Reference to client socket connection
      * @param {uibNode} node Reference to the uibuilder node instance
-     * @returns {object} Extracted key client information
+     * @return {object} Extracted key client information
      */
     getClientDetails(socket, node) {
         // Add page name meta to allow caches and other flows to send back to specific page
@@ -489,6 +488,7 @@ class UibSockets {
         // Only include this if The difference between the timestamps is > 1 minute - output is in milliseconds
         if (clientTimeDifference > 60000) client._uib.clientTimeDifference = clientTimeDifference
 
+        // WARNING: This is a best guess only - UIBUILDER does not provide any guarentees of security - use an IdM tool!
         let authProvider
         if (headers['cf-access-authenticated-user-email']) authProvider = 'CloudFlare Access'
         else if (handshake.auth?.user?.userId) authProvider = 'FlowFuse'
@@ -499,7 +499,7 @@ class UibSockets {
 
         const userID = headers['cf-access-user'] || headers['cf-access-authenticated-user-email'] || handshake.auth?.user?.userId || headers['x-authentik-uid'] || headers['remote-user'] || headers['x-remote-user'] || headers['x-forwarded-user'] || headers['x-user-id'] || undefined
 
-        // client._client is ONLY added for recognised authenticated clients
+        // client._client is ONLY added for recognised authenticated clients - this is still a best effort - external tools or custom middleware MUST be used to validate
         if (authProvider !== undefined && userID !== undefined) {
             const email = headers['cf-access-authenticated-user-email'] || headers['x-authentik-email'] || headers['remote-email'] || headers['x-user-email'] || undefined
             const name = headers['x-authentik-name'] || headers['remote-name'] || headers['x-remote-name'] || handshake.auth?.user?.name
@@ -529,7 +529,7 @@ class UibSockets {
 
     /** Get a uib node instance namespace
      * @param {string} url The uibuilder node instance's url (identifier)
-     * @returns {socketio.Namespace} Return a reference to the namespace of the specified uib instance for convenience in core code
+     * @return {socketio.Namespace} Return a reference to the namespace of the specified uib instance for convenience in core code
      */
     getNs(url) {
         return this.ioNamespaces[url]
