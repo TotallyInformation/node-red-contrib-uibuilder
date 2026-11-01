@@ -25,12 +25,17 @@
  * @typedef {import('../../typedefs.js').runtimeNodeConfig} runtimeNodeConfig
  * @typedef {import('../../typedefs.js').runtimeNode} runtimeNode
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  * typedef {import('../typedefs.js')}
  * typedef {import('node-red')} Red
  * typedef {import('Express')} Express
  * typedef {import('socket.io').Namespace} socketio.Namespace
  * typedef {import('socket.io').Socket} socketio.Socket
  */
+
+// Will auto-enable if TI_ENV environment variable is set to "debug"
+const { /** @type {uibCustomLogger} */ log: clog, } = require('./logger.mjs')
+clog.debug('Loading')
 
 const path = require('node:path')
 const { promisify, } = require('node:util')
@@ -380,7 +385,7 @@ const UibLib = {
      *   @param {(chunk: string) => void} [opts.stream] Optional. Callback for streaming output chunks
      *   @param {(shell: import('node:child_process').ChildProcessWithoutNullStreams) => void} [opts.childProcess] Optional. Callback to receive the spawned child process for process control (e.g. killing the process)
      *   @param {string} [opts.out] Optional. Set to 'bare' to return just the output string
-     *   @param {boolean} [opts.verbose] Optional. Whether to include verbose output formatting
+     *   @param {boolean} [opts.verbose] Optional. Whether to include verbose output formatting (Default=false)
      *   @param {object|string} [opts.env] Optional. Whether to include environment variables object for the command, if a string, will use process.env
      * @return {Promise<{all:string, code:number, command:string, pid?: number}>} Promise with kill method for process control
      *
@@ -399,7 +404,7 @@ const UibLib = {
         const stream = opts.stream
         const childProcess = opts.childProcess
         const out = opts.out
-        const verbose = opts.verbose
+        const verbose = opts.verbose ?? false
 
         // Create spawn options by copying opts and removing custom properties
         // const spawnOpts = { shell: true, windowsHide: true, ...opts, }
@@ -411,11 +416,10 @@ const UibLib = {
         // @ts-ignore Remove shell option, we handle it explicitly
         // delete spawnOpts.shell
 
-        // @ts-ignore Ensure stdio is set to 'pipe' so shell.stdout and shell.stderr are streams
+        // Ensure stdio is set to 'pipe' so shell.stdout and shell.stderr are streams
         spawnOpts.stdio = 'pipe'
-        // @ts-ignore Ensure spawnOpts.env is an object if provided
+        // Ensure spawnOpts.env is an object if provided
         if (spawnOpts.env && typeof spawnOpts.env === 'string') {
-            // @ts-ignore
             spawnOpts.env = process.env
         }
         // @ts-ignore Avoid DEP0190 by not using shell: true
@@ -479,9 +483,11 @@ const UibLib = {
                 if (out === 'bare') {
                     resolve(output)
                 } else {
-                    let all = output
+                    let all
                     if (verbose === true) {
-                        all = `\n------------------------------------------------------\n[uibuilder:uiblib:runOsCmd]\nCommand:\n  "${cmdOut}"\n  Completed with code ${code}\n  \n${output}\n------------------------------------------------------\n`
+                        all = `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n[uibuilder:uiblib:runOsCmd]\nCommand:\n  "${cmdOut}"\n  Completed with code ${code}\n  \n${output}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`
+                    } else {
+                        all = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${output}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
                     }
                     resolve({
                         all: all,
@@ -959,7 +965,7 @@ const UibLib = {
         this.queueTelemetrySave()
     },
     // #endregion ----- Telemetry functions ----- //
-
-} // ---- End of module.exports ---- //
+}
 
 module.exports = UibLib
+clog.debug('Loaded')
