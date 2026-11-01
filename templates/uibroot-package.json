@@ -2,6 +2,7 @@
     "name": "uib_root",
     "version": "TEMPLATE",
     "description": "Root configuration and data folder for uibuilder",
+    "private": true,
     "scripts": {},
     "dependencies": {},
     "homepage": "",
