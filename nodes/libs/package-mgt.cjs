@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable jsdoc/valid-types */
 /** Manage npm packages
  *
@@ -24,12 +23,18 @@
  * @typedef {import('../../typedefs.js').uibNode} uibNode
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
  * @typedef {import('../../typedefs.js').uibPackageJson} uibPackageJson
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  */
+
+// Will auto-enable if TI_ENV environment variable is set to "debug"
+const { /** @type {uibCustomLogger} */ log: clog, } = require('./logger.mjs')
+clog.debug('Loading')
 
 const { join, } = require('node:path')
 const { copy, copySync, existsSync, readJSONSync, writeJson, } = require('./fs.cjs')
 const { runOsCmd, runOsCmdSync, } = require('./uiblib.cjs')
 const uibGlobalConfig = require('./uibGlobalConfig.cjs')
+clog.debug('  Requires complete')
 
 class UibPackages {
     // #region ---- Class Variables ----
@@ -92,7 +97,7 @@ class UibPackages {
     } // ---- End of constructor ---- //
 
     /** Gets the global install folder for npm & saves to a class variable
-     * @returns {Promise<string>} The npm global install folder name
+     * @return {Promise<string>} The npm global install folder name
      */
     async npmGetGlobalPrefix() {
         // Does not need setup to have run
@@ -123,12 +128,13 @@ class UibPackages {
         }
 
         return out
-    } // ---- End of npmGetGlobalPrefix ---- //
+    }
 
     /** Configure this class with uibuilder module specifics
      * param {uibConfig} uib uibuilder module-level configuration
      */
     setup() {
+        clog.debug('  Setup started')
         const uib = uibGlobalConfig
         if ( uib.RED === null ) throw new Error('[uibuilder:UibPackages.js:setup] uib.RED is null')
         if ( uib.rootFolder === null ) throw this.#rootFldrNullError
@@ -181,7 +187,7 @@ class UibPackages {
         this.updateInstalledPackageDetails()
 
         log.trace('🌐[uibuilder:package-mgt:setup] Package Management setup completed')
-    } // ---- End of setup ---- //
+    }
 
     /** Make sure that <uibRoot>/package.json exists and contains basic info */
     createBasicPj() {
@@ -199,9 +205,10 @@ class UibPackages {
      * ! This could return a PARENT details if package.json doesn't exist in the given folder
      * ! If no package.json found, returns empty json if no node_modules.
      * ! If no package.json but modules anyway, output includes a `problems` entry
-     * @returns {object} uibRoot package.json + dependencyDetails for actual installed packages
+     * @return {object} uibRoot package.json + dependencyDetails for actual installed packages
      */
     pkgCheck() {
+        clog.debug('  pkgCheck started')
         if ( this.uib === undefined ) throw this.#uibUndefinedError
         if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
 
@@ -220,14 +227,14 @@ class UibPackages {
         ]
 
         let out
-        // console.time('⏱️ >> pkgCheckCmd')
+        clog.debug('  ⏱️ >> pkgCheckCmd')
         try {
             out = runOsCmdSync('npm', args, opts)
             out = JSON.parse(out)
         } catch (e) {
             this.log.error(`🌐🛑[uibuilder:package-mgt:pkgCheck] npm list installed packages FAILED. ${e.message}`, e)
         }
-        // console.timeEnd('⏱️ >> pkgCheckCmd')
+        clog.debug('  ⏱️ << pkgCheckCmd')
 
         // Save dependencies seperatelly then move _dependendencies back to dependencies to normalise the data
         this.dependencyDetails = out.dependencies
@@ -240,6 +247,7 @@ class UibPackages {
             delete out.problems
         }
 
+        clog.debug('  pkgCheck completed')
         return out
     }
 
@@ -419,7 +427,7 @@ class UibPackages {
 
     /** Get the instance node for a uibuilder instance
      * @param {string} url The URL of the uibuilder instance
-     * @returns {uibNode|null} The instance node or null if not found
+     * @return {uibNode|null} The instance node or null if not found
      */
     getInstanceNode(url) {
         const RED = this.uib.RED
@@ -441,7 +449,7 @@ class UibPackages {
     /** Get the root folder for a uibuilder instance
      * @throws {Error} if setup has not been called
      * @param {string} url The URL of the uibuilder instance
-     * @returns {string|null} The root folder path or null if not found
+     * @return {string|null} The root folder path or null if not found
      */
     getInstanceRootFolder(url) {
         if ( this.log === undefined ) throw this.#logUndefinedError
@@ -463,7 +471,7 @@ class UibPackages {
 
     /** Get the list of npm script names for a uibuilder instance
      * @param {string} url The URL of the uibuilder instance
-     * @returns {Array<string>} Array of npm script names or empty list if not found
+     * @return {Array<string>} Array of npm script names or empty list if not found
      */
     getInstanceNpmScriptNames( url ) {
         if ( this.log === undefined ) throw this.#logUndefinedError
@@ -505,7 +513,7 @@ class UibPackages {
      *       So we no longer use it, just search for folder names.
      * @param {string} packageName - Name of the package who's install folder we are looking for.
      * @param {string|Array<string>} installRoot Location to search. Can be an array of locations.
-     * @returns {null|string} Actual filing system path to the installed package
+     * @return {null|string} Actual filing system path to the installed package
      */
     getPackagePath2(packageName, installRoot) {
         if ( this.log === undefined ) throw this.#logUndefinedError
@@ -525,11 +533,11 @@ class UibPackages {
 
         this.log.warn(`🌐⚠️[uibuilder:package-mgt:getPackagePath2] PACKAGE ${packageName} NOT FOUND`)
         return null
-    } // ----  End of getPackagePath2 ---- //
+    }
 
     /** Is the specified package installed into uibRoot (e.g. via the library manager)
      * @param {string} packageName The package name to check
-     * @returns {boolean} True if it is installed, false otherwise
+     * @return {boolean} True if it is installed, false otherwise
      */
     isPackageInstalled(packageName) {
         if ( this.#isConfigured !== true ) {
@@ -541,7 +549,7 @@ class UibPackages {
         if (!this.uibPackageJson.uibuilder.packages[packageName]) return false
 
         return true
-    } // ----  End of isPackageInstalled ---- //
+    }
 
     // #region -- Manage Packages via npm --
 
@@ -552,38 +560,34 @@ class UibPackages {
      *       and that is updated by calling web.serveVendorPackages()
      *       which can't be done here - The calling admin API's do that
      *       Editor->API->This fn->API cont.->web.serveVendorPackages->getUibRootPackageJson->API cont2->Editor
-     * @param {string} url Node instance url
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
      * @param {string} [tag] Default=''. Specifier for a version, tag, branch, etc. with leading @ for npm and # for GitHub installs
-     * @param {string} [toLocation] Where to install to. '' defaults to uibRoot
+     * @param {string} [toLocation] Where to install to. '' defaults to uibRoot. **WARNING: Validate this at source!**
      * @param {'install'|'update'} [action] Install or Update. Defaults to install
-     * @returns {Promise<{all:string, code:number, command:string}|string>} Combined stdout/stderr, return code
+     * @param {boolean=} verbose Default=true. If true, log the output of the npm - normally the calller should log, if so, set this to false
+     * @return {Promise<{all:string, code:number, command:string}>} Combined stdout/stderr, return code
      */
-    async npmInstallPackage(url, pkgName, tag = '', toLocation = '', action = 'install') {
+    async npmInstallPackage(pkgName, tag = '', toLocation = '', action = 'install', verbose = true) {
         if ( this.log === undefined ) throw this.#logUndefinedError
-
-        // FIXME: No longer needed
-        if ( this.#isConfigured !== true ) {
-            this.log.warn('🌐⚠️[uibuilder:UibPackages:npmInstallPackage] Cannot run. Setup has not been called.')
-            return ''
-        }
 
         if ( this.uib === undefined ) throw this.#uibUndefinedError
         if ( this.uib.rootFolder === null ) throw new Error('this.log.rootFolder is null')
+        if ( !['install', 'update'].includes(action) ) throw new Error('action must be either install or update')
         if ( toLocation === '' ) toLocation = this.uib.rootFolder
 
         const opts = { ...this.npmCmdOpts, }
         opts.cwd = toLocation
         opts.out = ''
+        opts.verbose = verbose
 
-        const args = [ // `npm install --no-audit --no-update-notifier --save --production --color=false --no-fund --json ${params.package}@latest`
+        const args = [ // `npm install --no-audit --no-update-notifier --save --omit=dev --color=false --no-fund --json ${params.package}@latest`
             action,
             pkgName + tag,
             '--no-fund',
             '--no-audit',
             '--no-update-notifier',
             '--save',
-            '--production',
+            '--omit=dev',
             '--color=false',
             // '--json',
         ]
@@ -612,42 +616,36 @@ class UibPackages {
             myerr.command = out.command
             throw myerr
         }
-
-        // TODO: If location = uibRoot, update the metadata (remove from admin-api-v2)
-
-        this.log.info(`🌐📘[uibuilder:UibPackages:npmInstallPackage] npm output: \n ${out.all}\n `)
-
+        // Don't log here, caller should log
+        // this.log.info(`🌐📘[uibuilder:package-mgt:npmInstallPackage] npm output: \n ${out.all}\n `)
         return out
-    } // ---- End of installPackage ---- //
+    }
 
-    /** Install an npm package
+    /** Remove an npm package
      * NOTE: This fn does not update the list of packages - see install above for reasons.
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
-     * @returns {Promise<{all:string, code:number, command:string}|string>} Combined stdout/stderr
+     * @param {boolean=} verbose Default=true. If true, log the output of the npm - normally the calller should log, if so, set this to false
+    * @return {Promise<{all:string, code:number, command:string}>} Combined stdout/stderr
      */
-    async npmRemovePackage(pkgName) {
+    async npmRemovePackage(pkgName, verbose = true) {
         if ( this.log === undefined ) throw this.#logUndefinedError
         if ( this.uib === undefined ) throw this.#uibUndefinedError
         if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
 
-        if ( this.#isConfigured !== true ) {
-            this.log.warn('🌐⚠️[uibuilder:UibPackages:npmRemovePackage] Cannot run. Setup has not been called.')
-            return ''
-        }
-
         const opts = { ...this.npmCmdOpts, }
         opts.cwd = this.uib.rootFolder
         opts.out = ''
+        opts.verbose = verbose
 
         const args = [
             'uninstall',
+            pkgName,
             '--save',
             '--color=false',
             '--no-fund',
             '--no-audit',
             '--no-update-notifier',
             // '--json',
-            pkgName,
         ]
 
         /** @type {{all:string, code:number, command:string}} */
@@ -674,14 +672,14 @@ class UibPackages {
             myerr.command = out.command
             throw myerr
         }
-        this.log.info(`🌐📘[uibuilder:UibPackages:npmRemovePackage] npm output: \n ${out.all}\n `)
-
+        // Make the caller log, not here
+        // this.log.info(`🌐📘[uibuilder:UibPackages:npmRemovePackage] npm output: \n ${out.all}\n `)
         return out
-    } // ---- End of removePackage ---- //
+    }
 
     /** Get the latest version string for a package
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
-     * @returns {Promise<any>} Combined stdout/stderr
+     * @return {Promise<any>} Combined stdout/stderr
      */
     async npmOutdated(pkgName) {
         if ( this.log === undefined ) throw this.#logUndefinedError
@@ -722,13 +720,14 @@ class UibPackages {
         this.log.trace(`🌐[uibuilder[:UibPackages:npmOutdated] npm output: \n ${out}\n `)
 
         return out // we asked for bare output so out is a string
-    } // ---- End of npmOutdated ---- //
+    }
 
     /** Update an npm package (Not yet in use)
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
-     * @returns {Promise<{all:string, code:number, command:string}|string>} Combined stdout/stderr, return code
+     * @param {boolean=} verbose Default=true. If true, log the output of the npm - normally the calller should log, if so, set this to false
+     * @return {Promise<{all:string, code:number, command:string}|string>} Combined stdout/stderr, return code
      */
-    async npmUpdate(pkgName) {
+    async npmUpdate(pkgName, verbose = true) {
         if ( this.log === undefined ) throw this.#logUndefinedError
 
         if ( this.#isConfigured !== true ) {
@@ -744,17 +743,18 @@ class UibPackages {
         const opts = { ...this.npmCmdOpts, }
         opts.cwd = toLocation
         opts.out = ''
+        opts.verbose = verbose
 
         const args = [
             'update',
+            pkgName,
             '--no-fund',
             '--no-audit',
             '--no-update-notifier',
             '--save',
-            '--production',
+            '--omit=dev',
             '--color=false',
             // '--json',
-            pkgName,
         ]
 
         /** @type {{all:string, code:number, command:string}} */
@@ -782,6 +782,7 @@ class UibPackages {
             throw myerr
         }
 
+        // TODO Don't log here - make the caller log
         this.log.info(`🌐📘[uibuilder:UibPackages:npmUpdate] npm output: \n ${out.all}\n `)
 
         return out
@@ -794,7 +795,7 @@ class UibPackages {
      * @param {string} scriptName The name of the npm script to run
      * @param {string} uibUrl The URL (name) of the uibuilder instance
      * @param {Function} [streamOutput] Optional. If provided, will be called with each chunk of output as soon as it arrives
-     * @returns {Promise<{all:string, code:number, command:string, pid?: number}>} Combined stdout/stderr, return code of the executed command, with .kill() method
+     * @return {Promise<{all:string, code:number, command:string, pid?: number}>} Combined stdout/stderr, return code of the executed command, with .kill() method
      * @throws {Error} If this.log is undefined (setup not called)
      * @example
      * const promise = npmRunScript('build', 'myurl', chunk => console.log(chunk))
@@ -838,7 +839,7 @@ class UibPackages {
         }
 
         const args = [
-            // forces unknown script names to use npm run so only pre-defined scripts can run
+            // Since v8.0.0 forces unknown script names to use npm run so only pre-defined scripts can run
             ['outdated', 'update', 'install'].includes(scriptName) ? '' : 'run',
             scriptName,
             '--long',
@@ -886,12 +887,12 @@ class UibPackages {
         // @ts-ignore
         promise.pid = childProcessRef ? childProcessRef.pid : null
         return promise
-    } // ---- End of npmRunScript ---- //
+    }
 }
 
 /** Singleton model. Only 1 instance of UibWeb should ever exist.
  * Use as: `const packageMgt = require('./package-mgt.js')`
  */
-// @ts-ignore
 const uibPackages = new UibPackages()
 module.exports = uibPackages
+clog.debug('Loaded')
