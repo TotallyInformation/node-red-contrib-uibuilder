@@ -325,9 +325,7 @@ function pluginDefinition(RED) {
 
     /** (b) Do this before doing the web setup so that the packages can be served but after the folder/file setup */
     // ! This is SLOW - ~800ms on a clean install with 1 uibuilder, no packages
-    clog.debug('>> packageMgt setup')
     packageMgt.setup()
-    clog.debug('<< packageMgt setup')
 
     /** (c) We need an ExpressJS web server to serve the page, socket.io and vendor packages. */
     const web = require('./libs/web.cjs')
