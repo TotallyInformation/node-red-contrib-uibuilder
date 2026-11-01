@@ -22,7 +22,7 @@
     /** Default template name */
     const defaultTemplate = 'blank'
     /** List of installed packages - rebuilt when editor is opened, updates by library mgr */
-    let packages = uibuilder.packages
+    // let packages = uibuilder.packages
 
     /** List of npm script names for the current instance */
     let npmScriptNames = []
@@ -44,7 +44,7 @@
     /** placeholder for instance folder list
         @type {Array<string>}
     */
-    let folders = []
+    // let folders = []
 
     /** Placeholder for long-running npm scripts
      * Allows tracking and returning to them even if the Edit panel is closed
@@ -67,81 +67,38 @@
         const node = evt.data.node
         const displayVer = evt.target.nextElementSibling
 
-        RED.notify('Installing npm package ' + packageName)
+        RED.notify(`🌐 Starting update of npm package "${packageName}"`)
+        $('i.spinner').show()
 
-        // Call the npm installPackage v2 API (it updates the package list)
-        $.ajax({
-            url: 'uibuilder/uibnpmmanage',
-            method: 'GET',
-            dataType: 'json', // Expect JSON data
-            data: { // converted to URL parameters
-                cmd: 'update',
-                package: packageName,
-                url: node.url,
-            },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
-            },
-            success: function(data) {
-                const npmOutput = data.result[0]
-
-                if (data.success === true) {
-                    packages = uibuilder.packages = data.result[1]
-
-                    console.log('🌐[uibuilder:doPkgUpd:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
-                    RED.notify(`Successful update of npm package ${packageName}`, 'success')
-                    displayVer.innerHTML = data.result[1][packageName].installedVersion
-                    $(evt.target).remove() // removes the update button
-                } else {
-                    console.log('🌐[uibuilder:doPkgUpd:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ')
-                    RED.notify(`FAILED update of npm package ${packageName}`, 'error')
-                }
-
-                // Hide the progress spinner
-                $('i.spinner').hide()
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('🌐🛑[uibuilder:doPkgUpd:get] Error ' + textStatus, errorThrown)
-                RED.notify(`FAILED update of npm package ${packageName}`, 'error')
-
-                $('i.spinner').hide()
-
-                return 'addPackageRow failed'
-                // TODO otherwise highlight input
-            },
-        })
-
-        $.ajax({
-            type: 'PUT',
+        // Call the npm installPackage v3 API (it updates the package list)
+        uibuilder.doAdminApiv3({
+            verb: 'PUT',
+            // url: url,
             dataType: 'json',
-            url: './uibuilder/admin/' + evt.data.node.url, // v3 api
-            data: {
+            data: { // converted to URL query parameters
                 cmd: 'updatepackage',
-                pkgName: evt.data.pkgName,
+                package: packageName,
             },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
+            done: (data, textStatus, jqXHR) => {
+                // Returned data contains all defined packages
+                uibuilder.packages = data.result[1]
+                console.log(`🌐[uibuilder:doPkgUpd:put] PACKAGE UPDATED: "${packageName}"`, { pkgDefinition: uibuilder.packages[packageName], })
+                RED.notify(`🌐 Successful update of npm package "${packageName}"`, 'success')
+                RED._debug({ topic: 'UIBUILDER Library Update', result: 'success', payload: packageName, output: data, })
+
+                // reset and populate the list
+                $('#node-input-packageList').editableList('empty')
+                $('#node-input-packageList').editableList('addItems', Object.keys(uibuilder.packages))
+                $('i.spinner').hide()
+                // Assuming update worked, hide the update button
+                $(`#upd_${evt.data.pkgName}`).hide()
+            },
+            fail: (_jqXHR, textStatus, errorThrown) => {
+                console.error(`🌐🛑[uibuilder:doPkgUpd:put] Error: ${textStatus}`, errorThrown)
+                RED.notify(`🌐 FAILED to update npm package "${packageName}"`, 'error')
+                $('i.spinner').hide()
             },
         })
-            .done(function(data, _textStatus, jqXHR) {
-
-            })
-            .fail(function(jqXHR, textStatus, errorThrown) {
-                console.error( '🌐🛑[uibuilder:doPkgUpd:PUT] Error ' + textStatus, errorThrown )
-                RED.notify(`uibuilder: Package update for '${evt.data.pkgName}' failed.<br>${errorThrown}`, { type: 'error', })
-            })
-
-        // Assuming update worked, hide the button - And update version string
-        $(`#upd_${evt.data.pkgName}`)
-            .hide()
-            .next()
-            .text('XXX')
     }
 
     /** AddItem function for package list
@@ -182,7 +139,7 @@
                 npm install <tarball url>
                 npm install <folder>
                 */
-            pkgSpec = packages[data]
+            pkgSpec = uibuilder.packages[data]
 
             // if wanted !== installed, show update
             let upd = ''
@@ -241,63 +198,42 @@
             const packageTag = String($(`#packageList-tag-${index}`).val())
 
             if ( packageName.length !== 0 ) {
-                RED.notify('Installing npm package ' + packageName)
+                RED.notify(`🌐 Installing npm package "${packageName}"`)
 
-                // Call the npm installPackage v2 API (it updates the package list)
-                $.ajax({
-                    url: 'uibuilder/uibnpmmanage',
-                    method: 'GET',
-                    dataType: 'json', // Expect JSON data
-                    data: { // converted to URL parameters
-                        cmd: 'install',
+                // Call the npm installPackage v3 API (it updates the package list)
+                uibuilder.doAdminApiv3({
+                    verb: 'PUT',
+                    // url: url,
+                    dataType: 'json',
+                    data: { // converted to URL query parameters
+                        cmd: 'installpackage',
                         package: packageName,
-                        url: node.url,
                         tag: packageTag,
                     },
-                    beforeSend: function(jqXHR) {
-                        const authTokens = RED.settings.get('auth-tokens')
-                        if (authTokens) {
-                            jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                        }
-                    },
-                    success: function(data) {
-                        const npmOutput = data.result[0]
+                    done: (data, textStatus, jqXHR) => {
+                        // Returned data contains all defined packages
+                        uibuilder.packages = data.result[1]
+                        console.log(`🌐[uibuilder:addPackageRow:put] PACKAGE INSTALLED: "${packageName}"`, { pkgDefinition: uibuilder.packages[packageName], })
+                        RED.notify(`🌐 Successful installation of npm package "${packageName}"`, 'success')
+                        RED._debug({ topic: 'UIBUILDER Library Install', result: 'success', payload: packageName, output: data, })
 
-                        if ( data.success === true) {
-                            packages = uibuilder.packages = data.result[1]
-
-                            console.log('🌐[uibuilder:addPackageRow:get] PACKAGE INSTALLED. ', packageName, node.url, '\n\n', npmOutput, '\n ', packages[packageName])
-                            RED.notify(`Successful installation of npm package ${packageName} for ${node.url}`, 'success')
-                            RED._debug({ topic: 'UIBUILDER Library Install', result: 'success', payload: packageName, output: npmOutput, })
-
-                            // reset and populate the list
-                            $('#node-input-packageList').editableList('empty')
-                            // @ts-ignore
-                            $('#node-input-packageList').editableList('addItems', Object.keys(packages))
-                        } else {
-                            console.log('🌐[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', npmOutput, '\n ' )
-                            RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
-                        }
-
-                        // Hide the progress spinner
+                        // reset and populate the list
+                        $('#node-input-packageList').editableList('empty')
+                        $('#node-input-packageList').editableList('addItems', Object.keys(uibuilder.packages))
                         $('i.spinner').hide()
                     },
-                    error: function(jqXHR, textStatus, errorThrown) {
-                        console.log('🌐[uibuilder:addPackageRow:get] ERROR ON INSTALLATION OF PACKAGE ', packageName, node.url, '\n\n', textStatus, '\n ', errorThrown, '\n ' )
-                        RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
+                    fail: (_jqXHR, textStatus, errorThrown) => {
+                        console.error(`🌐🛑[uibuilder:removePackageRow:put] Error: ${textStatus}`, errorThrown)
+                        RED.notify(`🌐 FAILED to uninstall npm package "${packageName}"`, 'error')
+
+                        // Put the entry back again
+                        $('#node-input-packageList').editableList('addItem', packageName)
+                        $('i.spinner').hide()
                     },
                 })
-                    .fail(function(_jqXHR, textStatus, errorThrown) {
-                        console.error( '🌐🛑[uibuilder:addPackageRow:get] Error ' + textStatus, errorThrown )
-                        RED.notify(`FAILED installation of npm package ${packageName} for ${node.url}`, 'error')
-
-                        $('i.spinner').hide()
-                        return 'addPackageRow failed'
-                        // TODO otherwise highlight input
-                    })
             } // else Do nothing
         }) // -- end of button click -- //
-    } // --- End of addPackageRow() ---- //
+    }
 
     /** RemoveItem function for package list
      * @param {string} packageName Name of the npm package to remove
@@ -309,89 +245,81 @@
             return 'No package'
         }
 
-        RED.notify('Starting removal of npm package ' + packageName)
+        RED.notify(`🌐 Starting removal of npm package "${packageName}"`)
         // show activity spinner
         $('i.spinner').show()
 
         // Call the npm installPackage API (it updates the package list)
-        $.ajax({
-            url: 'uibuilder/uibnpmmanage',
-            method: 'GET',
-            dataType: 'json', // Expect JSON data
-            data: { // converted to URL parameters
-                cmd: 'remove',
+        uibuilder.doAdminApiv3({
+            verb: 'PUT',
+            // url: url,
+            dataType: 'json',
+            data: { // converted to URL query parameters
+                cmd: 'removepackage',
                 package: packageName,
             },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
-            },
-            success: function(data) {
-                if ( data.success === true) {
-                    console.log('🌐[uibuilder:removePackageRow:get] PACKAGE REMOVED. ', packageName)
-                    RED.notify('Successfully uninstalled npm package ' + packageName, 'success')
-                    if ( packages[packageName] ) delete packages[packageName]
-                } else {
-                    console.log('🌐[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', data.result )
-                    RED.notify(`FAILED to uninstall npm package ${packageName}`, 'error')
-                    // Put the entry back again
-                    $('#node-input-packageList').editableList('addItem', packageName)
-                }
-
+            done: (data, textStatus, jqXHR) => {
+                console.log(`🌐[uibuilder:removePackageRow:put] PACKAGE REMOVED: "${packageName}"`)
+                RED.notify(`🌐 Successfully uninstalled npm package "${packageName}"`, 'success')
+                if ( uibuilder.packages[packageName] ) delete uibuilder.packages[packageName]
                 $('i.spinner').hide()
             },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.log('🌐[uibuilder:removePackageRow:get] ERROR ON PACKAGE REMOVAL ', packageName, '\n\n', textStatus, '\n ', errorThrown, '\n ' )
-                RED.notify(`FAILED to uninstall npm package ${packageName}`, 'error')
-            },
-        })
-            .fail(function(_jqXHR, textStatus, errorThrown) {
-                console.error( '🌐🛑[uibuilder:removePackageRow:get] Error ' + textStatus, errorThrown )
-                RED.notify('FAILED to uninstall npm package ' + packageName, 'error')
+            fail: (_jqXHR, textStatus, errorThrown) => {
+                console.error( `🌐🛑[uibuilder:removePackageRow:put] Error: ${textStatus}`, errorThrown )
+                RED.notify(`🌐 FAILED to uninstall npm package "${packageName}"`, 'error')
 
                 // Put the entry back again
-                // @ts-ignore
                 $('#node-input-packageList').editableList('addItem', packageName)
-
                 $('i.spinner').hide()
-                return 'removePackageRow failed'
-                // TODO otherwise highlight input
-            })
-
-        return null
-    } // ---- End of removePackageRow ---- //
-
-    /** Get the list of npm script names for the uibuilder instance, updates `npmScriptNames` var
-     * @param {string} url The instance url
-     */
-    function getInstanceNpmScriptNames(url) {
-        const stdScripts = ['outdated', 'update', 'install']
-        // Call to admin-api-v3 to get the list of npm script names
-        $.ajax({
-            type: 'GET',
-            dataType: 'json',
-            async: false,
-            url: './uibuilder/admin/' + url,
-            data: {
-                cmd: 'getNpmScriptNames',
-            },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
             },
         })
-            .done(function(data, _textStatus, jqXHR) {
+        return null
+    }
+
+    /** Get the list of npm script names for the uibuilder instance, updates `npmScriptNames` var
+     * @param {uibNode} node A reference to the panel's `this` object
+     */
+    function getInstanceNpmScriptNames(node) {
+        const stdScripts = ['outdated', 'update', 'install']
+        // Call to admin-api-v3 to get the list of npm script names
+        uibuilder.doAdminApiv3({
+            verb: 'GET',
+            url: node.url,
+            dataType: 'json',
+            data: { // converted to URL query parameters
+                cmd: 'getNpmScriptNames',
+            },
+            done: (data, textStatus, jqXHR) => {
                 npmScriptNames = [...data, ...stdScripts]
-                // console.log(`🌐[uibuilder:getInstanceNpmScriptNames:getJSON] npm script names for '${url}':`, npmScriptNames, data)
-            })
-            .fail(function(jqXHR, textStatus, errorThrown) {
-                console.error( `🌐🛑[uibuilder:getInstanceNpmScriptNames:getJSON] '${url}' Error: ${textStatus}`, errorThrown )
-                RED.notify(`uibuilder: Could not get the npm script names for '${url}'.<br>${errorThrown}`, { type: 'error', })
-            })
+                const scriptList = $('#npm-script-list')
+                const elKillButton = $('#npm-script-kill')
+
+                // Clear the list
+                scriptList.empty()
+
+                npmScriptNames.forEach( (scriptName) => {
+                    // Add a button for each script
+                    scriptList.append(
+                        `<li><button id="btn-${scriptName}">${scriptName}</button></li>`
+                    )
+                    // Add the click handler for each button
+                    $(`#btn-${scriptName}`).on('click', function() { // (e) {
+                        runNpmScript(node, scriptName)
+                    })
+                })
+                // If a script is still running, display the kill button
+                console.log(`🌐[uibuilder:getInstanceNpmScriptNames] Currently running scripts for ${node.url}:`, runningScripts[node.url])
+                if (runningScripts[node.url]) {
+                    elKillButton.show()
+                } else {
+                    elKillButton.hide()
+                }
+            },
+            fail: (_jqXHR, textStatus, errorThrown) => {
+                console.error( `🌐🛑[uibuilder:getInstanceNpmScriptNames:getJSON] '${node.url}' Error: ${textStatus}`, errorThrown )
+                RED.notify(`🌐 uibuilder: Could not get the npm script names for '${node.url}'.<br>${errorThrown}`, { type: 'error', })
+            },
+        })
     }
 
     // #endregion ==== Package Management Functions ==== //
@@ -435,7 +363,7 @@
             }
         }
         return ftype
-    } // --- End of fileType --- //
+    }
 
     /** Enable/disable buttons if file has edits or not
      * @param {boolean} isClean true = the file is clean, else there are pending edits that need saving
@@ -461,7 +389,7 @@
             $('#node-dialog-ok').css( 'cursor', 'pointer' )
             $('#node-dialog-cancel').css( 'cursor', 'pointer' )
         }
-    } // --- End of fileIsClean --- //
+    }
 
     /** Get the chosen file contents & set up the ACE editor */
     function getFileContents() {
@@ -496,23 +424,16 @@
         $('#node-input-format').val(filetype)
 
         // Get the file contents via API defined in uibuilder.js
-        $.ajax({
-            url: 'uibuilder/uibgetfile',
-            method: 'GET',
-            data: { // converted to URL parameters
-                url: url,
+        uibuilder.doAdminApiv3({
+            verb: 'GET',
+            url: url,
+            dataType: 'text',
+            data: { // converted to URL query parameters
+                cmd: 'getfile',
                 fname: fname,
                 folder: folder,
             },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
-            },
-        })
-            .done(function(data, textStatus, jqXHR) {
-                // console.log( '🌐[uibuilder:getFileContents:get] File fetched successfully', textStatus, data, jqXHR)
+            done: (data, textStatus, jqXHR) => {
                 $('#node-input-template-editor').show()
                 $('#node-input-template-editor-no-file').hide()
                 // Add the fetched data to the editor
@@ -525,18 +446,19 @@
                 uiace.editorSession.getUndoManager().isClean()
                 // Position the cursor in the edit area
                 uiace.editor.focus()
-            })
-            .fail(function(_jqXHR, textStatus, errorThrown) {
+            },
+            fail: (_jqXHR, textStatus, errorThrown) => {
                 console.error( '🌐🛑[uibuilder:getFileContents:get] Error ' + textStatus, errorThrown )
                 uiace.editorSession.setValue('')
                 $('#node-input-template-editor').hide()
                 $('#node-input-template-editor-no-file').show()
-            })
-            .always(function() {
+            },
+            always: () => {
                 fileIsClean(true)
                 // Default the language selector in case it wasn't recognised
                 if (!$('#node-input-format option:selected').length) $('#node-input-format').val('text')
-            })
+            },
+        })
     }
 
     /** Get the list of files for the chosen url & folder
@@ -567,21 +489,14 @@
         $('#node-input-folder option').remove()
 
         // Get all files/folders for this uibuilder instance from API call
-        $.ajax({
-            type: 'GET',
+        uibuilder.doAdminApiv3({
+            verb: 'GET',
+            url: url,
             dataType: 'json',
-            url: './uibuilder/admin/' + url,
-            data: {
+            data: { // converted to URL query parameters
                 cmd: 'listall',
             },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
-            },
-        })
-            .done(function(data, _textStatus, jqXHR) {
+            done: (data, textStatus, jqXHR) => {
                 let firstFile = ''
                 let indexHtml = false
                 let selected = false
@@ -626,26 +541,25 @@
                     if ( filename === selectedFile ) selected = true
                 })
                 // Set default file name/type. In order: selectedFile param, index.html, 1st returned
-                // @ts-ignore
                 if ( selected === true ) uiace.fname = selectedFile
-                // @ts-ignore
                 else if ( indexHtml === true ) uiace.fname = 'index.html'
                 else uiace.fname = firstFile
                 $('#node-input-filename').val(uiace.fname)
                 uiace.format = fileType(uiace.fname)
                 // Persist the file name selection
                 localStorage.setItem('uibuilder.' + url + '.selectedFile', uiace.fname)
-            })
-            .fail(function(jqXHR, textStatus, errorThrown) {
+            },
+            fail: (_jqXHR, textStatus, errorThrown) => {
                 console.error( '🌐🛑[uibuilder:getFileList:getJSON] Error ' + textStatus, errorThrown )
                 uiace.fname = ''
                 uiace.format = 'text'
-                RED.notify(`uibuilder: Folder and file listing error.<br>${errorThrown}`, { type: 'error', })
-            })
-            .always(function() {
+                RED.notify(`🌐🛑uibuilder: Folder and file listing error.<br>${errorThrown}`, { type: 'error', })
+            },
+            always: () => {
                 getFileContents()
-            })
-    } // --- End of getFileList --- //
+            },
+        })
+    }
 
     /** Get a full list of instance folders (minus protected ones). Updates folders global var.
      * @param {uibNode} node A reference to the panel's `this` object
@@ -657,33 +571,27 @@
             return
         }
 
-        const data = $.ajax({
-            async: false,
-            type: 'GET',
+        uibuilder.doAdminApiv3({
+            verb: 'GET',
+            url: url,
             dataType: 'json',
-            url: './uibuilder/admin/' + url,
-            data: {
+            async: false,
+            data: { // converted to URL query parameters
                 cmd: 'listfolders',
             },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
+            done: (data, textStatus, jqXHR) => {
+                // console.log('🪲 [uibuilder:getFolders:done]', textStatus, data)
+                $('#node-input-sourceFolder').typedInput({
+                    types: [
+                        {
+                            value: 'sourceFolders',
+                            options: data, // array of <instanceRoot>/<foldername>
+                        }
+                    ],
+                })
             },
         })
-
-        folders = data.responseJSON
-
-        $('#node-input-sourceFolder').typedInput({
-            types: [
-                {
-                    value: 'sourceFolders',
-                    options: folders,
-                }
-            ],
-        })
-    } // --- End of getFolders --- //
+    }
 
     /** Call v3 admin API to create a new folder
      * @param {string} folder Name of new folder to create (combines with current uibuilder url)
@@ -694,35 +602,28 @@
         // Also get the current url
         const url = $('#node-input-url').val()
 
-        $.ajax({
-            type: 'POST',
+        uibuilder.doAdminApiv3({
+            verb: 'POST',
+            url: url,
             dataType: 'json',
-            url: `./uibuilder/admin/${url}`,
-            data: {
-                folder: folder,
+            data: { // converted to URL query parameters
                 cmd: 'newfolder',
+                folder: folder,
             },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
-            },
-        })
-            .done(function() { // data, textStatus, jqXHR) {
+            done: (data, textStatus, jqXHR) => {
                 RED.notify(`uibuilder: Folder <code>${folder}</code> Created.`, { type: 'success', })
                 // Rebuild the file list
                 getFileList()
                 // Rebuild the folder list
                 getFolders(node)
-
                 return 'Create folder succeeded'
-            })
-            .fail(function(jqXHR, textStatus, errorThrown) {
+            },
+            fail: (_jqXHR, textStatus, errorThrown) => {
                 RED.notify(`uibuilder: Create Folder Error.<br>${errorThrown}`, { type: 'error', })
                 return 'Create folder failed'
-            })
-    } // --- End of createNewFile --- //
+            },
+        })
+    }
 
     /** Call v3 admin API to create a new file
      * @param {string} fname Name of new file to create (combines with current selected folder and the current uibuilder url)
@@ -733,35 +634,28 @@
         const folder = $('#node-input-folder').val() || uiace.folder
         const url = $('#node-input-url').val()
 
-        $.ajax({
-            type: 'POST',
+        uibuilder.doAdminApiv3({
+            verb: 'POST',
+            url: url,
             dataType: 'json',
-            url: `./uibuilder/admin/${url}`,
-            data: {
+            data: { // converted to URL query parameters
+                cmd: 'newfile',
                 folder: folder,
                 fname: fname,
-                cmd: 'newfile',
             },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
-            },
-        })
-            .done(function() { // data, textStatus, jqXHR) {
+            done: (data, textStatus, jqXHR) => {
                 RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Created.`, { type: 'success', })
                 // Rebuild the file list
                 getFileList(fname)
-
                 return 'Create file succeeded'
-            })
-            .fail(function(jqXHR, textStatus, errorThrown) {
+            },
+            fail: (_jqXHR, textStatus, errorThrown) => {
                 console.error( '🌐🛑[uibuilder:createNewFile:post] Error ' + textStatus, errorThrown )
                 RED.notify(`uibuilder: Create File Error.<br>${errorThrown}`, { type: 'error', })
                 return 'Create file failed'
-            })
-    } // --- End of createNewFile --- //
+            },
+        })
+    }
 
     /** Call v3 admin API to delete the currently selected folder
      * returns {string} Status message
@@ -771,34 +665,27 @@
         const url = $('#node-input-url').val()
         const folder = $('#node-input-folder').val()
 
-        $.ajax({
-            type: 'DELETE',
+        uibuilder.doAdminApiv3({
+            verb: 'DELETE',
+            url: url,
             dataType: 'json',
-            url: `./uibuilder/admin/${url}`,
-            data: {
-                folder: folder,
+            data: { // converted to URL query parameters
                 cmd: 'deletefolder',
+                folder: folder,
             },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
-            },
-        })
-            .done(function() { // data, textStatus, jqXHR) {
+            done: (data, textStatus, jqXHR) => {
                 RED.notify(`uibuilder: Folder <code>${folder}</code> deleted.`, { type: 'success', })
                 // Rebuild the file list
                 getFileList()
-
                 return 'Delete folder succeeded'
-            })
-            .fail(function(jqXHR, textStatus, errorThrown) {
+            },
+            fail: (_jqXHR, textStatus, errorThrown) => {
                 console.error( '🌐🛑[uibuilder:deleteFolder:delete] Error ' + textStatus, errorThrown )
                 RED.notify(`uibuilder: Delete Folder Error.<br>${errorThrown}`, { type: 'error', })
                 return 'Delete folder failed'
-            })
-    } // --- End of deleteFolder --- //
+            },
+        })
+    }
 
     /** Call v3 admin API to delete the currently selected file
      * returns {string} Status message
@@ -809,35 +696,28 @@
         const url = /** @type {string} */ ($('#node-input-url').val())
         const fname = /** @type {string} */ ($('#node-input-filename').val())
 
-        $.ajax({
-            type: 'DELETE',
+        uibuilder.doAdminApiv3({
+            verb: 'DELETE',
+            url: url,
             dataType: 'json',
-            url: `./uibuilder/admin/${url}`,
-            data: {
+            data: { // converted to URL query parameters
+                cmd: 'deletefile',
                 folder: folder,
                 fname: fname,
-                cmd: 'deletefile',
             },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
-            },
-        })
-            .done(function() { // data, textStatus, jqXHR) {
+            done: (data, textStatus, jqXHR) => {
                 RED.notify(`uibuilder: File <code>${folder}/${fname}</code> Deleted.`, { type: 'success', })
                 // Rebuild the file list
                 getFileList(fname)
-
                 return 'Delete file succeeded'
-            })
-            .fail(function(jqXHR, textStatus, errorThrown) {
+            },
+            fail: (_jqXHR, textStatus, errorThrown) => {
                 console.error( '🌐🛑[uibuilder:deleteFile:delete] Error ' + textStatus, errorThrown )
                 RED.notify(`uibuilder: Delete File Error.<br>${errorThrown}`, { type: 'error', })
                 return 'Delete file failed'
-            })
-    } // --- End of deleteFile --- //
+            },
+        })
+    }
 
     /** Set the height of the ACE text editor box */
     function setACEheight() {
@@ -891,7 +771,7 @@
         }
     } // --- End of setACEheight --- //
 
-    /** Save Edited File */
+    /** Save Edited File (API v2)*/
     function saveFile() {
         const authTokens = RED.settings.get('auth-tokens')
 
@@ -987,6 +867,8 @@
     function queryFolderExists(url) {
         if (url === undefined) return false
         let check = false
+
+        // For now, don't use uibuilder.doAdminApiv3() as this needs to be a sync request
         $.ajax({
             type: 'GET',
             async: false,
@@ -1146,7 +1028,6 @@
                 fId = fId.split('-')[1]
             }
             this.urlDeployedDup = fId !== this.id
-            if (value.startsWith('overview')) console.log(`>> urlDeployedDup >> fId: ${fId}, this.id: ${this.id}, this.urlDeployedDup: ${this.urlDeployedDup}`)
         } else {
             this.urlDeployedDup = false
         }
@@ -1159,7 +1040,6 @@
                 fId = fId.split('-')[1]
             }
             this.urlEditorDup = fId !== this.id
-            if (value.startsWith('overview')) console.log(`>> urlEditorDup >> fId: ${fId}, this.id: ${this.id}, this.urlEditorDup: ${this.urlEditorDup}`)
         } else {
             this.urlEditorDup = false
         }
@@ -1223,7 +1103,6 @@
 
             /** If the folder already exists but not in another node */
             if ( this.urlEditorDup === false && this.folderExists === true && this.urlChanged === true ) {
-                log('>> folder already exists >>', this.url, this.id)
                 RED.notify(`<b>WARNING</b>: <p>The folder for the chosen URL (${value}) is already exists.<br>It will be adopted by this node.</p>`, { type: 'warning', })
             }
 
@@ -1261,42 +1140,7 @@
         }
 
         return this.urlValid
-    } // --- End of validateUrl --- //
-
-    /** Validation Function: Validate the session length property
-     * If security is on, must contain a number
-     * @return {boolean} true = valid, false = not valid
-     * @this {object}
-     */
-    // function validateSessLen() {
-    //     // NB: `this` is the node instance configuration as at last press of Done
-    //     // TODO: Add display comment to help user
-
-    //     var newVal = $('#node-input-sessionLength').val()
-    //     var newSec = $('#node-input-useSecurity').is(':checked')
-
-    //     if (newSec === true && (newVal.toString()).length < 1 ) return false
-
-    //     return true
-
-    // } // --- End of validateSessLen --- //
-
-    /** Validation Function: Validate the jwtSecret property
-     * If security is on, must contain text
-     * @return {boolean} true = valid, false = not valid
-     */
-    // function validateSecret() { // eslint-disable-line no-unused-vars
-    //     // NB: `this` is the node instance configuration as at last press of Done
-    //     // TODO: Add display comment to help user
-
-    //     var newVal = $('#node-input-jwtSecret').val()
-    //     var newSec = $('#node-input-useSecurity').is(':checked')
-
-    //     if (newSec === true && (newVal.toString()).length < 1 ) return false
-
-    //     return true
-
-    // } // --- End of validateSecret --- //
+    }
 
     /** Validation function: Was this node last deployed with a safe version?
      * In uibuilder.js, can change uib.reDeployNeeded to be the last version before the v that made a breaking change.
@@ -1380,7 +1224,7 @@
         const missing = []
 
         deps.forEach( (depName) => {
-            if ( !packages[depName] ) missing.push(depName)
+            if ( !uibuilder.packages[depName] ) missing.push(depName)
         })
 
         if ( missing.length > 0 ) {
@@ -1413,33 +1257,26 @@
         const url = $('#node-input-url').val()
         const reload = $('#node-input-reload').prop('checked')
 
-        $.ajax({
-            type: 'POST',
+        uibuilder.doAdminApiv3({
+            verb: 'POST',
+            url: url,
             dataType: 'json',
-            url: `./uibuilder/admin/${url}`,
-            data: {
+            data: { // converted to URL query parameters
+                cmd: 'replaceTemplate',
                 template: templateFolder,
                 extTemplate: extTemplate,
-                cmd: 'replaceTemplate',
                 reload: reload,
-                url: url,
             },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
-            },
-        })
-            .done(function(data, textStatus, jqXHR) {
+            done: (data, textStatus, jqXHR) => {
                 RED.notify(`<b>uibuilder</b>:<br><br>${jqXHR.statusText}<br>`, { type: 'success', })
                 return 'Template load succeeded'
-            })
-            .fail(function(jqXHR, textStatus, errorThrown) {
+            },
+            fail: (_jqXHR, textStatus, errorThrown) => {
                 console.error( '🌐🛑[uibuilder:loadTemplate] Error ' + textStatus, errorThrown )
                 RED.notify(`<b>uibuilder</b>:<br><br>Template Load Error.<br><br>${errorThrown}<br>`, { type: 'error', })
                 return 'Template load failed'
-            })
+            },
+        })
     } // --- End of loadTemplate() --- //
 
     /** Load a new template */
@@ -1650,7 +1487,6 @@
                         .prop('disabled', false)
                 }
             })
-        // @ts-ignore
         $('#fldr-new-dialog').dialog({ // define the dialog box
             autoOpen: false, modal: true, closeOnEscape: true,
             buttons: [
@@ -1665,7 +1501,6 @@
                             .addClass('input-error')
                         $('#fldr-new-dialog_new').addClass('input-error')
                             .prop('disabled', true)
-                        // @ts-ignore
                         $( this ).dialog( 'close' )
                     },
                 }, {
@@ -1675,24 +1510,19 @@
                             .addClass('input-error')
                         $('#fldr-new-dialog_new').addClass('input-error')
                             .prop('disabled', true)
-                        // @ts-ignore
                         $( this ).dialog( 'close' )
                     },
                 },
             ],
         })
-            .keyup(function(e) { // make enter key fire the create
-                // @ts-ignore
-                if (e.keyCode == $.ui.keyCode.ENTER)
-                    $('#fldr_new_dialog_new').trigger('click')
+            .on('keyup', function(e) { // make enter key fire the create
+                if (e.key === 'Enter') $('#fldr_new_dialog_new').trigger('click')
             })
         $('#btn-fldr-new').on('click', function() { // (e) {
             $('#fldr_url').html( /** @type {string} */ ($('#node-input-url').val()) )
-            // @ts-ignore
             $('#fldr-new-dialog').dialog('open')
         })
         // Handle the folder delete button
-        // @ts-ignore
         $('#fldr-del-dialog').dialog({
             autoOpen: false, modal: true, closeOnEscape: true,
             buttons: [
@@ -1702,13 +1532,11 @@
                     click: function() {
                         // Call the delete folder API (uses the current folder)
                         deleteFolder()
-                        // @ts-ignore
                         $( this ).dialog( 'close' )
                     },
                 }, {
                     text: 'Cancel',
                     click: function() {
-                        // @ts-ignore
                         $( this ).dialog( 'close' )
                     },
                 },
@@ -1730,7 +1558,6 @@
                 $('#fldr-del-recopy').css('color', '')
                     .text('')
             }
-            // @ts-ignore
             $('#fldr-del-dialog').dialog('open')
         })
 
@@ -1759,13 +1586,11 @@
                     click: function() {
                         // Call the delete file API (uses the current file)
                         deleteFile()
-                        // @ts-ignore
                         $( this ).dialog( 'close' )
                     },
                 }, {
                     text: 'Cancel',
                     click: function() {
-                        // @ts-ignore
                         $( this ).dialog( 'close' )
                     },
                 },
@@ -1820,7 +1645,6 @@
                             .addClass('input-error')
                         $('#edit_new_dialog_new').addClass('input-error')
                             .prop('disabled', true)
-                        // @ts-ignore
                         $( this ).dialog( 'close' )
                     },
                 }, {
@@ -1830,20 +1654,18 @@
                             .addClass('input-error')
                         $('#edit_new_dialog_new').addClass('input-error')
                             .prop('disabled', true)
-                        // @ts-ignore
                         $( this ).dialog( 'close' )
                     },
                 },
             ],
         })
-            .keyup(function(e) { // make enter key fire the create
-                if (e.keyCode == $.ui.keyCode.ENTER)
-                    $('#edit_new_dialog_new').click()
+            .on('keyup', function(e) { // make enter key fire the create
+                if (e.key === 'Enter')
+                    $('#edit_new_dialog_new').trigger('click')
             })
         $('#edit-new').on('click', function() { // (e) {
             $('#file_url').html( /** @type {string} */ ($('#node-input-url').val()) )
             $('#file_fldr').html( /** @type {string} */ ($('#node-input-folder').val()) )
-            // @ts-ignore
             $('#edit_new_dialog').dialog('open')
         })
         // #endregion
@@ -1886,7 +1708,7 @@
             //     document.exitFullscreen()
             // }
         })
-    } // ---- End of fileEditor ----
+    }
 
     /** Add uibuilder's custom buttons to the node-red editor node config panel's top button bar
      * Currently, open, docs and vscode buttons are added after the Delete button.
@@ -1933,6 +1755,10 @@
 
         xhr.open('PUT', `uibuilder/admin/${node.url}`, true)
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+        const authTokens = RED.settings.get('auth-tokens')
+        if (authTokens) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
+        }
 
         xhr.onload = function() {
             if (xhr.status === 200) {
@@ -2164,7 +1990,6 @@
             // When inside the editor, allow ctrl-s to save the file rather than the default of saving the web page
             const aceDiv = document.getElementsByClassName('red-ui-editor-text-container')
             aceDiv.item(0).addEventListener('keydown', (evt) => {
-                // @ts-ignore
                 if ( evt.ctrlKey === true && evt.key === 's' ) {
                     evt.preventDefault()
                     saveFile()
@@ -2185,7 +2010,7 @@
      */
     function tabLibraries(node) {
         // ! TODO Improve feedback
-        // console.log('>> packages >>', packages)
+        // console.log('>> packages >>', uibuilder.packages)
 
         // Setup the package list https://nodered.org/docs/api/ui/editableList/
         $('#node-input-packageList').editableList({
@@ -2205,7 +2030,7 @@
 
         // reset and populate the list
         $('#node-input-packageList').editableList('empty')
-        $('#node-input-packageList').editableList('addItems', Object.keys(packages))
+        $('#node-input-packageList').editableList('addItems', Object.keys(uibuilder.packages))
 
         // spinner
         $('.red-ui-editableList-addButton').after(' <i class="spinner"></i>')
@@ -2216,32 +2041,7 @@
      * @param {uibNode} node A reference to the panel's `this` object
      */
     function tabRunNpmScripts(node) {
-        getInstanceNpmScriptNames(node.url) // Sets npmScriptNames
-
-        const scriptList = $('#npm-script-list')
-        const elKillButton = $('#npm-script-kill')
-
-        // Clear the list
-        scriptList.empty()
-
-        npmScriptNames.forEach( (scriptName) => {
-            // Add a button for each script
-            scriptList.append(
-                `<li><button id="btn-${scriptName}">${scriptName}</button></li>`
-            )
-            // Add the click handler for each button
-            $(`#btn-${scriptName}`).on('click', function() { // (e) {
-                runNpmScript(node, scriptName)
-            })
-        })
-
-        // If a script is still running, display the kill button
-        console.log(`[uibuilder:tabRunNpmScripts] Running scripts for ${node.url}:`, runningScripts[node.url])
-        if (runningScripts[node.url]) {
-            elKillButton.show()
-        } else {
-            elKillButton.hide()
-        }
+        getInstanceNpmScriptNames(node) // Sets npmScriptNames
     }
 
     /** Prep tabs
