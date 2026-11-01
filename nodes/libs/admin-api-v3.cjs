@@ -424,7 +424,7 @@ v3AdminRouter.route('/:url')
 
             // Check if URL is already in use
             case 'checkurls': {
-                log.trace(`🌐[uibuilder[:adminRouterV3:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
+                log.trace(`🌐[uibuilder:adminRouterV3:GET:checkurls] Check if URL is already in use. URL: ${params.url}`)
 
                 /** @return {boolean} True if the given url exists, else false */
                 const chkInstances = Object.values(uib.instances).includes(params.url)
@@ -504,7 +504,7 @@ v3AdminRouter.route('/:url')
 
             // List all folders and files for this uibuilder instance
             case 'listall': {
-                log.trace(`🌐[uibuilder[:adminRouterV3:GET] Admin API. List all folders and files. url=${params.url}, root fldr=${uib.rootFolder}`)
+                log.trace(`🌐[uibuilder:adminRouterV3:GET] Admin API. List all folders and files. url=${params.url}, root fldr=${uib.rootFolder}`)
 
                 // get list of all (sub)folders (follow symlinks as well)
                 const out = { root: [], }
@@ -564,7 +564,7 @@ v3AdminRouter.route('/:url')
 
             // List all folders for this uibuilder instance
             case 'listfolders': {
-                log.trace(`🌐[uibuilder[:adminRouterV3:GET] Admin API. List all folders. url=${params.url}, root fldr=${uib.rootFolder}`)
+                log.trace(`🌐[uibuilder:adminRouterV3:GET] Admin API. List all folders. url=${params.url}, root fldr=${uib.rootFolder}`)
 
                 // get list of all (sub)folders (follow symlinks as well)
                 // const out = { 'root': [] }
@@ -669,34 +669,123 @@ v3AdminRouter.route('/:url')
         switch (params.cmd) {
             // Tell uibuilder to delete the instance local folder when this instance is deleted - see html file oneditdelete & uiblib.processClose
             case 'deleteondelete': {
-                log.trace(`🌐[uibuilder[:adminRouterV3:PUT:deleteondelete] url=${params.url}`)
+                log.trace(`🌐[uibuilder:adminRouterV3:PUT:deleteondelete] url=${params.url}`)
                 uib.deleteOnDelete[params.url] = true
                 res.statusMessage = 'PUT successful'
                 res.status(200).json({})
                 return
             }
 
-            // TODO: This is just a dummy placeholder for now
-            case 'updatepackage': {
-                log.trace(`🌐[uibuilder[:adminRouterV3:PUT:updatepackage] url=${params.url}`)
+            case 'updatepackage':
+            case 'installpackage': {
+                log.trace(`🌐[uibuilder:adminRouterV3:PUT:installpackage] package="${params.package}". url="${params.url}" (ignored)`)
+                if (!params.package) {
+                    res.json({ success: false, result: 'Package name not supplied', })
+                    return
+                }
+                // Create a unique process ID for this script execution
+                const processId = `uibApiV3Put_installpackage:${params.url}:${params.package}:${Date.now().toString()}`
+                // asyncLocalStorage captures the context for async functions so we can handle async outputs in a synchronous way
+                asyncLocalStorage.run({ requestId: processId, }, async () => {
+                    try {
+                        const npmOutput = await packageMgt.npmInstallPackage(params.package, params.tag, '', 'install', false)
+                        // Get the updated package.json file into packageMgt.uibPackageJson
+                        packageMgt.uibPackageJson = packageMgt.pkgCheck()
+                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
+                        packageMgt.pkgsQuickUpd()
+                        // ASYNC - Update details and re-save the file - no need to wait
+                        packageMgt.updateInstalledPackageDetails()
+                        // Update the packageList
+                        const web = require('./web.cjs') // late loading to avoid circular dependency
+                        web.serveVendorPackages()
 
-                res.statusMessage = 'PUT successful'
-                res.status(200).json({
-                    newVersion: '',
+                        res.json({ success: true, result: [npmOutput, packageMgt.uibPackageJson.uibuilder.packages], })
+                        log.info(`🌐[uibuilder:adminRouterV3:PUT:installPackage] Admin API. Added/updated package "${params.package}". \n${npmOutput.all}\n\n`)
+                    } catch (err) {
+                        clog.error('npmInstallPacckage error.', err)
+                        // err has extra props: {all:string, code:number, command:string}
+                        log.error(`🌐🛑[uibuilder:adminRouterV3:PUT:installpackage] Admin API. ERROR Running: \n'${err.command}' \n${err.all}\n\n`)
+                        res.json({ success: false, result: err.all, })
+                    }
+                })
+
+                // NB: url not required here
+                // packageMgt.npmInstallPackage(params.package, params.tag, '', 'install')
+                //     .then((npmOutput) => {
+                //         clog.debug('npmInstallPacckage then: ', npmOutput)
+                //         // Get the updated package.json file into packageMgt.uibPackageJson
+                //         packageMgt.uibPackageJson = packageMgt.pkgCheck()
+                //         // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
+                //         packageMgt.pkgsQuickUpd()
+                //         // ASYNC - Update details and re-save the file
+                //         packageMgt.updateInstalledPackageDetails()
+                //         // Update the packageList
+                //         const web = require('./web.cjs') // late loading to avoid circular dependency
+                //         web.serveVendorPackages()
+
+                //         res.json({ success: true, result: [npmOutput, packageMgt.uibPackageJson.uibuilder.packages], })
+                //         // return success
+                //         return true
+                //     })
+                //     .catch((err) => {
+                //         clog.error('npmInstallPacckage error.', err)
+                //         // err has extra props: {all:string, code:number, command:string}
+                //         log.error(`🌐🛑[uibuilder:apiv3:uibnpmmanage:${params.cmd}] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+                //         res.json({ success: false, result: err.all, })
+                //         return false
+                //     })
+
+                // res.statusMessage = 'PUT successful'
+                // res.status(200).json({
+                //     newVersion: '',
+                // })
+                return
+            }
+
+            case 'removepackage': {
+                log.trace(`🌐[uibuilder:adminRouterV3:PUT:removepackage] package="${params.package}". url="${params.url}" (ignored)`)
+                if (!params.package) {
+                    res.json({ success: false, result: 'Package name not supplied', })
+                    return
+                }
+
+                // Create a unique process ID for this script execution
+                const processId = `uibApiV3Put_removepackage:${params.url}:${params.package}:${Date.now().toString()}`
+                // asyncLocalStorage captures the context for async functions so we can handle async outputs in a synchronous way
+                asyncLocalStorage.run({ requestId: processId, }, async () => {
+                    try {
+                        const npmOutput = await packageMgt.npmRemovePackage(params.package, false)
+                        // Get the updated package.json file into packageMgt.uibPackageJson
+                        packageMgt.uibPackageJson = packageMgt.pkgCheck()
+                        // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
+                        packageMgt.pkgsQuickUpd()
+                        // ASYNC - Only need this to re-save the file - no need to wait
+                        packageMgt.updateInstalledPackageDetails()
+                        // Update the packageList
+                        const web = require('./web.cjs') // late loading to avoid circular dependency
+                        web.serveVendorPackages()
+
+                        res.json({ success: true, result: npmOutput, })
+                        log.info(`🌐[uibuilder:adminRouterV3:PUT:removePackage] Admin API. Removed package "${params.package}". \n${npmOutput.all}\n\n`)
+                    } catch (err) {
+                        log.warn(`🌐⚠️[uibuilder:apiv3:uibnpmmanage:remove] Admin API. ERROR Running: \n'${err.command}' \n${err.all}\n\n`)
+                        res.json({ success: false, result: err.all, })
+                    }
                 })
                 return
             }
 
             // Run an instance npm script, returning the output
+            // Note that only valid, pre-defined npm scripts can be executed by packageMgt.npmRunScript
             case 'runInstanceNpmScript': {
-                log.trace(`🌐[uibuilder[:adminRouterV3:PUT:runInstanceNpmScript] Running script. url="${params.url}", script="${params.scriptName}"`)
-
+                log.trace(`🌐[uibuilder:adminRouterV3:PUT:runInstanceNpmScript] Running script. url="${params.url}", script="${params.scriptName}"`)
+                if (!params.scriptName) {
+                    res.json({ success: false, result: 'NPM script name not supplied', })
+                    return
+                }
                 // Create a unique process ID for this script execution
                 const processId = `uibApiV3Put_runInstanceNpmScript:${params.url}:${params.scriptName}:${Date.now().toString()}`
-
-                /** asyncLocalStorage captures the context for async functions
-                 * so we can handle async outputs in a synchronous way
-                 */
+                // asyncLocalStorage captures the context for async functions so we can handle async outputs in a synchronous way
                 asyncLocalStorage.run({ requestId: processId, }, async () => {
                     try {
                         // Set headers for streaming output
@@ -746,17 +835,18 @@ v3AdminRouter.route('/:url')
                         res.end()
                     }
                 })
-
                 return
             }
 
-            // case for killing processes
+            // case for killing processes using asyncLocalStorage
             case 'killInstanceNpmScript': {
-                log.trace(`🌐[uibuilder[:adminRouterV3:PUT:killInstanceNpmScript] processId="${params.processId}"`)
-
+                log.trace(`🌐[uibuilder:adminRouterV3:PUT:killInstanceNpmScript] processId="${params.processId}"`)
+                if (!params.processId) {
+                    res.json({ success: false, result: 'Process ID not supplied', })
+                    return
+                }
                 // Kill the running process if it exists
                 const killed = killRunningProcess(params.processId, params.url, params.scriptName)
-
                 if (killed) {
                     res.statusMessage = 'Process killed successfully'
                     res.status(200).json({ killed: true, processId: params.processId, })
@@ -764,7 +854,6 @@ v3AdminRouter.route('/:url')
                     res.statusMessage = 'Process not found or already completed'
                     res.status(404).json({ killed: false, error: 'Process not found', })
                 }
-
                 return
             }
         }
