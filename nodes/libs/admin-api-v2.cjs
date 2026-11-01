@@ -739,6 +739,7 @@ v2AdminRouter.get('/uibvendorpackages', function(/** @type {express.Request} */ 
     res.json( packageMgt.uibPackageJson.uibuilder.packages )
 }) // ---- End of uibvendorpackages ---- //
 
+// Since v8.0.0 MIGRATED TO V3
 /** Call npm. Schema: {name:{(url),cmd}}
  * If url parameter not provided, uibPath = <userDir>, else uibPath = <uib.rootFolder>/<url>
  * Valid commands:
@@ -747,144 +748,143 @@ v2AdminRouter.get('/uibvendorpackages', function(/** @type {express.Request} */ 
  * @param {string} [req.query.url=userDir] Optional. If present, CWD is set to the uibuilder folder for that instance. Otherwise CWD is set to the userDir.
  * @param {string} req.query.cmd Command to run (see notes for this function)
  */
-v2AdminRouter.get('/uibnpmmanage', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-    // #region --- Parameter validation (cmd, package) ---
+// v2AdminRouter.get('/uibnpmmanage', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+//     // #region --- Parameter validation (cmd, package) ---
 
-    const params = req.query
+//     const params = req.query
 
-    // Validate the npm command to be used.
-    if ( params.cmd === undefined ) {
-        log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] uibuilder Admin API. No command provided for npm management.')
-        res.statusMessage = 'npm command parameter not provided'
-        res.status(500).end()
-        return
-    }
-    if ( Array.isArray(params.cmd) ) params.cmd = params.cmd[0]
-    switch (params.cmd) {
-        case 'install':
-        case 'remove':
-        case 'update':
-            break
+//     // Validate the npm command to be used.
+//     if ( params.cmd === undefined ) {
+//         log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] uibuilder Admin API. No command provided for npm management.')
+//         res.statusMessage = 'npm command parameter not provided'
+//         res.status(500).end()
+//         return
+//     }
+//     if ( Array.isArray(params.cmd) ) params.cmd = params.cmd[0]
+//     switch (params.cmd) {
+//         case 'install':
+//         case 'remove':
+//         case 'update':
+//             break
 
-        default:
-            log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. Invalid command provided for npm management.')
-            res.statusMessage = 'npm command parameter is invalid'
-            res.status(500).end()
-            return
-    }
+//         default:
+//             log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. Invalid command provided for npm management.')
+//             res.statusMessage = 'npm command parameter is invalid'
+//             res.status(500).end()
+//             return
+//     }
 
-    // package name must not exceed 255 characters
-    // we have to have a package name
-    if ( params.package === undefined ) {
-        log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package parameter not provided')
-        res.statusMessage = 'package parameter not provided'
-        res.status(500).end()
-        return
-    }
-    // If params.package is an array (multiple package names provided), just take the first one
-    if ( Array.isArray(params.package) ) params.package = params.package[0]
-    // @ts-ignore package name must be >0 in length
-    if ( params.package.length < 1 ) {
-        log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package name parameter is empty')
-        res.statusMessage = 'package name parameter is empty'
-        res.status(500).end()
-        return
-    }
-    // @ts-ignore package name must not exceed 255 characters
-    if ( params.package.length > 255 ) {
-        log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package name parameter is too long (>255 characters)')
-        res.statusMessage = 'package name parameter is too long. Max 255 characters'
-        res.status(500).end()
-        return
-    }
+//     // package name must not exceed 255 characters
+//     // we have to have a package name
+//     if ( params.package === undefined ) {
+//         log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package parameter not provided')
+//         res.statusMessage = 'package parameter not provided'
+//         res.status(500).end()
+//         return
+//     }
+//     // If params.package is an array (multiple package names provided), just take the first one
+//     if ( Array.isArray(params.package) ) params.package = params.package[0]
+//     // @ts-ignore package name must be >0 in length
+//     if ( params.package.length < 1 ) {
+//         log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package name parameter is empty')
+//         res.statusMessage = 'package name parameter is empty'
+//         res.status(500).end()
+//         return
+//     }
+//     // @ts-ignore package name must not exceed 255 characters
+//     if ( params.package.length > 255 ) {
+//         log.error('🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. package name parameter is too long (>255 characters)')
+//         res.statusMessage = 'package name parameter is too long. Max 255 characters'
+//         res.status(500).end()
+//         return
+//     }
 
-    // If install/update, we need the node instance as well
-    if ( params.cmd !== 'remove' ) {
-        // @ts-ignore
-        const chkUrl = chkParamUrl(params)
-        if ( chkUrl.status !== 0 ) {
-            log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. ${chkUrl.statusMessage}`)
-            res.statusMessage = chkUrl.statusMessage
-            res.status(chkUrl.status).end()
-            return
-        }
-    }
+//     // If install/update, we need the node instance as well
+//     if ( params.cmd !== 'remove' ) {
+//         // @ts-ignore
+//         const chkUrl = chkParamUrl(params)
+//         if ( chkUrl.status !== 0 ) {
+//             log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. ${chkUrl.statusMessage}`)
+//             res.statusMessage = chkUrl.statusMessage
+//             res.status(chkUrl.status).end()
+//             return
+//         }
+//     }
 
-    // #endregion ---- ----
+//     // #endregion ---- ----
 
-    const folder = RED.settings.userDir
+//     const folder = RED.settings.userDir
 
-    log.info(`🌐📘[uibuilder:apiv2:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} with tag/version '${params.tag ? params.tag : ''}'`)
+//     log.info(`🌐📘[uibuilder:apiv2:uibnpmmanage] Admin API. Running npm ${params.cmd} for package ${params.package} with tag/version '${params.tag ? params.tag : ''}'`)
 
-    // delete package lock file as it seems to mess up sometimes - no error if it fails
-    fslib.removeSync(path.join(folder, 'package-lock.json'))
+//     // delete package lock file as it seems to mess up sometimes - no error if it fails
+//     fslib.removeSync(path.join(folder, 'package-lock.json'))
 
-    // Formulate the command to be run
-    switch (params.cmd) {
-        case 'update':
-        case 'install': {
-            // @ts-expect-error
-            packageMgt.npmInstallPackage(params.url, params.package, params.tag, '', params.cmd)
-                .then((npmOutput) => {
-                    // Get the updated package.json file into packageMgt.uibPackageJson
-                    packageMgt.uibPackageJson = packageMgt.pkgCheck()
-                    // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
-                    packageMgt.pkgsQuickUpd()
-                    // ASYNC - Update details and re-save the file
-                    packageMgt.updateInstalledPackageDetails()
+//     // Formulate the command to be run
+//     switch (params.cmd) {
+//         // case 'update':
+//         // case 'install': {
+//         //     // @ts-expect-error
+//         //     packageMgt.npmInstallPackage(params.package, params.tag, '', params.cmd)
+//         //         .then((npmOutput) => {
+//         //             // Get the updated package.json file into packageMgt.uibPackageJson
+//         //             packageMgt.uibPackageJson = packageMgt.pkgCheck()
+//         //             // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
+//         //             packageMgt.pkgsQuickUpd()
+//         //             // ASYNC - Update details and re-save the file
+//         //             packageMgt.updateInstalledPackageDetails()
 
-                    // Update the packageList
-                    const web = require('./web.cjs') // late loading to avoid circular dependency
-                    web.serveVendorPackages()
+//         //             // Update the packageList
+//         //             const web = require('./web.cjs') // late loading to avoid circular dependency
+//         //             web.serveVendorPackages()
 
-                    res.json({ success: true, result: [npmOutput, packageMgt.uibPackageJson.uibuilder.packages], })
+//         //             res.json({ success: true, result: [npmOutput, packageMgt.uibPackageJson.uibuilder.packages], })
 
-                    // return success
-                    return true
-                })
-                .catch((err) => {
-                    // err has extra props: {all:string, code:number, command:string}
-                    log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage:${params.cmd}] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
-                    res.json({ success: false, result: err.all, })
-                    return false
-                })
-            break
-        }
-        case 'remove': {
-            // @ts-ignore
-            packageMgt.npmRemovePackage(params.package)
-                .then((npmOutput) => {
-                    // Get the updated package.json file into packageMgt.uibPackageJson
-                    packageMgt.uibPackageJson = packageMgt.pkgCheck()
-                    // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
-                    packageMgt.pkgsQuickUpd()
-                    // ASYNC - Only need this to re-save the file
-                    packageMgt.updateInstalledPackageDetails()
+//         //             // return success
+//         //             return true
+//         //         })
+//         //         .catch((err) => {
+//         //             // err has extra props: {all:string, code:number, command:string}
+//         //             log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage:${params.cmd}] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+//         //             res.json({ success: false, result: err.all, })
+//         //             return false
+//         //         })
+//         //     break
+//         // }
+//         // case 'remove': {
+//         //     // @ts-ignore
+//         //     packageMgt.npmRemovePackage(params.package)
+//         //         .then((npmOutput) => {
+//         //             // Get the updated package.json file into packageMgt.uibPackageJson
+//         //             packageMgt.uibPackageJson = packageMgt.pkgCheck()
+//         //             // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
+//         //             packageMgt.pkgsQuickUpd()
+//         //             // ASYNC - Only need this to re-save the file
+//         //             packageMgt.updateInstalledPackageDetails()
 
-                    // Update the packageList
-                    const web = require('./web.cjs') // late loading to avoid circular dependency
-                    web.serveVendorPackages()
+//         //             // Update the packageList
+//         //             const web = require('./web.cjs') // late loading to avoid circular dependency
+//         //             web.serveVendorPackages()
 
-                    res.json({ success: true, result: npmOutput, })
-                    return true
-                })
-                .catch((err) => {
-                    log.warn(`🌐⚠️[uibuilder:apiv2:uibnpmmanage:remove] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
-                    res.json({ success: false, result: err.all, })
-                    return false
-                })
-            break
-        }
-        default: {
-            log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. Command ${params.cmd} is not a valid command. Must be 'install', 'remove' or 'update'.`)
-            res.statusMessage = 'No valid npm command available'
-            res.status(500).end()
-            break
-        }
-    }
-}) // ---- End of npmmanage ---- //
+//         //             res.json({ success: true, result: npmOutput, })
+//         //             return true
+//         //         })
+//         //         .catch((err) => {
+//         //             log.warn(`🌐⚠️[uibuilder:apiv2:uibnpmmanage:remove] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
+//         //             res.json({ success: false, result: err.all, })
+//         //             return false
+//         //         })
+//         //     break
+//         // }
+//         default: {
+//             log.error(`🌐🛑[uibuilder:apiv2:uibnpmmanage] Admin API. Command ${params.cmd} is not a valid command. Must be 'install', 'remove' or 'update'.`)
+//             res.statusMessage = 'No valid npm command available'
+//             res.status(500).end()
+//             break
+//         }
+//     }
+// })
 
 // module.exports = adminRouterV2
 module.exports = v2AdminRouter
-
 clog.debug('Loaded')
