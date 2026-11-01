@@ -151,17 +151,17 @@ class UibPackages {
 
         log.trace('🌐[uibuilder:package-mgt:setup] Package Management setup started')
 
-        // ! HAVE TO CHECK IF uibRoot/package.json or uibRoot/node_modules EXISTS FIRST
-        //   or checks and installs could happen at a parent level if it has a package.json
+        // HAVE TO CHECK IF uibRoot/package.json or uibRoot/node_modules EXISTS FIRST
+        //   else checks and installs might happen at a parent level if it has a package.json which is wrong
         if (!existsSync(uib.rootFolder, this.packageJson)) {
             log.warn(`🌐⚠️[uibuilder:package-mgt:setup] uibRoot package.json not found. Copying template file. ${uib.rootFolder}`)
             this.createBasicPj()
         }
+        // // We need the uibRoot package.json in memory
+        // this.uibPackageJson = readJSONSync(join(uib.rootFolder, this.packageJson))
 
-        // Get the uibuilder root folder's package.json file and save to class var or create minimal version if one doesn't exist
-        // const pj = this.uibPackageJson = this.getUibRootPJ()
+        // See what is actually installed & save a full package.json to memory
         this.uibPackageJson = this.pkgCheck()
-
         // Update the version string to match uibuilder version
         this.uibPackageJson.version = this.uib.version
 
@@ -184,9 +184,10 @@ class UibPackages {
         this.#isConfigured = true
 
         // ASYNC - Re-build package.json uibuilder.packages with details & rewrite file (async)
-        this.updateInstalledPackageDetails()
+        this.updateInstalledPackageDetails() // don't wait
 
         log.trace('🌐[uibuilder:package-mgt:setup] Package Management setup completed')
+        clog.debug('  Setup finished')
     }
 
     /** Make sure that <uibRoot>/package.json exists and contains basic info */
@@ -208,7 +209,7 @@ class UibPackages {
      * @return {object} uibRoot package.json + dependencyDetails for actual installed packages
      */
     pkgCheck() {
-        clog.debug('  pkgCheck started')
+        // clog.debug('  pkgCheck started')
         if ( this.uib === undefined ) throw this.#uibUndefinedError
         if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
 
@@ -227,15 +228,16 @@ class UibPackages {
         ]
 
         let out
-        clog.debug('  ⏱️ >> pkgCheckCmd')
+        // clog.debug('  ⏱️ >> pkgCheckCmd')
         try {
             out = runOsCmdSync('npm', args, opts)
             out = JSON.parse(out)
         } catch (e) {
             this.log.error(`🌐🛑[uibuilder:package-mgt:pkgCheck] npm list installed packages FAILED. ${e.message}`, e)
         }
-        clog.debug('  ⏱️ << pkgCheckCmd')
+        // clog.debug('  ⏱️ << pkgCheckCmd')
 
+        // In the out, _dependencies = the package.json dependencies, dependencies = the actually installed packages
         // Save dependencies seperatelly then move _dependendencies back to dependencies to normalise the data
         this.dependencyDetails = out.dependencies
         delete out['dependencies']
@@ -247,7 +249,7 @@ class UibPackages {
             delete out.problems
         }
 
-        clog.debug('  pkgCheck completed')
+        // clog.debug('  pkgCheck completed')
         return out
     }
 
@@ -625,7 +627,7 @@ class UibPackages {
      * NOTE: This fn does not update the list of packages - see install above for reasons.
      * @param {string} pkgName The npm name of the package (with scope prefix, version, etc if needed)
      * @param {boolean=} verbose Default=true. If true, log the output of the npm - normally the calller should log, if so, set this to false
-    * @return {Promise<{all:string, code:number, command:string}>} Combined stdout/stderr
+     * @return {Promise<{all:string, code:number, command:string}>} Combined stdout/stderr
      */
     async npmRemovePackage(pkgName, verbose = true) {
         if ( this.log === undefined ) throw this.#logUndefinedError
@@ -704,8 +706,8 @@ class UibPackages {
         /** @type {string} */
         let out
         try {
-            const result = await runOsCmd('npm', args, opts)
-            out = result.all
+            // @ts-ignore no result.all when bare
+            out = await runOsCmd('npm', args, opts)
         } catch (e) {
             const myerr = new Error(`runOsCmd/npmOutdated failed. ${e.message}`)
             // @ts-ignore
