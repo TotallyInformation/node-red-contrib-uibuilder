@@ -1,7 +1,7 @@
 ---
 typora-root-url: docs/images
 created: 2017-04-18 16:53:00
-updated: 2026-10-10 13:50:38
+updated: 2026-11-01 16:46:19
 ---
 
 # Changelog
@@ -24,8 +24,11 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 * Potentially breaking changes - please make sure that you can meet the new baseline requirements before upgrading.:
   * Baselined to Node-RED v5+.
   * Baselined to Node.js v22.9+.
+  * It is strongly recommended that you use a Node.js LTS version and the latest Node-RED version.
 
-* The "basic-uib" example in the import examples library has been updated. It is now better labelled and will show the date/time on the web page when inject is triggered (demonstrating the use of the zero-code `uib-topic` HTML attribute for very simple page updates)
+* Examples:
+  * The "basic-uib" example in the import examples library has been updated. It is now better labelled and will show the date/time on the web page when inject is triggered (demonstrating the use of the zero-code `uib-topic` HTML attribute for very simple page updates)
+  * There is a new example demonstrating simple sparkline charts that do not need any JavaScript code.
 
 * The `uibuiler` node now has a button to open a web page (controlled by admin access) that shows _ALL_ uibuilder & Markweb instances with their type, title & description where provided (by the inputs on an instances advanced tab) and the link to the home page.
 
@@ -34,6 +37,11 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 ### Potential breaking changes
 
 * Baselined to Node-RED v5+ and Node.js v22.9+. Please make sure that you can meet these requirements before upgrading.
+* The old v2 API's have been moved to the v3 library which means that their URL's have changed. If you have used these API's manually, you will need to update your code to use the new URL. This should not affect most people.
+
+### Example Flows (See Node-RED's Import)
+
+* Client-side code > `no-js-charts-font` - Shows how to create simple sparkline style charts without needing any JavaScript. Uses a web font.
 
 ### Markweb
 
@@ -44,6 +52,17 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 * Now has a button to open a web page (controlled by admin access) that shows _ALL_ uibuilder & Markweb instances with their type, title & description where provided (by the inputs on an instances advanced tab) and the link to the home page.
 * When adding a new node, the Editor checks for an index.html file in the designated start folder. Previously, only a warning was given to the Editor browser console, there is now a notification with instructions on how to correct (reload the template or create the file). The check is delayed by 1 second to allow time for creation.
+* Update admin API calls to new standard and move off the v2 module.
+* **FIXED** - On the libraries tab, package updates are once again shown and the update button works correctly.
+  
+  > [!NOTE]
+  > Currently, outdated packages are only checked on Node-RED startup.
+  >
+  > You may also need to reload the Node-RED Editor page to see the update button.
+
+### uib-html
+
+* The JSDOM library is now lazily loaded on first use in order to reduce the startup time of Node-RED.
 
 ### Brand CSS styling
 

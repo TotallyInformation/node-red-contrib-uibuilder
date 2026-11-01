@@ -4,38 +4,29 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-10-13 15:30:43
+updated: 2026-11-01 16:46:10
 ---
 
 ## Possible issues/improvements
 
-* [ ] _STARTED_ Critical: Apply fixes for security advisories.
-* [x] Finish apps admin route - sort apps list
 * [ ] Add admin auth middleware
 * [ ] If using a custom uibRoot folder with projects - add startup warning that the folder is SHARED.
-* [x] Move `degit` dependency to a workplace package and use it for the template cloning process. Should allow us to move to the latest version.
 * [ ] Add app type to nr admin index page to make it easier to identify uibuilder and markweb nodes.
 * [ ] Add size trap to saferSerialize to prevent very large objects from being serialized and crashing the system.
 * [ ] Replacing (not importing) a flow file containing an invalid uibuilder node (and when the node's folder doesn't yet exist) may prevent that node from being corrected in the Editor. The startup process will create the folder and then say that the node's URL is a duplicate. [Ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/646).
 * [ ] Rationalise node descriptions (1st para of help).
 
 * Code smells:
-  * [ ] this.uib, this.log, this.RED - should be using the global config module instead.
-  * [ ] (uib) - passing uib object instead of using the module.
   * [ ] check that hooks are in uib?
 
 * Runtime plugin
   * [ ] Corrupted Telemetry file uncaught exception (Issue #648)
   * [ ] uibRoot folder may not update fast enough when changing projects in the Node-RED editor. [Ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/647)
 
-* Documentation
-  * [ ] Find places in documentation (and maybe the readme) to document the Node-RED projects issues.
-
 * Client library
   * [ ] Ensure that route change control msg is sent by uibuilder client library not uib-router library.
 
 * `uibuilder`
-  * [ ] Alter uibuilder where we have `JSON.stringify` to use saferSerialize instead.
   * [ ] In uibuilder `this.oldUrl` check. If the move fails, check if the old folder is still there. If not, clear the oldUrl property. This will prevent the error message on a failed move from being repeated on every deploy.
 
 * `uib-cache`
@@ -73,10 +64,12 @@ updated: 2026-10-13 15:30:43
 * [ ] Document the CSP overrides and how to use them.
 * [_] Remove docsify-darklight-theme dependency as it is dated and not being used. Will remove a bunch of audit failures. JS already not used, needs consolidation of the CSS.
 * [ ] Document the new logger.mjs module including actual use (uib-runtime-plugin.js) and JSDoc.
+* [ ] Find places in documentation (and maybe the readme) to document the Node-RED projects issues.
 
 ### uibuilder node
 
 * [ ] Deploy of new uibuilder node sometimes results in `🌐⚠️[uibuilder:web:setupInstanceStatic:nojs-charts] Cannot show default page, index.html does not exist in D:\src\uibRoot\nojs-charts\src.`.  Likely because the reload option is on so as the default folders & files being created, the node tries to reload the page. Maybe suspend watcher for initial deployment somehow?
+* [ ] Alter uibuilder where we have `JSON.stringify` to use saferSerialize instead.
 
 ### uibuilder library
 
@@ -173,6 +166,7 @@ updated: 2026-10-13 15:30:43
   * Consider use of env files (stable in node.js v22) - https://nodejs.org/docs/latest-v22.x/api/environment_variables.html#cli-options
   * Do we still need to maintain library metadata in `<uibRoot>/package.json`? It is re-created on each startup anyway so maybe just retain in memory?
   * Investigate use of `files` property in `package.json` to potentially make the deployed package smaller. [Ref](https://github.com/windkh/node-red-contrib-telegrambot/blob/master/package.json#L5-L10).
+  * Add periodic checks for outdated packages and notify the user.
 
 ## Communications
 
