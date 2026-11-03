@@ -73,7 +73,6 @@
         // Call the npm installPackage v3 API (it updates the package list)
         uibuilder.doAdminApiv3({
             verb: 'PUT',
-            // url: url,
             dataType: 'json',
             data: { // converted to URL query parameters
                 cmd: 'updatepackage',
@@ -575,7 +574,6 @@
             verb: 'GET',
             url: url,
             dataType: 'json',
-            async: false,
             data: { // converted to URL query parameters
                 cmd: 'listfolders',
             },
@@ -868,28 +866,19 @@
         if (url === undefined) return false
         let check = false
 
-        // For now, don't use uibuilder.doAdminApiv3() as this needs to be a sync request
-        $.ajax({
-            type: 'GET',
+        /** SYNC Check if the folder exists on the server */
+        uibuilder.doAdminApiv3({
+            url: url, // required for this call
+            verb: 'GET',
             async: false,
             dataType: 'json',
-            url: `./uibuilder/admin/${url}`,
             data: {
                 cmd: 'checkfolder',
             },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
+            success: (fldrExists) => {
+                check = fldrExists // true if folder exists, else false
             },
-            success: function(data) {
-                check = data
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                if (errorThrown !== 'Not Found') {
-                    console.error( '🌐🛑[uibuilder:queryFolderExists] Error ' + textStatus, errorThrown )
-                }
+            error: (xhr, textStatus, err) => {
                 check = false
             },
         })
@@ -2269,7 +2258,7 @@
             // Only warn if the node has been deployed
             if ( this.isDeployed ) {
                 const that = this
-                const myNotify = RED.notify(`<b>DELETE</b>: <p>You are deleting a uibuilder instance with url <i>${this.url}</i>.<br>Would you like to also delete the folder?<br><b>WARNING</b>: This cannot be undone.</p>`, {
+                const myNotify = RED.notify(`🌐UIBUILDER <b>DELETE</b>: <p>You are deleting a uibuilder instance with url <i>"${this.url}"</i>.<br>Would you like to also delete the folder?<br><b>WARNING</b>: This cannot be undone.</p>`, {
                     modal: true,
                     fixed: true,
                     type: 'warning', // 'compact', 'success', 'warning', 'error'
@@ -2278,33 +2267,30 @@
                             text: 'Yes',
                             click: function() { // (e) {
                                 // Mark folder for Deletion (actually done by the js file in `node.on('close', ..)`, handed off to uiblib:processClose)
-                                $.ajax({
-                                    type: 'PUT',
+                                /** SYNC Check if the folder exists on the server */
+                                uibuilder.doAdminApiv3({
+                                    url: that.url, // required for this call
+                                    verb: 'PUT',
+                                    // async: false,
                                     dataType: 'json',
-                                    url: './uibuilder/admin/' + that.url, // v3 api
                                     data: {
                                         cmd: 'deleteondelete',
                                     },
-                                    beforeSend: function(jqXHR) {
-                                        const authTokens = RED.settings.get('auth-tokens')
-                                        if (authTokens) {
-                                            jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                                        }
+                                    done: () => {
+                                        uibuilder.nrNotify(`The folder "<i>${that.url}</i>" will be deleted when you redeploy.`)
+                                    },
+                                    fail: (jqXHR, textStatus, errorThrown) => {
+                                        uibuilder.nrNotify(`Request url folder delete - error.<br>Folder will not be deleted, please delete manually.<br>${errorThrown}`, { type: 'error', fixed: true, })
                                     },
                                 })
-                                    .fail(function(jqXHR, textStatus, errorThrown) {
-                                        console.error( '🌐🛑[uibuilder:oneditdelete:PUT] Error ' + textStatus, errorThrown )
-                                        RED.notify(`uibuilder: Request url folder delete - error.<br>Folder will not be deleted, please delete manually.<br>${errorThrown}`, { type: 'error', })
-                                    })
-
                                 myNotify.close()
-                                RED.notify(`The folder <i>${that.url}</i> will be deleted when you redeploy.`, { type: 'compact', })
                             },
                         },
                         {
                             text: 'NO',
                             class: 'primary',
                             click: function() { // (e) {
+                                uibuilder.nrNotify(`Delete request for folder "<i>${that.url}</i>" <b>cancelled</b>. Folder will not be deleted.`)
                                 myNotify.close()
                             },
                         }
