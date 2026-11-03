@@ -42,11 +42,11 @@ const uib = require('./uibGlobalConfig.cjs') // UIBUILDER's global config object
 const errUibRootFldr = new Error('uib.rootFolder is null')
 
 const v2AdminRouter = express.Router()
-// v2AdminRouter.use((req, res, next) => {
-//     // Node-RED populates req.user if a session exists
-//     uib.RED.log.info(`[admin-api-v2:API Debug] User accessing endpoint: ${JSON.stringify(req.user || 'Unauthenticated')}`)
-//     next()
-// })
+v2AdminRouter.use(function v2AdminRouterDebug(req, res, next) {
+    // Node-RED populates req.user if a session exists
+    clog.info(req.user ?? 'Unauthenticated', req.originalUrl)
+    next()
+})
 /** Force ALL endpoints to use Node-RED auth permission */
 // v2AdminRouter.use(uib.RED.auth.needsPermission('flows.write'))
 
@@ -183,361 +183,361 @@ function chkParamFldr(params) {
  * @param {express.Request} req ExpressJS request object
  * @return {string} The URL prefix
  */
-function getUrlPrefix(req) {
-    // If using own Express server, correct the URL's
-    let url = new URL(`${req.protocol}://${req.headers.host}${req.originalUrl}`)
-    if (req.headers.referer) url = new URL(req.headers.referer)
-    else if (req.headers.origin) new URL(req.headers.origin)
-    url.pathname = ''
-    if (uib.customServer.port) {
-        // @ts-expect-error ts(2322)
-        url.port = uib.customServer.port
-    }
-    return url.href
-}
+// function getUrlPrefix(req) {
+//     // If using own Express server, correct the URL's
+//     let url = new URL(`${req.protocol}://${req.headers.host}${req.originalUrl}`)
+//     if (req.headers.referer) url = new URL(req.headers.referer)
+//     else if (req.headers.origin) new URL(req.headers.origin)
+//     url.pathname = ''
+//     if (uib.customServer.port) {
+//         // @ts-expect-error ts(2322)
+//         url.port = uib.customServer.port
+//     }
+//     return url.href
+// }
 
-/** uibuilder detailed information page
- * @param {string} urlPrefix The URL href prefix
- * @return {string} HTML string output
- */
-function detailsPage(urlPrefix) {
-    if (uib.rootFolder === null) throw errUibRootFldr
-    const rootFolder = uib.rootFolder
+// /** uibuilder detailed information page
+//  * @param {string} urlPrefix The URL href prefix
+//  * @return {string} HTML string output
+//  */
+// function detailsPage(urlPrefix) {
+//     if (uib.rootFolder === null) throw errUibRootFldr
+//     const rootFolder = uib.rootFolder
 
-    const RED = uib.RED
-    const log = RED.log
-    const web = require('./web.cjs')
-    const routes = web.dumpRoutes(false)
-    const urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/', '')}${uib.moduleName}`
+//     const RED = uib.RED
+//     const log = RED.log
+//     const web = require('./web.cjs')
+//     const routes = web.dumpRoutes(false)
+//     const urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/', '')}${uib.moduleName}`
 
-    // Fix for one person who had a failure on JSON parse with win32 circular ref - weird
-    let uibSummary = {}
-    try {
-        uibSummary = Object.assign({}, uib) // JSON.parse(JSON.stringify(uib))
-        delete uibSummary.me
-        delete uibSummary.RED
-    } catch (e) {
-        log.warn(`🌐⚠️[uibuilder:apiv2:detailsPage] Could not parse uib object, some info will be missing. ${e.message}`)
-    }
+//     // Fix for one person who had a failure on JSON parse with win32 circular ref - weird
+//     let uibSummary = {}
+//     try {
+//         uibSummary = Object.assign({}, uib) // JSON.parse(JSON.stringify(uib))
+//         delete uibSummary.me
+//         delete uibSummary.RED
+//     } catch (e) {
+//         log.warn(`🌐⚠️[uibuilder:apiv2:detailsPage] Could not parse uib object, some info will be missing. ${e.message}`)
+//     }
 
-    // Build the web page
-    let page = `
-        <!doctype html><html lang="en"><head>
-            <title>Uibuilder Index</title>
-            <link rel="icon" href="${urlRoot}/common/images/node-blue.ico">
-            <link type="text/css" rel="stylesheet" href="${urlRoot}/uib-brand.min.css" media="screen">
-            <style type="text/css" rel="stylesheet" media="all">
-                h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
-                .col3i tbody>tr>:nth-child(3){ font-style:italic; }
-            </style>
-        </head><body class="uib"><div class="container">
-            <h1>uibuilder Detailed Information Page</h1>
-            <p>
-                Note that this page is only accessible to users with Node-RED admin authority.
-            </p>
-    `
+//     // Build the web page
+//     let page = `
+//         <!doctype html><html lang="en"><head>
+//             <title>Uibuilder Index</title>
+//             <link rel="icon" href="${urlRoot}/common/images/node-blue.ico">
+//             <link type="text/css" rel="stylesheet" href="${urlRoot}/uib-brand.min.css" media="screen">
+//             <style type="text/css" rel="stylesheet" media="all">
+//                 h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
+//                 .col3i tbody>tr>:nth-child(3){ font-style:italic; }
+//             </style>
+//         </head><body class="uib"><div class="container">
+//             <h1>uibuilder Detailed Information Page</h1>
+//             <p>
+//                 Note that this page is only accessible to users with Node-RED admin authority.
+//             </p>
+//     `
 
-    /** Index of uibuilder instances */
-    page += `
-            <h2>Index of uibuilder pages</h2>
-            <p>'Folders' refer to locations on your Node-RED's server. 'Paths' refer to URL's in the browser.</p>
-            <table class="uib-info-tb table table-sm">
-                <thead><tr>
-                    <th>URL</th>
-                    <th title="Use this to search for the source node in the admin ui">Source Node Instance <a href="#i2"><sup>(2)</sup></th>
-                    <th>Server Filing System Folder</th>
-                </tr></thead><tbody>
-    `
-    Object.keys(uib.instances).forEach((key) => {
-        page += `
-            <tr>
-                <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, uib.instances[key]).replace('/', '')}" target="_blank">${uib.instances[key]}</a></td>
-                <td>${key}</td>
-                <td>${path.join(rootFolder, uib.instances[key])}</td>
-            </tr>
-        `
-    })
-    page += `
-        </tbody></table>
-        <p>Notes:</p>
-        <ol>
-            <li><a id="i1"></a>
-                Each instance of uibuilder uses its own socket.io <i>namespace</i> that matches <code>httpNodeRoot/url</code>. 
-                You can use this to manually send messages to your user interface.
-            </li>
-            <li><a id="i2"></a>
-                Paste the Source Node Instance into the search feature in the Node-RED admin ui to find the instance.
-                The "Filing System Folder" shows you where the front-end (client browser) code lives.
-            </li>
-        </ol>
-    `
+//     /** Index of uibuilder instances */
+//     page += `
+//             <h2>Index of uibuilder pages</h2>
+//             <p>'Folders' refer to locations on your Node-RED's server. 'Paths' refer to URL's in the browser.</p>
+//             <table class="uib-info-tb table table-sm">
+//                 <thead><tr>
+//                     <th>URL</th>
+//                     <th title="Use this to search for the source node in the admin ui">Source Node Instance <a href="#i2"><sup>(2)</sup></th>
+//                     <th>Server Filing System Folder</th>
+//                 </tr></thead><tbody>
+//     `
+//     Object.keys(uib.instances).forEach((key) => {
+//         page += `
+//             <tr>
+//                 <td><a href="${urlPrefix}${tilib.urlJoin(uib.nodeRoot, uib.instances[key]).replace('/', '')}" target="_blank">${uib.instances[key]}</a></td>
+//                 <td>${key}</td>
+//                 <td>${path.join(rootFolder, uib.instances[key])}</td>
+//             </tr>
+//         `
+//     })
+//     page += `
+//         </tbody></table>
+//         <p>Notes:</p>
+//         <ol>
+//             <li><a id="i1"></a>
+//                 Each instance of uibuilder uses its own socket.io <i>namespace</i> that matches <code>httpNodeRoot/url</code>. 
+//                 You can use this to manually send messages to your user interface.
+//             </li>
+//             <li><a id="i2"></a>
+//                 Paste the Source Node Instance into the search feature in the Node-RED admin ui to find the instance.
+//                 The "Filing System Folder" shows you where the front-end (client browser) code lives.
+//             </li>
+//         </ol>
+//     `
 
-    /** Table of Vendor Libraries available */
-    page += `
-        <h2>Vendor Client Libraries</h2>
-        <p>
-            You can include these libraries (packages) in any uibuilder served web page.
-            Note though that you need to find out the correct file and relative folder either by looking on 
-            your Node-RED server in the location shown or by looking at the packages source online.
-        </p>
-        <table class="uib-info-tb table table-sm">
-            <thead><tr>
-                <th>Package</th>
-                <th>Version</th>
-                <th>Browser Entry Point (est.) <a href="#vl1"><sup>(1)</sup></a> <a href="#vl2"><sup>(2)</sup></a></th>
-                <th>Server Filing System Folder</th>
-            </tr></thead><tbody>
-    `
-    const installedPackages = packageMgt.uibPackageJson.uibuilder.packages
-    Object.keys(installedPackages).forEach((packageName) => {
-        const pj = installedPackages[packageName]
+//     /** Table of Vendor Libraries available */
+//     page += `
+//         <h2>Vendor Client Libraries</h2>
+//         <p>
+//             You can include these libraries (packages) in any uibuilder served web page.
+//             Note though that you need to find out the correct file and relative folder either by looking on 
+//             your Node-RED server in the location shown or by looking at the packages source online.
+//         </p>
+//         <table class="uib-info-tb table table-sm">
+//             <thead><tr>
+//                 <th>Package</th>
+//                 <th>Version</th>
+//                 <th>Browser Entry Point (est.) <a href="#vl1"><sup>(1)</sup></a> <a href="#vl2"><sup>(2)</sup></a></th>
+//                 <th>Server Filing System Folder</th>
+//             </tr></thead><tbody>
+//     `
+//     const installedPackages = packageMgt.uibPackageJson.uibuilder.packages
+//     Object.keys(installedPackages).forEach((packageName) => {
+//         const pj = installedPackages[packageName]
 
-        page += `
-            <tr>
-                <td><a href="${pj.homepage}" title="Click to go to package's home page">${packageName}</a></td>
-                <td title="Installed Version, Version Spec='${pj.spec}'">${pj.installedVersion}</td>
-                <td title="Use this in your front-end code">${pj.url}</td>
-                <td>${pj.installFolder}</td>
-            </tr>
-        `
-    })
-    page += `
-        </tbody></table>
-        <p>Notes:</p>
-        <ol>
-            <li><a id="vl1"></a>
-                Always use relative URL's. All vendor URL's start <code>../uibuilder/vendor/</code>, 
-                all uibuilder and custom file URL's start <code>./</code>.<br>
-                Using relative URL's saves you from needing to worry about http(s), ip names/addresses and port numbers.
-            </li>
-            <li><a id="vl2"></a>
-                The 'Main Entry Point' shown is <i>usually</i> a JavaScript file that you will want in your index.html. 
-                However, because this is reported by the authors of the package, it may refer to something completely different, 
-                uibuilder has no way of knowing. Treat it as a hint rather than absolute truth. Check the packages documentation 
-                for the correct library files to load.
-            </li>
-        </ol>
-    `
+//         page += `
+//             <tr>
+//                 <td><a href="${pj.homepage}" title="Click to go to package's home page">${packageName}</a></td>
+//                 <td title="Installed Version, Version Spec='${pj.spec}'">${pj.installedVersion}</td>
+//                 <td title="Use this in your front-end code">${pj.url}</td>
+//                 <td>${pj.installFolder}</td>
+//             </tr>
+//         `
+//     })
+//     page += `
+//         </tbody></table>
+//         <p>Notes:</p>
+//         <ol>
+//             <li><a id="vl1"></a>
+//                 Always use relative URL's. All vendor URL's start <code>../uibuilder/vendor/</code>, 
+//                 all uibuilder and custom file URL's start <code>./</code>.<br>
+//                 Using relative URL's saves you from needing to worry about http(s), ip names/addresses and port numbers.
+//             </li>
+//             <li><a id="vl2"></a>
+//                 The 'Main Entry Point' shown is <i>usually</i> a JavaScript file that you will want in your index.html. 
+//                 However, because this is reported by the authors of the package, it may refer to something completely different, 
+//                 uibuilder has no way of knowing. Treat it as a hint rather than absolute truth. Check the packages documentation 
+//                 for the correct library files to load.
+//             </li>
+//         </ol>
+//     `
 
-    /** Configuration info */
-    page += `
-        <h2>Configuration</h2>
+//     /** Configuration info */
+//     page += `
+//         <h2>Configuration</h2>
 
-        <h3>uibuilder</h3>
-        <table class="uib-info-tb table table-sm col3i">
-            <tr>
-                <th>uibuilder Version</th>
-                <td>${uib.version}</td>
-                <td></td>
-            </tr>
-            <tr>
-                <th>uib.rootFolder</th>
-                <td>${rootFolder}</td>
-                <td>All uibuilder data lives here</td>
-            </tr>
-            <tr>
-                <th>uib.configFolder</th>
-                <td>${uib.configFolder}</td>
-                <td>uibuilder Global Configuration Folder</td>
-            </tr>
-            <tr>
-                <th>uib.commonFolder</th>
-                <td>${uib.commonFolder}</td>
-                <td>Used for loading common resources between multiple uibuilder instances</td>
-            </tr>
-            <tr>
-                <th>Common URL</th>
-                <td>../${uib.moduleName}/common</td>
-                <td>The common folder maps to this URL</td>
-            </tr>
-            <tr title="">
-                <th>uib_socketPath</th>
-                <td>${sockets.uib_socketPath}</td>
-                <td>Unique path given to Socket.IO to ensure isolation from other Nodes that might also use it</td>
-            </tr>
-            <tr>
-                <th>uib.masterTemplateFolder</th>
-                <td>${uib.masterTemplateFolder}</td>
-                <td>The built-in source templates, can be copied to any instance</td>
-            </tr>
-        </table>
+//         <h3>uibuilder</h3>
+//         <table class="uib-info-tb table table-sm col3i">
+//             <tr>
+//                 <th>uibuilder Version</th>
+//                 <td>${uib.version}</td>
+//                 <td></td>
+//             </tr>
+//             <tr>
+//                 <th>uib.rootFolder</th>
+//                 <td>${rootFolder}</td>
+//                 <td>All uibuilder data lives here</td>
+//             </tr>
+//             <tr>
+//                 <th>uib.configFolder</th>
+//                 <td>${uib.configFolder}</td>
+//                 <td>uibuilder Global Configuration Folder</td>
+//             </tr>
+//             <tr>
+//                 <th>uib.commonFolder</th>
+//                 <td>${uib.commonFolder}</td>
+//                 <td>Used for loading common resources between multiple uibuilder instances</td>
+//             </tr>
+//             <tr>
+//                 <th>Common URL</th>
+//                 <td>../${uib.moduleName}/common</td>
+//                 <td>The common folder maps to this URL</td>
+//             </tr>
+//             <tr title="">
+//                 <th>uib_socketPath</th>
+//                 <td>${sockets.uib_socketPath}</td>
+//                 <td>Unique path given to Socket.IO to ensure isolation from other Nodes that might also use it</td>
+//             </tr>
+//             <tr>
+//                 <th>uib.masterTemplateFolder</th>
+//                 <td>${uib.masterTemplateFolder}</td>
+//                 <td>The built-in source templates, can be copied to any instance</td>
+//             </tr>
+//         </table>
 
-        <h3>Configuration Files</h3>
+//         <h3>Configuration Files</h3>
 
-        <p>All are kept in the master configuration folder: ${uib.configFolder}</p>
+//         <p>All are kept in the master configuration folder: ${uib.configFolder}</p>
 
-        <dl style="margin-left:1em;">
-            <dt>${uib.sioUseMwName}</dt>
-            <dd>Custom Socket.IO Middleware file, also uibMiddleware.js.</dd>
-            <dt>uibMiddleware.js</dt>
-            <dd>Custom ExpressJS Middleware file.</dd>
-        </dl>
+//         <dl style="margin-left:1em;">
+//             <dt>${uib.sioUseMwName}</dt>
+//             <dd>Custom Socket.IO Middleware file, also uibMiddleware.js.</dd>
+//             <dt>uibMiddleware.js</dt>
+//             <dd>Custom ExpressJS Middleware file.</dd>
+//         </dl>
 
-        <h4>Dump of all uib master configuration settings</h4>
-        <pre>${tilib.syntaxHighlight( uibSummary, 100000 )}</pre>
+//         <h4>Dump of all uib master configuration settings</h4>
+//         <pre>${tilib.syntaxHighlight( uibSummary, 100000 )}</pre>
 
-        <h4>Dump of all uib settings.js entries</h4>
-        <pre>${tilib.syntaxHighlight( RED.settings.uibuilder ? RED.settings.uibuilder : 'NOT DEFINED', 100000 )}</pre>
+//         <h4>Dump of all uib settings.js entries</h4>
+//         <pre>${tilib.syntaxHighlight( RED.settings.uibuilder ? RED.settings.uibuilder : 'NOT DEFINED', 100000 )}</pre>
 
-        <h3>Node-RED</h3>
-        <p>See the <code>&lt;userDir&gt;/settings.js</code> file and the 
-        <a href="https://nodered.org/docs/" target="_blank">Node-RED documentation</a> for details.</p>
-        <table class="uib-info-tb table table-sm">
-            <tr><th>userDir</th><td>${RED.settings.userDir}</td></tr>
-            <tr><th>httpNodeRoot</th><td>${uib.nodeRoot}</td></tr>
-            <tr><th>Node-RED Version</th><td>${RED.settings.version}</td></tr>
-            <tr><th>Min. Version Required by uibuilder</th><td>${uib.me['node-red'].version}</td></tr>
-        </table>
+//         <h3>Node-RED</h3>
+//         <p>See the <code>&lt;userDir&gt;/settings.js</code> file and the 
+//         <a href="https://nodered.org/docs/" target="_blank">Node-RED documentation</a> for details.</p>
+//         <table class="uib-info-tb table table-sm">
+//             <tr><th>userDir</th><td>${RED.settings.userDir}</td></tr>
+//             <tr><th>httpNodeRoot</th><td>${uib.nodeRoot}</td></tr>
+//             <tr><th>Node-RED Version</th><td>${RED.settings.version}</td></tr>
+//             <tr><th>Min. Version Required by uibuilder</th><td>${uib.me['node-red'].version}</td></tr>
+//         </table>
 
-        <h3>Node.js</h3>
-        <table class="uib-info-tb table table-sm">
-            <tr><th>Version</th><td>${uib.nodeVersion.join('.')}</td></tr>
-            <tr><th>Min. version required by uibuilder</th><td>${uib.me.engines.node}</td></tr>
-        </table>
-    `
+//         <h3>Node.js</h3>
+//         <table class="uib-info-tb table table-sm">
+//             <tr><th>Version</th><td>${uib.nodeVersion.join('.')}</td></tr>
+//             <tr><th>Min. version required by uibuilder</th><td>${uib.me.engines.node}</td></tr>
+//         </table>
+//     `
 
-    /** ExpressJS Configuration info */
-    page += `
-        <h2>ExpressJS Configuration</h2>
-        <p>
-            See the <a href="https://expressjs.com/en/api.html#app.settings.table" target="_blank">ExpressJS documentation</a> for details.
-            Note that ExpressJS Views are not current used by uibuilder
-        </p>
-        <table class="uib-info-tb table table-sm">
-            <tr><th>Views Folder</th><td>${web.app.get('views')}</td></tr>
-            <tr><th>Views Engine</th><td>${web.app.get('view engine')}</td></tr>
-            <tr><th>Views Cache</th><td>${web.app.get('view cache')}</td></tr>
-        </table>
-        <h3>app.locals</h3>
-        <pre>${tilib.syntaxHighlight( web.app.locals )}</pre>
-        <h3>app.mountpath</h3>
-        <pre>${tilib.syntaxHighlight( web.app.mountpath )}</pre>
-    `
+//     /** ExpressJS Configuration info */
+//     page += `
+//         <h2>ExpressJS Configuration</h2>
+//         <p>
+//             See the <a href="https://expressjs.com/en/api.html#app.settings.table" target="_blank">ExpressJS documentation</a> for details.
+//             Note that ExpressJS Views are not current used by uibuilder
+//         </p>
+//         <table class="uib-info-tb table table-sm">
+//             <tr><th>Views Folder</th><td>${web.app.get('views')}</td></tr>
+//             <tr><th>Views Engine</th><td>${web.app.get('view engine')}</td></tr>
+//             <tr><th>Views Cache</th><td>${web.app.get('view cache')}</td></tr>
+//         </table>
+//         <h3>app.locals</h3>
+//         <pre>${tilib.syntaxHighlight( web.app.locals )}</pre>
+//         <h3>app.mountpath</h3>
+//         <pre>${tilib.syntaxHighlight( web.app.mountpath )}</pre>
+//     `
 
-    // Show the ExpressJS paths currently defined
-    // web.routers contains descriptive info on routes, routes.user contains the ExpressJS route stack info.
-    page += `
-        <h2>uibuilder ExpressJS Routes</h2>
-        <p>These tables show all of the web URL routes for uibuilder.</p>
-        <h3>Client-Facing Routes</h3>
-        ${web.htmlBuildTable( web.routers.user, ['name', 'desc', 'path', 'type', 'folder'] )}
-        <h4>ExpressJS technical route data for admin routes</h4>
-        <h5>Application Routes (<code>../*</code>)</h5>
-        ${web.htmlBuildTable( routes.user.app, ['name', 'path', 'folder', 'route'] )}
-        <h5>uibuilder generic Routes (<code>../uibuilder/*</code>)</h5>
-        ${web.htmlBuildTable( routes.user.uibRouter, ['name', 'path', 'folder', 'route'] )}
-        <h5>Vendor Routes (<code>../uibuilder/vendor/*</code>)</h5>
-        ${web.htmlBuildTable( routes.user.vendorRouter, ['name', 'path', 'folder', 'route'] )}
-        <hr>
-        <h3>Per-Instance Client-Facing Routes</h3>
-    `
-    Object.keys(routes.instances).forEach( (url) => {
-        page += `
-            <h4>${url}</h4>
-            ${web.htmlBuildTable( web.routers.instances[url], ['name', 'desc', 'path', 'type', 'folder'] )}
-            <h5>ExpressJS technical route data for <code>${url}</code> (<code>../${url}/*</code>)</h5>
-            ${web.htmlBuildTable( routes.instances[url], ['name', 'path', 'folder', 'route'] )}
-        `
-    } )
-    page += `
-        <hr>
-        <h3>Admin-Facing Routes</h3>
-        ${web.htmlBuildTable( web.routers.admin, ['name', 'desc', 'path', 'type', 'folder'] )}
-        <h4>ExpressJS technical route data for admin routes</h4>
-        <h5>Node-RED Admin Routes (<code>../*</code>)</h5>
-        <p>Note: Shows ALL Node-RED top-level admin routes, not just uibuilder</p>
-        ${web.htmlBuildTable( routes.admin.app, ['name', 'path', 'folder', 'route'] )}
-        <h5>Admin uibuilder Routes (<code>../uibuilder/*</code>)</h5>
-        ${web.htmlBuildTable( routes.admin.admin, ['name', 'path', 'folder', 'route'] )}
-        <h5>Admin v3 API Routes (<code>../uibuilder/admin</code>)</h5>
-        <p>Note: This route uses the following methods: all, get, put, post, delete.</p>
-        ${web.htmlBuildTable( routes.admin.v3, ['name', 'path', 'folder', 'route'] )}
-        <h5>Admin v2 API Routes (<code>../uibuilder/*</code>)</h5>
-        ${web.htmlBuildTable( routes.admin.v2, ['name', 'path', 'folder', 'route'] )}
-    `
+//     // Show the ExpressJS paths currently defined
+//     // web.routers contains descriptive info on routes, routes.user contains the ExpressJS route stack info.
+//     page += `
+//         <h2>uibuilder ExpressJS Routes</h2>
+//         <p>These tables show all of the web URL routes for uibuilder.</p>
+//         <h3>Client-Facing Routes</h3>
+//         ${web.htmlBuildTable( web.routers.user, ['name', 'desc', 'path', 'type', 'folder'] )}
+//         <h4>ExpressJS technical route data for admin routes</h4>
+//         <h5>Application Routes (<code>../*</code>)</h5>
+//         ${web.htmlBuildTable( routes.user.app, ['name', 'path', 'folder', 'route'] )}
+//         <h5>uibuilder generic Routes (<code>../uibuilder/*</code>)</h5>
+//         ${web.htmlBuildTable( routes.user.uibRouter, ['name', 'path', 'folder', 'route'] )}
+//         <h5>Vendor Routes (<code>../uibuilder/vendor/*</code>)</h5>
+//         ${web.htmlBuildTable( routes.user.vendorRouter, ['name', 'path', 'folder', 'route'] )}
+//         <hr>
+//         <h3>Per-Instance Client-Facing Routes</h3>
+//     `
+//     Object.keys(routes.instances).forEach( (url) => {
+//         page += `
+//             <h4>${url}</h4>
+//             ${web.htmlBuildTable( web.routers.instances[url], ['name', 'desc', 'path', 'type', 'folder'] )}
+//             <h5>ExpressJS technical route data for <code>${url}</code> (<code>../${url}/*</code>)</h5>
+//             ${web.htmlBuildTable( routes.instances[url], ['name', 'path', 'folder', 'route'] )}
+//         `
+//     } )
+//     page += `
+//         <hr>
+//         <h3>Admin-Facing Routes</h3>
+//         ${web.htmlBuildTable( web.routers.admin, ['name', 'desc', 'path', 'type', 'folder'] )}
+//         <h4>ExpressJS technical route data for admin routes</h4>
+//         <h5>Node-RED Admin Routes (<code>../*</code>)</h5>
+//         <p>Note: Shows ALL Node-RED top-level admin routes, not just uibuilder</p>
+//         ${web.htmlBuildTable( routes.admin.app, ['name', 'path', 'folder', 'route'] )}
+//         <h5>Admin uibuilder Routes (<code>../uibuilder/*</code>)</h5>
+//         ${web.htmlBuildTable( routes.admin.admin, ['name', 'path', 'folder', 'route'] )}
+//         <h5>Admin v3 API Routes (<code>../uibuilder/admin</code>)</h5>
+//         <p>Note: This route uses the following methods: all, get, put, post, delete.</p>
+//         ${web.htmlBuildTable( routes.admin.v3, ['name', 'path', 'folder', 'route'] )}
+//         <h5>Admin v2 API Routes (<code>../uibuilder/*</code>)</h5>
+//         ${web.htmlBuildTable( routes.admin.v2, ['name', 'path', 'folder', 'route'] )}
+//     `
 
-    page += '</div></body></html>'
+//     page += '</div></body></html>'
 
-    return page
-}
+//     return page
+// }
 
-/** Return diagnostics information as JSON
- * @return {object} An object containing diagnostics information
- */
-function diagnostics() {
-    const RED = uib.RED
-    const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
-    let serverLocation
-    if (uib.customServer.isCustom === true ) {
-        serverLocation = [
-            `${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot}`,
-            `${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`
-        ]
-    } else {
-        [
-            `${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`,
-        ]
-    }
-    return {
-        version: uib.version,
-        rootFolder: uib.rootFolder,
-        configFolder: uib.configFolder,
-        commonFolder: uib.commonFolder,
-        serverLocation: serverLocation,
-        installedLibraries: Object.keys(packageMgt.uibPackageJson.uibuilder.packages),
-        uib: uib,
-    }
-}
+// /** Return diagnostics information as JSON
+//  * @return {object} An object containing diagnostics information
+//  */
+// function diagnostics() {
+//     const RED = uib.RED
+//     const myroot = uib.nodeRoot === '' ? '/' : uib.nodeRoot
+//     let serverLocation
+//     if (uib.customServer.isCustom === true ) {
+//         serverLocation = [
+//             `${uib.customServer.type}://${uib.customServer.host}:${uib.customServer.port}${uib.nodeRoot}`,
+//             `${uib.customServer.type}://localhost:${uib.customServer.port}${myroot}`
+//         ]
+//     } else {
+//         [
+//             `${RED.settings.https ? 'https' : 'http'}://${RED.settings.uiHost}:${RED.settings.uiPort}${myroot}`,
+//         ]
+//     }
+//     return {
+//         version: uib.version,
+//         rootFolder: uib.rootFolder,
+//         configFolder: uib.configFolder,
+//         commonFolder: uib.commonFolder,
+//         serverLocation: serverLocation,
+//         installedLibraries: Object.keys(packageMgt.uibPackageJson.uibuilder.packages),
+//         uib: uib,
+//     }
+// }
 
-/** Return an HTML page listing all uib instances (apps) with details
- * @param {string} urlPrefix The URL href prefix
- * @return {string} HTML string output
- */
-function appsPage(urlPrefix) {
-    const apps = uib.apps
-    const urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/', '')}`
+// /** Return an HTML page listing all uib instances (apps) with details
+//  * @param {string} urlPrefix The URL href prefix
+//  * @return {string} HTML string output
+//  */
+// function appsPage(urlPrefix) {
+//     const apps = uib.apps
+//     const urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/', '')}`
 
-    let page = `
-        <!doctype html><html lang="en"><head>
-            <title>UIBUILDER Instances (Apps)</title>
-            <link rel="icon" href="${urlRoot}${uib.moduleName}/common/images/node-blue.ico">
-            <link type="text/css" rel="stylesheet" href="${urlRoot}${uib.moduleName}/uib-brand.min.css" media="screen">
-            <style type="text/css" rel="stylesheet" media="all">
-                h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
-                .col3i tbody>tr>:nth-child(3){ font-style:italic; }
-            </style>
-        </head><body><main>
-            <h1 class="with-subtitle">UIBUILDER Instances (Apps)</h1>
-            <div role="doc-subtitle">Note that this page is only accessible to users with Node-RED admin authority</div>
-            <table>
-    `
+//     let page = `
+//         <!doctype html><html lang="en"><head>
+//             <title>UIBUILDER Instances (Apps)</title>
+//             <link rel="icon" href="${urlRoot}${uib.moduleName}/common/images/node-blue.ico">
+//             <link type="text/css" rel="stylesheet" href="${urlRoot}${uib.moduleName}/uib-brand.min.css" media="screen">
+//             <style type="text/css" rel="stylesheet" media="all">
+//                 h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
+//                 .col3i tbody>tr>:nth-child(3){ font-style:italic; }
+//             </style>
+//         </head><body><main>
+//             <h1 class="with-subtitle">UIBUILDER Instances (Apps)</h1>
+//             <div role="doc-subtitle">Note that this page is only accessible to users with Node-RED admin authority</div>
+//             <table>
+//     `
 
-    Object.keys(apps)
-        .sort()
-        .forEach( (app) => {
-            const detail = apps[app]
-            // If detail.type = 'uibuilder' then set style to bold, else set style to italic
-            // const style = detail.type === 'uibuilder' ? 'font-weight:bold' : 'font-style: italic'
-            page += `
-            <tr>
-                <td>
-                    <a href="${urlRoot}${detail.url}">${app}</a>
-                </td>
-                <td>
-                    ${detail.title}
-                    ${detail.descr ? `<br><i>${detail.descr}</i>` : ''}
-                </td>
-                <td>
-                    ${detail.type}
-                </td>
-            </tr>
-            `
-        })
+//     Object.keys(apps)
+//         .sort()
+//         .forEach( (app) => {
+//             const detail = apps[app]
+//             // If detail.type = 'uibuilder' then set style to bold, else set style to italic
+//             // const style = detail.type === 'uibuilder' ? 'font-weight:bold' : 'font-style: italic'
+//             page += `
+//             <tr>
+//                 <td>
+//                     <a href="${urlRoot}${detail.url}">${app}</a>
+//                 </td>
+//                 <td>
+//                     ${detail.title}
+//                     ${detail.descr ? `<br><i>${detail.descr}</i>` : ''}
+//                 </td>
+//                 <td>
+//                     ${detail.type}
+//                 </td>
+//             </tr>
+//             `
+//         })
 
-    page += `</table></main></body></html>`
+//     page += `</table></main></body></html>`
 
-    return page
-}
+//     return page
+// }
 
 /** Better to use uibuilder v3 unified Admin API router - new API commands should be added here */
 // admin_Router_V3.route('/:url')
@@ -693,43 +693,41 @@ v2AdminRouter.post('/uibputfile', function(/** @type {express.Request} */ req, /
 /** Create an index web page or JSON return listing all uibuilder endpoints
  * Also allows confirmation of whether a url is in use ('check' parameter) or a simple list of urls in use.
  */
-v2AdminRouter.get('/uibindex', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-    log.trace('🌐[uibuilder:apiv2:uibindex] User Page/API. List all available uibuilder endpoints')
+// v2AdminRouter.get('/uibindex', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+//     log.trace('🌐[uibuilder:apiv2:uibindex] User Page/API. List all available uibuilder endpoints')
 
-    // If using own Express server, correct the URL's
-    const urlPrefix = getUrlPrefix(req)
+//     // If using own Express server, correct the URL's
+//     const urlPrefix = getUrlPrefix(req)
 
-    /** Return full details based on type parameter */
-    switch (req.query.type) {
-        case 'diagnostics': {
-            res.json(diagnostics())
-            break
-        }
-        case 'json': {
-            res.json(uib.instances)
-            break
-        }
-        case 'urls': {
-            res.json(Object.values(uib.instances))
-            break
-        }
-        // default to 'html' output type
-        default: {
-            const page = detailsPage(urlPrefix)
-            res.send(page)
-            break
-        }
-    }
-}) // ---- End of uibindex ---- //
+//     /** Return full details based on type parameter */
+//     switch (req.query.type) {
+//         case 'diagnostics': {
+//             res.json(diagnostics())
+//             break
+//         }
+//         case 'json': {
+//             res.json(uib.instances)
+//             break
+//         }
+//         case 'urls': {
+//             res.json(Object.values(uib.instances))
+//             break
+//         }
+//         // default to 'html' output type
+//         default: {
+//             const page = detailsPage(urlPrefix)
+//             res.send(page)
+//             break
+//         }
+//     }
+// })
 
 /** Return a web page containing all uibuilder instances with descriptions */
-v2AdminRouter.get('/apps', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
-    // If using own Express server, correct the URL's
-    const urlPrefix = getUrlPrefix(req)
-
-    res.send( appsPage(urlPrefix) )
-    // res.json( uib.apps )
-}) // ---- End of uibvendorpackages ---- //
+// v2AdminRouter.get('/apps', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
+//     // If using own Express server, correct the URL's
+//     const urlPrefix = getUrlPrefix(req)
+//     res.send( appsPage(urlPrefix) )
+// })
 
 /** Check & update installed front-end library packages, return list as JSON - this runs when NR Editor is loaded if a uib instance deployed */
 v2AdminRouter.get('/uibvendorpackages', function(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
