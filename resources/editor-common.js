@@ -59,6 +59,55 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 'uib-update'
             ],
 
+            /** Wrapper for RED.notify
+             * @param {string} msg Message to display
+             * @param {string|object} opts Options object
+             * @param {'info'|'compact'|'success'|'warning'|'error'} [opts.type] Panel type (default=info)
+             * @param {boolean} [opts.modal] Modal dialog (default=false)
+             * @param {boolean} [opts.fixed] Fixed position (default=false)
+             * @param {number} [opts.timeout] Timeout (ms)
+             * @param {number} [opts.btns] Number of buttons (1 or 2)
+             */
+            nrNotify: function nrNotify(msg, opts = {}) {
+                if (typeof opts === 'string') opts = { type: opts, }
+                if (!('modal' in opts)) {
+                    opts.modal = false
+                }
+                if (opts.modal === true && !('fixed' in opts)) opts.fixed = true
+
+                const myNote = RED.notify(`🌐UIBUILDER ${msg}`, {
+                    type: 'info', // info, compact, success, warning, error
+                    ...opts,
+                    buttons: opts.fixed === true || opts.btns > 0
+                        ? (opts.type === 'error') || (opts.btns === 1)
+                            ? [
+                                {
+                                    text: 'Ok',
+                                    class: 'primary',
+                                    click: function(e) {
+                                        myNote.close()
+                                    },
+                                },
+                            ]
+                            : [
+                                {
+                                    text: 'cancel',
+                                    click: function(e) {
+                                        myNote.close()
+                                    },
+                                },
+                                {
+                                    text: 'okay',
+                                    class: 'primary',
+                                    click: function(e) {
+                                        myNote.close()
+                                    },
+                                },
+                            ]
+                        : [],
+                })
+            },
+
             // Debug output via log() - turn on/off with true/false
             get debug() { return _dbg },
             set debug(dbg) {
@@ -90,12 +139,16 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                     },
                 })
             },
-            /** Perform an async API call to the admin v3 API
+
+            /** Perform an API call to the admin v3 API - defaults to ASYNC, override with opt.async=false
              * @param {object} opt Options object
              * @param {'GET'|'POST'|'PUT'|'DELETE'} [opt.verb] HTTP verb to use (default='GET')
              * @param {'text'|'json'} [opt.dataType] Type of data expected in return (default='text')
+             * @param {boolean=} opt.async Data to send (as query parameters)
              * @param {string=} opt.url uibuilder/markweb url (default='dummy')
              * @param {object=} opt.data Data to send (as query parameters)
+             * @param {number=} opt.timeout API call timout in ms (default=500)
+             * @param {boolean=} opt.fixErrNotify If true, unexpected API err notification is fixed on page (default=true)
              * @param {Function=} opt.done Function to call on successful call
              * @param {Function=} opt.fail Function to call on fail
              * @param {Function=} opt.always Optional function to run after success or fail
@@ -104,16 +157,31 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 // Make sure that the opt object has its defaults
                 const verb = opt.verb || 'GET'
                 const dataType = opt.dataType || 'text'
+                const async = 'async' in opt ? opt.async : true
                 const url = opt.url || 'dummy' // 'dummy' used where a real instance url isn't wanted
                 const data = opt.data || {}
+                const timeout = opt.timeout || 500
+                const fixErrNotify = 'fixErrNotify' in opt ? opt.fixErrNotify : true
+                // These are for async calls
                 const done = opt.done || function() {}
                 const fail = opt.fail || function() {}
                 const always = opt.always || function() {}
+                // These are for sync calls
+                if (async === false && !opt.success) {
+                    uibuilder.nrNotify(`"${data.cmd}" API call failed. success function not provided.`, { type: 'error', fixed: true, })
+                    console.error(`🌐🛑[uibuilder:common:doAdminApiv3] "${data.cmd}" API call ERROR: success function not provided.`)
+                    return
+                }
+                const success = opt.success || function() {}
+                const error = opt.error || function() {}
 
                 $.ajax({
                     // url: 'uibuilder/uibgetfile', // api v2
                     url: './uibuilder/admin/' + url, // api v3
                     method: verb,
+                    dataType: dataType,
+                    async: async,
+                    timeout: timeout,
                     // converted to URL query parameters
                     data: data,
                     beforeSend: function(jqXHR) {
@@ -122,33 +190,45 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                             jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
                         }
                     },
+                    error: function(xhr, textStatus, err) {
+                        let strCmd = ''
+                        if (data && data.cmd) strCmd = `Request=${data.cmd}`
+                        if (xhr.status === 401) {
+                            // Could be: not logged in, OR insufficient permissions
+                            uibuilder.nrNotify(`"${data.cmd}" API call failed - insufficient authorisation`, { type: 'error', fixed: true, })
+                            console.error(`🌐🛑[uibuilder:common:doAdminApiv3] "${data.cmd}" API call authorisation failure`, err)
+                        } else if (err === 'Not Found') { // for checkfolder
+                            // do nothing
+                        } else {
+                            uibuilder.nrNotify(`"${data.cmd}" API call failed. Status=${textStatus} (${xhr.status})`, { type: 'error', fixed: fixErrNotify, })
+                            console.error(`🌐🛑[uibuilder:common:doAdminApiv3] "${data.cmd}" API call ERROR: ${textStatus} (${xhr.status})`, err)
+                        }
+                        // if (textStatus === 'timeout') {}
+                        // Call the error function if provided
+                        error(xhr, textStatus, err)
+                    },
+                    success: success,
                 })
                     // .done(function(data, textStatus, jqXHR) {
                     .done(done)
-                    // .fail(function(_jqXHR, textStatus, errorThrown) {
+                    // .fail(function(jqXHR, textStatus, errorThrown) {
                     .fail(fail)
                     .always(always)
             },
-            /** Get all of the currently deployed uibuilder URL's & updates this.deployedUibInstances
+
+            /** SYNC Get all of the currently deployed uibuilder URL's & updates this.deployedUibInstances
              * NOTE that the uibuilder.editorUibInstances cannot be used as that includes disabled nodes/flows
              * See nodes/libs/admin-api-v3.cjs
              * @return {{string,string}} URLs by node id of deployed uibuilder nodes
              */
             getDeployedUrls: function getDeployedUrls() {
-                $.ajax({
-                    type: 'GET',
+                // SYNC Call the npm installPackage v3 API (it updates the package list)
+                this.doAdminApiv3({
+                    verb: 'GET',
                     async: false,
-                    timeout: 500, // 1/2 second
                     dataType: 'json',
-                    url: './uibuilder/admin/dummy',
-                    data: {
+                    data: { // converted to URL query parameters
                         cmd: 'listinstances',
-                    },
-                    beforeSend: function(jqXHR) {
-                        const authTokens = RED.settings.get('auth-tokens')
-                        if (authTokens) {
-                            jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                        }
                     },
                     success: (instances) => {
                         this.deployedUibInstances = this.sortInstances(instances)
@@ -156,10 +236,6 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                         // that list is built too late during Editor load
                         if (Object.keys(this.editorUibInstances).length === 0) this.editorUibInstances = this.deployedUibInstances
                         // uibuilder.log('🌐[uibuilder] Deployed Instances >>', instances, this )
-                    },
-                    error: function(xhr, textStatus, err) {
-                        console.error(`🌐🛑[uibuilder:common:uibvendorpackages] ERROR: ${textStatus}`, err)
-                        // if (textStatus === 'timeout') {}
                     },
                 })
                 return this.deployedUibInstances
@@ -216,29 +292,16 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
             uibuilder.log(`🌐[uibuilder] DEBUG ON (because env NODE_ENV is '${RED.settings.uibuilderNodeEnv}')`)
         }
 
-        /** Get initial list of installed FE packages via v2 API - save to master list */
-        $.ajax({
-            dataType: 'json',
-            method: 'GET',
-            url: './uibuilder/uibvendorpackages',
+        /** SYNC Get initial list of installed FE packages via v3 API - save to master list */
+        uibuilder.doAdminApiv3({
+            verb: 'GET',
             async: false,
-            timeout: 500, // 1/2 second
-            // data: { url: node.url},
-
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
+            dataType: 'json',
+            data: { // converted to URL query parameters
+                cmd: 'getLibraries',
             },
-
-            success: function(vendorPaths) {
+            success: (vendorPaths) => {
                 uibuilder.packages = vendorPaths
-            },
-
-            error: function(xhr, textStatus, err) {
-                console.error(`🌐🛑[uibuilder:common:uibvendorpackages] ERROR: ${textStatus}`, err)
-                // if (textStatus === 'timeout') {}
             },
         })
 
@@ -374,55 +437,41 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
         const isSeen = localStorage.getItem('uibuilder.lastSeenVersion') || 'none'
         if (isSeen !== RED.settings.uibuilderCurrentVersion) {
             // Get the contents of the changelog-highlights.md file and log to console
-            $.ajax({
-                type: 'GET',
+            uibuilder.doAdminApiv3({
+                verb: 'GET',
                 dataType: 'text',
-                url: './uibuilder/admin/dummy',
-                timeout: 500, // 1/2 second
                 data: {
                     cmd: 'getChangeSummary',
                 },
-                beforeSend: function(jqXHR) {
-                    const authTokens = RED.settings.get('auth-tokens')
-                    if (authTokens) {
-                        jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                    }
-                },
-                success: (data) => {
+                done: (data) => {
                     // Get the version from the frontmatter
                     const frontmatterMatch = data.match(/^---\s*\n([\s\S]*?)\n---/)
                     if (frontmatterMatch) {
                         const frontmatter = frontmatterMatch[1]
                         const versionMatch = frontmatter.match(/version:\s*['"]?([^'"\n]+)['"]?/)
                         if (versionMatch) {
-                            const version = versionMatch[1]
-                            uibuilder.log('🌐[uibuilder] Highlights frontmatter version:', version)
-                            // If the version is not the same as the current version, don't show anything
-                            if (version !== RED.settings.uibuilderCurrentVersion) return
-                            // Remove the frontmatter from the data & display the remainder in a node-red notification
-                            const changelog = RED.utils.renderMarkdown(data.replace(frontmatterMatch[0], '').trim())
-                            const n = RED.notify(
-                                `🌐 UIBUILDER has been updated to version ${version}\n${changelog}`,
-                                {
-                                    type: 'info',
-                                    fixed: true,
-                                    modal: true,
-                                    buttons: [{
-                                        text: 'Close',
-                                        click: (e) => {
-                                            n.close()
-                                        },
-                                    }],
-                                }
-                            )
-                            console.info(`🌐[uibuilder] Welcome to uibuilder version ${version} - this is your first view`)
-                            localStorage.setItem('uibuilder.lastSeenVersion', RED.settings.uibuilderCurrentVersion)
+                            // Delay for 5 seconds to let the Editor completely load
+                            setTimeout(() => {
+                                const version = versionMatch[1]
+                                uibuilder.log('🌐[uibuilder] Highlights frontmatter version:', version)
+                                // If the version is not the same as the current version, don't show anything
+                                if (version !== RED.settings.uibuilderCurrentVersion) return
+                                // Remove the frontmatter from the data & display the remainder in a node-red notification
+                                const changelog = RED.utils.renderMarkdown(data.replace(frontmatterMatch[0], '').trim())
+                                uibuilder.nrNotify(
+                                    `has been updated to version ${version}\n${changelog}`,
+                                    {
+                                        type: 'info',
+                                        modal: true,
+                                        fixed: true,
+                                        btns: 1,
+                                    }
+                                )
+                                console.info(`🌐[uibuilder] Welcome to uibuilder version ${version} - this is your first view`)
+                                localStorage.setItem('uibuilder.lastSeenVersion', RED.settings.uibuilderCurrentVersion)
+                            }, 5000)
                         }
                     }
-                },
-                error: function(xhr, textStatus, err) {
-                    console.error(`🌐🛑[uibuilder:common:isseen] ERROR: ${textStatus}`, err)
-                    // if (textStatus === 'timeout') {}
                 },
             })
         }
@@ -436,56 +485,57 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
          */
         ;(function addUibMonacoTypes() { // eslint-disable-line @stylistic/no-extra-semi
             const typeDeclarations = `
-declare namespace RED {
-    namespace util {
-        /** uibuilder server-side utilities available in function nodes */
-        namespace uib {
-            /** Recursive object deep find
-             * @param obj The object to be searched
-             * @param matcher If returns true, cb(obj) is called
-             * @param cb Callback receiving the matching object
-             */
-            function deepObjFind(obj: any, matcher: (obj: any) => boolean, cb: (obj: any) => void): void
-            /** Format a number to a given locale and decimal places
-             * @param inp Input number
-             * @param dp Decimal places (default=1)
-             * @param locale Locale string (default='en-GB')
-             */
-            function dp(inp: number, dp?: number, locale?: string): string
-            /** Returns true/false or a default for truthy/falsy inputs
-             * @param val The value to test
-             * @param deflt Default if value is neither truthy nor falsy
-             */
-            function truthy(val: string | number | boolean | any, deflt?: any): boolean | any
-            /** Return a list of all deployed uibuilder instances */
-            function listAllApps(): object
-            /** Send a message to a specific uibuilder instance
-             * @param uibName The URL name of the target uibuilder instance
-             * @param msg Message to send to the front-end
-             */
-            function send(uibName: string, msg: object): void
-            /** Render data to an HTML string using the json-viewer component renderer
-             * @param data Any JavaScript value to render
-             * @param opts Rendering options
-             * @returns HTML string representing the data tree
-             */
-            function renderToHTML(data: any, opts?: {
-                /** Maximum auto-expand depth (default=2) */
-                maxDepth?: number
-                /** Start all nodes collapsed (default=false) */
-                collapsed?: boolean
-                /** Allow scalar leaf values to be edited (default=false) */
-                editable?: boolean
-                /** Include search/collapse controls (default=false) */
-                interactive?: boolean
-                /** Embed component CSS in output (default=true) */
-                includeStyles?: boolean
-            }): string
-            /** Safer JSON.stringify with circular reference handling */
-            function saferSerialize(data: any): string
-        }
-    }
-}`
+                declare namespace RED {
+                    namespace util {
+                        /** uibuilder server-side utilities available in function nodes */
+                        namespace uib {
+                            /** Recursive object deep find
+                             * @param obj The object to be searched
+                             * @param matcher If returns true, cb(obj) is called
+                             * @param cb Callback receiving the matching object
+                             */
+                            function deepObjFind(obj: any, matcher: (obj: any) => boolean, cb: (obj: any) => void): void
+                            /** Format a number to a given locale and decimal places
+                             * @param inp Input number
+                             * @param dp Decimal places (default=1)
+                             * @param locale Locale string (default='en-GB')
+                             */
+                            function dp(inp: number, dp?: number, locale?: string): string
+                            /** Returns true/false or a default for truthy/falsy inputs
+                             * @param val The value to test
+                             * @param deflt Default if value is neither truthy nor falsy
+                             */
+                            function truthy(val: string | number | boolean | any, deflt?: any): boolean | any
+                            /** Return a list of all deployed uibuilder instances */
+                            function listAllApps(): object
+                            /** Send a message to a specific uibuilder instance
+                             * @param uibName The URL name of the target uibuilder instance
+                             * @param msg Message to send to the front-end
+                             */
+                            function send(uibName: string, msg: object): void
+                            /** Render data to an HTML string using the json-viewer component renderer
+                             * @param data Any JavaScript value to render
+                             * @param opts Rendering options
+                             * @returns HTML string representing the data tree
+                             */
+                            function renderToHTML(data: any, opts?: {
+                                /** Maximum auto-expand depth (default=2) */
+                                maxDepth?: number
+                                /** Start all nodes collapsed (default=false) */
+                                collapsed?: boolean
+                                /** Allow scalar leaf values to be edited (default=false) */
+                                editable?: boolean
+                                /** Include search/collapse controls (default=false) */
+                                interactive?: boolean
+                                /** Embed component CSS in output (default=true) */
+                                includeStyles?: boolean
+                            }): string
+                            /** Safer JSON.stringify with circular reference handling */
+                            function saferSerialize(data: any): string
+                        }
+                    }
+                }
+            `
 
             /** Inject the type declarations into Monaco for RED.util.uib as soon as Monaco is available,
              * so that function nodes get IntelliSense for uibuilder server-side utilities.
