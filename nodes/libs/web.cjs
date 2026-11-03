@@ -47,7 +47,7 @@ const uiblib = require('./uiblib.cjs')
 /** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
 const uib = require('../libs/uibGlobalConfig.cjs')
 
-const adminRouterV2 = require('./admin-api-v2.cjs')
+// const adminRouterV2 = require('./admin-api-v2.cjs')
 const adminRouterV3 = require('./admin-api-v3.cjs')
 
 // Filename for default web page
@@ -202,11 +202,12 @@ class UibWeb {
 
         // TODO: Move v2 API's to V3
         // this.adminRouterV2 = require('./admin-api-v2.cjs')()
-        this.routers.admin.push( { name: 'Admin API v2', path: `${this.RED.settings.httpAdminRoot}uibuilder/*`, desc: 'Various older admin APIs used by the uibuilder Editor panel', type: 'Router', } )
+        // this.routers.admin.push( { name: 'Admin API v2', path: `${this.RED.settings.httpAdminRoot}uibuilder/*`, desc: 'Various older admin APIs used by the uibuilder Editor panel', type: 'Router', } )
 
         /** Serve up the admin root for uibuilder on /<httpAdminRoot>/uibuilder/ */
         // this.RED.httpAdmin.use('/uibuilder', this.adminRouter, this.adminRouterV2)
-        this.RED.httpAdmin.use('/uibuilder', this.adminRouter, adminRouterV2)
+        // this.RED.httpAdmin.use('/uibuilder', this.adminRouter, adminRouterV2)
+        this.RED.httpAdmin.use('/uibuilder', this.adminRouter)
     }
 
     /** Add routes for master user-facing APIs */
@@ -349,7 +350,7 @@ class UibWeb {
         // Create Express Router to handle routes on `<httpNodeRoot>/uibuilder/`
         this.uibRouter = express.Router(this.#routerOptions)
 
-        // Add auto-generated index page to uibRouter showing all uibuilder user app endpoints at `../uibuilder/apps`
+        // Add auto-generated user-facing index page to uibRouter showing all uibuilder user app endpoints at `../uibuilder/apps`
         this._serveUserUibIndex()
 
         // Add masterStatic to ../uibuilder - serves up front-end/... uib-styles.css, clients, etc...
@@ -389,7 +390,7 @@ class UibWeb {
         // this.debugExpressProps(this.server)
     }
 
-    /** Return a dynamic index page of all uibuilder user-accessible endpoints on /uibuilder/apps
+    /** Return a dynamic user-facing index page of all uibuilder user-accessible endpoints on /uibuilder/apps
      * param {express.Request} req Express request object
      * param {express.Response} res Express response object
      * param {Function} next Function to pass to next handler
@@ -412,8 +413,9 @@ class UibWeb {
                             padding-left: 5px;
                         }
                     </style>
-                </head><body class="uib"><div class="container">
-                    <h1>List of available apps</h1>
+                </head><body><main><section>
+                    <h1 class="with-subtitle">List of all UIBUILDER apps</h1>
+                    <div role="doc-subtitle">Use the title and description on the uibuilder node's Advanced tab to provide nicer looking entries</div>
                     <div><ul>
             `
 
@@ -433,7 +435,7 @@ class UibWeb {
 
             page += `
                     </ul></div>
-                </div></body></html>
+                </section></main></body></html>
             `
 
             res.statusMessage = 'Apps listed'
@@ -1015,6 +1017,7 @@ class UibWeb {
         // }
         const urlPrefix = url.href
         const urlRoot = `${urlPrefix}${uib.nodeRoot.replace('/', '')}${node.url}`
+        const urlAdminRoot = url.href + `${uib.RED.settings.httpAdminRoot.replace('/', '')}uibuilder/docs/resources`
 
         const nodeKeys = [
             'id', 'type',
@@ -1029,68 +1032,70 @@ class UibWeb {
         page += /* html */ `
             <!doctype html><html lang="en"><head>
                 <title>uibuilder Instance Debug Page</title>
-                <link rel="icon" href="${urlRoot}/common/images/node-blue.ico">
-                <link type="text/css" rel="stylesheet" href="${urlRoot}/uib-brand.min.css" media="screen">
+                <link rel="icon" href="${urlAdminRoot}/images/node-blue.ico">
+                <link type="text/css" rel="stylesheet" href="${urlAdminRoot}/uib-brand.min.css" media="screen">
                 <style type="text/css" rel="stylesheet" media="all">
                     h2 { border-top:1px solid silver;margin-top:1em;padding-top:0.5em; }
                     .col3i tbody>tr>:nth-child(3){ font-style:italic; }
                 </style>
-            </head><body class="uib"><div class="container">
-                <h1>uibuilder Instance Debug Page</h1>
-                <p>
-                    Note that this page is only accessible to users with Node-RED admin authority.
-                </p>
-                <h2>Instance Information for '${node.url}'</h2>
+            </head><body class="uib"><main><section>
+                <h1 class="with-subtitle">UIBUILDER Instance Debug Page for url '${node.url}'</h1>
+                <div role="doc-subtitle">Note that this page is only accessible to users with Node-RED admin read authority</div>
                 <table class="uib-info-tb">
                     <tbody>
                         <tr>
                             <th>The node id for this instance</th>
-                            <td>${node.id}<br>
-                                This can be used to search for the node in the Editor.
+                            <td><code>${node.id}</code><br><i>
+                                This can be used to search for the node in the Editor.</i>
                             </td>
                         </tr>
                         <tr>
                             <th>Filing system path to front-end resources</th>
-                            <td>${node.instanceFolder}<br>
+                            <td><code>${node.instanceFolder}</code><br><i>
                                 Contains all of your UI code and other resources.
                                 Folders and files can be viewed, edited, created and deleted using the "Edit Files" button.
-                                You <b>MUST</b> keep at least the <code>src</code> and <code>dist</code> folders otherwise things may not work.
+                                You <b>MUST</b> keep at least the <code>src</code> and <code>dist</code> folders otherwise things may not work.</i>
                             </td>
                         </tr>
                         <tr>
                             <th>URL for the front-end resources</th>
-                            <td><a href="${urlPrefix}${urlJoin(uib.nodeRoot, node.url).replace('/', '')}" target="_blank">.${urlJoin(uib.nodeRoot, node.url)}/</a><br>Index.html page will be shown if you click.</td>
+                            <td>
+                                <a href="${urlPrefix}${urlJoin(uib.nodeRoot, node.url).replace('/', '')}" target="_blank">
+                                    .${urlJoin(uib.nodeRoot, node.url)}/
+                                </a><br><i>
+                                Index.html page will be shown if you click.</i>
+                            </td>
                         </tr>
                         <tr>
                             <th>Node-RED userDir folder</th>
-                            <td>${userDir}<br>
+                            <td><code>${userDir}</code><br><i>
                                 Also the location for any installed vendor resources (installed library packages)
-                                and your other nodes.
+                                and your other nodes.</i>
                             </td>
                         </tr>
                         <tr>
                             <th>URL for vendor resources</th>
-                            <td>../uibuilder/vendor/<br>
-                                See the <a href="../../uibindex" target="_blank">Detailed Information Page</a> for more details.
+                            <td><code>../uibuilder/vendor/</code><br><i>
+                                See the <a href="?cmd=showdetails&output=html" target="_blank">Detailed Information Page</a> for more details.</i>
                             </td>
                         </tr>
                         <tr>
                             <th>Filing system path to common (shared) front-end resources</th>
-                            <td>${uib.commonFolder}<br>
-                                Resource files in this folder are accessible from the main URL.
+                            <td><code>${uib.commonFolder}</code><br><i>
+                                Resource files in this folder are accessible from the main URL.</i>
                             </td>
                         </tr>
                         <tr>
                             <th>Filing system path to common uibuilder configuration resource files</th>
-                            <td>${uib.configFolder}<br>
-                                Contains the package list, master package list, authentication and authorisation middleware.
+                            <td><code>${uib.configFolder}</code><br><i>
+                                Contains the package list, master package list, authentication and authorisation middleware.</i>
                             </td>
                         </tr>
                         <tr>
                             <th>Filing system path to uibuilder master template files</th>
-                            <td>${uib.masterTemplateFolder}<br>
+                            <td><code>${uib.masterTemplateFolder}</code><br><i>
                                 These are copied to any new instance of the uibuilder node.
-                                If you keep the copy flag turned on they are re-copied if deleted.
+                                If you keep the copy flag turned on they are re-copied if deleted.</i>
                             </td>
                         </tr>
                         <tr>
@@ -1099,22 +1104,19 @@ class UibWeb {
                         </tr>
                         <tr>
                             <th>Node-RED version</th>
-                            <td>${RED.settings.version}<br>
-                                Minimum version required by uibuilder is ${uib.me['node-red'].version}
+                            <td>${RED.settings.version}<br><i>
+                                Minimum version required by uibuilder is ${uib.me['node-red'].version}</i>
                             </td>
                         </tr>
                         <tr>
                             <th>Node.js version</th>
-                            <td>${uib.nodeVersion.join('.')}<br>
-                                Minimum version required by uibuilder is ${uib.me.engines.node}
+                            <td>${uib.nodeVersion.join('.')}<br><i>
+                                Minimum version required by uibuilder is ${uib.me.engines.node}</i>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                <h2>Node Instance Configuration Items</h2>
-                <p>
-                    Shows the internal configuration.
-                </p>
+                <h2>Internal configuration</h2>
                 <table class="uib-info-tb">
                     <tbody>
         `
@@ -1149,14 +1151,14 @@ class UibWeb {
 
         const iRoutes = Object.values(this.dumpInstanceRoutes(false, node.url))[0]
         page += `
-            <h4>Instance Routes for ${node.url}</h4>
+            <h2>Instance Routes for ${node.url}</h2>
             ${this.htmlBuildTable( this.routers.instances[node.url], ['name', 'desc', 'path', 'type', 'folder'] )}
-            <h5>ExpressJS technical route data for <code>${node.url}</code> (<code>../${node.url}/*</code>)</h5>
+            <h2>ExpressJS technical route data for <code>${node.url}</code> (<code>../${node.url}/*</code>)</h2>
             ${this.htmlBuildTable( iRoutes, ['name', 'path', 'folder', 'route'] )}
             `
 
         page += `
-            </body></html>
+            </section></main></body></html>
 
         `
 
@@ -1388,7 +1390,7 @@ class UibWeb {
         for ( const layer of this.appStack(this.RED.httpAdmin)) { this.summariseRoute(layer, routes.app) }
         if (this.adminRouter) for ( const layer of this.adminRouter.stack) { this.summariseRoute(layer, routes.admin) }
         if (adminRouterV3) for ( const layer of adminRouterV3.stack) { this.summariseRoute(layer, routes.v3) }
-        if (adminRouterV2) for ( const layer of adminRouterV2.stack) { this.summariseRoute(layer, routes.v2) }
+        // if (adminRouterV2) for ( const layer of adminRouterV2.stack) { this.summariseRoute(layer, routes.v2) }
 
         if (print) {
             console.log(' \n---- Admin Facing Routes ----')
