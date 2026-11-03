@@ -25,18 +25,25 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
   * Baselined to Node-RED v5+.
   * Baselined to Node.js v22.9+.
   * It is strongly recommended that you use a Node.js LTS version and the latest Node-RED version.
+  * Additional Editor security (see below).
+  * The old v2 admin API's have been moved to v3 and so their URL's have changed. All admin API calles are now under `./uibuilder/admin/`.
 
 * Examples:
   * The "basic-uib" example in the import examples library has been updated. It is now better labelled and will show the date/time on the web page when inject is triggered (demonstrating the use of the zero-code `uib-topic` HTML attribute for very simple page updates)
   * There is a new example demonstrating simple sparkline charts that do not need any JavaScript code.
 
-* The `uibuiler` node now has a button to open a web page (controlled by admin access) that shows _ALL_ uibuilder & Markweb instances with their type, title & description where provided (by the inputs on an instances advanced tab) and the link to the home page.
+* There is a new, user-facing route GET `./uibuilder/apps` - returns a simple formatted list of all installed apps. It uses the instance title and description (set on the uibuilder node's Advanced tab in the Editor). Note that this is user-facing, not admin-facing.
+
+* The `uibuiler` node now has a button to open a web page (controlled by admin access) that shows _ALL_ uibuilder & Markweb instances with their type, title & description where provided (by the inputs on an instances advanced tab) and the link to the home page. This is the admin version of the user-facing list above.
 
 * DEGIT has been updated to the latest release now that the baseline node version is v20+. This should fix the git requirement bug and allow us to use the latest features and fixes in degit. It is also now wrapped into a local version which allows us to continue using as a CommonJS version (Degit v3 is ESM only). _For reference, DEGIT is used for installing front-end templates_.
 
 ### Potential breaking changes
 
 * Baselined to Node-RED v5+ and Node.js v22.9+. Please make sure that you can meet these requirements before upgrading.
+
+* Additional security checks have been added to all admin API calls. This may affect some _people who use Node-RED admin logins_. Users logged into the Node-RED Editor _must_ have at least `flow.read` authorisation to use any of the API's. API's that have consequences require the admin user to have `flow.write` authorisation. _If you don't use Node-RED Editor authorisation, you will not be affected_.
+
 * The old v2 API's have been moved to the v3 library which means that their URL's have changed. If you have used these API's manually, you will need to update your code to use the new URL. This should not affect most people.
 
 ### Example Flows (See Node-RED's Import)
@@ -97,11 +104,12 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 * Editor plugin (`editor-common.js`)
   * Added `uibuilder.sanitiseUrl(urlPath)` function to allow url paths (e.g. the "url" name of a uibuilder node) to be made safe for use in URLs. Returns `null` if path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls are included in the path. Else returns the path.
 
-* `adminRouterV2.cjs`
-  * New route GET `/apps` - returns a list of all installed apps with details. Used from button in uibuilder node.
+* `adminRouterV2.cjs` - this has now been removed completely.
 
 * `adminRouterV3.cjs`
   * Additional safety/security checks on user input.
+  * Node-RED admin authorisation now required for all API calls. `flow.read` for GET calls, `flow.write` for POST, PUT, and DELETE calls. This only impacts when Node-RED Editor admin authorisation is used.
+  * New user-facing route GET `./uibuilder/apps` - returns a simple formatted list of all installed apps. It uses the instance title and description (set on the uibuilder node's Advanced tab in the Editor). Note that this is user-facing, not admin-facing.
 
 * New Module: `logger.mjs` - A custom logging class singleton with colourised output. Output is disabled by default. Setting the environment variable `TI_ENV` to "debug" before starting node-red will enable it. Otherwise control as shown below. Setting the environment variable `TI_LOGGER` not only enables output but also sets the output level, valid levels are error|warn|info|debug.
   

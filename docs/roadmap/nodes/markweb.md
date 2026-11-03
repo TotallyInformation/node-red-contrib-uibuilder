@@ -3,7 +3,7 @@ title: Road map for the markweb node
 description: |
   This page is a working document to track the development of the markweb node. It is not intended to be a comprehensive list of all features or changes, but rather a high-level overview of the main areas of development. It is expected that this page will be updated frequently as development progresses and new features are added or changed.
 created: 2026-07-26 15:34:19
-updated: 2026-07-28 19:49:32
+updated: 2026-11-02 12:24:55
 author: Julian Knight (Totally Information)
 ---
 
@@ -11,6 +11,9 @@ author: Julian Knight (Totally Information)
   * Rendered lists have too much vertical whitespace.
   * Rendered lists need better link colours
   * Need extra arg to allow a flat instead of tree list. Probably needs a completely new runtime fn
+
+* Consider moving indexing processes to a worker thread.
+* Consider having realtime (ws or socket.io) from runtime to Editor to allow realtime updates to the index.
 
 ## Index listing process flow
 
@@ -27,7 +30,7 @@ author: Julian Knight (Totally Information)
     * `index`:
       * `indexListing`
 
-## Index creaation process
+## Index creation process
 
 
 ## Index
