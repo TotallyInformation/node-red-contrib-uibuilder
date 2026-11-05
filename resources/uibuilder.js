@@ -772,34 +772,30 @@
     /** Save Edited File (API v2)*/
     function saveFile() {
         const authTokens = RED.settings.get('auth-tokens')
-
-        // Post the updated content of the file via the admin API
-        // NOTE: Cannot use jQuery POST function as it sets headers node trigger a CORS error. Do it using native requests only.
-        // Clients will be reloaded if the reload checkbox is set.
-        const request = new XMLHttpRequest()
-        const params = 'fname=' + $('#node-input-filename').val() + '&folder=' + $('#node-input-folder').val()
-            + '&url=' + $('#node-input-url').val()
-            + '&reload=' + $('#node-input-reload').prop('checked')
-            + '&data=' + encodeURIComponent(uiace.editorSession.getValue())
-        request.open('POST', 'uibuilder/uibputfile', true)
-        request.onreadystatechange = function() {
-            if (this.readyState === XMLHttpRequest.DONE) {
-                if (this.status === 200) {
-                    // Request successful
-                    // display msg - blank msg when new edits present
-                    $('#file-action-message').text('File Saved')
-                    fileIsClean(true)
-                } else {
-                    // Request failed
-                    // display msg - blank msg when new edits present
-                    $('#file-action-message').text('File Save FAILED')
-                }
-            }
-        }
-        request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
-        // If admin ui is protected with a login, we need to send the access token
-        if (authTokens) request.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-        request.send(params)
+        uibuilder.doAdminApiv3({
+            verb: 'POST',
+            dataType: 'json',
+            url: $('#node-input-url').val(), // required
+            data: {
+                cmd: 'saveFile',
+                reload: $('#node-input-reload').prop('checked'),
+                fname: $('#node-input-filename').val(),
+                folder: $('#node-input-folder').val(),
+                // data: encodeURIComponent(uiace.editorSession.getValue()),
+                data: uiace.editorSession.getValue(),
+            },
+            done: (data, textStatus, jqXHR) => {
+                // display msg - blank msg when new edits present
+                $('#file-action-message').text('File Saved')
+                fileIsClean(true)
+            },
+            fail: (jqXHR, textStatus, errorThrown) => {
+                // display msg - blank msg when new edits present
+                $('#file-action-message').text('File Save FAILED')
+                console.error( `🌐🛑[uibuilder:saveFile:put] Error: ${textStatus}`, errorThrown )
+                // RED.notify(`🌐 FAILED to uninstall npm package "${packageName}"`, 'error')
+            },
+        })
     } // ---- End of saveFile ---- //
 
     /** Create the wrapping HTML string that provides a link to open the instance folder in vscode
