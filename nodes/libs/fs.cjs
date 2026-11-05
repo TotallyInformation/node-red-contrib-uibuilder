@@ -85,7 +85,7 @@ class UibFs {
 
     /** returns true if the filename contains / or \ else false
      * @param {string} fname filename to test
-     * @returns {boolean} True if fname contains / or \
+     * @return {boolean} True if fname contains / or \
      */
     hasFolder(fname) {
         return /[/|\\]/.test(fname)
@@ -105,7 +105,7 @@ class UibFs {
      * @param {string} dir Folder name to start the walk
      * @param {string} ftype File extension to filter on, e.g. '.html'
      * @param {number} [level] Current recursion level - used internally
-     * @returns {Promise<string[]>} On each call, returns the next found file name
+     * @return {Promise<string[]>} On each call, returns the next found file name
      */
     async walk(dir, ftype, level = 0) {
         let files
@@ -184,7 +184,7 @@ class UibFs {
 
     /** Returns the create/amend timestamps (as JS Date objects) & file size
      * @param {string} fname File name to examine
-     * @returns {Promise< {created:Date,modified:Date,size:number,[pageName:string]} | {error:string,[originalError:string]} >} File stats
+     * @return {Promise< {created:Date,modified:Date,size:number,[pageName:string]} | {error:string,[originalError:string]} >} File stats
      */
     async getFileMeta(fname) {
         if (!fname) return { error: 'No file provided', }
@@ -209,7 +209,7 @@ class UibFs {
     /** Return all of the *.html files from the served folder for a specific instance
      * NOTE: Only call this after all nodes are loaded into the Node-RED runtime
      * @param {string} url uibuilder instance url (name)
-     * @returns {Promise<string[]>} List of discovered html files with their folder if needed
+     * @return {Promise<string[]>} List of discovered html files with their folder if needed
      */
     async getInstanceLiveHtmlFiles(url) {
         if ( !uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:writeInstanceFile]')
@@ -242,7 +242,7 @@ class UibFs {
 
     /** Get the instance node for a uibuilder instance
      * @param {string} url The URL of the uibuilder instance
-     * @returns {uibNode|null} The instance node or null if not found
+     * @return {uibNode|null} The instance node or null if not found
      */
     getInstanceNode(url) {
         const RED = uib.RED
@@ -264,7 +264,7 @@ class UibFs {
     /** Get a text file from uibuilder's master template folders
      * @param {*} template The name of the master template, e.g. "blank" or "esm-blank-client"
      * @param {*} fName The name of the file to get (optionally with leading folder using forward-slash separators)
-     * @returns {Promise<string>} The text contents of the file.
+     * @return {Promise<string>} The text contents of the file.
      */
     async getTemplateFile(template, fName) {
         return await fs.readFile( join(__dirname, '..', '..', 'templates', template, fName), 'utf8') // eslint-disable-line security/detect-non-literal-fs-filename
@@ -280,7 +280,7 @@ class UibFs {
     /** Read a file, return as a buffer unless options.encoding is provided
      * @param {import('node:fs').PathLike} path The file path/name to read
      * @param {object|string=} options
-     * @returns {string|Buffer} File contents as a string
+     * @return {string|Buffer} File contents as a string
      */
     readFile = fs.readFile
 
@@ -288,7 +288,7 @@ class UibFs {
      * If the path does not exist, rm does nothing.
      * https://nodejs.org/docs/latest-v22.x/api/fs.html#fspromisesrmpath-options
      * @param {string} path Folder/File to remove
-     * @returns {Promise<boolean>} True if removed,
+     * @return {Promise<boolean>} True if removed,
      */
     async remove(path) {
         await fs.rm(path, { force: true, recursive: true, })
@@ -316,7 +316,7 @@ class UibFs {
      * @param {singleTemplateConf} templateDef Template definition object
      * @param {string} fullname Destination folder name
      * @param {templateProcessingOpts} opts Options object
-     * @returns {Promise<string|Error>} statusMessage or error object
+     * @return {Promise<string|Error>} statusMessage or error object
      */
     async doDegit(templateDef, fullname, opts) {
         const { url, template, cmd, templateConf, uib, log, } = opts
@@ -371,7 +371,7 @@ class UibFs {
 
     /** Replace template in front-end instance folder (has to be async because degit is async)
      * @param {templateProcessingOpts} opts Options object
-     * @returns {Promise<string|Error>} statusMessage or error object
+     * @return {Promise<string|Error>} statusMessage or error object
      */
     async replaceTemplate(opts) {
         const { url, template, cmd, templateConf, uib, log, } = opts
@@ -433,7 +433,7 @@ class UibFs {
      * @param {[string]} exclude A fast-glob exclude filter array (or string)
      * @param {boolean} urlOut Output will include a url list (relative to the current uib instance root)
      * @param {boolean} fullPrefix Output will be prefixed with the full path for both file and url outputs
-     * @returns {Promise<any>} List of found files
+     * @return {Promise<any>} List of found files
      */
     async searchInstance(uibId, live, filter, exclude, urlOut, fullPrefix) {
         if ( !uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:searchInstance]')
@@ -536,7 +536,7 @@ class UibFs {
      * @param {*} data The data to save, string or buffer
      * @param {boolean} createFolder If true and folder does not exist, will be created. Else returns error
      * @param {boolean} reload If true, issue a reload command to all clients connected to the instance
-     * @returns {Promise} Success if write is successful
+     * @return {Promise} Success if write is successful
      */
     async writeInstanceFile(url, folder, fname, data, createFolder = false, reload = false) {
         if ( !uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:writeInstanceFile]')
@@ -698,7 +698,7 @@ class UibFs {
     /** Ensures that the directory exists. If the directory structure does not exist, it is created. If provided, options may specify the desired mode for the directory.
      * @param {string} dir Folder path to ensure
      * @param {object|number=} opts Mode if number, else { mode: <Integer> }
-     * @returns {string|undefined} Returns the path to the created directory or undefined if it can't be created
+     * @return {string|undefined} Returns the path to the created directory or undefined if it can't be created
      */
     ensureDirSync(dir, opts) {
         // Handle if opts is a number (mode)
@@ -717,7 +717,7 @@ class UibFs {
 
     /** Does the path exist? Pass 1 or more args which are joined & then checked
      * param {...string} path FS Path to check, multiple strings are path.join'd
-     * @returns {boolean} True if path exists
+     * @return {boolean} True if path exists
      */
     existsSync() {
         const p = join(...arguments)
@@ -727,7 +727,7 @@ class UibFs {
     /** Return a list of files matching the glob specification
      * @param {string} glob The pattern to match - see fast-glob for details
      * @param {object} [options] Options to pass to fast-glob (e.g. { ignore: [...] })
-     * @returns {string[]} A list of files
+     * @return {string[]} A list of files
      */
     fgSync(glob, options) {
         if (!glob) return []
@@ -739,7 +739,7 @@ class UibFs {
     /** Synchronously create a folder
      * @param {string} path The folder to create - creates intermediates only if recursive option is set
      * @param {{recursive:boolean}|{recursive:boolean,mode:string|number}|number} [options] Options
-     * @returns {string|undefined} Returns undefined unless recursive is set in which case the 1st created path is returned
+     * @return {string|undefined} Returns undefined unless recursive is set in which case the 1st created path is returned
      */
     mkdirSync(path, options) {
         return mkdirSync(path, options) // eslint-disable-line security/detect-non-literal-fs-filename
@@ -750,7 +750,7 @@ class UibFs {
     /** Read a JSON file and return as a JavaScript object
      * @throws {Error} If reading or parsing fails
      * @param {string} file JSON file path/name to read
-     * @returns {object} The parsed JSON file as an object
+     * @return {object} The parsed JSON file as an object
      */
     readJSONSync(file) {
         try {
@@ -764,7 +764,7 @@ class UibFs {
     /** Read a file, return as a buffer unless options.encoding is provided
      * @param {string|Buffer|URL|number} file The file path/name to read
      * @param {object|string=} options
-     * @returns {string|Buffer} File contents as a string
+     * @return {string|Buffer} File contents as a string
      */
     readFileSync = readFileSync
 
@@ -814,7 +814,7 @@ class UibFs {
     /** Removes a file or directory. The directory can have contents. If path does not exist, silently does nothing.
      * Uses Node.js v14.14+ rmSync with recursive and force flags.
      * @param {string} path Folder/file path to remove
-     * @returns {boolean} True if the path no longer exists, false if the remove failed
+     * @return {boolean} True if the path no longer exists, false if the remove failed
      */
     removeSync(path) {
         rmSync(path, { recursive: true, force: true, })
@@ -830,7 +830,7 @@ class UibFs {
      * @param {string} file File path to write to
      * @param {object} object Object to serialise as JSON
      * @param {any=} options Serialisation options: spaces (default 2), EOL (default '\n')
-     * @returns {Promise<void>}
+     * @return {Promise<void>}
      */
     async writeJson(file, object, options = {}) {
         const spaces = options.spaces ?? 2
