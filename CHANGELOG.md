@@ -100,26 +100,34 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 * `web.cjs`
   * Many thanks to [ryanmurdoc](https://github.com/ryanmurdoc) for contributing 2 new methods: `appStack` and `layerRegexp` along with code to remove older ExpressJS v4 expressions, enabling this module and UIBUILDER to be ready for a switch to ExpressJS v5.
+  * New user-facing route GET `./uibuilder/apps` - returns a simple formatted list of all installed apps. It uses the instance title and description (set on the uibuilder node's Advanced tab in the Editor). Note that this is user-facing, not admin-facing.
 
 * Editor plugin (`editor-common.js`)
   * Added `uibuilder.sanitiseUrl(urlPath)` function to allow url paths (e.g. the "url" name of a uibuilder node) to be made safe for use in URLs. Returns `null` if path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls are included in the path. Else returns the path.
 
-* `adminRouterV2.cjs` - this has now been removed completely.
+* `adminRouterV2.cjs` - this has now been removed completely. Functions have been migrated to the v3 admin router.
 
 * `adminRouterV3.cjs`
   * Additional safety/security checks on user input.
   * Node-RED admin authorisation now required for all API calls. `flow.read` for GET calls, `flow.write` for POST, PUT, and DELETE calls. This only impacts when Node-RED Editor admin authorisation is used.
-  * New user-facing route GET `./uibuilder/apps` - returns a simple formatted list of all installed apps. It uses the instance title and description (set on the uibuilder node's Advanced tab in the Editor). Note that this is user-facing, not admin-facing.
+  * All v2 admin routes have now been migrated to v3.
+  * New GET cmd's added/updated (there are now 16 cmd's):
+    * `showapps` - the admin equivalent of the user-facing apps route with more detail.
+    * `showdetails` - now has an `output` URL parameter: '_short_'=Quick JSON listing of key web settings. '_diagnostics_'=Long JSON output of uibuilder and web settings. '_json_'=JSON output of uibuilder instances. '_urls_'=JSON output of uibuilder names with node id. '_html_'=The full uibuilder details (index) page showing all uibuilder, ExpressJS and Node-RED setings, routes, etc.
+  * PUT route for npm install/update/remove of front-end packages updated to better handle async processing. Uses `asyncLocalStorage` to wrap async calls.
+  * POST route gains the `saveFile` cmd. Migrated from admin v2.
 
 * New Module: `logger.mjs` - A custom logging class singleton with colourised output. Output is disabled by default. Setting the environment variable `TI_ENV` to "debug" before starting node-red will enable it. Otherwise control as shown below. Setting the environment variable `TI_LOGGER` not only enables output but also sets the output level, valid levels are error|warn|info|debug.
   
-  Adds colour, timestamp and icons. Can be turned on/off. Gives correct traces. Passes through anything it doesn't enhance. Enhances 'log', 'info', 'warn', 'error', 'debug', and 'trace'. Can be set to _output to a file_ instead of stdout/stderr. Output levels can also be set to one of 'error', 'warn', 'info', 'debug'/'log' or 1-4 (default=4). Also has a level map function if needed in case you want to override a log level. This is used for internal logging.
+  Adds colour, timestamp and icons. Can be turned on/off. Gives correct traces. Passes through anything it doesn't enhance. Enhances 'log', 'info', 'warn', 'error', 'debug', and 'trace'. Can be set to _output to a file_ instead of stdout/stderr. Output levels can also be set to one of 'error', 'warn', 'info', 'debug'/'log' or 1-4 (default=4). Also has a level map function if needed in case you want to override a log level.
+
+  This module is mostly intended for internal logging.
 
   The enhanced methods have colorised output with a timestamp, level indicator and icons.
 
   Unlike Node-RED's native logging, this module allows multiple, complex outputs in a single log call.
   
-  Default is for `enabled` to be false. But this can the `level` can be set in the uibuilder property of settings.js. e.g. `uibuilder{ logging: { enabled: true, level: 'debug'} },`. However, do note that the settings are loaded early in the runtime plugin and so output will not happen until after the settings are loaded. If needed earlier, set `log.enabled = true` manually.
+  Default is for `enabled` to be false. The `level` can be set in the uibuilder property of settings.js. e.g. `uibuilder{ logging: { enabled: true, level: 'debug'} },`. However, do note that the settings are loaded early in the runtime plugin and so output will not happen until after the settings are loaded. If needed earlier, set `clog.enabled = true` manually.
   
   Manual settings are dynamic but they are global.
 
