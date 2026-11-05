@@ -43,6 +43,7 @@ const {
 /** @type {uibConfig} The uibuilder global configuration object, used throughout all nodes and libraries. */
 const uib = require('./uibGlobalConfig.cjs')
 
+/** fast-glob from packages/uib-fs-utils */
 const { fg, } = require('../../packages/uib-fs-utils')
 
 // ! WARNING: Take care not to end up with circular requires. e.g. libs/socket.js or uiblib.js cannot be required here
@@ -769,6 +770,9 @@ class UibFs {
     readFileSync = readFileSync
 
     // #endregion ---- ---- ----
+
+    /** fast-glob's stream method */
+    fgStream = fg.stream
 
     // #region ---- fs-extra replacement methods (native Node.js) ----
 
