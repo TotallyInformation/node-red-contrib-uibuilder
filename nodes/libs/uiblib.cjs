@@ -765,7 +765,9 @@ const UibLib = {
                 const raw = await fslib.readFile(telemetryFile, 'utf8')
                 parsed = JSON.parse(raw)
             } catch (err) {
-                throw new Error(`Could not read or parse telemetry file '${telemetryFile}'. ${err.message} [uiblib:parseTelemetryFile]`, { cause: err, })
+                /** @since v8.0.0 Only logs an error on fail. Fixes issue #648. Don't throw here as it will stop node-red from starting. Just log an error */
+                log.error(`🌐[uiblib:parseTelemetryFile] Could not read or parse telemetry file '${telemetryFile}'. ${err.message}`, { cause: err, })
+                // throw new Error(`Could not read or parse telemetry file '${telemetryFile}'. ${err.message} [uiblib:parseTelemetryFile]`, { cause: err, })
             }
             uib.telemetry = parsed
         }

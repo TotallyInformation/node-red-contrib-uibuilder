@@ -39,10 +39,8 @@ const { saferSerialize, } = require('./libs/tilib.cjs') // Safer JSON.stringify 
  */
 const uib = require('./libs/uibGlobalConfig.cjs')
 
-// const { parseTelemetryFile, } = require('./libs/uiblib.cjs')
 const fslib = require('./libs/fs.cjs') // File/folder handling library (by Totally Information)
 const packageMgt = require('./libs/package-mgt.cjs')
-// const web = require('./libs/web.cjs')
 const sockets = require('./libs/socket.cjs')
 const { renderToHTML, } = require('../front-end/utils/json-viewer.cjs')
 
@@ -388,9 +386,11 @@ function pluginDefinition(RED) {
             uib.nrDeploys = 0
         }
 
-        // Parse the telemetry file to load the telemetry data into the global uib object
-        // (ensures the file exists & sends data to cloudflare if needed)
-        // NB: Runs every time the flows are (re)started
+        /** Parse the telemetry file to load the telemetry data into the global uib object
+         * (ensures the file exists & sends data to cloudflare if needed)
+         * NB: Runs every time the flows are (re)started
+         * @since v8.0.0 Only logs an error on fail. Fixes issue #648
+         */
         await uiblib.parseTelemetryFile()
 
         if (initialised === false ) { // make sure we only log this once, not on every deploy (flows:started is emitted on every deploy)
