@@ -13,10 +13,10 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ main ]
+    branches: [ main, dev ]
   schedule:
     - cron: '31 11 * * 3'
 
@@ -61,8 +61,8 @@ jobs:
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@e46ed2cbd01164d986452f91f178727624ae40d7 # v3.29.5
+    # - name: Autobuild
+    #   uses: github/codeql-action/autobuild@e46ed2cbd01164d986452f91f178727624ae40d7 # v3.29.5
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 https://git.io/JvXDl
