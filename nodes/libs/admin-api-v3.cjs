@@ -61,6 +61,7 @@ const log = uib.RED.log
 // #region === REST API Validation functions === //
 
 /** Validate url query parameter
+ * 0>length<21, must not contain path traversal strings
  * NB: The URL param only has to be a potentially valid name, it doesn't have to exist
  * @param {object} params The GET (res.query) or POST (res.body) parameters
  * @param {string} params.url The uibuilder url to check
@@ -585,6 +586,8 @@ function doDebug(req, res, next) {
         user: req.user ?? 'Unauthenticated',
         secure: req.secure,
         headers: req.headers,
+        // @ts-ignore
+        uibSec: res?.uibSec ?? 'Not yet set',
     })
     next()
 }
@@ -721,17 +724,17 @@ function killRunningProcess(processId, url, scriptName) {
     return false
 }
 
-/** uibuilder v3 unified Admin API router (./uibuilder/admin/<url>) - new API commands should be added here
- * Typical URL (with httpAdminRoot set to /red): http://127.0.0.1:1880/red/uibuilder/admin/nodeurl?cmd=listfolders
- * or (NR defaults): http://127.0.0.1:1880/uibuilder/admin/nodeurl?cmd=listfolders
+/** uibuilder v3 unified Admin API router (./uibuilder/admin/<uib-node-url>) - new API commands should be added here
+ * Typical URL (with httpAdminRoot set to /red): http://127.0.0.1:1880/red/uibuilder/admin/:url?cmd=listfolders
+ * or (NR defaults): http://127.0.0.1:1880/uibuilder/admin/:url?cmd=listfolders
  */
 v3AdminRouter.route('/:url')
     // For all routes (this function is called before more specific ones) - don't add authorisation to this
     .all(function v3AdminAll(/** @type {express.Request} */ req, /** @type {express.Response} */ res, /** @type {express.NextFunction} */ next) {
-        // @ts-ignore
-        const params = res.allparams = Object.assign({}, req.query, req.body, req.params)
+        // @ts-ignore + Make sure that cmd has a default of ''
+        const params = res.allparams = Object.assign({ cmd: '', }, req.query, req.body, req.params)
         params.type = 'all'
-        // @ts-ignore
+        // @ts-ignore - Add pseudo uibuilder security settings summary to the response object
         res.uibSec = {
             authInfo: req.authInfo,
             isAuthenticated: req.isAuthenticated,
@@ -742,7 +745,7 @@ v3AdminRouter.route('/:url')
         }
         // params.headers = req.headers
 
-        // Validate URL - params.url
+        // Validate URL - params.url - 0>length<21, must not contain path traversal strings
         const chkUrl = chkParamUrl(params)
         if ( chkUrl.status !== 0 ) {
             log.error(`🌐🛑[uibuilder:adminRouterV3:ALL] Admin API. ${chkUrl.statusMessage}`)
