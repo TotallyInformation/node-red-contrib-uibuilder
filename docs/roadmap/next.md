@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-11-05 15:29:46
+updated: 2026-11-05 16:04:16
 ---
 
 ## Possible issues/improvements
@@ -17,9 +17,9 @@ updated: 2026-11-05 15:29:46
 
 * Code smells:
   * [ ] check that hooks are in uib?
+  * [ ] Add `{ cause: err, }` when throwing new error in a catch
 
 * Runtime plugin
-  * [ ] Corrupted Telemetry file uncaught exception (Issue #648)
   * [ ] uibRoot folder may not update fast enough when changing projects in the Node-RED editor. [Ref](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/647)
 
 * Client library

@@ -82,6 +82,7 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 ### Development and maintenance
 
 * Bump to v8.0.0, baseline to node.js v22.9, NR v5, degit 3.*. Remove gulp and dependencies, execa
+* Fix for [Issue #648](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues/648) - don't crash if telemetry file is corrupted in FS.
 * Browser Telemetry capture moved to uiblib from socket library for consistency.
 * Browser telemetry data improved to eliminate more "Not a brand" issues.
 * GULP is no longer used for build processes, there is now a unified custom node.js script that handles watches and builds. GULP dev-dependencies have been removed.
