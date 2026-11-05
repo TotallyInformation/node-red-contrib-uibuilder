@@ -176,7 +176,6 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 const error = opt.error || function() {}
 
                 $.ajax({
-                    // url: 'uibuilder/uibgetfile', // api v2
                     url: './uibuilder/admin/' + url, // api v3
                     method: verb,
                     dataType: dataType,
@@ -191,8 +190,6 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                         }
                     },
                     error: function(xhr, textStatus, err) {
-                        let strCmd = ''
-                        if (data && data.cmd) strCmd = `Request=${data.cmd}`
                         if (xhr.status === 401) {
                             // Could be: not logged in, OR insufficient permissions
                             uibuilder.nrNotify(`"${data.cmd}" API call failed - insufficient authorisation`, { type: 'error', fixed: true, })
