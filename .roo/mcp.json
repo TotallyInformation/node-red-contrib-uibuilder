@@ -1,0 +1,22 @@
+{
+	"mcpServers": {
+		"context7": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@upstash/context7-mcp"
+			],
+			"env": {
+				"DEFAULT_MINIMUM_TOKENS": ""
+			},
+			"timeout": 15,
+			"alwaysAllow": []
+		},
+		"DeepWiki": {
+			"type": "streamable-http",
+			"url": "https://mcp.deepwiki.com/mcp",
+			"timeout": 15,
+			"alwaysAllow": []
+		}
+	}
+}
