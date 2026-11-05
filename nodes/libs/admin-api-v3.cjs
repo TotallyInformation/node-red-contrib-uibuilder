@@ -121,6 +121,7 @@ function chkParamUrl(params) {
 }
 
 /** Validate fname (filename) query parameter
+ * <256 chars, no `..`, `/`, or `\`
  * @param {object} params The GET (res.query) or POST (res.body) parameters
  * @param {string} params.fname The uibuilder url to check
  * @return {{statusMessage: string, status: number}} Status message
@@ -165,6 +166,7 @@ function chkParamFname(params) {
 }
 
 /** Validate folder query parameter
+ * <256 chars, no `..`
  * @param {object} params The GET (res.query) or POST (res.body) parameters
  * @param {string} params.folder The uibuilder url to check
  * @return {{statusMessage: string, status: number}} Status message
@@ -572,6 +574,7 @@ function doDebug(req, res, next) {
     res.statusMessage = 'UIB Admin API v3 Debug'
     // Node-RED populates req.user if a session exists
     clog.info({
+        // @ts-ignore
         allparams: res?.allparams ?? Object.assign({}, req.query, req.body, req.params),
         originalUrl: req.originalUrl,
         url: req.url,
@@ -728,6 +731,15 @@ v3AdminRouter.route('/:url')
         // @ts-ignore
         const params = res.allparams = Object.assign({}, req.query, req.body, req.params)
         params.type = 'all'
+        // @ts-ignore
+        res.uibSec = {
+            authInfo: req.authInfo,
+            isAuthenticated: req.isAuthenticated,
+            isUnauthenticated: req.isUnauthenticated,
+            statusMessage: req.statusMessage,
+            user: req.user ?? 'Unauthenticated',
+            secure: req.secure,
+        }
         // params.headers = req.headers
 
         // Validate URL - params.url
@@ -1096,13 +1108,10 @@ v3AdminRouter.route('/:url')
     // Do something that has side-effects, e.g. update a file or run an npm script
     .put(needsWrite, function v3AdminPut(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         if (uib.rootFolder === null) throw errUibRootFldr
-
         // @ts-expect-error
         const params = res.allparams
         params.type = 'put'
-
         const fullname = path.join(uib.rootFolder, params.url)
-
         // Commands ...
         switch (params.cmd) {
             // Tell uibuilder to delete the instance local folder when this instance is deleted - see html file oneditdelete & uiblib.processClose
@@ -1113,7 +1122,7 @@ v3AdminRouter.route('/:url')
                 res.status(200).json({})
                 return
             }
-
+            // npm install/remove handling
             case 'updatepackage':
             case 'installpackage': {
                 log.trace(`🌐[uibuilder:adminRouterV3:PUT:installpackage] package="${params.package}". url="${params.url}" (ignored)`)
@@ -1146,40 +1155,8 @@ v3AdminRouter.route('/:url')
                         res.json({ success: false, result: err.all, })
                     }
                 })
-
-                // NB: url not required here
-                // packageMgt.npmInstallPackage(params.package, params.tag, '', 'install')
-                //     .then((npmOutput) => {
-                //         clog.debug('npmInstallPacckage then: ', npmOutput)
-                //         // Get the updated package.json file into packageMgt.uibPackageJson
-                //         packageMgt.uibPackageJson = packageMgt.pkgCheck()
-                //         // Do a fast update of the min data in pj.uibuilder.packages required for web.serveVendorPackages()
-                //         packageMgt.pkgsQuickUpd()
-                //         // ASYNC - Update details and re-save the file
-                //         packageMgt.updateInstalledPackageDetails()
-                //         // Update the packageList
-                //         const web = require('./web.cjs') // late loading to avoid circular dependency
-                //         web.serveVendorPackages()
-
-                //         res.json({ success: true, result: [npmOutput, packageMgt.uibPackageJson.uibuilder.packages], })
-                //         // return success
-                //         return true
-                //     })
-                //     .catch((err) => {
-                //         clog.error('npmInstallPacckage error.', err)
-                //         // err has extra props: {all:string, code:number, command:string}
-                //         log.error(`🌐🛑[uibuilder:apiv3:uibnpmmanage:${params.cmd}] Admin API. ERROR Running: \n'${err.command}' \n${err.all}`)
-                //         res.json({ success: false, result: err.all, })
-                //         return false
-                //     })
-
-                // res.statusMessage = 'PUT successful'
-                // res.status(200).json({
-                //     newVersion: '',
-                // })
                 return
             }
-
             case 'removepackage': {
                 log.trace(`🌐[uibuilder:adminRouterV3:PUT:removepackage] package="${params.package}". url="${params.url}" (ignored)`)
                 if (!params.package) {
@@ -1212,7 +1189,6 @@ v3AdminRouter.route('/:url')
                 })
                 return
             }
-
             // Run an instance npm script, returning the output
             // Note that only valid, pre-defined npm scripts can be executed by packageMgt.npmRunScript
             case 'runInstanceNpmScript': {
@@ -1275,7 +1251,6 @@ v3AdminRouter.route('/:url')
                 })
                 return
             }
-
             // case for killing processes using asyncLocalStorage
             case 'killInstanceNpmScript': {
                 log.trace(`🌐[uibuilder:adminRouterV3:PUT:killInstanceNpmScript] processId="${params.processId}"`)
@@ -1295,7 +1270,6 @@ v3AdminRouter.route('/:url')
                 return
             }
         }
-
         // If we get here, we've failed
         log.trace(`🌐[uibuilder:adminRouterV3:PUT] Unsuccessful. command=${params.cmd}, url=${params.url}`)
         res.statusMessage = 'PUT unsuccessful'
@@ -1307,7 +1281,7 @@ v3AdminRouter.route('/:url')
         })
     })
 
-    // Load new template or Create a new folder or file
+    // Load new template, Create a new folder or file or save a file
     .post(needsWrite, function v3AdminPost(/** @type {express.Request} */ req, /** @type {express.Response} */ res) {
         if (uib.rootFolder === null) throw errUibRootFldr
 
@@ -1315,116 +1289,177 @@ v3AdminRouter.route('/:url')
         const params = res.allparams
         params.type = 'post'
 
-        if ( params.cmd === 'replaceTemplate' ) {
-            fslib.replaceTemplate({
-                url: params.url,
-                template: params.template,
-                extTemplate: params.extTemplate,
-                cmd: params.cmd,
-                templateConf,
-                uib,
-                log,
-            })
-                .then( (statusMessage) => {
-                    // @ts-ignore
-                    res.statusMessage = statusMessage
-                    res.status(200).json({ statusMessage, })
-                    // Reload connected clients if required by sending them a reload msg
-                    if ( params.reload === 'true' ) {
-                        sockets.sendToFe2(
-                            {
-                                _uib: {
-                                    reload: true,
-                                },
-                            },
-                            // @ts-ignore
-                            {
-                                url: params.url,
-                            }
-                        )
-                    }
-                    return true
+        switch (params.cmd) {
+            case 'replaceTemplate': {
+                fslib.replaceTemplate({
+                    url: params.url,
+                    template: params.template,
+                    extTemplate: params.extTemplate,
+                    cmd: params.cmd,
+                    templateConf,
+                    uib,
+                    log,
                 })
-                .catch( (err) => {
-                    let statusMsg, mystr
-                    if ( err.code === 'MISSING_REF' ) {
-                        statusMsg = `Degit clone error. CHECK External Template Name. Name='${params.extTemplate}', url=${params.url}, cmd=${params.cmd}. ${err.message}`
-                    } else {
-                        if ( params.template === 'external' ) mystr = `, ${params.extTemplate}`
-                        statusMsg = `Replace template error. ${err.message}. url=${params.url}. ${params.template}${mystr}`
+                    .then( (statusMessage) => {
+                        // @ts-ignore
+                        res.statusMessage = statusMessage
+                        res.status(200).json({ statusMessage, })
+                        // Reload connected clients if required by sending them a reload msg
+                        if ( params.reload === 'true' ) {
+                            sockets.sendToFe2(
+                                {
+                                    _uib: {
+                                        reload: true,
+                                    },
+                                },
+                                // @ts-ignore
+                                {
+                                    url: params.url,
+                                }
+                            )
+                        }
+                        return true
+                    })
+                    .catch( (err) => {
+                        let statusMsg, mystr
+                        if ( err.code === 'MISSING_REF' ) {
+                            statusMsg = `Degit clone error. CHECK External Template Name. Name='${params.extTemplate}', url=${params.url}, cmd=${params.cmd}. ${err.message}`
+                        } else {
+                            if ( params.template === 'external' ) mystr = `, ${params.extTemplate}`
+                            statusMsg = `Replace template error. ${err.message}. url=${params.url}. ${params.template}${mystr}`
+                        }
+                        log.error(`🌐🛑[uibuilder:adminapi:POST:replaceTemplate] ${statusMsg}`, err)
+                        // console.log(err.stack)
+                        res.statusMessage = statusMsg
+                        res.status(500).end()
+                    } )
+                break
+            }
+
+            case 'newfolder':
+            case 'newfile': {
+                // Validate folder name - params.folder - 0>chars<256, no `..`
+                const chkFldr = chkParamFldr(params)
+                if ( chkFldr.status !== 0 ) {
+                    log.error(`🌐🛑[uibuilder:adminRouterV3:POST] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+                    res.statusMessage = chkFldr.statusMessage
+                    res.status(chkFldr.status).end()
+                    return
+                }
+                // If newfile, validate file name - params.fname - <256 chars, no `..`, `/`, or `\`
+                if (params.cmd === 'newfile' ) {
+                    const chkFname = chkParamFname(params)
+                    if ( chkFname.status !== 0 ) {
+                        log.error(`🌐🛑[uibuilder:adminRouterV3:POST] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+                        res.statusMessage = chkFname.statusMessage
+                        res.status(chkFname.status).end()
+                        return
                     }
-                    log.error(`🌐🛑[uibuilder:adminapi:POST:replaceTemplate] ${statusMsg}`, err)
-                    // console.log(err.stack)
+                }
+
+                // Fix for Issue #155 - if fldr = root, no folder
+                if ( params.folder === 'root' ) params.folder = ''
+
+                let fullname = path.join(uib.rootFolder, params.url, params.folder)
+                if (params.cmd === 'newfile' ) {
+                    fullname = path.join(fullname, params.fname)
+                }
+
+                // Does folder or file already exist? If so, return error
+                if ( fslib.existsSync(fullname) ) {
+                    const statusMsg = `selected ${params.cmd === 'newfolder' ? 'folder' : 'file'} already exists. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}`
+                    log.error(`🌐🛑[uibuilder:adminRouterV3:POST] Admin API. ${statusMsg}`)
                     res.statusMessage = statusMsg
                     res.status(500).end()
-                } )
-        } else {
-            // Validate folder name - params.folder
-            const chkFldr = chkParamFldr(params)
-            if ( chkFldr.status !== 0 ) {
-                log.error(`🌐🛑[uibuilder:adminRouterV3:POST] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
-                res.statusMessage = chkFldr.statusMessage
-                res.status(chkFldr.status).end()
-                return
+                    return
+                }
+
+                // try to create folder/file - if fail, return error
+                try {
+                    if ( params.cmd === 'newfolder') {
+                        fslib.ensureDirSync(fullname)
+                    } else {
+                        fslib.ensureFileSync(fullname)
+                    }
+                } catch (e) {
+                    const statusMsg = `could not create ${params.cmd === 'newfolder' ? 'folder' : 'file'}. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}, error=${e.message}`
+                    log.error(`🌐🛑[uibuilder:adminRouterV3:POST] Admin API. ${statusMsg}`)
+                    res.statusMessage = statusMsg
+                    res.status(500).end()
+                    return
+                }
+
+                log.trace(`🌐[uibuilder:adminRouterV3:POST] Admin API. Folder/File create SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
+                res.statusMessage = 'Folder/File created successfully'
+                res.status(200).json({
+                    fullname: fullname,
+                    params: params,
+                })
+                break
             }
-            // Validate command - must be present and either be 'newfolder' or 'newfile'
-            if ( !(params.cmd && (params.cmd === 'newfolder' || params.cmd === 'newfile')) ) {
-                const statusMsg = `cmd parameter not present or wrong value (must be 'newfolder' or 'newfile'). url=${params.url}, cmd=${params.cmd}`
-                log.error(`🌐🛑[uibuilder:adminRouterV3:POST] Admin API. ${statusMsg}`)
-                res.statusMessage = statusMsg
-                res.status(500).end()
-                return
-            }
-            // If newfile, validate file name - params.fname
-            if (params.cmd === 'newfile' ) {
-                const chkFname = chkParamFname(params)
+
+            case 'saveFile': {
+                // #region ====== Parameter validation ====== //
+                // NOTE: url already checked
+                const chkFname = chkParamFname(params) // <256 chars, no `..`, `/`, or `\`
                 if ( chkFname.status !== 0 ) {
-                    log.error(`🌐🛑[uibuilder:adminRouterV3:POST] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
+                    log.error(`🌐🛑[uibuilder:adminRouterV3:post:saveFile] Admin API. ${chkFname.statusMessage}. url=${params.url}`)
                     res.statusMessage = chkFname.statusMessage
                     res.status(chkFname.status).end()
                     return
                 }
-            }
-
-            // Fix for Issue #155 - if fldr = root, no folder
-            if ( params.folder === 'root' ) params.folder = ''
-
-            let fullname = path.join(uib.rootFolder, params.url, params.folder)
-            if (params.cmd === 'newfile' ) {
-                fullname = path.join(fullname, params.fname)
-            }
-
-            // Does folder or file already exist? If so, return error
-            if ( fslib.existsSync(fullname) ) {
-                const statusMsg = `selected ${params.cmd === 'newfolder' ? 'folder' : 'file'} already exists. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}`
-                log.error(`🌐🛑[uibuilder:adminRouterV3:POST] Admin API. ${statusMsg}`)
-                res.statusMessage = statusMsg
-                res.status(500).end()
-                return
-            }
-
-            // try to create folder/file - if fail, return error
-            try {
-                if ( params.cmd === 'newfolder') {
-                    fslib.ensureDirSync(fullname)
-                } else {
-                    fslib.ensureFileSync(fullname)
+                const chkFldr = chkParamFldr(params) // 0>chars<256, no `..`
+                if ( chkFldr.status !== 0 ) {
+                    log.error(`🌐🛑[uibuilder:adminRouterV3:post:saveFile] Admin API. ${chkFldr.statusMessage}. url=${params.url}`)
+                    res.statusMessage = chkFldr.statusMessage
+                    res.status(chkFldr.status).end()
+                    return
                 }
-            } catch (e) {
-                const statusMsg = `could not create ${params.cmd === 'newfolder' ? 'folder' : 'file'}. url=${params.url}, cmd=${params.cmd}, folder=${params.folder}, error=${e.message}`
+                // #endregion ====== ====== //
+                log.trace(`🌐[uibuilder[:adminRouterV3:post:saveFile] Admin API. File put requested. url=${params.url}, file=${params.folder}/${params.fname}, reload? ${params.reload}`)
+                // Fix for Issue #155 - if fldr = root, no folder
+                if ( params.folder === 'root' ) params.folder = '.'
+                const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
+                clog.info(fullname, params)
+                fslib.writeFileCb(fullname, params.data, function (err) {
+                    if (err) {
+                        // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
+                        log.error(`🌐🛑[uibuilder:adminRouterV3:post:saveFile] Admin API. File write FAIL. url=${params.url}, file=${params.folder}/${params.fname}. ${err.message}`, err)
+                        res.statusMessage = err.message
+                        res.status(500).json({ statusMessage: res.statusMessage, })
+                    } else {
+                        // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
+                        log.trace(`🌐[uibuilder:adminRouterV3:post:saveFile] Admin API. File write SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
+                        res.statusMessage = 'File written successfully'
+                        res.status(200).json({ statusMessage: res.statusMessage, })
+                        // Reload connected clients if required by sending them a reload msg
+                        // if ( params.reload === 'true' ) {
+                        //     sockets.sendToFe2(
+                        //         {
+                        //             _uib: {
+                        //                 reload: true,
+                        //             },
+                        //         },
+                        //         // @ts-ignore
+                        //         {
+                        //             url: params.url,
+                        //         }
+                        //     )
+                        // }
+                    }
+                })
+                break
+            }
+
+            default: {
+                // Validate command
+                const statusMsg = `cmd parameter not present or wrong value. url=${params.url}, cmd=${params.cmd}`
                 log.error(`🌐🛑[uibuilder:adminRouterV3:POST] Admin API. ${statusMsg}`)
                 res.statusMessage = statusMsg
                 res.status(500).end()
-                return
+                break
             }
-
-            log.trace(`🌐[uibuilder:adminRouterV3:POST] Admin API. Folder/File create SUCCESS. url=${params.url}, file=${params.folder}/${params.fname}`)
-            res.statusMessage = 'Folder/File created successfully'
-            res.status(200).json({
-                fullname: fullname,
-                params: params,
-            })
-        } // end of else
+        }
     })
 
     // Delete a folder or a file
@@ -1503,7 +1538,7 @@ v3AdminRouter.route('/:url')
     })
 
 /** @see https://expressjs.com/en/4x/api.html#app.METHOD for other methods
- *  patch, report, search ?
+ *  patch, report, search, options ?
  */
 
 module.exports = v3AdminRouter
