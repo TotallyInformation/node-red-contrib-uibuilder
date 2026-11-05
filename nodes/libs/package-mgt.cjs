@@ -33,7 +33,7 @@ clog.debug('Loading')
 const { join, } = require('node:path')
 const { copy, copySync, existsSync, readJSONSync, writeJson, } = require('./fs.cjs')
 const { runOsCmd, runOsCmdSync, } = require('./uiblib.cjs')
-const uibGlobalConfig = require('./uibGlobalConfig.cjs')
+const uib = require('./uibGlobalConfig.cjs')
 clog.debug('  Requires complete')
 
 class UibPackages {
@@ -45,8 +45,8 @@ class UibPackages {
     #isConfigured = false
 
     #logUndefinedError = new Error('pkgMgt: this.log is undefined')
-    #uibUndefinedError = new Error('pkgMgt: this.uib is undefined')
-    #rootFldrNullError = new Error('pkgMgt: this.uib.rootFolder is null')
+    #uibUndefinedError = new Error('pkgMgt: uibGlobalConfig is undefined')
+    #rootFldrNullError = new Error('pkgMgt: uibGlobalConfig.rootFolder is null')
 
     /** @type {Array<string>} Updated by updateMergedPackageList which is called first in setup and then in various updates */
     mergedPkgMasterList = []
@@ -135,7 +135,7 @@ class UibPackages {
      */
     setup() {
         clog.debug('  Setup started')
-        const uib = uibGlobalConfig
+        // const uib = uibGlobalConfig
         if ( uib.RED === null ) throw new Error('[uibuilder:UibPackages.js:setup] uib.RED is null')
         if ( uib.rootFolder === null ) throw this.#rootFldrNullError
 
@@ -145,8 +145,6 @@ class UibPackages {
             return
         }
 
-        this.RED = uib.RED
-        this.uib = uib
         const log = this.log = uib.RED.log
 
         log.trace('🌐[uibuilder:package-mgt:setup] Package Management setup started')
@@ -163,14 +161,14 @@ class UibPackages {
         // See what is actually installed & save a full package.json to memory
         this.uibPackageJson = this.pkgCheck()
         // Update the version string to match uibuilder version
-        this.uibPackageJson.version = this.uib.version
+        this.uibPackageJson.version = uib.version
 
         // TODO Good enough for now but all SHOULD be auto-fixable.
         if (this.dependencyProblems) {
             setTimeout(() => {
                 this.log.warn('------------------------------------------------------')
                 this.log.warn([
-                    `🌐⚠️[uibuilder:package-mgt:setup] Problems with uibuilder root package.json.\nRoot folder: ${this.uib.rootFolder}\nPlease resolve before continuing.`,
+                    `🌐⚠️[uibuilder:package-mgt:setup] Problems with uibuilder root package.json.\nRoot folder: ${uib.rootFolder}\nPlease resolve before continuing.`,
                     this.dependencyProblems
                 ])
                 this.log.warn('------------------------------------------------------\n \n')
@@ -194,10 +192,10 @@ class UibPackages {
     createBasicPj() {
         if (!this.log) console.error('🌐🛑[uibuilder:package-mgt:createBasicPj] this.log not defined!')
         try {
-            copySync([__dirname, '..', '..', 'templates', 'uibroot-package.json'], [this.uib.rootFolder, 'package.json'])
-            this.log.trace(`🌐[uibuilder[:package-mgt:createBasicPj] Basic package.json created in "${this.uib.rootFolder}"`)
+            copySync([__dirname, '..', '..', 'templates', 'uibroot-package.json'], [uib.rootFolder, 'package.json'])
+            this.log.trace(`🌐[uibuilder[:package-mgt:createBasicPj] Basic package.json created in "${uib.rootFolder}"`)
         } catch (e) {
-            this.log.error(`🌐🛑[uibuilder:package-mgt:createBasicPj] Basic package.json creation FAILED in "${this.uib.rootFolder}". ${e.message}`, e)
+            this.log.error(`🌐🛑[uibuilder:package-mgt:createBasicPj] Basic package.json creation FAILED in "${uib.rootFolder}". ${e.message}`, e)
             return
         }
     }
@@ -210,11 +208,11 @@ class UibPackages {
      */
     pkgCheck() {
         // clog.debug('  pkgCheck started')
-        if ( this.uib === undefined ) throw this.#uibUndefinedError
-        if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
+        if ( uib === undefined ) throw this.#uibUndefinedError
+        if ( uib.rootFolder === null ) throw this.#rootFldrNullError
 
         const opts = { ...this.npmCmdOpts, }
-        opts.cwd = this.uib.rootFolder
+        opts.cwd = uib.rootFolder
         opts.out = 'bare' // returns just the output string
 
         const args = [
@@ -257,8 +255,8 @@ class UibPackages {
      * Only compares dependencies with uibuilder.packages in the package.json file. Does not compare to installed.
      */
     pkgsQuickUpd() {
-        if ( this.uib === undefined ) throw this.#uibUndefinedError
-        if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
+        if ( uib === undefined ) throw this.#uibUndefinedError
+        if ( uib.rootFolder === null ) throw this.#rootFldrNullError
 
         const pj = this.uibPackageJson
 
@@ -283,14 +281,14 @@ class UibPackages {
         for (const pkgName in pj.uibuilder.packages) {
             const pkg = pj.uibuilder.packages[pkgName]
             // The actual location of the package folder
-            pkg.installFolder = this.dependencyDetails[pkgName].path || join(this.uib.rootFolder, 'node_modules', pkgName)
+            pkg.installFolder = this.dependencyDetails[pkgName].path || join(uib.rootFolder, 'node_modules', pkgName)
             // The base url used by uib - note this is changed if this is a scoped package
             pkg.packageUrl = '/' + pkgName
         }
 
         // Re-save the updated file
         // this.setUibRootPackageJson(pj)
-        // this.writePackageJson(this.uib.rootFolder, pj)
+        // this.writePackageJson(uibGlobalConfig.rootFolder, pj)
     }
 
     /** Write updated <folder>/package.json (async)
@@ -405,9 +403,9 @@ class UibPackages {
     async updateInstalledPackageDetails() {
         const pj = this.uibPackageJson
 
-        if ( this.uib === undefined ) throw this.#uibUndefinedError
-        if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
-        const rootFolder = this.uib.rootFolder
+        if ( uib === undefined ) throw this.#uibUndefinedError
+        if ( uib.rootFolder === null ) throw this.#rootFldrNullError
+        const rootFolder = uib.rootFolder
 
         // Make sure we have package details for all installed packages - NB: don't use await with forEach!
         const depPkgNames = Object.keys(this.dependencyDetails || {})
@@ -432,11 +430,11 @@ class UibPackages {
      * @return {uibNode|null} The instance node or null if not found
      */
     getInstanceNode(url) {
-        const RED = this.uib.RED
+        const RED = uib.RED
 
         // Get the node id of the instance
         let node
-        for (const [key, value] of Object.entries(this.uib.instances)) {
+        for (const [key, value] of Object.entries(uib.instances)) {
             if (value === url) node = RED.nodes.getNode(key)
         }
 
@@ -455,8 +453,8 @@ class UibPackages {
      */
     getInstanceRootFolder(url) {
         if ( this.log === undefined ) throw this.#logUndefinedError
-        if ( !this.uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:getInstanceRootFolder]')
-        if ( this.uib.RED === null ) throw new Error('uib.RED is null. Check setup order [UibFs:getInstanceRootFolder]')
+        if ( !uib ) throw new Error('Called without required uib parameter or uib is undefined [UibFs:getInstanceRootFolder]')
+        if ( uib.RED === null ) throw new Error('uib.RED is null. Check setup order [UibFs:getInstanceRootFolder]')
 
         // Get the node instance
         const node = this.getInstanceNode(url)
@@ -572,10 +570,10 @@ class UibPackages {
     async npmInstallPackage(pkgName, tag = '', toLocation = '', action = 'install', verbose = true) {
         if ( this.log === undefined ) throw this.#logUndefinedError
 
-        if ( this.uib === undefined ) throw this.#uibUndefinedError
-        if ( this.uib.rootFolder === null ) throw new Error('this.log.rootFolder is null')
+        if ( uib === undefined ) throw this.#uibUndefinedError
+        if ( uib.rootFolder === null ) throw new Error('this.log.rootFolder is null')
         if ( !['install', 'update'].includes(action) ) throw new Error('action must be either install or update')
-        if ( toLocation === '' ) toLocation = this.uib.rootFolder
+        if ( toLocation === '' ) toLocation = uib.rootFolder
 
         const opts = { ...this.npmCmdOpts, }
         opts.cwd = toLocation
@@ -631,11 +629,11 @@ class UibPackages {
      */
     async npmRemovePackage(pkgName, verbose = true) {
         if ( this.log === undefined ) throw this.#logUndefinedError
-        if ( this.uib === undefined ) throw this.#uibUndefinedError
-        if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
+        if ( uib === undefined ) throw this.#uibUndefinedError
+        if ( uib.rootFolder === null ) throw this.#rootFldrNullError
 
         const opts = { ...this.npmCmdOpts, }
-        opts.cwd = this.uib.rootFolder
+        opts.cwd = uib.rootFolder
         opts.out = ''
         opts.verbose = verbose
 
@@ -685,8 +683,8 @@ class UibPackages {
      */
     async npmOutdated(pkgName) {
         if ( this.log === undefined ) throw this.#logUndefinedError
-        if ( this.uib === undefined ) throw this.#uibUndefinedError
-        if ( this.uib.rootFolder === null ) throw this.#rootFldrNullError
+        if ( uib === undefined ) throw this.#uibUndefinedError
+        if ( uib.rootFolder === null ) throw this.#rootFldrNullError
 
         if ( this.#isConfigured !== true ) {
             this.log.warn('🌐⚠️[uibuilder:UibPackages:npmOutdated] Cannot run. Setup has not been called.')
@@ -694,7 +692,7 @@ class UibPackages {
         }
 
         const opts = { ...this.npmCmdOpts, }
-        opts.cwd = this.uib.rootFolder
+        opts.cwd = uib.rootFolder
         opts.out = 'bare' // returns just the output string
 
         const args = [
@@ -737,10 +735,10 @@ class UibPackages {
             return ''
         }
 
-        if ( this.uib === undefined ) throw this.#uibUndefinedError
-        if ( this.uib.rootFolder === null ) throw new Error('this.log.rootFolder is null')
-        // if ( toLocation === '' ) toLocation = this.uib.rootFolder
-        const toLocation = this.uib.rootFolder
+        if ( uib === undefined ) throw this.#uibUndefinedError
+        if ( uib.rootFolder === null ) throw new Error('this.log.rootFolder is null')
+        // if ( toLocation === '' ) toLocation = uibGlobalConfig.rootFolder
+        const toLocation = uib.rootFolder
 
         const opts = { ...this.npmCmdOpts, }
         opts.cwd = toLocation
