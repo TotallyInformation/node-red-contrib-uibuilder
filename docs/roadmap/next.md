@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-11-05 16:04:16
+updated: 2026-11-06 11:51:53
 ---
 
 ## Possible issues/improvements
@@ -133,7 +133,7 @@ updated: 2026-11-05 16:04:16
   * Add links to docs and default page to editor context menu [Ref](https://github.com/node-red/node-red/pull/5332).
 * Editor:
   * uib-sidebar - add markdown support.
-  * The default palette categories now have description tooltips, and custom categories can provide their own descriptions via a theme plugin or node ([#5769](https://github.com/node-red/node-red/pull/5769)).
+  * Consider reworking custom Monaco settings for the file editor. [ref](https://claude.ai/share/ca9c9a68-800d-46bf-b06f-c2fccd83f05a)
 * router
   * Add icon support to the router menu system.
   * Add vertical support to the router menu system.

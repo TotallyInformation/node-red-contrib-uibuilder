@@ -58,6 +58,7 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 ### uibuilder
 
 * Now has a button to open a web page (controlled by admin access) that shows _ALL_ uibuilder & Markweb instances with their type, title & description where provided (by the inputs on an instances advanced tab) and the link to the home page.
+* Added a palette category description tooltips for the uibuilder category.
 * When adding a new node, the Editor checks for an index.html file in the designated start folder. Previously, only a warning was given to the Editor browser console, there is now a notification with instructions on how to correct (reload the template or create the file). The check is delayed by 1 second to allow time for creation.
 * Update admin API calls to new standard and move off the v2 module.
 * **FIXED** - On the libraries tab, package updates are once again shown and the update button works correctly.
