@@ -2205,6 +2205,7 @@
         },
         paletteLabel: moduleName,
         category: uibuilder.paletteCategory,
+        categoryDescription: 'UIBUILDER for Node-RED. Easily build data-driven web apps, sites, and pages. No front-end frameworks required but they can be used if desired.',
         // color: 'var(--uib-node-colour)', // '#E6E0F8'
         color: 'var(--uib-node-colour)', // '#E6E0F8' '"hsl(248 100% 91%)"'
         // credentials: {
