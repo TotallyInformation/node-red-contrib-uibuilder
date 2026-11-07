@@ -1,6 +1,8 @@
 /* eslint-disable n/no-unpublished-import */
 // @ts-nocheck
-/**
+/** Main ESLINT definition
+ * @version 2026-11-07
+ *
  * https://www.npmjs.com/search?q=eslint-config
  * https://www.npmjs.com/search?q=keywords:eslint
  *
@@ -14,17 +16,18 @@
 
 import { defineConfig } from 'eslint/config'
 import globals from 'globals' // https://www.npmjs.com/package/globals
-// @ts-ignore
-import { importX } from 'eslint-plugin-import-x' // https://www.npmjs.com/package/eslint-plugin-import-x
 import pluginPromise from 'eslint-plugin-promise' // https://www.npmjs.com/package/eslint-plugin-promise
-// https://github.com/gajus/eslint-plugin-jsdoc
-import jsdoc from 'eslint-plugin-jsdoc' // eslint-disable-line import-x/no-named-as-default
-// import sonarjs from 'eslint-plugin-sonarjs' // https://www.npmjs.com/package/eslint-plugin-sonarjs, for code quality and security issues
 import node from 'eslint-plugin-n' // https://www.npmjs.com/package/eslint-plugin-n, node.js only
 import pluginSecurity from 'eslint-plugin-security' // https://www.npmjs.com/package/eslint-plugin-security, node.js only
 import stylistic from '@stylistic/eslint-plugin' // https://eslint.style
 import js from '@eslint/js'
+import { importX } from 'eslint-plugin-import-x' // https://www.npmjs.com/package/eslint-plugin-import-x
 import { jsdocRules, stylisticRules, generalRules, nodeVersion, } from './eslint-shared-config.mjs' // Shared rules for all ESLINT configs
+// https://github.com/gajus/eslint-plugin-jsdoc
+import jsdoc from 'eslint-plugin-jsdoc' // eslint-disable-line import-x/no-named-as-default
+// import sonarjs from 'eslint-plugin-sonarjs' // https://www.npmjs.com/package/eslint-plugin-sonarjs, for code quality and security issues
+
+const jsVersion = 2019
 
 // Folder/file lists - eslint flat config is WEIRD!
 // You have to override the top-level config (e.g. **/*.js) and then exclude the folders/files you don't want.
@@ -60,9 +63,9 @@ export default defineConfig([
         },
         extends: [
             'js/recommended',
-            jsdoc.configs['flat/recommended'],
-            stylistic.configs.recommended,
-            pluginPromise.configs['flat/recommended'],
+            'jsdoc/flat/recommended',
+            '@stylistic/recommended',
+            'pluginPromise/flat/recommended',
         ],
         settings: {
             jsdoc: { mode: 'permissive', }, // or 'typescript' or closure
@@ -106,9 +109,12 @@ export default defineConfig([
         },
         extends: [
             'js/recommended',
-            jsdoc.configs['flat/recommended'],
-            stylistic.configs.recommended,
-            pluginPromise.configs['flat/recommended'],
+            'jsdoc/flat/recommended',
+            '@stylistic/recommended',
+            'pluginPromise/flat/recommended',
+            // jsdoc.configs['flat/recommended'], // eslint-disable-line import-x/no-named-as-default-member
+            // stylistic.configs.recommended,
+            // pluginPromise.configs['flat/recommended'],
             'import-x/flat/recommended',
         ],
         settings: {
@@ -150,9 +156,9 @@ export default defineConfig([
         },
         extends: [
             'js/recommended',
-            jsdoc.configs['flat/recommended'],
-            stylistic.configs.recommended,
-            pluginPromise.configs['flat/recommended'],
+            'jsdoc/flat/recommended',
+            '@stylistic/recommended',
+            'pluginPromise/flat/recommended',
             node.configs['flat/recommended-script'], // <= script/commonjs
             pluginSecurity.configs.recommended,
             // sonarjs.configs.recommended
@@ -197,9 +203,9 @@ export default defineConfig([
         },
         extends: [
             'js/recommended',
-            jsdoc.configs['flat/recommended'],
-            stylistic.configs.recommended,
-            pluginPromise.configs['flat/recommended'],
+            'jsdoc/flat/recommended',
+            '@stylistic/recommended',
+            'pluginPromise/flat/recommended',
             'import-x/flat/recommended',
             node.configs['flat/recommended-module'], // <= module/ESM
             pluginSecurity.configs.recommended,
