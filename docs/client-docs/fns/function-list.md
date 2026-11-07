@@ -1,6 +1,6 @@
 ---
 created: 2026-01-02 13:03:58
-updated: 2026-04-28 17:15:35
+updated: 2026-11-07 20:49:55
 ---
 Those marked with `*` can be triggered with a command message from Node-RED flows. Those marked with `§` are low-code _ui functions and so can be triggered from Node-RED using messages containing [suitable `_ui` properties](client-docs/config-driven-ui).
 
@@ -22,7 +22,7 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`cancelChange`](#cancelChange) - Cancel a managed variable event watcher.
 * [`cancelTopic`](#cancelTopic) - Cancel a topic event watcher.
 * [`clearHtmlCache`](#clearHtmlCache)
-* [`connect()`]() - Manually (re)connect Socket.IO communications between the browser and Node-RED.
+* [`connect()`](#connect) - Manually (re)connect Socket.IO communications between the browser and Node-RED.
 * [`convertMarkdown`](#convertMarkdown) - Convert a Markdown string to HTML.
 * [`copyToClipboard`](#copyToClipboard)
 * [`createHtmlTable`](#createHtmlTable) - Create an HTML table from an array/object input & insert to the page.
@@ -40,11 +40,13 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`getFormElementValue`](#getFormElementValue) - Check for el.value and el.checked, return as an object.
 * [`getManagedVarList`](#getManagedVarList)* - Returns list of all managed variables.
 * [`getPageMeta`](#getPageMeta) - Asks the server for the created/update timestamps and size (in bytes) of the current page.
-* [`getStore`](#getStore)
+* [`getStore`](#getStore) -
 * [`getWatchedVars`](#getWatchedVars)* - Returns list of all managed variables.
 * [`hasUibRouter`](#hasUibRouter)
 * [`htmlSend`](#htmlSend)* - Sends the current page's full HTML back to Node-RED.
-* [`include`](#include)*
+* [`include`](#include)* -
+* [`isObject`]() - Reliably check if something is an object
+* [`isPrimitive`]() - Return true if the value is primative (string, number, etc)
 * [`joinRoom(room)`](#joinRoom) - join an arbitrary socket.io room to receive messages from it.
 * [`keepHashFromUrl`](#keepHashFromUrl)
 * [`leaveRoom(room)`](#leaveRoom) - leave an arbitrary socket.io room to stop receiving messages from it.
@@ -76,9 +78,12 @@ Available in front-end JavaScript as `uibuilder.xxxxx` or `uib.xxxxx`.
 * [`sendCustom`](#sendcustom) - Sends a message to a specified Socket.IO channel.
 * [`sendRoom(room, msg)`](#sendRoom) - Send a message to an arbitrary socket.io room.
 * [`set`](#set)* - Create/update a uibuilder managed variable.
+* [`setAttributes`]() - Set multiple DOM attributes.
+* [`setDataset`]() - Set multiple DOM dataset properties.
 * [`setOriginator`](#setOriginator)
 * [`setPing`](#setPing)
 * [`setStore`](#setStore)
+* [`setValueOrChecked`]() - Set DOM value or checked properties
 * [`showDialog`](#showDialog)
 * [`showMsg`](#showMsg)*
 * [`showOverlay`](#showOverlay)* - Displays an overlay window with customizable content and behavior.
