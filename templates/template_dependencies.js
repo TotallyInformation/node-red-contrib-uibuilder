@@ -22,6 +22,16 @@ module.exports = {
          Contains a div with the id "<code>more</code>" which is set to automatically show
          <code>msg.payload</code> content sent with <code>msg.topic</code> set to "<code>more</code>".`,
     },
+    'ext-esm-router': {
+        name: 'Single-page-app (SPA) Template (external)',
+        folder: 'ext-esm-router',
+        location: 'totallyinformation/uibuilder-template-router-modern', // GitHub
+        dependencies: [],
+        description:
+        `Creates an SPA style web app.
+         Uses modern ES Module style code.
+         See <u><a href="https://github.com/TotallyInformation/uib-template-router-modern" target="_blank">README.md</a></u> for details.`,
+    },
     'ext-extended-iife': {
         name: 'Extended example using the IIFE client (external)',
         // Redundant, no longer needed for external templates
