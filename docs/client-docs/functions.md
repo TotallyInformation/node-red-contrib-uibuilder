@@ -3,7 +3,7 @@ title: Functions available in the modern client
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2026-06-02 17:22:48
+updated: 2026-11-07 20:37:31
 ---
 
 Functions accessible in client-side user code.
@@ -251,14 +251,14 @@ Note that you can add additional custom data variables to the UIBUILDER object b
 
 #### Arguments
 
-* `prop` - (required) the variable to set and manage
-* `val` - (required) the value to set the prop to
-* `store`  - (optional) true/false. Default=false. If true, the change is written to the browser `localStorage` as well if possible.
+- `prop` - (required) the variable to set and manage
+- `val` - (required) the value to set the prop to
+- `store`  - (optional) true/false. Default=false. If true, the change is written to the browser `localStorage` as well if possible.
   
   > [!WARNING]
   > `localStorage` is shared per _(sub)domain_, e.g. the IP address/name and port number. All pages from the same origin share the variables. It also only survives until the browser is *closed*.
 
-* `autoload` - (optional) true/false. Default=false. If true and if `store` is true, uibuilder will try to automatically restore the variable on future page loads. Do another `set` with this set to false to turn off.
+- `autoload` - (optional) true/false. Default=false. If true and if `store` is true, uibuilder will try to automatically restore the variable on future page loads. Do another `set` with this set to false to turn off.
 
 #### Remote call
 
@@ -307,13 +307,13 @@ This takes HTML (including styles and scripts) from a `<template>` tag. Template
 
 `config` (optional) is an object with 2 possible properties:
 
-* `config.onceOnly` (optional) if set to `true`, the contents of the template will be consumed and can not be re-used. Otherwise, the template may be reused as often as needed.
-* `config.attributes` (optional) if provided, must be an object containing attribute-name:value pairs. These will be applied to the **first child element only** of the template allowing any attribute (e.g. `id`, `class`, etc) to be set. Wrap your template content in a `<div>` or similar if you need attributes to be inherited by the rest of the template.
-* `config.mode` `{'insert'|'replace'|'wrap'}` Defines how to apply the template. *Default is 'insert'*.
+- `config.onceOnly` (optional) if set to `true`, the contents of the template will be consumed and can not be re-used. Otherwise, the template may be reused as often as needed.
+- `config.attributes` (optional) if provided, must be an object containing attribute-name:value pairs. These will be applied to the **first child element only** of the template allowing any attribute (e.g. `id`, `class`, etc) to be set. Wrap your template content in a `<div>` or similar if you need attributes to be inherited by the rest of the template.
+- `config.mode` `{'insert'|'replace'|'wrap'}` Defines how to apply the template. *Default is 'insert'*.
   
-  * `insert` (default) will *append* the template content to the end of any existing child elements of the target element.
-  * `replace` will *replace* the target element's content with the template content. Any previous target content will be lost.
-  * `wrap` will replace the target element with the template content but will also move the target element's previous content into the template's 1st `<slot>` if present. If no `<slot>` is present, the target previous content will be lost.
+  - `insert` (default) will *append* the template content to the end of any existing child elements of the target element.
+  - `replace` will *replace* the target element's content with the template content. Any previous target content will be lost.
+  - `wrap` will replace the target element with the template content but will also move the target element's previous content into the template's 1st `<slot>` if present. If no `<slot>` is present, the target previous content will be lost.
 
 > [!NOTE]
 > If the template contains `<style>` content, this becomes global to the page once it has been applied once.
@@ -347,22 +347,22 @@ The table HTML is returned as a string unless a parent id is provided.
 
 The options object can contain the following properties:
 
-* `cols` `{Array<columnDefinition>=}` - Column metadata. If not provided will be derived from 1st row of data
-* `parent` `{HTMLElement|string}` - If provided, the table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
-* `allowHTML` `{boolean=}` - Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+- `cols` `{Array<columnDefinition>=}` - Column metadata. If not provided will be derived from 1st row of data
+- `parent` `{HTMLElement|string}` - If provided, the table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
+- `allowHTML` `{boolean=}` - Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
 
 > [!NOTE]
 > Will issue a warning to the browser console if > 1000 rows of data are provided. This is because large tables can be slow to render.
 
 `columnDefinition` is a schema with the following properties:
 
-* `{number} index` The column index number
-* `{boolean} hasName` Whether the column has a defined name or not
-* `{string} title` The title of the column. Shown in the table header row
-* `{string=} name` Optional. A defined column name that will be added as the `data-col-name` to all cells in the column if defined
-* `{string|number=} key` Optional. A key value (currently unused)
-* `{"string"|"date"|"number"|"html"=} dataType` FOR FUTURE USE. Optional. What type of data will this column contain?
-* `{boolean=} editable` FOR FUTURE USE. Optional. Can cells in this column be edited?
+- `{number} index` The column index number
+- `{boolean} hasName` Whether the column has a defined name or not
+- `{string} title` The title of the column. Shown in the table header row
+- `{string=} name` Optional. A defined column name that will be added as the `data-col-name` to all cells in the column if defined
+- `{string|number=} key` Optional. A key value (currently unused)
+- `{"string"|"date"|"number"|"html"=} dataType` FOR FUTURE USE. Optional. What type of data will this column contain?
+- `{boolean=} editable` FOR FUTURE USE. Optional. Can cells in this column be edited?
 
 This allows the table columns to be defined in a more flexible way.
 
@@ -400,11 +400,11 @@ The `threshold` argument defaults to 0.1 (10%). It must be between 0 and 1 and r
 
 Notes:
 
-* Unlike the visibility control message, this function sends a standard message AND is not effected by the browser tab visibility. So even if the tab containing the page is not visible but the element would be if the tab were showing, the result of this function is still TRUE.
-* Requires the browser to support the IntersectionObserver API (available to all mainstream browsers from early 2019).
-* The element has to exist on the page before it can be observed.
-* Turn on the optional `msg._uib` feature in the UIBUILDER node to see which client is sending the messages.
-* Due to the nature of the IntersectionObserver API, this fn is not available as a command for now.
+- Unlike the visibility control message, this function sends a standard message AND is not effected by the browser tab visibility. So even if the tab containing the page is not visible but the element would be if the tab were showing, the result of this function is still TRUE.
+- Requires the browser to support the IntersectionObserver API (available to all mainstream browsers from early 2019).
+- The element has to exist on the page before it can be observed.
+- Turn on the optional `msg._uib` feature in the UIBUILDER node to see which client is sending the messages.
+- Due to the nature of the IntersectionObserver API, this fn is not available as a command for now.
 
 ### `getElementAttributes(el)` - Returns an object containing attribute-name/value keypairs (or an empty object) :id=getElementAttributes
 
@@ -478,16 +478,16 @@ Each of the includes are wrapped in a `div` tag to which the supplied `id` attri
 
 The following file types are handled:
 
-* *HTML document/fragment* (*.html) - Will be wrapped in a div given the specified `id` attribute.
+- *HTML document/fragment* (*.html) - Will be wrapped in a div given the specified `id` attribute.
   
   If the `DOMPurify` library is loaded before the UIBUILDER client library, it will be used to sanitise the HTML.
 
-* *Image* - Any image file type recognised by the browser will be shown using an `img` tag (wrapped in the div as usual).
-* *Video* - Any video file type recognised by the browser will be shown using a `video` tag (wrapped in the div as usual). The video controls will be shown and it will auto-play if the browser allows it.
-* *JSON* - A `*.json` file will be syntax highlighted and shown in a panel. The syntax highlight CSS is contained in the `uib-brand.css` file and can be copied to your own CSS definitions if needed. The panel is defined as a `pre` tag with the `syntax-highlight` class added.
-* *PDF* - A `*.pdf` file will be shown in a resizable iFrame.
-* *Text* - The contents of the text file will be shown in a resizable iFrame.
-* *Other* - Any other file type will be shown in a resizable iFrame.
+- *Image* - Any image file type recognised by the browser will be shown using an `img` tag (wrapped in the div as usual).
+- *Video* - Any video file type recognised by the browser will be shown using a `video` tag (wrapped in the div as usual). The video controls will be shown and it will auto-play if the browser allows it.
+- *JSON* - A `*.json` file will be syntax highlighted and shown in a panel. The syntax highlight CSS is contained in the `uib-brand.css` file and can be copied to your own CSS definitions if needed. The panel is defined as a `pre` tag with the `syntax-highlight` class added.
+- *PDF* - A `*.pdf` file will be shown in a resizable iFrame.
+- *Text* - The contents of the text file will be shown in a resizable iFrame.
+- *Other* - Any other file type will be shown in a resizable iFrame.
 
 Any file type that the browser cannot handle will trigger the browser to automatically download it. This is a browser limitation.
 
@@ -768,17 +768,17 @@ if (eMsg) eMsg.innerHTML = uibuilder.syntaxHighlight(msg)
 
 Adds or replaces a single row in an existing table>tbody
 
- * `tbl` is either a CSS Selector for the table or a reference to the HTML Table Element.
- * `rowData` is single row of column/cell data either as an array or an object.
- * `options` is an object with the following properties:
+ - `tbl` is either a CSS Selector for the table or a reference to the HTML Table Element.
+ - `rowData` is single row of column/cell data either as an array or an object.
+ - `options` is an object with the following properties:
   
-   * `{number=} body` Optional, default=0. The tbody section to add the row to.
-   * `{boolean=} allowHTML` Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
-   * `{string=} rowId` Optional. HTML element ID for the added row
-   * `{number=} afterRow` Optional. If provided, the new row will be added after this row number
-   * `{number=} beforeRow` Optional. If provided, the new row will be added before this row number. Ignored if afterRow is provided
-   * `{number=} replaceRow` Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
-   * `{Array<columnDefinition>=} cols` Optional. Data about each column. If not provided, will be calculated from the table
+   - `{number=} body` Optional, default=0. The tbody section to add the row to.
+   - `{boolean=} allowHTML` Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
+   - `{string=} rowId` Optional. HTML element ID for the added row
+   - `{number=} afterRow` Optional. If provided, the new row will be added after this row number
+   - `{number=} beforeRow` Optional. If provided, the new row will be added before this row number. Ignored if afterRow is provided
+   - `{number=} replaceRow` Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
+   - `{Array<columnDefinition>=} cols` Optional. Data about each column. If not provided, will be calculated from the table
 
 A DOM element reference to the newly added row is returned to enable further changes to be made if required.
 
@@ -828,7 +828,7 @@ Removes a row from an existing table
 `rowIndex` is the row number to remove (1st row is 0, last row is -1).
 `options` is an object with the following properties:
 
-* `{number=} body` Optional, default=0. The tbody section to add the row to.
+- `{number=} body` Optional, default=0. The tbody section to add the row to.
 
 ### `ui(json)` - Directly manage UI via JSON :id=ui
 
@@ -956,16 +956,16 @@ The UIBUILDER library also issues a number of custom events. These can be handle
 
 This is a convenience method to help you select [HTML DOM elements](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement) in your own custom code. For basic use it is identical to the native `document.querySelector(cssSelector)`. So any errors are the same as the native function.
 
-* `cssSelector` is a string containing a valid [CSS selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_selectors).
+- `cssSelector` is a string containing a valid [CSS selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_selectors).
 
-* `output` is an optional argument that can be used to control what is returned:
+- `output` is an optional argument that can be used to control what is returned:
 
-  * `el` - default. Returns the found HTML element.
-  * `text` - returns the inner text content of the element.
-  * `html` - returns the inner HTML content of the element as a string.
-  * `attributes` (or `attr`) - returns an object containing the element's attributes and attribute values.
+  - `el` - default. Returns the found HTML element.
+  - `text` - returns the inner text content of the element.
+  - `html` - returns the inner HTML content of the element as a string.
+  - `attributes` (or `attr`) - returns an object containing the element's attributes and attribute values.
 
-* `context` is an optional argument that can be used to specify the parent element to search within. If not provided, the search is done on the whole document. If used, it must be a valid HTML element.
+- `context` is an optional argument that can be used to specify the parent element to search within. If not provided, the search is done on the whole document. If used, it must be a valid HTML element.
 
 If the CSS Selector provided is not unique (e.g. >1 element would be returned), only the first element found in the DOM is returned. Use `$$` or the native `document.querySelectorAll(cssSelector)` if you want to get back an array of selected elements.
 
@@ -991,8 +991,8 @@ if (elMore) elMore.innerHTML = uibuilder.syntaxHighlight(msg)
 
 This function is a convenience wrapper around `Array.from(document.querySelectorAll(cssSelector))`. So it returns an array. The array has an entry for each found element (an empty array if nothing found).
 
-* `cssSelector` is a string containing a valid [CSS selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_selectors).
-* `context` is an optional argument that can be used to specify the parent element to search within. If not provided, the search is done on the whole document. If used, it must be a valid HTML element.
+- `cssSelector` is a string containing a valid [CSS selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_selectors).
+- `context` is an optional argument that can be used to specify the parent element to search within. If not provided, the search is done on the whole document. If used, it must be a valid HTML element.
 
 The function returns an _array_ of HTML elements. If the array length is 0, no elements were found.
 
@@ -1102,19 +1102,19 @@ Examples: `uibuilder.urlJoin('/aaa/', '//bbbb/ccc/')` -> `/aaa/bbbb/ccc`, `uibui
 
 Unlike the original UIBUILDER client, this version:
 
-* Rarely needs to be manually called. It should work for all page locations including in sub-folders as long as the client allows cookies.
+- Rarely needs to be manually called. It should work for all page locations including in sub-folders as long as the client allows cookies.
 
-* Only allows passing of a single options object.
+- Only allows passing of a single options object.
 
-* Allows being called again which will reset the Socket.IO connection and internal msg event handlers.
+- Allows being called again which will reset the Socket.IO connection and internal msg event handlers.
 
 #### Options
 
 While multiple properties can be given in the options object, only the following are currently used:
 
-* `ioNamespace` - This is normally calculated for you. However, if using an external server to serve the page, you may need to manually set this. Check the UIBUILDER node details page in the Node-RED Editor for what this should be set to.
-* `ioPath` - As above.
-* `nopolling` - If set, will turn off Socket.IO's HTTP long-polling transport. Forcing it to only use websockets.
+- `ioNamespace` - This is normally calculated for you. However, if using an external server to serve the page, you may need to manually set this. Check the UIBUILDER node details page in the Node-RED Editor for what this should be set to.
+- `ioPath` - As above.
+- `nopolling` - If set, will turn off Socket.IO's HTTP long-polling transport. Forcing it to only use websockets.
 
 ## Alphabetical function list
 
