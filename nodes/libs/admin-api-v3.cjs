@@ -1322,17 +1322,21 @@ v3AdminRouter.route('/:url')
                         return true
                     })
                     .catch( (err) => {
-                        let statusMsg, mystr
-                        if ( err.code === 'MISSING_REF' ) {
-                            statusMsg = `Degit clone error. CHECK External Template Name. Name='${params.extTemplate}', url=${params.url}, cmd=${params.cmd}. ${err.message}`
+                        let statusMsg = ''
+                        let mystr = ''
+                        const data = {}
+                        if ( err.cause.code === 'MISSING_REF' ) {
+                            statusMsg = `Degit clone error. CHECK External Template Name. Name="${params.extTemplate}", url="${params.url}". ${err.message}`
                         } else {
                             if ( params.template === 'external' ) mystr = `, ${params.extTemplate}`
                             statusMsg = `Replace template error. ${err.message}. url=${params.url}. ${params.template}${mystr}`
                         }
-                        log.error(`🌐🛑[uibuilder:adminapi:POST:replaceTemplate] ${statusMsg}`, err)
+                        log.error(`🌐🛑[uibuilder:adminapiv3:POST:replaceTemplate] ${statusMsg}`, err)
                         // console.log(err.stack)
+                        data.code = err?.cause?.code
+                        data.ref = err?.cause?.ref
                         res.statusMessage = statusMsg
-                        res.status(500).end()
+                        res.status(500).json({ statusMsg, data, })
                     } )
                 break
             }

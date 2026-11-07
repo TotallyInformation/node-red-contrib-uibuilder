@@ -27,7 +27,12 @@
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
  * @typedef {import('../../typedefs.js').uibPackageJson} uibPackageJson
  * @typedef {import('../../typedefs.js').singleTemplateConf} singleTemplateConf
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  */
+
+// Will auto-enable if TI_ENV environment variable is set to "debug"
+const { /** @type {uibCustomLogger} */ log: clog, } = require('./logger.mjs')
+clog.debug('Loading')
 
 const { join, relative, normalize, dirname, } = require('node:path')
 // const { randomUUID, } = require('node:crypto')
@@ -359,9 +364,9 @@ class UibFs {
         try {
             await degitEmitter.clone(fullname)
         } catch (err) {
-            const e = new Error(`Failed to copy template from '${extTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message} [UibFs:doDegit]`)
-            e.name = 'TEMPLATECOPYFAIL'
-            e.cause = err
+            const e = new Error(`${err.message}. Failed to clone from "${extTemplate}" to "${fullname}" [UibFs:doDegit]`)
+            e.name = 'DEGITFAIL'
+            e.cause = err // NB: err.ref contains remote ref degit tried to get
             throw e
         }
 
@@ -419,8 +424,8 @@ class UibFs {
             log.info(`🌐📘[uibuilder:fs:replaceTemplate] ${statusMsg} cmd=replaceTemplate`)
             return statusMsg
         } catch (err) {
-            const e = new Error(`Failed to copy template from '${srcTemplate}' to '${fullname}'. url=${url}, cmd=${cmd}, ERR=${err.message} [UibFs:replaceTemplate]`)
-            e.name = 'COPYFAIL'
+            const e = new Error(`${err.message}. Failed to copy template from "${srcTemplate}" to "${fullname}". url="${url}" [UibFs:replaceTemplate]`)
+            e.name = 'TEMPLATECOPYFAIL'
             e.cause = err
             throw e
         }
@@ -852,5 +857,4 @@ class UibFs {
 // @ts-ignore
 const uibFs = new UibFs()
 module.exports = uibFs
-
-// EOF
+clog.debug('Loaded')

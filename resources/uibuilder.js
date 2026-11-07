@@ -1246,6 +1246,8 @@
             verb: 'POST',
             url: url,
             dataType: 'json',
+            timeout: 5000, // needs longer than default
+            error: function() {}, // overrides error notify in doAdminApiv3
             data: { // converted to URL query parameters
                 cmd: 'replaceTemplate',
                 template: templateFolder,
@@ -1256,9 +1258,14 @@
                 RED.notify(`<b>uibuilder</b>:<br><br>${jqXHR.statusText}<br>`, { type: 'success', })
                 return 'Template load succeeded'
             },
-            fail: (_jqXHR, textStatus, errorThrown) => {
-                console.error( '🌐🛑[uibuilder:loadTemplate] Error ' + textStatus, errorThrown )
-                RED.notify(`<b>uibuilder</b>:<br><br>Template Load Error.<br><br>${errorThrown}<br>`, { type: 'error', })
+            fail: (jqXHR, textStatus, errorThrown) => {
+                console.error( `🌐🛑[uibuilder:loadTemplate] ${errorThrown}`, { code: jqXHR.responseJSON.data.code, ref: jqXHR.responseJSON.data.ref, errorThrown, } )
+                if (jqXHR.responseJSON.data.code === 'MISSING_REF') {
+                    console.warn('Template Load Error. Either the source does not exist or git is not found on the server.')
+                    uibuilder.nrNotify('Template Load Error.<br><br>Either the source does not exist or git is not found on the server.', { type: 'error', modal: true, })
+                } else {
+                    uibuilder.nrNotify(`Template Load Error.<br><br>${errorThrown}<br>`, { type: 'error', modal: true, })
+                }
                 return 'Template load failed'
             },
         })
