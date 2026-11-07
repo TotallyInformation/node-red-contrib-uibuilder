@@ -4,8 +4,8 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __typeError = (msg) => {
-  throw TypeError(msg);
+var __typeError = (msg2) => {
+  throw TypeError(msg2);
 };
 var __defNormalProp = (obj, key, value2) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value: value2 }) : obj[key] = value2;
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
@@ -35,7 +35,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 var __publicField = (obj, key, value2) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value2);
-var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __accessCheck = (obj, member, msg2) => member.has(obj) || __typeError("Cannot " + msg2);
 var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
 var __privateAdd = (obj, member, value2) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value2);
 var __privateSet = (obj, member, value2, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value2) : member.set(obj, value2), value2);
@@ -472,17 +472,17 @@ var Ui = (_a = class {
    * Called from start()
    * @param {*} msg Standardised msg object containing a _ui property object
    */
-  _uiManager(msg) {
-    if (!msg._ui) return;
-    if (!Array.isArray(msg._ui)) msg._ui = [msg._ui];
-    msg._ui.forEach((ui, i) => {
+  _uiManager(msg2) {
+    if (!msg2._ui) return;
+    if (!Array.isArray(msg2._ui)) msg2._ui = [msg2._ui];
+    msg2._ui.forEach((ui, i) => {
       if (ui.mode && !ui.method) ui.method = ui.mode;
       if (!ui.method) {
         _a.log("error", "Ui:_uiManager", "No method defined for msg._ui[".concat(i, "]. Ignoring. "), ui)();
         return;
       }
-      ui.payload = msg.payload;
-      ui.topic = msg.topic;
+      ui.payload = msg2.payload;
+      ui.topic = msg2.topic;
       switch (ui.method) {
         case "add": {
           this._uiAdd(ui, false);
@@ -513,11 +513,11 @@ var Ui = (_a = class {
           break;
         }
         case "notify": {
-          this.showDialog("notify", ui, msg);
+          this.showDialog("notify", ui, msg2);
           break;
         }
         case "alert": {
-          this.showDialog("alert", ui, msg);
+          this.showDialog("alert", ui, msg2);
           break;
         }
         default: {
@@ -1197,7 +1197,7 @@ var Ui = (_a = class {
    * @example
    * Ui.showDialog('alert', null, msg)
    */
-  showDialog(type, ui, msg) {
+  showDialog(type, ui, msg2) {
     if (!type || !["notify", "alert"].includes(type)) {
       type = "notify";
     }
@@ -1209,7 +1209,7 @@ var Ui = (_a = class {
       };
     }
     let body = "";
-    if (msg.payload && typeof msg.payload === "string") body += "<div>".concat(msg.payload, "</div>");
+    if (msg2.payload && typeof msg2.payload === "string") body += "<div>".concat(msg2.payload, "</div>");
     if (ui.content) body += "<div>".concat(ui.content, "</div>");
     if (body === "") {
       _a.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
@@ -1217,7 +1217,7 @@ var Ui = (_a = class {
     }
     let title = "";
     if (ui.title) title = ui.title;
-    else if (msg.topic) title = msg.topic;
+    else if (msg2.topic) title = msg2.topic;
     if (ui.noAutohide) ui.noAutoHide = ui.noAutohide;
     if (ui.noAutoHide) ui.autohide = !ui.noAutoHide;
     if (ui.autoHideDelay) {
@@ -1347,10 +1347,10 @@ var Ui = (_a = class {
    * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
    */
   ui(json) {
-    let msg = {};
-    if (json._ui) msg = json;
-    else msg._ui = json;
-    this._uiManager(msg);
+    let msg2 = {};
+    if (json._ui) msg2 = json;
+    else msg2._ui = json;
+    this._uiManager(msg2);
   }
   /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
    * @param {string} cssSelector Identify the DOM element to get data from
@@ -2940,18 +2940,14 @@ if (withEventListeners) {
     OFFLINE_EVENT_LISTENERS.forEach((listener) => listener());
   }, false);
 }
-var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
-  /**
-   * Socket constructor.
-   *
-   * @param {String|Object} uri - uri or options
-   * @param {Object} opts - options
-   */
-  constructor(uri, opts) {
+var Socket = class _Socket extends Emitter {
+  constructor(uri, opts = {}) {
+    var _a3, _b;
     super();
     this.binaryType = defaultBinaryType;
     this.writeBuffer = [];
     this._prevBufferLen = 0;
+    this._upgrades = [];
     this._pingInterval = -1;
     this._pingTimeout = -1;
     this._maxPayload = -1;
@@ -2977,13 +2973,21 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
     }
     this.hostname = opts.hostname || (typeof location !== "undefined" ? location.hostname : "localhost");
     this.port = opts.port || (typeof location !== "undefined" && location.port ? location.port : this.secure ? "443" : "80");
-    this.transports = [];
-    this._transportsByName = {};
-    opts.transports.forEach((t) => {
-      const transportName = t.prototype.name;
-      this.transports.push(transportName);
-      this._transportsByName[transportName] = t;
-    });
+    if (opts.transportImplementations && opts.transports) {
+      throw new Error("specifying both 'transportImplementations' and 'transports' options is not supported");
+    }
+    if (opts.transportImplementations || ((_a3 = opts.transports) === null || _a3 === void 0 ? void 0 : _a3.length) && typeof opts.transports[0] === "function") {
+      this.transports = [];
+      this._transportsByName = /* @__PURE__ */ Object.create(null);
+      ((_b = opts.transportImplementations) !== null && _b !== void 0 ? _b : opts.transports).forEach((t) => {
+        const transportName = t.prototype.name;
+        this.transports.push(transportName);
+        this._transportsByName[transportName] = t;
+      });
+    } else {
+      this.transports = opts.transports ? [...opts.transports] : ["polling", "websocket", "webtransport"];
+      this._transportsByName = transports;
+    }
     this.opts = Object.assign({
       path: "/engine.io",
       agent: false,
@@ -3061,7 +3065,7 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
       }, 0);
       return;
     }
-    const transportName = this.opts.rememberUpgrade && _SocketWithoutUpgrade.priorWebsocketSuccess && this.transports.indexOf("websocket") !== -1 ? "websocket" : this.transports[0];
+    const transportName = this.opts.rememberUpgrade && _Socket.priorWebsocketSuccess && this.transports.indexOf("websocket") !== -1 ? "websocket" : this.transports[0];
     this.readyState = "opening";
     const transport = this.createTransport(transportName);
     transport.open();
@@ -3080,15 +3084,110 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
     transport.on("drain", this._onDrain.bind(this)).on("packet", this._onPacket.bind(this)).on("error", this._onError.bind(this)).on("close", (reason) => this._onClose("transport close", reason));
   }
   /**
+   * Probes a transport.
+   *
+   * @param {String} name - transport name
+   * @private
+   */
+  _probe(name2) {
+    let transport = this.createTransport(name2);
+    let failed = false;
+    _Socket.priorWebsocketSuccess = false;
+    const onTransportOpen = () => {
+      if (failed)
+        return;
+      transport.send([{ type: "ping", data: "probe" }]);
+      transport.once("packet", (msg2) => {
+        if (failed)
+          return;
+        if ("pong" === msg2.type && "probe" === msg2.data) {
+          this.upgrading = true;
+          this.emitReserved("upgrading", transport);
+          if (!transport)
+            return;
+          _Socket.priorWebsocketSuccess = "websocket" === transport.name;
+          this.transport.pause(() => {
+            if (failed)
+              return;
+            if ("closed" === this.readyState)
+              return;
+            cleanup();
+            this.setTransport(transport);
+            transport.send([{ type: "upgrade" }]);
+            this.emitReserved("upgrade", transport);
+            transport = null;
+            this.upgrading = false;
+            this.flush();
+          });
+        } else {
+          const err = new Error("probe error");
+          err.transport = transport.name;
+          this.emitReserved("upgradeError", err);
+        }
+      });
+    };
+    function freezeTransport() {
+      if (failed)
+        return;
+      failed = true;
+      cleanup();
+      transport.close();
+      transport = null;
+    }
+    const onerror = (err) => {
+      const error = new Error("probe error: " + err);
+      error.transport = transport.name;
+      freezeTransport();
+      this.emitReserved("upgradeError", error);
+    };
+    function onTransportClose() {
+      onerror("transport closed");
+    }
+    function onclose() {
+      onerror("socket closed");
+    }
+    function onupgrade(to) {
+      if (transport && to.name !== transport.name) {
+        freezeTransport();
+      }
+    }
+    const cleanup = () => {
+      transport.removeListener("open", onTransportOpen);
+      transport.removeListener("error", onerror);
+      transport.removeListener("close", onTransportClose);
+      this.off("close", onclose);
+      this.off("upgrading", onupgrade);
+    };
+    transport.once("open", onTransportOpen);
+    transport.once("error", onerror);
+    transport.once("close", onTransportClose);
+    this.once("close", onclose);
+    this.once("upgrading", onupgrade);
+    if (this._upgrades.indexOf("webtransport") !== -1 && name2 !== "webtransport") {
+      this.setTimeoutFn(() => {
+        if (!failed) {
+          transport.open();
+        }
+      }, 200);
+    } else {
+      transport.open();
+    }
+  }
+  /**
    * Called when connection is deemed open.
    *
    * @private
    */
   onOpen() {
     this.readyState = "open";
-    _SocketWithoutUpgrade.priorWebsocketSuccess = "websocket" === this.transport.name;
+    _Socket.priorWebsocketSuccess = "websocket" === this.transport.name;
     this.emitReserved("open");
     this.flush();
+    if ("open" === this.readyState && this.opts.upgrade) {
+      for (let i = 0; i < this._upgrades.length; i++) {
+        this._probe(this._upgrades[i]);
+      }
+    }
   }
   /**
    * Handles a packet.
@@ -3132,6 +3231,7 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
     this.emitReserved("handshake", data);
     this.id = data.sid;
     this.transport.query.sid = data.sid;
+    this._upgrades = this._filterUpgrades(data.upgrades);
     this._pingInterval = data.pingInterval;
     this._pingTimeout = data.pingTimeout;
     this._maxPayload = data.maxPayload;
@@ -3237,8 +3337,8 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
    * @param {Function} fn - callback function.
    * @return {Socket} for chaining.
    */
-  write(msg, options, fn) {
-    this._sendPacket("message", msg, options, fn);
+  write(msg2, options, fn) {
+    this._sendPacket("message", msg2, options, fn);
     return this;
   }
   /**
@@ -3249,8 +3349,8 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
    * @param {Function} fn - callback function.
    * @return {Socket} for chaining.
    */
-  send(msg, options, fn) {
-    this._sendPacket("message", msg, options, fn);
+  send(msg2, options, fn) {
+    this._sendPacket("message", msg2, options, fn);
     return this;
   }
   /**
@@ -3328,7 +3428,7 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
    * @private
    */
   _onError(err) {
-    _SocketWithoutUpgrade.priorWebsocketSuccess = false;
+    _Socket.priorWebsocketSuccess = false;
     if (this.opts.tryAllTransports && this.transports.length > 1 && this.readyState === "opening") {
       this.transports.shift();
       return this._open();
@@ -3365,115 +3465,6 @@ var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
       this._prevBufferLen = 0;
     }
   }
-};
-SocketWithoutUpgrade.protocol = protocol;
-var SocketWithUpgrade = class extends SocketWithoutUpgrade {
-  constructor() {
-    super(...arguments);
-    this._upgrades = [];
-  }
-  onOpen() {
-    super.onOpen();
-    if ("open" === this.readyState && this.opts.upgrade) {
-      for (let i = 0; i < this._upgrades.length; i++) {
-        this._probe(this._upgrades[i]);
-      }
-    }
-  }
-  /**
-   * Probes a transport.
-   *
-   * @param {String} name - transport name
-   * @private
-   */
-  _probe(name2) {
-    let transport = this.createTransport(name2);
-    let failed = false;
-    SocketWithoutUpgrade.priorWebsocketSuccess = false;
-    const onTransportOpen = () => {
-      if (failed)
-        return;
-      transport.send([{ type: "ping", data: "probe" }]);
-      transport.once("packet", (msg) => {
-        if (failed)
-          return;
-        if ("pong" === msg.type && "probe" === msg.data) {
-          this.upgrading = true;
-          this.emitReserved("upgrading", transport);
-          if (!transport)
-            return;
-          SocketWithoutUpgrade.priorWebsocketSuccess = "websocket" === transport.name;
-          this.transport.pause(() => {
-            if (failed)
-              return;
-            if ("closed" === this.readyState)
-              return;
-            cleanup();
-            this.setTransport(transport);
-            transport.send([{ type: "upgrade" }]);
-            this.emitReserved("upgrade", transport);
-            transport = null;
-            this.upgrading = false;
-            this.flush();
-          });
-        } else {
-          const err = new Error("probe error");
-          err.transport = transport.name;
-          this.emitReserved("upgradeError", err);
-        }
-      });
-    };
-    function freezeTransport() {
-      if (failed)
-        return;
-      failed = true;
-      cleanup();
-      transport.close();
-      transport = null;
-    }
-    const onerror = (err) => {
-      const error = new Error("probe error: " + err);
-      error.transport = transport.name;
-      freezeTransport();
-      this.emitReserved("upgradeError", error);
-    };
-    function onTransportClose() {
-      onerror("transport closed");
-    }
-    function onclose() {
-      onerror("socket closed");
-    }
-    function onupgrade(to) {
-      if (transport && to.name !== transport.name) {
-        freezeTransport();
-      }
-    }
-    const cleanup = () => {
-      transport.removeListener("open", onTransportOpen);
-      transport.removeListener("error", onerror);
-      transport.removeListener("close", onTransportClose);
-      this.off("close", onclose);
-      this.off("upgrading", onupgrade);
-    };
-    transport.once("open", onTransportOpen);
-    transport.once("error", onerror);
-    transport.once("close", onTransportClose);
-    this.once("close", onclose);
-    this.once("upgrading", onupgrade);
-    if (this._upgrades.indexOf("webtransport") !== -1 && name2 !== "webtransport") {
-      this.setTimeoutFn(() => {
-        if (!failed) {
-          transport.open();
-        }
-      }, 200);
-    } else {
-      transport.open();
-    }
-  }
-  onHandshake(data) {
-    this._upgrades = this._filterUpgrades(data.upgrades);
-    super.onHandshake(data);
-  }
   /**
    * Filters upgrades, returning only those matching client transports.
    *
@@ -3489,15 +3480,7 @@ var SocketWithUpgrade = class extends SocketWithoutUpgrade {
     return filteredUpgrades;
   }
 };
-var Socket = class extends SocketWithUpgrade {
-  constructor(uri, opts = {}) {
-    const o = typeof uri === "object" ? uri : opts;
-    if (!o.transports || o.transports && typeof o.transports[0] === "string") {
-      o.transports = (o.transports || ["polling", "websocket", "webtransport"]).map((transportName) => transports[transportName]).filter((t) => !!t);
-    }
-    super(uri, o);
-  }
-};
+Socket.protocol = protocol;
 
 // node_modules/engine.io-client/build/esm/index.js
 var protocol2 = Socket.protocol;
@@ -3596,7 +3579,7 @@ function deconstructPacket(packet) {
   pack.attachments = buffers.length;
   return { packet: pack, buffers };
 }
-function _deconstructPacket(data, buffers) {
+function _deconstructPacket(data, buffers, toJSON) {
   if (!data)
     return data;
   if (isBinary(data)) {
@@ -3610,6 +3593,9 @@ function _deconstructPacket(data, buffers) {
     }
     return newData;
   } else if (typeof data === "object" && !(data instanceof Date)) {
+    if (data.toJSON && typeof data.toJSON === "function" && !toJSON) {
+      return _deconstructPacket(data.toJSON(), buffers, true);
+    }
     const newData = {};
     for (const key in data) {
       if (Object.prototype.hasOwnProperty.call(data, key)) {
@@ -3762,9 +3748,6 @@ var Decoder = class _Decoder extends Emitter {
       if (isBinaryEvent || packet.type === PacketType.BINARY_ACK) {
         packet.type = isBinaryEvent ? PacketType.EVENT : PacketType.ACK;
         this.reconstructor = new BinaryReconstructor(packet);
-        if (packet.attachments === 0) {
-          super.emitReserved("decoded", packet);
-        }
       } else {
         super.emitReserved("decoded", packet);
       }
@@ -3805,7 +3788,7 @@ var Decoder = class _Decoder extends Emitter {
         throw new Error("Illegal attachments");
       }
       const n = Number(buf);
-      if (!isInteger(n) || n < 0) {
+      if (!isInteger(n) || n < 1) {
         throw new Error("Illegal attachments");
       } else if (n > this.opts.maxAttachments) {
         throw new Error("too many attachments");
@@ -5356,34 +5339,34 @@ var _TiBaseComponent = class _TiBaseComponent extends _HTMLElement {
    * Each prop in the msg.payload is set as a prop on the component instance.
    * @param {object} msg A uibuilder message object
    */
-  _uibMsgHandler(msg) {
-    if (typeof msg.payload !== "object") {
-      console.warn("[".concat(this.localName, "] Ignoring msg, payload is not an object:"), msg);
+  _uibMsgHandler(msg2) {
+    if (typeof msg2.payload !== "object") {
+      console.warn("[".concat(this.localName, "] Ignoring msg, payload is not an object:"), msg2);
       return;
     }
-    Object.keys(msg.payload).forEach((key) => {
+    Object.keys(msg2.payload).forEach((key) => {
       if (key.startsWith("_")) return;
       let key2 = key.toLowerCase();
       if (key2.startsWith("data-")) key2 = "data";
       switch (key2) {
         case "value": {
-          this.setAttribute("value", msg.payload[key]);
+          this.setAttribute("value", msg2.payload[key]);
           break;
         }
         case "class": {
-          this.className = msg.payload[key];
+          this.className = msg2.payload[key];
           break;
         }
         case "style": {
-          this.style.cssText = msg.payload[key];
+          this.style.cssText = msg2.payload[key];
           break;
         }
         case "data": {
-          this.dataset[key.replace("data-", "")] = msg.payload[key];
+          this.dataset[key.replace("data-", "")] = msg2.payload[key];
           break;
         }
         default: {
-          this[key] = msg.payload[key];
+          this[key] = msg2.payload[key];
           break;
         }
       }
@@ -5646,11 +5629,11 @@ var UibVar = class extends ti_base_component_default {
   /** Process watched uibuilder msg.topic received
    * @param {object} msg The value of the managed uibuilder variable
    */
-  _topicChange(msg) {
-    this.uibuilder.log("trace", this.localName, "Topic msg received: '".concat(msg.topic, "'"), msg);
-    this.value = msg.payload;
+  _topicChange(msg2) {
+    this.uibuilder.log("trace", this.localName, "Topic msg received: '".concat(msg2.topic, "'"), msg2);
+    this.value = msg2.payload;
     this.showVar();
-    if (this.report === true) this.uibuilder.send({ topic: msg.topic, payload: this.value || void 0, source: this.localName, id: this.id });
+    if (this.report === true) this.uibuilder.send({ topic: msg2.topic, payload: this.value || void 0, source: this.localName, id: this.id });
   }
   /** Convert this.value to DOM output (applies output filter if needed)
    * @param {boolean} chkVal If true (default), check for undefined value. False used to run filter even with no value set.
@@ -7037,7 +7020,7 @@ var _ui = new ui_default(window, log, syntaxHighlight);
 var _a2, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _manualDisconnect, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _uniqueElID, _extCommands, _managedVars, _showStatus, _uiObservers, _uibAttrSel;
 var Uib = (_a2 = class {
   // #endregion -------- ------------ -------- //
-  // #region Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
+  // #region --- EXPERIMENTAL ---
   /** Attempt to load a service worker
    * https://yonatankra.com/how-service-workers-sped-up-our-website-by-97-5/
    * @param {string} fileName Name of service worker js file (without .js extension)
@@ -7315,18 +7298,15 @@ var Uib = (_a2 = class {
         }
       }
     });
-    // --- End of elementExists --- //
     /** Format a Date using Intl with optional pattern support.
      * @param {Date|string|number} date Input JS Date, date string, or timestamp
      * @param {string} [pattern] Optional pattern string
      * @param {string} [locale] Locale code. Defaults to browser locale.
-     * @returns {string} Formatted date string
+     * @return {string} Formatted date string
      */
-    // formatDate = formatDate
     __publicField(this, "formatDate", formatDate);
-    // --- End of elementIsVisible --- //
     // #endregion -------- -------- -------- //
-    // #region ------- UI handlers --------- //
+    // #region ------- UI/DOM handlers --------- //
     // #region -- Direct to _ui --
     // ! NOTE: Direct assignments change the target `this` to here. Use with caution
     // However, also note that the window/jsdom and the window.document
@@ -7336,13 +7316,13 @@ var Uib = (_a2 = class {
      * If the selected element is a <template>, returns the first child element.
      * type {HTMLElement}
      * @param {string} cssSelector A CSS Selector that identifies the element to return
-     * @returns {HTMLElement|null} Selected HTML element or null
+     * @return {HTMLElement|null} Selected HTML element or null
      */
     __publicField(this, "$", _ui.$);
     /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
      * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
      * @param {string} cssSelector A CSS Selector that identifies the elements to return
-     * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
+     * @return {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
      */
     __publicField(this, "$$", _ui.$$);
     /** Reference to the full ui library */
@@ -7414,10 +7394,10 @@ var Uib = (_a2 = class {
     }
     this._watchHashChanges();
     this.set("msg", null);
-    this.onChange("msg", (msg) => {
+    this.onChange("msg", (msg2) => {
       if (__privateGet(this, _isShowMsg) === true) {
         const eMsg = document.getElementById("uib_last_msg");
-        if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg);
+        if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg2);
       }
     });
     this._dispatchCustomEvent("uibuilder:constructorComplete");
@@ -7446,7 +7426,7 @@ var Uib = (_a2 = class {
   /** Extract the root property from a nested property path (e.g., 'myvar.aprop' or 'myvar["bprop"]').
    * @private
    * @param {string} prop The property name or nested property path
-   * @returns {Object<boolean, string, string|null>} Whether the prop is a nested path,
+   * @return {Object<boolean, string, string|null>} Whether the prop is a nested path,
    *   the root property name (e.g., 'myvar' from 'myvar.aprop' or 'myvar["bprop"]'),
    *   and the nested path or null if not a nested path
    */
@@ -7477,7 +7457,7 @@ var Uib = (_a2 = class {
    * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
    * @param {boolean} [store] If true, the variable is also saved to the browser localStorage if possible
    * @param {boolean} [autoload] If true & store is true, on load, uib will try to restore the value from the store automatically
-   * @returns {*} Input value
+   * @return {*} Input value
    */
   set(prop, val, store = false, autoload = false) {
     var _a3;
@@ -7503,6 +7483,11 @@ var Uib = (_a2 = class {
     const eventVal = this[eventProp];
     this._dispatchCustomEvent("uibuilder:propertyChanged", { prop: eventProp, value: eventVal, oldValue: oldVal, store, autoload });
     this._dispatchCustomEvent("uibuilder:propertyChanged:".concat(eventProp), { prop: eventProp, value: eventVal, oldValue: oldVal, store, autoload });
+    if (prop === "msg" && val && (val == null ? void 0 : val._from) !== "server") {
+      if (!(val == null ? void 0 : val._from)) val._from = "local";
+      this._dispatchCustomEvent("uibuilder:stdMsgReceived", val);
+      if (val.topic) this._dispatchCustomEvent("uibuilder:msg:topic:".concat(val.topic), val);
+    }
     return eventVal;
   }
   /** Function to get the value of a uibuilder property
@@ -7510,7 +7495,7 @@ var Uib = (_a2 = class {
    * Example: uibuilder.get('msg')
    * Example: uibuilder.get('myvar.nested.prop')
    * @param {string} prop The name of the property to get as long as it does not start with a _ or #
-   * @returns {*|undefined} The current value of the property
+   * @return {*|undefined} The current value of the property
    */
   get(prop) {
     if (prop.startsWith("_") || prop.startsWith("#")) {
@@ -7541,7 +7526,7 @@ var Uib = (_a2 = class {
    * @param {string} id localStorage var name to be used (prefixed with 'uib_')
    * @param {*} value value to write to localstore
    * @param {boolean} [autoload] If true, on load, uib will try to restore the value from the store
-   * @returns {boolean} True if succeeded else false
+   * @return {boolean} True if succeeded else false
    */
   setStore(id, value2, autoload = false) {
     let autoVars = {};
@@ -7580,7 +7565,7 @@ var Uib = (_a2 = class {
   /** Attempt to get and re-hydrate a key value from localStorage
    * Note that all uib storage is automatically prefixed using this.storePrefix
    * @param {*} id The key of the value to attempt to retrieve
-   * @returns {*|null|undefined} The re-hydrated value of the key or null if key not found, undefined on error
+   * @return {*|null|undefined} The re-hydrated value of the key or null if key not found, undefined on error
    */
   getStore(id) {
     try {
@@ -7603,13 +7588,13 @@ var Uib = (_a2 = class {
     }
   }
   /** Returns a list of the externally accessible command functions that are available to be called from Node-RED
-   * @returns {string[]} List of externally accessible command functions
+   * @return {string[]} List of externally accessible command functions
    */
   getCommandList() {
     return __privateGet(this, _extCommands);
   }
   /** Returns a list of uibuilder properties (variables) that can be watched with onChange
-   * @returns {Object<string,string>} List of uibuilder managed variables
+   * @return {Object<string,string>} List of uibuilder managed variables
    */
   getManagedVarList() {
     return __privateGet(this, _managedVars);
@@ -7636,7 +7621,7 @@ var Uib = (_a2 = class {
    *
    * @param {string} prop The property of uibuilder that we want to monitor
    * @param {Function} callback The function that will run when the property changes, parameter is the new value of the property after change
-   * @returns {number} A reference to the callback to cancel, save and pass to uibuilder.cancelChange if you need to remove a listener
+   * @return {number} A reference to the callback to cancel, save and pass to uibuilder.cancelChange if you need to remove a listener
    */
   onChange(prop, callback) {
     if (!__privateGet(this, _propChangeCallbacks)[prop]) __privateGet(this, _propChangeCallbacks)[prop] = { _nextRef: 1 };
@@ -7664,16 +7649,16 @@ var Uib = (_a2 = class {
    *
    * @param {string} topic The msg.topic we want to listen for
    * @param {Function} callback The function that will run when an appropriate msg is received. `this` inside the callback as well as the cb's single argument is the received msg.
-   * @returns {number} A reference to the callback to cancel, save and pass to uibuilder.cancelTopic if you need to remove a listener
+   * @return {number} A reference to the callback to cancel, save and pass to uibuilder.cancelTopic if you need to remove a listener
    */
   onTopic(topic, callback) {
     if (!__privateGet(this, _msgRecvdByTopicCallbacks)[topic]) __privateGet(this, _msgRecvdByTopicCallbacks)[topic] = { _nextRef: 1 };
     else __privateGet(this, _msgRecvdByTopicCallbacks)[topic]._nextRef++;
     const nextCbRef = __privateGet(this, _msgRecvdByTopicCallbacks)[topic]._nextRef;
     const msgRecvdEvtCallback = __privateGet(this, _msgRecvdByTopicCallbacks)[topic][nextCbRef] = function msgRecvdEvtCallback2(e) {
-      const msg = e.detail;
-      if (msg.topic === topic) {
-        callback.call(msg, msg);
+      const msg2 = e.detail;
+      if (msg2.topic === topic) {
+        callback.call(msg2, msg2);
       }
     };
     document.addEventListener("uibuilder:stdMsgReceived", msgRecvdEvtCallback);
@@ -7717,7 +7702,7 @@ var Uib = (_a2 = class {
   // #region ------- General Utility Functions -------- //
   /** Check supplied msg from server for a timestamp - if received, work out & store difference to browser time
    * @param {object} receivedMsg A message object recieved from Node-RED
-   * @returns {void} Updates self.serverTimeOffset if different to previous value
+   * @return {void} Updates self.serverTimeOffset if different to previous value
    * @private
    */
   _checkTimestamp(receivedMsg) {
@@ -7730,23 +7715,34 @@ var Uib = (_a2 = class {
       }
     }
   }
-  /** Set up an event listener to watch for hash changes
-   * and set the watchable urlHash variable
+  /** Set a value at a dotted/bracketed property path on an object
+   * e.g. _setNestedPath(obj, 'a.b["c"]', value) => obj.a.b.c = value
+   * Creates intermediate objects if they don't exist
+   * @param {object} obj The object to set the value on
+   * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
+   * @param {*} value The value to set
+   * @return {boolean} True if successful, false otherwise
    * @private
    */
-  _watchHashChanges() {
-    this.set("urlHash", location.hash);
-    window.addEventListener("hashchange", (event2) => {
-      this.set("urlHash", location.hash);
-      if (__privateGet(this, _sendUrlHash) === true) {
-        this.send({ topic: "hashChange", payload: location.hash, newHash: this.keepHashFromUrl(event2.newURL), oldHash: this.keepHashFromUrl(event2.oldURL) });
+  _setNestedPath(obj, path, value2) {
+    if (!obj || !path) return false;
+    const keys = path.replace(/\[["'`]?/g, ".").replace(/["'`]?\]/g, "").split(".").filter(Boolean);
+    let current = obj;
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i];
+      if (current[key] == null || typeof current[key] !== "object") {
+        current[key] = {};
       }
-    });
+      current = current[key];
+    }
+    const finalKey = keys[keys.length - 1];
+    current[finalKey] = value2;
+    return true;
   }
   /** Returns a new array containing the intersection of the 2 input arrays
    * @param {Array} a1 Array to check
    * @param {Array} a2 Array to intersect
-   * @returns {Array} The intersection of the 2 arrays (may be an empty array)
+   * @return {Array} The intersection of the 2 arrays (may be an empty array)
    */
   arrayIntersect(a1, a2) {
     return a1.filter((uName) => a2.includes(uName));
@@ -7764,17 +7760,36 @@ var Uib = (_a2 = class {
     navigator.clipboard.writeText(data);
   }
   // --- End of copyToClipboard --- //
+  /** Creates a sandboxed evaluator function for string expressions that can reference properties on a provided context object
+   *  A safer alternative to using eval()
+   * - Uses the Function constructor to create a new function with the context passed as an argument,
+   *   and uses a with() block to allow direct access to context properties.
+   * - Catches and logs any errors during function creation, returning a safe default function that returns false if creation fails.
+   * @param {string} expression - The expression to evaluate
+   * @return {Function} - Evaluator function
+   */
+  createSafeEvaluator(expression) {
+    if (typeof expression !== "string" || expression.trim() === "") {
+      throw new Error("Expression must be a non-empty string");
+    }
+    try {
+      return new Function("context", "\n                // 'use strict';\n                with (context) {\n                    return (".concat(expression, ");\n                }\n            "));
+    } catch (error) {
+      log("error", "uibuilder:createSafeEvaluator", "Failed to create evaluator:", error)();
+      return () => false;
+    }
+  }
   /** Does the chosen CSS Selector currently exist?
    * Automatically sends a msg back to Node-RED unless turned off.
    * @param {string} cssSelector Required. CSS Selector to examine for visibility
    * @param {boolean} [msg] Optional, default=true. If true also sends a message back to Node-RED
-   * @returns {boolean} True if the element exists
+   * @return {boolean} True if the element exists
    */
-  elementExists(cssSelector, msg = true) {
+  elementExists(cssSelector, msg2 = true) {
     const el = document.querySelector(cssSelector);
     let exists = false;
     if (el !== null) exists = true;
-    if (msg === true) {
+    if (msg2 === true) {
       this.send({
         payload: exists,
         info: 'Element "'.concat(cssSelector, '" ').concat(exists ? "exists" : "does not exist")
@@ -7782,12 +7797,46 @@ var Uib = (_a2 = class {
     }
     return exists;
   }
+  /** Creates a safe evaluator function for template (string) expressions. A safer alternative to using eval()
+   * - will retry several times if variables are not yet available, and defaults to false if still not successful after retries.
+   * @param {string} expression - The expression to evaluate (e.g., "pageData.status || pageData.since")
+   * @param {object} context - The context object containing variables (e.g., { pageData })
+   * @param {object} options - Configuration options
+   * @return {Promise<boolean>} - Resolves to true/false
+   */
+  async evaluateWithRetry(expression, context, options = {}) {
+    const {
+      maxRetries = 3,
+      retryDelay = 300,
+      defaultValue = false
+    } = options;
+    const evaluator = this.createSafeEvaluator(expression);
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const result = evaluator(context);
+        if (result !== void 0 && result !== null) {
+          return result;
+        }
+        if (attempt === maxRetries) {
+          return defaultValue;
+        }
+        await this.sleep(retryDelay);
+      } catch (error) {
+        console.warn("Evaluation attempt ".concat(attempt + 1, " failed:"), error.message);
+        if (attempt === maxRetries) {
+          return defaultValue;
+        }
+        await this.sleep(retryDelay);
+      }
+    }
+    return defaultValue;
+  }
   /** Format a number using the INTL standard library - compatible with uib-var filter function
    * @param {number} value Number to format
    * @param {number} decimalPlaces Number of decimal places to include. Default=no default
    * @param {string} intl standard locale spec, e.g. "ja-JP" or "en-GB". Default=navigator.language
    * @param {object} opts INTL library options object. Optional
-   * @returns {string} formatted number
+   * @return {string} formatted number
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString
    */
   formatNumber(value2, decimalPlaces, intl, opts) {
@@ -7812,7 +7861,7 @@ var Uib = (_a2 = class {
   }
   /** Attempt to get rough size of an object
    * @param {*} obj Any serialisable object
-   * @returns {number|undefined} Rough size of object in bytes or undefined
+   * @return {number|undefined} Rough size of object in bytes or undefined
    */
   getObjectSize(obj) {
     let size;
@@ -7827,22 +7876,36 @@ var Uib = (_a2 = class {
     return size;
   }
   /** Returns true if a uibrouter instance is loaded, otherwise returns false
-   * @returns {boolean} true if uibrouter instance loaded else false
+   * @return {boolean} true if uibrouter instance loaded else false
    */
   hasUibRouter() {
     return !!this.uibrouterinstance;
   }
+  /** Check if something is an object
+   * @param {*} value value to check
+   * @return {boolean} True if an object
+   */
+  isObject(value2) {
+    return typeof value2 === "object" && value2 !== null;
+  }
+  /** Return true if the value is primative (string, number, etc)
+   * @param {*} value Input to test
+   * @return {boolean} True if a primative value
+   */
+  isPrimitive(value2) {
+    return value2 === null || typeof value2 !== "object" && typeof value2 !== "function";
+  }
   /** Check if an attribute name is a uibuilder-specific attribute.
    * Matches names starting with 'uib-', 'data-uib-', or ':'.
    * @param {string} name The attribute name to check
-   * @returns {boolean} True if the attribute name is a uib attribute
+   * @return {boolean} True if the attribute name is a uib attribute
    */
   isUibAttribute(name2) {
     return name2.startsWith("uib-") || name2.startsWith("data-uib-") || name2.startsWith(":");
   }
   /** Only keep the URL Hash & ignoring query params
    * @param {string} url URL to extract the hash from
-   * @returns {string} Just the route id
+   * @return {string} Just the route id
    */
   keepHashFromUrl(url2) {
     if (!url2) return "";
@@ -7867,7 +7930,7 @@ var Uib = (_a2 = class {
    * If not null, moves "thing" to {payload:thing}
    * @param {*} thing Thing to check
    * @param {string} [property] property that "thing" is moved to if not null and not an object. Default='payload'
-   * @returns {!object} _
+   * @return {!object} _
    */
   makeMeAnObject(thing, property) {
     if (!property) property = "payload";
@@ -7886,7 +7949,7 @@ var Uib = (_a2 = class {
   // --- End of make me an object --- //
   /** Navigate to a new page or a new route (hash)
    * @param {string} url URL to navigate to. Can be absolute or relative (to current page) or just a hash for a route change
-   * @returns {Location} The new window.location string
+   * @return {Location} The new window.location string
    */
   navigate(url2) {
     if (url2) window.location.href = url2;
@@ -7895,20 +7958,21 @@ var Uib = (_a2 = class {
   /** Create and return a randomised UUID
    * Uses the browsers crypto library if available (newer browsers)
    * or something based on the timestamp and a random number
-   * @returns {string} The UUID
+   * @return {string} The UUID
    */
   randomUUID() {
     return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "".concat(Date.now(), "-").concat(Math.random().toString(36).substring(2, 11));
   }
   /** Wrap a provided variable in a proxy object so that it can be used reactively
+   * Uses the Reactive module
    * @param {*} srcvar The source variable to wrap
-   * @returns {Proxy} A proxy object that can be used reactively
+   * @return {Proxy} A proxy object that can be used reactively
    */
   reactive(srcvar) {
     return reactive(srcvar);
   }
   /** Get the Reactive class for advanced usage
-   * @returns {Function} The Reactive class constructor
+   * @return {Function} The Reactive class constructor
    * @example
    * const ReactiveClass = uib.getReactiveClass()
    * const reactiveInstance = new ReactiveClass(data, customEventDispatcher)
@@ -7917,30 +7981,11 @@ var Uib = (_a2 = class {
   getReactiveClass() {
     return Reactive;
   }
-  // ! TODO change ui uib-* attributes to use this
-  /** Convert a string attribute into an variable/constant reference
-   * Used to resolve data sources in attributes
-   * @param {string} path The string path to resolve, must be relative to the `window` global scope
-   * @returns {*} The resolved data source or null
-   */
-  resolveDataSource(path) {
-    try {
-      const parts2 = path.split(/[\.\[\]\'\"]/).filter(Boolean);
-      let data = window;
-      for (const part of parts2) {
-        data = data == null ? void 0 : data[part];
-      }
-      return data;
-    } catch (error) {
-      log("error", "uibuilder:resolveDataSource", 'Error resolving data source "'.concat(path, "\", returned 'null'. ").concat(error.message))();
-      return null;
-    }
-  }
   /** Fast but accurate number rounding (https://stackoverflow.com/a/48764436/1309986 solution 2)
    * Half away from zero method (AKA "commercial" rounding), most common type
    * @param {number} num The number to be rounded
    * @param {number} decimalPlaces Number of DP's to round to
-   * @returns {number} Rounded number
+   * @return {number} Rounded number
    */
   round(num, decimalPlaces) {
     const p = Math.pow(10, decimalPlaces || 0);
@@ -7953,7 +7998,6 @@ var Uib = (_a2 = class {
   setOriginator(originator = "") {
     this.set("originator", originator);
   }
-  // ---- End of setOriginator ---- //
   /** HTTP Ping/Keep-alive - makes a call back to uibuilder's ExpressJS server and receives a 204 response
    * Can be used to keep sessions alive.
    * @example
@@ -7990,13 +8034,19 @@ var Uib = (_a2 = class {
       }, ms));
     }
   }
-  // ---- End of ping ---- //
+  /** Promise-based (async) sleep utility
+   * @param {number} ms - Milliseconds to sleep
+   * @return {Promise<void>} - Resolves after the specified time
+   */
+  sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
   /** Get the current call stack as an array of objects containing file, function, line, column, and raw information.
    * Sheesh! Sometimes JavaScript is a PAIN. The stack property of an Error object is not yet an official standard
    * and is implemented differently across browsers. So we have to do a bunch of parsing to try to get a consistent
    * output across browsers. We will attempt to parse the stack trace in Chromium, Firefox, and Safari formats, and
    * return an array of objects with the same properties for each line of the stack trace.
-   * @returns {Array<{{file:string,function:string,line:number,column:number,raw:string}}>} Stack array
+   * @return {Array<{{file:string,function:string,line:number,column:number,raw:string}}>} Stack array
    */
   stack() {
     function _stackMapChromium(line) {
@@ -8052,16 +8102,15 @@ var Uib = (_a2 = class {
   }
   /** Convert JSON to Syntax Highlighted HTML
    * @param {object} json A JSON/JavaScript Object
-   * @returns {html} Object reformatted as highlighted HTML
+   * @return {html} Object reformatted as highlighted HTML
    */
   syntaxHighlight(json) {
     return syntaxHighlight(json);
   }
-  // --- End of syntaxHighlight --- //
   /** Returns true/false or a default value for truthy/falsy and other values
    * @param {string|number|boolean|*} val The value to test
    * @param {any} deflt Default value to use if the value is not truthy/falsy
-   * @returns {boolean|any} The truth! Or the default
+   * @return {boolean|any} The truth! Or the default
    */
   truthy(val, deflt) {
     let ret;
@@ -8074,7 +8123,7 @@ var Uib = (_a2 = class {
    * see http://stackoverflow.com/a/28592528/3016654
    * since v1.0.10, fixed potential double // issue
    * arguments {string} URL fragments
-   * @returns {string} _
+   * @return {string} _
    */
   urlJoin() {
     const paths = Array.prototype.slice.call(arguments);
@@ -8085,10 +8134,9 @@ var Uib = (_a2 = class {
     }).join("/");
     return url2.replace("//", "/");
   }
-  // ---- End of urlJoin ---- //
   /** Turn on/off/toggle sending URL hash changes back to Node-RED
    * @param {string|number|boolean|undefined} [toggle] Optional on/off/etc
-   * @returns {boolean} True if we will send a msg to Node-RED on a hash change
+   * @return {boolean} True if we will send a msg to Node-RED on a hash change
    */
   watchUrlHash(toggle) {
     __privateSet(this, _sendUrlHash, this.truthy(toggle, __privateGet(this, _sendUrlHash) !== true));
@@ -8099,7 +8147,7 @@ var Uib = (_a2 = class {
    * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
    * Automatically sends a msg back to Node-RED.
    * Requires the element to already exist.
-   * @returns {false} False if not visible
+   * @return {false} False if not visible
    */
   elementIsVisible() {
     const info = "elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex";
@@ -8123,7 +8171,7 @@ var Uib = (_a2 = class {
    * @param {Array<object>|object} data Input data array or object
    * @param {object} opts Table options
    *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
-   * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
+   * @return {HTMLTableElement|HTMLParagraphElement} Output HTML Element
    */
   buildHtmlTable(data, opts = {}) {
     return _ui.buildHtmlTable(data, opts);
@@ -8141,7 +8189,7 @@ var Uib = (_a2 = class {
   /** Converts markdown text input to HTML if the Markdown-IT library is loaded
    * Otherwise simply returns the text
    * @param {string} mdText The input markdown string
-   * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
+   * @return {string} HTML (if Markdown-IT library loaded and parse successful) or original text
    */
   convertMarkdown(mdText) {
     return _ui.convertMarkdown(mdText);
@@ -8217,7 +8265,7 @@ var Uib = (_a2 = class {
   /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
    * Otherwise just returns that HTML as-is.
    * @param {string} html The input HTML string
-   * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+   * @return {string} The sanitised HTML or the original if DOMPurify not loaded
    */
   sanitiseHTML(html) {
     return _ui.sanitiseHTML(html);
@@ -8231,7 +8279,7 @@ var Uib = (_a2 = class {
    *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
    *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
    *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
-   * @returns {object} Object with close() method to manually close the overlay
+   * @return {object} Object with close() method to manually close the overlay
    */
   showOverlay(options) {
     return _ui.showOverlay(options);
@@ -8268,7 +8316,7 @@ var Uib = (_a2 = class {
    * @param {number=} options.replaceRow Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
    * @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
    *
-   * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
+   * @return {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
    */
   tblAddRow(tbl, rowData = {}, options = {}) {
     return _ui.tblAddRow(tbl, rowData, options);
@@ -8289,14 +8337,14 @@ var Uib = (_a2 = class {
    * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
    * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
    * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
-   * @returns {void}
+   * @return {void}
    * @example
    * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
    * @example
    * Ui.showDialog('alert', null, msg)
    */
-  showDialog(type, ui, msg) {
-    _ui.showDialog(type, ui, msg);
+  showDialog(type, ui, msg2) {
+    _ui.showDialog(type, ui, msg2);
   }
   /** Directly manage UI via JSON
    * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
@@ -8307,7 +8355,7 @@ var Uib = (_a2 = class {
   /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
    * @param {string} cssSelector Identify the DOM element to get data from
    * @param {string} [propName] Optional. Specific name of property to get from the element
-   * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
+   * @return {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
    */
   uiGet(cssSelector, propName = null) {
     return _ui.uiGet(cssSelector, propName);
@@ -8321,8 +8369,62 @@ var Uib = (_a2 = class {
     _ui.uiEnhanceElement(el, component);
   }
   // #endregion -- direct to _ui --
-  // ! TODO: Rework attrib handling to allow for uib-* and data-uib-* AND :* attributes
-  //   See other bookmarks as well
+  // TODO: Move these to _ui
+  /** Set multiple DOM dataset properties
+   * @param {HTMLElement} el The element to update
+   * @param {object} newData The dataset object to process
+   * @return {boolean} True if element was updated, else false
+   * @private
+   */
+  setDataset(el, newData) {
+    if (!this.isObject(newData)) {
+      log("error", "uibuilder:setDataset", "newData parameter must be an object")();
+      return false;
+    }
+    try {
+      for (const [key, value2] of Object.entries(newData)) {
+        el.dataset[key] = value2;
+      }
+    } catch (e) {
+      log("error", "uibuilder:setDataset", "Failed to set dataset. Ensure that dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.", e.message)();
+      return false;
+    }
+    return true;
+  }
+  /** Set multiple DOM attributes
+   * @param {HTMLElement} el The element to update
+   * @param {object} attribs The attributes object to process
+   * @return {boolean} True if element was updated, else false
+   */
+  setAttributes(el, attribs) {
+    if (!this.isObject(attribs)) {
+      log("error", "uibuilder:setAttributes", "attributes parameter must be an object")();
+      return false;
+    }
+    try {
+      for (const [key, value2] of Object.entries(attribs)) {
+        el.setAttribute(key, value2);
+      }
+    } catch (e) {
+      log("error", "uibuilder:setAttributes", "Failed to set attributes. Ensure that attributes is an object containing key/value pairs with each key a valid attribute name. Note that values values have to be a string.", e.message)();
+      return false;
+    }
+    return true;
+  }
+  /** Set a DOM value or checked property
+   * @param {HTMLElement} el The element to update
+   * @param {string} value The value/checked object to process
+   * @return {boolean} True if element was updated, else false
+   */
+  setValueOrChecked(el, value2) {
+    if (el.type && (el.type === "checkbox" || el.type === "radio")) {
+      el.checked = this.truthy(value2, false);
+    } else {
+      el.value = value2;
+    }
+    return true;
+  }
+  // #region -- DOM mutation handlers --
   /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
    * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
    *          as possible.
@@ -8357,57 +8459,41 @@ var Uib = (_a2 = class {
       }
     }
   }
-  /** Process a uib-topic attribute by setting up a topic listener and applying received msgs to the element
-   *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
-   * @param {HTMLElement} el The element to process
-   * @param {string} topic The msg topic string to watch for
+  /** Standardised processing of a msg or managed var with extended properties such as payload, attributes, dataset, etc
+   * @param {HTMLElement} el The element to update
+   * @param {string} data The input variable to process
+   * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
+   * @return {boolean} True if element was updated, else false
    * @private
    */
-  _processUibTopic(el, topic) {
-    this.onTopic(topic, (msg) => {
-      msg._uib_processed_by = "_uibAttrScanOne";
-      if (Object.prototype.hasOwnProperty.call(msg, "attributes")) {
-        try {
-          for (const [k, v] of Object.entries(msg.attributes)) {
-            el.setAttribute(k, v);
-          }
-        } catch (e) {
-          log(0, "uibuilder:attribute-processing", "Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.")();
-        }
-      }
-      if (Object.prototype.hasOwnProperty.call(msg, "dataset")) {
-        console.log("uibuilder:dataset-processing", "Processing dataset for element", el, msg.dataset);
-        try {
-          for (const [key, value2] of Object.entries(msg.dataset)) {
-            el.dataset[key] = value2;
-          }
-        } catch (e) {
-          log("error", "uibuilder:dataset-processing", "Failed to set dataset. Ensure that msg.dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.")();
-        }
-      }
-      const hasChecked = Object.prototype.hasOwnProperty.call(msg, "checked");
-      const hasValue = Object.prototype.hasOwnProperty.call(msg, "value");
-      if (hasValue || hasChecked) {
-        if (el.type && (el.type === "checkbox" || el.type === "radio")) {
-          if (hasChecked) el.checked = this.truthy(msg.checked, false);
-          else if (hasValue) el.checked = this.truthy(msg.value, false);
-        } else {
-          if (hasValue) el.value = msg.value;
-          else if (hasChecked) el.value = this.truthy(msg.checked, false);
-        }
-      }
+  _processVarProps(el, data, isIf = false) {
+    if (isIf === true) {
+      data = { if: data };
+    } else {
+      if (this.isPrimitive(data)) data = { payload: data };
+    }
+    if (Object.prototype.hasOwnProperty.call(data, "attributes")) this.setAttributes(el, data.dataset);
+    if (Object.prototype.hasOwnProperty.call(data, "dataset")) this.setDataset(el, data.dataset);
+    const hasChecked = Object.prototype.hasOwnProperty.call(data, "checked");
+    const hasValue = Object.prototype.hasOwnProperty.call(data, "value");
+    if (hasValue || hasChecked) {
+      const value2 = hasChecked ? msg.checked : hasValue ? msg.value : void 0;
+      this.setValueOrChecked(el, value2);
+    }
+    if (Object.prototype.hasOwnProperty.call(data, "payload")) {
       if (el.hasAttribute("content")) {
-        if (Object.prototype.hasOwnProperty.call(msg, "payload")) el.setAttribute("content", msg.payload);
+        el.setAttribute("content", data.payload);
       } else {
-        if (Object.prototype.hasOwnProperty.call(msg, "payload")) this.replaceSlot(el, msg.payload);
+        this.replaceSlot(el, data.payload);
       }
-    });
+    }
+    return true;
   }
   /** Resolve a dotted/bracketed property path on an object
    * e.g. resolveNestedPath(obj, 'a.b["c"]') => obj.a.b.c
    * @param {object} obj The object to resolve from
    * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
-   * @returns {*} The resolved value, or undefined if not found
+   * @return {*} The resolved value, or undefined if not found
    * @private
    */
   _resolveNestedPath(obj, path) {
@@ -8420,38 +8506,27 @@ var Uib = (_a2 = class {
     }
     return current;
   }
-  /** Set a value at a dotted/bracketed property path on an object
-   * e.g. _setNestedPath(obj, 'a.b["c"]', value) => obj.a.b.c = value
-   * Creates intermediate objects if they don't exist
-   * @param {object} obj The object to set the value on
-   * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
-   * @param {*} value The value to set
-   * @returns {boolean} True if successful, false otherwise
+  /** Process a uib-topic custom DOM attribute by setting up a topic listener and applying received msgs to the element
+   *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
+   * @param {HTMLElement} el The element to process
+   * @param {string} topic The msg topic string to watch for
    * @private
    */
-  _setNestedPath(obj, path, value2) {
-    if (!obj || !path) return false;
-    const keys = path.replace(/\[["'`]?/g, ".").replace(/["'`]?\]/g, "").split(".").filter(Boolean);
-    let current = obj;
-    for (let i = 0; i < keys.length - 1; i++) {
-      const key = keys[i];
-      if (current[key] == null || typeof current[key] !== "object") {
-        current[key] = {};
-      }
-      current = current[key];
-    }
-    const finalKey = keys[keys.length - 1];
-    current[finalKey] = value2;
-    return true;
+  _processUibTopic(el, topic) {
+    this.onTopic(topic, (msg2) => {
+      msg2._uib_processed_by = "_processUibTopic";
+      this._processVarProps(el, msg2);
+    });
   }
-  /** Process a uib-var attribute by evaluating the variable reference and applying it to the element
+  /** Process a uib-var custom DOM attribute by evaluating the variable reference and applying it to the element
    *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc).
    *  Supports deep property paths such as "myvar.aprop" or "myvar['bprop']".
    * @param {HTMLElement} el The element to process
    * @param {string} varName The variable name (optionally with property path) to watch for
+   * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
    * @private
    */
-  async _processUibVar(el, varName) {
+  async _processUibVar(el, varName, isIf = false) {
     const dotIdx = varName.indexOf(".");
     const bracketIdx = varName.indexOf("[");
     let sepIdx = -1;
@@ -8460,31 +8535,21 @@ var Uib = (_a2 = class {
     else if (bracketIdx >= 0) sepIdx = bracketIdx;
     const hasSubPath = sepIdx > 0;
     const rootProp = hasSubPath ? varName.substring(0, sepIdx) : varName;
-    const doVar = (rootValue, hasSubPath2) => {
-      let value2 = hasSubPath2 ? this._resolveNestedPath(this, varName) : rootValue;
-      if (typeof value2 !== "object") {
-        value2 = {
-          payload: value2
-        };
+    const doVar = (rootValue, hasSubPath2, isIf2) => {
+      const value2 = hasSubPath2 ? this._resolveNestedPath(this, varName) : rootValue;
+      try {
+        value2._uib_processed_by = "_processUibVar";
+      } catch (e) {
       }
-      if (Object.prototype.hasOwnProperty.call(value2, "payload")) {
-        if (value2.payload == null) return;
-        if (el.hasAttribute("content")) {
-          el.setAttribute("content", value2.payload);
-        } else if (el.hasAttribute("rel")) {
-          el.setAttribute("href", value2.payload);
-        } else {
-          this.replaceSlot(el, value2.payload);
-        }
-      }
+      this._processVarProps(el, value2, isIf2);
+      if (isIf2) el.style.display = this.truthy(value2) ? "" : "none";
     };
     this.onChange(rootProp, (rootValue) => {
-      doVar(rootValue, hasSubPath);
+      doVar(rootValue, hasSubPath, isIf);
     });
-    doVar(await this.evaluateWithRetry(rootProp, this, {}), hasSubPath);
+    doVar(await this.evaluateWithRetry(rootProp, this, {}), hasSubPath, isIf);
   }
-  // ! EXPERIMENTAL - not fully working. Is not reactive.
-  /** Process a uib-if attribute by safely evaluating a JavaScript expression that returns true/false.
+  /** Process a uib-if custom DOM attribute by safely evaluating a JavaScript expression that returns true/false.
    * If true (the default), the element's content is visible. If false, the content is hidden.
    * Uses display style rather than removing content so the element can be shown again later.
    * The expression can reference uibuilder managed variables (e.g. pageData.status) directly
@@ -8494,99 +8559,9 @@ var Uib = (_a2 = class {
    * @private
    */
   async _processUibIf(el, expr) {
-    const result = await this.evaluateWithRetry(expr, this, {});
-    el.style.display = result ? "" : "none";
+    this._processUibVar(el, expr, true);
   }
-  /** Creates a safe evaluator function for template (string) expressions
-   * - will retry several times if variables are not yet available, and defaults to false if still not successful after retries.
-   * @param {string} expression - The expression to evaluate (e.g., "pageData.status || pageData.since")
-   * @param {object} context - The context object containing variables (e.g., { pageData })
-   * @param {object} options - Configuration options
-   * @returns {Promise<boolean>} - Resolves to true/false
-   */
-  async evaluateWithRetry(expression, context, options = {}) {
-    const {
-      maxRetries = 3,
-      retryDelay = 300,
-      defaultValue = false
-    } = options;
-    const evaluator = this.createSafeEvaluator(expression);
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        const result = evaluator(context);
-        if (result !== void 0 && result !== null) {
-          return result;
-        }
-        if (attempt === maxRetries) {
-          return defaultValue;
-        }
-        await this.sleep(retryDelay);
-      } catch (error) {
-        console.warn("Evaluation attempt ".concat(attempt + 1, " failed:"), error.message);
-        if (attempt === maxRetries) {
-          return defaultValue;
-        }
-        await this.sleep(retryDelay);
-      }
-    }
-    return defaultValue;
-  }
-  /** Creates a sandboxed evaluator function for string expressions that can reference properties on a provided context object
-   * - Uses the Function constructor to create a new function with the context passed as an argument, and uses a with() block to allow direct access to context properties.
-   * - Catches and logs any errors during function creation, returning a safe default function that returns false if creation fails.
-   * @param {string} expression - The expression to evaluate
-   * @returns {Function} - Evaluator function
-   */
-  createSafeEvaluator(expression) {
-    if (typeof expression !== "string" || expression.trim() === "") {
-      throw new Error("Expression must be a non-empty string");
-    }
-    try {
-      return new Function("context", "\n                // 'use strict';\n                with (context) {\n                    return (".concat(expression, ");\n                }\n            "));
-    } catch (error) {
-      console.error("Failed to create evaluator:", error);
-      return () => false;
-    }
-  }
-  /** Promise-based (async) sleep utility
-   * @param {number} ms - Milliseconds to sleep
-   * @returns {Promise<void>} - Resolves after the specified time
-   */
-  sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-  // ! EXPERIMENTAL
-  /** Process a uib-bind:* attribute by evaluating the bind value and applying it to the element as the named attribute
-   *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
-   * @param {HTMLElement} el The element to process
-   * @param {string} bindName The name of the attribute to bind
-   * @param {string} bindValue The value to bind to the attribute
-   * @private
-   */
-  _processUibBind(el, bindName, bindValue) {
-    var _a3;
-    let value2 = bindValue;
-    try {
-      value2 = new Function("return (".concat(bindValue, ")"))();
-      log("print", "uibuilder:_uibAttrScanOne", "SUCCESS 1 uib-bind attribute:", bindName, "with value:", value2)();
-    } catch (e) {
-      log("print", "uibuilder:_uibAttrScanOne", "\u{1F7E5}Error 1 uib-bind attribute:", bindName, "with value:", value2)();
-      try {
-        console.log(globalThis);
-        value2 = (_a3 = globalThis[bindValue]) != null ? _a3 : bindValue;
-        log("print", "uibuilder:_uibAttrScanOne", "SUCCESS 2 uib-bind attribute:", bindName, "with value:", value2)();
-      } catch (e2) {
-        log("print", "uibuilder:_uibAttrScanOne", "\u{1F7E5}Error 2 uib-bind attribute:", bindName, "with value:", value2)();
-      }
-    }
-    if (bindName && value2) {
-      el.setAttribute(bindName, value2);
-      if (bindName === "value") el.value = value2;
-    } else {
-      log("warn", "uibuilder:_uibAttrScanOne", "Invalid uib-bind attribute:", bindName, "with value:", value2, "for element:", el)();
-    }
-  }
-  /** Check a single HTML element for uib attributes and add auto-processors as needed.
+  /** Check a single HTML element for uib custom DOM attributes and add auto-processors as needed.
    * Understands uib-prefixed attributes (e.g. uib-topic, uib-var, uib-bind:*, uib-if, etc). Msgs received on the topic can have:
    *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
    *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
@@ -8614,7 +8589,7 @@ var Uib = (_a2 = class {
       }
     }
   }
-  /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
+  /** Check all children of an array of or a single HTML element(s) for uib custom DOM attributes and add auto-processors as needed.
    * WARNING: Can only check for KNOWN attrib names, not all as per the main processing.
    * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
    * @private
@@ -8632,10 +8607,137 @@ var Uib = (_a2 = class {
       }
     }
   }
+  /** Use the Mutation Observer browser API to watch for changes to a single element on the page.
+   * OMG! It is sooo hard to turn the data into something that successfully serialises so it can be sent back to Node-RED!
+   * NB: Each cssSelector creates a unique watcher. Sending the same selector overwrites the previous one.
+   * @param {string} cssSelector A CSS Selector that selects the element to watch for changes
+   * @param {boolean|"toggle"} [startStop] true=start watching the DOM, false=stop. Default='toggle'
+   * @param {boolean} [send] true=Send changes to Node-RED, false=Don't send. Default=true
+   * @param {boolean} [showLog] true=Output changes to log, false=stop. Default=true. Log level is 2 (Info)
+   * @return {boolean} True if the watch is on, false otherwise
+   */
+  uiWatch(cssSelector, startStop = "toggle", send = true, showLog = true) {
+    const targetNode = document.querySelector(cssSelector);
+    if (!targetNode) {
+      log("warn", "uibuilder.module.js:uiWatch", "CSS Selector '".concat(cssSelector, "' not found."))();
+      return false;
+    }
+    if (startStop === "toggle" || startStop === void 0 || startStop === null) {
+      if (__privateGet(this, _uiObservers)[cssSelector]) startStop = false;
+      else startStop = true;
+    }
+    const that = this;
+    if (startStop === true) {
+      __privateGet(this, _uiObservers)[cssSelector] = new MutationObserver(function(mutationList) {
+        const out = [];
+        mutationList.forEach((mu) => {
+          const oMu = {
+            type: mu.type,
+            oldValue: mu.oldValue !== null ? mu.oldValue : void 0
+          };
+          if (mu.addedNodes.length > 0) {
+            oMu.addedNodes = [];
+            mu.addedNodes.forEach((an, i) => {
+              oMu.addedNodes.push(_ui.nodeGet(mu.addedNodes[i]));
+            });
+          }
+          if (mu.removedNodes.length > 0) {
+            oMu.removedNodes = [];
+            mu.removedNodes.forEach((an, i) => {
+              oMu.removedNodes.push(_ui.nodeGet(mu.removedNodes[i]));
+            });
+          }
+          if (mu.type === "attributes") {
+            oMu.attributeName = mu.attributeName;
+            oMu.newValue = mu.target.attributes[mu.attributeName].value;
+          }
+          out.push(oMu);
+        });
+        that._dispatchCustomEvent("uibuilder:domChange", out);
+        if (send === true) {
+          that.send({
+            _ui: {
+              cssSelector,
+              uiChanges: out
+            },
+            topic: that.topic || "DOM Changes for '".concat(cssSelector, "'")
+          });
+        }
+        if (showLog === true) {
+          log("info", "uibuilder.module.js:uiWatch", "DOM Changes for '".concat(cssSelector, "'"), { uiChanges: out }, { mutationList })();
+        }
+      });
+      __privateGet(this, _uiObservers)[cssSelector].observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true });
+      log("trace", "uibuilder.module.js:uiWatch", "Started Watching DOM changes for '".concat(cssSelector, "'"))();
+    } else {
+      __privateGet(this, _uiObservers)[cssSelector].disconnect();
+      delete __privateGet(this, _uiObservers)[cssSelector];
+      log("trace", "uibuilder.module.js:uiWatch", "Stopped Watching DOM changes for '".concat(cssSelector, "'"))();
+    }
+    return startStop;
+  }
+  /** Use the Mutation Observer browser API to watch for and save changes to the HTML
+   * Once the observer is created, it will be reused.
+   * Sending true or undefined will turn on the observer, false turns it off.
+   * saveHtmlCache is called whenever anything changes in the dom. This allows
+   * users to call restoreHtmlFromCache() on page load if desired to completely reload
+   * to the last saved state.
+   * @param {boolean} startStop true=start watching the DOM, false=stop
+   */
+  watchDom(startStop) {
+    const targetNode = document.documentElement;
+    const that = this;
+    if (!this._htmlObserver) {
+      this._htmlObserver = new MutationObserver(function() {
+        this.takeRecords();
+        that.saveHtmlCache();
+      });
+    }
+    if (startStop === true || startStop === void 0) {
+      this._htmlObserver.observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true });
+      log("trace", "uibuilder.module.js:watchDom", "Started Watching and saving DOM changes")();
+    } else {
+      this._htmlObserver.disconnect();
+      log("trace", "uibuilder.module.js:watchDom", "Stopped Watching and saving DOM changes")();
+    }
+  }
+  // ! EXPERIMENTAL - not yet working
+  /** Process a uib-bind:* attribute by evaluating the bind value and applying it to the element as the named attribute
+   *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
+   * @param {HTMLElement} el The element to process
+   * @param {string} bindName The name of the attribute to bind
+   * @param {string} bindValue The value to bind to the attribute
+   * @private
+   */
+  _processUibBind(el, bindName, bindValue) {
+    var _a3;
+    log("print", "uibuilder:_uibAttrScanOne", "Processing uib-bind:", bindName, "for element:", el)();
+    let value2 = bindValue;
+    try {
+      value2 = new Function("return (".concat(bindValue, ")"))();
+      log("print", "uibuilder:_uibAttrScanOne", "SUCCESS 1 uib-bind attribute:", bindName, "with value:", value2)();
+    } catch (e) {
+      log("print", "uibuilder:_uibAttrScanOne", "\u{1F7E5}Error 1 uib-bind attribute:", bindName, "with value:", value2)();
+      try {
+        console.log(globalThis);
+        value2 = (_a3 = globalThis[bindValue]) != null ? _a3 : bindValue;
+        log("print", "uibuilder:_uibAttrScanOne:_processUibBind", "SUCCESS 2 uib-bind attribute:", bindName, "with value:", value2)();
+      } catch (e2) {
+        log("print", "uibuilder:_uibAttrScanOne:_processUibBind", "\u{1F7E5}Error 2 uib-bind attribute:", bindName, "with value:", value2)();
+      }
+    }
+    if (bindName && value2) {
+      el.setAttribute(bindName, value2);
+      if (bindName === "value") el.value = value2;
+    } else {
+      log("warn", "uibuilder:_uibAttrScanOne:_processUibBind", "Invalid uib-bind attribute:", bindName, "with value:", value2, "for element:", el)();
+    }
+  }
+  // #endregion -- DOM mutation handlers --
   /** Given a FileList array, send each file to Node-RED and return file metadata
    * @param {HTMLInputElement} srcEl Reference to the source input element
    * @param {boolean=} noSend If true, don't send the file to Node-RED. Default is to send.
-   * @returns {Array<object>} Metadata values from all files
+   * @return {Array<object>} Metadata values from all files
    * @private
    */
   _processFilesInput(srcEl, noSend = false) {
@@ -8660,11 +8762,24 @@ var Uib = (_a2 = class {
     }
     return value2;
   }
-  /** Easy creation/change of DOM elements, @see ./tinyDom.js */
+  /** Set up an event listener to watch for DOM hash changes
+   * and set the watchable urlHash variable
+   * @private
+   */
+  _watchHashChanges() {
+    this.set("urlHash", location.hash);
+    window.addEventListener("hashchange", (event2) => {
+      this.set("urlHash", location.hash);
+      if (__privateGet(this, _sendUrlHash) === true) {
+        this.send({ topic: "hashChange", payload: location.hash, newHash: this.keepHashFromUrl(event2.newURL), oldHash: this.keepHashFromUrl(event2.oldURL) });
+      }
+    });
+  }
+  // TODO (FUTURE) Easy creation/change of DOM elements, @see ./tinyDom.js
   // dom = dom
   /** Attempt to get target attributs - can fail for certain target types, if so, returns empty object
    * @param {HTMLElement} el Target element
-   * @returns {object} Array of key/value HTML attribute objects
+   * @return {object} Array of key/value HTML attribute objects
    */
   getElementAttributes(el) {
     const ignoreAttribs = ["class", "id", "name"];
@@ -8688,7 +8803,7 @@ var Uib = (_a2 = class {
   }
   /** Check for CSS Classes and return as array if found or undefined if not
    * @param {HTMLElement} el Target element
-   * @returns {Array|undefined} Array of class names
+   * @return {Array|undefined} Array of class names
    */
   getElementClasses(el) {
     let classes;
@@ -8701,7 +8816,7 @@ var Uib = (_a2 = class {
   /** Get target custom properties - only shows custom props not element default ones
    * Excludes custom props starting with _
    * @param {HTMLElement} el Target element
-   * @returns {object} Object of propname/value pairs
+   * @return {object} Object of propname/value pairs
    */
   getElementCustomProps(el) {
     const props = {};
@@ -8714,7 +8829,7 @@ var Uib = (_a2 = class {
   /** Check for el.value and el.checked. el.checked will also set the value return for ease of use.
    * Only 2 input types use el.checked, different from all other input types - this is annoying.
    * @param {HTMLElement} el HTML Element to be checked
-   * @returns {{value:boolean|null, checked:boolean|null}} Return null if properties not present, else the appropriate value
+   * @return {{value:boolean|null, checked:boolean|null}} Return null if properties not present, else the appropriate value
    */
   getFormElementValue(el) {
     let value2 = null;
@@ -8745,7 +8860,7 @@ var Uib = (_a2 = class {
   // ! TODO - Handle fieldsets
   /** For HTML Form elements (e.g. input, textarea, select), return the details
    * @param {HTMLFormElement} el Source form element
-   * @returns {object|null} Form element key details
+   * @return {object|null} Form element key details
    */
   getFormElementDetails(el) {
     if (!el.type) {
@@ -8796,7 +8911,7 @@ var Uib = (_a2 = class {
    * uibuilder.notify(notifyConfig).then( res => uibuilder.eventSend(res) )
    * @see https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
    * @param {object|string} config Notification config data or simple message string
-   * @returns {Promise<Event>|null} A promise that resolves to the click event or null
+   * @return {Promise<Event>|null} A promise that resolves to the click event or null
    */
   notify(config) {
     if (config.return) return _ui.notification(config);
@@ -8809,7 +8924,7 @@ var Uib = (_a2 = class {
   }
   /** Get or create a (hopefully) unique ID
    * @param {HTMLFormElement} el Source form element
-   * @returns {string|null} A hopefully unique element ID
+   * @return {string|null} A hopefully unique element ID
    */
   returnElementId(el) {
     return el.id !== "" ? el.id : el.name !== "" ? "".concat(el.name, "-").concat(++__privateWrapper(this, _uniqueElID)._) : el.type ? "".concat(el.type, "-").concat(++__privateWrapper(this, _uniqueElID)._) : "".concat(el.localName, "-").concat(++__privateWrapper(this, _uniqueElID)._);
@@ -8818,7 +8933,7 @@ var Uib = (_a2 = class {
    * https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
    * @param {string} [cssSelector] Optional. If not set, scrolls to top of page.
    * @param {{block:(string|undefined),inline:(string|undefined),behavior:(string|undefined)}} [opts] Optional. DOM scrollIntoView options
-   * @returns {boolean} True if element was found, false otherwise
+   * @return {boolean} True if element was found, false otherwise
    */
   scrollTo(cssSelector, opts) {
     if (!opts) opts = {};
@@ -8838,7 +8953,7 @@ var Uib = (_a2 = class {
    * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
    * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
    * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
-   * @returns {boolean} New state
+   * @return {boolean} New state
    */
   showMsg(showHide, parent = "body") {
     if (showHide === void 0) showHide = !__privateGet(this, _isShowMsg);
@@ -8905,7 +9020,7 @@ var Uib = (_a2 = class {
    * The display is updated by an event listener created in the class constructor.
    * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
    * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
-   * @returns {boolean} New state
+   * @return {boolean} New state
    */
   showStatus(showHide, parent = "body") {
     if (showHide === void 0) showHide = !__privateGet(this, _isShowStatus);
@@ -8967,103 +9082,7 @@ var Uib = (_a2 = class {
     _ui._uiReplace(root);
     return showHide;
   }
-  /** Use the Mutation Observer browser API to watch for changes to a single element on the page.
-   * OMG! It is sooo hard to turn the data into something that successfully serialises so it can be sent back to Node-RED!
-   * NB: Each cssSelector creates a unique watcher. Sending the same selector overwrites the previous one.
-   * @param {string} cssSelector A CSS Selector that selects the element to watch for changes
-   * @param {boolean|"toggle"} [startStop] true=start watching the DOM, false=stop. Default='toggle'
-   * @param {boolean} [send] true=Send changes to Node-RED, false=Don't send. Default=true
-   * @param {boolean} [showLog] true=Output changes to log, false=stop. Default=true. Log level is 2 (Info)
-   * @returns {boolean} True if the watch is on, false otherwise
-   */
-  uiWatch(cssSelector, startStop = "toggle", send = true, showLog = true) {
-    const targetNode = document.querySelector(cssSelector);
-    if (!targetNode) {
-      log("warn", "uibuilder.module.js:uiWatch", "CSS Selector '".concat(cssSelector, "' not found."))();
-      return false;
-    }
-    if (startStop === "toggle" || startStop === void 0 || startStop === null) {
-      if (__privateGet(this, _uiObservers)[cssSelector]) startStop = false;
-      else startStop = true;
-    }
-    const that = this;
-    if (startStop === true) {
-      __privateGet(this, _uiObservers)[cssSelector] = new MutationObserver(function(mutationList) {
-        const out = [];
-        mutationList.forEach((mu) => {
-          const oMu = {
-            type: mu.type,
-            oldValue: mu.oldValue !== null ? mu.oldValue : void 0
-          };
-          if (mu.addedNodes.length > 0) {
-            oMu.addedNodes = [];
-            mu.addedNodes.forEach((an, i) => {
-              oMu.addedNodes.push(_ui.nodeGet(mu.addedNodes[i]));
-            });
-          }
-          if (mu.removedNodes.length > 0) {
-            oMu.removedNodes = [];
-            mu.removedNodes.forEach((an, i) => {
-              oMu.removedNodes.push(_ui.nodeGet(mu.removedNodes[i]));
-            });
-          }
-          if (mu.type === "attributes") {
-            oMu.attributeName = mu.attributeName;
-            oMu.newValue = mu.target.attributes[mu.attributeName].value;
-          }
-          out.push(oMu);
-        });
-        that._dispatchCustomEvent("uibuilder:domChange", out);
-        if (send === true) {
-          that.send({
-            _ui: {
-              cssSelector,
-              uiChanges: out
-            },
-            topic: that.topic || "DOM Changes for '".concat(cssSelector, "'")
-          });
-        }
-        if (showLog === true) {
-          log("info", "uibuilder.module.js:uiWatch", "DOM Changes for '".concat(cssSelector, "'"), { uiChanges: out }, { mutationList })();
-        }
-      });
-      __privateGet(this, _uiObservers)[cssSelector].observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true });
-      log("trace", "uibuilder.module.js:uiWatch", "Started Watching DOM changes for '".concat(cssSelector, "'"))();
-    } else {
-      __privateGet(this, _uiObservers)[cssSelector].disconnect();
-      delete __privateGet(this, _uiObservers)[cssSelector];
-      log("trace", "uibuilder.module.js:uiWatch", "Stopped Watching DOM changes for '".concat(cssSelector, "'"))();
-    }
-    return startStop;
-  }
-  // ---- End of watchDom ---- //
-  /** Use the Mutation Observer browser API to watch for and save changes to the HTML
-   * Once the observer is created, it will be reused.
-   * Sending true or undefined will turn on the observer, false turns it off.
-   * saveHtmlCache is called whenever anything changes in the dom. This allows
-   * users to call restoreHtmlFromCache() on page load if desired to completely reload
-   * to the last saved state.
-   * @param {boolean} startStop true=start watching the DOM, false=stop
-   */
-  watchDom(startStop) {
-    const targetNode = document.documentElement;
-    const that = this;
-    if (!this._htmlObserver) {
-      this._htmlObserver = new MutationObserver(function() {
-        this.takeRecords();
-        that.saveHtmlCache();
-      });
-    }
-    if (startStop === true || startStop === void 0) {
-      this._htmlObserver.observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true });
-      log("trace", "uibuilder.module.js:watchDom", "Started Watching and saving DOM changes")();
-    } else {
-      this._htmlObserver.disconnect();
-      log("trace", "uibuilder.module.js:watchDom", "Stopped Watching and saving DOM changes")();
-    }
-  }
-  // ---- End of watchDom ---- //
-  // #endregion -------- -------- -------- //
+  // #endregion -------- UI/DOM handlers -------- //
   // #region ------- HTML cache --------- //
   /** Clear the saved DOM from localStorage */
   clearHtmlCache() {
@@ -9100,9 +9119,9 @@ var Uib = (_a2 = class {
     if (receivedCtrlMsg === null) {
       receivedCtrlMsg = {};
     } else if (typeof receivedCtrlMsg !== "object") {
-      const msg = {};
-      msg["uibuilderCtrl:" + this._ioChannels.control] = receivedCtrlMsg;
-      receivedCtrlMsg = msg;
+      const msg2 = {};
+      msg2["uibuilderCtrl:" + this._ioChannels.control] = receivedCtrlMsg;
+      receivedCtrlMsg = msg2;
     }
     receivedCtrlMsg._receivedHRtime = ts;
     this._checkTimestamp(receivedCtrlMsg);
@@ -9145,7 +9164,7 @@ var Uib = (_a2 = class {
   // -- End of websocket receive CONTROL msg from Node-RED -- //
   /** Do we want to process something? Check pageName, clientId, tabId. Defaults to yes.
    * @param {*} obj Either a msg._ui or msg._uib object to check
-   * @returns {boolean} True if we should process the inbound _ui/_uib msg, false if not.
+   * @return {boolean} True if we should process the inbound _ui/_uib msg, false if not.
    * @private
    */
   _forThis(obj) {
@@ -9168,39 +9187,39 @@ var Uib = (_a2 = class {
    * @param {object} msg The message received from Node-RED
    * @private
    */
-  _msgRcvdEvents(msg) {
-    this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
-    if (msg.topic) this._dispatchCustomEvent("uibuilder:msg:topic:".concat(msg.topic), msg);
-    if (msg._uib_processed_by) return;
-    msg._uib_processed_by = "_msgRcvdEvents";
-    if (msg._uib) {
-      if (!this._forThis(msg._uib)) return;
-      if (msg._uib.reload === true) {
+  _msgRcvdEvents(msg2) {
+    this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg2);
+    if (msg2.topic) this._dispatchCustomEvent("uibuilder:msg:topic:".concat(msg2.topic), msg2);
+    if (msg2._uib_processed_by) return;
+    msg2._uib_processed_by = "_msgRcvdEvents";
+    if (msg2._uib) {
+      if (!this._forThis(msg2._uib)) return;
+      if (msg2._uib.reload === true) {
         log("trace", "Uib:_msgRcvdEvents:_uib:reload", "reloading")();
-        msg._uib_processed_by = "_msgRcvdEvents - reload";
+        msg2._uib_processed_by = "_msgRcvdEvents - reload";
         location.reload();
         return;
       }
-      if (msg._uib.command) {
-        msg._uib_processed_by = "_msgRcvdEvents - remote command";
-        this._uibCommand(msg);
+      if (msg2._uib.command) {
+        msg2._uib_processed_by = "_msgRcvdEvents - remote command";
+        this._uibCommand(msg2);
         return;
       }
-      if (msg._uib.componentRef === "globalNotification") {
-        msg._uib_processed_by = "_msgRcvdEvents - globalNotification";
-        _ui.showDialog("notify", msg._uib.options, msg);
+      if (msg2._uib.componentRef === "globalNotification") {
+        msg2._uib_processed_by = "_msgRcvdEvents - globalNotification";
+        _ui.showDialog("notify", msg2._uib.options, msg2);
       }
-      if (msg._uib.componentRef === "globalAlert") {
-        msg._uib_processed_by = "_msgRcvdEvents - globalAlert";
-        _ui.showDialog("alert", msg._uib.options, msg);
+      if (msg2._uib.componentRef === "globalAlert") {
+        msg2._uib_processed_by = "_msgRcvdEvents - globalAlert";
+        _ui.showDialog("alert", msg2._uib.options, msg2);
       }
     }
-    if (msg._ui) {
-      if (!this._forThis(msg._ui)) return;
+    if (msg2._ui) {
+      if (!this._forThis(msg2._ui)) return;
       log("trace", "Uib:_msgRcvdEvents:_ui", "Calling _uiManager")();
-      msg._uib_processed_by = "_msgRcvdEvents - _ui";
-      this._dispatchCustomEvent("uibuilder:msg:_ui", msg);
-      _ui._uiManager(msg);
+      msg2._uib_processed_by = "_msgRcvdEvents - _ui";
+      this._dispatchCustomEvent("uibuilder:msg:_ui", msg2);
+      _ui._uiManager(msg2);
     }
   }
   /** Internal send fn. Send a standard or control msg back to Node-RED via Socket.IO
@@ -9267,6 +9286,7 @@ var Uib = (_a2 = class {
     receivedMsg._receivedHRtime = ts;
     if (receivedMsg._uib && !this._forThis(receivedMsg._uib)) return;
     if (receivedMsg._ui && !this._forThis(receivedMsg._ui)) return;
+    receivedMsg._from = "server";
     this._checkTimestamp(receivedMsg);
     this.set("msgsReceived", ++this.msgsReceived);
     this._msgRcvdEvents(receivedMsg);
@@ -9280,23 +9300,23 @@ var Uib = (_a2 = class {
    * @param {object} msg Msg from Node-RED containing a msg._uib object
    * @private
    */
-  _uibCommand(msg) {
+  _uibCommand(msg2) {
     var _a3, _b, _c, _d, _e, _f, _g, _h, _i;
-    if (!msg._uib || !msg._uib.command) {
-      log("error", "uibuilder:_uibCommand", "Invalid command message received", { msg })();
-      msg.payload = msg.error = "Invalid command message received";
-      this.send(msg);
+    if (!msg2._uib || !msg2._uib.command) {
+      log("error", "uibuilder:_uibCommand", "Invalid command message received", { msg: msg2 })();
+      msg2.payload = msg2.error = "Invalid command message received";
+      this.send(msg2);
       return;
     }
-    const cmd = msg._uib.command;
+    const cmd = msg2._uib.command;
     if (!__privateGet(this, _extCommands).includes(cmd.trim())) {
       log("error", "Uib:_uibCommand", "Command '".concat(cmd, " is not allowed to be called externally"))();
       return;
     }
-    const prop = (_a3 = msg._uib) == null ? void 0 : _a3.prop;
-    const value2 = (_b = msg._uib) == null ? void 0 : _b.value;
-    const quiet = (_g = (_f = (_c = msg._uib) == null ? void 0 : _c.quiet) != null ? _f : (_e = (_d = msg._uib) == null ? void 0 : _d.options) == null ? void 0 : _e.quiet) != null ? _g : false;
-    const options = (_i = (_h = msg._uib) == null ? void 0 : _h.options) != null ? _i : { type: prop, title: value2, quiet };
+    const prop = (_a3 = msg2._uib) == null ? void 0 : _a3.prop;
+    const value2 = (_b = msg2._uib) == null ? void 0 : _b.value;
+    const quiet = (_g = (_f = (_c = msg2._uib) == null ? void 0 : _c.quiet) != null ? _f : (_e = (_d = msg2._uib) == null ? void 0 : _d.options) == null ? void 0 : _e.quiet) != null ? _g : false;
+    const options = (_i = (_h = msg2._uib) == null ? void 0 : _h.options) != null ? _i : { type: prop, title: value2, quiet };
     let response, info;
     switch (cmd) {
       // case 'elementIsVisible': { // temporarily deprecated
@@ -9346,9 +9366,9 @@ var Uib = (_a2 = class {
       case "set": {
         let store = false;
         let autoload = false;
-        if (msg._uib.options && msg._uib.options.store) {
-          if (msg._uib.options.store === true) store = true;
-          if (msg._uib.options.autoload === true) autoload = true;
+        if (msg2._uib.options && msg2._uib.options.store) {
+          if (msg2._uib.options.store === true) store = true;
+          if (msg2._uib.options.autoload === true) autoload = true;
         }
         response = this.set(prop, value2, store, autoload);
         break;
@@ -9362,7 +9382,7 @@ var Uib = (_a2 = class {
         break;
       }
       case "showOverlay": {
-        if (msg.payload && !(options == null ? void 0 : options.content)) options.content = msg.payload;
+        if (msg2.payload && !(options == null ? void 0 : options.content)) options.content = msg2.payload;
         response = this.showOverlay(options);
         break;
       }
@@ -9389,19 +9409,19 @@ var Uib = (_a2 = class {
       }
       if (Object(response).constructor === Promise) {
         response.then((data) => {
-          msg.payload = msg._uib.response = data;
-          msg.info = msg._uib.info = info;
-          if (!msg.topic) msg.topic = this.topic || "uib ".concat(cmd, " for '").concat(prop, "'");
-          this.send(msg);
+          msg2.payload = msg2._uib.response = data;
+          msg2.info = msg2._uib.info = info;
+          if (!msg2.topic) msg2.topic = this.topic || "uib ".concat(cmd, " for '").concat(prop, "'");
+          this.send(msg2);
           return true;
         }).catch((err) => {
           log(0, "Uib:_uibCommand", "Error: ", err)();
         });
       } else {
-        msg.payload = msg._uib.response = response;
-        msg.info = msg._uib.info = info;
-        if (!msg.topic) msg.topic = this.topic || "uib ".concat(cmd, " for '").concat(prop, "'");
-        this.send(msg);
+        msg2.payload = msg2._uib.response = response;
+        msg2.info = msg2._uib.info = info;
+        if (!msg2.topic) msg2.topic = this.topic || "uib ".concat(cmd, " for '").concat(prop, "'");
+        this.send(msg2);
       }
     }
   }
@@ -9413,7 +9433,7 @@ var Uib = (_a2 = class {
    * @param {number} [options.timeout] Timeout in milliseconds (default: 60000 = 60 seconds)
    * @param {Function} [options.onSuccess] Optional callback function to call on success. Receives the response msg.
    * @param {string} [options.originator] Optional Node-RED node ID to return the message to
-   * @returns {Promise<object>} Promise that resolves with the response message or rejects on timeout
+   * @return {Promise<object>} Promise that resolves with the response message or rejects on timeout
    * @example
    * // Basic usage
    * const response = await uibuilder.asyncSend({ topic: 'myTopic', payload: 'Hello' })
@@ -9429,19 +9449,19 @@ var Uib = (_a2 = class {
    *     .then(response => console.log('Response:', response))
    *     .catch(err => console.error('Failed:', err))
    */
-  asyncSend(msg, options = {}) {
+  asyncSend(msg2, options = {}) {
     var _a3, _b;
     const timeout = (_a3 = options.timeout) != null ? _a3 : 6e4;
     const onSuccess = options.onSuccess;
     const originator = (_b = options.originator) != null ? _b : "";
-    msg = this.makeMeAnObject(msg, "payload");
+    msg2 = this.makeMeAnObject(msg2, "payload");
     const correlationId = this.randomUUID();
-    if (!msg.topic) {
-      msg.topic = this.topic || "uibuilder/asyncSend";
+    if (!msg2.topic) {
+      msg2.topic = this.topic || "uibuilder/asyncSend";
     }
-    if (!msg._uib) msg._uib = {};
-    msg._uib.correlationId = correlationId;
-    const topic = msg.topic;
+    if (!msg2._uib) msg2._uib = {};
+    msg2._uib.correlationId = correlationId;
+    const topic = msg2.topic;
     return new Promise((resolve, reject) => {
       const cleanup = (tid, lref) => {
         if (tid) clearTimeout(tid);
@@ -9467,8 +9487,8 @@ var Uib = (_a2 = class {
           resolve(responseMsg);
         }
       });
-      log("trace", "Uib:asyncSend", 'Sending async message with topic "'.concat(topic, '" and correlationId "').concat(correlationId, '"'), msg)();
-      this._send(msg, this._ioChannels.client, originator);
+      log("trace", "Uib:asyncSend", 'Sending async message with topic "'.concat(topic, '" and correlationId "').concat(correlationId, '"'), msg2)();
+      this._send(msg2, this._ioChannels.client, originator);
     });
   }
   /** Send log text to uibuilder's beacon endpoint (works even if socket.io not connected)
@@ -9488,17 +9508,17 @@ var Uib = (_a2 = class {
   /** Easily send the entire DOM/HTML msg back to Node-RED
    * @param {string} [originator] A Node-RED node ID to return the message to
    * @param {boolean} [send] If true (default) directly send response to Node-RED. Is false when calling from Node-RED as a command.
-   * @returns {string} The HTML as a string
+   * @return {string} The HTML as a string
    */
   htmlSend(originator = "", send = true) {
     const out = "<!doctype html>\n".concat(document.documentElement.outerHTML);
-    const msg = {
+    const msg2 = {
       payload: out,
       length: out.length,
       topic: this.topic
     };
-    log("trace", "Uib:htmlSend", "Sending full HTML to Node-RED", msg)();
-    if (send === true) this._send(msg, this._ioChannels.client, originator);
+    log("trace", "Uib:htmlSend", "Sending full HTML to Node-RED", msg2)();
+    if (send === true) this._send(msg2, this._ioChannels.client, originator);
     return out;
   }
   /** Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
@@ -9604,7 +9624,7 @@ var Uib = (_a2 = class {
         vibrate: target.vibrate
       };
     }
-    const msg = {
+    const msg2 = {
       // - this may be an empty Object if no data attributes defined
       payload,
       _ui: {
@@ -9630,16 +9650,16 @@ var Uib = (_a2 = class {
         tabId: this.tabId
       }
     };
-    log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg)();
-    this._send(msg, this._ioChannels.client, originator);
+    log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg2)();
+    this._send(msg2, this._ioChannels.client, originator);
   }
   /** Send a standard message to NR
    * @example uibuilder.send({payload:'Hello'})
    * @param {object} msg Message to send
    * @param {string} [originator] A Node-RED node ID to return the message to
    */
-  send(msg, originator = "") {
-    this._send(msg, this._ioChannels.client, originator);
+  send(msg2, originator = "") {
+    this._send(msg2, this._ioChannels.client, originator);
   }
   // ! TODO: Rooms do not auto-reconnect. Add tracking and update _onConnect
   // ! TODO: Add receipt handler on joining a room.
@@ -9650,8 +9670,8 @@ var Uib = (_a2 = class {
    * @param {string} room Name of a Socket.IO pre-defined room.
    * @param {*} msg Message to send
    */
-  sendRoom(room, msg) {
-    this._socket.emit("uib-room-send", room, msg);
+  sendRoom(room, msg2) {
+    this._socket.emit("uib-room-send", room, msg2);
   }
   joinRoom(room) {
     this._socket.emit("uib-room-join", room);
@@ -9662,16 +9682,16 @@ var Uib = (_a2 = class {
   /** Send a control msg to NR
    * @param {object} msg Message to send
    */
-  sendCtrl(msg) {
-    this._send(msg, this._ioChannels.control);
+  sendCtrl(msg2) {
+    this._send(msg2, this._ioChannels.control);
   }
   /**
    * Send a message to Node-RED on a custom channel - use for UIBUILDER 3rd-party custom nodes
    * @param {string} channel The custom channel name to use
    * @param {object} msg The message to send
    */
-  sendCustom(channel, msg) {
-    this._socket.emit(channel, msg);
+  sendCustom(channel, msg2) {
+    this._socket.emit(channel, msg2);
   }
   /** Upload a file to Node-RED over Socket.IO
    * https://developer.mozilla.org/en-US/docs/Web/API/FileReader
@@ -9682,7 +9702,7 @@ var Uib = (_a2 = class {
     const reader = new FileReader();
     reader.onload = (e) => {
       const arrayBuffer = e.target.result;
-      const msg = {
+      const msg2 = {
         topic: this.topic || "file-upload",
         payload: arrayBuffer,
         fileName: file.name,
@@ -9696,20 +9716,20 @@ var Uib = (_a2 = class {
       };
       const maxSize = this.maxHttpBufferSize - 500;
       if (arrayBuffer.byteLength >= maxSize) {
-        msg.payload = void 0;
-        msg.error = "File is too large to send. File size: ".concat(arrayBuffer.byteLength, ". Max msg size: ").concat(maxSize);
-        log("error", "Uib:uploadFile", msg.error)();
+        msg2.payload = void 0;
+        msg2.error = "File is too large to send. File size: ".concat(arrayBuffer.byteLength, ". Max msg size: ").concat(maxSize);
+        log("error", "Uib:uploadFile", msg2.error)();
       }
-      this.send(msg);
+      this.send(msg2);
     };
     reader.readAsArrayBuffer(file);
   }
-  // #endregion -------- ------------ -------- //
+  // #endregion -------- Message Handling -------- //
   // #region ------- Web Worker -------- //
   /** Get HTTP headers that were sent with the page request
    * Uses a web worker to fetch headers from the server.
    * @param {string} [headerName] Optional specific header name to retrieve (case-insensitive)
-   * @returns {Promise<object|string|null>} Promise resolving to all headers object, a specific header value, or null
+   * @return {Promise<object|string|null>} Promise resolving to all headers object, a specific header value, or null
    * @example
    * // Get all headers
    * const allHeaders = await uibuilder.headers()
@@ -9727,7 +9747,7 @@ var Uib = (_a2 = class {
   // }
   /** Get HTTP headers synchronously (may be empty if not yet fetched)
    * @param {string} [headerName] Optional specific header name to retrieve (case-insensitive)
-   * @returns {object|string|null} All headers object, a specific header value, or null
+   * @return {object|string|null} All headers object, a specific header value, or null
    * @example
    * // Get all headers (may be empty if called too early)
    * const allHeaders = uibuilder.headersSync()
@@ -9741,7 +9761,7 @@ var Uib = (_a2 = class {
   //     return this.#headerWorker.getHeaders(headerName)
   // }
   /** Check if HTTP headers have been fetched and are available
-   * @returns {boolean} True if headers are ready to be read
+   * @return {boolean} True if headers are ready to be read
    */
   // get headersReady() {
   //     return this.#headerWorker.isReady
@@ -9761,7 +9781,7 @@ var Uib = (_a2 = class {
    * since 2017-10-21 Improve method to cope with more complex paths - thanks to Steve Rickus @shrickus
    * since 2017-11-10 v1.0.1 Check cookie first then url. cookie works even if the path is more complex (e.g. sub-folder)
    * since 2020-01-25 Removed httpRoot from namespace to prevent proxy induced errors
-   * @returns {string} Socket.IO namespace
+   * @return {string} Socket.IO namespace
    * @private
    */
   _getIOnamespace() {
@@ -9788,7 +9808,7 @@ var Uib = (_a2 = class {
    * @param {number} [delay] Initial delay before checking (ms). Default=2000ms
    * @param {number} [factor] Multiplication factor for subsequent checks (delay*factor). Default=1.5
    * @param {number} [depth] Recursion depth
-   * @returns {boolean|undefined} Whether or not Socket.IO is connected to uibuilder in Node-RED
+   * @return {boolean|undefined} Whether or not Socket.IO is connected to uibuilder in Node-RED
    * @private
    */
   _checkConnect(delay, factor, depth = 1) {
@@ -9866,7 +9886,7 @@ var Uib = (_a2 = class {
   }
   /** Setup Socket.io
    * since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
-   * @returns {boolean} Attaches socket.io manager to self._socket and updates self.ioNamespace & self.ioPath as needed
+   * @return {boolean} Attaches socket.io manager to self._socket and updates self.ioNamespace & self.ioPath as needed
    * @private
    */
   _ioSetup() {
@@ -9965,7 +9985,7 @@ var Uib = (_a2 = class {
    * necessarily work out the correct ioPath to use.
    * Also, if cookies aren't permitted in the browser, both ioPath and ioNamespace may need to be specified.
    * @param {object} [options] The start options object.
-   * @returns {void}
+   * @return {void}
    */
   start(options) {
     log("trace", "Uib:start", "Starting")();
@@ -10248,4 +10268,5 @@ export {
  * @license Apache-2.0
  * @author Julian Knight (Totally Information)
  * @copyright (c) 2022-2026 Julian Knight (Totally Information)
+ * Version: See version var in code
  */

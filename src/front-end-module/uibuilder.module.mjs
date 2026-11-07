@@ -1,7 +1,8 @@
+/* eslint-disable no-useless-assignment */
 /* eslint-disable no-undef */
-/* eslint-disable jsdoc/valid-types */
 /* eslint-disable jsdoc/check-param-names */
 /* eslint-disable @stylistic/no-multi-spaces */
+/* eslint-disable jsdoc/valid-types */
 // @ts-nocheck
 /** This is the source main file for the uibuilder client library
  * @kind module
@@ -15,6 +16,7 @@
  * @license Apache-2.0
  * @author Julian Knight (Totally Information)
  * @copyright (c) 2022-2026 Julian Knight (Totally Information)
+ * Version: See version var in code
  */
 
 const perf = new Map()
@@ -33,10 +35,7 @@ const __uibHeadersPromise = fetch(location.href, { method: 'HEAD', cache: 'no-st
 
 // #region --- Type Defs --- //
 /**
- * A string containing HTML markup
- * @typedef {string} html
- */
-/**
+ * @typedef {string} html A string containing HTML markup
  * @type {import('./libs/uib-worker.mjs').UibHeaderWorker} Reference to header worker
  */
 // #endregion --- Type Defs --- //
@@ -68,7 +67,7 @@ const isMinified = !(/param/).test(function (param) { })
 // #region --- print/console - debugging output functions --- //
 
 /** Custom logging. e.g. log(2, 'here:there', 'jiminy', {fred:'jim'})()
- * @returns {Function} Log function @example log(2, 'here:there', 'jiminy', {fred:'jim'})()
+ * @return {Function} Log function @example log(2, 'here:there', 'jiminy', {fred:'jim'})()
  */
 function log() {
     // Get the args
@@ -249,7 +248,7 @@ log.level = log.default
 
 /** A hack to dynamically load a remote module and wait until it is loaded
  * @param {string} url The URL of the module to load
- * @returns {object|null} Either the result object or null (if the load fails)
+ * @return {object|null} Either the result object or null (if the load fails)
  */
 // function loadModule(url) { // eslint-disable-line no-unused-vars
 //     let done
@@ -270,11 +269,11 @@ log.level = log.default
 //     return done
 // }
 
-/** Convert JSON to Syntax Highlighted HTML
+/** Convert JSON to Syntax Highlighted HTML - uses JsonViewer module if present
  * If the `json-viewer` custom element is registered, delegates to its static
  * `renderToHTML` method. Otherwise falls back to the built-in regex renderer.
  * @param {object} json A JSON/JavaScript Object
- * @returns {html} Object reformatted as highlighted HTML
+ * @return {html} Object reformatted as highlighted HTML
  */
 function syntaxHighlight(json) {
     if (json === undefined) {
@@ -561,7 +560,7 @@ export const Uib = class Uib {
     /** Extract the root property from a nested property path (e.g., 'myvar.aprop' or 'myvar["bprop"]').
      * @private
      * @param {string} prop The property name or nested property path
-     * @returns {Object<boolean, string, string|null>} Whether the prop is a nested path,
+     * @return {Object<boolean, string, string|null>} Whether the prop is a nested path,
      *   the root property name (e.g., 'myvar' from 'myvar.aprop' or 'myvar["bprop"]'),
      *   and the nested path or null if not a nested path
      */
@@ -595,7 +594,7 @@ export const Uib = class Uib {
      * @param {*} val The set value of the property or a string declaring that a protected property cannot be changed
      * @param {boolean} [store] If true, the variable is also saved to the browser localStorage if possible
      * @param {boolean} [autoload] If true & store is true, on load, uib will try to restore the value from the store automatically
-     * @returns {*} Input value
+     * @return {*} Input value
      */
     set(prop, val, store = false, autoload = false) {
         // Check for excluded properties - we don't want people to set these
@@ -643,6 +642,12 @@ export const Uib = class Uib {
         // trigger an event on the prop name, pass both the name and value to the event details
         this._dispatchCustomEvent('uibuilder:propertyChanged', { prop: eventProp, value: eventVal, oldValue: oldVal, store: store, autoload: autoload, })
         this._dispatchCustomEvent(`uibuilder:propertyChanged:${eventProp}`, { prop: eventProp, value: eventVal, oldValue: oldVal, store: store, autoload: autoload, })
+        // if the prop name is "msg", and the change didn't come from the server, also trigger 
+        if (prop === 'msg' && val && val?._from !== 'server') {
+            if (!val?._from) val._from = 'local'
+            this._dispatchCustomEvent('uibuilder:stdMsgReceived', val)
+            if ( val.topic ) this._dispatchCustomEvent(`uibuilder:msg:topic:${val.topic}`, val)
+        }
 
         // And return the (root) value for good measure
         return eventVal
@@ -653,7 +658,7 @@ export const Uib = class Uib {
      * Example: uibuilder.get('msg')
      * Example: uibuilder.get('myvar.nested.prop')
      * @param {string} prop The name of the property to get as long as it does not start with a _ or #
-     * @returns {*|undefined} The current value of the property
+     * @return {*|undefined} The current value of the property
      */
     get(prop) {
         // Handle special properties first - these are either protected or virtual properties that don't exist directly on the uibuilder object
@@ -691,7 +696,7 @@ export const Uib = class Uib {
      * @param {string} id localStorage var name to be used (prefixed with 'uib_')
      * @param {*} value value to write to localstore
      * @param {boolean} [autoload] If true, on load, uib will try to restore the value from the store
-     * @returns {boolean} True if succeeded else false
+     * @return {boolean} True if succeeded else false
      */
     setStore(id, value, autoload = false) {
         let autoVars = {}
@@ -729,7 +734,7 @@ export const Uib = class Uib {
     /** Attempt to get and re-hydrate a key value from localStorage
      * Note that all uib storage is automatically prefixed using this.storePrefix
      * @param {*} id The key of the value to attempt to retrieve
-     * @returns {*|null|undefined} The re-hydrated value of the key or null if key not found, undefined on error
+     * @return {*|null|undefined} The re-hydrated value of the key or null if key not found, undefined on error
      */
     getStore(id) {
         try {
@@ -753,14 +758,14 @@ export const Uib = class Uib {
     }
 
     /** Returns a list of the externally accessible command functions that are available to be called from Node-RED
-     * @returns {string[]} List of externally accessible command functions
+     * @return {string[]} List of externally accessible command functions
      */
     getCommandList() {
         return this.#extCommands
     }
 
     /** Returns a list of uibuilder properties (variables) that can be watched with onChange
-     * @returns {Object<string,string>} List of uibuilder managed variables
+     * @return {Object<string,string>} List of uibuilder managed variables
      */
     getManagedVarList() {
         return this.#managedVars
@@ -793,7 +798,7 @@ export const Uib = class Uib {
      *
      * @param {string} prop The property of uibuilder that we want to monitor
      * @param {Function} callback The function that will run when the property changes, parameter is the new value of the property after change
-     * @returns {number} A reference to the callback to cancel, save and pass to uibuilder.cancelChange if you need to remove a listener
+     * @return {number} A reference to the callback to cancel, save and pass to uibuilder.cancelChange if you need to remove a listener
      */
     onChange(prop, callback) {
         // Note: Property does not have to exist yet
@@ -843,7 +848,7 @@ export const Uib = class Uib {
      *
      * @param {string} topic The msg.topic we want to listen for
      * @param {Function} callback The function that will run when an appropriate msg is received. `this` inside the callback as well as the cb's single argument is the received msg.
-     * @returns {number} A reference to the callback to cancel, save and pass to uibuilder.cancelTopic if you need to remove a listener
+     * @return {number} A reference to the callback to cancel, save and pass to uibuilder.cancelTopic if you need to remove a listener
      */
     onTopic(topic, callback) {
         // Make sure we have an object to receive the saved callback, update the latest reference number
@@ -912,7 +917,7 @@ export const Uib = class Uib {
 
     /** Check supplied msg from server for a timestamp - if received, work out & store difference to browser time
      * @param {object} receivedMsg A message object recieved from Node-RED
-     * @returns {void} Updates self.serverTimeOffset if different to previous value
+     * @return {void} Updates self.serverTimeOffset if different to previous value
      * @private
      */
     _checkTimestamp(receivedMsg) {
@@ -927,24 +932,44 @@ export const Uib = class Uib {
         }
     }
 
-    /** Set up an event listener to watch for hash changes
-     * and set the watchable urlHash variable
+    /** Set a value at a dotted/bracketed property path on an object
+     * e.g. _setNestedPath(obj, 'a.b["c"]', value) => obj.a.b.c = value
+     * Creates intermediate objects if they don't exist
+     * @param {object} obj The object to set the value on
+     * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
+     * @param {*} value The value to set
+     * @return {boolean} True if successful, false otherwise
      * @private
      */
-    _watchHashChanges() {
-        this.set('urlHash', location.hash)
-        window.addEventListener('hashchange', (event) => {
-            this.set('urlHash', location.hash)
-            if (this.#sendUrlHash === true) {
-                this.send({ topic: 'hashChange', payload: location.hash, newHash: this.keepHashFromUrl(event.newURL), oldHash: this.keepHashFromUrl(event.oldURL), })
+    _setNestedPath(obj, path, value) {
+        if (!obj || !path) return false
+        // Split on dots and bracket notation, filter out empty segments
+        const keys = path
+            .replace(/\[["'`]?/g, '.')
+            .replace(/["'`]?\]/g, '')
+            .split('.')
+            .filter(Boolean)
+
+        // Navigate to the parent of the final key, creating objects as needed
+        let current = obj
+        for (let i = 0; i < keys.length - 1; i++) {
+            const key = keys[i]
+            if (current[key] == null || typeof current[key] !== 'object') {
+                current[key] = {}
             }
-        })
+            current = current[key]
+        }
+
+        // Set the final property
+        const finalKey = keys[keys.length - 1]
+        current[finalKey] = value
+        return true
     }
 
     /** Returns a new array containing the intersection of the 2 input arrays
      * @param {Array} a1 Array to check
      * @param {Array} a2 Array to intersect
-     * @returns {Array} The intersection of the 2 arrays (may be an empty array)
+     * @return {Array} The intersection of the 2 arrays (may be an empty array)
      */
     arrayIntersect(a1, a2) {
         return a1.filter(uName => a2.includes(uName))
@@ -963,11 +988,40 @@ export const Uib = class Uib {
         navigator.clipboard.writeText(data)
     } // --- End of copyToClipboard --- //
 
+    /** Creates a sandboxed evaluator function for string expressions that can reference properties on a provided context object
+     *  A safer alternative to using eval()
+     * - Uses the Function constructor to create a new function with the context passed as an argument,
+     *   and uses a with() block to allow direct access to context properties.
+     * - Catches and logs any errors during function creation, returning a safe default function that returns false if creation fails.
+     * @param {string} expression - The expression to evaluate
+     * @return {Function} - Evaluator function
+     */
+    createSafeEvaluator(expression) {
+        // Validate the expression (basic security check)
+        if (typeof expression !== 'string' || expression.trim() === '') {
+            throw new Error('Expression must be a non-empty string')
+        }
+
+        // Create function with explicit parameter to avoid global scope access
+        // The context will be passed as an argument, making available variables explicit
+        try {
+            return new Function('context', `
+                // 'use strict';
+                with (context) {
+                    return (${expression});
+                }
+            `)
+        } catch (error) {
+            log('error', 'uibuilder:createSafeEvaluator', 'Failed to create evaluator:', error)()
+            return () => false // Return safe default function
+        }
+    }
+
     /** Does the chosen CSS Selector currently exist?
      * Automatically sends a msg back to Node-RED unless turned off.
      * @param {string} cssSelector Required. CSS Selector to examine for visibility
      * @param {boolean} [msg] Optional, default=true. If true also sends a message back to Node-RED
-     * @returns {boolean} True if the element exists
+     * @return {boolean} True if the element exists
      */
     elementExists(cssSelector, msg = true) {
         const el = document.querySelector(cssSelector)
@@ -983,15 +1037,64 @@ export const Uib = class Uib {
         }
 
         return exists
-    } // --- End of elementExists --- //
+    }
+
+    /** Creates a safe evaluator function for template (string) expressions. A safer alternative to using eval()
+     * - will retry several times if variables are not yet available, and defaults to false if still not successful after retries.
+     * @param {string} expression - The expression to evaluate (e.g., "pageData.status || pageData.since")
+     * @param {object} context - The context object containing variables (e.g., { pageData })
+     * @param {object} options - Configuration options
+     * @return {Promise<boolean>} - Resolves to true/false
+     */
+    async evaluateWithRetry(expression, context, options = {}) {
+        const {
+            maxRetries = 3,
+            retryDelay = 300,
+            defaultValue = false,
+        } = options
+
+        // Create a safe evaluation function
+        const evaluator = this.createSafeEvaluator(expression)
+
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const result = evaluator(context)
+                // console.log(`🪲[uibuilder:evaluateWithRetry] Attempt ${attempt + 1} for expression "${expression}" with result:`, result)
+
+                // Convert to boolean and check if we got a meaningful result
+                // (not undefined/null on first attempts)
+                if (result !== undefined && result !== null) {
+                    // return Boolean(result)
+                    return result
+                }
+
+                // If this was the last attempt, return default
+                if (attempt === maxRetries) {
+                    return defaultValue
+                }
+
+                // Wait before retry
+                await this.sleep(retryDelay)
+            } catch (error) {
+                console.warn(`Evaluation attempt ${attempt + 1} failed:`, error.message)
+
+                if (attempt === maxRetries) {
+                    return defaultValue
+                }
+
+                await this.sleep(retryDelay)
+            }
+        }
+
+        return defaultValue
+    }
 
     /** Format a Date using Intl with optional pattern support.
      * @param {Date|string|number} date Input JS Date, date string, or timestamp
      * @param {string} [pattern] Optional pattern string
      * @param {string} [locale] Locale code. Defaults to browser locale.
-     * @returns {string} Formatted date string
+     * @return {string} Formatted date string
      */
-    // formatDate = formatDate
     formatDate = formatDate
 
     /** Format a number using the INTL standard library - compatible with uib-var filter function
@@ -999,7 +1102,7 @@ export const Uib = class Uib {
      * @param {number} decimalPlaces Number of decimal places to include. Default=no default
      * @param {string} intl standard locale spec, e.g. "ja-JP" or "en-GB". Default=navigator.language
      * @param {object} opts INTL library options object. Optional
-     * @returns {string} formatted number
+     * @return {string} formatted number
      * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString
      */
     formatNumber(value, decimalPlaces, intl, opts) {
@@ -1025,7 +1128,7 @@ export const Uib = class Uib {
 
     /** Attempt to get rough size of an object
      * @param {*} obj Any serialisable object
-     * @returns {number|undefined} Rough size of object in bytes or undefined
+     * @return {number|undefined} Rough size of object in bytes or undefined
      */
     getObjectSize(obj) {
         let size
@@ -1042,16 +1145,32 @@ export const Uib = class Uib {
     }
 
     /** Returns true if a uibrouter instance is loaded, otherwise returns false
-     * @returns {boolean} true if uibrouter instance loaded else false
+     * @return {boolean} true if uibrouter instance loaded else false
      */
     hasUibRouter() {
         return !!this.uibrouterinstance
     }
 
+    /** Check if something is an object
+     * @param {*} value value to check
+     * @return {boolean} True if an object
+     */
+    isObject(value) {
+        return typeof value === 'object' && value !== null
+    }
+
+    /** Return true if the value is primative (string, number, etc)
+     * @param {*} value Input to test
+     * @return {boolean} True if a primative value
+     */
+    isPrimitive(value) {
+        return value === null || (typeof value !== 'object' && typeof value !== 'function')
+    }
+
     /** Check if an attribute name is a uibuilder-specific attribute.
      * Matches names starting with 'uib-', 'data-uib-', or ':'.
      * @param {string} name The attribute name to check
-     * @returns {boolean} True if the attribute name is a uib attribute
+     * @return {boolean} True if the attribute name is a uib attribute
      */
     isUibAttribute(name) {
         return name.startsWith('uib-') || name.startsWith('data-uib-') || name.startsWith(':')
@@ -1059,7 +1178,7 @@ export const Uib = class Uib {
 
     /** Only keep the URL Hash & ignoring query params
      * @param {string} url URL to extract the hash from
-     * @returns {string} Just the route id
+     * @return {string} Just the route id
      */
     keepHashFromUrl(url) {
         if (!url) return ''
@@ -1088,7 +1207,7 @@ export const Uib = class Uib {
      * If not null, moves "thing" to {payload:thing}
      * @param {*} thing Thing to check
      * @param {string} [property] property that "thing" is moved to if not null and not an object. Default='payload'
-     * @returns {!object} _
+     * @return {!object} _
      */
     makeMeAnObject(thing, property) {
         if (!property) property = 'payload'
@@ -1107,7 +1226,7 @@ export const Uib = class Uib {
 
     /** Navigate to a new page or a new route (hash)
      * @param {string} url URL to navigate to. Can be absolute or relative (to current page) or just a hash for a route change
-     * @returns {Location} The new window.location string
+     * @return {Location} The new window.location string
      */
     navigate(url) {
         if (url) window.location.href = url
@@ -1117,7 +1236,7 @@ export const Uib = class Uib {
     /** Create and return a randomised UUID
      * Uses the browsers crypto library if available (newer browsers)
      * or something based on the timestamp and a random number
-     * @returns {string} The UUID
+     * @return {string} The UUID
      */
     randomUUID() {
         return (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -1127,15 +1246,16 @@ export const Uib = class Uib {
     }
 
     /** Wrap a provided variable in a proxy object so that it can be used reactively
+     * Uses the Reactive module
      * @param {*} srcvar The source variable to wrap
-     * @returns {Proxy} A proxy object that can be used reactively
+     * @return {Proxy} A proxy object that can be used reactively
      */
     reactive(srcvar) {
         return createReactive(srcvar)
     }
 
     /** Get the Reactive class for advanced usage
-     * @returns {Function} The Reactive class constructor
+     * @return {Function} The Reactive class constructor
      * @example
      * const ReactiveClass = uib.getReactiveClass()
      * const reactiveInstance = new ReactiveClass(data, customEventDispatcher)
@@ -1145,32 +1265,11 @@ export const Uib = class Uib {
         return Reactive
     }
 
-    // ! TODO change ui uib-* attributes to use this
-    /** Convert a string attribute into an variable/constant reference
-     * Used to resolve data sources in attributes
-     * @param {string} path The string path to resolve, must be relative to the `window` global scope
-     * @returns {*} The resolved data source or null
-     */
-    resolveDataSource(path) {
-        try {
-            const parts = path.split(/[\.\[\]\'\"]/).filter(Boolean)
-            let data = window
-            for (const part of parts) {
-                data = data?.[part]
-            }
-            return data
-        } catch (error) {
-            // console.error('Error resolving data source:', error)
-            log('error', 'uibuilder:resolveDataSource', `Error resolving data source "${path}", returned 'null'. ${error.message}`)()
-            return null
-        }
-    }
-
     /** Fast but accurate number rounding (https://stackoverflow.com/a/48764436/1309986 solution 2)
      * Half away from zero method (AKA "commercial" rounding), most common type
      * @param {number} num The number to be rounded
      * @param {number} decimalPlaces Number of DP's to round to
-     * @returns {number} Rounded number
+     * @return {number} Rounded number
      */
     round(num, decimalPlaces) {
         const p = Math.pow(10, decimalPlaces || 0)
@@ -1183,7 +1282,7 @@ export const Uib = class Uib {
      */
     setOriginator(originator = '') {
         this.set('originator', originator)
-    } // ---- End of setOriginator ---- //
+    }
 
     /** HTTP Ping/Keep-alive - makes a call back to uibuilder's ExpressJS server and receives a 204 response
      * Can be used to keep sessions alive.
@@ -1222,20 +1321,28 @@ export const Uib = class Uib {
                 oReq.send()
             }, ms)
         }
-    } // ---- End of ping ---- //
+    }
+
+    /** Promise-based (async) sleep utility
+     * @param {number} ms - Milliseconds to sleep
+     * @return {Promise<void>} - Resolves after the specified time
+     */
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms))
+    }
 
     /** Get the current call stack as an array of objects containing file, function, line, column, and raw information.
      * Sheesh! Sometimes JavaScript is a PAIN. The stack property of an Error object is not yet an official standard
      * and is implemented differently across browsers. So we have to do a bunch of parsing to try to get a consistent
      * output across browsers. We will attempt to parse the stack trace in Chromium, Firefox, and Safari formats, and
      * return an array of objects with the same properties for each line of the stack trace.
-     * @returns {Array<{{file:string,function:string,line:number,column:number,raw:string}}>} Stack array
+     * @return {Array<{{file:string,function:string,line:number,column:number,raw:string}}>} Stack array
      */
     stack() {
         /** Map a Chromium stack trace line to an object with function, file, line, and column properties.
          * @param {string} line Input stack trace line from Chromium, e.g. "    at myFunction (http://example.com/script.js:10:15)"
          * @param {string} [raw] Optional raw line to include in output if parsing fails. Defaults to the input line.
-         * @returns {object} An object with function, file, line, column, and raw properties extracted from the stack trace line
+         * @return {object} An object with function, file, line, column, and raw properties extracted from the stack trace line
          */
         function _stackMapChromium(line) {
             // console.log(arguments, arguments.length === 2 ? arguments[1] : '--no raw--')
@@ -1267,7 +1374,7 @@ export const Uib = class Uib {
         }
         /** Map a Firefox stack trace line to a Chromium-like format for easier parsing.
          * @param {string} line Input stack trace line from Firefox, e.g. "myFunction@http://example.com/script.js:10:15"
-         * @returns {object} An object with function, file, line, column, and raw properties extracted from the stack trace line
+         * @return {object} An object with function, file, line, column, and raw properties extracted from the stack trace line
          */
         function _stackMapFirefox(line) {
             const raw = line
@@ -1281,7 +1388,7 @@ export const Uib = class Uib {
          * Note that Safari does not include line or column numbers, so these will be set to 0.
          *      It does not even include the calling script file name :(
          * @param {string} line Input stack trace line from Safari, e.g. "myFunction@http://example.com/script.js"
-         * @returns {object} An object with function, file (<safari-unknown>), line (0), column (0), and raw properties extracted from the stack trace line
+         * @return {object} An object with function, file (<safari-unknown>), line (0), column (0), and raw properties extracted from the stack trace line
          */
         function _stackMapSafari(line) {
             const raw = line
@@ -1321,16 +1428,16 @@ export const Uib = class Uib {
 
     /** Convert JSON to Syntax Highlighted HTML
      * @param {object} json A JSON/JavaScript Object
-     * @returns {html} Object reformatted as highlighted HTML
+     * @return {html} Object reformatted as highlighted HTML
      */
     syntaxHighlight(json) {
         return syntaxHighlight(json)
-    } // --- End of syntaxHighlight --- //
+    }
 
     /** Returns true/false or a default value for truthy/falsy and other values
      * @param {string|number|boolean|*} val The value to test
      * @param {any} deflt Default value to use if the value is not truthy/falsy
-     * @returns {boolean|any} The truth! Or the default
+     * @return {boolean|any} The truth! Or the default
      */
     truthy(val, deflt) {
         let ret
@@ -1344,7 +1451,7 @@ export const Uib = class Uib {
      * see http://stackoverflow.com/a/28592528/3016654
      * since v1.0.10, fixed potential double // issue
      * arguments {string} URL fragments
-     * @returns {string} _
+     * @return {string} _
      */
     urlJoin() {
         const paths = Array.prototype.slice.call(arguments)
@@ -1356,11 +1463,11 @@ export const Uib = class Uib {
             })
             .join('/')
         return url.replace('//', '/')
-    } // ---- End of urlJoin ---- //
+    }
 
     /** Turn on/off/toggle sending URL hash changes back to Node-RED
      * @param {string|number|boolean|undefined} [toggle] Optional on/off/etc
-     * @returns {boolean} True if we will send a msg to Node-RED on a hash change
+     * @return {boolean} True if we will send a msg to Node-RED on a hash change
      */
     watchUrlHash(toggle) {
         this.#sendUrlHash = this.truthy(toggle, this.#sendUrlHash !== true)
@@ -1372,18 +1479,18 @@ export const Uib = class Uib {
      * Requires IntersectionObserver (available to all mainstream browsers from early 2019)
      * Automatically sends a msg back to Node-RED.
      * Requires the element to already exist.
-     * @returns {false} False if not visible
+     * @return {false} False if not visible
      */
     elementIsVisible() {
         const info = 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex'
         log('error', 'uib:elementIsVisible', info)()
         this.send({ payload: 'elementIsVisible has been temporarily DEPRECATED as it was not working correctly and a fix is complex', })
         return false
-    } // --- End of elementIsVisible --- //
+    }
 
     // #endregion -------- -------- -------- //
 
-    // #region ------- UI handlers --------- //
+    // #region ------- UI/DOM handlers --------- //
 
     // #region -- Direct to _ui --
     // ! NOTE: Direct assignments change the target `this` to here. Use with caution
@@ -1395,14 +1502,14 @@ export const Uib = class Uib {
      * If the selected element is a <template>, returns the first child element.
      * type {HTMLElement}
      * @param {string} cssSelector A CSS Selector that identifies the element to return
-     * @returns {HTMLElement|null} Selected HTML element or null
+     * @return {HTMLElement|null} Selected HTML element or null
      */
     $ = _ui.$
 
     /** CSS query selector that returns ALL found selections. Matches the Chromium DevTools feature of the same name.
      * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
      * @param {string} cssSelector A CSS Selector that identifies the elements to return
-     * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
+     * @return {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
      */
     $$ = _ui.$$
 
@@ -1443,7 +1550,7 @@ export const Uib = class Uib {
      * @param {Array<object>|object} data Input data array or object
      * @param {object} opts Table options
      *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
-     * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
+     * @return {HTMLTableElement|HTMLParagraphElement} Output HTML Element
      */
     buildHtmlTable(data, opts = {}) {
         return _ui.buildHtmlTable(data, opts)
@@ -1463,7 +1570,7 @@ export const Uib = class Uib {
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
      * @param {string} mdText The input markdown string
-     * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
+     * @return {string} HTML (if Markdown-IT library loaded and parse successful) or original text
      */
     convertMarkdown(mdText) {
         return _ui.convertMarkdown(mdText)
@@ -1554,7 +1661,7 @@ export const Uib = class Uib {
     /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
      * Otherwise just returns that HTML as-is.
      * @param {string} html The input HTML string
-     * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+     * @return {string} The sanitised HTML or the original if DOMPurify not loaded
      */
     sanitiseHTML(html) {
         return _ui.sanitiseHTML(html)
@@ -1569,7 +1676,7 @@ export const Uib = class Uib {
      *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
      *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
      *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
-     * @returns {object} Object with close() method to manually close the overlay
+     * @return {object} Object with close() method to manually close the overlay
      */
     showOverlay(options) {
         return _ui.showOverlay(options)
@@ -1608,7 +1715,7 @@ export const Uib = class Uib {
      * @param {number=} options.replaceRow Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
      * @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
      *
-     * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
+     * @return {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
      */
     tblAddRow(tbl, rowData = {}, options = {}) {
         return _ui.tblAddRow(tbl, rowData, options)
@@ -1631,7 +1738,7 @@ export const Uib = class Uib {
      * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
      * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
      * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
-     * @returns {void}
+     * @return {void}
      * @example
      * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
      * @example
@@ -1651,7 +1758,7 @@ export const Uib = class Uib {
     /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
      * @param {string} cssSelector Identify the DOM element to get data from
      * @param {string} [propName] Optional. Specific name of property to get from the element
-     * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
+     * @return {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
      */
     uiGet(cssSelector, propName = null) {
         return _ui.uiGet(cssSelector, propName)
@@ -1668,8 +1775,66 @@ export const Uib = class Uib {
 
     // #endregion -- direct to _ui --
 
-    // ! TODO: Rework attrib handling to allow for uib-* and data-uib-* AND :* attributes
-    //   See other bookmarks as well
+    // TODO: Move these to _ui
+    /** Set multiple DOM dataset properties
+     * @param {HTMLElement} el The element to update
+     * @param {object} newData The dataset object to process
+     * @return {boolean} True if element was updated, else false
+     * @private
+     */
+    setDataset(el, newData) {
+        // data must be an object
+        if (!this.isObject(newData)) {
+            log('error', 'uibuilder:setDataset', 'newData parameter must be an object')()
+            return false
+        }
+        try {
+            for (const [key, value] of Object.entries(newData)) {
+                el.dataset[key] = value
+            }
+        } catch (e) {
+            log('error', 'uibuilder:setDataset', 'Failed to set dataset. Ensure that dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.', e.message)()
+            return false
+        }
+        return true
+    }
+    /** Set multiple DOM attributes
+     * @param {HTMLElement} el The element to update
+     * @param {object} attribs The attributes object to process
+     * @return {boolean} True if element was updated, else false
+     */
+    setAttributes(el, attribs) {
+        // data must be an object
+        if (!this.isObject(attribs)) {
+            log('error', 'uibuilder:setAttributes', 'attributes parameter must be an object')()
+            return false
+        }
+        try {
+            for (const [key, value] of Object.entries(attribs)) {
+                el.setAttribute(key, value)
+            }
+        } catch (e) {
+            log('error', 'uibuilder:setAttributes', 'Failed to set attributes. Ensure that attributes is an object containing key/value pairs with each key a valid attribute name. Note that values values have to be a string.', e.message)()
+            return false
+        }
+        return true
+    }
+    /** Set a DOM value or checked property
+     * @param {HTMLElement} el The element to update
+     * @param {string} value The value/checked object to process
+     * @return {boolean} True if element was updated, else false
+     */
+    setValueOrChecked(el, value) {
+        if (el.type && (el.type === 'checkbox' || el.type === 'radio')) {
+            // Force value to be boolean or fail false
+            el.checked = this.truthy(value, false)
+        } else {
+            el.value = value
+        }
+        return true
+    }
+
+    // #region -- DOM mutation handlers --
 
     /** DOM Mutation observer callback to watch for new/amended elements with uib-* or data-uib-* attributes
      * WARNING: Mutation observers can receive a LOT of mutations very rapidly. So make sure this runs as fast
@@ -1712,75 +1877,53 @@ export const Uib = class Uib {
         }
     }
 
-    /** Process a uib-topic attribute by setting up a topic listener and applying received msgs to the element
-     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
-     * @param {HTMLElement} el The element to process
-     * @param {string} topic The msg topic string to watch for
+    /** Standardised processing of a msg or managed var with extended properties such as payload, attributes, dataset, etc
+     * @param {HTMLElement} el The element to update
+     * @param {string} data The input variable to process
+     * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
+     * @return {boolean} True if element was updated, else false
      * @private
      */
-    _processUibTopic(el, topic) {
-        // Create a topic listener
-        this.onTopic(topic, (msg) => {
-            // log('trace', 'uibuilder:_uibAttrScanOne', `Msg with topic "${topic}" received. msg content: `, msg)()
-            msg._uib_processed_by = '_uibAttrScanOne' // record that this has already been processed
+    _processVarProps(el, data, isIf = false) {
+        if (isIf === true) { // data is true/false
+            data = { if: data, }
+        } else {
+            // if data is a primative (string, etc), assume that should be the payload
+            if (this.isPrimitive(data)) data = { payload: data, }
+        }
 
-            // Process msg.attributes
-            if (Object.prototype.hasOwnProperty.call(msg, 'attributes')) {
-                try {
-                    for (const [k, v] of Object.entries(msg.attributes)) {
-                        el.setAttribute(k, v)
-                    }
-                } catch (e) {
-                    log(0, 'uibuilder:attribute-processing', 'Failed to set attributes. Ensure that msg.attributes is an object containing key/value pairs with each key a valid attribute name. Note that attribute values have to be a string.')()
-                }
-            }
+        // Process msg.attributes
+        if (Object.prototype.hasOwnProperty.call(data, 'attributes')) this.setAttributes(el, data.dataset)
+        // Process msg.dataset
+        if (Object.prototype.hasOwnProperty.call(data, 'dataset')) this.setDataset(el, data.dataset)
 
-            // Process msg.dataset
-            if (Object.prototype.hasOwnProperty.call(msg, 'dataset')) {
-                console.log('uibuilder:dataset-processing', 'Processing dataset for element', el, msg.dataset)
-                try {
-                    for (const [key, value] of Object.entries(msg.dataset)) {
-                        // Convert to kebab-case for dataset
-                        // const kebabKey = k.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
-                        // el.dataset[kebabKey] = v
-                        el.dataset[key] = value
-                    }
-                } catch (e) {
-                    log('error', 'uibuilder:dataset-processing', 'Failed to set dataset. Ensure that msg.dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.')()
-                }
-            }
+        // Process msg.value (or set checked if boolean - for checkboxes)
+        const hasChecked = Object.prototype.hasOwnProperty.call(data, 'checked')
+        const hasValue = Object.prototype.hasOwnProperty.call(data, 'value')
+        if ( hasValue || hasChecked ) {
+            const value = hasChecked ? msg.checked : hasValue ? msg.value : undefined
+            this.setValueOrChecked(el, value)
+        }
 
-            // Process msg.value (or set checked if boolean - for checkboxes)
-            // TODO Move this to a common function
-            const hasChecked = Object.prototype.hasOwnProperty.call(msg, 'checked')
-            const hasValue = Object.prototype.hasOwnProperty.call(msg, 'value')
-            if ( hasValue || hasChecked ) {
-                if (el.type && (el.type === 'checkbox' || el.type === 'radio')) {
-                    if (hasChecked) el.checked = this.truthy(msg.checked, false)
-                    else if (hasValue) el.checked = this.truthy(msg.value, false)
-                } else {
-                    if (hasValue) el.value = msg.value
-                    else if (hasChecked) el.value = this.truthy(msg.checked, false)
-                }
-            }
+        // TODO (MAYBE) Process msg.classes and msg.styles. msg.props (for non-string data)?
 
-            // TODO (MAYBE) Process msg.classes and msg.styles. msg.props (for non-string data)?
-
+        if (Object.prototype.hasOwnProperty.call(data, 'payload')) {
             // If el has a `content` attrib, we must apply as text not html
             if (el.hasAttribute('content')) {
-                if (Object.prototype.hasOwnProperty.call(msg, 'payload')) el.setAttribute('content', msg.payload)
+                el.setAttribute('content', data.payload)
             } else {
-                // Process msg.payload (applied as slot HTML) - NB: Will process <script> & <style>
-                if (Object.prototype.hasOwnProperty.call(msg, 'payload')) this.replaceSlot(el, msg.payload)
+                // Apply as slot HTML - NB: Will process <script> & <style>
+                this.replaceSlot(el, data.payload)
             }
-        })
+        }
+        return true
     }
 
     /** Resolve a dotted/bracketed property path on an object
      * e.g. resolveNestedPath(obj, 'a.b["c"]') => obj.a.b.c
      * @param {object} obj The object to resolve from
      * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
-     * @returns {*} The resolved value, or undefined if not found
+     * @return {*} The resolved value, or undefined if not found
      * @private
      */
     _resolveNestedPath(obj, path) {
@@ -1799,48 +1942,29 @@ export const Uib = class Uib {
         return current
     }
 
-    /** Set a value at a dotted/bracketed property path on an object
-     * e.g. _setNestedPath(obj, 'a.b["c"]', value) => obj.a.b.c = value
-     * Creates intermediate objects if they don't exist
-     * @param {object} obj The object to set the value on
-     * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
-     * @param {*} value The value to set
-     * @returns {boolean} True if successful, false otherwise
+    /** Process a uib-topic custom DOM attribute by setting up a topic listener and applying received msgs to the element
+     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
+     * @param {HTMLElement} el The element to process
+     * @param {string} topic The msg topic string to watch for
      * @private
      */
-    _setNestedPath(obj, path, value) {
-        if (!obj || !path) return false
-        // Split on dots and bracket notation, filter out empty segments
-        const keys = path
-            .replace(/\[["'`]?/g, '.')
-            .replace(/["'`]?\]/g, '')
-            .split('.')
-            .filter(Boolean)
-
-        // Navigate to the parent of the final key, creating objects as needed
-        let current = obj
-        for (let i = 0; i < keys.length - 1; i++) {
-            const key = keys[i]
-            if (current[key] == null || typeof current[key] !== 'object') {
-                current[key] = {}
-            }
-            current = current[key]
-        }
-
-        // Set the final property
-        const finalKey = keys[keys.length - 1]
-        current[finalKey] = value
-        return true
+    _processUibTopic(el, topic) {
+        // Create a topic listener
+        this.onTopic(topic, (msg) => {
+            msg._uib_processed_by = '_processUibTopic' // record that this has already been processed
+            this._processVarProps(el, msg)
+        })
     }
 
-    /** Process a uib-var attribute by evaluating the variable reference and applying it to the element
+    /** Process a uib-var custom DOM attribute by evaluating the variable reference and applying it to the element
      *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc).
      *  Supports deep property paths such as "myvar.aprop" or "myvar['bprop']".
      * @param {HTMLElement} el The element to process
      * @param {string} varName The variable name (optionally with property path) to watch for
+     * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
      * @private
      */
-    async _processUibVar(el, varName) {
+    async _processUibVar(el, varName, isIf = false) {
         // Determine the root property and any nested sub-path
         // e.g. "myvar.aprop" => rootProp="myvar", subPath="aprop"
         // e.g. "myvar['bprop'].x" => rootProp="myvar", subPath="'bprop'].x"
@@ -1855,44 +1979,32 @@ export const Uib = class Uib {
         const hasSubPath = sepIdx > 0
         const rootProp = hasSubPath ? varName.substring(0, sepIdx) : varName
 
-        const doVar = (rootValue, hasSubPath) => {
-            let value = hasSubPath ? this._resolveNestedPath(this, varName) : rootValue
+        /** sub-fn
+         * @param {*} rootValue Either the value to process or its parent
+         * @param {boolean} hasSubPath If true, we are processing a sub-path, e.g. myvar.something or myva['something']
+         * @param {boolean} isIf True if we were originally called via the uib-if handler. Default=false
+         */
+        const doVar = (rootValue, hasSubPath, isIf) => {
+            const value = hasSubPath ? this._resolveNestedPath(this, varName) : rootValue
+            try {
+                value._uib_processed_by = '_processUibVar' // record that this has already been processed
+            } catch (e) {}
             // console.log(`🪲[uibuilder:_processUibVar] Variable "${varName}" changed. New value:`, value)
             // log('trace', 'uibuilder:_processUibVar', `Variable "${varName}" changed. New value: `, value)()
-            if (typeof value !== 'object') {
-                value = {
-                    payload: value,
-                }
-            }
-            // Deal with different element types:
-            if (Object.prototype.hasOwnProperty.call(value, 'payload')) {
-                // Skip update when payload is null or undefined to avoid setting attributes
-                // to the literal string "undefined" (e.g. <link rel="icon"> href="undefined").
-                if (value.payload == null) return
-                if (el.hasAttribute('content')) {
-                    // If el has a `content` attrib, we must apply as text not html
-                    el.setAttribute('content', value.payload)
-                } else if (el.hasAttribute('rel')) {
-                    // If it has a `rel` attribute, we have to set the `href`
-                    el.setAttribute('href', value.payload)
-                } else {
-                    // Otherwise, we replace the innerHTML
-                    this.replaceSlot(el, value.payload)
-                }
-            }
+            this._processVarProps(el, value, isIf)
+            if (isIf) el.style.display = this.truthy(value) ? '' : 'none'
         }
 
         // Create a uibuilder managed variable watcher on the root property
         // When the root property changes, resolve the full nested path to get the value
         this.onChange(rootProp, (rootValue) => {
-            doVar(rootValue, hasSubPath)
+            doVar(rootValue, hasSubPath, isIf)
         })
         // and do it now
-        doVar(await this.evaluateWithRetry(rootProp, this, {}), hasSubPath)
+        doVar(await this.evaluateWithRetry(rootProp, this, {}), hasSubPath, isIf)
     }
 
-    // ! EXPERIMENTAL - not fully working. Is not reactive.
-    /** Process a uib-if attribute by safely evaluating a JavaScript expression that returns true/false.
+    /** Process a uib-if custom DOM attribute by safely evaluating a JavaScript expression that returns true/false.
      * If true (the default), the element's content is visible. If false, the content is hidden.
      * Uses display style rather than removing content so the element can be shown again later.
      * The expression can reference uibuilder managed variables (e.g. pageData.status) directly
@@ -1902,167 +2014,11 @@ export const Uib = class Uib {
      * @private
      */
     async _processUibIf(el, expr) {
-        // /** Evaluate the expression using current managed variables and apply visibility
-        //  * @private
-        //  */
-        // const evaluate = () => {
-        //     // Skip if element has been removed from DOM
-        //     if (!el.isConnected) return
-        //     let result = true
-        //     try {
-        //         // Inject user-set managed variables as local parameters so they can be
-        //         // referenced directly in expressions (e.g. `pageData.status || pageData.since`).
-        //         // Only include names that are valid JS identifiers.
-        //         const varNames = Object.keys(this.#managedVars).filter(name => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name))
-        //         const varValues = varNames.map(name => this[name])
-        //         // Also expose the uibuilder instance itself
-        //         varNames.push('uibuilder')
-        //         varValues.push(this)
-        //         result = (new Function(...varNames, `return (${expr})`))(...varValues)
-        //         console.log(`🪲[uibuilder:_processUibIf] Evaluated expression "${expr}" with result:`, result)
-        //     } catch (e) {
-        //         log('warn', 'uibuilder:_processUibIf', `Failed to evaluate uib-if expression "${expr}". Defaulting to true.`, e.message)()
-        //     }
-        //     // Coerce to boolean, default to true for non-boolean returns
-        //     if (typeof result !== 'boolean') result = this.truthy(result, true)
-        //     el.style.display = result ? '' : 'none'
-        // }
-        // // Evaluate immediately with whatever vars are available now
-        // setTimeout(() => {
-        //     evaluate()
-        // }, 300)
-        // // Re-evaluate whenever any managed variable changes (handles timing/late-set vars)
-        // document.addEventListener('uibuilder:propertyChanged', evaluate)
-        // const result = await this.evaluateWithRetry(expr, this, {})
-        const result = await this.evaluateWithRetry(expr, this, {})
-        // console.log(`🪲[uibuilder:_processUibIf] Final result for expression "${expr}":`, result)
-        el.style.display = result ? '' : 'none'
+        // Evaluate the expression using current managed variables and apply visibility
+        this._processUibVar(el, expr, true)
     }
 
-    /** Creates a safe evaluator function for template (string) expressions
-     * - will retry several times if variables are not yet available, and defaults to false if still not successful after retries.
-     * @param {string} expression - The expression to evaluate (e.g., "pageData.status || pageData.since")
-     * @param {object} context - The context object containing variables (e.g., { pageData })
-     * @param {object} options - Configuration options
-     * @returns {Promise<boolean>} - Resolves to true/false
-     */
-    async evaluateWithRetry(expression, context, options = {}) {
-        const {
-            maxRetries = 3,
-            retryDelay = 300,
-            defaultValue = false,
-        } = options
-
-        // Create a safe evaluation function
-        const evaluator = this.createSafeEvaluator(expression)
-
-        for (let attempt = 0; attempt <= maxRetries; attempt++) {
-            try {
-                const result = evaluator(context)
-                // console.log(`🪲[uibuilder:evaluateWithRetry] Attempt ${attempt + 1} for expression "${expression}" with result:`, result)
-
-                // Convert to boolean and check if we got a meaningful result
-                // (not undefined/null on first attempts)
-                if (result !== undefined && result !== null) {
-                    // return Boolean(result)
-                    return result
-                }
-
-                // If this was the last attempt, return default
-                if (attempt === maxRetries) {
-                    return defaultValue
-                }
-
-                // Wait before retry
-                await this.sleep(retryDelay)
-            } catch (error) {
-                console.warn(`Evaluation attempt ${attempt + 1} failed:`, error.message)
-
-                if (attempt === maxRetries) {
-                    return defaultValue
-                }
-
-                await this.sleep(retryDelay)
-            }
-        }
-
-        return defaultValue
-    }
-
-    /** Creates a sandboxed evaluator function for string expressions that can reference properties on a provided context object
-     * - Uses the Function constructor to create a new function with the context passed as an argument, and uses a with() block to allow direct access to context properties.
-     * - Catches and logs any errors during function creation, returning a safe default function that returns false if creation fails.
-     * @param {string} expression - The expression to evaluate
-     * @returns {Function} - Evaluator function
-     */
-    createSafeEvaluator(expression) {
-        // Validate the expression (basic security check)
-        if (typeof expression !== 'string' || expression.trim() === '') {
-            throw new Error('Expression must be a non-empty string')
-        }
-
-        // Create function with explicit parameter to avoid global scope access
-        // The context will be passed as an argument, making available variables explicit
-        try {
-            return new Function('context', `
-                // 'use strict';
-                with (context) {
-                    return (${expression});
-                }
-            `)
-        } catch (error) {
-            console.error('Failed to create evaluator:', error)
-            return () => false // Return safe default function
-        }
-    }
-
-    /** Promise-based (async) sleep utility
-     * @param {number} ms - Milliseconds to sleep
-     * @returns {Promise<void>} - Resolves after the specified time
-     */
-    sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms))
-    }
-
-    // ! EXPERIMENTAL
-    /** Process a uib-bind:* attribute by evaluating the bind value and applying it to the element as the named attribute
-     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
-     * @param {HTMLElement} el The element to process
-     * @param {string} bindName The name of the attribute to bind
-     * @param {string} bindValue The value to bind to the attribute
-     * @private
-     */
-    _processUibBind(el, bindName, bindValue) {
-        // log('print', 'uibuilder:_uibAttrScanOne', 'Processing uib-bind:', bindName, 'for element:', el)()
-        // treat the attribute value as a javascript function, run the function safely
-        let value = bindValue
-        try {
-            value = (new Function(`return (${bindValue})`))()
-            log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 1 uib-bind attribute:', bindName, 'with value:', value)()
-        } catch (e) {
-            log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 1 uib-bind attribute:', bindName, 'with value:', value)()
-            try {
-                console.log(globalThis)
-                value = globalThis[bindValue] ?? bindValue
-                // value = (new Function(`return (window.${attr.value})`))()
-                log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 2 uib-bind attribute:', bindName, 'with value:', value)()
-            } catch (e) {
-                log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 2 uib-bind attribute:', bindName, 'with value:', value)()
-            }
-        }
-
-        // set the attribute names by bindName to the value of the attribute
-        if (bindName && value) {
-            // Set the attribute to the value of the bindName
-            el.setAttribute(bindName, value)
-            // If the bindName is 'value', then also set the value of the element
-            if (bindName === 'value') el.value = value
-        } else {
-            log('warn', 'uibuilder:_uibAttrScanOne', 'Invalid uib-bind attribute:', bindName, 'with value:', value, 'for element:', el)()
-        }
-    }
-
-    /** Check a single HTML element for uib attributes and add auto-processors as needed.
+    /** Check a single HTML element for uib custom DOM attributes and add auto-processors as needed.
      * Understands uib-prefixed attributes (e.g. uib-topic, uib-var, uib-bind:*, uib-if, etc). Msgs received on the topic can have:
      *   msg.payload - replaces innerHTML (but also runs <script>s and applies <style>s)
      *   msg.attributes - An object containing attribute names as keys with attribute values as values. e.g. {title: 'HTML tooltip', href='#route03'}
@@ -2102,7 +2058,7 @@ export const Uib = class Uib {
         }
     }
 
-    /** Check all children of an array of or a single HTML element(s) for uib attributes and add auto-processors as needed.
+    /** Check all children of an array of or a single HTML element(s) for uib custom DOM attributes and add auto-processors as needed.
      * WARNING: Can only check for KNOWN attrib names, not all as per the main processing.
      * @param {Element|Element[]} parentEl HTML Element to check for uib-* or data-uib-* attributes
      * @private
@@ -2124,401 +2080,6 @@ export const Uib = class Uib {
         }
     }
 
-    /** Given a FileList array, send each file to Node-RED and return file metadata
-     * @param {HTMLInputElement} srcEl Reference to the source input element
-     * @param {boolean=} noSend If true, don't send the file to Node-RED. Default is to send.
-     * @returns {Array<object>} Metadata values from all files
-     * @private
-     */
-    _processFilesInput(srcEl, noSend = false) {
-        const value = []
-        const files = srcEl.files
-        const seqCount = files.length
-        let seq = 0
-        for (const file of files) {
-            const props = {}
-            seq++
-            // Walk through each file property
-            for (const prop in file) {
-                props[prop] = file[prop]
-            }
-            // Create a temp URL allowing access to download the file
-            // Automatically destroyed on page reload
-            props.tempUrl = window.URL.createObjectURL(file)
-
-            value.push(props)
-
-            const meta = { seq, seqCount, }
-            meta.id = srcEl.id
-            // meta.srcElIds.name = srcEl.name
-            if (srcEl.form) meta.formId = srcEl.form.id
-            meta.tempUrl = props.tempUrl
-            meta.data = srcEl.dataset
-
-            // Auto-upload to Node-RED over Socket.IO {id: target.id, name: target.name, formId: target.parent.formID,}
-            if (noSend !== true) this.uploadFile(file, meta)
-        }
-        return value
-    }
-
-    /** Easy creation/change of DOM elements, @see ./tinyDom.js */
-    // dom = dom
-
-    /** Attempt to get target attributs - can fail for certain target types, if so, returns empty object
-     * @param {HTMLElement} el Target element
-     * @returns {object} Array of key/value HTML attribute objects
-     */
-    getElementAttributes(el) {
-        const ignoreAttribs = ['class', 'id', 'name']
-        let attribs
-        try {
-            attribs = Object.assign({},
-                ...Array.from(el.attributes,
-                    ( { name, value, } ) => {
-                        if ( !ignoreAttribs.includes(name) ) {
-                            return ({ [name]: value, })
-                        }
-                        return undefined
-                    }
-                )
-            )
-        } catch (e) {}
-
-        return attribs
-    }
-
-    /** Check for CSS Classes and return as array if found or undefined if not
-     * @param {HTMLElement} el Target element
-     * @returns {Array|undefined} Array of class names
-     */
-    getElementClasses(el) {
-        let classes
-        try {
-            classes = Array.from(el.classList)
-        } catch (e) {}
-        return classes
-    }
-
-    /** Get target custom properties - only shows custom props not element default ones
-     * Excludes custom props starting with _
-     * @param {HTMLElement} el Target element
-     * @returns {object} Object of propname/value pairs
-     */
-    getElementCustomProps(el) {
-        const props = {}
-        Object.keys(el).forEach( (key) => {
-            if (key.startsWith('_')) return // Exclude private
-            props[key] = el[key]
-        })
-        return props
-    }
-
-    /** Check for el.value and el.checked. el.checked will also set the value return for ease of use.
-     * Only 2 input types use el.checked, different from all other input types - this is annoying.
-     * @param {HTMLElement} el HTML Element to be checked
-     * @returns {{value:boolean|null, checked:boolean|null}} Return null if properties not present, else the appropriate value
-     */
-    getFormElementValue(el) {
-        let value = null
-        let checked = null
-
-        switch (el.type) {
-            case 'checkbox':
-            case 'radio': {
-                value = checked = el.checked
-                // HTML does not normally return any value if not checked but we do for ease of use,
-                break
-            }
-
-            case 'select-multiple': {
-                // value = Array.from(el.selectedOptions).forEach( (sel) => sel.value )
-                value = Array.from(el.selectedOptions).map(option => option.value)
-                break
-            }
-
-            default: {
-                if (el.value) value = el.value
-
-                // Probably not really needed
-                if (el.checked) {
-                    value = checked = el.checked
-                    // HTML does not normally return any value if not checked but we do for ease of use,
-                }
-
-                // If the value is a valid number, use that instead of the text version - probably only applies to range inputs
-                if (el.valueAsNumber && !isNaN(el.valueAsNumber)) {
-                    value = el.valueAsNumber
-                }
-
-                break
-            }
-        }
-
-        return { value, checked, }
-    }
-
-    // ! TODO - Handle fieldsets
-    /** For HTML Form elements (e.g. input, textarea, select), return the details
-     * @param {HTMLFormElement} el Source form element
-     * @returns {object|null} Form element key details
-     */
-    getFormElementDetails(el) {
-        if (!el.type) {
-            log(1, 'uibuilder:getFormElementDetails', 'Cannot get form element details as this is not an input type element')()
-            return null
-        }
-
-        // Get or create a (hopefully) unique ID
-        const id = this.returnElementId(el)
-        if (!id) {
-            log(1, 'uibuilder:getFormElementDetails', 'Cannot get form element details as no id is present and could not be generated')()
-            return null
-        }
-
-        let { value, checked, } = this.getFormElementValue(el) // eslint-disable-line prefer-const
-
-        // This is now done in eventSend rather than here for consistency with non-form sends.
-        // For multi file input, get the file details as the value
-        // el.files is a FileList type & each entry is a File type - have to process these manually - stupid HTML!
-        // https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications
-        // if (el.type === 'file' && el.files.length > 0) {
-        //     // Walk through each file in the FileList, get the details and send the file to Node-RED
-        //     value = this._processFilesInput(el.files)
-        // }
-
-        const formDetails = {
-            id: id,
-            name: el.name,
-            valid: el.checkValidity(),
-            type: el.type,
-        }
-        if (value !== null) formDetails.value = value
-        if (checked !== null) formDetails.checked = checked
-
-        // If the form element has invalid content, try to report why
-        if (formDetails.valid === false) {
-            const v = el.validity
-            formDetails.validity = {
-                badInput: v.badInput === true ? v.badInput : undefined,
-                customError: v.customError === true ? v.customError : undefined,
-                patternMismatch: v.patternMismatch === true ? v.patternMismatch : undefined,
-                rangeOverflow: v.rangeOverflow === true ? v.rangeOverflow : undefined,
-                rangeUnderflow: v.rangeUnderflow === true ? v.rangeUnderflow : undefined,
-                stepMismatch: v.stepMismatch === true ? v.stepMismatch : undefined,
-                tooLong: v.tooLong === true ? v.tooLong : undefined,
-                tooShort: v.tooShort === true ? v.tooShort : undefined,
-                typeMismatch: v.typeMismatch === true ? v.typeMismatch : undefined,
-                valueMissing: v.valueMissing === true ? v.valueMissing : undefined,
-            }
-        }
-
-        // If any data-* attribs defined
-        if (Object.keys(el.dataset).length > 0) formDetails.data = el.dataset
-
-        return formDetails
-    }
-
-    /** Show a browser notification if possible.
-     * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
-     * or a Notifications API options object + config.title string.
-     * @example uibuilder.notify( 'My simple message to the user' )
-     * @example uibuilder.notify( {topic: 'My Title', payload: 'My simple message to the user'} )
-     * @example uibuilder.notify( {title: 'My Title', body: 'My simple message to the user'} )
-     * @example // If config.return = true, a promise is returned.
-     * // The resolved promise is only returned if the notification is clicked by the user.
-     * // Can be used to send the response back to Node-RED
-     * uibuilder.notify(notifyConfig).then( res => uibuilder.eventSend(res) )
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
-     * @param {object|string} config Notification config data or simple message string
-     * @returns {Promise<Event>|null} A promise that resolves to the click event or null
-     */
-    notify(config) {
-        if (config.return) return _ui.notification(config)
-
-        _ui.notification(config)
-            .then( (res) => { // eslint-disable-line promise/always-return
-                log('info', 'Uib:notification', 'Notification completed event', res)()
-                // if (config.return) return res
-            })
-            .catch( (err) => {
-                log('error', 'Uib:notification', 'Notification error event', err)()
-            })
-        return null
-    }
-
-    /** Get or create a (hopefully) unique ID
-     * @param {HTMLFormElement} el Source form element
-     * @returns {string|null} A hopefully unique element ID
-     */
-    returnElementId(el) {
-        return el.id !== '' ? el.id : (el.name !== '' ? `${el.name}-${++this.#uniqueElID}` : (el.type ? `${el.type}-${++this.#uniqueElID}` : `${el.localName}-${++this.#uniqueElID}`))
-    }
-
-    /** Scroll the page
-     * https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
-     * @param {string} [cssSelector] Optional. If not set, scrolls to top of page.
-     * @param {{block:(string|undefined),inline:(string|undefined),behavior:(string|undefined)}} [opts] Optional. DOM scrollIntoView options
-     * @returns {boolean} True if element was found, false otherwise
-     */
-    scrollTo(cssSelector, opts) {
-        // @ts-ignore
-        if (!opts) opts = {}
-        if (!cssSelector || cssSelector === 'top'  || cssSelector === 'start') cssSelector = 'body'
-        else if (cssSelector === 'bottom' || cssSelector === 'end') {
-            cssSelector = 'body'
-            opts.block = 'end'
-        }
-        const el = this.$(cssSelector)
-        if (el) {
-            el.scrollIntoView(opts)
-            return true
-        }
-        return false
-    }
-
-    /** Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
-     * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
-     * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
-     * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
-     * @returns {boolean} New state
-     */
-    showMsg(showHide, parent = 'body') {
-        if ( showHide === undefined ) showHide = !this.#isShowMsg
-        this.#isShowMsg = showHide
-        let slot = 'Waiting for a message from Node-RED'
-
-        if (this.msg && Object.keys(this.msg).length > 0) {
-            slot = this.syntaxHighlight(this.msg)
-        }
-
-        if ( showHide === false ) {
-            _ui._uiRemove( {
-                components: [
-                    '#uib_last_msg_wrap',
-                ],
-            })
-        } else {
-            _ui._uiReplace({
-                components: [
-                    {
-                        type: 'div',
-                        id: 'uib_last_msg_wrap',
-                        parent: parent,
-                        attributes: {
-                            title: 'Last message from Node-RED',
-                        },
-                        components: [
-                            {
-                                type: 'button',
-                                attributes: {
-                                    onclick: 'uibuilder.copyToClipboard("msg")',
-                                    class: 'compact',
-                                    style: 'right:3em;',
-                                    title: 'Copy message to clipboard',
-                                },
-                                slot: '📋',
-                            },
-                            {
-                                type: 'button',
-                                attributes: {
-                                    onclick: 'uibuilder.showMsg()',
-                                    class: 'compact',
-                                    style: 'right:.5em;',
-                                    title: 'Turn off message display',
-                                },
-                                slot: '⛔',
-                            },
-                            {
-                                type: 'pre',
-                                id: 'uib_last_msg',
-                                // parent: 'uib_last_msg_wrap',
-                                attributes: {
-                                    class: 'syntax-highlight',
-                                },
-                                slot: slot,
-                            },
-                        ],
-                    },
-                ],
-            })
-        }
-
-        return showHide
-    }
-
-    /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
-     * The card has the id `uib_status`.
-     * The display is updated by an event listener created in the class constructor.
-     * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
-     * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
-     * @returns {boolean} New state
-     */
-    showStatus(showHide, parent = 'body') {
-        if ( showHide === undefined ) showHide = !this.#isShowStatus
-        this.#isShowStatus = showHide
-
-        if ( showHide === false ) {
-            _ui._uiRemove( {
-                components: [
-                    '#uib_status',
-                ],
-            })
-            return showHide
-        }
-
-        const root = {
-            components: [
-                {
-                    type: 'div',
-                    id: 'uib_status',
-                    parent: parent,
-                    attributes: {
-                        title: 'Current status of the uibuilder client',
-                        class: 'text-smaller',
-                    },
-                    components: [
-                        {
-                            type: 'table',
-                            components: [
-                                {
-                                    type: 'tbody',
-                                    components: [],
-                                }
-                            ],
-                        }
-                    ],
-                }
-            ],
-        }
-        const details = root.components[0].components[0].components[0].components
-
-        Object.values(this.#showStatus).forEach( (entry) => {
-            details.push({
-                type: 'tr',
-                attributes: {
-                    title: entry.description,
-                },
-                components: [
-                    {
-                        type: 'th',
-                        slot: entry.label,
-                    },
-                    {
-                        type: 'td',
-                        attributes: {
-                            'data-varType': entry.var,
-                        },
-                        slot: entry.var === 'version' ? Uib._meta.version : JSON.stringify(this[entry.var]),
-                    }
-                ],
-            })
-        })
-
-        _ui._uiReplace(root)
-
-        return showHide
-    }
-
     /** Use the Mutation Observer browser API to watch for changes to a single element on the page.
      * OMG! It is sooo hard to turn the data into something that successfully serialises so it can be sent back to Node-RED!
      * NB: Each cssSelector creates a unique watcher. Sending the same selector overwrites the previous one.
@@ -2526,7 +2087,7 @@ export const Uib = class Uib {
      * @param {boolean|"toggle"} [startStop] true=start watching the DOM, false=stop. Default='toggle'
      * @param {boolean} [send] true=Send changes to Node-RED, false=Don't send. Default=true
      * @param {boolean} [showLog] true=Output changes to log, false=stop. Default=true. Log level is 2 (Info)
-     * @returns {boolean} True if the watch is on, false otherwise
+     * @return {boolean} True if the watch is on, false otherwise
      */
     uiWatch(cssSelector, startStop = 'toggle', send = true, showLog = true) {
         // Select the node that will be observed for mutations
@@ -2607,7 +2168,7 @@ export const Uib = class Uib {
         }
 
         return startStop
-    } // ---- End of watchDom ---- //
+    }
 
     /** Use the Mutation Observer browser API to watch for and save changes to the HTML
      * Once the observer is created, it will be reused.
@@ -2642,9 +2203,458 @@ export const Uib = class Uib {
             this._htmlObserver.disconnect()
             log('trace', 'uibuilder.module.js:watchDom', 'Stopped Watching and saving DOM changes')()
         }
-    } // ---- End of watchDom ---- //
+    }
 
-    // #endregion -------- -------- -------- //
+    // ! EXPERIMENTAL - not yet working
+    /** Process a uib-bind:* attribute by evaluating the bind value and applying it to the element as the named attribute
+     *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
+     * @param {HTMLElement} el The element to process
+     * @param {string} bindName The name of the attribute to bind
+     * @param {string} bindValue The value to bind to the attribute
+     * @private
+     */
+    _processUibBind(el, bindName, bindValue) {
+        log('print', 'uibuilder:_uibAttrScanOne', 'Processing uib-bind:', bindName, 'for element:', el)()
+        // treat the attribute value as a javascript function, run the function safely
+        let value = bindValue
+        try {
+            value = (new Function(`return (${bindValue})`))()
+            log('print', 'uibuilder:_uibAttrScanOne', 'SUCCESS 1 uib-bind attribute:', bindName, 'with value:', value)()
+        } catch (e) {
+            log('print', 'uibuilder:_uibAttrScanOne', '🟥Error 1 uib-bind attribute:', bindName, 'with value:', value)()
+            try {
+                console.log(globalThis)
+                value = globalThis[bindValue] ?? bindValue
+                // value = (new Function(`return (window.${attr.value})`))()
+                log('print', 'uibuilder:_uibAttrScanOne:_processUibBind', 'SUCCESS 2 uib-bind attribute:', bindName, 'with value:', value)()
+            } catch (e) {
+                log('print', 'uibuilder:_uibAttrScanOne:_processUibBind', '🟥Error 2 uib-bind attribute:', bindName, 'with value:', value)()
+            }
+        }
+
+        // set the attribute names by bindName to the value of the attribute
+        if (bindName && value) {
+            // Set the attribute to the value of the bindName
+            el.setAttribute(bindName, value)
+            // If the bindName is 'value', then also set the value of the element
+            if (bindName === 'value') el.value = value
+        } else {
+            log('warn', 'uibuilder:_uibAttrScanOne:_processUibBind', 'Invalid uib-bind attribute:', bindName, 'with value:', value, 'for element:', el)()
+        }
+    }
+
+    // #endregion -- DOM mutation handlers --
+
+    /** Given a FileList array, send each file to Node-RED and return file metadata
+     * @param {HTMLInputElement} srcEl Reference to the source input element
+     * @param {boolean=} noSend If true, don't send the file to Node-RED. Default is to send.
+     * @return {Array<object>} Metadata values from all files
+     * @private
+     */
+    _processFilesInput(srcEl, noSend = false) {
+        const value = []
+        const files = srcEl.files
+        const seqCount = files.length
+        let seq = 0
+        for (const file of files) {
+            const props = {}
+            seq++
+            // Walk through each file property
+            for (const prop in file) {
+                props[prop] = file[prop]
+            }
+            // Create a temp URL allowing access to download the file
+            // Automatically destroyed on page reload
+            props.tempUrl = window.URL.createObjectURL(file)
+
+            value.push(props)
+
+            const meta = { seq, seqCount, }
+            meta.id = srcEl.id
+            // meta.srcElIds.name = srcEl.name
+            if (srcEl.form) meta.formId = srcEl.form.id
+            meta.tempUrl = props.tempUrl
+            meta.data = srcEl.dataset
+
+            // Auto-upload to Node-RED over Socket.IO {id: target.id, name: target.name, formId: target.parent.formID,}
+            if (noSend !== true) this.uploadFile(file, meta)
+        }
+        return value
+    }
+
+    /** Set up an event listener to watch for DOM hash changes
+     * and set the watchable urlHash variable
+     * @private
+     */
+    _watchHashChanges() {
+        this.set('urlHash', location.hash)
+        window.addEventListener('hashchange', (event) => {
+            this.set('urlHash', location.hash)
+            if (this.#sendUrlHash === true) {
+                this.send({ topic: 'hashChange', payload: location.hash, newHash: this.keepHashFromUrl(event.newURL), oldHash: this.keepHashFromUrl(event.oldURL), })
+            }
+        })
+    }
+
+    // TODO (FUTURE) Easy creation/change of DOM elements, @see ./tinyDom.js
+    // dom = dom
+
+    /** Attempt to get target attributs - can fail for certain target types, if so, returns empty object
+     * @param {HTMLElement} el Target element
+     * @return {object} Array of key/value HTML attribute objects
+     */
+    getElementAttributes(el) {
+        const ignoreAttribs = ['class', 'id', 'name']
+        let attribs
+        try {
+            attribs = Object.assign({},
+                ...Array.from(el.attributes,
+                    ( { name, value, } ) => {
+                        if ( !ignoreAttribs.includes(name) ) {
+                            return ({ [name]: value, })
+                        }
+                        return undefined
+                    }
+                )
+            )
+        } catch (e) {}
+
+        return attribs
+    }
+
+    /** Check for CSS Classes and return as array if found or undefined if not
+     * @param {HTMLElement} el Target element
+     * @return {Array|undefined} Array of class names
+     */
+    getElementClasses(el) {
+        let classes
+        try {
+            classes = Array.from(el.classList)
+        } catch (e) {}
+        return classes
+    }
+
+    /** Get target custom properties - only shows custom props not element default ones
+     * Excludes custom props starting with _
+     * @param {HTMLElement} el Target element
+     * @return {object} Object of propname/value pairs
+     */
+    getElementCustomProps(el) {
+        const props = {}
+        Object.keys(el).forEach( (key) => {
+            if (key.startsWith('_')) return // Exclude private
+            props[key] = el[key]
+        })
+        return props
+    }
+
+    /** Check for el.value and el.checked. el.checked will also set the value return for ease of use.
+     * Only 2 input types use el.checked, different from all other input types - this is annoying.
+     * @param {HTMLElement} el HTML Element to be checked
+     * @return {{value:boolean|null, checked:boolean|null}} Return null if properties not present, else the appropriate value
+     */
+    getFormElementValue(el) {
+        let value = null
+        let checked = null
+
+        switch (el.type) {
+            case 'checkbox':
+            case 'radio': {
+                value = checked = el.checked
+                // HTML does not normally return any value if not checked but we do for ease of use,
+                break
+            }
+
+            case 'select-multiple': {
+                // value = Array.from(el.selectedOptions).forEach( (sel) => sel.value )
+                value = Array.from(el.selectedOptions).map(option => option.value)
+                break
+            }
+
+            default: {
+                if (el.value) value = el.value
+
+                // Probably not really needed
+                if (el.checked) {
+                    value = checked = el.checked
+                    // HTML does not normally return any value if not checked but we do for ease of use,
+                }
+
+                // If the value is a valid number, use that instead of the text version - probably only applies to range inputs
+                if (el.valueAsNumber && !isNaN(el.valueAsNumber)) {
+                    value = el.valueAsNumber
+                }
+
+                break
+            }
+        }
+
+        return { value, checked, }
+    }
+
+    // ! TODO - Handle fieldsets
+    /** For HTML Form elements (e.g. input, textarea, select), return the details
+     * @param {HTMLFormElement} el Source form element
+     * @return {object|null} Form element key details
+     */
+    getFormElementDetails(el) {
+        if (!el.type) {
+            log(1, 'uibuilder:getFormElementDetails', 'Cannot get form element details as this is not an input type element')()
+            return null
+        }
+
+        // Get or create a (hopefully) unique ID
+        const id = this.returnElementId(el)
+        if (!id) {
+            log(1, 'uibuilder:getFormElementDetails', 'Cannot get form element details as no id is present and could not be generated')()
+            return null
+        }
+
+        let { value, checked, } = this.getFormElementValue(el) // eslint-disable-line prefer-const
+
+        // This is now done in eventSend rather than here for consistency with non-form sends.
+        // For multi file input, get the file details as the value
+        // el.files is a FileList type & each entry is a File type - have to process these manually - stupid HTML!
+        // https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications
+        // if (el.type === 'file' && el.files.length > 0) {
+        //     // Walk through each file in the FileList, get the details and send the file to Node-RED
+        //     value = this._processFilesInput(el.files)
+        // }
+
+        const formDetails = {
+            id: id,
+            name: el.name,
+            valid: el.checkValidity(),
+            type: el.type,
+        }
+        if (value !== null) formDetails.value = value
+        if (checked !== null) formDetails.checked = checked
+
+        // If the form element has invalid content, try to report why
+        if (formDetails.valid === false) {
+            const v = el.validity
+            formDetails.validity = {
+                badInput: v.badInput === true ? v.badInput : undefined,
+                customError: v.customError === true ? v.customError : undefined,
+                patternMismatch: v.patternMismatch === true ? v.patternMismatch : undefined,
+                rangeOverflow: v.rangeOverflow === true ? v.rangeOverflow : undefined,
+                rangeUnderflow: v.rangeUnderflow === true ? v.rangeUnderflow : undefined,
+                stepMismatch: v.stepMismatch === true ? v.stepMismatch : undefined,
+                tooLong: v.tooLong === true ? v.tooLong : undefined,
+                tooShort: v.tooShort === true ? v.tooShort : undefined,
+                typeMismatch: v.typeMismatch === true ? v.typeMismatch : undefined,
+                valueMissing: v.valueMissing === true ? v.valueMissing : undefined,
+            }
+        }
+
+        // If any data-* attribs defined
+        if (Object.keys(el.dataset).length > 0) formDetails.data = el.dataset
+
+        return formDetails
+    }
+
+    /** Show a browser notification if possible.
+     * Config can be a simple string, a Node-RED msg (topic as title, payload as body)
+     * or a Notifications API options object + config.title string.
+     * @example uibuilder.notify( 'My simple message to the user' )
+     * @example uibuilder.notify( {topic: 'My Title', payload: 'My simple message to the user'} )
+     * @example uibuilder.notify( {title: 'My Title', body: 'My simple message to the user'} )
+     * @example // If config.return = true, a promise is returned.
+     * // The resolved promise is only returned if the notification is clicked by the user.
+     * // Can be used to send the response back to Node-RED
+     * uibuilder.notify(notifyConfig).then( res => uibuilder.eventSend(res) )
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
+     * @param {object|string} config Notification config data or simple message string
+     * @return {Promise<Event>|null} A promise that resolves to the click event or null
+     */
+    notify(config) {
+        if (config.return) return _ui.notification(config)
+
+        _ui.notification(config)
+            .then( (res) => { // eslint-disable-line promise/always-return
+                log('info', 'Uib:notification', 'Notification completed event', res)()
+                // if (config.return) return res
+            })
+            .catch( (err) => {
+                log('error', 'Uib:notification', 'Notification error event', err)()
+            })
+        return null
+    }
+
+    /** Get or create a (hopefully) unique ID
+     * @param {HTMLFormElement} el Source form element
+     * @return {string|null} A hopefully unique element ID
+     */
+    returnElementId(el) {
+        return el.id !== '' ? el.id : (el.name !== '' ? `${el.name}-${++this.#uniqueElID}` : (el.type ? `${el.type}-${++this.#uniqueElID}` : `${el.localName}-${++this.#uniqueElID}`))
+    }
+
+    /** Scroll the page
+     * https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+     * @param {string} [cssSelector] Optional. If not set, scrolls to top of page.
+     * @param {{block:(string|undefined),inline:(string|undefined),behavior:(string|undefined)}} [opts] Optional. DOM scrollIntoView options
+     * @return {boolean} True if element was found, false otherwise
+     */
+    scrollTo(cssSelector, opts) {
+        // @ts-ignore
+        if (!opts) opts = {}
+        if (!cssSelector || cssSelector === 'top'  || cssSelector === 'start') cssSelector = 'body'
+        else if (cssSelector === 'bottom' || cssSelector === 'end') {
+            cssSelector = 'body'
+            opts.block = 'end'
+        }
+        const el = this.$(cssSelector)
+        if (el) {
+            el.scrollIntoView(opts)
+            return true
+        }
+        return false
+    }
+
+    /** Show/hide a display card on the end of the visible HTML that will dynamically display the last incoming msg from Node-RED
+     * The card has the id `uib_last_msg`. Updates are done from a listener set up in the start function.
+     * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
+     * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+     * @return {boolean} New state
+     */
+    showMsg(showHide, parent = 'body') {
+        if ( showHide === undefined ) showHide = !this.#isShowMsg
+        this.#isShowMsg = showHide
+        let slot = 'Waiting for a message from Node-RED'
+
+        if (this.msg && Object.keys(this.msg).length > 0) {
+            slot = this.syntaxHighlight(this.msg)
+        }
+
+        if ( showHide === false ) {
+            _ui._uiRemove( {
+                components: [
+                    '#uib_last_msg_wrap',
+                ],
+            })
+        } else {
+            _ui._uiReplace({
+                components: [
+                    {
+                        type: 'div',
+                        id: 'uib_last_msg_wrap',
+                        parent: parent,
+                        attributes: {
+                            title: 'Last message from Node-RED',
+                        },
+                        components: [
+                            {
+                                type: 'button',
+                                attributes: {
+                                    onclick: 'uibuilder.copyToClipboard("msg")',
+                                    class: 'compact',
+                                    style: 'right:3em;',
+                                    title: 'Copy message to clipboard',
+                                },
+                                slot: '📋',
+                            },
+                            {
+                                type: 'button',
+                                attributes: {
+                                    onclick: 'uibuilder.showMsg()',
+                                    class: 'compact',
+                                    style: 'right:.5em;',
+                                    title: 'Turn off message display',
+                                },
+                                slot: '⛔',
+                            },
+                            {
+                                type: 'pre',
+                                id: 'uib_last_msg',
+                                // parent: 'uib_last_msg_wrap',
+                                attributes: {
+                                    class: 'syntax-highlight',
+                                },
+                                slot: slot,
+                            },
+                        ],
+                    },
+                ],
+            })
+        }
+
+        return showHide
+    }
+
+    /** Show/hide a display card on the end of the visible HTML that will dynamically display the current status of the uibuilder client
+     * The card has the id `uib_status`.
+     * The display is updated by an event listener created in the class constructor.
+     * @param {boolean|undefined} showHide true=show, false=hide. undefined=toggle.
+     * @param {string|undefined} parent Optional. If not undefined, a CSS selector to attach the display to. Defaults to `body`
+     * @return {boolean} New state
+     */
+    showStatus(showHide, parent = 'body') {
+        if ( showHide === undefined ) showHide = !this.#isShowStatus
+        this.#isShowStatus = showHide
+
+        if ( showHide === false ) {
+            _ui._uiRemove( {
+                components: [
+                    '#uib_status',
+                ],
+            })
+            return showHide
+        }
+
+        const root = {
+            components: [
+                {
+                    type: 'div',
+                    id: 'uib_status',
+                    parent: parent,
+                    attributes: {
+                        title: 'Current status of the uibuilder client',
+                        class: 'text-smaller',
+                    },
+                    components: [
+                        {
+                            type: 'table',
+                            components: [
+                                {
+                                    type: 'tbody',
+                                    components: [],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+        const details = root.components[0].components[0].components[0].components
+
+        Object.values(this.#showStatus).forEach( (entry) => {
+            details.push({
+                type: 'tr',
+                attributes: {
+                    title: entry.description,
+                },
+                components: [
+                    {
+                        type: 'th',
+                        slot: entry.label,
+                    },
+                    {
+                        type: 'td',
+                        attributes: {
+                            'data-varType': entry.var,
+                        },
+                        slot: entry.var === 'version' ? Uib._meta.version : JSON.stringify(this[entry.var]),
+                    }
+                ],
+            })
+        })
+
+        _ui._uiReplace(root)
+
+        return showHide
+    }
+
+    // #endregion -------- UI/DOM handlers -------- //
 
     // #region ------- HTML cache --------- //
 
@@ -2764,7 +2774,7 @@ export const Uib = class Uib {
 
     /** Do we want to process something? Check pageName, clientId, tabId. Defaults to yes.
      * @param {*} obj Either a msg._ui or msg._uib object to check
-     * @returns {boolean} True if we should process the inbound _ui/_uib msg, false if not.
+     * @return {boolean} True if we should process the inbound _ui/_uib msg, false if not.
      * @private
      */
     _forThis(obj) {
@@ -2949,6 +2959,9 @@ export const Uib = class Uib {
         if (receivedMsg._uib && !this._forThis(receivedMsg._uib)) return
         if (receivedMsg._ui && !this._forThis(receivedMsg._ui)) return
 
+        // Make sure we know it is from the server
+        receivedMsg._from = 'server'
+
         // @since 2018-10-07 v1.0.9: Work out local time offset from server
         this._checkTimestamp(receivedMsg)
 
@@ -2958,8 +2971,8 @@ export const Uib = class Uib {
         // Emit specific document events on msg receipt that make it easy for coders to use
         this._msgRcvdEvents(receivedMsg)
 
+        // Save the msg for further processing
         if ( !('_ui' in receivedMsg && !('payload' in receivedMsg)) ) {
-            // Save the msg for further processing
             this.set('msg', receivedMsg)
         }
 
@@ -3129,7 +3142,7 @@ export const Uib = class Uib {
      * @param {number} [options.timeout] Timeout in milliseconds (default: 60000 = 60 seconds)
      * @param {Function} [options.onSuccess] Optional callback function to call on success. Receives the response msg.
      * @param {string} [options.originator] Optional Node-RED node ID to return the message to
-     * @returns {Promise<object>} Promise that resolves with the response message or rejects on timeout
+     * @return {Promise<object>} Promise that resolves with the response message or rejects on timeout
      * @example
      * // Basic usage
      * const response = await uibuilder.asyncSend({ topic: 'myTopic', payload: 'Hello' })
@@ -3227,7 +3240,7 @@ export const Uib = class Uib {
     /** Easily send the entire DOM/HTML msg back to Node-RED
      * @param {string} [originator] A Node-RED node ID to return the message to
      * @param {boolean} [send] If true (default) directly send response to Node-RED. Is false when calling from Node-RED as a command.
-     * @returns {string} The HTML as a string
+     * @return {string} The HTML as a string
      */
     htmlSend(originator = '', send = true) {
         const out = `<!doctype html>\n${document.documentElement.outerHTML}`
@@ -3521,13 +3534,13 @@ export const Uib = class Uib {
         // Read the file as an ArrayBuffer
         reader.readAsArrayBuffer(file)
     }
-    // #endregion -------- ------------ -------- //
+    // #endregion -------- Message Handling -------- //
 
     // #region ------- Web Worker -------- //
     /** Get HTTP headers that were sent with the page request
      * Uses a web worker to fetch headers from the server.
      * @param {string} [headerName] Optional specific header name to retrieve (case-insensitive)
-     * @returns {Promise<object|string|null>} Promise resolving to all headers object, a specific header value, or null
+     * @return {Promise<object|string|null>} Promise resolving to all headers object, a specific header value, or null
      * @example
      * // Get all headers
      * const allHeaders = await uibuilder.headers()
@@ -3546,7 +3559,7 @@ export const Uib = class Uib {
 
     /** Get HTTP headers synchronously (may be empty if not yet fetched)
      * @param {string} [headerName] Optional specific header name to retrieve (case-insensitive)
-     * @returns {object|string|null} All headers object, a specific header value, or null
+     * @return {object|string|null} All headers object, a specific header value, or null
      * @example
      * // Get all headers (may be empty if called too early)
      * const allHeaders = uibuilder.headersSync()
@@ -3561,7 +3574,7 @@ export const Uib = class Uib {
     // }
 
     /** Check if HTTP headers have been fetched and are available
-     * @returns {boolean} True if headers are ready to be read
+     * @return {boolean} True if headers are ready to be read
      */
     // get headersReady() {
     //     return this.#headerWorker.isReady
@@ -3584,7 +3597,7 @@ export const Uib = class Uib {
      * since 2017-10-21 Improve method to cope with more complex paths - thanks to Steve Rickus @shrickus
      * since 2017-11-10 v1.0.1 Check cookie first then url. cookie works even if the path is more complex (e.g. sub-folder)
      * since 2020-01-25 Removed httpRoot from namespace to prevent proxy induced errors
-     * @returns {string} Socket.IO namespace
+     * @return {string} Socket.IO namespace
      * @private
      */
     _getIOnamespace() {
@@ -3624,7 +3637,7 @@ export const Uib = class Uib {
      * @param {number} [delay] Initial delay before checking (ms). Default=2000ms
      * @param {number} [factor] Multiplication factor for subsequent checks (delay*factor). Default=1.5
      * @param {number} [depth] Recursion depth
-     * @returns {boolean|undefined} Whether or not Socket.IO is connected to uibuilder in Node-RED
+     * @return {boolean|undefined} Whether or not Socket.IO is connected to uibuilder in Node-RED
      * @private
      */
     _checkConnect(delay, factor, depth = 1) {
@@ -3740,7 +3753,7 @@ export const Uib = class Uib {
 
     /** Setup Socket.io
      * since v2.0.0-beta2 Moved to a function and called by the user (uibuilder.start()) so that namespace & path can be passed manually if needed
-     * @returns {boolean} Attaches socket.io manager to self._socket and updates self.ioNamespace & self.ioPath as needed
+     * @return {boolean} Attaches socket.io manager to self._socket and updates self.ioNamespace & self.ioPath as needed
      * @private
      */
     _ioSetup() {
@@ -3909,8 +3922,7 @@ export const Uib = class Uib {
 
     // #endregion -------- ------------ -------- //
 
-    // #region Watch for and process uib-* or data-uib-* attributes in HTML and auto-process
-
+    // #region --- EXPERIMENTAL ---
     /** Attempt to load a service worker
      * https://yonatankra.com/how-service-workers-sped-up-our-website-by-97-5/
      * @param {string} fileName Name of service worker js file (without .js extension)
@@ -4078,7 +4090,7 @@ export const Uib = class Uib {
      * necessarily work out the correct ioPath to use.
      * Also, if cookies aren't permitted in the browser, both ioPath and ioNamespace may need to be specified.
      * @param {object} [options] The start options object.
-     * @returns {void}
+     * @return {void}
      */
     start(options) {
         log('trace', 'Uib:start', 'Starting')()
