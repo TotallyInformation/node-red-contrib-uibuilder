@@ -173,7 +173,22 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                     return
                 }
                 const success = opt.success || function() {}
-                const error = opt.error || function() {}
+                let error = function(xhr, textStatus, err) {
+                    if (xhr.status === 401) {
+                        // Could be: not logged in, OR insufficient permissions
+                        uibuilder.nrNotify(`"${data.cmd}" API call failed - insufficient authorisation`, { type: 'error', fixed: true, })
+                        console.error(`🌐🛑[uibuilder:common:doAdminApiv3] "${data.cmd}" API call authorisation failure`, err)
+                    } else if (err === 'Not Found') { // for checkfolder
+                        // do nothing
+                    } else {
+                        uibuilder.nrNotify(`"${data.cmd}" API call failed. Status=${textStatus} (${xhr.status})`, { type: 'error', fixed: fixErrNotify, })
+                        console.error(`🌐🛑[uibuilder:common:doAdminApiv3] "${data.cmd}" API call ERROR: ${textStatus} (${xhr.status})`, err)
+                    }
+                    // if (textStatus === 'timeout') {}
+                }
+                if (opt.error) {
+                    error = opt.error
+                }
 
                 $.ajax({
                     url: './uibuilder/admin/' + url, // api v3
@@ -189,21 +204,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                             jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
                         }
                     },
-                    error: function(xhr, textStatus, err) {
-                        if (xhr.status === 401) {
-                            // Could be: not logged in, OR insufficient permissions
-                            uibuilder.nrNotify(`"${data.cmd}" API call failed - insufficient authorisation`, { type: 'error', fixed: true, })
-                            console.error(`🌐🛑[uibuilder:common:doAdminApiv3] "${data.cmd}" API call authorisation failure`, err)
-                        } else if (err === 'Not Found') { // for checkfolder
-                            // do nothing
-                        } else {
-                            uibuilder.nrNotify(`"${data.cmd}" API call failed. Status=${textStatus} (${xhr.status})`, { type: 'error', fixed: fixErrNotify, })
-                            console.error(`🌐🛑[uibuilder:common:doAdminApiv3] "${data.cmd}" API call ERROR: ${textStatus} (${xhr.status})`, err)
-                        }
-                        // if (textStatus === 'timeout') {}
-                        // Call the error function if provided
-                        error(xhr, textStatus, err)
-                    },
+                    error: error,
                     success: success,
                 })
                     // .done(function(data, textStatus, jqXHR) {
