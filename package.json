@@ -42,7 +42,7 @@
     "@types/jquery": "3.*",
     "@types/jqueryui": "1.*",
     "@types/node": "22.*",
-    "@types/node-red": "*",
+    "@types/node-red": "5.*",
     "browserslist": "^4",
     "docsify": "^5.0.0",
     "docsify-copy-code": "^3.0.0",
