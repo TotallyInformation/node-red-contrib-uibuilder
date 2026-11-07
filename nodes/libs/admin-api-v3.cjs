@@ -1425,7 +1425,6 @@ v3AdminRouter.route('/:url')
                 // Fix for Issue #155 - if fldr = root, no folder
                 if ( params.folder === 'root' ) params.folder = '.'
                 const fullname = path.join(uib.rootFolder, params.url, params.folder, params.fname)
-                clog.info(fullname, params)
                 fslib.writeFileCb(fullname, params.data, function (err) {
                     if (err) {
                         // Send back a response message and code 200 = OK, 500 (Internal Server Error)=Update failed
