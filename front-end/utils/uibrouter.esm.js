@@ -234,22 +234,21 @@ var _UibRouter = class _UibRouter {
   _updateRouteIds() {
     this.routeIds = new Set(Object.values(this.config.routes).map((r) => r.id));
   }
-  /** If uibuilder in use, report on route change
-   * @param {string} newRouteId The route id now shown
-   */
-  _uibRouteChange(newRouteId) {
-    if (!this.uibuilder || !newRouteId) return;
+  /** If uibuilder in use, report on route change */
+  _uibRouteChange() {
+    if (!this.uibuilder || !this.currentRouteId) return;
     uibuilder.set("uibrouter", "route changed");
-    uibuilder.set("uibrouter_CurrentRoute", newRouteId);
+    uibuilder.set("uibrouter_CurrentRoute", this.currentRouteId);
     uibuilder.set("uibrouter_CurrentTitle", this.routeTitle());
     uibuilder.set("uibrouter_CurrentDescription", this.routeDescription());
-    uibuilder.set("uibrouter_CurrentDetails", this.getRouteConfigById(newRouteId));
+    uibuilder.set("uibrouter_CurrentDetails", this.getRouteConfigById(this.currentRouteId));
     uibuilder.sendCtrl({
       uibuilderCtrl: "route change",
-      routeId: newRouteId,
+      routeId: this.currentRouteId,
       title: this.routeTitle(),
       description: this.routeDescription(),
-      details: this.getRouteConfigById(newRouteId)
+      details: this.getRouteConfigById(this.currentRouteId),
+      previousRouteId: this.currentRouteId
     });
   }
   // #endregion --- ----- --
@@ -415,7 +414,7 @@ var _UibRouter = class _UibRouter {
     container.dataset.currentRoute = newRouteId;
     this.setCurrentMenuItems();
     document.dispatchEvent(new CustomEvent("uibrouter:route-changed", { detail: { newRouteId, oldRouteId } }));
-    this._uibRouteChange(newRouteId);
+    this._uibRouteChange();
   }
   /** Load other external files and apply to specific parents (mostly used for externally defined menus)
    * @param {otherLoadDefinition|Array<otherLoadDefinition>} extOther Required. Array of objects defining what to load and where

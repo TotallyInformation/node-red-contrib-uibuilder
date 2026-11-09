@@ -355,23 +355,23 @@ class UibRouter {
         this.routeIds = new Set(Object.values(this.config.routes).map( r => r.id ))
     }
 
-    /** If uibuilder in use, report on route change
-     * @param {string} newRouteId The route id now shown
-     */
-    _uibRouteChange(newRouteId) {
-        if (!this.uibuilder || !newRouteId) return
+    /** If uibuilder in use, report on route change */
+    _uibRouteChange() {
+        // this.currentRouteId this.previousRouteId
+        if (!this.uibuilder || !this.currentRouteId) return
         uibuilder.set('uibrouter', 'route changed')
-        uibuilder.set('uibrouter_CurrentRoute', newRouteId)
+        uibuilder.set('uibrouter_CurrentRoute', this.currentRouteId)
         uibuilder.set('uibrouter_CurrentTitle', this.routeTitle())
         uibuilder.set('uibrouter_CurrentDescription', this.routeDescription())
-        uibuilder.set('uibrouter_CurrentDetails', this.getRouteConfigById(newRouteId))
+        uibuilder.set('uibrouter_CurrentDetails', this.getRouteConfigById(this.currentRouteId))
         // Send control msg back to Node-RED
         uibuilder.sendCtrl({
             uibuilderCtrl: 'route change',
-            routeId: newRouteId,
+            routeId: this.currentRouteId,
             title: this.routeTitle(),
             description: this.routeDescription(),
-            details: this.getRouteConfigById(newRouteId),
+            details: this.getRouteConfigById(this.currentRouteId),
+            previousRouteId: this.currentRouteId,
         })
     }
     // #endregion --- ----- --
@@ -627,7 +627,7 @@ class UibRouter {
 
         // Events on route changed ...
         document.dispatchEvent(new CustomEvent('uibrouter:route-changed', { detail: { newRouteId, oldRouteId, }, }))
-        this._uibRouteChange(newRouteId)
+        this._uibRouteChange()
     }
 
     /** Load other external files and apply to specific parents (mostly used for externally defined menus)
