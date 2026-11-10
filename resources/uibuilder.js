@@ -1,3 +1,4 @@
+/* eslint-disable @stylistic/no-extra-semi */
 /* eslint-disable @stylistic/newline-per-chained-call */
 // NOTE: window.uibuilder is added - see `resources` folder
 
@@ -6,13 +7,16 @@
  * @typedef {import('../typedefs.js').uibNode} uibNode
  */
 
-;(function () { // eslint-disable-line @stylistic/no-extra-semi
+;(function () {
     'use strict'
 
     // #region --------- module variables for the panel --------- //
 
     // NOTE: window.uibuilder is added by editor-common.js - see `resources` folder
     const uibuilder = /** @type {UibEditorCommon} */ (window['uibuilder'])
+    // Work around Node-RED bug that loads Editor resources in wrong order on Node package install
+    if (!uibuilder) alert('Resources loded in incorrect order due to Node-RED bug, please reload the page.')
+    // enhanced logging
     const log = uibuilder.log
     /** Module name must match this nodes html file @constant {string} moduleName */
     const moduleName = 'uibuilder'
