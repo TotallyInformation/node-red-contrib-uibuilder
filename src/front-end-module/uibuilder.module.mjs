@@ -319,16 +319,17 @@ const _ui = new Ui(window, log, syntaxHighlight)
  * @typicalname uibuilder
  */
 export const Uib = class Uib {
-    // #region --- Static variables ---
+    // #region ------- Class variables ------- //
+
+    // #region Static variables
     static _meta = {
         version: version,
         type: 'module',
         displayName: 'uibuilder',
     }
-    // #endregion ---- ---- ---- ----
+    // #endregion ---- ----
 
     // #region private class vars
-
     // How many times has the loaded instance connected to Socket.IO (detect if not a new load?)
     connectedNum = 0
     // event listener callbacks by property name
@@ -375,10 +376,8 @@ export const Uib = class Uib {
         'navigate', 'scrollTo', 'set', 'showMsg', 'showStatus', 'showOverlay',
         'uiGet', 'uiWatch', 'watchUrlHash',
     ]
-
     /** @type {Object<string, string>} Managed uibuilder variables */
     #managedVars = {}
-
     // What status variables to show via showStatus()
     #showStatus = {
         online: { var: 'online', label: 'Online?', description: 'Is the browser online?', },
@@ -406,21 +405,17 @@ export const Uib = class Uib {
         version: { var: 'version', label: 'uibuilder client version', description: 'The version of the loaded uibuilder client library', },
         serverTimeOffset: { var: 'serverTimeOffset', label: 'Server time offset (Hrs)', description: 'The number of hours difference between the Node-red server and the client', },
     }
-
     // Track ui observers (see uiWatch)
     #uiObservers = {}
-
     // CSS selector for querySelectorAll to find elements with known uib attributes.
     // NOTE: CSS cannot match attribute name prefixes, so this covers known names.
     //       _uibAttrScanOne handles any uib-prefixed attributes found on matched elements.
     #uibAttrSel = '[uib-topic], [data-uib-topic], [uib-var], [data-uib-var], [uib-if], [data-uib-if]'
-
-    //#endregion
+    // #endregion --- ---
 
     // #region public class vars
-
     // TODO Move to proper getters
-    // #region ---- Externally read-only (via .get method) ---- //
+    // #region Externally read-only (via .get method)
     // version - moved to _meta
     // Has the initial Socket.IO connection been made? Used to detect if a page reload or just a disconnect/reconnect
     initialConnect = null
@@ -474,10 +469,9 @@ export const Uib = class Uib {
     urlHash = location.hash
     // HTTP Headers on initial load - contain useful uibuilder info
     httpHeaders = {}
-    // #endregion ---- ---- ---- ---- //
-
+    // #endregion ---- ----
     // TODO Move to proper getters/setters
-    // #region ---- Externally Writable (via .set method, read via .get method) ---- //
+    // #region Externally Writable (via .set method, read via .get method)
     /** Default originator node id - empty string by default
      * @type {string}
      */
@@ -492,9 +486,8 @@ export const Uib = class Uib {
     uibrouterinstance
     /** Set by uibrouter, do not set manually */
     uibrouter_CurrentRoute
-    // #endregion ---- ---- ---- ---- //
-
-    // #region ---- These are unlikely to be needed externally: ----
+    // #endregion ---- ----
+    // #region Unlikely to be needed externally
     autoSendReady = true
     httpNodeRoot = '' // Node-RED setting (via cookie)
     ioNamespace = ''
@@ -537,9 +530,10 @@ export const Uib = class Uib {
             },
         },
     }
-    // #endregion -- not external --
+    // #endregion --- ---
+    // #endregion --- ---
 
-    // #endregion --- End of variables ---
+    // #endregion --- End of class variables ---
 
     // #region ------- Getters and Setters ------- //
 
@@ -642,7 +636,7 @@ export const Uib = class Uib {
         // trigger an event on the prop name, pass both the name and value to the event details
         this._dispatchCustomEvent('uibuilder:propertyChanged', { prop: eventProp, value: eventVal, oldValue: oldVal, store: store, autoload: autoload, })
         this._dispatchCustomEvent(`uibuilder:propertyChanged:${eventProp}`, { prop: eventProp, value: eventVal, oldValue: oldVal, store: store, autoload: autoload, })
-        // if the prop name is "msg", and the change didn't come from the server, also trigger 
+        // if the prop name is "msg", and the change didn't come from the server, also trigger
         if (prop === 'msg' && val && val?._from !== 'server') {
             if (!val?._from) val._from = 'local'
             this._dispatchCustomEvent('uibuilder:stdMsgReceived', val)
@@ -729,7 +723,7 @@ export const Uib = class Uib {
             log('error', 'Uib:setStore', 'Cannot write to localStorage. ', e)()
             return false
         }
-    } // --- end of setStore --- //
+    }
 
     /** Attempt to get and re-hydrate a key value from localStorage
      * Note that all uib storage is automatically prefixed using this.storePrefix
@@ -775,7 +769,7 @@ export const Uib = class Uib {
         return Object.keys(this.#propChangeCallbacks)
     }
 
-    // #endregion ------- -------- ------- //
+    // #endregion ------- --------
 
     // #region ------- Our own event handling system ---------- //
 
@@ -1810,8 +1804,37 @@ export const Uib = class Uib {
             return false
         }
         try {
-            for (const [key, value] of Object.entries(attribs)) {
-                el.setAttribute(key, value)
+            // Object.keys(comp.attributes).forEach((attrib) => {
+            for (const [attrib, value] of Object.entries(attribs)) {
+                // For values and checks, set the actual value as well since the attrib only changes the DEFAULT value
+                if (attrib === 'value' || attrib === 'checked') this.setValueOrChecked(el, value)
+                else if (attrib === 'classes' || attrib === 'class') {
+                    if (Array.isArray(value)) {
+                        value.forEach( (val) => {
+                            el.classList.add(val) // WARN: ADDs classes
+                        })
+                    } else {
+                        el.ClassName = value // WARN: Replaces all classes
+                    }
+                } else if (attrib === 'style' || attrib === 'styles') {
+                    if (Array.isArray(value)) {
+                        // Array entries should be stylename/value objects or tuplet array
+                        value.forEach( (val) => {
+                            if (Array.isArray(val)) { // WARN: ADDs/OVERRIDES styles
+                                el.style[val[0]] = val[1]
+                            } else if (this.isObject(val)) { // WARN: ADDs/OVERRIDES styles
+                                for (const [style, val] of Object.entries(val)) {
+                                    el.style[style] = val
+                                }
+                            }
+                        })
+                    } else if (this.isObject(value)) { // WARN: ADDs/OVERRIDES styles
+                        for (const [style, val] of Object.entries(value)) {
+                            el.style[style] = val
+                        }
+                    } else el.style.cssText = value // WARN: Replaces all inline styles
+                } else if (attrib.startsWith('xlink:')) el.setAttributeNS('http://www.w3.org/1999/xlink', attrib, value)
+                else el.setAttribute(attrib, value)
             }
         } catch (e) {
             log('error', 'uibuilder:setAttributes', 'Failed to set attributes. Ensure that attributes is an object containing key/value pairs with each key a valid attribute name. Note that values values have to be a string.', e.message)()
@@ -1828,8 +1851,10 @@ export const Uib = class Uib {
         if (el.type && (el.type === 'checkbox' || el.type === 'radio')) {
             // Force value to be boolean or fail false
             el.checked = this.truthy(value, false)
+            el.setAttribute('checked', value)
         } else {
             el.value = value
+            el.setAttribute('value', value)
         }
         return true
     }
@@ -1881,33 +1906,46 @@ export const Uib = class Uib {
      * @param {HTMLElement} el The element to update
      * @param {string} data The input variable to process
      * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
+     * @param {string=} varName What var we are processing (info only)
      * @return {boolean} True if element was updated, else false
      * @private
      */
-    _processVarProps(el, data, isIf = false) {
+    _processVarProps(el, data, isIf = false, varName = '') {
+        if (!_ui.isElement(el)) {
+            log('error', 'uibuilder:_processVarProps', 'el is not an HTML element, cannot continue')()
+            return false
+        }
         if (isIf === true) { // data is true/false
             data = { if: data, }
         } else {
             // if data is a primative (string, etc), assume that should be the payload
-            if (this.isPrimitive(data)) data = { payload: data, }
+            // Unless the el is an input, in that case, set the appropriate attributes instead
+            if (this.isPrimitive(data)) {
+                if ('value' in el) data = { attributes: { value: data, }, }
+                else if ('checked' in el) data = { attributes: { checked: data, }, }
+                else data = { payload: data, }
+            }
         }
 
         // Process msg.attributes
-        if (Object.prototype.hasOwnProperty.call(data, 'attributes')) this.setAttributes(el, data.dataset)
+        if (Object.prototype.hasOwnProperty.call(data, 'attributes')) this.setAttributes(el, data.attributes)
         // Process msg.dataset
         if (Object.prototype.hasOwnProperty.call(data, 'dataset')) this.setDataset(el, data.dataset)
 
-        // Process msg.value (or set checked if boolean - for checkboxes)
+        // In case someone puts checked/value at the top level. Process msg.value (or set checked if boolean - for checkboxes)
         const hasChecked = Object.prototype.hasOwnProperty.call(data, 'checked')
         const hasValue = Object.prototype.hasOwnProperty.call(data, 'value')
         if ( hasValue || hasChecked ) {
-            const value = hasChecked ? msg.checked : hasValue ? msg.value : undefined
+            const value = hasChecked ? data.checked : hasValue ? data.value : undefined
             this.setValueOrChecked(el, value)
         }
 
-        // TODO (MAYBE) Process msg.classes and msg.styles. msg.props (for non-string data)?
-
+        // TODO (MAYBE) Process msg.props (for non-string data)?
+        // Process content/slot
         if (Object.prototype.hasOwnProperty.call(data, 'payload')) {
+            // If el has data-before/data-after attributes, apply these to the payload
+            if (el.dataset.before) data.payload = `${el.dataset.before}${data.payload}`
+            if (el.dataset.after) data.payload = `${data.payload}${el.dataset.after}`
             // If el has a `content` attrib, we must apply as text not html
             if (el.hasAttribute('content')) {
                 el.setAttribute('content', data.payload)
@@ -1916,6 +1954,7 @@ export const Uib = class Uib {
                 this.replaceSlot(el, data.payload)
             }
         }
+
         return true
     }
 
@@ -1991,7 +2030,7 @@ export const Uib = class Uib {
             } catch (e) {}
             // console.log(`🪲[uibuilder:_processUibVar] Variable "${varName}" changed. New value:`, value)
             // log('trace', 'uibuilder:_processUibVar', `Variable "${varName}" changed. New value: `, value)()
-            this._processVarProps(el, value, isIf)
+            this._processVarProps(el, value, isIf, varName)
             if (isIf) el.style.display = this.truthy(value) ? '' : 'none'
         }
 
@@ -3922,7 +3961,7 @@ export const Uib = class Uib {
 
     // #endregion -------- ------------ -------- //
 
-    // #region --- EXPERIMENTAL ---
+    // #region ------- EXPERIMENTAL ------- //
     /** Attempt to load a service worker
      * https://yonatankra.com/how-service-workers-sped-up-our-website-by-97-5/
      * @param {string} fileName Name of service worker js file (without .js extension)
@@ -4218,9 +4257,9 @@ export const Uib = class Uib {
     }
 
     // #endregion -------- ------------ -------- //
-} // ==== End of Class Uib ====
+}
 
-// #region --- Wrap up - get things started, define globals & web components ---
+// #region Wrap up - get things started, define globals & web components
 
 // Create an instance (we will only ever want one)
 const uibuilder = new Uib()
