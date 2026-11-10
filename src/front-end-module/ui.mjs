@@ -178,7 +178,7 @@ const Ui = class Ui {
 
     /** Show a browser notification if the browser and the user allows it
      * @param {object} config Notification config data
-     * @returns {Promise} Resolves on close or click event, returns the event.
+     * @return {Promise} Resolves on close or click event, returns the event.
      */
     _showNotification(config) {
         if ( config.topic && !config.title ) config.title = config.topic
@@ -480,7 +480,7 @@ const Ui = class Ui {
 
             this.loadStyleTxt(ui.txtStyles.join('\n'))
         }
-    } // --- end of _uiLoad ---
+    }
 
     /** Handle incoming _ui messages and loaded UI JSON files
      * Called from start()
@@ -553,7 +553,7 @@ const Ui = class Ui {
                 }
             }
         })
-    } // --- end of _uiManager ---
+    }
 
     /** Handle a reload request */
     _uiReload() {
@@ -582,7 +582,7 @@ const Ui = class Ui {
                 }
             })
         })
-    } // --- end of _uiRemove ---
+    }
 
     /** Handle incoming _ui replace requests
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
@@ -651,7 +651,7 @@ const Ui = class Ui {
                 this._uiExtendEl(newEl, compToReplace.components, compToReplace.ns)
             }
         })
-    } // --- end of _uiReplace ---
+    }
 
     // TODO Allow single add without using components array
     // TODO Allow sub-components
@@ -736,11 +736,19 @@ const Ui = class Ui {
             //     })
             // }
         })
-    } // --- end of _uiUpdate ---
+    }
 
     // #endregion ---- -------- ----
 
     // #region ---- External Methods ----
+
+    // #region -- Utility --
+    /** Returns true if the value is an HTML element, else false
+     * @param {*} value Value to check
+     * @return {boolean} True if value refers to an HTML element
+     */
+    isElement = value => value !== null && typeof value === 'object' && value.nodeType === 1
+    // #endregion -- -- --
 
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
      * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
@@ -749,7 +757,7 @@ const Ui = class Ui {
      * @param {string} cssSelector A CSS Selector that identifies the element to return
      * @param {"el"|"text"|"html"|"attributes"|"attr"} [output] Optional. What type of output to return. Defaults to "el", the DOM element reference
      * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
-     * @returns {HTMLElement|string|Array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
+     * @return {HTMLElement|string|Array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
      */
     $(cssSelector, output, context) {
         if (!context) context = Ui.doc
@@ -818,7 +826,7 @@ const Ui = class Ui {
      * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
      * @param {string} cssSelector A CSS Selector that identifies the elements to return
      * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
-     * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
+     * @return {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
      */
     $$(cssSelector, context) {
         if (!context) context = Ui.doc
@@ -914,7 +922,7 @@ const Ui = class Ui {
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
      * @param {string} mdText The input markdown string
-     * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
+     * @return {string} HTML (if Markdown-IT library loaded and parse successful) or original text
      */
     convertMarkdown(mdText) {
         if (!mdText) return ''
@@ -936,7 +944,7 @@ const Ui = class Ui {
      * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
      * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
      * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
-     * @returns {Promise<any>} Status
+     * @return {Promise<any>} Status
      */
     async include(url, uiOptions) {
         // TODO: src, id, parent must all be a strings
@@ -988,7 +996,7 @@ const Ui = class Ui {
         }
 
         // Create the HTML to include on the page based on type
-        let slot = ''
+        let slot = '' // eslint-disable-line no-useless-assignment
         let txtReturn = 'Include successful'
         let data
         switch (type) {
@@ -1178,7 +1186,7 @@ const Ui = class Ui {
     /** Get standard data from a DOM node.
      * @param {*} node DOM node to examine
      * @param {string} cssSelector Identify the DOM element to get data from
-     * @returns {object} Standardised data object
+     * @return {object} Standardised data object
      */
     nodeGet(node, cssSelector) {
         const thisOut = {
@@ -1255,7 +1263,7 @@ const Ui = class Ui {
      * or a Notifications API options object + config.title string.
      * Config ref: https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
      * @param {object|string} config Notification config object or simple message string
-     * @returns {Promise} Resolves on close or click event, returns the event.
+     * @return {Promise} Resolves on close or click event, returns the event.
      */
     async notification(config) {
         if (typeof config === 'string') {
@@ -1305,7 +1313,7 @@ const Ui = class Ui {
         // If DOMPurify is loaded, apply it now
         slot = this.sanitiseHTML(slot)
 
-        // Override for where the el is a template, the normal handler does now work correctly
+        // Override for where the el is a template, the normal handler does not work correctly
         if (el.nodeName === 'TEMPLATE') {
             el.innerHTML = slot
             return
@@ -1346,7 +1354,7 @@ const Ui = class Ui {
     /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
      * Otherwise just returns that HTML as-is.
      * @param {string} html The input HTML string
-     * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+     * @return {string} The sanitised HTML or the original if DOMPurify not loaded
      */
     sanitiseHTML(html) {
         if (!Ui.win['DOMPurify']) return html
@@ -1365,7 +1373,7 @@ const Ui = class Ui {
      * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
      * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
      * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
-     * @returns {HTMLDivElement|null} The toast element (which may disappear after a timeout) or null if no content
+     * @return {HTMLDivElement|null} The toast element (which may disappear after a timeout) or null if no content
      * @example
      * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
      * @example
@@ -1414,7 +1422,7 @@ const Ui = class Ui {
         } else ui.autoHideDelay = 10000 // default = 10s
         if (!Object.prototype.hasOwnProperty.call(ui, 'autohide')) ui.autohide = true
 
-        let content = ''
+        let content = '' // eslint-disable-line no-useless-assignment
         let icon = ''
         if (type === 'alert') {
             icon = '<svg viewBox="0 0 192.146 192.146"><path d="M108.186 144.372c0 7.054-4.729 12.32-12.037 12.32h-.254c-7.054 0-11.92-5.266-11.92-12.32 0-7.298 5.012-12.31 12.174-12.31s11.91 4.992 12.037 12.31zM88.44 125.301h15.447l2.951-61.298H85.46l2.98 61.298zm101.932 51.733c-2.237 3.664-6.214 5.921-10.493 5.921H12.282c-4.426 0-8.51-2.384-10.698-6.233a12.34 12.34 0 0 1 .147-12.349l84.111-149.22c2.208-3.722 6.204-5.96 10.522-5.96h.332c4.445.107 8.441 2.618 10.513 6.546l83.515 149.229c1.993 3.8 1.905 8.363-.352 12.066zm-10.493-6.4L96.354 21.454l-84.062 149.18h167.587z" /></svg>'
@@ -1566,7 +1574,7 @@ const Ui = class Ui {
      *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
      *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
      *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
-     * @returns {object} Object with close() method to manually close the overlay
+     * @return {object} Object with close() method to manually close the overlay
      */
     showOverlay(options) {
         return showOverlay(options)
@@ -1587,7 +1595,7 @@ const Ui = class Ui {
     /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
      * @param {string} cssSelector Identify the DOM element to get data from
      * @param {string} [propName] Optional. Specific name of property to get from the element
-     * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
+     * @return {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
      */
     uiGet(cssSelector, propName = null) {
         // The type cast below not really correct but it gets rid of the other typescript errors
@@ -1690,7 +1698,7 @@ const Ui = class Ui {
      *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
      *   @param {HTMLElement|string=} opts.parent If provided, the table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
      *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
-     * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
+     * @return {HTMLTableElement|HTMLParagraphElement} Output HTML Element
      */
     buildHtmlTable(data, opts = {}) {
         // If data is an object of objects, convert it to an array of objects
@@ -1776,7 +1784,7 @@ const Ui = class Ui {
             try {
                 parentEl.appendChild(tbl)
             } catch (e) {
-                throw new Error(`[ui.js:buildHtmlTable] Could not add table to parent. ${e.message}`)
+                throw new Error(`[ui.js:buildHtmlTable] Could not add table to parent. ${e.message}`, { cause: e, })
             }
             return
         }
@@ -1797,7 +1805,7 @@ const Ui = class Ui {
      *  @param {number=} options.replaceRow Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
      *  @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
      *
-     * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
+     * @return {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
      */
     tblAddRow(tbl, rowData = {}, options = {}) {
         const tblType = Object.prototype.toString.apply(tbl)
@@ -1962,7 +1970,7 @@ const Ui = class Ui {
      * @param {string|number} rowKey Key or index to use for column search
      * @param {Array<columnDefinition>=} colMeta Array of column definitions. If not provided, will need the HTML table element.
      * @param {HTMLTableElement=} tblEl If the colMeta table not provided, provide the HTML table element to do the lookup
-     * @returns {columnDefinition} Column metadata object
+     * @return {columnDefinition} Column metadata object
      */
     tblFindColMeta(rowKey, colMeta, tblEl) {
         if (!colMeta && !tblEl) throw new Error('[tblFindColMeta] Either the column metadata array or the HTML table element must be provided')
@@ -1982,7 +1990,7 @@ const Ui = class Ui {
     /** Return a standardised table cell name. Either from a `data-col-name` attribute or a numeric reference like `C003`
      * @param {HTMLTableCellElement} cellEl The cell element to process
      * @param {number=} pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
-     * @returns {string} A cell name
+     * @return {string} A cell name
      */
     tblGetCellName(cellEl, pad = 3) {
         return cellEl.getAttribute('data-col-name') ?? `C${String(cellEl.cellIndex + 1).padStart(pad, '0')}`
@@ -1994,7 +2002,7 @@ const Ui = class Ui {
      * @param {HTMLTableElement} tblEl DOM table element
      * @param {object} [options] Additional options. Default={}
      *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
-     * @returns {Array<columnDefinition>} Column metadata = array of column definitions
+     * @return {Array<columnDefinition>} Column metadata = array of column definitions
      */
     tblGetColMeta(tblEl, options = {}) {
         if (!options.pad) options.pad = 3
