@@ -97,7 +97,7 @@ class UibVar extends TiBaseComponent {
     static componentVersion = '2026-02-15'
 
     /** Makes HTML attribute change watched
-     * @returns {Array<string>} List of all of the html attribs (props) listened to
+     * @return {Array<string>} List of all of the html attribs (props) listened to
      */
     static get observedAttributes() {
         return [
@@ -148,7 +148,7 @@ class UibVar extends TiBaseComponent {
                 this.splitVarName = varName.split(/[\.\[\]\'\"]/)
                 this.#variable = varName = this.splitVarName.shift()
             } catch (e) {
-                throw new Error(`[${this.localName}] variable attribute: Name split failed on "${varName}". ${e.message}`)
+                throw new Error(`[${this.localName}] variable attribute: Name split failed on "${varName}". ${e.message}`, { cause: e, })
             }
         }
 
@@ -165,7 +165,7 @@ class UibVar extends TiBaseComponent {
     }
 
     /** Get the watched uibuilder variable name
-     * @returns {string} The watched variable name
+     * @return {string} The watched variable name
      */
     get variable() {
         return this.#variable
@@ -185,7 +185,7 @@ class UibVar extends TiBaseComponent {
     }
 
     /** Get the watched uibuilder msg topic
-     * @returns {string} The watched topic name
+     * @return {string} The watched topic name
      */
     get topic() {
         return this.#topic
@@ -300,7 +300,6 @@ class UibVar extends TiBaseComponent {
                 if (!this.variable && !this.topic) this.showVar(false)
                 break
             }
-
             default: {
                 break
             }
@@ -412,10 +411,11 @@ class UibVar extends TiBaseComponent {
                 out = div.textContent
                 // NB: Deliberately fall through to html/default
             }
+            // TODO: replace with safer method
             case 'html':
             default: {
                 const t = typeof val
-                // @ts-ignore
+                // if val is an object or array, attempt to stringify it
                 if (Array.isArray(val) || t === '[object Object]' || t === 'object') {
                     try {
                         out = JSON.stringify(val)
@@ -429,17 +429,14 @@ class UibVar extends TiBaseComponent {
         if (this.dataset.before) out = `${this.dataset.before}${out}`
         if (this.dataset.after) out = `${out}${this.dataset.after}`
 
-        // if (this.uib) this.shadow.innerHTML = this.uibuilder.sanitiseHTML(out)
-        // else this.shadow.innerHTML = out
-        if (this.uib) this.innerHTML = this.uibuilder.sanitiseHTML(out)
+        // if (this.uib) this.innerHTML = this.uibuilder.sanitiseHTML(out)
+        if (this.uib) this.uibuilder.replaceSlot(this, out)
         else this.innerHTML = out
-
-        // this.shadow.appendChild(this.css)
     }
 
     /** Apply value filter if specified
      * @param {*} value The value to change
-     * @returns {*} The amended value that will be displayed
+     * @return {*} The amended value that will be displayed
      */
     doFilter(value) {
         if (this.filter) {
