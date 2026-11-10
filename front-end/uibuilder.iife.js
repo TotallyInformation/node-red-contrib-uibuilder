@@ -6,8 +6,8 @@
   var __getOwnPropNames = Object.getOwnPropertyNames;
   var __getProtoOf = Object.getPrototypeOf;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
-  var __typeError = (msg2) => {
-    throw TypeError(msg2);
+  var __typeError = (msg) => {
+    throw TypeError(msg);
   };
   var __defNormalProp = (obj, key, value2) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value: value2 }) : obj[key] = value2;
   var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
@@ -37,7 +37,7 @@
     mod
   ));
   var __publicField = (obj, key, value2) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value2);
-  var __accessCheck = (obj, member, msg2) => member.has(obj) || __typeError("Cannot " + msg2);
+  var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
   var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
   var __privateAdd = (obj, member, value2) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value2);
   var __privateSet = (obj, member, value2, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value2) : member.set(obj, value2), value2);
@@ -172,6 +172,14 @@
       });
       /** Optional Markdown-IT Plugins */
       __publicField(this, "ui_md_plugins");
+      // #endregion ---- -------- ----
+      // #region ---- External Methods ----
+      // #region -- Utility --
+      /** Returns true if the value is an HTML element, else false
+       * @param {*} value Value to check
+       * @return {boolean} True if value refers to an HTML element
+       */
+      __publicField(this, "isElement", (value2) => value2 !== null && typeof value2 === "object" && value2.nodeType === 1);
       if (win) _a.win = win;
       else {
         throw new Error("Ui:constructor. Current environment does not include `window`, UI functions cannot be used.");
@@ -257,7 +265,7 @@
     }
     /** Show a browser notification if the browser and the user allows it
      * @param {object} config Notification config data
-     * @returns {Promise} Resolves on close or click event, returns the event.
+     * @return {Promise} Resolves on close or click event, returns the event.
      */
     _showNotification(config) {
       if (config.topic && !config.title) config.title = config.topic;
@@ -469,22 +477,21 @@
         this.loadStyleTxt(ui.txtStyles.join("\n"));
       }
     }
-    // --- end of _uiLoad ---
     /** Handle incoming _ui messages and loaded UI JSON files
      * Called from start()
      * @param {*} msg Standardised msg object containing a _ui property object
      */
-    _uiManager(msg2) {
-      if (!msg2._ui) return;
-      if (!Array.isArray(msg2._ui)) msg2._ui = [msg2._ui];
-      msg2._ui.forEach((ui, i) => {
+    _uiManager(msg) {
+      if (!msg._ui) return;
+      if (!Array.isArray(msg._ui)) msg._ui = [msg._ui];
+      msg._ui.forEach((ui, i) => {
         if (ui.mode && !ui.method) ui.method = ui.mode;
         if (!ui.method) {
           _a.log("error", "Ui:_uiManager", "No method defined for msg._ui[".concat(i, "]. Ignoring. "), ui)();
           return;
         }
-        ui.payload = msg2.payload;
-        ui.topic = msg2.topic;
+        ui.payload = msg.payload;
+        ui.topic = msg.topic;
         switch (ui.method) {
           case "add": {
             this._uiAdd(ui, false);
@@ -515,11 +522,11 @@
             break;
           }
           case "notify": {
-            this.showDialog("notify", ui, msg2);
+            this.showDialog("notify", ui, msg);
             break;
           }
           case "alert": {
-            this.showDialog("alert", ui, msg2);
+            this.showDialog("alert", ui, msg);
             break;
           }
           default: {
@@ -529,7 +536,6 @@
         }
       });
     }
-    // --- end of _uiManager ---
     /** Handle a reload request */
     _uiReload() {
       _a.log("trace", "Ui:uiManager:reload", "reloading")();
@@ -554,7 +560,6 @@
         });
       });
     }
-    // --- end of _uiRemove ---
     /** Handle incoming _ui replace requests
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
@@ -605,7 +610,6 @@
         }
       });
     }
-    // --- end of _uiReplace ---
     // TODO Allow single add without using components array
     // TODO Allow sub-components
     // TODO Add multi-slot capability
@@ -658,9 +662,7 @@
         });
       });
     }
-    // --- end of _uiUpdate ---
-    // #endregion ---- -------- ----
-    // #region ---- External Methods ----
+    // #endregion -- -- --
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
      * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
      * If the selected element is a <template>, returns the first child element.
@@ -668,7 +670,7 @@
      * @param {string} cssSelector A CSS Selector that identifies the element to return
      * @param {"el"|"text"|"html"|"attributes"|"attr"} [output] Optional. What type of output to return. Defaults to "el", the DOM element reference
      * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
-     * @returns {HTMLElement|string|Array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
+     * @return {HTMLElement|string|Array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
      */
     $(cssSelector, output, context) {
       if (!context) context = _a.doc;
@@ -723,7 +725,7 @@
      * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
      * @param {string} cssSelector A CSS Selector that identifies the elements to return
      * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
-     * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
+     * @return {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
      */
     $$(cssSelector, context) {
       if (!context) context = _a.doc;
@@ -806,7 +808,7 @@
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
      * @param {string} mdText The input markdown string
-     * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
+     * @return {string} HTML (if Markdown-IT library loaded and parse successful) or original text
      */
     convertMarkdown(mdText) {
       if (!mdText) return "";
@@ -826,7 +828,7 @@
      * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
      * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
      * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
-     * @returns {Promise<any>} Status
+     * @return {Promise<any>} Status
      */
     async include(url2, uiOptions) {
       if (!fetch) {
@@ -1036,7 +1038,7 @@
     /** Get standard data from a DOM node.
      * @param {*} node DOM node to examine
      * @param {string} cssSelector Identify the DOM element to get data from
-     * @returns {object} Standardised data object
+     * @return {object} Standardised data object
      */
     nodeGet(node, cssSelector) {
       const thisOut = {
@@ -1107,7 +1109,7 @@
      * or a Notifications API options object + config.title string.
      * Config ref: https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
      * @param {object|string} config Notification config object or simple message string
-     * @returns {Promise} Resolves on close or click event, returns the event.
+     * @return {Promise} Resolves on close or click event, returns the event.
      */
     async notification(config) {
       if (typeof config === "string") {
@@ -1175,7 +1177,7 @@
     /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
      * Otherwise just returns that HTML as-is.
      * @param {string} html The input HTML string
-     * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+     * @return {string} The sanitised HTML or the original if DOMPurify not loaded
      */
     sanitiseHTML(html) {
       if (!_a.win["DOMPurify"]) return html;
@@ -1193,13 +1195,13 @@
      * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
      * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
      * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
-     * @returns {HTMLDivElement|null} The toast element (which may disappear after a timeout) or null if no content
+     * @return {HTMLDivElement|null} The toast element (which may disappear after a timeout) or null if no content
      * @example
      * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
      * @example
      * Ui.showDialog('alert', null, msg)
      */
-    showDialog(type, ui, msg2) {
+    showDialog(type, ui, msg) {
       if (!type || !["notify", "alert"].includes(type)) {
         type = "notify";
       }
@@ -1211,7 +1213,7 @@
         };
       }
       let body = "";
-      if (msg2.payload && typeof msg2.payload === "string") body += "<div>".concat(msg2.payload, "</div>");
+      if (msg.payload && typeof msg.payload === "string") body += "<div>".concat(msg.payload, "</div>");
       if (ui.content) body += "<div>".concat(ui.content, "</div>");
       if (body === "") {
         _a.log(1, "Ui:showDialog", "Toast content is blank. Not shown.")();
@@ -1219,7 +1221,7 @@
       }
       let title = "";
       if (ui.title) title = ui.title;
-      else if (msg2.topic) title = msg2.topic;
+      else if (msg.topic) title = msg.topic;
       if (ui.noAutohide) ui.noAutoHide = ui.noAutohide;
       if (ui.noAutoHide) ui.autohide = !ui.noAutoHide;
       if (ui.autoHideDelay) {
@@ -1340,7 +1342,7 @@
      *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
      *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
      *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
-     * @returns {object} Object with close() method to manually close the overlay
+     * @return {object} Object with close() method to manually close the overlay
      */
     showOverlay(options) {
       return showOverlay(options);
@@ -1349,15 +1351,15 @@
      * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
      */
     ui(json) {
-      let msg2 = {};
-      if (json._ui) msg2 = json;
-      else msg2._ui = json;
-      this._uiManager(msg2);
+      let msg = {};
+      if (json._ui) msg = json;
+      else msg._ui = json;
+      this._uiManager(msg);
     }
     /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
      * @param {string} cssSelector Identify the DOM element to get data from
      * @param {string} [propName] Optional. Specific name of property to get from the element
-     * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
+     * @return {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
      */
     uiGet(cssSelector, propName = null) {
       const selection = (
@@ -1447,7 +1449,7 @@
      *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
      *   @param {HTMLElement|string=} opts.parent If provided, the table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
      *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
-     * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
+     * @return {HTMLTableElement|HTMLParagraphElement} Output HTML Element
      */
     buildHtmlTable(data, opts = {}) {
       let rowKeys;
@@ -1510,7 +1512,7 @@
         try {
           parentEl.appendChild(tbl);
         } catch (e) {
-          throw new Error("[ui.js:buildHtmlTable] Could not add table to parent. ".concat(e.message));
+          throw new Error("[ui.js:buildHtmlTable] Could not add table to parent. ".concat(e.message), { cause: e });
         }
         return;
       }
@@ -1529,7 +1531,7 @@
      *  @param {number=} options.replaceRow Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
      *  @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
      *
-     * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
+     * @return {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
      */
     tblAddRow(tbl, rowData = {}, options = {}) {
       const tblType = Object.prototype.toString.apply(tbl);
@@ -1649,7 +1651,7 @@
      * @param {string|number} rowKey Key or index to use for column search
      * @param {Array<columnDefinition>=} colMeta Array of column definitions. If not provided, will need the HTML table element.
      * @param {HTMLTableElement=} tblEl If the colMeta table not provided, provide the HTML table element to do the lookup
-     * @returns {columnDefinition} Column metadata object
+     * @return {columnDefinition} Column metadata object
      */
     tblFindColMeta(rowKey, colMeta, tblEl) {
       if (!colMeta && !tblEl) throw new Error("[tblFindColMeta] Either the column metadata array or the HTML table element must be provided");
@@ -1665,7 +1667,7 @@
     /** Return a standardised table cell name. Either from a `data-col-name` attribute or a numeric reference like `C003`
      * @param {HTMLTableCellElement} cellEl The cell element to process
      * @param {number=} pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
-     * @returns {string} A cell name
+     * @return {string} A cell name
      */
     tblGetCellName(cellEl, pad = 3) {
       var _a3;
@@ -1677,7 +1679,7 @@
      * @param {HTMLTableElement} tblEl DOM table element
      * @param {object} [options] Additional options. Default={}
      *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
-     * @returns {Array<columnDefinition>} Column metadata = array of column definitions
+     * @return {Array<columnDefinition>} Column metadata = array of column definitions
      */
     tblGetColMeta(tblEl, options = {}) {
       var _a3, _b, _c;
@@ -3099,10 +3101,10 @@
         if (failed)
           return;
         transport.send([{ type: "ping", data: "probe" }]);
-        transport.once("packet", (msg2) => {
+        transport.once("packet", (msg) => {
           if (failed)
             return;
-          if ("pong" === msg2.type && "probe" === msg2.data) {
+          if ("pong" === msg.type && "probe" === msg.data) {
             this.upgrading = true;
             this.emitReserved("upgrading", transport);
             if (!transport)
@@ -3339,8 +3341,8 @@
      * @param {Function} fn - callback function.
      * @return {Socket} for chaining.
      */
-    write(msg2, options, fn) {
-      this._sendPacket("message", msg2, options, fn);
+    write(msg, options, fn) {
+      this._sendPacket("message", msg, options, fn);
       return this;
     }
     /**
@@ -3351,8 +3353,8 @@
      * @param {Function} fn - callback function.
      * @return {Socket} for chaining.
      */
-    send(msg2, options, fn) {
-      this._sendPacket("message", msg2, options, fn);
+    send(msg, options, fn) {
+      this._sendPacket("message", msg, options, fn);
       return this;
     }
     /**
@@ -5341,34 +5343,34 @@
      * Each prop in the msg.payload is set as a prop on the component instance.
      * @param {object} msg A uibuilder message object
      */
-    _uibMsgHandler(msg2) {
-      if (typeof msg2.payload !== "object") {
-        console.warn("[".concat(this.localName, "] Ignoring msg, payload is not an object:"), msg2);
+    _uibMsgHandler(msg) {
+      if (typeof msg.payload !== "object") {
+        console.warn("[".concat(this.localName, "] Ignoring msg, payload is not an object:"), msg);
         return;
       }
-      Object.keys(msg2.payload).forEach((key) => {
+      Object.keys(msg.payload).forEach((key) => {
         if (key.startsWith("_")) return;
         let key2 = key.toLowerCase();
         if (key2.startsWith("data-")) key2 = "data";
         switch (key2) {
           case "value": {
-            this.setAttribute("value", msg2.payload[key]);
+            this.setAttribute("value", msg.payload[key]);
             break;
           }
           case "class": {
-            this.className = msg2.payload[key];
+            this.className = msg.payload[key];
             break;
           }
           case "style": {
-            this.style.cssText = msg2.payload[key];
+            this.style.cssText = msg.payload[key];
             break;
           }
           case "data": {
-            this.dataset[key.replace("data-", "")] = msg2.payload[key];
+            this.dataset[key.replace("data-", "")] = msg.payload[key];
             break;
           }
           default: {
-            this[key] = msg2.payload[key];
+            this[key] = msg.payload[key];
             break;
           }
         }
@@ -5463,7 +5465,7 @@
       __publicField(this, "types", ["plain", "html", "markdown", "object", "json", "table", "list", "array"]);
     }
     /** Makes HTML attribute change watched
-     * @returns {Array<string>} List of all of the html attribs (props) listened to
+     * @return {Array<string>} List of all of the html attribs (props) listened to
      */
     static get observedAttributes() {
       return [
@@ -5489,7 +5491,7 @@
           this.splitVarName = varName.split(/[\.\[\]\'\"]/);
           __privateSet(this, _variable, varName = this.splitVarName.shift());
         } catch (e) {
-          throw new Error("[".concat(this.localName, '] variable attribute: Name split failed on "').concat(varName, '". ').concat(e.message));
+          throw new Error("[".concat(this.localName, '] variable attribute: Name split failed on "').concat(varName, '". ').concat(e.message), { cause: e });
         }
       }
       if (__privateGet(this, _varCb)) this.uibuilder.cancelChange(varName, __privateGet(this, _varCb));
@@ -5498,7 +5500,7 @@
       __privateSet(this, _varCb, this.uibuilder.onChange(varName, this._varChange.bind(this)));
     }
     /** Get the watched uibuilder variable name
-     * @returns {string} The watched variable name
+     * @return {string} The watched variable name
      */
     get variable() {
       return __privateGet(this, _variable);
@@ -5511,7 +5513,7 @@
       __privateSet(this, _topicCb, this.uibuilder.onTopic(topicName, this._topicChange.bind(this)));
     }
     /** Get the watched uibuilder msg topic
-     * @returns {string} The watched topic name
+     * @return {string} The watched topic name
      */
     get topic() {
       return __privateGet(this, _topic);
@@ -5631,11 +5633,11 @@
     /** Process watched uibuilder msg.topic received
      * @param {object} msg The value of the managed uibuilder variable
      */
-    _topicChange(msg2) {
-      this.uibuilder.log("trace", this.localName, "Topic msg received: '".concat(msg2.topic, "'"), msg2);
-      this.value = msg2.payload;
+    _topicChange(msg) {
+      this.uibuilder.log("trace", this.localName, "Topic msg received: '".concat(msg.topic, "'"), msg);
+      this.value = msg.payload;
       this.showVar();
-      if (this.report === true) this.uibuilder.send({ topic: msg2.topic, payload: this.value || void 0, source: this.localName, id: this.id });
+      if (this.report === true) this.uibuilder.send({ topic: msg.topic, payload: this.value || void 0, source: this.localName, id: this.id });
     }
     /** Convert this.value to DOM output (applies output filter if needed)
      * @param {boolean} chkVal If true (default), check for undefined value. False used to run filter even with no value set.
@@ -5676,6 +5678,7 @@
           div.innerHTML = val;
           out = div.textContent;
         }
+        // TODO: replace with safer method
         case "html":
         default: {
           const t = typeof val;
@@ -5690,12 +5693,12 @@
       }
       if (this.dataset.before) out = "".concat(this.dataset.before).concat(out);
       if (this.dataset.after) out = "".concat(out).concat(this.dataset.after);
-      if (this.uib) this.innerHTML = this.uibuilder.sanitiseHTML(out);
+      if (this.uib) this.uibuilder.replaceSlot(this, out);
       else this.innerHTML = out;
     }
     /** Apply value filter if specified
      * @param {*} value The value to change
-     * @returns {*} The amended value that will be displayed
+     * @return {*} The amended value that will be displayed
      */
     doFilter(value2) {
       if (this.filter) {
@@ -7023,7 +7026,7 @@
   var _a2, _pingInterval, _propChangeCallbacks, _msgRecvdByTopicCallbacks, _timerid, _manualDisconnect, _MsgHandler, _isShowMsg, _isShowStatus, _sendUrlHash, _uniqueElID, _extCommands, _managedVars, _showStatus, _uiObservers, _uibAttrSel;
   var Uib = (_a2 = class {
     // #endregion -------- ------------ -------- //
-    // #region --- EXPERIMENTAL ---
+    // #region ------- EXPERIMENTAL ------- //
     /** Attempt to load a service worker
      * https://yonatankra.com/how-service-workers-sped-up-our-website-by-97-5/
      * @param {string} fileName Name of service worker js file (without .js extension)
@@ -7088,7 +7091,7 @@
     // #endregion ! EXPERIMENTAL
     // #region ------- Class construction & startup method -------- //
     constructor() {
-      // #endregion ---- ---- ---- ----
+      // #endregion ---- ----
       // #region private class vars
       // How many times has the loaded instance connected to Socket.IO (detect if not a new load?)
       __publicField(this, "connectedNum", 0);
@@ -7179,10 +7182,10 @@
       // NOTE: CSS cannot match attribute name prefixes, so this covers known names.
       //       _uibAttrScanOne handles any uib-prefixed attributes found on matched elements.
       __privateAdd(this, _uibAttrSel, "[uib-topic], [data-uib-topic], [uib-var], [data-uib-var], [uib-if], [data-uib-if]");
-      //#endregion
+      // #endregion --- ---
       // #region public class vars
       // TODO Move to proper getters
-      // #region ---- Externally read-only (via .get method) ---- //
+      // #region Externally read-only (via .get method)
       // version - moved to _meta
       // Has the initial Socket.IO connection been made? Used to detect if a page reload or just a disconnect/reconnect
       __publicField(this, "initialConnect", null);
@@ -7236,9 +7239,9 @@
       __publicField(this, "urlHash", location.hash);
       // HTTP Headers on initial load - contain useful uibuilder info
       __publicField(this, "httpHeaders", {});
-      // #endregion ---- ---- ---- ---- //
+      // #endregion ---- ----
       // TODO Move to proper getters/setters
-      // #region ---- Externally Writable (via .set method, read via .get method) ---- //
+      // #region Externally Writable (via .set method, read via .get method)
       /** Default originator node id - empty string by default
        * @type {string}
        */
@@ -7253,8 +7256,8 @@
       __publicField(this, "uibrouterinstance");
       /** Set by uibrouter, do not set manually */
       __publicField(this, "uibrouter_CurrentRoute");
-      // #endregion ---- ---- ---- ---- //
-      // #region ---- These are unlikely to be needed externally: ----
+      // #endregion ---- ----
+      // #region Unlikely to be needed externally
       __publicField(this, "autoSendReady", true);
       __publicField(this, "httpNodeRoot", "");
       // Node-RED setting (via cookie)
@@ -7397,18 +7400,19 @@
       }
       this._watchHashChanges();
       this.set("msg", null);
-      this.onChange("msg", (msg2) => {
+      this.onChange("msg", (msg) => {
         if (__privateGet(this, _isShowMsg) === true) {
           const eMsg = document.getElementById("uib_last_msg");
-          if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg2);
+          if (eMsg) eMsg.innerHTML = this.syntaxHighlight(msg);
         }
       });
       this._dispatchCustomEvent("uibuilder:constructorComplete");
       log("trace", "Uib:constructor", "Ending")();
       perf.set("constructor finished", performance.now());
     }
-    // #endregion -- not external --
-    // #endregion --- End of variables ---
+    // #endregion --- ---
+    // #endregion --- ---
+    // #endregion --- End of class variables ---
     // #region ------- Getters and Setters ------- //
     // Change logging level dynamically (affects both console. and print.)
     set logLevel(level) {
@@ -7564,7 +7568,6 @@
         return false;
       }
     }
-    // --- end of setStore --- //
     /** Attempt to get and re-hydrate a key value from localStorage
      * Note that all uib storage is automatically prefixed using this.storePrefix
      * @param {*} id The key of the value to attempt to retrieve
@@ -7605,7 +7608,7 @@
     getWatchedVars() {
       return Object.keys(__privateGet(this, _propChangeCallbacks));
     }
-    // #endregion ------- -------- ------- //
+    // #endregion ------- --------
     // #region ------- Our own event handling system ---------- //
     /** Standard fn to create a custom event with details & dispatch it
      * @param {string} title The event name
@@ -7659,9 +7662,9 @@
       else __privateGet(this, _msgRecvdByTopicCallbacks)[topic]._nextRef++;
       const nextCbRef = __privateGet(this, _msgRecvdByTopicCallbacks)[topic]._nextRef;
       const msgRecvdEvtCallback = __privateGet(this, _msgRecvdByTopicCallbacks)[topic][nextCbRef] = function msgRecvdEvtCallback2(e) {
-        const msg2 = e.detail;
-        if (msg2.topic === topic) {
-          callback.call(msg2, msg2);
+        const msg = e.detail;
+        if (msg.topic === topic) {
+          callback.call(msg, msg);
         }
       };
       document.addEventListener("uibuilder:stdMsgReceived", msgRecvdEvtCallback);
@@ -7788,11 +7791,11 @@
      * @param {boolean} [msg] Optional, default=true. If true also sends a message back to Node-RED
      * @return {boolean} True if the element exists
      */
-    elementExists(cssSelector, msg2 = true) {
+    elementExists(cssSelector, msg = true) {
       const el = document.querySelector(cssSelector);
       let exists = false;
       if (el !== null) exists = true;
-      if (msg2 === true) {
+      if (msg === true) {
         this.send({
           payload: exists,
           info: 'Element "'.concat(cssSelector, '" ').concat(exists ? "exists" : "does not exist")
@@ -8346,8 +8349,8 @@
      * @example
      * Ui.showDialog('alert', null, msg)
      */
-    showDialog(type, ui, msg2) {
-      _ui.showDialog(type, ui, msg2);
+    showDialog(type, ui, msg) {
+      _ui.showDialog(type, ui, msg);
     }
     /** Directly manage UI via JSON
      * @param {object} json Either an object containing {_ui: {}} or simply simple {} containing ui instructions
@@ -8405,8 +8408,34 @@
         return false;
       }
       try {
-        for (const [key, value2] of Object.entries(attribs)) {
-          el.setAttribute(key, value2);
+        for (const [attrib, value2] of Object.entries(attribs)) {
+          if (attrib === "value" || attrib === "checked") this.setValueOrChecked(el, value2);
+          else if (attrib === "classes" || attrib === "class") {
+            if (Array.isArray(value2)) {
+              value2.forEach((val) => {
+                el.classList.add(val);
+              });
+            } else {
+              el.ClassName = value2;
+            }
+          } else if (attrib === "style" || attrib === "styles") {
+            if (Array.isArray(value2)) {
+              value2.forEach((val) => {
+                if (Array.isArray(val)) {
+                  el.style[val[0]] = val[1];
+                } else if (this.isObject(val)) {
+                  for (const [style, val2] of Object.entries(val2)) {
+                    el.style[style] = val2;
+                  }
+                }
+              });
+            } else if (this.isObject(value2)) {
+              for (const [style, val] of Object.entries(value2)) {
+                el.style[style] = val;
+              }
+            } else el.style.cssText = value2;
+          } else if (attrib.startsWith("xlink:")) el.setAttributeNS("http://www.w3.org/1999/xlink", attrib, value2);
+          else el.setAttribute(attrib, value2);
         }
       } catch (e) {
         log("error", "uibuilder:setAttributes", "Failed to set attributes. Ensure that attributes is an object containing key/value pairs with each key a valid attribute name. Note that values values have to be a string.", e.message)();
@@ -8422,8 +8451,10 @@
     setValueOrChecked(el, value2) {
       if (el.type && (el.type === "checkbox" || el.type === "radio")) {
         el.checked = this.truthy(value2, false);
+        el.setAttribute("checked", value2);
       } else {
         el.value = value2;
+        el.setAttribute("value", value2);
       }
       return true;
     }
@@ -8466,24 +8497,35 @@
      * @param {HTMLElement} el The element to update
      * @param {string} data The input variable to process
      * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
+     * @param {string=} varName What var we are processing (info only)
      * @return {boolean} True if element was updated, else false
      * @private
      */
-    _processVarProps(el, data, isIf = false) {
+    _processVarProps(el, data, isIf = false, varName = "") {
+      if (!_ui.isElement(el)) {
+        log("error", "uibuilder:_processVarProps", "el is not an HTML element, cannot continue")();
+        return false;
+      }
       if (isIf === true) {
         data = { if: data };
       } else {
-        if (this.isPrimitive(data)) data = { payload: data };
+        if (this.isPrimitive(data)) {
+          if ("value" in el) data = { attributes: { value: data } };
+          else if ("checked" in el) data = { attributes: { checked: data } };
+          else data = { payload: data };
+        }
       }
-      if (Object.prototype.hasOwnProperty.call(data, "attributes")) this.setAttributes(el, data.dataset);
+      if (Object.prototype.hasOwnProperty.call(data, "attributes")) this.setAttributes(el, data.attributes);
       if (Object.prototype.hasOwnProperty.call(data, "dataset")) this.setDataset(el, data.dataset);
       const hasChecked = Object.prototype.hasOwnProperty.call(data, "checked");
       const hasValue = Object.prototype.hasOwnProperty.call(data, "value");
       if (hasValue || hasChecked) {
-        const value2 = hasChecked ? msg.checked : hasValue ? msg.value : void 0;
+        const value2 = hasChecked ? data.checked : hasValue ? data.value : void 0;
         this.setValueOrChecked(el, value2);
       }
       if (Object.prototype.hasOwnProperty.call(data, "payload")) {
+        if (el.dataset.before) data.payload = "".concat(el.dataset.before).concat(data.payload);
+        if (el.dataset.after) data.payload = "".concat(data.payload).concat(el.dataset.after);
         if (el.hasAttribute("content")) {
           el.setAttribute("content", data.payload);
         } else {
@@ -8516,9 +8558,9 @@
      * @private
      */
     _processUibTopic(el, topic) {
-      this.onTopic(topic, (msg2) => {
-        msg2._uib_processed_by = "_processUibTopic";
-        this._processVarProps(el, msg2);
+      this.onTopic(topic, (msg) => {
+        msg._uib_processed_by = "_processUibTopic";
+        this._processVarProps(el, msg);
       });
     }
     /** Process a uib-var custom DOM attribute by evaluating the variable reference and applying it to the element
@@ -8544,7 +8586,7 @@
           value2._uib_processed_by = "_processUibVar";
         } catch (e) {
         }
-        this._processVarProps(el, value2, isIf2);
+        this._processVarProps(el, value2, isIf2, varName);
         if (isIf2) el.style.display = this.truthy(value2) ? "" : "none";
       };
       this.onChange(rootProp, (rootValue) => {
@@ -9122,9 +9164,9 @@
       if (receivedCtrlMsg === null) {
         receivedCtrlMsg = {};
       } else if (typeof receivedCtrlMsg !== "object") {
-        const msg2 = {};
-        msg2["uibuilderCtrl:" + this._ioChannels.control] = receivedCtrlMsg;
-        receivedCtrlMsg = msg2;
+        const msg = {};
+        msg["uibuilderCtrl:" + this._ioChannels.control] = receivedCtrlMsg;
+        receivedCtrlMsg = msg;
       }
       receivedCtrlMsg._receivedHRtime = ts;
       this._checkTimestamp(receivedCtrlMsg);
@@ -9190,39 +9232,39 @@
      * @param {object} msg The message received from Node-RED
      * @private
      */
-    _msgRcvdEvents(msg2) {
-      this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg2);
-      if (msg2.topic) this._dispatchCustomEvent("uibuilder:msg:topic:".concat(msg2.topic), msg2);
-      if (msg2._uib_processed_by) return;
-      msg2._uib_processed_by = "_msgRcvdEvents";
-      if (msg2._uib) {
-        if (!this._forThis(msg2._uib)) return;
-        if (msg2._uib.reload === true) {
+    _msgRcvdEvents(msg) {
+      this._dispatchCustomEvent("uibuilder:stdMsgReceived", msg);
+      if (msg.topic) this._dispatchCustomEvent("uibuilder:msg:topic:".concat(msg.topic), msg);
+      if (msg._uib_processed_by) return;
+      msg._uib_processed_by = "_msgRcvdEvents";
+      if (msg._uib) {
+        if (!this._forThis(msg._uib)) return;
+        if (msg._uib.reload === true) {
           log("trace", "Uib:_msgRcvdEvents:_uib:reload", "reloading")();
-          msg2._uib_processed_by = "_msgRcvdEvents - reload";
+          msg._uib_processed_by = "_msgRcvdEvents - reload";
           location.reload();
           return;
         }
-        if (msg2._uib.command) {
-          msg2._uib_processed_by = "_msgRcvdEvents - remote command";
-          this._uibCommand(msg2);
+        if (msg._uib.command) {
+          msg._uib_processed_by = "_msgRcvdEvents - remote command";
+          this._uibCommand(msg);
           return;
         }
-        if (msg2._uib.componentRef === "globalNotification") {
-          msg2._uib_processed_by = "_msgRcvdEvents - globalNotification";
-          _ui.showDialog("notify", msg2._uib.options, msg2);
+        if (msg._uib.componentRef === "globalNotification") {
+          msg._uib_processed_by = "_msgRcvdEvents - globalNotification";
+          _ui.showDialog("notify", msg._uib.options, msg);
         }
-        if (msg2._uib.componentRef === "globalAlert") {
-          msg2._uib_processed_by = "_msgRcvdEvents - globalAlert";
-          _ui.showDialog("alert", msg2._uib.options, msg2);
+        if (msg._uib.componentRef === "globalAlert") {
+          msg._uib_processed_by = "_msgRcvdEvents - globalAlert";
+          _ui.showDialog("alert", msg._uib.options, msg);
         }
       }
-      if (msg2._ui) {
-        if (!this._forThis(msg2._ui)) return;
+      if (msg._ui) {
+        if (!this._forThis(msg._ui)) return;
         log("trace", "Uib:_msgRcvdEvents:_ui", "Calling _uiManager")();
-        msg2._uib_processed_by = "_msgRcvdEvents - _ui";
-        this._dispatchCustomEvent("uibuilder:msg:_ui", msg2);
-        _ui._uiManager(msg2);
+        msg._uib_processed_by = "_msgRcvdEvents - _ui";
+        this._dispatchCustomEvent("uibuilder:msg:_ui", msg);
+        _ui._uiManager(msg);
       }
     }
     /** Internal send fn. Send a standard or control msg back to Node-RED via Socket.IO
@@ -9303,23 +9345,23 @@
      * @param {object} msg Msg from Node-RED containing a msg._uib object
      * @private
      */
-    _uibCommand(msg2) {
+    _uibCommand(msg) {
       var _a3, _b, _c, _d, _e, _f, _g, _h, _i;
-      if (!msg2._uib || !msg2._uib.command) {
-        log("error", "uibuilder:_uibCommand", "Invalid command message received", { msg: msg2 })();
-        msg2.payload = msg2.error = "Invalid command message received";
-        this.send(msg2);
+      if (!msg._uib || !msg._uib.command) {
+        log("error", "uibuilder:_uibCommand", "Invalid command message received", { msg })();
+        msg.payload = msg.error = "Invalid command message received";
+        this.send(msg);
         return;
       }
-      const cmd = msg2._uib.command;
+      const cmd = msg._uib.command;
       if (!__privateGet(this, _extCommands).includes(cmd.trim())) {
         log("error", "Uib:_uibCommand", "Command '".concat(cmd, " is not allowed to be called externally"))();
         return;
       }
-      const prop = (_a3 = msg2._uib) == null ? void 0 : _a3.prop;
-      const value2 = (_b = msg2._uib) == null ? void 0 : _b.value;
-      const quiet = (_g = (_f = (_c = msg2._uib) == null ? void 0 : _c.quiet) != null ? _f : (_e = (_d = msg2._uib) == null ? void 0 : _d.options) == null ? void 0 : _e.quiet) != null ? _g : false;
-      const options = (_i = (_h = msg2._uib) == null ? void 0 : _h.options) != null ? _i : { type: prop, title: value2, quiet };
+      const prop = (_a3 = msg._uib) == null ? void 0 : _a3.prop;
+      const value2 = (_b = msg._uib) == null ? void 0 : _b.value;
+      const quiet = (_g = (_f = (_c = msg._uib) == null ? void 0 : _c.quiet) != null ? _f : (_e = (_d = msg._uib) == null ? void 0 : _d.options) == null ? void 0 : _e.quiet) != null ? _g : false;
+      const options = (_i = (_h = msg._uib) == null ? void 0 : _h.options) != null ? _i : { type: prop, title: value2, quiet };
       let response, info;
       switch (cmd) {
         // case 'elementIsVisible': { // temporarily deprecated
@@ -9369,9 +9411,9 @@
         case "set": {
           let store = false;
           let autoload = false;
-          if (msg2._uib.options && msg2._uib.options.store) {
-            if (msg2._uib.options.store === true) store = true;
-            if (msg2._uib.options.autoload === true) autoload = true;
+          if (msg._uib.options && msg._uib.options.store) {
+            if (msg._uib.options.store === true) store = true;
+            if (msg._uib.options.autoload === true) autoload = true;
           }
           response = this.set(prop, value2, store, autoload);
           break;
@@ -9385,7 +9427,7 @@
           break;
         }
         case "showOverlay": {
-          if (msg2.payload && !(options == null ? void 0 : options.content)) options.content = msg2.payload;
+          if (msg.payload && !(options == null ? void 0 : options.content)) options.content = msg.payload;
           response = this.showOverlay(options);
           break;
         }
@@ -9412,19 +9454,19 @@
         }
         if (Object(response).constructor === Promise) {
           response.then((data) => {
-            msg2.payload = msg2._uib.response = data;
-            msg2.info = msg2._uib.info = info;
-            if (!msg2.topic) msg2.topic = this.topic || "uib ".concat(cmd, " for '").concat(prop, "'");
-            this.send(msg2);
+            msg.payload = msg._uib.response = data;
+            msg.info = msg._uib.info = info;
+            if (!msg.topic) msg.topic = this.topic || "uib ".concat(cmd, " for '").concat(prop, "'");
+            this.send(msg);
             return true;
           }).catch((err) => {
             log(0, "Uib:_uibCommand", "Error: ", err)();
           });
         } else {
-          msg2.payload = msg2._uib.response = response;
-          msg2.info = msg2._uib.info = info;
-          if (!msg2.topic) msg2.topic = this.topic || "uib ".concat(cmd, " for '").concat(prop, "'");
-          this.send(msg2);
+          msg.payload = msg._uib.response = response;
+          msg.info = msg._uib.info = info;
+          if (!msg.topic) msg.topic = this.topic || "uib ".concat(cmd, " for '").concat(prop, "'");
+          this.send(msg);
         }
       }
     }
@@ -9452,19 +9494,19 @@
      *     .then(response => console.log('Response:', response))
      *     .catch(err => console.error('Failed:', err))
      */
-    asyncSend(msg2, options = {}) {
+    asyncSend(msg, options = {}) {
       var _a3, _b;
       const timeout = (_a3 = options.timeout) != null ? _a3 : 6e4;
       const onSuccess = options.onSuccess;
       const originator = (_b = options.originator) != null ? _b : "";
-      msg2 = this.makeMeAnObject(msg2, "payload");
+      msg = this.makeMeAnObject(msg, "payload");
       const correlationId = this.randomUUID();
-      if (!msg2.topic) {
-        msg2.topic = this.topic || "uibuilder/asyncSend";
+      if (!msg.topic) {
+        msg.topic = this.topic || "uibuilder/asyncSend";
       }
-      if (!msg2._uib) msg2._uib = {};
-      msg2._uib.correlationId = correlationId;
-      const topic = msg2.topic;
+      if (!msg._uib) msg._uib = {};
+      msg._uib.correlationId = correlationId;
+      const topic = msg.topic;
       return new Promise((resolve, reject) => {
         const cleanup = (tid, lref) => {
           if (tid) clearTimeout(tid);
@@ -9490,8 +9532,8 @@
             resolve(responseMsg);
           }
         });
-        log("trace", "Uib:asyncSend", 'Sending async message with topic "'.concat(topic, '" and correlationId "').concat(correlationId, '"'), msg2)();
-        this._send(msg2, this._ioChannels.client, originator);
+        log("trace", "Uib:asyncSend", 'Sending async message with topic "'.concat(topic, '" and correlationId "').concat(correlationId, '"'), msg)();
+        this._send(msg, this._ioChannels.client, originator);
       });
     }
     /** Send log text to uibuilder's beacon endpoint (works even if socket.io not connected)
@@ -9515,13 +9557,13 @@
      */
     htmlSend(originator = "", send = true) {
       const out = "<!doctype html>\n".concat(document.documentElement.outerHTML);
-      const msg2 = {
+      const msg = {
         payload: out,
         length: out.length,
         topic: this.topic
       };
-      log("trace", "Uib:htmlSend", "Sending full HTML to Node-RED", msg2)();
-      if (send === true) this._send(msg2, this._ioChannels.client, originator);
+      log("trace", "Uib:htmlSend", "Sending full HTML to Node-RED", msg)();
+      if (send === true) this._send(msg, this._ioChannels.client, originator);
       return out;
     }
     /** Send log info back to Node-RED over uibuilder's websocket control output (Port #2)
@@ -9627,7 +9669,7 @@
           vibrate: target.vibrate
         };
       }
-      const msg2 = {
+      const msg = {
         // - this may be an empty Object if no data attributes defined
         payload,
         _ui: {
@@ -9653,16 +9695,16 @@
           tabId: this.tabId
         }
       };
-      log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg2)();
-      this._send(msg2, this._ioChannels.client, originator);
+      log("trace", "Uib:eventSend", "Sending msg to Node-RED", msg)();
+      this._send(msg, this._ioChannels.client, originator);
     }
     /** Send a standard message to NR
      * @example uibuilder.send({payload:'Hello'})
      * @param {object} msg Message to send
      * @param {string} [originator] A Node-RED node ID to return the message to
      */
-    send(msg2, originator = "") {
-      this._send(msg2, this._ioChannels.client, originator);
+    send(msg, originator = "") {
+      this._send(msg, this._ioChannels.client, originator);
     }
     // ! TODO: Rooms do not auto-reconnect. Add tracking and update _onConnect
     // ! TODO: Add receipt handler on joining a room.
@@ -9673,8 +9715,8 @@
      * @param {string} room Name of a Socket.IO pre-defined room.
      * @param {*} msg Message to send
      */
-    sendRoom(room, msg2) {
-      this._socket.emit("uib-room-send", room, msg2);
+    sendRoom(room, msg) {
+      this._socket.emit("uib-room-send", room, msg);
     }
     joinRoom(room) {
       this._socket.emit("uib-room-join", room);
@@ -9685,16 +9727,16 @@
     /** Send a control msg to NR
      * @param {object} msg Message to send
      */
-    sendCtrl(msg2) {
-      this._send(msg2, this._ioChannels.control);
+    sendCtrl(msg) {
+      this._send(msg, this._ioChannels.control);
     }
     /**
      * Send a message to Node-RED on a custom channel - use for UIBUILDER 3rd-party custom nodes
      * @param {string} channel The custom channel name to use
      * @param {object} msg The message to send
      */
-    sendCustom(channel, msg2) {
-      this._socket.emit(channel, msg2);
+    sendCustom(channel, msg) {
+      this._socket.emit(channel, msg);
     }
     /** Upload a file to Node-RED over Socket.IO
      * https://developer.mozilla.org/en-US/docs/Web/API/FileReader
@@ -9705,7 +9747,7 @@
       const reader = new FileReader();
       reader.onload = (e) => {
         const arrayBuffer = e.target.result;
-        const msg2 = {
+        const msg = {
           topic: this.topic || "file-upload",
           payload: arrayBuffer,
           fileName: file.name,
@@ -9719,11 +9761,11 @@
         };
         const maxSize = this.maxHttpBufferSize - 500;
         if (arrayBuffer.byteLength >= maxSize) {
-          msg2.payload = void 0;
-          msg2.error = "File is too large to send. File size: ".concat(arrayBuffer.byteLength, ". Max msg size: ").concat(maxSize);
-          log("error", "Uib:uploadFile", msg2.error)();
+          msg.payload = void 0;
+          msg.error = "File is too large to send. File size: ".concat(arrayBuffer.byteLength, ". Max msg size: ").concat(maxSize);
+          log("error", "Uib:uploadFile", msg.error)();
         }
-        this.send(msg2);
+        this.send(msg);
       };
       reader.readAsArrayBuffer(file);
     }
@@ -10077,7 +10119,8 @@
       perf.set("start finished", performance.now());
     }
     // #endregion -------- ------------ -------- //
-  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _manualDisconnect = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _uniqueElID = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), _uibAttrSel = new WeakMap(), // #region --- Static variables ---
+  }, _pingInterval = new WeakMap(), _propChangeCallbacks = new WeakMap(), _msgRecvdByTopicCallbacks = new WeakMap(), _timerid = new WeakMap(), _manualDisconnect = new WeakMap(), _MsgHandler = new WeakMap(), _isShowMsg = new WeakMap(), _isShowStatus = new WeakMap(), _sendUrlHash = new WeakMap(), _uniqueElID = new WeakMap(), _extCommands = new WeakMap(), _managedVars = new WeakMap(), _showStatus = new WeakMap(), _uiObservers = new WeakMap(), _uibAttrSel = new WeakMap(), // #region ------- Class variables ------- //
+  // #region Static variables
   __publicField(_a2, "_meta", {
     version,
     type: "module",

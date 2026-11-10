@@ -153,6 +153,14 @@
       });
       /** Optional Markdown-IT Plugins */
       __publicField(this, "ui_md_plugins");
+      // #endregion ---- -------- ----
+      // #region ---- External Methods ----
+      // #region -- Utility --
+      /** Returns true if the value is an HTML element, else false
+       * @param {*} value Value to check
+       * @return {boolean} True if value refers to an HTML element
+       */
+      __publicField(this, "isElement", (value) => value !== null && typeof value === "object" && value.nodeType === 1);
       if (win) _a.win = win;
       else {
         throw new Error("Ui:constructor. Current environment does not include `window`, UI functions cannot be used.");
@@ -238,7 +246,7 @@
     }
     /** Show a browser notification if the browser and the user allows it
      * @param {object} config Notification config data
-     * @returns {Promise} Resolves on close or click event, returns the event.
+     * @return {Promise} Resolves on close or click event, returns the event.
      */
     _showNotification(config) {
       if (config.topic && !config.title) config.title = config.topic;
@@ -450,7 +458,6 @@
         this.loadStyleTxt(ui.txtStyles.join("\n"));
       }
     }
-    // --- end of _uiLoad ---
     /** Handle incoming _ui messages and loaded UI JSON files
      * Called from start()
      * @param {*} msg Standardised msg object containing a _ui property object
@@ -510,7 +517,6 @@
         }
       });
     }
-    // --- end of _uiManager ---
     /** Handle a reload request */
     _uiReload() {
       _a.log("trace", "Ui:uiManager:reload", "reloading")();
@@ -535,7 +541,6 @@
         });
       });
     }
-    // --- end of _uiRemove ---
     /** Handle incoming _ui replace requests
      * @param {*} ui Standardised msg._ui property object. Note that payload and topic are appended to this object
      */
@@ -586,7 +591,6 @@
         }
       });
     }
-    // --- end of _uiReplace ---
     // TODO Allow single add without using components array
     // TODO Allow sub-components
     // TODO Add multi-slot capability
@@ -639,9 +643,7 @@
         });
       });
     }
-    // --- end of _uiUpdate ---
-    // #endregion ---- -------- ----
-    // #region ---- External Methods ----
+    // #endregion -- -- --
     /** Simplistic jQuery-like document CSS query selector, returns an HTML Element
      * NOTE that this fn returns the element itself. Use $$ to get the properties of 1 or more elements.
      * If the selected element is a <template>, returns the first child element.
@@ -649,7 +651,7 @@
      * @param {string} cssSelector A CSS Selector that identifies the element to return
      * @param {"el"|"text"|"html"|"attributes"|"attr"} [output] Optional. What type of output to return. Defaults to "el", the DOM element reference
      * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
-     * @returns {HTMLElement|string|Array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
+     * @return {HTMLElement|string|Array|null} Selected HTML DOM element, innerText, innerHTML, attribute list or null
      */
     $(cssSelector, output, context) {
       if (!context) context = _a.doc;
@@ -704,7 +706,7 @@
      * NOTE that this fn returns an array showing the PROPERTIES of the elements whereas $ returns the element itself
      * @param {string} cssSelector A CSS Selector that identifies the elements to return
      * @param {HTMLElement} [context] Optional. The context to search within. Defaults to the document. Must be a DOM element.
-     * @returns {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
+     * @return {HTMLElement[]} Array of DOM elements/nodes. Array is empty if selector is not found.
      */
     $$(cssSelector, context) {
       if (!context) context = _a.doc;
@@ -787,7 +789,7 @@
     /** Converts markdown text input to HTML if the Markdown-IT library is loaded
      * Otherwise simply returns the text
      * @param {string} mdText The input markdown string
-     * @returns {string} HTML (if Markdown-IT library loaded and parse successful) or original text
+     * @return {string} HTML (if Markdown-IT library loaded and parse successful) or original text
      */
     convertMarkdown(mdText) {
       if (!mdText) return "";
@@ -807,7 +809,7 @@
      * @param {object} uiOptions Object containing properties recognised by the _uiReplace function. Must at least contain an id
      * param {string} uiOptions.id The HTML ID given to the wrapping DIV tag
      * param {string} uiOptions.parentSelector The CSS selector for a parent element to insert the new HTML under (defaults to 'body')
-     * @returns {Promise<any>} Status
+     * @return {Promise<any>} Status
      */
     async include(url, uiOptions) {
       if (!fetch) {
@@ -1017,7 +1019,7 @@
     /** Get standard data from a DOM node.
      * @param {*} node DOM node to examine
      * @param {string} cssSelector Identify the DOM element to get data from
-     * @returns {object} Standardised data object
+     * @return {object} Standardised data object
      */
     nodeGet(node, cssSelector) {
       const thisOut = {
@@ -1088,7 +1090,7 @@
      * or a Notifications API options object + config.title string.
      * Config ref: https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
      * @param {object|string} config Notification config object or simple message string
-     * @returns {Promise} Resolves on close or click event, returns the event.
+     * @return {Promise} Resolves on close or click event, returns the event.
      */
     async notification(config) {
       if (typeof config === "string") {
@@ -1156,7 +1158,7 @@
     /** Sanitise HTML to make it safe - if the DOMPurify library is loaded
      * Otherwise just returns that HTML as-is.
      * @param {string} html The input HTML string
-     * @returns {string} The sanitised HTML or the original if DOMPurify not loaded
+     * @return {string} The sanitised HTML or the original if DOMPurify not loaded
      */
     sanitiseHTML(html) {
       if (!_a.win["DOMPurify"]) return html;
@@ -1174,7 +1176,7 @@
      * @param {"notify"|"alert"|null} type Dialog type. If null, invalid or not provided, defaults to "notify".
      * @param {object|null} ui Standardised ui data. If not provided, defaults to {noAutohide:true,modal:true,appendToast:false}
      * @param {object} [msg] msg.payload/msg.topic - only used if payload is a string. Optional.
-     * @returns {HTMLDivElement|null} The toast element (which may disappear after a timeout) or null if no content
+     * @return {HTMLDivElement|null} The toast element (which may disappear after a timeout) or null if no content
      * @example
      * Ui.showDialog('notify', { title: 'Hello', content: 'This is a notification', noAutohide: true, appendToast: true })
      * @example
@@ -1321,7 +1323,7 @@
      *   @param {boolean} [options.showDismiss] - Whether to show dismiss button (auto-determined if not set)
      *   @param {number|null} [options.autoClose] - Auto-close delay in seconds (null for no auto-close)
      *   @param {boolean} [options.time] - Show timestamp in overlay (default: true)
-     * @returns {object} Object with close() method to manually close the overlay
+     * @return {object} Object with close() method to manually close the overlay
      */
     showOverlay(options) {
       return showOverlay(options);
@@ -1338,7 +1340,7 @@
     /** Get data from the DOM. Returns selection of useful props unless a specific prop requested.
      * @param {string} cssSelector Identify the DOM element to get data from
      * @param {string} [propName] Optional. Specific name of property to get from the element
-     * @returns {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
+     * @return {Array<*>} Array of objects containing either specific requested property or a selection of useful properties
      */
     uiGet(cssSelector, propName = null) {
       const selection = (
@@ -1428,7 +1430,7 @@
      *   @param {Array<columnDefinition>=} opts.cols Column metadata. If not provided will be derived from 1st row of data
      *   @param {HTMLElement|string=} opts.parent If provided, the table will be added as a child instead of returned. May be an actual HTML element or a CSS Selector
      *   @param {boolean=} opts.allowHTML Optional, default=false. If true, allows HTML cell content, otherwise only allows text. Always sanitise HTML inputs
-     * @returns {HTMLTableElement|HTMLParagraphElement} Output HTML Element
+     * @return {HTMLTableElement|HTMLParagraphElement} Output HTML Element
      */
     buildHtmlTable(data, opts = {}) {
       let rowKeys;
@@ -1491,7 +1493,7 @@
         try {
           parentEl.appendChild(tbl);
         } catch (e) {
-          throw new Error("[ui.js:buildHtmlTable] Could not add table to parent. ".concat(e.message));
+          throw new Error("[ui.js:buildHtmlTable] Could not add table to parent. ".concat(e.message), { cause: e });
         }
         return;
       }
@@ -1510,7 +1512,7 @@
      *  @param {number=} options.replaceRow Optional. If provided, the specified row will be REPLACED instead of added. Ignored if afterRow or beforeRow is provided
      *  @param {Array<columnDefinition>} [options.cols] Optional. Data about each column. If not provided, will be calculated from the table
      *
-     * @returns {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
+     * @return {HTMLTableRowElement} Reference to the newly added row. Use the `rowIndex` prop for the row number
      */
     tblAddRow(tbl, rowData = {}, options = {}) {
       const tblType = Object.prototype.toString.apply(tbl);
@@ -1630,7 +1632,7 @@
      * @param {string|number} rowKey Key or index to use for column search
      * @param {Array<columnDefinition>=} colMeta Array of column definitions. If not provided, will need the HTML table element.
      * @param {HTMLTableElement=} tblEl If the colMeta table not provided, provide the HTML table element to do the lookup
-     * @returns {columnDefinition} Column metadata object
+     * @return {columnDefinition} Column metadata object
      */
     tblFindColMeta(rowKey, colMeta, tblEl) {
       if (!colMeta && !tblEl) throw new Error("[tblFindColMeta] Either the column metadata array or the HTML table element must be provided");
@@ -1646,7 +1648,7 @@
     /** Return a standardised table cell name. Either from a `data-col-name` attribute or a numeric reference like `C003`
      * @param {HTMLTableCellElement} cellEl The cell element to process
      * @param {number=} pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
-     * @returns {string} A cell name
+     * @return {string} A cell name
      */
     tblGetCellName(cellEl, pad = 3) {
       var _a2;
@@ -1658,7 +1660,7 @@
      * @param {HTMLTableElement} tblEl DOM table element
      * @param {object} [options] Additional options. Default={}
      *   @param {number=} options.pad Optional, default=3. Will be used to front-pad unnamed column references with zeros. e.g. 3 => "C002"/"C012"/"C342"
-     * @returns {Array<columnDefinition>} Column metadata = array of column definitions
+     * @return {Array<columnDefinition>} Column metadata = array of column definitions
      */
     tblGetColMeta(tblEl, options = {}) {
       var _a2, _b, _c;
