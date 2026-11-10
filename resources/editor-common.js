@@ -1,6 +1,9 @@
 /** Common functions and data for UIBUILDER nodes
  * Load as: ./resources/node-red-contrib-uibuilder/editor-common.js
  * Note that RED is available here
+ * Version see code below
+ * @author Julian Knight (Totally Information)
+ * @license Apache-2.0
  */
 
 /** --- Type Defs ---
@@ -18,6 +21,8 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
          * @type {UibEditorCommon}
          */
         const uibuilder = window['uibuilder'] = /** @type {UibEditorCommon} */ ({
+            // What version of uibuilder is this from?
+            version: '8.0.0',
             // Standard palette category for all uibuilder nodes
             paletteCategory: 'uibuilder',
             // Common node color for all uibuilder nodes - set in each node to avoid v4.1.7 custom var bug
