@@ -28,62 +28,51 @@
     // Standard width for typed input fields
     const tiWidth = uibuilder.typedInputWidth
 
-    /** Get the list of available types via API call, updates elTypes
+    /** Get the list of available low-code types via API call, updates elTypes
      * @param {*} node A node instance as seen from the Node-RED Editor
      */
     function getTypesList(node) {
-        $.ajax({
-            url: './uibuilder/admin/nourl',
-            method: 'GET',
+        uibuilder.doAdminApiv3({
+            verb: 'GET',
             async: false,
             dataType: 'json',
             data: {
                 cmd: 'getElements',
             },
-            beforeSend: function(jqXHR) {
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
-            },
-            success: function(data) {
-                log('[uib-element:onEditPrepare:getElTypes] Data updated successfully', data)
+            success: (data) => {
+                log('🌐[uib-element:onEditPrepare:getElTypes] Data updated successfully', data)
                 elTypes = data
             },
+            fail: (_jqXHR, textStatus, errorThrown) => {
+                console.error( '🌐🛑[uib-element:onEditPrepare:getElTypes] Error ' + textStatus, errorThrown )
+            },
+            error: function() {}, // No nr notify needed
         })
-            .fail(function(_jqXHR, textStatus, errorThrown) {
-                console.error( '[uib-element:onEditPrepare:getElTypes] Error ' + textStatus, errorThrown )
-            })
     }
 
+    /** SYNC Get a single low-code element definition
+     * @param {string} elType The low-code element type to fetch
+     */
     function getOneType(elType) {
-        $.ajax({
-            url: './uibuilder/admin/-nourl-',
-            method: 'GET',
+        uibuilder.doAdminApiv3({
+            verb: 'GET',
             async: false,
             dataType: 'json',
             data: {
                 cmd: 'getOneElement',
                 elType: elType,
-                // @ts-ignore - Current user's browser languages via jQuery extension 
+                // Current user's browser languages via jQuery extension
                 languages: $.i18n.languages,
             },
-            beforeSend: function(jqXHR) {
-                log('[uib-element:getOneType:getEl] Preparing to get el type descr/opts. ', elType, $.i18n.languages)
-                const authTokens = RED.settings.get('auth-tokens')
-                if (authTokens) {
-                    jqXHR.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
-                }
-            },
-            success: function(data) {
-                log('[uib-element:getOneType:getEl] Data retrieved successfully', data)
+            success: (data) => {
+                log('🌐[uib-element:getOneType:getEl] Data retrieved successfully', data)
                 elTypes[elType].description = data.descHtml
                 elTypes[elType].options = data.optsHtml
             },
+            error: (xhr, textStatus, err) => { // No nr notify needed
+                console.error( '🌐🛑[uib-element:getOneType:getEl] Error ' + textStatus, err )
+            },
         })
-            .fail(function(_jqXHR, textStatus, errorThrown) {
-                console.error( '[uib-element:getOneType:getEl] Error ' + textStatus, errorThrown )
-            })
     }
 
     /** Update advanced settings tab for an element
