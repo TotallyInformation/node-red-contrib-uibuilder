@@ -21,6 +21,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
          * @type {UibEditorCommon}
          */
         const uibuilder = window['uibuilder'] = /** @type {UibEditorCommon} */ ({
+            // #region --- variables/constants ---
             // What version of uibuilder is this from?
             version: '8.0.0',
             // Standard palette category for all uibuilder nodes
@@ -63,6 +64,7 @@ RED.plugins.registerPlugin('uib-editor-plugin', {
                 'uib-tag',
                 'uib-update'
             ],
+            // #endregion --- variables/constants ---
 
             /** Wrapper for RED.notify
              * @param {string} msg Message to display
