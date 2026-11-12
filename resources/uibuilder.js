@@ -1743,19 +1743,17 @@
         if (!processId) return
         if (!runningScripts[node.url]) return
 
-        const xhr = new XMLHttpRequest()
+        const xhr = new XMLHttpRequest() // not using common doAdminApiv3
         const params = {
             cmd: 'killInstanceNpmScript',
             processId: processId,
         }
-
         xhr.open('PUT', `uibuilder/admin/${node.url}`, true)
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
         const authTokens = RED.settings.get('auth-tokens')
         if (authTokens) {
             xhr.setRequestHeader('Authorization', 'Bearer ' + authTokens.access_token)
         }
-
         xhr.onload = function() {
             if (xhr.status === 200) {
                 const response = JSON.parse(xhr.responseText)
@@ -1769,11 +1767,9 @@
                 RED.notify(`🌐 Failed to kill process ${runningScripts[node.url].scriptName} for ${node.url}. XHR Status: ${xhr.status}`, { type: 'error', })
             }
         }
-
         const formData = Object.keys(params)
             .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
             .join('&')
-
         xhr.send(formData)
     }
 
@@ -1817,7 +1813,7 @@
         elScriptOutput.text(output)
 
         // Use XMLHttpRequest for streaming chunked output
-        xhr = new XMLHttpRequest()
+        xhr = new XMLHttpRequest() // not using common doAdminApiv3
         xhr.open('PUT', './uibuilder/admin/' + node.url, true)
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
         const authTokens = RED.settings.get('auth-tokens')
