@@ -26,11 +26,13 @@
      * @param {object} msg The message to send to the runtime - will be stringified before sending
      */
     function sendToNode(nodeid, msg) {
-        msg = JSON.stringify(msg) // needs try/catch
-        const postUrl = '/uibuilder/sidebarui/' + nodeid
-        // console.log('🌐📊[uib-sidebar:sidebar] Sending to node runtime:', postUrl, msg, node.id, node)
-        $.ajax({
-            url: './uibuilder/uib-sidebar/' + nodeid,
+        try {
+            msg = JSON.stringify(msg)
+        } catch (e) {}
+        const postUrl = `./uibuilder/uib-sidebar/${nodeid}`
+        // Admin endpoint defined in uib-sidebar runtime (not in libs/adminapiv3)
+        $.ajax({ // can't use common doAdminApiv3 fn
+            url: postUrl,
             type: 'POST',
             data: msg,
             contentType: 'application/json; charset=utf-8',
