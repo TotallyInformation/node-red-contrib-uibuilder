@@ -1223,7 +1223,8 @@ export const Uib = class Uib {
      * @return {Location} The new window.location string
      */
     navigate(url) {
-        if (url) window.location.href = url
+        if (url && url.startsWith('#')) window.location.hash = url
+        if (url) window.location.assign(url)
         return window.location
     }
 
@@ -1288,7 +1289,7 @@ export const Uib = class Uib {
      * @param {number} ms Repeat interval in ms
      */
     setPing(ms = 0) {
-        const oReq = new XMLHttpRequest()
+        const oReq = new XMLHttpRequest() // not using common doAdminApiv3
         oReq.addEventListener('load', () => {
             const headers = (oReq.getAllResponseHeaders()).split('\r\n')
             const elapsedTime = Number(new Date()) - Number((oReq.responseURL.split('='))[1])
@@ -1300,15 +1301,12 @@ export const Uib = class Uib {
                 elapsedTime: elapsedTime,
             })
         })
-
         if (this.#pingInterval) {
             clearInterval(this.#pingInterval)
             this.#pingInterval = undefined
         }
-
         oReq.open('GET', `${this.httpNodeRoot}/uibuilder/ping?t=${Number(new Date())}`)
         oReq.send()
-
         if (ms > 0) {
             this.#pingInterval = setInterval(() => {
                 oReq.open('GET', `${this.httpNodeRoot}/uibuilder/ping?t=${Number(new Date())}`)
