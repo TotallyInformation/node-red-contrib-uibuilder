@@ -7958,7 +7958,8 @@
      * @return {Location} The new window.location string
      */
     navigate(url2) {
-      if (url2) window.location.href = url2;
+      if (url2 && url2.startsWith("#")) window.location.hash = url2;
+      if (url2) window.location.assign(url2);
       return window.location;
     }
     /** Create and return a randomised UUID
