@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-assignment */
 // @ts-nocheck
 'use strict'
 
@@ -93,7 +94,7 @@ window.$docsify = {
 
             /** Safely get a single tip file
              * @param {string} filename - The tip filename to load
-             * @returns {string} The markdown content or error message
+             * @return {string} The markdown content or error message
              */
             const getSingleTipFile = (filename) => {
                 try {
@@ -152,7 +153,7 @@ window.$docsify = {
             }
 
             /** Get a random tip from the available tips
-             * @returns {object|null} Random tip object or null if no tips available
+             * @return {object|null} Random tip object or null if no tips available
              */
             const getRandomTip = () => {
                 if (tipsFiles.length === 0) return null
@@ -394,11 +395,11 @@ window.$docsify = {
                     const STORAGE_KEY = 'uib-docs-sidebar-state'
 
                     /** Get saved sidebar state from localStorage
-                     * @returns {object} Saved state object or empty object
+                     * @return {object} Saved state object or empty object
                      */
                     const getSavedState = () => {
                         try {
-                            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}
+                            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {} // eslint-disable-line n/no-unsupported-features/node-builtins
                         } catch (e) {
                             return {}
                         }
@@ -412,7 +413,7 @@ window.$docsify = {
                         try {
                             const state = getSavedState()
                             state[sectionId] = isOpen
-                            localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+                            localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) // eslint-disable-line n/no-unsupported-features/node-builtins
                         } catch (e) {
                             console.warn('Failed to save sidebar state:', e)
                         }
@@ -420,7 +421,7 @@ window.$docsify = {
 
                     /** Generate a stable ID from section text content
                      * @param {HTMLElement} summaryEl - The summary element
-                     * @returns {string} A stable identifier for the section
+                     * @return {string} A stable identifier for the section
                      */
                     const getSectionId = (summaryEl) => {
                         // Use text content, trimmed and lowercased, as the key
@@ -507,12 +508,12 @@ window.$docsify = {
                 document.documentElement.style.setProperty('--sidebar-width', `${widthPx}px`)
                 const resizeHandle = document.querySelector('.sidebar-resize-handle')
                 if (resizeHandle) resizeHandle.setAttribute('aria-valuenow', String(Math.round(widthPx)))
-                if (persist) localStorage.setItem(STORAGE_KEY_WIDTH, `${widthPx}px`)
+                if (persist) localStorage.setItem(STORAGE_KEY_WIDTH, `${widthPx}px`) // eslint-disable-line n/no-unsupported-features/node-builtins
             }
 
             hook.mounted(() => {
                 // Restore saved sidebar width
-                const savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH)
+                const savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH) // eslint-disable-line n/no-unsupported-features/node-builtins
                 if (savedWidth) document.documentElement.style.setProperty('--sidebar-width', savedWidth)
 
                 // Create the draggable resize handle between sidebar and content
@@ -613,16 +614,25 @@ window.$docsify = {
                 history.pushState(null, '', `${pageBase}?id=${id}`)
             }
 
-            /** Rebuild the page TOC from h2/h3 headings in the rendered content.
-             * H2s that have H3 children are wrapped in <details><summary> to match
-             * the collapsible style of the Navigation panel.
+            /** Rebuild the page TOC from headings in the rendered content.
+             * Any heading level from H2 to H6 may be included (H1 is always excluded).
+             * Headings that have child headings are wrapped in <details><summary> to match
+             * the collapsible style of the Navigation panel. Nesting is arbitrarily deep
+             * and copes with skipped levels (e.g. an H4 directly under an H2).
+             * @param {number} [minLevel] Lowest heading level to include (2-6). Default 2.
+             * @param {number} [maxLevel] Highest heading level to include (2-6). Default 4.
              */
-            const buildToc = () => {
+            const buildToc = (minLevel = 2, maxLevel = 4) => {
                 const tocPanel = document.querySelector('.sidebar-toc-panel')
                 if (!tocPanel) return
 
+                // Sanitise the level range: H1 is never included, H6 is the maximum
+                const lo = Math.min(6, Math.max(2, Math.trunc(Number(minLevel)) || 2))
+                const hi = Math.min(6, Math.max(lo, Math.trunc(Number(maxLevel)) || 4))
+
+                const selector = Array.from({ length: hi - lo + 1, }, (_, i) => `h${lo + i}`).join(', ')
                 const mainContent = document.querySelector('.markdown-section')
-                const headings = mainContent ? Array.from(mainContent.querySelectorAll('h2, h3')) : []
+                const headings = mainContent ? Array.from(mainContent.querySelectorAll(selector)) : []
                 tocPanel.innerHTML = ''
 
                 if (headings.length === 0) {
@@ -633,73 +643,71 @@ window.$docsify = {
                     return
                 }
 
-                // Pre-scan to know which H2s have H3 children so we can decide
-                // whether to use <details><summary> or a plain <button>.
-                const h2HasChildren = new Map()
-                let lastH2Key = null
-                headings.forEach((h) => {
-                    if (h.tagName === 'H2') {
-                        lastH2Key = h.id || h.textContent.trim()
-                        h2HasChildren.set(lastH2Key, false)
-                    } else if (lastH2Key !== null) {
-                        h2HasChildren.set(lastH2Key, true)
-                    }
-                })
-
-                const ul = document.createElement('ul')
-                let currentDetails = null
-                let currentSubUl = null
+                /** Build a tree of headings. A heading's parent is the nearest
+                 * preceding heading with a lower level number.
+                 * @typedef {{level: number, label: string, id: string, children: Array<object>}} TocNode
+                 */
+                /** @type {TocNode[]} */
+                const roots = []
+                /** @type {TocNode[]} */
+                const stack = []
 
                 headings.forEach((heading) => {
-                    // Strip trailing '#' link anchors added by docsify-themeable
-                    const label = heading.textContent.replace(/\s*#\s*$/, '').trim()
-                    const id = heading.id
+                    /** @type {TocNode} */
+                    const node = {
+                        level: Number(heading.tagName.slice(1)),
+                        // Strip trailing '#' link anchors added by docsify-themeable
+                        label: heading.textContent.replace(/\s*#\s*$/, '').trim(),
+                        id: heading.id,
+                        children: [],
+                    }
 
-                    if (heading.tagName === 'H2') {
-                        currentSubUl = null
-                        const h2Key = id || label
-                        const hasChildren = h2HasChildren.get(h2Key)
+                    while (stack.length > 0 && stack[stack.length - 1].level >= node.level) stack.pop()
+
+                    if (stack.length > 0) stack[stack.length - 1].children.push(node)
+                    else roots.push(node)
+
+                    stack.push(node)
+                })
+
+                /** Render a list of TOC nodes (recursively) into a <ul>
+                 * @param {TocNode[]} nodes Nodes to render
+                 * @return {HTMLUListElement} The rendered list
+                 */
+                const renderList = (nodes) => {
+                    const ul = document.createElement('ul')
+
+                    nodes.forEach((node) => {
                         const li = document.createElement('li')
+                        const className = `sidebar-toc-link sidebar-toc-h${node.level}`
 
-                        if (hasChildren) {
+                        if (node.children.length > 0) {
                             // Wrap in <details><summary> to match Navigation panel style
                             const details = document.createElement('details')
                             details.open = true
                             const summary = document.createElement('summary')
-                            summary.className = 'sidebar-toc-link sidebar-toc-h2'
-                            summary.textContent = label
-                            if (id) summary.addEventListener('click', () => scrollToHeading(id))
+                            summary.className = className
+                            summary.textContent = node.label
+                            if (node.id) summary.addEventListener('click', () => scrollToHeading(node.id))
                             details.appendChild(summary)
-                            currentDetails = details
+                            details.appendChild(renderList(node.children))
                             li.appendChild(details)
                         } else {
                             const btn = document.createElement('button')
                             btn.type = 'button'
-                            btn.className = 'sidebar-toc-link sidebar-toc-h2'
-                            btn.textContent = label
-                            if (id) btn.addEventListener('click', () => scrollToHeading(id))
-                            currentDetails = null
+                            btn.className = className
+                            btn.textContent = node.label
+                            if (node.id) btn.addEventListener('click', () => scrollToHeading(node.id))
                             li.appendChild(btn)
                         }
+
                         ul.appendChild(li)
-                    } else {
-                        const li = document.createElement('li')
-                        const btn = document.createElement('button')
-                        btn.type = 'button'
-                        btn.className = 'sidebar-toc-link sidebar-toc-h3'
-                        btn.textContent = label
-                        if (id) btn.addEventListener('click', () => scrollToHeading(id))
-                        li.appendChild(btn)
+                    })
 
-                        if (!currentSubUl) {
-                            currentSubUl = document.createElement('ul')
-                            ;(currentDetails || ul).appendChild(currentSubUl)
-                        }
-                        currentSubUl.appendChild(li)
-                    }
-                })
+                    return ul
+                }
 
-                tocPanel.appendChild(ul)
+                tocPanel.appendChild(renderList(roots))
             }
 
             // Visual ordering is handled entirely by CSS flex `order` values on
@@ -740,7 +748,7 @@ window.$docsify = {
                         const btn = e.target.closest('[data-tab]')
                         if (!btn) return
                         activateTab(btn.dataset.tab)
-                        localStorage.setItem(STORAGE_KEY_TAB, btn.dataset.tab)
+                        localStorage.setItem(STORAGE_KEY_TAB, btn.dataset.tab) // eslint-disable-line n/no-unsupported-features/node-builtins
                     })
                 }
 
@@ -753,7 +761,7 @@ window.$docsify = {
                 }
 
                 buildToc()
-                activateTab(localStorage.getItem(STORAGE_KEY_TAB) || 'nav')
+                activateTab(localStorage.getItem(STORAGE_KEY_TAB) || 'nav') // eslint-disable-line n/no-unsupported-features/node-builtins
             })
         },
     ],

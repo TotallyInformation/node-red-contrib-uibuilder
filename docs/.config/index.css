@@ -347,6 +347,14 @@ figcaption::before {
     padding-top: 0.1rem;
     padding-left: 0;
 }
+/* Nested collapsible headings: no top border/bold so only the top level stands out */
+.sidebar-toc-panel details details > summary.sidebar-toc-link {
+    border-top: none;
+    font-style: normal;
+    font-weight: normal;
+    margin-top: 0;
+    padding-top: 0.1rem;
+}
 /* Buttons styled as nav links — avoids Docsify link-binder scanning <a href> elements */
 .sidebar-toc-link {
     background: none;
