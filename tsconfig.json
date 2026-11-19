@@ -13,6 +13,7 @@
 
         "strictNullChecks": false,
         "strict": false,
+        "noImplicitAny": false,
         "lib": [
             "ES2022"
         ],
