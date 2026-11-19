@@ -19,7 +19,7 @@
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
  * NB: The version is updated automatically by the build process to the current date - see gulpfile.js
- * @version: 2026-10-13
+ * @version: 2026-11-15
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -559,12 +559,31 @@ html {
     color: var(--text2);
     accent-color: var(--primary);
 }
-body {
-    margin-left: var(--base-margin);
-    margin-right: var(--base-margin);
-    /* padding: 0.3rem; */
+body { /* with nested HMTL5 block tags */
+    margin-inline-start: var(--base-margin);
+    margin-inline-end: var(--base-margin);
     font-family: var(--font-family);
     -webkit-font-smoothing: antialiased; /* Improve text rendering */
+
+    /* HTML5 block tags - only special format top-level to reduce odd fmts */
+    > main, > header, > footer, > section {
+        padding-inline-start: var(--base-margin);
+        padding-inline-end: var(--base-margin);
+        max-width: var(--max-width);
+        margin: 0 auto;
+    }
+    > main { /* Put asides inside a main to the right */
+        &:has(aside) {
+            .left {
+                float: left;
+            }
+            > aside, .right {
+                float: right;
+                margin-block-start: 1rem;
+                margin-inline-start: 1rem;
+            }
+        }
+    }
 }
 h1, h2, h3, h4, h5, h6, heading {
     line-height: calc(1em + 0.5rem); /* dynamic heights for headings */
@@ -666,45 +685,28 @@ article { /* This lets us use an article like a card display */
     padding: var(--border-pad);
     margin: 1rem var(--border-margin);
     background-color: var(--surface3);
-}
-article > h1::before {
-    font-size: 50%;
-    color: hsl( var(--failure-hue) 100% 50% );
-    content: "⛔ Do not use H1 headings in articles. "
-}
-article > h2, article > h3, article > h4 {
-    margin-block-start: 0;
-    border-bottom: 1px solid var(--text3);
-    padding-block-end: var(--border-pad);
-}
-/* HTML5 section tags - only special format top-level to reduce odd fmts */
-body > main, body > header, body > footer, body > section {
-    padding-left: var(--base-margin);
-    padding-right: var(--base-margin);
-    max-width: var(--max-width);
-    margin: 0 auto;
-}
-body > main {
-    display: grid;
-    gap: 1rem;
+
+    > h1::before {
+        font-size: 50%;
+        color: hsl( var(--failure-hue) 100% 50% );
+        content: "⛔ Do not use H1 headings in articles. "
+    }
+    > h2, > h3, > h4 {
+        margin-block-start: 0;
+        border-bottom: 1px solid var(--text3);
+        padding-block-end: var(--border-pad);
+    }
 }
 footer {
     margin-top: 1em;
 }
-/* Put asides inside a main to one side
-   Or, use a section or div to wrap multiple */
-main > article, main .left {
-    grid-column: 1;
-}
-main > aside, main .right {
-    grid-column: 2;
-}
 summary {
     cursor: pointer;
-}
-/* Inline blocks in a summary tag */
-summary > h2, summary > h3, summary > h4, summary > div, summary > p {
-    display: inline-block;
+
+    /* Inline blocks in a summary tag */
+    > h2, > h3, > h4, > div, > p {
+        display: inline-block;
+    }
 }
 
 /* #region Fix link colours when using dark mode in a light mode browser and visa versa */
@@ -1285,6 +1287,24 @@ button.compact {
     display: grid;
     gap: 0.5rem;
     grid-template-columns: repeat(auto-fit, minmax(min(var(--grid-fit-min), 100%), 1fr));
+}
+.grid-span-all-cols, .grid-span-cols {
+    grid-column: 1 / -1;
+}
+.grid-span-2-cols {
+    grid-column: span 2;
+}
+.grid-span-3-cols {
+    grid-column: span 3;
+}
+.grid-span-4-cols {
+    grid-column: span 4;
+}
+.grid-col-first, .grid-col-left {
+    grid-column: 1;
+}
+.grid-col-last, .grid-col-right {
+    grid-column: -2 / -1;
 }
 
 .flex {
