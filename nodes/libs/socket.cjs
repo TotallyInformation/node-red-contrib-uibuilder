@@ -25,7 +25,11 @@
  * @typedef {import('../../typedefs.js').uibNode} uibNode
  * @typedef {import('../../typedefs.js').uibConfig} uibConfig
  * @typedef {import('express')} Express
+ * @typedef {import('../../typedefs.js').uibCustomLogger} uibCustomLogger
  */
+
+const { /** @type {uibCustomLogger} */ log: clog, } = require('./logger.mjs')
+clog.debug('Loading')
 
 const { join, } = require('node:path')
 const socketio = require('socket.io')
@@ -204,7 +208,7 @@ class UibSockets {
 
         // Prevent setup from being called more than once
         if ( this._isConfigured === true ) {
-            log.warn('🌐⚠️[uibuilder:web:setup] Setup has already been called, it cannot be called again.')
+            log.warn('🌐⚠️[uibuilder:socket:setup] Setup has already been called, it cannot be called again.')
             return
         }
 
@@ -957,3 +961,5 @@ try { // Wrap in a try in case any errors creep into the class
 } catch (e) {
     uib.RED.log.error(`🌐🛑[uibuilder:socket.js] Unable to create class instance. Error: ${e.message}`)
 }
+
+clog.debug('Loaded')
