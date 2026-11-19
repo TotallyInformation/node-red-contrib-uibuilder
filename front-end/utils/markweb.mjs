@@ -1378,9 +1378,9 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         }
 
         // Received when server detects an index change (e.g. file added/removed)
-        // Used to trigger updates of any indexListings via use of `uib-topic="_indexes-changed"`
+        // Used to trigger updates of any indexListings via use of `uib-topic="_indexes-changed"` including sidebar nav
         case '_indexes-changed': {
-            // console.log('Indexes changed on server.', ctrlMsg)
+            // console.log('🕸️ Indexes changed on server.', ctrlMsg)
             // Request updated sidebar nav index from server
             uibuilder.sendCtrl({
                 uibuilderCtrl: 'internal',
@@ -1460,15 +1460,15 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             const newUrl = data.path ? (baseUrl.replace(/\/$/, '') + data.path + hashFragment) : window.location.pathname
 
             // Only push to history if not handling popstate and server says to add to history
-            console.log('pushState:', newUrl, 'addToHistory:', ctrlMsg.addToHistory, 'isHandlingPopstate:', isHandlingPopstate)
+            // console.log('pushState:', newUrl, 'addToHistory:', ctrlMsg.addToHistory, 'isHandlingPopstate:', isHandlingPopstate)
             if (data.path && ctrlMsg.addToHistory === true && !isHandlingPopstate) {
                 history.pushState(
                     { path: newUrl, hash: hashFragment || undefined, status: 'SPA page change', },
                     '', newUrl
                 )
             }
-            console.log('Updated history state to:', { newUrl, hashFragment, isSamePage, addToHistory: ctrlMsg.addToHistory, isHandlingPopstate, })
-            console.log('Scroll handling for page navigation:', { isSamePage, hashFragment, doit: !(isSamePage || hashFragment), })
+            // console.log('Updated history state to:', { newUrl, hashFragment, isSamePage, addToHistory: ctrlMsg.addToHistory, isHandlingPopstate, })
+            // console.log('Scroll handling for page navigation:', { isSamePage, hashFragment, doit: !(isSamePage || hashFragment), })
 
             // Scroll after content is rendered - target <main> <section> since it is the scroll container
             // Skip scroll reset when reloading the same page (e.g. source/config change)
@@ -1496,7 +1496,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
 
             // Reset the popstate flag after processing
             isHandlingPopstate = false
-            console.log('Reset isHandlingPopstate to false after page navigation handling.')
+            // console.log('Reset isHandlingPopstate to false after page navigation handling.')
 
             // Update active nav link(s) and parent indicators
             // updateActiveNavState(data.path)
