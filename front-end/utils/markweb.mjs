@@ -1,5 +1,4 @@
 // @ts-nocheck
-/* eslint-disable jsdoc/no-undefined-types */
 /* eslint-disable n/no-unsupported-features/node-builtins */
 // ^ This file is browser code, not Node.js - localStorage is a browser API
 
@@ -13,7 +12,7 @@ import mermaid from './mermaid.esm.min.js'
 // mermaid.initialize({ startOnLoad: false, theme: 'redux-dark-color', })
 mermaid.initialize({ startOnLoad: false, theme: 'dark', darkMode: true, })
 
-const clientVersion = '8.8.0-src' // NB: This is replaced with the actual version during the build process by bin/build.mjs
+const clientVersion = '8.0.0-src' // NB: This is replaced with the actual version during the build process by bin/build.mjs
 
 /** The uibuilder.pageData object is set on load and when navigating
  * You can use it to do your own processing if desired
@@ -50,7 +49,7 @@ const elSearchDetails = document.getElementById('search-details')
 
 /** Escape HTML to prevent XSS - returns escaped text (HTML removed)
  * @param {string} text Input text
- * @returns {string} Escaped text
+ * @return {string} Escaped text
  */
 function escapeHtml(text) {
     const div = document.createElement('div')
@@ -74,7 +73,7 @@ const normalizePath = (p) => {
  * Also reflect back to window.pageData and the local pageData object for consistency. Log the change
  * @param {object} attributes The page attributes to set
  * @param {object} additionalInfo Any additional info to merge into pageData (e.g. search query)
- * @returns {object} The updated pageData object
+ * @return {object} The updated pageData object
  */
 function updatePageData(attributes, additionalInfo = {}) {
     const pgData = { ...additionalInfo, ...attributes, }
@@ -87,7 +86,7 @@ function updatePageData(attributes, additionalInfo = {}) {
 }
 
 /** Make the page title act as a "back to top" control and clear any hash fragment
- * @returns {void}
+ * @return {void}
  */
 function setupPageTitleResetLink() {
     const pageTitleLink = document.getElementById('page-title-link')
@@ -657,7 +656,7 @@ let isCollapsed = false
 let lastNavigateRequest = { key: '', ts: 0, }
 
 /** Create the burger icon element
- * @returns {HTMLElement} The burger button element
+ * @return {HTMLElement} The burger button element
  */
 const navCreateBurger = () => {
     const btn = document.createElement('button')
