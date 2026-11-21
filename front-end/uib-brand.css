@@ -19,7 +19,7 @@
  * https://chromatichq.com/insights/understanding-and-using-hsl-your-css gives calculations for the color wheel
  *
  * NB: The version is updated automatically by the build process to the current date - see gulpfile.js
- * @version: 2026-11-15
+ * @version: 2026-11-19
  * @author: Julian Knight (TotallyInformation)
  * @license: Apache 2.0
  * @created: 2022-05-02
@@ -661,7 +661,7 @@ blockquote {
     margin: 0.5em 0 1em 0;
     color: inherit;
     border: none;
-    border-left: 0.25em solid var(--text3);
+    border-left: 0.25em solid var(--callout-border-color, var(--text3));
     background-color: var(--surface3);
     box-shadow: none;
     p, div {
