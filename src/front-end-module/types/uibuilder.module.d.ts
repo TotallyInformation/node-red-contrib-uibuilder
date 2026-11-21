@@ -373,13 +373,13 @@ export class Uib {
      */
     scrollTo(cssSelector?: string, opts?: { block?: string, inline?: string, behavior?: string }): boolean
 
-    /**
+    /** (Experimental)
      * Convert a string attribute into a variable/constant reference
      * Used to resolve data sources in attributes
      * @param path The string path to resolve, must be relative to the `window` global scope
      * @returns The resolved data source or null
      */
-    resolveDataSource(path: string): any
+    // resolveDataSource(path: string): any
 
     /**
      * Fast but accurate number rounding
