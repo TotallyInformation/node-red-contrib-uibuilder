@@ -1011,13 +1011,13 @@ function createSidebar(key, pageEnv, node, options) {
                         Contents
                     </button>
                 </div>
-                <uib-var id="sidebar-panel-nav" class="sidebar-panel active" role="tabpanel" aria-labelledby="sidebar-tab-nav" variable="sidebar-nav" type="html">
+                <uib-var id="sidebar-panel-nav" class="sidebar-panel active" role="tabpanel" aria-labelledby="sidebar-tab-nav" variable="sidebar-nav" output="html">
                     ${navIndexHtml}
                 </uib-var>
                 <div id="sidebar-panel-toc" class="sidebar-panel" role="tabpanel" aria-labelledby="sidebar-tab-toc" hidden>
                     <nav id="sidebar-toc" aria-label="Table of contents">
                         <!-- TOC generated client-side from page headings -->
-                        <uib-var variable="sidebar-toc" type="html">
+                        <uib-var variable="sidebar-toc" output="html">
                             <p>Table of contents will appear here based on page headings.</p>
                         </uib-var>
                     </nav>
