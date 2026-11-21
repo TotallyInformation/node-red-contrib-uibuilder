@@ -94,9 +94,10 @@ import TiBaseComponent from './ti-base-component.mjs'
  */
 class UibVar extends TiBaseComponent {
     /** Component version */
-    static componentVersion = '2026-02-15'
+    static componentVersion = '2026-11-21'
 
     /** Makes HTML attribute change watched
+     * Since v8.0.0 "type" changed to "output"
      * @return {Array<string>} List of all of the html attribs (props) listened to
      */
     static get observedAttributes() {
@@ -105,30 +106,50 @@ class UibVar extends TiBaseComponent {
             /* 'inherit-style', */ 'name',
             // Other watched attributes:
             'filter', 'id', 'report',
-            'topic', 'type', 'undefined', 'variable',
+            'topic', 'output', 'undefined', 'variable',
         ]
     }
 
     // #region --- Class Properties ---
 
+    /** The original var name to process (may have sub-property-paths) @type {string} */
+    #fullVarName
     /** Name of the uibuilder mangaged variable to use @type {string} */
-    #variable
+    #rootVarName
     /** Current value of the watched variable */
     value
-    /** Holds reference to var watch callback so it can be cancelled @type {Function} */
-    #varCb
-    /** The watched msg topic @type {string} */
+    /** Default type */
+    #defaultOutputType = 'html'
+    /** what are the available types? */
+    outputTypes = ['html', 'plain', 'text', 'markdown', 'object', 'json', 'table', 'list', 'array']
+    /** uibuilder extended element data properties - aligns with uibuilder element handling */
+    _uib = {
+        /** @type {'html'|'text'|'plain'|'markdown'|'json'|'object'|'table'|'array'|'list'} */
+        outputType: this.#defaultOutputType,
+        /** Name of filter fn to apply (in globalThis/window or uibuilder scope) @type {string} */
+        filterName: null,
+        /** Array of filter fn arguments to apply @type {Array<string>} */
+        filterArgs: null,
+        /** The (split)path of the var name @type {{fullVarName:string,hasSubPath:boolean,rootVarName:string,nestedPath:string,splitNestedPath:Array<string>}} */
+        uibVarDetails: null,
+        /** The watch fn for changes to the variable to allow cancel @type {Function} */
+        varWatch: null,
+        /** The name of the watched variable to allow cancel @type {string} */
+        varWatchName: null,
+        /** The watch fn for changes to the topic to allow cancel @type {Function} */
+        topicWatch: null,
+        /** The name of the watched topic to allow cancel @type {string} */
+        topicWatchName: null,
+        /** If true, show undefined variables with the text "undefined", otherwise show slot content @type {boolean} */
+        showUndefined: false,
+        /** Whether to report back to Node-RED on data change @type {boolean} */
+        sendReport: false,
+    }
     #topic
-    /** Holds reference to topic watch callback so it can be cancelled @type {Function} */
-    #topicCb
     /** Whether to output if the variable is undefined */
     undef = false
     /** Whether to send update value to Node-RED on change */
     report = false
-    /** What is the value type */
-    type = 'plain'
-    /** what are the available types? */
-    types = ['plain', 'html', 'markdown', 'object', 'json', 'table', 'list', 'array']
 
     // #endregion --- Class Properties ---
 
@@ -140,48 +161,72 @@ class UibVar extends TiBaseComponent {
 
     /** Set the uibuilder variable name to watch */
     set variable(varName) {
-        this.#variable = varName
-        this.splitVarName
         if (varName) {
-            // console.log('resolving', this.resolveVariable(varName))
-            try {
-                this.splitVarName = varName.split(/[\.\[\]\'\"]/)
-                this.#variable = varName = this.splitVarName.shift()
-            } catch (e) {
-                throw new Error(`[${this.localName}] variable attribute: Name split failed on "${varName}". ${e.message}`, { cause: e, })
-            }
+            this.#fullVarName = varName
+            this._uib.uibVarDetails = this.uibuilder.varNameSubPathChk(varName)
+            this.#rootVarName = this._uib.uibVarDetails.rootVarName
+        } else {
+            this.#fullVarName = null
+            this._uib.uibVarDetails = null
+            this.#rootVarName = null
         }
 
-        // Stop any previous variable or topic settings
-        if (this.#varCb) this.uibuilder.cancelChange(varName, this.#varCb)
+        // Stop any previous variable or topic watcher & settings
+        this._removeWatchers()
 
         if (!varName) return
 
-        // Set the initial value immediately - this handles the case where the variable was already set before this component was connected to the DOM
-        this._varChange(this.uibuilder.get(varName))
+        // NB: this._uib should contain path details, filter & args, output type
+        //     varChange gets the nested value and calls _processUibVar to update the element and content
 
+        // Set the initial value immediately - this handles the case where the variable was already set before this component was connected to the DOM
+        this.value = this.uibuilder.varChange(this, this.uibuilder.get(this.#rootVarName), 'uib-var-var-initial')
+        // And save the var name used for the callback
+        this._uib.varWatchName = this.#rootVarName
         // Watch for changes in the variable (could use `uibuilder:propertyChanged:${prop}` event instead)
-        this.#varCb = this.uibuilder.onChange(varName, this._varChange.bind(this))
+        this._uib.varWatch = this.uibuilder.onChange(this.#rootVarName, (rootValue) => {
+            this.value = this.uibuilder.varChange(this, rootValue, 'uib-var-on-var-change')
+        })
     }
 
-    /** Get the watched uibuilder variable name
+    /** Get the watched uibuilder variable name (including sub-property-paths)
      * @return {string} The watched variable name
      */
     get variable() {
-        return this.#variable
+        return this.#fullVarName
     }
 
     /** Set the uibuilder msg topic to watch. We could use `uibuilder:msg:topic:${msg.topic}` event instead */
     set topic(topicName) {
-        this.#topic = topicName
-        // Stop any previous variable or topic settings
-        if (this.#topicCb) this.uibuilder.cancelTopic(topicName, this.#topicCb)
+        if (topicName) {
+            this.#topic = topicName
+        } else {
+            this.#topic = null
+        }
+
+        // Stop any previous variable or topic watcher & settings
+        this._removeWatchers()
 
         // Handle empty topic
         if (!topicName) return
 
+        this.#topic = topicName
+        // Set this manually, allows varChange to work correctly
+        this._uib.uibVarDetails = {
+            fullVarName: 'msg',
+            hasSubPath: false,
+            rootVarName: 'msg',
+            nestedPath: null,
+            splitNestedPath: [],
+        }
+
+        // save the var name used for the callback
+        this._uib.topicWatchName = topicName
         // Set up a uibuilder listener for this topic - ASSUMES msg.payload contains the VALUE to show
-        this.#topicCb = this.uibuilder.onTopic(topicName, this._topicChange.bind(this))
+        this._uib.topicWatch = this.uibuilder.onTopic(topicName, (msg) => {
+            msg._uib_processed_by = 'uib-var-topic' // record that this has already been processed
+            this.uibuilder.varChange(this, msg, 'uib-var-on-topic-change')
+        })
     }
 
     /** Get the watched uibuilder msg topic
@@ -195,7 +240,7 @@ class UibVar extends TiBaseComponent {
     connectedCallback() {
         this._connect() // Keep at start.
 
-        // Initial process of key attributes
+        // Initial process of key attributes (fires set methods)
         this.variable = this.getAttribute('variable')
         this.topic = this.getAttribute('topic')
 
@@ -204,15 +249,8 @@ class UibVar extends TiBaseComponent {
 
     // Runs when an instance is removed from the DOM
     disconnectedCallback() {
-        // Stop any previous variable or topic settings
-        if (this.#varCb) this.uibuilder.cancelChange(this.#variable, this.#varCb)
-        if (this.#topicCb) {
-            this.uibuilder.cancelTopic(this.#topic, this.#topicCb)
-
-            Object.keys(this.#topicCb).forEach( (topic) => {
-                this.uibuilder.cancelTopic(topic, this.#topicCb[topic])
-            })
-        }
+        // Stop any previous variable or topic watcher & settings
+        this._removeWatchers()
 
         this._disconnect() // Keep at end.
     }
@@ -232,6 +270,7 @@ class UibVar extends TiBaseComponent {
 
         // Don't bother if the new value same as old
         if ( oldVal === newVal ) return
+
         // Create a property from the value - WARN: Be careful with name clashes - triggers setters
         this[attrib] = newVal
 
@@ -241,26 +280,27 @@ class UibVar extends TiBaseComponent {
             case 'undefined': {
                 if (newVal === '' || ['on', 'true', 'report'].includes(newVal.toLowerCase())) this.undef = true
                 else this.undef = false
+                this._uib.showUndefined = this.undef
                 break
             }
             case 'report': {
-                if (newVal === '' || ['on', 'true', 'report'].includes(newVal.toLowerCase())) this.report = true
-                else this.report = false
+                if (newVal === '' || ['on', 'true', 'report'].includes(newVal.toLowerCase())) this._uib.sendReport = true
+                else this._uib.sendReport = false
                 break
             }
-            case 'type': {
-                if (newVal === '' || !this.types.includes(newVal.toLowerCase())) this.type = 'plain'
-                else this.type = newVal
+            case 'output': { /** Since v8.0.0 changed to output from type */
+                if (newVal === '' || !this.outputTypes.includes(newVal.toLowerCase())) this._uib.outputType = this.#defaultOutputType
+                else this._uib.outputType = newVal
                 break
             }
             case 'filter': {
-                this.filter = undefined
-                this.filterArgs = []
+                this._uib.filterName = undefined
+                this._uib.filterArgs = []
 
                 // Handle empty filter
                 if (!newVal) break
 
-                this.filter = newVal
+                this._uib.filterName = newVal
 
                 // Filter the input - at least limit the length of the attr
                 newVal = newVal.slice(0, 127)
@@ -271,18 +311,18 @@ class UibVar extends TiBaseComponent {
                     break
                 }
                 // Fn name
-                this.filter = f[1]
+                this._uib.filterName = f[1]
                 // Fn arguments
                 if (f[3]) { // undefined if no args found
                     // TODO Do we really want to try this?
                     try {
-                        this.filterArgs = JSON.parse(f[3])
+                        this._uib.filterArgs = JSON.parse(f[3])
                     } catch (e) {}
 
-                    this.filterArgs = f[3].split(',').map((x) => {
+                    this._uib.filterArgs = f[3].split(',').map((x) => {
                         // No objects/arrays allowed - if they have a , they are split
                         x = x.trim()
-                        // @ts-ignore NB: Do NOT use Number.isNaN here, it is too narrow minded
+                        // NB: Do NOT use Number.isNaN here, it is too narrow minded
                         if (isNaN(x)) {
                             // String inside string ends up double quoted so remove those
                             let y = x.replace(/^["'`]/, '').replace(/["'`]$/, '')
@@ -296,8 +336,8 @@ class UibVar extends TiBaseComponent {
                     })
                 }
 
-                // Apply the filter directly if neither variable nor topic attribs set
-                if (!this.variable && !this.topic) this.showVar(false)
+                // ! TODO: Check if filter applied  if neither variable nor topic attribs set
+                // if (!this.variable && !this.topic) this.showVar(false)
                 break
             }
             default: {
@@ -307,159 +347,22 @@ class UibVar extends TiBaseComponent {
 
         // Keep at end. Let everyone know that an attribute has changed for this instance of the component
         this._event('attribChanged', { attribute: attrib, newVal: newVal, oldVal: oldVal, })
-    } // --- end of attributeChangedCallback --- //
-
-    /** Process watched uibuilder variable value change
-     * @param {*} value The value of the managed uibuilder variable
-     */
-    _varChange(value) {
-        // If varname was nested object - get the real value - silently exit if the path can't be traversed (found)
-        let success = true
-        if (this.splitVarName.length > 0) {
-            let target = value
-            const partSuccess = []
-            try {
-                this.splitVarName.forEach( (part) => {
-                    let successPart
-                    if (target[part] === undefined) successPart = false
-                    else successPart = true
-                    partSuccess.push(successPart)
-                    target = target[part]
-                })
-                value = target
-                success = partSuccess.filter(Boolean).length > 0 ? true : false
-            } catch (e) {
-                success = false
-            }
-        }
-        if (success) {
-            this.value = value
-            this.showVar()
-            if (this.report === true) this.uibuilder.send({ topic: this.variable, payload: this.value || undefined, source: this.localName, id: this.id, })
-        }
     }
 
-    /** Process watched uibuilder msg.topic received
-     * @param {object} msg The value of the managed uibuilder variable
-     */
-    _topicChange(msg) {
-        this.uibuilder.log('trace', this.localName, `Topic msg received: '${msg.topic}'`, msg)
-        // console.log('🔦 topicMonitor ⟫', newVal, msg)
-        this.value = msg.payload
-        this.showVar()
-        if (this.report === true) this.uibuilder.send({ topic: msg.topic, payload: this.value || undefined, source: this.localName, id: this.id, })
-    }
-
-    /** Convert this.value to DOM output (applies output filter if needed)
-     * @param {boolean} chkVal If true (default), check for undefined value. False used to run filter even with no value set.
-     */
-    showVar(chkVal = true) {
-        this.uibuilder.log('trace', this.localName, `showVar. chkVal: '${chkVal}'. Value=`, this.value)
-
-        // If user doesn't want to show undefined vars, allow the component slot to show instead
-        if (chkVal === true && this.value === undefined && this.undef !== true) {
-            // this.shadow.innerHTML = '<slot></slot>'
-            return
+    /** Remove any existing watchers */
+    _removeWatchers() {
+        // Stop any previous variable watch settings
+        if (this._uib.varWatch) {
+            this.uibuilder.cancelChange(this._uib.varWatchName, this._uib.varWatch)
+            this._uib.varWatch = undefined
+            this._uib.varWatchName = undefined
         }
-
-        // Apply the filter to the value before display
-        let val = chkVal ? this.doFilter(this.value) : this.doFilter()
-
-        // console.log('🔦 varDOM ⟫ ', val, typeof val, this.type)
-
-        let out = val
-
-        switch (this.type) {
-            case 'markdown': {
-                if (this.uib) out = this.uibuilder.convertMarkdown(val)
-                break
-            }
-
-            case 'json':
-            case 'object': {
-                // console.log(this.uibuilder.syntaxHighlight(val))
-                out = `<pre class="syntax-highlight">${this.uib ? this.uibuilder.syntaxHighlight(val) : val}</pre>`
-                break
-            }
-
-            case 'table': {
-                // console.log('🔦 val ⟫', val)
-                // if (!Array.isArray(val)) {
-                //     out = '<code>Contents of msg.payload is not an array which is required for table output.</code>'
-                //     break
-                // }
-                out = this.uibuilder.buildHtmlTable(val).outerHTML
-                break
-            }
-
-            case 'array':
-            case 'list': {
-                if (!Array.isArray(val)) val = [val]
-                // console.log('🔦 val ⟫', val)
-                out = '<ul>'
-                val.forEach( (li) => {
-                    out += `<li>${li}</li>`
-                })
-                out += '</ul>'
-                break
-            }
-
-            case 'plain': {
-                // get the plain text version of the value by using DOM conversion
-                const div = document.createElement('div')
-                div.innerHTML = val
-                out = div.textContent
-                // NB: Deliberately fall through to html/default
-            }
-            // TODO: replace with safer method
-            case 'html':
-            default: {
-                const t = typeof val
-                // if val is an object or array, attempt to stringify it
-                if (Array.isArray(val) || t === '[object Object]' || t === 'object') {
-                    try {
-                        out = JSON.stringify(val)
-                    } catch (e) {}
-                }
-                break
-            }
+        // Stop any previous topic watch settings
+        if (this._uib?.topicWatchName) {
+            this.uibuilder.cancelTopic(this._uib.topicWatchName, this._uib.topicWatch)
+            this._uib.varWatch = null
+            this._uib.varWatchName = null
         }
-
-        // Add before and after text if specified
-        if (this.dataset.before) out = `${this.dataset.before}${out}`
-        if (this.dataset.after) out = `${out}${this.dataset.after}`
-
-        // if (this.uib) this.innerHTML = this.uibuilder.sanitiseHTML(out)
-        if (this.uib) this.uibuilder.replaceSlot(this, out)
-        else this.innerHTML = out
-    }
-
-    /** Apply value filter if specified
-     * @param {*} value The value to change
-     * @return {*} The amended value that will be displayed
-     */
-    doFilter(value) {
-        if (this.filter) {
-            // Cater for dotted notation functions (e.g. uibuilder.get)
-            const splitFilter = this.filter.split('.')
-            let globalFn = globalThis[splitFilter[0]]
-            if (globalFn && splitFilter.length > 1) {
-                const parts = [splitFilter.pop()]
-                parts.forEach( (part) => {
-                    globalFn = globalFn[part]
-                } )
-            }
-            if (!globalFn && this.uib === true) globalFn = this.uibuilder[splitFilter[0]]
-            if (globalFn && typeof globalFn !== 'function' ) globalFn = undefined
-            if (globalFn) {
-                const argList = value === undefined ? [...this.filterArgs] : [value, ...this.filterArgs]
-                value = Reflect.apply(globalFn, value ?? globalFn, argList)
-            } else {
-                console.warn(`⚠️ [uib-var] Filter function "${this.filter}" ${typeof globalFn === 'object' ? 'is an object not a function' : 'not found'}`)
-            }
-        }
-
-        return value
     }
 }
 
