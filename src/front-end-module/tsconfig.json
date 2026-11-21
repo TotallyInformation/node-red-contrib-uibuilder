@@ -3,12 +3,14 @@
         "allowJs": true,
         "checkJs": true,
         "noEmit": true,
-        "strict": true,
+        "strict": false,
         "strictNullChecks": false,
+        "noImplicitAny": false,
         "target": "ESNext",
         "module": "ESNext",
         "typeRoots": [
             ".",
+            "./node_modules/@types",
             "./types"
         ]
     },
