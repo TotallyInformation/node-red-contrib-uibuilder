@@ -5515,9 +5515,11 @@
       }
       this._removeWatchers();
       if (!varName) return;
+      console.log(">> FIRST", varName, __privateGet(this, _rootVarName), this.uibuilder.varChange(this, this.uibuilder.get(__privateGet(this, _rootVarName)), "uib-var-var-initial"), this.id);
       this.value = this.uibuilder.varChange(this, this.uibuilder.get(__privateGet(this, _rootVarName)), "uib-var-var-initial");
       this._uib.varWatchName = __privateGet(this, _rootVarName);
       this._uib.varWatch = this.uibuilder.onChange(__privateGet(this, _rootVarName), (rootValue) => {
+        console.log(">> CHANGE", varName, __privateGet(this, _rootVarName), this.uibuilder.varChange(this, rootValue, "uib-var-on-var-change"), this.id);
         this.value = this.uibuilder.varChange(this, rootValue, "uib-var-on-var-change");
       });
     }
@@ -5559,8 +5561,6 @@
     // Runs when an instance is added to the DOM
     connectedCallback() {
       this._connect();
-      this.variable = this.getAttribute("variable");
-      this.topic = this.getAttribute("topic");
       this._ready();
     }
     // Runs when an instance is removed from the DOM
@@ -5578,59 +5578,6 @@
     attributeChangedCallback(attrib, oldVal, newVal) {
       if (oldVal === newVal) return;
       this[attrib] = newVal;
-      switch (attrib) {
-        case "undefined": {
-          if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase())) this.undef = true;
-          else this.undef = false;
-          this._uib.showUndefined = this.undef;
-          break;
-        }
-        case "report": {
-          if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase())) this._uib.sendReport = true;
-          else this._uib.sendReport = false;
-          break;
-        }
-        case "output": {
-          if (newVal === "" || !this.outputTypes.includes(newVal.toLowerCase())) this._uib.outputType = __privateGet(this, _defaultOutputType);
-          else this._uib.outputType = newVal;
-          break;
-        }
-        case "filter": {
-          this._uib.filterName = void 0;
-          this._uib.filterArgs = [];
-          if (!newVal) break;
-          this._uib.filterName = newVal;
-          newVal = newVal.slice(0, 127);
-          const f = newVal.replace(/\s/g, "").match(/([a-zA-Z_$][a-zA-Z_$0-9.-]+)(\((.*)\))?/);
-          if (!f) {
-            console.warn('\u26A0\uFE0F [uib-var] Filter function "'.concat(newVal, '" invalid. Cannot process.'));
-            break;
-          }
-          this._uib.filterName = f[1];
-          if (f[3]) {
-            try {
-              this._uib.filterArgs = JSON.parse(f[3]);
-            } catch (e) {
-            }
-            this._uib.filterArgs = f[3].split(",").map((x) => {
-              x = x.trim();
-              if (isNaN(x)) {
-                let y = x.replace(/^["'`]/, "").replace(/["'`]$/, "");
-                try {
-                  y = new Function("return ".concat(y))();
-                } catch (e) {
-                }
-                return y;
-              }
-              return Number(x);
-            });
-          }
-          break;
-        }
-        default: {
-          break;
-        }
-      }
       this._event("attribChanged", { attribute: attrib, newVal, oldVal });
     }
     /** Remove any existing watchers */
@@ -7732,6 +7679,7 @@
      * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString
      */
     formatNumber(value2, decimalPlaces, intl, opts) {
+      if (typeof value2 === "string") value2 = Number(value2);
       if (isNaN(value2)) {
         log("error", "formatNumber", 'Value must be a number. Value type: "'.concat(typeof value2, '"'))();
         return "NaN";
@@ -8280,7 +8228,7 @@
           el.dataset[key] = value2;
         }
       } catch (e) {
-        log("error", "uibuilder:setDataset", "Failed to set dataset. Ensure that dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.", e.message)();
+        log("error", "uibuilder:setDataset", "Failed to set dataset. Ensure that dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.", e)();
         return false;
       }
       return true;
@@ -8383,14 +8331,44 @@
     }
     /** Apply value filter if specified, found and executable. Returns original value on error.
      * Searches for fn name firstly in the global scope then in uibuilder scope
-     * @param {string} filterName The filter name to apply (must be in global or uibuilder context)
-     * @param {Array<string>} filterArgs Array of filter arguments to apply
+     * @param {string} _uib The el._uib data
      * @param {*} value The value to change
      * @return {*} The amended (or original) value
      */
-    applyFilterFn(filterName, filterArgs, value2) {
-      if (filterName) {
-        const splitFilter = filterName.split(".");
+    applyFilterFn(_uib, value2) {
+      if (!_uib) return;
+      if (_uib == null ? void 0 : _uib.filterName) {
+        _uib.filterArgs = [];
+        try {
+          _uib.filterName = _uib.filterName.slice(0, 127);
+        } catch (e) {
+          log("error", "uibuilder:applyFilterFn", e, _uib)();
+        }
+        const f = _uib == null ? void 0 : _uib.filterName.replace(/\s/g, "").match(/([a-zA-Z_$][a-zA-Z_$0-9.-]+)(\((.*)\))?/);
+        if (!f) {
+          console.warn('\u26A0\uFE0F [uib-var] Filter function "'.concat(value2, '" invalid. Cannot process.'));
+          return;
+        }
+        _uib.filterName = f[1];
+        if (f[3]) {
+          try {
+            _uib.filterArgs = JSON.parse(f[3]);
+          } catch (e) {
+          }
+          _uib.filterArgs = f[3].split(",").map((x) => {
+            x = x.trim();
+            if (isNaN(x)) {
+              let y = x.replace(/^["'`]/, "").replace(/["'`]$/, "");
+              try {
+                y = new Function("return ".concat(y))();
+              } catch (e) {
+              }
+              return y;
+            }
+            return Number(x);
+          });
+        }
+        const splitFilter = _uib.filterName.split(".");
         let fnToCall = globalThis[splitFilter[0]];
         if (fnToCall && splitFilter.length > 1) {
           const parts2 = [splitFilter.pop()];
@@ -8401,14 +8379,14 @@
         if (!fnToCall) fnToCall = this[splitFilter[0]];
         if (fnToCall && typeof fnToCall !== "function") fnToCall = void 0;
         if (fnToCall) {
-          const argList = value2 === void 0 ? [...filterArgs] : [value2, ...filterArgs];
+          const argList = value2 === void 0 ? [..._uib.filterArgs] : [value2, ..._uib.filterArgs];
           try {
             value2 = Reflect.apply(fnToCall, value2 != null ? value2 : fnToCall, argList);
           } catch (err) {
-            log("warn", "uibuilder:applyFilterFn", '"'.concat(filterName, '" could not be executed or it raised an unrecoverable error'))();
+            log("warn", "uibuilder:applyFilterFn", '"'.concat(_uib.filterName, '" could not be executed or it raised an unrecoverable error'))();
           }
         } else {
-          log("warn", "uibuilder:applyFilterFn", '"'.concat(filterName, '" ').concat(typeof fnToCall === "object" ? "is an object not a function" : "not found"))();
+          log("warn", "uibuilder:applyFilterFn", '"'.concat(_uib.filterName, '" ').concat(typeof fnToCall === "object" ? "is an object not a function" : "not found"))();
         }
       }
       return value2;
@@ -8424,7 +8402,7 @@
      * @private
      */
     _processElVarProps(el, data, isIf = false) {
-      var _a3, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o;
+      var _a3, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
       if (!_ui.isElement(el)) {
         log("error", "uibuilder:_processVarProps", "el is not an HTML element, cannot continue")();
         return false;
@@ -8435,36 +8413,31 @@
       }
       if ((el == null ? void 0 : el._uib) && !((_a3 = el == null ? void 0 : el._uib) == null ? void 0 : _a3.showUndefined)) el._uib.showUndefined = false;
       if (this.isPrimitive(data)) {
-        data = this.applyFilterFn((_b = el == null ? void 0 : el._uib) == null ? void 0 : _b.filterName, (_c = el == null ? void 0 : el._uib) == null ? void 0 : _c.filterArgs, data);
         if (this.isElCheckable(el) && data !== void 0 && data !== null) {
-          data = { attributes: { checked: data } };
+          data = { attributes: { checked: this.applyFilterFn(el == null ? void 0 : el._uib, data) } };
         } else if (this.isElFormControl(el) && data !== void 0 && data !== null) {
-          data = { attributes: { value: data } };
+          data = { attributes: { value: this.applyFilterFn(el == null ? void 0 : el._uib, data) } };
         } else {
           data = { payload: data };
         }
-      } else {
-        if (data == null ? void 0 : data.payload) {
-          data.payload = this.applyFilterFn((_d = el == null ? void 0 : el._uib) == null ? void 0 : _d.filterName, (_e = el == null ? void 0 : el._uib) == null ? void 0 : _e.filterArgs, data.payload);
-        }
       }
-      const before = (_g = (_f = el == null ? void 0 : el.dataset) == null ? void 0 : _f.before) != null ? _g : "";
-      const after = (_i = (_h = el == null ? void 0 : el.dataset) == null ? void 0 : _h.after) != null ? _i : "";
-      if ((el == null ? void 0 : el.type) && ((_j = data == null ? void 0 : data.attributes) == null ? void 0 : _j.value) && (before || after)) {
+      const before = (_c = (_b = el == null ? void 0 : el.dataset) == null ? void 0 : _b.before) != null ? _c : "";
+      const after = (_e = (_d = el == null ? void 0 : el.dataset) == null ? void 0 : _d.after) != null ? _e : "";
+      if ((el == null ? void 0 : el.type) && ((_f = data == null ? void 0 : data.attributes) == null ? void 0 : _f.value) && (before || after)) {
         data.attributes.value = "".concat(before).concat(data.attributes.value).concat(after);
       }
       if (Object.prototype.hasOwnProperty.call(data, "attributes")) this.setAttributes(el, data.attributes);
       if (Object.prototype.hasOwnProperty.call(data, "dataset")) this.setDataset(el, data.dataset);
       if (Object.prototype.hasOwnProperty.call(data, "payload")) {
-        if (data.payload === void 0 && ((_k = el == null ? void 0 : el._uib) == null ? void 0 : _k.showUndefined) === false) {
+        if (data.payload === void 0 && ((_g = el == null ? void 0 : el._uib) == null ? void 0 : _g.showUndefined) === false) {
           return true;
         }
-        if (((_l = el == null ? void 0 : el._uib) == null ? void 0 : _l.uibVarDetails.fullVarName) === "myTextInput") console.log(">> type", el.getAttribute("type"), (_m = el == null ? void 0 : el._uib) == null ? void 0 : _m.uibVarDetails.fullVarName, data, el);
+        if (((_h = el == null ? void 0 : el._uib) == null ? void 0 : _h.uibVarDetails.fullVarName) === "myTextInput") console.log(">> type", el.getAttribute("type"), (_i = el == null ? void 0 : el._uib) == null ? void 0 : _i.uibVarDetails.fullVarName, data, el);
         if (el.hasAttribute("content")) {
           el.setAttribute("content", "".concat(before).concat(data.payload).concat(after));
         } else {
-          const outputType = (_o = (_n = el == null ? void 0 : el._uib) == null ? void 0 : _n.outputType) != null ? _o : "html";
-          let output = data.payload;
+          const outputType = (_k = (_j = el == null ? void 0 : el._uib) == null ? void 0 : _j.outputType) != null ? _k : "html";
+          let output = this.applyFilterFn(el == null ? void 0 : el._uib, data.payload);
           let out = "";
           switch (outputType) {
             case "markdown": {
@@ -8615,15 +8588,30 @@
      * @typedef {'html'|'text'|'plain'|'markdown'|'json'|'object'|'table'|'array'|'list'} OutputType
      * @param {HTMLElement} el The element to process
      * @param {*} rootValue Value of root variable
-     * param {{fullVarName:string,hasSubPath:boolean,rootVarName:string,nestedPath:string}} [path] If not set, get from el._uib.path
-     * param {OutputType} [outputType] What type of output is desired?
-     * param {string} [filterName] Name of a filter function to apply
      * @param {string} [from] for debugging only
      * @return {*} Value of variable (might be a nested path value)
      */
-    // varChange(el, rootValue, path, outputType = 'html', filterName = null, from = '') {
     varChange(el, rootValue, from = "") {
       var _a3, _b;
+      if (!(el == null ? void 0 : el._uib)) el._uib = {};
+      if (el.hasAttribute("filter")) {
+        const val = el.getAttribute("filter");
+        el._uib.filterArgs = [];
+        if (!val) el._uib.filterName = void 0;
+        el._uib.filterName = val;
+      }
+      if (el.hasAttribute("output")) {
+        const val = el.getAttribute("output");
+        el._uib.outputType = val.toLowerCase();
+      }
+      if (el.hasAttribute("undefined")) {
+        const val = el.getAttribute("undefined");
+        el._uib.showUndefined = ["", "on", "true", "report"].includes(val);
+      }
+      if (el.hasAttribute("report")) {
+        const val = el.getAttribute("report");
+        el._uib.sendReport = ["", "on", "true", "report"].includes(val);
+      }
       const value2 = this.getVarNameNestedValue((_b = (_a3 = el == null ? void 0 : el._uib) == null ? void 0 : _a3.uibVarDetails) == null ? void 0 : _b.fullVarName);
       const result = this._processElVarProps(el, value2);
       if (el._uib.sendReport === true && result === true) this.send({
@@ -10250,7 +10238,7 @@
     customElements.define("apply-template", apply_template_default);
     customElements.define("uib-control", uib_control_default);
     perf.set("all done", performance.now());
-    console.log("Performance: ", perf);
+    log("info", "uibuider", "Client performance: ", perf)();
   });
 })();
 /**
