@@ -21,39 +21,100 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 ### 📌 Highlights
 
-* Potentially breaking changes - please make sure that you can meet the new baseline requirements before upgrading.:
+* Potentially breaking changes - please make sure that you can meet the new baseline requirements before upgrading. More details are available later in the changelog:
   * Baselined to Node-RED v5+.
   * Baselined to Node.js v22.9+.
   * It is strongly recommended that you use a Node.js LTS version and the latest Node-RED version.
   * Additional Editor security (see below).
+  * If using `<main>` element, it is no longer a grid by default. If `<main>` contains an `<aside>`, that will be floated right. Other content will be to the left. (RTL languages are not catered for in the default CSS I'm afraid, you will need custom CSS.) This will probably not affect most people.
+  * `<uib-var>` component and `uib-topic`/`uib-var` attributes have been extensively rewritten. See notes below. Notably, for `<uib-var>`, the `type` attribute is now `output` to avoid processing issues on input elements.
   * The old v2 admin API's have been moved to v3 and so their URL's have changed. All admin API calles are now under `./uibuilder/admin/`.
 
 * Examples:
   * The "basic-uib" example in the import examples library has been updated. It is now better labelled and will show the date/time on the web page when inject is triggered (demonstrating the use of the zero-code `uib-topic` HTML attribute for very simple page updates)
   * There is a new example demonstrating simple sparkline charts that do not need any JavaScript code.
 
-* There is a new, user-facing route GET `./uibuilder/apps` - returns a simple formatted list of all installed apps. It uses the instance title and description (set on the uibuilder node's Advanced tab in the Editor). Note that this is user-facing, not admin-facing.
+* Templates:
+  * There is a new Single-page-app (SPA) Template to quickly get you started.
 
-* The `uibuiler` node now has a button to open a web page (controlled by admin access) that shows _ALL_ uibuilder & Markweb instances with their type, title & description where provided (by the inputs on an instances advanced tab) and the link to the home page. This is the admin version of the user-facing list above.
+* Documentation:
+  * The Table of Contents in the sidebar now shows headings from level 2 to level 4 instead of 2-3. This greatly improves navigation on more complex pages.
+  * Various pages have been update to better explain uibuilder's reactive attributes and components. Hopefully easier than ever to understand how to get data from Node-RED to your web pages.
+
+* There is a new, user-facing route GET `../uibuilder/apps` - returns a simple formatted list of all installed apps. It uses the instance title and description (set on the uibuilder node's Advanced tab in the Editor). Note that this is user-facing, not admin-facing.
+
+* The `uibuilder` node now has a button to open a web page (controlled by admin access) that shows _ALL_ uibuilder & Markweb instances with their type, title & description where provided (by the inputs on an instances advanced tab) and the link to the home page. This is the admin version of the user-facing list above.
 
 * DEGIT has been updated to the latest release now that the baseline node version is v20+. This should fix the git requirement bug and allow us to use the latest features and fixes in degit. It is also now wrapped into a local version which allows us to continue using as a CommonJS version (Degit v3 is ESM only). _For reference, DEGIT is used for installing front-end templates_.
+
+* Due to a bug in Node-RED, after initial install of UIBUILDER, you must reload the Editor page if you had it open. You will get an alert message telling you this if the bug is triggered.
+
+* UIBUILDER is now ready for ExpressJS v5 thanks to help from [ryanmurdoc](https://github.com/ryanmurdoc).
+
+* Front-end client library
+  * Handling of the `uib-var` and `uib-topic` attributes has been significantly improved. Primitive (e.g. string/number) values now work for inputs. class & style properties now also support arrays/objects.
+  * Finally! You can now actually set the `msg` variable in front-end JavaScript and it correctly triggers both `onChange('msg', ...)` and `onTopic(...)` handlers. This hasn't been properly working for the longest time, sorry about that. `uibuilder.set('msg', {topic: 'more', payload: 'Hi'})`. Great for testing without having to keep going back to Node-RED.
+  * The `uib-topic` and `uib-var` custom HTML attributes now use the same processing and so fully support `attributes`, `dataset`, `checked`, and `value` properties which will update their target HTML element accordingly.
+  * The `uib-if` custom HTML attribute now also works. Set it to a uibuilder managed variable that is truthy or falsy. Falsy hides the content. `<div uib-if="myif">` `uibuilder.set('myif', true)`.
 
 ### Potential breaking changes
 
 * Baselined to Node-RED v5+ and Node.js v22.9+. Please make sure that you can meet these requirements before upgrading.
 
+* The style of a `<main>` element in the default CSS is no longer a _grid_ by default. Add a grid class to it if you want it to be (`grid`, `grid-2`, `grid-3`, `grid-4`, and `grid-fit` are available classes). Alternatively, add a `<content>` sub-section with a grid class or style. The formating of an `<aside>` within a `<main>` is changed to _float right_. This will probably not affect most people.
+
+* The `<uib-var>` `type` attribute has been changed to `output` to avoid a clash with HTML input elements. In addition, the default is now "html" instead of "plain". This means you may need to change your HTML for uibuilder and if you have a custom page template for Markweb, that will certainly require a small change.
+
+* In the front-end, the custom `uib-topic` & `uib-var` attributes and the custom `<uib-var>` component have been extensively re-written and rationalised. This means that there is a possibility that previous outputs might work differently. The changes should just be extensions but the logic is complex. Let me know if you spot anything.
+
 * Additional security checks have been added to all admin API calls. This may affect some _people who use Node-RED admin logins_. Users logged into the Node-RED Editor _must_ have at least `flow.read` authorisation to use any of the API's. API's that have consequences require the admin user to have `flow.write` authorisation. _If you don't use Node-RED Editor authorisation, you will not be affected_.
 
 * The old v2 API's have been moved to the v3 library which means that their URL's have changed. If you have used these API's manually, you will need to update your code to use the new URL. This should not affect most people.
 
+### Documentation
+
+* The Table of Contents in the sidebar now shows headings from level 2 to level 4 instead of 2-3. This greatly improves navigation on more complex pages.
+* Various pages have been update to better explain uibuilder's reactive attributes and components. Hopefully easier than ever to understand how to get data from Node-RED to your web pages.
+* Documentation now supports the `shortTitle` frontmatter. The page title (shown in the browser tab) is set to one of (in order of preference): fm shortTitle, fm title, sidebar link description or text in the sidebar.
+
 ### Example Flows (See Node-RED's Import)
 
-* Client-side code > `no-js-charts-font` - Shows how to create simple sparkline style charts without needing any JavaScript. Uses a web font.
+* **New** Client-side code > `no-js-charts-font` - Shows how to create simple sparkline style charts without needing any JavaScript. Uses a web font.
+* **Improvement** The "basic-uib" example in the import examples library has been updated. It is now better labelled and will show the date/time on the web page when inject is triggered (demonstrating the use of the zero-code `uib-topic` HTML attribute for very simple page updates).
+
+### Code templates
+
+* **New** Single-page-app (SPA) Template (external) - Loads example code demonstrating how to use UIBUILDER's SPA Router library. Simply adjust for your own use. Note that there is already an existing example flow in the library as well but this template contains minimal code.
+* Error handling and notification messages have also been improved when loading templates.
 
 ### Markweb
 
 * Improved processing of `%%index%%` directive. Attributes now correctly work if the values surrounding quotes are missed off.
 * Added page updated date to the title of index listing links.
+
+### uibuilder client library
+
+* **Improvement** Handling of the `uib-var` and `uib-topic` attributes has been significantly improved.
+  * Primitive (e.g. string/number) values now work for inputs.
+  * Class & style properties now also support arrays/objects. Note that, if using arrays/objects, classes/styles are ADDED or UPDATED, nothing is removed. Use a string value to fully replace as in previous versions.
+  * `uib-var` and `uib-topic` will now work correctly on HTML input elements.
+  * `uib-var` and `uib-topic` now both handle `data-before` and `data-after` HTML attributes. These add pre/post strings to the output. As these are HTML attributes, they can be set in the HTML but also overriden using the appropriate msg or variable object. Since the output supports HTML, these do as well.
+  * Some edge-case bugs were also squashed along the way.
+  * An updated example flow shows both the simple use and the extended features.
+
+* **Improvement** The `uib-topic` and `uib-var` custom HTML attributes now use the same processing and so fully support `attributes`, `dataset`, `checked`, and `value` properties which will update their target HTML element accordingly.
+
+
+* **Changed** The `<uib-var>` built-in HTML component now uses the same prcessing as the custom attributes above.
+  * The `type` attribute that controls output has been changed to `output` to avoid clashes with HTML input elements. In addition, the default has changed from `plain` text to `html`. Any HTML that uses this component are likely to need tweaking.
+
+* **Fixed** Finally! You can now _actually_ set the `msg` variable in front-end JavaScript and it correctly triggers both `onChange('msg', ...)` and `onTopic(...)` handlers. This hasn't been properly working for the longest time, sorry about that. `uibuilder.set('msg', {topic: 'more', payload: 'Hi'})`. Great for front-end testing without having to keep going back to Node-RED.
+
+* **Fixed** The `uib-if` custom HTML attribute now also works. Set it to a uibuilder managed variable that is truthy or falsy. Falsy hides the content. `<div uib-if="myvar">` `uibuilder.set('myvar', true)`.
+
+* **Improvement** `uibuilder.navigate` (used with remote commands from Node-RED or called locally) now sets `window.location.hash` if the passed URL starts with `#` otherwise calls `windows.location.assign(url)`. This is to avoid unnecessary page reloads if only changing the in-page navigation.
+
+* **Improvement** `uibuilder.evaluateWithRetry` gets an extra option `noWarn` (default=false). If set `true`, if the variable is not found, only a trace log is produced instead of a warning. This is used to deal with timing edge-cases where a variable might not be ready early in processing, the evaluation will be tried 3 times with a 300ms delay. Note that even the default warning won't be shown by default since the log output is `error` so warnings are not shown, `uibuilder.set('logLevel', 1)` to see warnings.
 
 ### uibuilder
 
@@ -74,11 +135,18 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 ### Brand CSS styling
 
-* Fixed an edge case for links that could use light mode colours in dark mode.
+* **Fixed** Fixed an edge case for links that could use light mode colours in dark mode.
 
-### Examples
+* **Changed** The style of a `<main>` element in the default CSS is no longer a grid by default. Add a grid class to it if you want it to be (`grid`, `grid-2`, `grid-3`, `grid-4`, and `grid-fit` are available classes). Alternatively, add a `<content>` sub-section with a grid class or style. The formating of an `<aside>` within a `<main>` is changed to float right. This will probably not affect most people. _This makes grid layouts inside `<main>` more robust._
 
-* The "basic-uib" example in the import examples library has been updated. It is now better labelled and will show the date/time on the web page when inject is triggered (demonstrating the use of the zero-code `uib-topic` HTML attribute for very simple page updates).
+* **New** CSS Classes:
+  * `.grid-span-all-cols`, `.grid-span-cols`, `.grid-span-2-cols`, `.grid-span-3-cols`, `.grid-span-4-cols` classes for spanning all or some columns in a grid.
+  * `.grid-col-first`, `.grid-col-left`, `.grid-col-last`, `.grid-col-right` classes for overriding the automatic grid column positioning.
+
+* **New** CSS Variables:
+  * `--callout-border-color` - use with `<blockquote>` to change the left border colour from grey to something else. e.g. `<blockquote style="--callout-border-color:var(--info-intense);">` - similar to GitHub-stle callouts/alerts.
+
+* The raw `uib-brand.css` resource now uses modern CSS including nesting, `:has()`, `@supports`, and `selector()`. For the best compatibility with older browsers, use the minimised version `uib-brand.min.css`. This is the default for all UIBUILDER templates and always has been. LightningCSS is used to build and compress the raw file, it takes care of compatibility, aiming for early 2019 browsers currently (the target is 7 year support).
 
 ### Development and maintenance
 

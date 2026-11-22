@@ -3,36 +3,39 @@ title: Roadmap for improving uibuilder documentation
 description: |
   This page is a working document to track the development of the uibuilder documentation. It is not intended to be a comprehensive list of all features or changes, but rather a high-level overview of the main areas of development. It is expected that this page will be updated frequently as development progresses and new features are added or changed.
 created: 2026-04-19 14:45:25
-updated: 2026-04-28 16:52:52
+updated: 2026-11-14 14:01:08
 author: Julian Knight (Totally Information)
 ---
 
-## To do
 * [ ] Add a manual `[UIBUILDER]` Markdown extension to replace the former auto-colouring of the word "UIBUILDER".
 * [ ] Add content to Lists, Maps, Tables, Dashboard Layouts, Cards, Articles.
 * [ ] Properly document file uploads and how to handle them. [Ref](https://discourse.nodered.org/t/input-file-in-uibuilder-v7/96196)
 * [ ] Add thanks to the contributors in the readme.
 * [x] Setting up and using VS Code for front-end development with uibuilder
   * [x] Link in uibuilder nodes
+  * [x] Useful extensions for front-end development
   * [ ] Setting up remote VS Code
-  * [ ] Useful extensions for front-end development
   * [ ] Configure browser dev tools (e.g. round-trip edits)
 
-## Other
 * [ ] Document `tblGetCellName` (ui) new FE function.
+* [ ] Document `getVarNameNestedValue`, `varNameSubPathChk`, `setVarNameNestedValue` new FE functions.
+* [ ] Update `evaluateWithRetry` FE fn with `noWarn` option.
 * [ ] Add a "Debugging" doc. [ref](https://dashboard.flowfuse.com/contributing/widgets/debugging.html#debugging-dashboard-2-0), [ref1](https://discourse.nodered.org/t/debugging-node-red-ui-base-js-and-understanding-websocket-behavior/91131/6)
 * [ ] Document grid and flex layouts.
 * [ ] Finish 3rd-party-extensions. Finish documenting Editor and runtime API's for new endpoint creation for 3rd-party extensions.
-* [ ] Document `.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
+* [ ] Document `<uibRoute>/.config/uibMiddleware.js`, also update `docs\how-to\server-side-views.md`.
 
-* Document the `.public` folder and how to use it with the custom web server.
+* The new build script and processes.
+* The CSP overrides and how to use them.
+* Document the use of the FE `routes` folder. Add link to `web-app-workflow.md`.
+* Document the `<uibRoute>/.public` folder and how to use it with the custom web server.
 * Create a comparison table of how to do things with VueJS vs Node-RED/uibuilder.
 * **Need some documentation** to explain how to replicate framework-like features using the existing uibuilder features. How things like `if` and dynamic attributes can be replicated using `uib-topic`, `uib-var` and `uibuilder.set()`.
 * Improve `[tips]`. Allow pause/start on rotation. Add an `all` option.
 * New help doc re CORS. [Ref](https://discourse.nodered.org/t/allow-cors-for-ui-builder/94838).
 
 * How to redirect un-auth web requests to login page (using `msg._client`).
-* Update docs for ctrl msgs and `msg._uib` return data to say that anything set via the socket.io auth can only update when the client reconnects. 
+* Update docs for ctrl msgs and `msg._uib` return data to say that anything set via the socket.io auth can only update when the client reconnects.
 * document clientTimeDifference
 * New doc for using `ui.js` outside of uibuilder.
 * `README.md`: Add more links to the Features section so that each feature points to appropriate documentation. Add a landing-page link to "includes many helper features" to signpost to relavent detailed documentation.

@@ -3,15 +3,17 @@ title: Styling roadmap
 description: |
   This page is a working document to track the development of the front-end styling for uibuilder. It is not intended to be a comprehensive list of all features or changes, but rather a high-level overview of the main areas of development. It is expected that this page will be updated frequently as development progresses and new features are added or changed. The main styling for uibuilder comes from the uib-brand.css file.
 created: 2026-04-19 14:45:25
-updated: 2026-05-08 16:59:32
+updated: 2026-11-15 14:21:12
 author: Julian Knight (Totally Information)
 ---
 
 ## To do
+
 * [ ] Make `form > label` use a variable for `align-self`.
 * [ ] Add more css vars for styling buttons. [Ref](https://discourse.nodered.org/t/uibuilder-button/98970/21)
 
 ## Other
+
 * Move uib-brand.css to a new sub-package. Publish separately.
 * Enhance CSS with ideas from [OpenProps](https://open-props.style).
 
