@@ -1,5 +1,6 @@
 ---
 title: Creating a content-heavy grid layout using CSS Grid
+shortTitle: Grid Layouts
 description: |
   An example showing a complete blog-style layout. Easily adapted.
 created: 2025-04-03 15:56:55
