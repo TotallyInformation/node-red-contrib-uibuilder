@@ -180,13 +180,11 @@ class UibVar extends TiBaseComponent {
         //     varChange gets the nested value and calls _processUibVar to update the element and content
 
         // Set the initial value immediately - this handles the case where the variable was already set before this component was connected to the DOM
-        console.log('>> FIRST', varName, this.#rootVarName, this.uibuilder.varChange(this, this.uibuilder.get(this.#rootVarName), 'uib-var-var-initial'), this.id)
         this.value = this.uibuilder.varChange(this, this.uibuilder.get(this.#rootVarName), 'uib-var-var-initial')
         // And save the var name used for the callback
         this._uib.varWatchName = this.#rootVarName
         // Watch for changes in the variable (could use `uibuilder:propertyChanged:${prop}` event instead)
         this._uib.varWatch = this.uibuilder.onChange(this.#rootVarName, (rootValue) => {
-            console.log('>> CHANGE', varName, this.#rootVarName, this.uibuilder.varChange(this, rootValue, 'uib-var-on-var-change'), this.id)
             this.value = this.uibuilder.varChange(this, rootValue, 'uib-var-on-var-change')
         })
     }

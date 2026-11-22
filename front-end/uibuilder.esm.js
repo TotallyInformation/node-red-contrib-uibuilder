@@ -5514,11 +5514,9 @@ var UibVar = class extends ti_base_component_default {
     }
     this._removeWatchers();
     if (!varName) return;
-    console.log(">> FIRST", varName, __privateGet(this, _rootVarName), this.uibuilder.varChange(this, this.uibuilder.get(__privateGet(this, _rootVarName)), "uib-var-var-initial"), this.id);
     this.value = this.uibuilder.varChange(this, this.uibuilder.get(__privateGet(this, _rootVarName)), "uib-var-var-initial");
     this._uib.varWatchName = __privateGet(this, _rootVarName);
     this._uib.varWatch = this.uibuilder.onChange(__privateGet(this, _rootVarName), (rootValue) => {
-      console.log(">> CHANGE", varName, __privateGet(this, _rootVarName), this.uibuilder.varChange(this, rootValue, "uib-var-on-var-change"), this.id);
       this.value = this.uibuilder.varChange(this, rootValue, "uib-var-on-var-change");
     });
   }
