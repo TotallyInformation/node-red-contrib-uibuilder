@@ -1,10 +1,10 @@
 ---
-title: Custom web components
+title: Custom Web Components
 description: |
   Web components - AKA "Widgets" - built into the UIBUILDER client and information about external web components.
 created: 2023-10-08 13:44:56
-updated: 2026-06-02 17:22:59
-since: v6.6.0
+updated: 2026-11-14 12:32:25
+since: v6.6.0 (Updated v8.0.0)
 ---
 
 The following custom web components are built into UIBUILDER:
@@ -36,7 +36,7 @@ Needless to say, any web components written by [TotallyInformation](https://gith
 
 > [!TIP]
 > There is a more extensive package of web components available from [Totally Information](https://wc.totallyinformation.net). They are designed to work with or without UIBUILDER. Indeed they should work with other web servers and also with the Node-RED Dashboard or http-in/-response nodes.
-> 
+>
 > The built-in components described here are built to the same standards used in the other package.
 
 ## Built-in components
@@ -182,7 +182,7 @@ For size output:
 </div>
 ```
 
-### `<uib-var>` (since v6.6) :id=uib-var
+### `<uib-var>` (since v6.6, updated v8.0.0) :id=uib-var
 
 Include easily updated output on a web page.
 
@@ -198,7 +198,7 @@ There is no need to separately load the component library, that is done automati
 > [!NOTE]
 >
 > This can only be used with HTML elements that allow other HTML tags inside their content slot. This also means that it can only be used inside the `<body>` of your page, not in the `<head>`.
-> 
+>
 > For example, you cannot use it with `<link>` or `<meta>` elements. For those, use the [`uib-var` custom attribute](client-docs/reactive#uib-var) instead.
 
 
@@ -227,7 +227,7 @@ Displays the *value* of the given variable name in your web page and *dynamicall
 > Variables are found by the component _in the `uibuilder` namespace (scope)_, not in the global `window` namespace. They must have been set as uibuilder managed variables, either by the uibuilder client library, or manually using the `uibuilder.set('varName', varValue)` function. This means that you should not prefix the variable with `uibuilder.`.
 
 > [!TIP]
-> You can use deep property names with the `variable` attribute. For example, `variable="myVar.propName"` will display the value of `myVar.propName` and update when that value changes.
+> You can use deep property names with the `variable` attribute. For example, `variable="myVar.propName"` will display the value of `myVar.propName`. Note, however, that the `<uib-var>` element will be update by _any_ change to `myVar`. e.g. the watch is set on the root variable, not the deep property.
 
 ##### filter :id=uib-var-filter
 
@@ -243,7 +243,7 @@ Dotted notation for the function name is allowed (e.g. `uibuilder.get('version')
 
 If the function name is not found in the global window context, the `uibuilder` context is searched so `get('version')` will call `uibuilder.get('version')` so long as `get` is not defined as `window.get` which would take preference.
 
-Generally, it will be best to define your own function. Further standard filters may be added in future releases of UIBUILDER. Until then, a list of standard filters included in the uibuilder is provided [lower-down](#useful-filter-functions).
+Generally, it will be best to define your own function. Further standard filters may be added in future releases of UIBUILDER. Until then, a list of standard filters included in the uibuilder is provided [lower-down this page](#useful-filter-functions).
 
 > [!NOTE]
 >
@@ -254,32 +254,33 @@ Generally, it will be best to define your own function. Further standard filters
 > Notably, **before** the uibuilder client library is loaded.
 >
 > For example, defining `lang` and `yen` filters:
+>
 > ```html
-><script>
+> <script>
 > // Some filter functions (use globalThis. or window.)
 > globalThis.lang = () => navigator.language
 > globalThis.yen = (v) =>
->   uibuilder.formatNumber( v, 2, 'ja-JP', 
-      { style: 'currency', currency: 'JPY' }
-    )
-    </script>
-    
-    <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
-    <script defer src="./index.js"></script>
-    ```
-    
-    And using them in your page:
-    
-    ```html
-    <uib-var topic="mytopic" filter="yen"></uib-var>
-    <uib-var filter="lang" data-before="You are using the language: "></uib-var>
-    ```
-    
-    
+>   uibuilder.formatNumber(
+>      v, 2, 'ja-JP',
+>      { style: 'currency', currency: 'JPY' }
+>   )
+> </script>
+>
+> <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
+> <script defer src="./index.js"></script>
+> ```
+>
+> And using them in your page:
+>
+> ```html
+> <uib-var topic="mytopic" filter="yen"></uib-var>
+> <uib-var filter="lang" data-before="You are using the language: "></uib-var>
+> ```
+
 
 ##### undefined :id=uib-var-undefined
 
-If present or set to `on`, or `true`, the component will show the text "undefined" if the variable is undefined. 
+If present or set to `on`, or `true`, the component will show the text "undefined" if the variable is undefined.
 
 If not present or set to anything else, an undefined variable will show the _slot content_ (anything put between the open and close tag). This lets you have an initial value showing that is replaced as soon as the variable is actually set.
 
@@ -287,16 +288,19 @@ If not present or set to anything else, an undefined variable will show the _slo
 
 If present or set to `on`, or `true`, the component will return a standard message back to Node-RED when the variable changes value.
 
-##### type :id=uib-var-type
+##### output (changed from type in v8.0.0) :id=uib-var-type
+
+> [!CAUTION]
+> The attribute `type` was changed to `output` in v8.0.0 because HTML input elements already have a `type` property
 
 Must be one of:
 
-* `plain` - Strips any embedded HTML for safety. Arrays and objects are "stringified" to plain text.
-* `html` - Allows HTML to be rendered. Arrays and objects are "stringified" to plain text.
+* `html` (default) - Allows HTML to be rendered. Arrays and objects are "stringified" to plain text.
+* `plain` or `text` - Strips any embedded HTML for safety. Arrays and objects are "stringified" to plain text.
 * `markdown` - Allows the insertion of Markdown as long as the Markdown-IT library is loaded.
 * `table` - Input is passed to uibuilder's buildHtmlTable function to attempt to build an HTML table. Input should be an array of objects or an object of objects. The property names in the first entry in the outer array/object will be assumed to be the table column headings.
-* `list`/`array` - Input should be an array. If it isn't, it is converted to an array with a single entry. The output is a simple HTML bulleted list of the array entries. Entries can contain HTML.
-* `json`/`object` - Input is passed through uibuilder's `syntaxHighlight` function to attempt to format it as a pretty-printed JSON string. Input should be something that is valid JSON or a JavaScript object or array.
+* `list` or `array` - Input should be an array. If it isn't, it is converted to an array with a single entry. The output is a simple HTML bulleted list of the array entries. Entries can contain HTML.
+* `json` or `object` - Input is passed through uibuilder's `syntaxHighlight` function to attempt to format it as a pretty-printed JSON string. Input should be something that is valid JSON or a JavaScript object or array.
 
 Final output is passed to uibuilder's sanitise function so if the DOMPurify library is loaded, the output is santized by it.
 
@@ -323,7 +327,8 @@ This is the standard method for UIBUILDER instances but this feature is not depe
 
 Formats a number to a given locale and optionally, a set number of decimal places.
 
-Example, formatting to 2dp using the Japanese locale: 
+Example, formatting to 2dp using the Japanese locale:
+
 ```html
 <uib-var variable="mynumber" filter="uibuilder.formatNumber(2, 'ja-JP')"></uib-var>
 ```
@@ -345,6 +350,7 @@ If no locale is provided, the browser's default locale is used.
 See the [formatDate documentation](fns/format-date-time.md) for details.
 
 Example:
+
 ```html
 <uib-var variabl="mydate" filter="formatDate('iso', 'en-GB')"></uib-var>
 ```
@@ -441,11 +447,13 @@ To use independently of markweb, simply include the component script in your HTM
 ```html
 <script type="module" src="../uibuilder/utils/show-meta.mjs"></script>
 ```
+
 Then add the tag where you want the metadata to appear:
 
 ```html
 <show-meta></show-meta>
 ```
+
 And finally, use a script to update the metadata as required:
 
 ```javascript
@@ -478,6 +486,7 @@ For the standard script approach (AKA "IIFE") use as:
 ```html
 <script defer src="../uibuilder/utils/json-viewer.iife.min.js"></script>
 ```
+
 Add this after the uibuilder client library and before your own script. It automatically registers itself.
 
 If using ES Modules (ESM), you can import it as:
@@ -485,6 +494,7 @@ If using ES Modules (ESM), you can import it as:
 ```javascript
 import '../uibuilder/utils/json-viewer.esm.min.js'
 ```
+
 At the top of your own module script.
 
 In the body of your HTML:
@@ -524,11 +534,12 @@ import { renderToHTML } from '../uibuilder/utils/json-viewer.esm.min.js'
 const data = { hello: 'world', nested: { values: [1, 2, 3] } }
 const html = renderToHTML(data, { maxDepth: 3, filterType: 'string' })
 ```
+
 This may be helpful if you want to use the renderer in your own custom components or in other contexts where you don't want to use the full component.
 
 ##### Editing
 
-When the `editable` attribute is present, editable properties and values are shown with a dashed underline. 
+When the `editable` attribute is present, editable properties and values are shown with a dashed underline.
 
 Click on a property or value to edit it. When you finish editing, a `json-viewer:change` event is emitted with the path to the changed value and the new value. If you are using UIBUILDER, the changed values will also be sent in a message to Node-RED with the topic `json-viewer/change` and the payload containing the HMTL id, object path for the edit and old/new values.
 
@@ -543,9 +554,9 @@ In edit mode, any objects `{...}` or arrays `[...]` get an additional button to 
 > There are a few limitations to be aware of with editing. These are due to limitations of HTML/JavaScript and the need to convert values to and from strings for editing.
 >
 > * The following value types cannot be edited since they cannot be reliably converted to and from strings. They will be shown as read-only.
-> 
+>
 >   * *Symbols*, *functions*, *Circular references*, and *Regex*.
-> 
+>
 > * *Bigint* values can be edited but the value in the message returned to Node-RED will be a string representation of the bigint since they cannot be stringified to JSON. You can convert this back to a bigint in Node-RED with `BigInt(value)`. (Note that bigints are numbers with a trailing "n", e.g. `123n`). Make sure to include the *trailing "n"* when editing bigints.
 > * *Map* and *Set* values are represented as objects and arrays respectively and so can be edited but the value returned to Node-RED will be in this form. You can convert these back to Map and Set in Node-RED with `new Map(Object.entries(value))` and `new Set(value)` respectively.
 
@@ -601,6 +612,7 @@ el.data = { nested: { values: [1, 2, 3] } }
 ```
 
 ##### Listening for events
+
 ```javascript
 // Listen for a node being toggled
 el.addEventListener('json-viewer:toggle', evt => console.log(evt.detail.data))
@@ -616,19 +628,23 @@ Some potentially useful components are shown below.
 
 ### Totally Information web components
 
-Totally Information has a set of web components that work with or without UIBUILDER though they will generally have extra features when used with. 
+Totally Information has a set of web components that work with or without UIBUILDER though they will generally have extra features when used with.
 
 The components have [their own website](https://wc.totallyinformation.net) that shows demos, documentation and tests.
 
 The components have various levels of readiness. Some are ready to be used now and some are marked as "Alpha" quality and should only be used for testing.
 
-See the [TotallyInformation/web-components GitHub repo](https://github.com/TotallyInformation/web-components) for details. 
+See the [TotallyInformation/web-components GitHub repo](https://github.com/TotallyInformation/web-components) for details.
 
 ### HotNiPi Gauge component
 
 A nice looking gauge was gifted to the community by Node-RED forum contributor HotNiPi and this also works with or without UIBUILDER. See [HotNipi Gauge Web Component](https://github.com/TotallyInformation/gauge-hotnipi) for details. In line with UIBUILDER standards, the gauge component is available in both ESM and IIFE formats for ease of use.
 
 ### Include-fragment-element
+
+> [!TIP]
+> The Totally Information web componets includes an [HTML-include component](https://wc.totallyinformation.net/tests/live/html-include).
+> It is a comprehensive and UIBUILDER-friendly replacement for this component.
 
 This web component is written and maintained by GitHub. It lets you have something like this in your page:
 
@@ -662,15 +678,15 @@ ESM loads are also available. [See GitHub for details](https://github.com/github
 
 There are many web components and web component libraries available. All should work with UIBUILDER.
 
-- [Basic Material Design components](https://material-web.dev/about/intro/) - supported by Google designers and developers.
-- [Elix components](https://component.kitchen/elix) - high-quality basic elements and composable mixins.
-- [Webcomponents.org](https://www.webcomponents.org/) - elements, collections and how-to's.
-- [Webcomponents.org libraries](https://www.webcomponents.org/libraries)
-- [GitHub Components](https://github.com/orgs/github/repositories?q=component) - various components and tools written by GitHub devs.
-- [Mozilla Developer Network (MDN) example components](https://github.com/mdn/web-components-examples) - example components, useful to get started on your own.
-- [Open Web Components](https://open-wc.org/) - guides, tools and libraries for developing web components.
-- [Open Web Components community libraries](https://open-wc.org/guides/community/component-libraries/) - list of potentially useful component libraries.
-- "Awesome" lists
-  - [obetomuniz/awesome-webcomponents](https://github.com/obetomuniz/awesome-webcomponents/blob/master/README.md)
-  - [web-padawan/awesome-web-components](https://github.com/web-padawan/awesome-web-components/blob/main/README.md)
+* [Basic Material Design components](https://material-web.dev/about/intro/) - supported by Google designers and developers.
+* [Elix components](https://component.kitchen/elix) - high-quality basic elements and composable mixins.
+* [Webcomponents.org](https://www.webcomponents.org/) - elements, collections and how-to's.
+* [Webcomponents.org libraries](https://www.webcomponents.org/libraries)
+* [GitHub Components](https://github.com/orgs/github/repositories?q=component) - various components and tools written by GitHub devs.
+* [Mozilla Developer Network (MDN) example components](https://github.com/mdn/web-components-examples) - example components, useful to get started on your own.
+* [Open Web Components](https://open-wc.org/) - guides, tools and libraries for developing web components.
+* [Open Web Components community libraries](https://open-wc.org/guides/community/component-libraries/) - list of potentially useful component libraries.
+* "Awesome" lists
+  * [obetomuniz/awesome-webcomponents](https://github.com/obetomuniz/awesome-webcomponents/blob/master/README.md)
+  * [web-padawan/awesome-web-components](https://github.com/web-padawan/awesome-web-components/blob/main/README.md)
 
