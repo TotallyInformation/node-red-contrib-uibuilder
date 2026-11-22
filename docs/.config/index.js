@@ -380,7 +380,7 @@ window.$docsify = {
                 footer[3] = `Copyright &copy; ${strYr}`
 
                 return content
-            }) // ------- End of Custom Plugin ------- //
+            })
 
             // Runs against the rendered HTML for each page
             hook.afterEach(function (html, next) {
@@ -388,7 +388,12 @@ window.$docsify = {
                 next(html + footer.join(''))
             })
 
+            // Invoked each time after the data is fully loaded, no arguments,
             hook.doneEach(() => {
+                console.log(vm)
+                // Set custom page title
+                document.title = vm.frontmatter.shortTitle ? vm.frontmatter.shortTitle : vm.frontmatter?.title ? vm.frontmatter?.title : document.title
+
                 // Make top-level sidebar list items with nested lists collapsible
                 const sidebar = document.querySelector('.sidebar-nav > ul')
                 if (sidebar) {
