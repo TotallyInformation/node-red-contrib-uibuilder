@@ -180,11 +180,13 @@ class UibVar extends TiBaseComponent {
         //     varChange gets the nested value and calls _processUibVar to update the element and content
 
         // Set the initial value immediately - this handles the case where the variable was already set before this component was connected to the DOM
+        console.log('>> FIRST', varName, this.#rootVarName, this.uibuilder.varChange(this, this.uibuilder.get(this.#rootVarName), 'uib-var-var-initial'), this.id)
         this.value = this.uibuilder.varChange(this, this.uibuilder.get(this.#rootVarName), 'uib-var-var-initial')
         // And save the var name used for the callback
         this._uib.varWatchName = this.#rootVarName
         // Watch for changes in the variable (could use `uibuilder:propertyChanged:${prop}` event instead)
         this._uib.varWatch = this.uibuilder.onChange(this.#rootVarName, (rootValue) => {
+            console.log('>> CHANGE', varName, this.#rootVarName, this.uibuilder.varChange(this, rootValue, 'uib-var-on-var-change'), this.id)
             this.value = this.uibuilder.varChange(this, rootValue, 'uib-var-on-var-change')
         })
     }
@@ -240,10 +242,6 @@ class UibVar extends TiBaseComponent {
     connectedCallback() {
         this._connect() // Keep at start.
 
-        // Initial process of key attributes (fires set methods)
-        this.variable = this.getAttribute('variable')
-        this.topic = this.getAttribute('topic')
-
         this._ready() // Keep at end. Let everyone know that a new instance of the component has been connected & is ready
     }
 
@@ -263,87 +261,13 @@ class UibVar extends TiBaseComponent {
      * @param {string} newVal The new value of the attribute
      */
     attributeChangedCallback(attrib, oldVal, newVal) {
-        /** Optionally ignore attrib changes until instance is fully connected
-         * Otherwise this can fire BEFORE everthing is fully connected.
-         */
-        // if (!this.connected) return
-
         // Don't bother if the new value same as old
         if ( oldVal === newVal ) return
 
         // Create a property from the value - WARN: Be careful with name clashes - triggers setters
         this[attrib] = newVal
 
-        // Add other dynamic attribute processing here.
-        // If attribute processing doesn't need to be dynamic, process in connectedCallback as that happens earlier in the lifecycle
-        switch (attrib) {
-            case 'undefined': {
-                if (newVal === '' || ['on', 'true', 'report'].includes(newVal.toLowerCase())) this.undef = true
-                else this.undef = false
-                this._uib.showUndefined = this.undef
-                break
-            }
-            case 'report': {
-                if (newVal === '' || ['on', 'true', 'report'].includes(newVal.toLowerCase())) this._uib.sendReport = true
-                else this._uib.sendReport = false
-                break
-            }
-            case 'output': { /** Since v8.0.0 changed to output from type */
-                if (newVal === '' || !this.outputTypes.includes(newVal.toLowerCase())) this._uib.outputType = this.#defaultOutputType
-                else this._uib.outputType = newVal
-                break
-            }
-            case 'filter': {
-                this._uib.filterName = undefined
-                this._uib.filterArgs = []
-
-                // Handle empty filter
-                if (!newVal) break
-
-                this._uib.filterName = newVal
-
-                // Filter the input - at least limit the length of the attr
-                newVal = newVal.slice(0, 127)
-                // Remove spaces and then separate fn name from potential extra arguments
-                const f = newVal.replace(/\s/g, '').match(/([a-zA-Z_$][a-zA-Z_$0-9.-]+)(\((.*)\))?/)
-                if (!f) {
-                    console.warn(`⚠️ [uib-var] Filter function "${newVal}" invalid. Cannot process.`)
-                    break
-                }
-                // Fn name
-                this._uib.filterName = f[1]
-                // Fn arguments
-                if (f[3]) { // undefined if no args found
-                    // TODO Do we really want to try this?
-                    try {
-                        this._uib.filterArgs = JSON.parse(f[3])
-                    } catch (e) {}
-
-                    this._uib.filterArgs = f[3].split(',').map((x) => {
-                        // No objects/arrays allowed - if they have a , they are split
-                        x = x.trim()
-                        // NB: Do NOT use Number.isNaN here, it is too narrow minded
-                        if (isNaN(x)) {
-                            // String inside string ends up double quoted so remove those
-                            let y = x.replace(/^["'`]/, '').replace(/["'`]$/, '')
-                            // Attempt very limited parse in case it is valid object/array
-                            try {
-                                y = new Function(`return ${y}`)()
-                            } catch (e) {}
-                            return y
-                        }
-                        return Number(x)
-                    })
-                }
-
-                // ! TODO: Check if filter applied  if neither variable nor topic attribs set
-                // if (!this.variable && !this.topic) this.showVar(false)
-                break
-            }
-            default: {
-                break
-            }
-        }
+        // Since v8.0.0, we don't do the additional attribute checks here, they happen in uibuilder.setVar
 
         // Keep at end. Let everyone know that an attribute has changed for this instance of the component
         this._event('attribChanged', { attribute: attrib, newVal: newVal, oldVal: oldVal, })
