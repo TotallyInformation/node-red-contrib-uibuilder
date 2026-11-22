@@ -1046,6 +1046,7 @@ export const Uib = class Uib {
      * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString
      */
     formatNumber(value, decimalPlaces, intl, opts) {
+        if (typeof value === 'string') value = Number(value)
         if (isNaN(value)) {
             log('error', 'formatNumber', `Value must be a number. Value type: "${typeof value}"`)()
             return 'NaN'
@@ -1732,7 +1733,7 @@ export const Uib = class Uib {
                 el.dataset[key] = value
             }
         } catch (e) {
-            log('error', 'uibuilder:setDataset', 'Failed to set dataset. Ensure that dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.', e.message)()
+            log('error', 'uibuilder:setDataset', 'Failed to set dataset. Ensure that dataset is an object containing key/value pairs with each key a valid dataset name. Note that dataset values have to be a string.', e)()
             return false
         }
         return true
@@ -1855,15 +1856,54 @@ export const Uib = class Uib {
 
     /** Apply value filter if specified, found and executable. Returns original value on error.
      * Searches for fn name firstly in the global scope then in uibuilder scope
-     * @param {string} filterName The filter name to apply (must be in global or uibuilder context)
-     * @param {Array<string>} filterArgs Array of filter arguments to apply
+     * @param {string} _uib The el._uib data
      * @param {*} value The value to change
      * @return {*} The amended (or original) value
      */
-    applyFilterFn(filterName, filterArgs, value) {
-        if (filterName) {
+    applyFilterFn(_uib, value) {
+        if (!_uib) return
+        if (_uib?.filterName) {
+            _uib.filterArgs = []
+            // Filter the input - at least limit the length of the attr
+            try {
+                _uib.filterName = _uib.filterName.slice(0, 127)
+            } catch (e) {
+                log('error', 'uibuilder:applyFilterFn', e, _uib)()
+            }
+            // Remove spaces and then separate fn name from potential extra arguments
+            const f = _uib?.filterName.replace(/\s/g, '').match(/([a-zA-Z_$][a-zA-Z_$0-9.-]+)(\((.*)\))?/)
+            if (!f) {
+                console.warn(`⚠️ [uib-var] Filter function "${value}" invalid. Cannot process.`)
+                return
+            }
+            // Fn name
+            _uib.filterName = f[1]
+            // Fn arguments
+            if (f[3]) { // undefined if no args found
+                // TODO Do we really want to try this?
+                try {
+                    _uib.filterArgs = JSON.parse(f[3])
+                } catch (e) {}
+
+                _uib.filterArgs = f[3].split(',').map((x) => {
+                    // No objects/arrays allowed - if they have a , they are split
+                    x = x.trim()
+                    // NB: Do NOT use Number.isNaN here, it is too narrow minded
+                    if (isNaN(x)) {
+                        // String inside string ends up double quoted so remove those
+                        let y = x.replace(/^["'`]/, '').replace(/["'`]$/, '')
+                        // Attempt very limited parse in case it is valid object/array
+                        try {
+                            y = new Function(`return ${y}`)()
+                        } catch (e) {}
+                        return y
+                    }
+                    return Number(x)
+                })
+            }
+
             // Cater for dotted notation functions (e.g. uibuilder.get)
-            const splitFilter = filterName.split('.')
+            const splitFilter = _uib.filterName.split('.')
             // Search for globally defined fn first
             let fnToCall = globalThis[splitFilter[0]]
             if (fnToCall && splitFilter.length > 1) {
@@ -1878,16 +1918,19 @@ export const Uib = class Uib {
             if (fnToCall && typeof fnToCall !== 'function' ) fnToCall = undefined
             if (fnToCall) {
                 // prefix args with value if present
-                const argList = value === undefined ? [...filterArgs] : [value, ...filterArgs]
+                const argList = value === undefined ? [..._uib.filterArgs] : [value, ..._uib.filterArgs]
                 try {
                     value = Reflect.apply(fnToCall, value ?? fnToCall, argList)
                 } catch (err) {
-                    log('warn', 'uibuilder:applyFilterFn', `"${filterName}" could not be executed or it raised an unrecoverable error`)()
+                    log('warn', 'uibuilder:applyFilterFn', `"${_uib.filterName}" could not be executed or it raised an unrecoverable error`)()
                 }
             } else {
-                log('warn', 'uibuilder:applyFilterFn', `"${filterName}" ${typeof fnToCall === 'object' ? 'is an object not a function' : 'not found'}`)()
+                log('warn', 'uibuilder:applyFilterFn', `"${_uib.filterName}" ${typeof fnToCall === 'object' ? 'is an object not a function' : 'not found'}`)()
             }
         }
+
+        // ? TODO: Check if filter applied  if neither variable nor topic attribs set
+        // if (!this.variable && !this.topic) this.showVar(false)
 
         return value
     }
@@ -1917,18 +1960,12 @@ export const Uib = class Uib {
         // if data is a primative (string, etc), assume that should be the payload
         // Unless the el is an input, in that case, set the appropriate attributes instead
         if (this.isPrimitive(data)) {
-            // Apply the filter first
-            data = this.applyFilterFn(el?._uib?.filterName, el?._uib?.filterArgs, data)
             if (this.isElCheckable(el) && data !== undefined && data !== null) {
-                data = { attributes: { checked: data, }, }
+                data = { attributes: { checked: this.applyFilterFn(el?._uib, data), }, }
             } else if (this.isElFormControl(el) && data !== undefined && data !== null) {
-                data = { attributes: { value: data, }, }
+                data = { attributes: { value: this.applyFilterFn(el?._uib, data), }, }
             } else {
                 data = { payload: data, }
-            }
-        } else {
-            if (data?.payload) {
-                data.payload = this.applyFilterFn(el?._uib?.filterName, el?._uib?.filterArgs, data.payload)
             }
         }
         // NB: If data is an object, any slot content HAS to be in data.payload
@@ -1946,15 +1983,6 @@ export const Uib = class Uib {
         // Process msg.dataset
         if (Object.prototype.hasOwnProperty.call(data, 'dataset')) this.setDataset(el, data.dataset)
 
-        // Since v8.0.0 - removed
-        // Process msg.value (or set checked if boolean - for checkboxes). In case someone puts checked/value at the top level.
-        // const hasChecked = Object.prototype.hasOwnProperty.call(data, 'checked')
-        // const hasValue = Object.prototype.hasOwnProperty.call(data, 'value')
-        // if ( hasValue || hasChecked ) {
-        //     const value = hasChecked ? data.checked : hasValue ? data.value : undefined
-        //     this.setValueOrChecked(el, value)
-        // }
-
         // Process content/slot
         if (Object.prototype.hasOwnProperty.call(data, 'payload')) {
             // If el has data-before/data-after attributes, apply these to the payload
@@ -1968,7 +1996,7 @@ export const Uib = class Uib {
             } else {
                 // Apply the correct output type (defaults to HTML)
                 const outputType = el?._uib?.outputType ?? 'html'
-                let output = data.payload
+                let output = this.applyFilterFn(el?._uib, data.payload)
                 let out = ''
                 switch (outputType) {
                     case 'markdown': {
@@ -2156,15 +2184,38 @@ export const Uib = class Uib {
      * @typedef {'html'|'text'|'plain'|'markdown'|'json'|'object'|'table'|'array'|'list'} OutputType
      * @param {HTMLElement} el The element to process
      * @param {*} rootValue Value of root variable
-     * param {{fullVarName:string,hasSubPath:boolean,rootVarName:string,nestedPath:string}} [path] If not set, get from el._uib.path
-     * param {OutputType} [outputType] What type of output is desired?
-     * param {string} [filterName] Name of a filter function to apply
      * @param {string} [from] for debugging only
      * @return {*} Value of variable (might be a nested path value)
      */
-    // varChange(el, rootValue, path, outputType = 'html', filterName = null, from = '') {
     varChange(el, rootValue, from = '') {
         // NB: additional details are in the passed element
+        if (!el?._uib) el._uib = {}
+        // Set the filter fn if `filter` attribute is set
+        if (el.hasAttribute('filter')) {
+            const val = el.getAttribute('filter')
+            el._uib.filterArgs = []
+
+            // Handle empty filter
+            if (!val) el._uib.filterName = undefined
+
+            el._uib.filterName = val
+        }
+        // Set the output type if `output` attribute is set
+        if (el.hasAttribute('output')) {
+            const val = el.getAttribute('output')
+            el._uib.outputType = val.toLowerCase() // TODO: Perhaps filter to valid types?
+        }
+        // shows undefined values if `undefined` attribute is set
+        if (el.hasAttribute('undefined')) {
+            const val = el.getAttribute('undefined')
+            el._uib.showUndefined = ['', 'on', 'true', 'report'].includes(val)
+        }
+        // Sends msg to Node-RED when data changes if `report` attribute is set
+        if (el.hasAttribute('report')) {
+            const val = el.getAttribute('report')
+            el._uib.sendReport = ['', 'on', 'true', 'report'].includes(val)
+        }
+
         const value = this.getVarNameNestedValue(el?._uib?.uibVarDetails?.fullVarName)
         const result = this._processElVarProps(el, value)
         // Report back to Node-RED if requested
@@ -4531,7 +4582,7 @@ document.addEventListener('uibuilder:httpHeadersReady', () => {
     customElements.define('uib-control', UibControl)
 
     perf.set('all done', performance.now())
-    console.log('Performance: ', perf)
+    log('info', 'uibuider', 'Client performance: ', perf)()
 })
 
 // #endregion --- Wrap up ---
