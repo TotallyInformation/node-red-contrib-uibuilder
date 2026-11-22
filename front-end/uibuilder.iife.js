@@ -1,4 +1,3 @@
-"use strict";
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -5439,32 +5438,53 @@
   var ti_base_component_default = TiBaseComponent;
 
   // src/components/uib-var.mjs
-  var _variable, _varCb, _topic, _topicCb;
+  var _fullVarName, _rootVarName, _defaultOutputType, _topic;
   var UibVar = class extends ti_base_component_default {
     // #endregion --- Class Properties ---
     constructor() {
       super();
       // #region --- Class Properties ---
+      /** The original var name to process (may have sub-property-paths) @type {string} */
+      __privateAdd(this, _fullVarName);
       /** Name of the uibuilder mangaged variable to use @type {string} */
-      __privateAdd(this, _variable);
+      __privateAdd(this, _rootVarName);
       /** Current value of the watched variable */
       __publicField(this, "value");
-      /** Holds reference to var watch callback so it can be cancelled @type {Function} */
-      __privateAdd(this, _varCb);
-      /** The watched msg topic @type {string} */
+      /** Default type */
+      __privateAdd(this, _defaultOutputType, "html");
+      /** what are the available types? */
+      __publicField(this, "outputTypes", ["html", "plain", "text", "markdown", "object", "json", "table", "list", "array"]);
+      /** uibuilder extended element data properties - aligns with uibuilder element handling */
+      __publicField(this, "_uib", {
+        /** @type {'html'|'text'|'plain'|'markdown'|'json'|'object'|'table'|'array'|'list'} */
+        outputType: __privateGet(this, _defaultOutputType),
+        /** Name of filter fn to apply (in globalThis/window or uibuilder scope) @type {string} */
+        filterName: null,
+        /** Array of filter fn arguments to apply @type {Array<string>} */
+        filterArgs: null,
+        /** The (split)path of the var name @type {{fullVarName:string,hasSubPath:boolean,rootVarName:string,nestedPath:string,splitNestedPath:Array<string>}} */
+        uibVarDetails: null,
+        /** The watch fn for changes to the variable to allow cancel @type {Function} */
+        varWatch: null,
+        /** The name of the watched variable to allow cancel @type {string} */
+        varWatchName: null,
+        /** The watch fn for changes to the topic to allow cancel @type {Function} */
+        topicWatch: null,
+        /** The name of the watched topic to allow cancel @type {string} */
+        topicWatchName: null,
+        /** If true, show undefined variables with the text "undefined", otherwise show slot content @type {boolean} */
+        showUndefined: false,
+        /** Whether to report back to Node-RED on data change @type {boolean} */
+        sendReport: false
+      });
       __privateAdd(this, _topic);
-      /** Holds reference to topic watch callback so it can be cancelled @type {Function} */
-      __privateAdd(this, _topicCb);
       /** Whether to output if the variable is undefined */
       __publicField(this, "undef", false);
       /** Whether to send update value to Node-RED on change */
       __publicField(this, "report", false);
-      /** What is the value type */
-      __publicField(this, "type", "plain");
-      /** what are the available types? */
-      __publicField(this, "types", ["plain", "html", "markdown", "object", "json", "table", "list", "array"]);
     }
     /** Makes HTML attribute change watched
+     * Since v8.0.0 "type" changed to "output"
      * @return {Array<string>} List of all of the html attribs (props) listened to
      */
     static get observedAttributes() {
@@ -5477,40 +5497,58 @@
         "id",
         "report",
         "topic",
-        "type",
+        "output",
         "undefined",
         "variable"
       ];
     }
     /** Set the uibuilder variable name to watch */
     set variable(varName) {
-      __privateSet(this, _variable, varName);
-      this.splitVarName;
       if (varName) {
-        try {
-          this.splitVarName = varName.split(/[\.\[\]\'\"]/);
-          __privateSet(this, _variable, varName = this.splitVarName.shift());
-        } catch (e) {
-          throw new Error("[".concat(this.localName, '] variable attribute: Name split failed on "').concat(varName, '". ').concat(e.message), { cause: e });
-        }
+        __privateSet(this, _fullVarName, varName);
+        this._uib.uibVarDetails = this.uibuilder.varNameSubPathChk(varName);
+        __privateSet(this, _rootVarName, this._uib.uibVarDetails.rootVarName);
+      } else {
+        __privateSet(this, _fullVarName, null);
+        this._uib.uibVarDetails = null;
+        __privateSet(this, _rootVarName, null);
       }
-      if (__privateGet(this, _varCb)) this.uibuilder.cancelChange(varName, __privateGet(this, _varCb));
+      this._removeWatchers();
       if (!varName) return;
-      this._varChange(this.uibuilder.get(varName));
-      __privateSet(this, _varCb, this.uibuilder.onChange(varName, this._varChange.bind(this)));
+      this.value = this.uibuilder.varChange(this, this.uibuilder.get(__privateGet(this, _rootVarName)), "uib-var-var-initial");
+      this._uib.varWatchName = __privateGet(this, _rootVarName);
+      this._uib.varWatch = this.uibuilder.onChange(__privateGet(this, _rootVarName), (rootValue) => {
+        this.value = this.uibuilder.varChange(this, rootValue, "uib-var-on-var-change");
+      });
     }
-    /** Get the watched uibuilder variable name
+    /** Get the watched uibuilder variable name (including sub-property-paths)
      * @return {string} The watched variable name
      */
     get variable() {
-      return __privateGet(this, _variable);
+      return __privateGet(this, _fullVarName);
     }
     /** Set the uibuilder msg topic to watch. We could use `uibuilder:msg:topic:${msg.topic}` event instead */
     set topic(topicName) {
-      __privateSet(this, _topic, topicName);
-      if (__privateGet(this, _topicCb)) this.uibuilder.cancelTopic(topicName, __privateGet(this, _topicCb));
+      if (topicName) {
+        __privateSet(this, _topic, topicName);
+      } else {
+        __privateSet(this, _topic, null);
+      }
+      this._removeWatchers();
       if (!topicName) return;
-      __privateSet(this, _topicCb, this.uibuilder.onTopic(topicName, this._topicChange.bind(this)));
+      __privateSet(this, _topic, topicName);
+      this._uib.uibVarDetails = {
+        fullVarName: "msg",
+        hasSubPath: false,
+        rootVarName: "msg",
+        nestedPath: null,
+        splitNestedPath: []
+      };
+      this._uib.topicWatchName = topicName;
+      this._uib.topicWatch = this.uibuilder.onTopic(topicName, (msg) => {
+        msg._uib_processed_by = "uib-var-topic";
+        this.uibuilder.varChange(this, msg, "uib-var-on-topic-change");
+      });
     }
     /** Get the watched uibuilder msg topic
      * @return {string} The watched topic name
@@ -5527,13 +5565,7 @@
     }
     // Runs when an instance is removed from the DOM
     disconnectedCallback() {
-      if (__privateGet(this, _varCb)) this.uibuilder.cancelChange(__privateGet(this, _variable), __privateGet(this, _varCb));
-      if (__privateGet(this, _topicCb)) {
-        this.uibuilder.cancelTopic(__privateGet(this, _topic), __privateGet(this, _topicCb));
-        Object.keys(__privateGet(this, _topicCb)).forEach((topic) => {
-          this.uibuilder.cancelTopic(topic, __privateGet(this, _topicCb)[topic]);
-        });
-      }
+      this._removeWatchers();
       this._disconnect();
     }
     /** Handle watched attributes
@@ -5550,36 +5582,37 @@
         case "undefined": {
           if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase())) this.undef = true;
           else this.undef = false;
+          this._uib.showUndefined = this.undef;
           break;
         }
         case "report": {
-          if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase())) this.report = true;
-          else this.report = false;
+          if (newVal === "" || ["on", "true", "report"].includes(newVal.toLowerCase())) this._uib.sendReport = true;
+          else this._uib.sendReport = false;
           break;
         }
-        case "type": {
-          if (newVal === "" || !this.types.includes(newVal.toLowerCase())) this.type = "plain";
-          else this.type = newVal;
+        case "output": {
+          if (newVal === "" || !this.outputTypes.includes(newVal.toLowerCase())) this._uib.outputType = __privateGet(this, _defaultOutputType);
+          else this._uib.outputType = newVal;
           break;
         }
         case "filter": {
-          this.filter = void 0;
-          this.filterArgs = [];
+          this._uib.filterName = void 0;
+          this._uib.filterArgs = [];
           if (!newVal) break;
-          this.filter = newVal;
+          this._uib.filterName = newVal;
           newVal = newVal.slice(0, 127);
           const f = newVal.replace(/\s/g, "").match(/([a-zA-Z_$][a-zA-Z_$0-9.-]+)(\((.*)\))?/);
           if (!f) {
             console.warn('\u26A0\uFE0F [uib-var] Filter function "'.concat(newVal, '" invalid. Cannot process.'));
             break;
           }
-          this.filter = f[1];
+          this._uib.filterName = f[1];
           if (f[3]) {
             try {
-              this.filterArgs = JSON.parse(f[3]);
+              this._uib.filterArgs = JSON.parse(f[3]);
             } catch (e) {
             }
-            this.filterArgs = f[3].split(",").map((x) => {
+            this._uib.filterArgs = f[3].split(",").map((x) => {
               x = x.trim();
               if (isNaN(x)) {
                 let y = x.replace(/^["'`]/, "").replace(/["'`]$/, "");
@@ -5592,7 +5625,6 @@
               return Number(x);
             });
           }
-          if (!this.variable && !this.topic) this.showVar(false);
           break;
         }
         default: {
@@ -5601,133 +5633,27 @@
       }
       this._event("attribChanged", { attribute: attrib, newVal, oldVal });
     }
-    // --- end of attributeChangedCallback --- //
-    /** Process watched uibuilder variable value change
-     * @param {*} value The value of the managed uibuilder variable
-     */
-    _varChange(value2) {
-      let success = true;
-      if (this.splitVarName.length > 0) {
-        let target = value2;
-        const partSuccess = [];
-        try {
-          this.splitVarName.forEach((part) => {
-            let successPart;
-            if (target[part] === void 0) successPart = false;
-            else successPart = true;
-            partSuccess.push(successPart);
-            target = target[part];
-          });
-          value2 = target;
-          success = partSuccess.filter(Boolean).length > 0 ? true : false;
-        } catch (e) {
-          success = false;
-        }
+    /** Remove any existing watchers */
+    _removeWatchers() {
+      var _a3;
+      if (this._uib.varWatch) {
+        this.uibuilder.cancelChange(this._uib.varWatchName, this._uib.varWatch);
+        this._uib.varWatch = void 0;
+        this._uib.varWatchName = void 0;
       }
-      if (success) {
-        this.value = value2;
-        this.showVar();
-        if (this.report === true) this.uibuilder.send({ topic: this.variable, payload: this.value || void 0, source: this.localName, id: this.id });
+      if ((_a3 = this._uib) == null ? void 0 : _a3.topicWatchName) {
+        this.uibuilder.cancelTopic(this._uib.topicWatchName, this._uib.topicWatch);
+        this._uib.varWatch = null;
+        this._uib.varWatchName = null;
       }
-    }
-    /** Process watched uibuilder msg.topic received
-     * @param {object} msg The value of the managed uibuilder variable
-     */
-    _topicChange(msg) {
-      this.uibuilder.log("trace", this.localName, "Topic msg received: '".concat(msg.topic, "'"), msg);
-      this.value = msg.payload;
-      this.showVar();
-      if (this.report === true) this.uibuilder.send({ topic: msg.topic, payload: this.value || void 0, source: this.localName, id: this.id });
-    }
-    /** Convert this.value to DOM output (applies output filter if needed)
-     * @param {boolean} chkVal If true (default), check for undefined value. False used to run filter even with no value set.
-     */
-    showVar(chkVal = true) {
-      this.uibuilder.log("trace", this.localName, "showVar. chkVal: '".concat(chkVal, "'. Value="), this.value);
-      if (chkVal === true && this.value === void 0 && this.undef !== true) {
-        return;
-      }
-      let val = chkVal ? this.doFilter(this.value) : this.doFilter();
-      let out = val;
-      switch (this.type) {
-        case "markdown": {
-          if (this.uib) out = this.uibuilder.convertMarkdown(val);
-          break;
-        }
-        case "json":
-        case "object": {
-          out = '<pre class="syntax-highlight">'.concat(this.uib ? this.uibuilder.syntaxHighlight(val) : val, "</pre>");
-          break;
-        }
-        case "table": {
-          out = this.uibuilder.buildHtmlTable(val).outerHTML;
-          break;
-        }
-        case "array":
-        case "list": {
-          if (!Array.isArray(val)) val = [val];
-          out = "<ul>";
-          val.forEach((li) => {
-            out += "<li>".concat(li, "</li>");
-          });
-          out += "</ul>";
-          break;
-        }
-        case "plain": {
-          const div = document.createElement("div");
-          div.innerHTML = val;
-          out = div.textContent;
-        }
-        // TODO: replace with safer method
-        case "html":
-        default: {
-          const t = typeof val;
-          if (Array.isArray(val) || t === "[object Object]" || t === "object") {
-            try {
-              out = JSON.stringify(val);
-            } catch (e) {
-            }
-          }
-          break;
-        }
-      }
-      if (this.dataset.before) out = "".concat(this.dataset.before).concat(out);
-      if (this.dataset.after) out = "".concat(out).concat(this.dataset.after);
-      if (this.uib) this.uibuilder.replaceSlot(this, out);
-      else this.innerHTML = out;
-    }
-    /** Apply value filter if specified
-     * @param {*} value The value to change
-     * @return {*} The amended value that will be displayed
-     */
-    doFilter(value2) {
-      if (this.filter) {
-        const splitFilter = this.filter.split(".");
-        let globalFn = globalThis[splitFilter[0]];
-        if (globalFn && splitFilter.length > 1) {
-          const parts2 = [splitFilter.pop()];
-          parts2.forEach((part) => {
-            globalFn = globalFn[part];
-          });
-        }
-        if (!globalFn && this.uib === true) globalFn = this.uibuilder[splitFilter[0]];
-        if (globalFn && typeof globalFn !== "function") globalFn = void 0;
-        if (globalFn) {
-          const argList = value2 === void 0 ? [...this.filterArgs] : [value2, ...this.filterArgs];
-          value2 = Reflect.apply(globalFn, value2 != null ? value2 : globalFn, argList);
-        } else {
-          console.warn('\u26A0\uFE0F [uib-var] Filter function "'.concat(this.filter, '" ').concat(typeof globalFn === "object" ? "is an object not a function" : "not found"));
-        }
-      }
-      return value2;
     }
   };
-  _variable = new WeakMap();
-  _varCb = new WeakMap();
+  _fullVarName = new WeakMap();
+  _rootVarName = new WeakMap();
+  _defaultOutputType = new WeakMap();
   _topic = new WeakMap();
-  _topicCb = new WeakMap();
   /** Component version */
-  __publicField(UibVar, "componentVersion", "2026-02-15");
+  __publicField(UibVar, "componentVersion", "2026-11-21");
   var uib_var_default = UibVar;
   window["UibVar"] = UibVar;
 
@@ -7099,7 +7025,7 @@
       // #events = {}
       // Socket.IO channel names
       __publicField(this, "_ioChannels", { control: "uiBuilderControl", client: "uiBuilderClient", server: "uiBuilder" });
-      /** setInterval holder for pings @type {function|undefined} */
+      /** setInterval reference for pings @type {number|undefined} */
       __privateAdd(this, _pingInterval);
       // onChange event callbacks
       __privateAdd(this, _propChangeCallbacks, {});
@@ -7353,6 +7279,8 @@
        * @param {HTMLElement} el HTML Element to add class(es) to
        */
       __publicField(this, "removeClass", _ui.removeClass);
+      __publicField(this, "isElFormControl", (el) => el.matches("input, textarea, select"));
+      __publicField(this, "isElCheckable", (el) => el.matches('input[type="checkbox"], input[type="radio"]'));
       log("trace", "Uib:constructor", "Starting")();
       perf.set("constructor starting", performance.now());
       __uibHeadersPromise.then((headers) => {
@@ -7430,31 +7358,6 @@
     get meta() {
       return _a2._meta;
     }
-    /** Extract the root property from a nested property path (e.g., 'myvar.aprop' or 'myvar["bprop"]').
-     * @private
-     * @param {string} prop The property name or nested property path
-     * @return {Object<boolean, string, string|null>} Whether the prop is a nested path,
-     *   the root property name (e.g., 'myvar' from 'myvar.aprop' or 'myvar["bprop"]'),
-     *   and the nested path or null if not a nested path
-     */
-    _nestedPath(prop) {
-      const isNestedPath = prop.includes(".") || prop.includes("[");
-      let nestedPath = null;
-      let rootProp;
-      if (isNestedPath) {
-        const dotIdx = prop.indexOf(".");
-        const bracketIdx = prop.indexOf("[");
-        let sepIdx = -1;
-        if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx);
-        else if (dotIdx >= 0) sepIdx = dotIdx;
-        else if (bracketIdx >= 0) sepIdx = bracketIdx;
-        if (sepIdx > 0) {
-          rootProp = prop.substring(0, sepIdx);
-          nestedPath = prop.substring(prop[sepIdx] === "[" ? sepIdx : sepIdx + 1);
-        }
-      }
-      return { isNestedPath, rootProp, nestedPath };
-    }
     /** Function to set uibuilder properties to a new value - works on any property except _* or #*
      * Also triggers any event listeners.
      * Supports nested property paths (e.g., 'myvar.aprop' or 'myvar["bprop"]').
@@ -7467,26 +7370,25 @@
      * @return {*} Input value
      */
     set(prop, val, store = false, autoload = false) {
-      var _a3;
       if (prop.startsWith("_") || prop.startsWith("#")) {
         log("warn", "Uib:set", 'Cannot use set() on protected property "'.concat(prop, '"'))();
         return 'Cannot use set() on protected property "'.concat(prop, '"');
       }
-      const { isNestedPath, rootProp, nestedPath } = this._nestedPath(prop);
-      const oldVal = isNestedPath ? this._resolveNestedPath(this, prop) : (_a3 = this[prop]) != null ? _a3 : void 0;
-      if (isNestedPath && nestedPath) {
-        if (this[rootProp] == null || typeof this[rootProp] !== "object") {
-          this[rootProp] = {};
+      const { hasSubPath, rootVarName, splitNestedPath } = this.varNameSubPathChk(prop, "set");
+      const oldVal = hasSubPath ? this.getVarNameNestedValue(prop) : this.get(prop);
+      if (hasSubPath && splitNestedPath) {
+        if (this[rootVarName] == null || typeof this[rootVarName] !== "object") {
+          this[rootVarName] = {};
         }
-        this._setNestedPath(this[rootProp], nestedPath, val);
-        __privateGet(this, _managedVars)[rootProp] = rootProp;
+        this.setVarNameNestedValue(this[rootVarName], splitNestedPath, val);
+        __privateGet(this, _managedVars)[rootVarName] = rootVarName;
       } else {
         this[prop] = val;
         __privateGet(this, _managedVars)[prop] = prop;
       }
-      if (store === true) this.setStore(rootProp, isNestedPath ? this[rootProp] : val, autoload);
+      if (store === true) this.setStore(rootVarName, hasSubPath ? this[rootVarName] : val, autoload);
       log("trace", "Uib:set", "prop set - prop: ".concat(prop, ", val: "), val, " store: ".concat(store, ", autoload: ").concat(autoload))();
-      const eventProp = isNestedPath ? rootProp : prop;
+      const eventProp = hasSubPath ? rootVarName : prop;
       const eventVal = this[eventProp];
       this._dispatchCustomEvent("uibuilder:propertyChanged", { prop: eventProp, value: eventVal, oldValue: oldVal, store, autoload });
       this._dispatchCustomEvent("uibuilder:propertyChanged:".concat(eventProp), { prop: eventProp, value: eventVal, oldValue: oldVal, store, autoload });
@@ -7512,9 +7414,9 @@
       if (prop === "version") return _a2._meta.version;
       if (prop === "msgsCtrl") return this.msgsCtrlReceived;
       if (prop === "reconnections") return this.connectedNum;
-      const { isNestedPath, rootProp } = this._nestedPath(prop);
-      if (isNestedPath) {
-        const value2 = this._resolveNestedPath(this, prop);
+      const { hasSubPath, rootVarName } = this.varNameSubPathChk(prop, "get");
+      if (hasSubPath) {
+        const value2 = this.getVarNameNestedValue(prop);
         if (value2 === void 0) {
           log("info", "Uib:get", 'get() - property "'.concat(prop, '" is undefined'))();
         }
@@ -7721,30 +7623,6 @@
         }
       }
     }
-    /** Set a value at a dotted/bracketed property path on an object
-     * e.g. _setNestedPath(obj, 'a.b["c"]', value) => obj.a.b.c = value
-     * Creates intermediate objects if they don't exist
-     * @param {object} obj The object to set the value on
-     * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
-     * @param {*} value The value to set
-     * @return {boolean} True if successful, false otherwise
-     * @private
-     */
-    _setNestedPath(obj, path, value2) {
-      if (!obj || !path) return false;
-      const keys = path.replace(/\[["'`]?/g, ".").replace(/["'`]?\]/g, "").split(".").filter(Boolean);
-      let current = obj;
-      for (let i = 0; i < keys.length - 1; i++) {
-        const key = keys[i];
-        if (current[key] == null || typeof current[key] !== "object") {
-          current[key] = {};
-        }
-        current = current[key];
-      }
-      const finalKey = keys[keys.length - 1];
-      current[finalKey] = value2;
-      return true;
-    }
     /** Returns a new array containing the intersection of the 2 input arrays
      * @param {Array} a1 Array to check
      * @param {Array} a2 Array to intersect
@@ -7807,14 +7685,20 @@
      * - will retry several times if variables are not yet available, and defaults to false if still not successful after retries.
      * @param {string} expression - The expression to evaluate (e.g., "pageData.status || pageData.since")
      * @param {object} context - The context object containing variables (e.g., { pageData })
-     * @param {object} options - Configuration options
+     * @param {object} [options] - Configuration options {maxRetries, retryDelay, defaultValue, noWarn}
+     * @param {number=} options.maxRetries Optional, default=3
+     * @param {number=} options.retryDelay Optional, default=300
+     * @param {boolean=} options.defaultValue Optional, default=false
+     * @param {boolean=} options.noWarn Optional, default=false
      * @return {Promise<boolean>} - Resolves to true/false
      */
     async evaluateWithRetry(expression, context, options = {}) {
+      if (!expression) return;
       const {
         maxRetries = 3,
         retryDelay = 300,
-        defaultValue = false
+        defaultValue = false,
+        noWarn = false
       } = options;
       const evaluator = this.createSafeEvaluator(expression);
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -7828,7 +7712,9 @@
           }
           await this.sleep(retryDelay);
         } catch (error) {
-          console.warn("Evaluation attempt ".concat(attempt + 1, " failed:"), error.message);
+          let out = "warn";
+          if (noWarn) out = "trace";
+          log(out, "uibuilder:evaluateWithRetry", "Evaluation attempt ".concat(attempt + 1, " failed:"), error.message)();
           if (attempt === maxRetries) {
             return defaultValue;
           }
@@ -8053,7 +7939,7 @@
      * and is implemented differently across browsers. So we have to do a bunch of parsing to try to get a consistent
      * output across browsers. We will attempt to parse the stack trace in Chromium, Firefox, and Safari formats, and
      * return an array of objects with the same properties for each line of the stack trace.
-     * @return {Array<{{file:string,function:string,line:number,column:number,raw:string}}>} Stack array
+     * @return {Array<{file:string,function:string,line:number,column:number,raw:string}>} Stack array
      */
     stack() {
       function _stackMapChromium(line) {
@@ -8088,24 +7974,25 @@
         line = line.replace(/^global code@/, "anonymous@").replace(/^(.*)@$/, "    at $1 (<safari-unknown>:0:0)");
         return _stackMapChromium(line, raw);
       }
-      let stack = new Error().stack;
+      const stack = new Error().stack;
+      let splitStack, mapStack;
       let type = "unknown";
       if (stack.includes("at ")) {
         type = "chromium";
-        stack = stack.split("\n").slice(2);
-        stack = stack.map(_stackMapChromium);
+        splitStack = stack.split("\n").slice(2);
+        mapStack = splitStack.map(_stackMapChromium);
       } else if (stack.endsWith("@")) {
         type = "safari";
-        stack = stack.split("\n").slice(1);
-        stack = stack.map(_stackMapSafari);
+        splitStack = stack.split("\n").slice(1);
+        mapStack = splitStack.map(_stackMapSafari);
       } else if (stack.includes("@")) {
         type = "firefox";
-        stack = stack.split("\n").slice(1, -1);
-        stack = stack.map(_stackMapFirefox);
+        splitStack = stack.split("\n").slice(1, -1);
+        mapStack = splitStack.map(_stackMapFirefox);
       } else {
-        return [{ raw: stack }];
+        return [{ raw: stack, file: void 0, function: void 0, line: void 0, column: void 0 }];
       }
-      return stack;
+      return mapStack;
     }
     /** Convert JSON to Syntax Highlighted HTML
      * @param {object} json A JSON/JavaScript Object
@@ -8417,7 +8304,7 @@
                 el.classList.add(val);
               });
             } else {
-              el.ClassName = value2;
+              el.className = value2;
             }
           } else if (attrib === "style" || attrib === "styles") {
             if (Array.isArray(value2)) {
@@ -8425,8 +8312,8 @@
                 if (Array.isArray(val)) {
                   el.style[val[0]] = val[1];
                 } else if (this.isObject(val)) {
-                  for (const [style, val2] of Object.entries(val2)) {
-                    el.style[style] = val2;
+                  for (const [style, _val] of Object.entries(val)) {
+                    el.style[style] = _val;
                   }
                 }
               });
@@ -8450,7 +8337,7 @@
      * @return {boolean} True if element was updated, else false
      */
     setValueOrChecked(el, value2) {
-      if (el.type && (el.type === "checkbox" || el.type === "radio")) {
+      if ((el == null ? void 0 : el.type) && (el.type === "checkbox" || el.type === "radio")) {
         el.checked = this.truthy(value2, false);
         el.setAttribute("checked", value2);
       } else {
@@ -8494,63 +8381,133 @@
         }
       }
     }
+    /** Apply value filter if specified, found and executable. Returns original value on error.
+     * Searches for fn name firstly in the global scope then in uibuilder scope
+     * @param {string} filterName The filter name to apply (must be in global or uibuilder context)
+     * @param {Array<string>} filterArgs Array of filter arguments to apply
+     * @param {*} value The value to change
+     * @return {*} The amended (or original) value
+     */
+    applyFilterFn(filterName, filterArgs, value2) {
+      if (filterName) {
+        const splitFilter = filterName.split(".");
+        let fnToCall = globalThis[splitFilter[0]];
+        if (fnToCall && splitFilter.length > 1) {
+          const parts2 = [splitFilter.pop()];
+          parts2.forEach((part) => {
+            fnToCall = fnToCall[part];
+          });
+        }
+        if (!fnToCall) fnToCall = this[splitFilter[0]];
+        if (fnToCall && typeof fnToCall !== "function") fnToCall = void 0;
+        if (fnToCall) {
+          const argList = value2 === void 0 ? [...filterArgs] : [value2, ...filterArgs];
+          try {
+            value2 = Reflect.apply(fnToCall, value2 != null ? value2 : fnToCall, argList);
+          } catch (err) {
+            log("warn", "uibuilder:applyFilterFn", '"'.concat(filterName, '" could not be executed or it raised an unrecoverable error'))();
+          }
+        } else {
+          log("warn", "uibuilder:applyFilterFn", '"'.concat(filterName, '" ').concat(typeof fnToCall === "object" ? "is an object not a function" : "not found"))();
+        }
+      }
+      return value2;
+    }
     /** Standardised processing of a msg or managed var with extended properties such as payload, attributes, dataset, etc
+     * NOTE: el._uib contains additional processing details, set by uibuilder for custom attribute process and by <uib-var>
      * @param {HTMLElement} el The element to update
-     * @param {string} data The input variable to process
+     * @param {string|*} data The input variable to process
+     * param {string} filterName The filter name to apply (must be in global or uibuilder context)
      * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
-     * @param {string=} varName What var we are processing (info only)
+     * param {string=} varName What var we are processing (info only)
      * @return {boolean} True if element was updated, else false
      * @private
      */
-    _processVarProps(el, data, isIf = false, varName = "") {
+    _processElVarProps(el, data, isIf = false) {
+      var _a3, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o;
       if (!_ui.isElement(el)) {
         log("error", "uibuilder:_processVarProps", "el is not an HTML element, cannot continue")();
         return false;
       }
       if (isIf === true) {
-        data = { if: data };
-      } else {
-        if (this.isPrimitive(data)) {
-          if ("value" in el) data = { attributes: { value: data } };
-          else if ("checked" in el) data = { attributes: { checked: data } };
-          else data = { payload: data };
+        el.style.display = this.truthy(data) ? "unset" : "none";
+        return true;
+      }
+      if ((el == null ? void 0 : el._uib) && !((_a3 = el == null ? void 0 : el._uib) == null ? void 0 : _a3.showUndefined)) el._uib.showUndefined = false;
+      if (this.isPrimitive(data)) {
+        data = this.applyFilterFn((_b = el == null ? void 0 : el._uib) == null ? void 0 : _b.filterName, (_c = el == null ? void 0 : el._uib) == null ? void 0 : _c.filterArgs, data);
+        if (this.isElCheckable(el) && data !== void 0 && data !== null) {
+          data = { attributes: { checked: data } };
+        } else if (this.isElFormControl(el) && data !== void 0 && data !== null) {
+          data = { attributes: { value: data } };
+        } else {
+          data = { payload: data };
         }
+      } else {
+        if (data == null ? void 0 : data.payload) {
+          data.payload = this.applyFilterFn((_d = el == null ? void 0 : el._uib) == null ? void 0 : _d.filterName, (_e = el == null ? void 0 : el._uib) == null ? void 0 : _e.filterArgs, data.payload);
+        }
+      }
+      const before = (_g = (_f = el == null ? void 0 : el.dataset) == null ? void 0 : _f.before) != null ? _g : "";
+      const after = (_i = (_h = el == null ? void 0 : el.dataset) == null ? void 0 : _h.after) != null ? _i : "";
+      if ((el == null ? void 0 : el.type) && ((_j = data == null ? void 0 : data.attributes) == null ? void 0 : _j.value) && (before || after)) {
+        data.attributes.value = "".concat(before).concat(data.attributes.value).concat(after);
       }
       if (Object.prototype.hasOwnProperty.call(data, "attributes")) this.setAttributes(el, data.attributes);
       if (Object.prototype.hasOwnProperty.call(data, "dataset")) this.setDataset(el, data.dataset);
-      const hasChecked = Object.prototype.hasOwnProperty.call(data, "checked");
-      const hasValue = Object.prototype.hasOwnProperty.call(data, "value");
-      if (hasValue || hasChecked) {
-        const value2 = hasChecked ? data.checked : hasValue ? data.value : void 0;
-        this.setValueOrChecked(el, value2);
-      }
       if (Object.prototype.hasOwnProperty.call(data, "payload")) {
-        if (el.dataset.before) data.payload = "".concat(el.dataset.before).concat(data.payload);
-        if (el.dataset.after) data.payload = "".concat(data.payload).concat(el.dataset.after);
+        if (data.payload === void 0 && ((_k = el == null ? void 0 : el._uib) == null ? void 0 : _k.showUndefined) === false) {
+          return true;
+        }
+        if (((_l = el == null ? void 0 : el._uib) == null ? void 0 : _l.uibVarDetails.fullVarName) === "myTextInput") console.log(">> type", el.getAttribute("type"), (_m = el == null ? void 0 : el._uib) == null ? void 0 : _m.uibVarDetails.fullVarName, data, el);
         if (el.hasAttribute("content")) {
-          el.setAttribute("content", data.payload);
+          el.setAttribute("content", "".concat(before).concat(data.payload).concat(after));
         } else {
-          this.replaceSlot(el, data.payload);
+          const outputType = (_o = (_n = el == null ? void 0 : el._uib) == null ? void 0 : _n.outputType) != null ? _o : "html";
+          let output = data.payload;
+          let out = "";
+          switch (outputType) {
+            case "markdown": {
+              out = this.convertMarkdown("".concat(before).concat(output).concat(after));
+              break;
+            }
+            case "json":
+            case "object": {
+              out = "".concat(before, '<pre class="syntax-highlight">').concat(this.syntaxHighlight(output), "</pre>").concat(after);
+              break;
+            }
+            case "table": {
+              if (!output) out = "[undefined]";
+              out = "".concat(before).concat(this.buildHtmlTable(output).outerHTML).concat(after);
+              break;
+            }
+            case "array":
+            case "list": {
+              if (!Array.isArray(output)) output = [output];
+              out = "".concat(before, "<ul>");
+              output.forEach((li) => {
+                out += "<li>".concat(li, "</li>");
+              });
+              out += "</ul>".concat(after);
+              break;
+            }
+            case "text":
+            case "plain": {
+              const div = document.createElement("div");
+              div.innerHTML = "".concat(before).concat(output).concat(after);
+              out = div.textContent;
+              break;
+            }
+            case "html":
+            default: {
+              out = "".concat(before).concat(output).concat(after);
+              break;
+            }
+          }
+          this.replaceSlot(el, out);
         }
       }
       return true;
-    }
-    /** Resolve a dotted/bracketed property path on an object
-     * e.g. resolveNestedPath(obj, 'a.b["c"]') => obj.a.b.c
-     * @param {object} obj The object to resolve from
-     * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
-     * @return {*} The resolved value, or undefined if not found
-     * @private
-     */
-    _resolveNestedPath(obj, path) {
-      if (!obj || !path) return void 0;
-      const keys = path.replace(/\[["'`]?/g, ".").replace(/["'`]?\]/g, "").split(".").filter(Boolean);
-      let current = obj;
-      for (const key of keys) {
-        if (current == null) return void 0;
-        current = current[key];
-      }
-      return current;
     }
     /** Process a uib-topic custom DOM attribute by setting up a topic listener and applying received msgs to the element
      *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc)
@@ -8558,11 +8515,124 @@
      * @param {string} topic The msg topic string to watch for
      * @private
      */
-    _processUibTopic(el, topic) {
-      this.onTopic(topic, (msg) => {
+    _processElUibTopic(el, topic) {
+      var _a3;
+      if (!(el == null ? void 0 : el._uib)) el._uib = {};
+      if ((_a3 = el._uib) == null ? void 0 : _a3.topicWatch) {
+        this.cancelChange(el._uib.topicWatchName, el._uib.varWatch);
+        el._uib.topicWatch = null;
+        el._uib.topicWatchName = null;
+      }
+      el._uib.uibVarDetails = {
+        fullVarName: "msg",
+        hasSubPath: false,
+        rootVarName: "msg",
+        nestedPath: null,
+        splitNestedPath: []
+      };
+      el._uib.topicWatchName = topic;
+      el._uib.topicWatch = this.onTopic(topic, (msg) => {
         msg._uib_processed_by = "_processUibTopic";
-        this._processVarProps(el, msg);
+        const result = this._processElVarProps(el, msg);
+        if (el._uib.sendReport === true && result === true) this.send({
+          topic: el._uib.uibVarDetails.fullVarName,
+          payload: msg.payload,
+          source: el.localName,
+          id: el.id
+        });
       });
+    }
+    /** split a variable name into sub-paths. e.g. a.b = [a,b], a['b'] = [a,b]
+     * @param {string} varName var name to check
+     * @return {Array<string>} array of name parts
+     */
+    splitVarName(varName) {
+      return varName.replace(/\[["'`]?/g, ".").replace(/["'`]?\]/g, "").split(".").filter(Boolean);
+    }
+    // ! TODO: Add 2nd param for re-tryable?
+    /** Resolve a dotted/bracketed property path on an object
+     * e.g. resolveNestedPath(obj, 'a.b["c"]') => obj.a.b.c
+     * @param {string} varName The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
+     * @return {*} The resolved value, or undefined if not found
+     */
+    getVarNameNestedValue(varName) {
+      if (!varName) return void 0;
+      const keys = this.splitVarName(varName);
+      const root = keys.shift();
+      let current = this.get(root);
+      if (current === void 0) {
+        return void 0;
+      }
+      for (const key of keys) {
+        if (current == null) return void 0;
+        current = current[key];
+      }
+      return current;
+    }
+    /** Set a value at a dotted/bracketed property path on an object
+     * e.g. _setNestedPath(obj, 'a.b["c"]', value) => obj.a.b.c = value
+     * Creates intermediate objects if they don't exist
+     * @param {object} rootValue The object to set the value on
+     * @param {string|Array<string>} nestedPath The remaining nested property path as array or string (e.g. 'aprop' or '["bprop"]')
+     * @param {*} value The value to set
+     * @return {boolean} True if successful, false otherwise
+     */
+    setVarNameNestedValue(rootValue, nestedPath, value2) {
+      if (!rootValue || !nestedPath) return false;
+      const keys = typeof nestedPath === "string" ? this.splitVarName(nestedPath) : nestedPath;
+      let current = rootValue;
+      const finalKey = keys.pop();
+      for (const key of keys) {
+        if (current[key] == null || typeof current[key] !== "object") {
+          current[key] = {};
+        }
+        current = current[key];
+      }
+      current[finalKey] = value2;
+      return true;
+    }
+    // ! TODO: Check if we need to drop the 1st path
+    /** Determine if a var name has a sub-path. e.g. a.b or c.d['e'], etc.
+     * @param {string} fullVarName var name to check
+     * @param {string} from For debugging
+     * @return {{fullVarName:string,hasSubPath:boolean,rootVarName:string,nestedPath:string,splitNestedPath:Array<string>}} Details
+     */
+    varNameSubPathChk(fullVarName, from = "") {
+      const dotIdx = fullVarName.indexOf(".");
+      const bracketIdx = fullVarName.indexOf("[");
+      let sepIdx = -1;
+      if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx);
+      else if (dotIdx >= 0) sepIdx = dotIdx;
+      else if (bracketIdx >= 0) sepIdx = bracketIdx;
+      const hasSubPath = sepIdx > 0;
+      const rootVarName = hasSubPath ? fullVarName.substring(0, sepIdx) : fullVarName;
+      const nestedPath = hasSubPath ? fullVarName.substring(fullVarName[sepIdx] === "[" ? sepIdx : sepIdx + 1) : "";
+      const splitNestedPath = this.splitVarName(nestedPath);
+      const out = { fullVarName, hasSubPath, rootVarName, nestedPath, splitNestedPath };
+      return out;
+    }
+    /** Process a changed uib-var variable & return its value
+     * @typedef {'html'|'text'|'plain'|'markdown'|'json'|'object'|'table'|'array'|'list'} OutputType
+     * @param {HTMLElement} el The element to process
+     * @param {*} rootValue Value of root variable
+     * param {{fullVarName:string,hasSubPath:boolean,rootVarName:string,nestedPath:string}} [path] If not set, get from el._uib.path
+     * param {OutputType} [outputType] What type of output is desired?
+     * param {string} [filterName] Name of a filter function to apply
+     * @param {string} [from] for debugging only
+     * @return {*} Value of variable (might be a nested path value)
+     */
+    // varChange(el, rootValue, path, outputType = 'html', filterName = null, from = '') {
+    varChange(el, rootValue, from = "") {
+      var _a3, _b;
+      const value2 = this.getVarNameNestedValue((_b = (_a3 = el == null ? void 0 : el._uib) == null ? void 0 : _a3.uibVarDetails) == null ? void 0 : _b.fullVarName);
+      const result = this._processElVarProps(el, value2);
+      if (el._uib.sendReport === true && result === true) this.send({
+        topic: el._uib.uibVarDetails.fullVarName,
+        payload: value2,
+        source: el.localName,
+        id: el.id
+      });
+      return value2;
     }
     /** Process a uib-var custom DOM attribute by evaluating the variable reference and applying it to the element
      *  as per the msg properties (e.g. msg.payload, msg.attributes, msg.dataset, etc).
@@ -8570,30 +8640,23 @@
      * @param {HTMLElement} el The element to process
      * @param {string} varName The variable name (optionally with property path) to watch for
      * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
-     * @private
      */
-    async _processUibVar(el, varName, isIf = false) {
-      const dotIdx = varName.indexOf(".");
-      const bracketIdx = varName.indexOf("[");
-      let sepIdx = -1;
-      if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx);
-      else if (dotIdx >= 0) sepIdx = dotIdx;
-      else if (bracketIdx >= 0) sepIdx = bracketIdx;
-      const hasSubPath = sepIdx > 0;
-      const rootProp = hasSubPath ? varName.substring(0, sepIdx) : varName;
-      const doVar = (rootValue, hasSubPath2, isIf2) => {
-        const value2 = hasSubPath2 ? this._resolveNestedPath(this, varName) : rootValue;
-        try {
-          value2._uib_processed_by = "_processUibVar";
-        } catch (e) {
-        }
-        this._processVarProps(el, value2, isIf2, varName);
-        if (isIf2) el.style.display = this.truthy(value2) ? "" : "none";
-      };
-      this.onChange(rootProp, (rootValue) => {
-        doVar(rootValue, hasSubPath, isIf);
+    _processUibVar(el, varName, isIf = false) {
+      var _a3;
+      if (!(el == null ? void 0 : el._uib)) el._uib = {};
+      const { rootVarName } = el._uib.uibVarDetails = this.varNameSubPathChk(varName);
+      if ((_a3 = el._uib) == null ? void 0 : _a3.varWatch) {
+        this.cancelChange(el._uib.varWatchName, el._uib.varWatch);
+        delete el._uib.varWatch;
+        delete el._uib.varWatchName;
+      }
+      el._uib.varWatch = this.onChange(rootVarName, (rootValue) => {
+        this.varChange(el, rootValue, "on-change");
       });
-      doVar(await this.evaluateWithRetry(rootProp, this, {}), hasSubPath, isIf);
+      el._uib.varWatchName = rootVarName;
+      if (!isIf) {
+        this.varChange(el, this.get(rootVarName), "initial");
+      }
     }
     /** Process a uib-if custom DOM attribute by safely evaluating a JavaScript expression that returns true/false.
      * If true (the default), the element's content is visible. If false, the content is hidden.
@@ -8626,7 +8689,7 @@
       const alen = uibAttribs.length;
       for (let i = 0; i < alen; i++) {
         const attr = uibAttribs[i];
-        if ((attr == null ? void 0 : attr.name) === "uib-topic" || (attr == null ? void 0 : attr.name) === "data-uib-topic") this._processUibTopic(el, attr.value);
+        if ((attr == null ? void 0 : attr.name) === "uib-topic" || (attr == null ? void 0 : attr.name) === "data-uib-topic") this._processElUibTopic(el, attr.value);
         else if ((attr == null ? void 0 : attr.name) === "uib-var" || (attr == null ? void 0 : attr.name) === "data-uib-var") this._processUibVar(el, attr.value);
         else if ((attr == null ? void 0 : attr.name) === "uib-if" || (attr == null ? void 0 : attr.name) === "data-uib-if") this._processUibIf(el, attr.value);
         else if ((attr == null ? void 0 : attr.name.startsWith("uib-bind:")) || (attr == null ? void 0 : attr.name.startsWith("data-uib-bind:")) || (attr == null ? void 0 : attr.name.startsWith(":"))) {
@@ -8684,13 +8747,13 @@
             if (mu.addedNodes.length > 0) {
               oMu.addedNodes = [];
               mu.addedNodes.forEach((an, i) => {
-                oMu.addedNodes.push(_ui.nodeGet(mu.addedNodes[i]));
+                oMu.addedNodes.push(_ui.nodeGet(mu.addedNodes[i], cssSelector));
               });
             }
             if (mu.removedNodes.length > 0) {
               oMu.removedNodes = [];
               mu.removedNodes.forEach((an, i) => {
-                oMu.removedNodes.push(_ui.nodeGet(mu.removedNodes[i]));
+                oMu.removedNodes.push(_ui.nodeGet(mu.removedNodes[i], cssSelector));
               });
             }
             if (mu.type === "attributes") {
@@ -9753,6 +9816,7 @@
           payload: arrayBuffer,
           fileName: file.name,
           type: file.type,
+          // @ts-ignore
           lastModified: file.lastModifiedDate,
           size: file.size,
           clientId: this.clientId,
@@ -9950,9 +10014,6 @@
         this._socket.offAny();
         this._socket = void 0;
         this.set("ioConnected", false);
-      }
-      if (this.headers) {
-        console.log("HTTP Headers: ", this.headersReady, this.headers);
       }
       this.socketOptions.path = this.ioPath;
       log("trace", "Uib:ioSetup", "About to create IO object. Transports: [".concat(this.socketOptions.transports.join(", "), "]"))();
