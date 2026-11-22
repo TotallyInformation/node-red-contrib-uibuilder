@@ -1,9 +1,9 @@
 ---
-title: Functions available in the modern client
+title: Client Functions
 description: |
   Details about the functions/methods used in the UIBUILDER front-end client library. Some functions are available to your own custom code and some are hidden inside the `uibuilder` client object.
 created: 2023-01-28 15:56:57
-updated: 2026-11-07 20:37:31
+updated: 2026-11-14 16:39:20
 ---
 
 Functions accessible in client-side user code.
@@ -92,7 +92,7 @@ If the source event type is `change` (e.g. a user changed an input field and the
 >
 > The input element validity property can contain any of the following: badInput, customError, patternMismatch, rangeOverflow, rangeUnderflow, stepMismatch, tooLong, tooShort, typeMismatch, valueMissing. See [ValidityState](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState) for details of the meanings.
 
-> [!HINT]
+> [!TIP]
 > This function is used automatically by uibuilder's form element type from the `uib-element` node.
 
 

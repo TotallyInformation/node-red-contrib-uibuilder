@@ -3,7 +3,7 @@ title: Front-End Build Steps and Tools
 description: |
   Describes how to use a build step to transpile and optimise your front-end code.
 created: 2021-04-22 09:53:00
-updated: 2024-06-14 20:18:33
+updated: 2026-11-14 15:39:24
 ---
 
 A build step is simply a way to take things that your browser wont understand directly (like .vue, .jsx files)
@@ -15,6 +15,9 @@ Along the way, it will try to optimise everything to give the best possible perf
 - [Things to watch out for](#things-to-watch-out-for)
 - [Using a build development server](#using-a-build-development-server)
 - [Tools](#tools)
+
+> [!TIP]
+> In the latest versions of UIBUILDER, you can configure a script to run any build or other pre-delivery steps in the instance `package.json` file. These can then be run from within the Node-RED Editor by going to the "Scripts" tab in the uibuilder node instance.
 
 ## Why have a build step (and why not)
 
@@ -30,14 +33,17 @@ front-end libraries for avoiding build steps. It even has a dynamic loader (3rd 
 
 ## Things to watch out for
 
-* The tooling is likely to have its own desired folder structure. You will most likely have to change the configuration
-  to make it use the folders for UIBUILDER on the Node-RED server.
-* If using the build-tool's development server, you will need to change some code. See the next section for details. The Svelte development server is the only known exception to this as it "just works" with Node-red/UIBUILDER.
+- The tooling is likely to have its own desired folder structure. You will most likely have to change the configuration
+  to make it use the folders for UIBUILDER on the Node-RED server. Less of an issue from UIBUILDER v6+ since you can node configure the uibuilder node to use any instance sub-folder to serve up your resources.
+- If using the build-tool's development server instead of a Node-RED/uibuilder one, you will need to change some code. See the next section for details. The Svelte development server is the only known exception to this (as of 2024) as it "just works" with Node-red/UIBUILDER.
 
 ## Using a build development server
 
+> [!TIP]
+> See the [Creating data-driven web apps](web-app-workflow#build-processes) page for more ideas on how to do builds for your front-end code.
+
 Many build tools and some front-end frameworks have "live servers" to support development. These automatically reload the page being developed
-whenever something changes. 
+whenever something changes.
 
 At present, only the Svelte development server will work correctly without you making some temporary changes to your front-end code. (However, see also [Live-reload dev servers](how-to/live-reload-dev-server)).
 
@@ -74,8 +80,6 @@ Snowpack works well with UIBUILDER.
 Unlike the other tools listed here, esbuild _only_ does a build. It does not attempt to provide a development server or do clever transpilation (converting from a newer version of JavaScript to an older one).
 
 And that may well be all that you need since Node-RED is providing a web server and modern browsers are less likely to require transpilation.
-
-Julia Evans is a well-known blogger and has written a [simple guide to using esbuild with VueJS](https://jvns.ca/blog/2021/11/15/esbuild-vue/).
 
 ESbuild is used to produce the IIFE and ESM builds of the uibuilder client library and other front-end libraries because it is able to output different versions constrained to specific JavaScript versions and module types. It can also compress JavaScript source and create map files for ease of debugging.
 

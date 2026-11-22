@@ -1,9 +1,10 @@
 ---
 title: Pre-defined UIBUILDER messages
+shortTitle: Pre-defined msgs
 description: |
   Documents the different types of UIBUILDER messages between a Node-RED `uibuilder` node and a UIBUILDER front-end.
 created: 2020-09-24 18:14:00
-updated: 2025-01-02 16:06:01
+updated: 2026-11-14 16:33:01
 ---
 
 ## Message types
@@ -11,7 +12,7 @@ updated: 2025-01-02 16:06:01
 The `uibuilder` node has a number of general types of message. Some of which have more defined structures. It also has some standard message property names that are used throughout. These are described in the [next section below](#standard-msg-properties-used-by-uibuilder).
 
 > [!TIP]
-> As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance.
+> As of v7, clients automatically _filter_ incoming messages based on `pageName`, `clientId`, and `tabId` properties either in `msg._ui` or `msg._uib`. This means that you can send messages to specific clients or pages without needing to filter them in your flows. This is particularly useful when you have multiple clients connected to the same Node-RED instance. See [Standard msg properties](#standard-msg-properties-used-by-uibuilder) below for details.
 
 ### Input messages
 
@@ -33,9 +34,15 @@ The `uibuilder` node has a number of general types of message. Some of which hav
 
 ### Output messages
 
-* Output control messages
+- Output control messages
 
   A number of standard control messages may be output from the lower output port of the `uibuilder` node. These may be informational, control caching, notify of errors
+
+- User inputs
+
+  When using the built in `uibuilder.eventSend(event)` function to handle changes to HTML input elements, a standard message is sent back to Node-RED when a user changes an input or presses a button. This message details what changed. If the input is contained in a form element, all the current form data is also sent back.
+
+  If using the `uib-element` node to create a form from input data, `eventSend` is added automatically.
 
 ## Control message overview
 
@@ -85,35 +92,6 @@ Please read [Security/Authenticated Client Properties](security/authenticated-cl
 Used by the [eventSend](front-end-library?id=eventsend-helper-fn-to-send-event-data) function.
 
 Replaced with the new `msg._ui` features in v5.1 with the ESM client library. The new version provides much more information back from the client browser. It is also standardised with the rest of the config-driven UI features.
-
-### msg.script `{String}` (PARTIALLY DEPRECATED IN v5.1)
-
-Only used if the "Scripts?" flag is set in uibuilder's Advanced Settings.
-
-Text must be valid JavaScript and will be dynamically added to the client page DOM.
-
-**WARNING** No checking is done and this could be quite dangerous.
-
-From v5.1, if using the new ESM client library, this property is no longer respected. Please use the new `msg._ui` features with the `load` mode.
-
-### msg.style `{String}` (PARTIALLY DEPRECATED IN v5.1)
-
-Only used if the "Styles?" flag is set in uibuilder's Advanced Settings.
-
-Text must be valid CSS and will be dynamically added to the client page DOM.
-
-**WARNING** No checking is done and this could be quite dangerous.
-
-From v5.1, if using the new ESM client library, this property is no longer respected. Please use the new `msg._ui` features with the `load` mode.
-
-### msg._auth `{Object}` (~~uibuilder v3+~~ DEPRECATED IN v5.0)
-
-The intent of this property is to have a unified data exchange between Node-RED and the client browser. It should facilitate authentication and authorisation activities.
-
-The built-in uibuilder security features were removed in v5 since they were seriously hampering development without resolving to a stable, workable solution.
-
-It is possible and even likely that this will re-appear in a future release.
-
 
 ## Messages out of uibuilder's 2nd output port
 
