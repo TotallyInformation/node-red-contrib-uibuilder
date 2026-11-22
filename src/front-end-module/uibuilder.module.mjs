@@ -336,7 +336,7 @@ export const Uib = class Uib {
     // #events = {}
     // Socket.IO channel names
     _ioChannels = { control: 'uiBuilderControl', client: 'uiBuilderClient', server: 'uiBuilder', }
-    /** setInterval holder for pings @type {function|undefined} */
+    /** setInterval reference for pings @type {number|undefined} */
     #pingInterval
     // onChange event callbacks
     #propChangeCallbacks = {}
@@ -551,34 +551,6 @@ export const Uib = class Uib {
 
     get meta() { return Uib._meta }
 
-    /** Extract the root property from a nested property path (e.g., 'myvar.aprop' or 'myvar["bprop"]').
-     * @private
-     * @param {string} prop The property name or nested property path
-     * @return {Object<boolean, string, string|null>} Whether the prop is a nested path,
-     *   the root property name (e.g., 'myvar' from 'myvar.aprop' or 'myvar["bprop"]'),
-     *   and the nested path or null if not a nested path
-     */
-    _nestedPath(prop) {
-        const isNestedPath = prop.includes('.') || prop.includes('[')
-        let nestedPath = null
-        let rootProp
-        if (isNestedPath) {
-            const dotIdx = prop.indexOf('.')
-            const bracketIdx = prop.indexOf('[')
-            let sepIdx = -1
-            if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx)
-            else if (dotIdx >= 0) sepIdx = dotIdx
-            else if (bracketIdx >= 0) sepIdx = bracketIdx
-            if (sepIdx > 0) {
-                // Extract the root property and nested path
-                rootProp = prop.substring(0, sepIdx)
-                // For bracket notation, keep the '[' so _setNestedPath can properly strip quotes
-                nestedPath = prop.substring(prop[sepIdx] === '[' ? sepIdx : sepIdx + 1)
-            }
-        }
-        return { isNestedPath, rootProp, nestedPath, }
-    }
-
     /** Function to set uibuilder properties to a new value - works on any property except _* or #*
      * Also triggers any event listeners.
      * Supports nested property paths (e.g., 'myvar.aprop' or 'myvar["bprop"]').
@@ -592,30 +564,29 @@ export const Uib = class Uib {
      */
     set(prop, val, store = false, autoload = false) {
         // Check for excluded properties - we don't want people to set these
-        // if (this.#excludedSet.indexOf(prop) !== -1) {
         if (prop.startsWith('_') || prop.startsWith('#')) {
             log('warn', 'Uib:set', `Cannot use set() on protected property "${prop}"`)()
             return `Cannot use set() on protected property "${prop}"`
         }
 
         // Check if this is a nested property path (contains . or [)
-        const { isNestedPath, rootProp, nestedPath, } = this._nestedPath(prop)
+        const { hasSubPath, rootVarName, splitNestedPath, } = this.varNameSubPathChk(prop, 'set')
         // console.log('🪲 is nested?', { prop, isNestedPath, rootProp, nestedPath, })
 
         // Check for an old value
-        const oldVal = isNestedPath
-            ? this._resolveNestedPath(this, prop)
-            : (this[prop] ?? undefined)
+        const oldVal = hasSubPath
+            ? this.getVarNameNestedValue(prop) // returns undefined if not existing
+            : this.get(prop) // returns undefined if not existing
 
-        if (isNestedPath && nestedPath) {
+        if (hasSubPath && splitNestedPath) {
             // Ensure root property exists and is an object
-            if (this[rootProp] == null || typeof this[rootProp] !== 'object') {
-                this[rootProp] = {}
+            if (this[rootVarName] == null || typeof this[rootVarName] !== 'object') {
+                this[rootVarName] = {}
             }
             // Set the nested property
-            this._setNestedPath(this[rootProp], nestedPath, val)
+            this.setVarNameNestedValue(this[rootVarName], splitNestedPath, val)
             // Keep track of all managed variables (track root property for nested paths)
-            this.#managedVars[rootProp] = rootProp
+            this.#managedVars[rootVarName] = rootVarName
         } else {
             // We must add the var to the uibuilder object
             this[prop] = val
@@ -624,13 +595,13 @@ export const Uib = class Uib {
         }
 
         // If requested, save to store (save the entire root object for nested paths)
-        if (store === true) this.setStore(rootProp, isNestedPath ? this[rootProp] : val, autoload)
+        if (store === true) this.setStore(rootVarName, hasSubPath ? this[rootVarName] : val, autoload)
 
         log('trace', 'Uib:set', `prop set - prop: ${prop}, val: `, val, ` store: ${store}, autoload: ${autoload}`)()
 
         // Trigger this prop's event callbacks (listeners which are set by this.onChange)
         // Fire event for the root property (since that's what actually changed)
-        const eventProp = isNestedPath ? rootProp : prop
+        const eventProp = hasSubPath ? rootVarName : prop
         const eventVal = this[eventProp] // get the current value of the root property (which will include the nested changes if it's a nested path)
 
         // trigger an event on the prop name, pass both the name and value to the event details
@@ -665,11 +636,12 @@ export const Uib = class Uib {
         if (prop === 'reconnections') return this.connectedNum
 
         // Extract root property for nested paths
-        const { isNestedPath, rootProp, } = this._nestedPath(prop)
+        // const { hasSubPath, rootVarName, } = this._nestedPath(prop)
+        const { hasSubPath, rootVarName, } = this.varNameSubPathChk(prop, 'get')
 
         // Handle nested paths
-        if (isNestedPath) {
-            const value = this._resolveNestedPath(this, prop)
+        if (hasSubPath) {
+            const value = this.getVarNameNestedValue(prop)
             if (value === undefined) {
                 log('info', 'Uib:get', `get() - property "${prop}" is undefined`)()
             }
@@ -926,40 +898,6 @@ export const Uib = class Uib {
         }
     }
 
-    /** Set a value at a dotted/bracketed property path on an object
-     * e.g. _setNestedPath(obj, 'a.b["c"]', value) => obj.a.b.c = value
-     * Creates intermediate objects if they don't exist
-     * @param {object} obj The object to set the value on
-     * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
-     * @param {*} value The value to set
-     * @return {boolean} True if successful, false otherwise
-     * @private
-     */
-    _setNestedPath(obj, path, value) {
-        if (!obj || !path) return false
-        // Split on dots and bracket notation, filter out empty segments
-        const keys = path
-            .replace(/\[["'`]?/g, '.')
-            .replace(/["'`]?\]/g, '')
-            .split('.')
-            .filter(Boolean)
-
-        // Navigate to the parent of the final key, creating objects as needed
-        let current = obj
-        for (let i = 0; i < keys.length - 1; i++) {
-            const key = keys[i]
-            if (current[key] == null || typeof current[key] !== 'object') {
-                current[key] = {}
-            }
-            current = current[key]
-        }
-
-        // Set the final property
-        const finalKey = keys[keys.length - 1]
-        current[finalKey] = value
-        return true
-    }
-
     /** Returns a new array containing the intersection of the 2 input arrays
      * @param {Array} a1 Array to check
      * @param {Array} a2 Array to intersect
@@ -1037,14 +975,20 @@ export const Uib = class Uib {
      * - will retry several times if variables are not yet available, and defaults to false if still not successful after retries.
      * @param {string} expression - The expression to evaluate (e.g., "pageData.status || pageData.since")
      * @param {object} context - The context object containing variables (e.g., { pageData })
-     * @param {object} options - Configuration options
+     * @param {object} [options] - Configuration options {maxRetries, retryDelay, defaultValue, noWarn}
+     * @param {number=} options.maxRetries Optional, default=3
+     * @param {number=} options.retryDelay Optional, default=300
+     * @param {boolean=} options.defaultValue Optional, default=false
+     * @param {boolean=} options.noWarn Optional, default=false
      * @return {Promise<boolean>} - Resolves to true/false
      */
     async evaluateWithRetry(expression, context, options = {}) {
+        if (!expression) return
         const {
             maxRetries = 3,
             retryDelay = 300,
             defaultValue = false,
+            noWarn = false,
         } = options
 
         // Create a safe evaluation function
@@ -1070,7 +1014,9 @@ export const Uib = class Uib {
                 // Wait before retry
                 await this.sleep(retryDelay)
             } catch (error) {
-                console.warn(`Evaluation attempt ${attempt + 1} failed:`, error.message)
+                let out = 'warn'
+                if (noWarn) out = 'trace'
+                log(out, 'uibuilder:evaluateWithRetry', `Evaluation attempt ${attempt + 1} failed:`, error.message)()
 
                 if (attempt === maxRetries) {
                     return defaultValue
@@ -1328,12 +1274,12 @@ export const Uib = class Uib {
      * and is implemented differently across browsers. So we have to do a bunch of parsing to try to get a consistent
      * output across browsers. We will attempt to parse the stack trace in Chromium, Firefox, and Safari formats, and
      * return an array of objects with the same properties for each line of the stack trace.
-     * @return {Array<{{file:string,function:string,line:number,column:number,raw:string}}>} Stack array
+     * @return {Array<{file:string,function:string,line:number,column:number,raw:string}>} Stack array
      */
     stack() {
         /** Map a Chromium stack trace line to an object with function, file, line, and column properties.
          * @param {string} line Input stack trace line from Chromium, e.g. "    at myFunction (http://example.com/script.js:10:15)"
-         * @param {string} [raw] Optional raw line to include in output if parsing fails. Defaults to the input line.
+         * param {string} [raw] Optional raw line to include in output if parsing fails. Defaults to the input line.
          * @return {object} An object with function, file, line, column, and raw properties extracted from the stack trace line
          */
         function _stackMapChromium(line) {
@@ -1390,32 +1336,33 @@ export const Uib = class Uib {
             return _stackMapChromium(line, raw)
         }
 
-        let stack = (new Error()).stack
+        const stack = (new Error()).stack
+        let splitStack, mapStack
         let type = 'unknown'
         // Is this a Safari browser? Safari has a different stack trace format and doesn't include the "at" keyword, so we need to adjust for that
         if (stack.includes('at ')) {
             // Chromium case - we can parse the stack as is, dropping the first 2 lines which are just "Error" and the current function
             type = 'chromium'
-            stack = stack.split('\n').slice(2)
-            stack = stack.map(_stackMapChromium)
+            splitStack = stack.split('\n').slice(2)
+            mapStack = splitStack.map(_stackMapChromium)
         } else if (stack.endsWith('@')) {
             // Safari case - it is cr@p and does not include line or column numbers, so we will just return the raw stack lines as the file and function with line and column as null. We also need to drop the first line which is just "Error"
             type = 'safari'
             // console.trace() // Does not trace other than this fn on Safari unlike other browsers.
-            stack = stack.split('\n').slice(1) // Remove the first line
-            stack = stack.map(_stackMapSafari)
+            splitStack = stack.split('\n').slice(1) // Remove the first line
+            mapStack = splitStack.map(_stackMapSafari)
         } else if (stack.includes('@')) {
             // else is this Firefox? Firefox also has a different format, It uses "@" instead of "at" and doesn't include the column number, so we need to adjust for that as well
             type = 'firefox'
             // Firefox case - we will replace "@" with "at" and add a placeholder column number to make it compatible with our regex parsing below
-            stack = stack.split('\n').slice(1, -1) // Remove the first & last lines
-            stack = stack.map(_stackMapFirefox)
+            splitStack = stack.split('\n').slice(1, -1) // Remove the first & last lines
+            mapStack = splitStack.map(_stackMapFirefox)
         } else {
             // Unknown format, return raw stack as a single entry
-            return [{ raw: stack, }]
+            return [{ raw: stack, file: undefined, function: undefined, line: undefined, column: undefined, }]
         }
 
-        return stack
+        return mapStack
     }
 
     /** Convert JSON to Syntax Highlighted HTML
@@ -1812,7 +1759,7 @@ export const Uib = class Uib {
                             el.classList.add(val) // WARN: ADDs classes
                         })
                     } else {
-                        el.ClassName = value // WARN: Replaces all classes
+                        el.className = value // WARN: Replaces all classes
                     }
                 } else if (attrib === 'style' || attrib === 'styles') {
                     if (Array.isArray(value)) {
@@ -1821,8 +1768,8 @@ export const Uib = class Uib {
                             if (Array.isArray(val)) { // WARN: ADDs/OVERRIDES styles
                                 el.style[val[0]] = val[1]
                             } else if (this.isObject(val)) { // WARN: ADDs/OVERRIDES styles
-                                for (const [style, val] of Object.entries(val)) {
-                                    el.style[style] = val
+                                for (const [style, _val] of Object.entries(val)) {
+                                    el.style[style] = _val
                                 }
                             }
                         })
@@ -1846,11 +1793,13 @@ export const Uib = class Uib {
      * @return {boolean} True if element was updated, else false
      */
     setValueOrChecked(el, value) {
-        if (el.type && (el.type === 'checkbox' || el.type === 'radio')) {
-            // Force value to be boolean or fail false
+        // @ts-ignore Stupid TS - type exists on input elements
+        if (el?.type && (el.type === 'checkbox' || el.type === 'radio')) {
+            // @ts-ignore (stupid TS - checked exists on check/radio inputs) Force value to be boolean or fail false
             el.checked = this.truthy(value, false)
             el.setAttribute('checked', value)
         } else {
+            // @ts-ignore Stupid TS - value exists on inputs
             el.value = value
             el.setAttribute('value', value)
         }
@@ -1874,6 +1823,7 @@ export const Uib = class Uib {
             // Deal with attribute changes
             if (m.attributeName && this.isUibAttribute(m.attributeName)) {
                 // log(0, 'attribute mutation', m.attributeName, m.target.getAttribute(m.attributeName), m.oldValue, m )()
+                // @ts-ignore
                 this._uibAttrScanOne(m.target)
             } else if (m.addedNodes.length > 0) {
                 // And deal with newly added elements (e.g. from route change)
@@ -1900,29 +1850,95 @@ export const Uib = class Uib {
         }
     }
 
+    isElFormControl = el => el.matches('input, textarea, select')
+    isElCheckable = el => el.matches('input[type="checkbox"], input[type="radio"]')
+
+    /** Apply value filter if specified, found and executable. Returns original value on error.
+     * Searches for fn name firstly in the global scope then in uibuilder scope
+     * @param {string} filterName The filter name to apply (must be in global or uibuilder context)
+     * @param {Array<string>} filterArgs Array of filter arguments to apply
+     * @param {*} value The value to change
+     * @return {*} The amended (or original) value
+     */
+    applyFilterFn(filterName, filterArgs, value) {
+        if (filterName) {
+            // Cater for dotted notation functions (e.g. uibuilder.get)
+            const splitFilter = filterName.split('.')
+            // Search for globally defined fn first
+            let fnToCall = globalThis[splitFilter[0]]
+            if (fnToCall && splitFilter.length > 1) {
+                const parts = [splitFilter.pop()]
+                parts.forEach( (part) => {
+                    fnToCall = fnToCall[part]
+                } )
+            }
+            // If not found, search uibuilder scope next
+            if (!fnToCall) fnToCall = this[splitFilter[0]]
+            // Make sure we got an actual function
+            if (fnToCall && typeof fnToCall !== 'function' ) fnToCall = undefined
+            if (fnToCall) {
+                // prefix args with value if present
+                const argList = value === undefined ? [...filterArgs] : [value, ...filterArgs]
+                try {
+                    value = Reflect.apply(fnToCall, value ?? fnToCall, argList)
+                } catch (err) {
+                    log('warn', 'uibuilder:applyFilterFn', `"${filterName}" could not be executed or it raised an unrecoverable error`)()
+                }
+            } else {
+                log('warn', 'uibuilder:applyFilterFn', `"${filterName}" ${typeof fnToCall === 'object' ? 'is an object not a function' : 'not found'}`)()
+            }
+        }
+
+        return value
+    }
+
     /** Standardised processing of a msg or managed var with extended properties such as payload, attributes, dataset, etc
+     * NOTE: el._uib contains additional processing details, set by uibuilder for custom attribute process and by <uib-var>
      * @param {HTMLElement} el The element to update
-     * @param {string} data The input variable to process
+     * @param {string|*} data The input variable to process
+     * param {string} filterName The filter name to apply (must be in global or uibuilder context)
      * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
-     * @param {string=} varName What var we are processing (info only)
+     * param {string=} varName What var we are processing (info only)
      * @return {boolean} True if element was updated, else false
      * @private
      */
-    _processVarProps(el, data, isIf = false, varName = '') {
+    _processElVarProps(el, data, isIf = false) {
         if (!_ui.isElement(el)) {
             log('error', 'uibuilder:_processVarProps', 'el is not an HTML element, cannot continue')()
             return false
         }
         if (isIf === true) { // data is true/false
-            data = { if: data, }
-        } else {
-            // if data is a primative (string, etc), assume that should be the payload
-            // Unless the el is an input, in that case, set the appropriate attributes instead
-            if (this.isPrimitive(data)) {
-                if ('value' in el) data = { attributes: { value: data, }, }
-                else if ('checked' in el) data = { attributes: { checked: data, }, }
-                else data = { payload: data, }
+            el.style.display = this.truthy(data) ? 'unset' : 'none'
+            return true
+        }
+        // Don't show undefined unless wanted
+        if (el?._uib && !el?._uib?.showUndefined) el._uib.showUndefined = false
+
+        // if data is a primative (string, etc), assume that should be the payload
+        // Unless the el is an input, in that case, set the appropriate attributes instead
+        if (this.isPrimitive(data)) {
+            // Apply the filter first
+            data = this.applyFilterFn(el?._uib?.filterName, el?._uib?.filterArgs, data)
+            if (this.isElCheckable(el) && data !== undefined && data !== null) {
+                data = { attributes: { checked: data, }, }
+            } else if (this.isElFormControl(el) && data !== undefined && data !== null) {
+                data = { attributes: { value: data, }, }
+            } else {
+                data = { payload: data, }
             }
+        } else {
+            if (data?.payload) {
+                data.payload = this.applyFilterFn(el?._uib?.filterName, el?._uib?.filterArgs, data.payload)
+            }
+        }
+        // NB: If data is an object, any slot content HAS to be in data.payload
+
+        const before = el?.dataset?.before ?? ''
+        const after = el?.dataset?.after ?? ''
+
+        // If the el is an input/textarea/select and a value is being set add before/after
+        if (el?.type && data?.attributes?.value && (before || after)) {
+            data.attributes.value = `${before}${data.attributes.value}${after}`
         }
 
         // Process msg.attributes
@@ -1930,53 +1946,81 @@ export const Uib = class Uib {
         // Process msg.dataset
         if (Object.prototype.hasOwnProperty.call(data, 'dataset')) this.setDataset(el, data.dataset)
 
-        // In case someone puts checked/value at the top level. Process msg.value (or set checked if boolean - for checkboxes)
-        const hasChecked = Object.prototype.hasOwnProperty.call(data, 'checked')
-        const hasValue = Object.prototype.hasOwnProperty.call(data, 'value')
-        if ( hasValue || hasChecked ) {
-            const value = hasChecked ? data.checked : hasValue ? data.value : undefined
-            this.setValueOrChecked(el, value)
-        }
+        // Since v8.0.0 - removed
+        // Process msg.value (or set checked if boolean - for checkboxes). In case someone puts checked/value at the top level.
+        // const hasChecked = Object.prototype.hasOwnProperty.call(data, 'checked')
+        // const hasValue = Object.prototype.hasOwnProperty.call(data, 'value')
+        // if ( hasValue || hasChecked ) {
+        //     const value = hasChecked ? data.checked : hasValue ? data.value : undefined
+        //     this.setValueOrChecked(el, value)
+        // }
 
-        // TODO (MAYBE) Process msg.props (for non-string data)?
         // Process content/slot
         if (Object.prototype.hasOwnProperty.call(data, 'payload')) {
             // If el has data-before/data-after attributes, apply these to the payload
-            if (el.dataset.before) data.payload = `${el.dataset.before}${data.payload}`
-            if (el.dataset.after) data.payload = `${data.payload}${el.dataset.after}`
+            if (data.payload === undefined && el?._uib?.showUndefined === false) {
+                return true
+            }
+            if (el?._uib?.uibVarDetails.fullVarName === 'myTextInput') console.log('>> type', el.getAttribute('type'), el?._uib?.uibVarDetails.fullVarName, data, el)
             // If el has a `content` attrib, we must apply as text not html
             if (el.hasAttribute('content')) {
-                el.setAttribute('content', data.payload)
+                el.setAttribute('content', `${before}${data.payload}${after}`)
             } else {
+                // Apply the correct output type (defaults to HTML)
+                const outputType = el?._uib?.outputType ?? 'html'
+                let output = data.payload
+                let out = ''
+                switch (outputType) {
+                    case 'markdown': {
+                        out = this.convertMarkdown(`${before}${output}${after}`)
+                        break
+                    }
+
+                    case 'json':
+                    case 'object': {
+                        out = `${before}<pre class="syntax-highlight">${this.syntaxHighlight(output)}</pre>${after}`
+                        break
+                    }
+
+                    case 'table': {
+                        if (!output) out = '[undefined]'
+                        out = `${before}${this.buildHtmlTable(output).outerHTML}${after}`
+                        break
+                    }
+
+                    case 'array':
+                    case 'list': {
+                        if (!Array.isArray(output)) output = [output]
+                        out = `${before}<ul>`
+                        output.forEach( (li) => {
+                            out += `<li>${li}</li>`
+                        })
+                        out += `</ul>${after}`
+                        break
+                    }
+
+                    case 'text':
+                    case 'plain': {
+                        // get the plain text version of the value by using DOM conversion
+                        const div = document.createElement('div')
+                        div.innerHTML = `${before}${output}${after}`
+                        out = div.textContent
+                        break
+                    }
+
+                    case 'html':
+                    default: {
+                        // TODO: Should we cater for output being an object/array and stringify it?
+                        out = `${before}${output}${after}`
+                        break
+                    }
+                }
                 // Apply as slot HTML - NB: Will process <script> & <style>
-                this.replaceSlot(el, data.payload)
+                this.replaceSlot(el, out)
             }
         }
 
         return true
-    }
-
-    /** Resolve a dotted/bracketed property path on an object
-     * e.g. resolveNestedPath(obj, 'a.b["c"]') => obj.a.b.c
-     * @param {object} obj The object to resolve from
-     * @param {string} path The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
-     * @return {*} The resolved value, or undefined if not found
-     * @private
-     */
-    _resolveNestedPath(obj, path) {
-        if (!obj || !path) return undefined
-        // Split on dots and bracket notation, filter out empty segments
-        const keys = path
-            .replace(/\[["'`]?/g, '.')
-            .replace(/["'`]?\]/g, '')
-            .split('.')
-            .filter(Boolean)
-        let current = obj
-        for (const key of keys) {
-            if (current == null) return undefined
-            current = current[key]
-        }
-        return current
     }
 
     /** Process a uib-topic custom DOM attribute by setting up a topic listener and applying received msgs to the element
@@ -1985,12 +2029,154 @@ export const Uib = class Uib {
      * @param {string} topic The msg topic string to watch for
      * @private
      */
-    _processUibTopic(el, topic) {
+    _processElUibTopic(el, topic) {
+        // Add el._uib to hold element specific uibuilder properties/watchers
+        if (!el?._uib) el._uib = {}
         // Create a topic listener
-        this.onTopic(topic, (msg) => {
+        // Cancel any previous watch
+        if (el._uib?.topicWatch) {
+            this.cancelChange(el._uib.topicWatchName, el._uib.varWatch)
+            el._uib.topicWatch = null
+            el._uib.topicWatchName = null
+        }
+        // Set this manually, allows _processElVarProps to work correctly
+        el._uib.uibVarDetails = {
+            fullVarName: 'msg',
+            hasSubPath: false,
+            rootVarName: 'msg',
+            nestedPath: null,
+            splitNestedPath: [],
+        }
+        // Record topic name
+        el._uib.topicWatchName = topic
+        // When the root property changes, resolve the full nested path to get the value
+        el._uib.topicWatch = this.onTopic(topic, (msg) => {
             msg._uib_processed_by = '_processUibTopic' // record that this has already been processed
-            this._processVarProps(el, msg)
+            const result = this._processElVarProps(el, msg)
+            // Report back to Node-RED if requested
+            if (el._uib.sendReport === true && result === true) this.send({
+                topic: el._uib.uibVarDetails.fullVarName,
+                payload: msg.payload,
+                source: el.localName,
+                id: el.id,
+            })
         })
+    }
+
+    /** split a variable name into sub-paths. e.g. a.b = [a,b], a['b'] = [a,b]
+     * @param {string} varName var name to check
+     * @return {Array<string>} array of name parts
+     */
+    splitVarName(varName) {
+        return varName
+            .replace(/\[["'`]?/g, '.')
+            .replace(/["'`]?\]/g, '')
+            .split('.')
+            .filter(Boolean)
+    }
+
+    // ! TODO: Add 2nd param for re-tryable?
+    /** Resolve a dotted/bracketed property path on an object
+     * e.g. resolveNestedPath(obj, 'a.b["c"]') => obj.a.b.c
+     * @param {string} varName The property path string (e.g. 'myvar.aprop' or 'myvar["bprop"]')
+     * @return {*} The resolved value, or undefined if not found
+     */
+    getVarNameNestedValue(varName) {
+        if (!varName) return undefined
+        // Split on dots and bracket notation, filter out empty segments
+        const keys = this.splitVarName(varName)
+        // Get the top-level value
+        const root = keys.shift()
+        let current = this.get(root)
+        if (current === undefined) {
+            return undefined
+        }
+        // Walk through remaining keys getting value down to bottom level
+        for (const key of keys) {
+            if (current == null) return undefined
+            current = current[key]
+        }
+        return current
+    }
+
+    /** Set a value at a dotted/bracketed property path on an object
+     * e.g. _setNestedPath(obj, 'a.b["c"]', value) => obj.a.b.c = value
+     * Creates intermediate objects if they don't exist
+     * @param {object} rootValue The object to set the value on
+     * @param {string|Array<string>} nestedPath The remaining nested property path as array or string (e.g. 'aprop' or '["bprop"]')
+     * @param {*} value The value to set
+     * @return {boolean} True if successful, false otherwise
+     */
+    setVarNameNestedValue(rootValue, nestedPath, value) {
+        if (!rootValue || !nestedPath) return false
+        // Split on dots and bracket notation, filter out empty segments
+        const keys = typeof nestedPath === 'string' ? this.splitVarName(nestedPath) : nestedPath // NB: Doesn't include root name
+        // Navigate to the parent of the final key -1, creating objects as needed
+        let current = rootValue
+        const finalKey = keys.pop()
+        for (const key of keys) {
+            if (current[key] == null || typeof current[key] !== 'object') {
+                current[key] = {}
+            }
+            current = current[key]
+        }
+        // Set the final property
+        current[finalKey] = value
+        return true
+    }
+
+    // ! TODO: Check if we need to drop the 1st path
+    /** Determine if a var name has a sub-path. e.g. a.b or c.d['e'], etc.
+     * @param {string} fullVarName var name to check
+     * @param {string} from For debugging
+     * @return {{fullVarName:string,hasSubPath:boolean,rootVarName:string,nestedPath:string,splitNestedPath:Array<string>}} Details
+     */
+    varNameSubPathChk(fullVarName, from = '') {
+        // Determine the root property and any nested sub-path
+        // e.g. "myvar.aprop" => rootProp="myvar", subPath="aprop"
+        // e.g. "myvar['bprop'].x" => rootProp="myvar", subPath="'bprop'].x"
+        const dotIdx = fullVarName.indexOf('.')
+        const bracketIdx = fullVarName.indexOf('[')
+        // Find the earliest separator to see if we have a sub-path as part of the varName
+        let sepIdx = -1
+        if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx)
+        else if (dotIdx >= 0) sepIdx = dotIdx
+        else if (bracketIdx >= 0) sepIdx = bracketIdx
+        const hasSubPath = sepIdx > 0
+        const rootVarName = hasSubPath ? fullVarName.substring(0, sepIdx) : fullVarName
+        // For bracket notation, keep the '[' so setVarNameNestedValue can properly strip quotes
+        const nestedPath = hasSubPath ? fullVarName.substring(fullVarName[sepIdx] === '[' ? sepIdx : sepIdx + 1) : ''
+        const splitNestedPath = this.splitVarName(nestedPath)
+        const out = { fullVarName, hasSubPath, rootVarName, nestedPath, splitNestedPath, }
+        // console.log('>> chk subpath >>', from, { fullVarName, hasSubPath, rootVarName, nestedPath, splitNestedPath, sepIdx, dotIdx, bracketIdx, })
+        return out
+    }
+
+    /** Process a changed uib-var variable & return its value
+     * @typedef {'html'|'text'|'plain'|'markdown'|'json'|'object'|'table'|'array'|'list'} OutputType
+     * @param {HTMLElement} el The element to process
+     * @param {*} rootValue Value of root variable
+     * param {{fullVarName:string,hasSubPath:boolean,rootVarName:string,nestedPath:string}} [path] If not set, get from el._uib.path
+     * param {OutputType} [outputType] What type of output is desired?
+     * param {string} [filterName] Name of a filter function to apply
+     * @param {string} [from] for debugging only
+     * @return {*} Value of variable (might be a nested path value)
+     */
+    // varChange(el, rootValue, path, outputType = 'html', filterName = null, from = '') {
+    varChange(el, rootValue, from = '') {
+        // NB: additional details are in the passed element
+        const value = this.getVarNameNestedValue(el?._uib?.uibVarDetails?.fullVarName)
+        const result = this._processElVarProps(el, value)
+        // Report back to Node-RED if requested
+        if (el._uib.sendReport === true && result === true) this.send({
+            topic: el._uib.uibVarDetails.fullVarName,
+            payload: value,
+            source: el.localName,
+            id: el.id,
+        })
+
+        // console.log('> varChange >', { from, path, value, rootValue, el, })
+        return value
     }
 
     /** Process a uib-var custom DOM attribute by evaluating the variable reference and applying it to the element
@@ -1999,46 +2185,36 @@ export const Uib = class Uib {
      * @param {HTMLElement} el The element to process
      * @param {string} varName The variable name (optionally with property path) to watch for
      * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
-     * @private
      */
-    async _processUibVar(el, varName, isIf = false) {
-        // Determine the root property and any nested sub-path
-        // e.g. "myvar.aprop" => rootProp="myvar", subPath="aprop"
-        // e.g. "myvar['bprop'].x" => rootProp="myvar", subPath="'bprop'].x"
-        const dotIdx = varName.indexOf('.')
-        const bracketIdx = varName.indexOf('[')
-        // Find the earliest separator
-        let sepIdx = -1
-        if (dotIdx >= 0 && bracketIdx >= 0) sepIdx = Math.min(dotIdx, bracketIdx)
-        else if (dotIdx >= 0) sepIdx = dotIdx
-        else if (bracketIdx >= 0) sepIdx = bracketIdx
+    _processUibVar(el, varName, isIf = false) {
+        // Add el._uib to hold element specific uibuilder properties/watchers
+        if (!el?._uib) el._uib = {}
+        // Determine if varName has a sub-path and the root property
+        // e.g. "myvar.aprop" => rootProp="myvar"
+        // e.g. "myvar['bprop'].x" => rootProp="myvar"
+        const { rootVarName, } = el._uib.uibVarDetails = this.varNameSubPathChk(varName)
 
-        const hasSubPath = sepIdx > 0
-        const rootProp = hasSubPath ? varName.substring(0, sepIdx) : varName
+        // NB: Watch data is saved to this element because that is unique to this request
 
-        /** sub-fn
-         * @param {*} rootValue Either the value to process or its parent
-         * @param {boolean} hasSubPath If true, we are processing a sub-path, e.g. myvar.something or myva['something']
-         * @param {boolean} isIf True if we were originally called via the uib-if handler. Default=false
-         */
-        const doVar = (rootValue, hasSubPath, isIf) => {
-            const value = hasSubPath ? this._resolveNestedPath(this, varName) : rootValue
-            try {
-                value._uib_processed_by = '_processUibVar' // record that this has already been processed
-            } catch (e) {}
-            // console.log(`🪲[uibuilder:_processUibVar] Variable "${varName}" changed. New value:`, value)
-            // log('trace', 'uibuilder:_processUibVar', `Variable "${varName}" changed. New value: `, value)()
-            this._processVarProps(el, value, isIf, varName)
-            if (isIf) el.style.display = this.truthy(value) ? '' : 'none'
+        // Cancel any previous watch
+        if (el._uib?.varWatch) {
+            this.cancelChange(el._uib.varWatchName, el._uib.varWatch)
+            delete el._uib.varWatch
+            delete el._uib.varWatchName
         }
 
         // Create a uibuilder managed variable watcher on the root property
         // When the root property changes, resolve the full nested path to get the value
-        this.onChange(rootProp, (rootValue) => {
-            doVar(rootValue, hasSubPath, isIf)
+        el._uib.varWatch = this.onChange(rootVarName, (rootValue) => {
+            this.varChange(el, rootValue, 'on-change')
         })
-        // and do it now
-        doVar(await this.evaluateWithRetry(rootProp, this, {}), hasSubPath, isIf)
+        // and save the watch root var name
+        el._uib.varWatchName = rootVarName
+        // and do it now - with retry in case we hit a timing issue with setting the var
+        if (!isIf) {
+            // this.varChange(el, await this.evaluateWithRetry(rootVarName, this, {}), 'initial')
+            this.varChange(el, this.get(rootVarName), 'initial')
+        }
     }
 
     /** Process a uib-if custom DOM attribute by safely evaluating a JavaScript expression that returns true/false.
@@ -2083,10 +2259,10 @@ export const Uib = class Uib {
         const alen = uibAttribs.length
         for (let i = 0; i < alen; i++) {
             const attr = uibAttribs[i]
-            if (attr?.name === 'uib-topic' || attr?.name === 'data-uib-topic') this._processUibTopic(el, attr.value)
+            if (attr?.name === 'uib-topic' || attr?.name === 'data-uib-topic') this._processElUibTopic(el, attr.value)
             else if (attr?.name === 'uib-var' || attr?.name === 'data-uib-var') this._processUibVar(el, attr.value)
             else if (attr?.name === 'uib-if' || attr?.name === 'data-uib-if') this._processUibIf(el, attr.value)
-            // ! EXPERIMENTAL Check for uib-bind:* attributes
+            // ! EXPERIMENTAL Check for uib-bind:* attributes - need to exclude : if VueJS loaded
             else if (attr?.name.startsWith('uib-bind:') || attr?.name.startsWith('data-uib-bind:') || attr?.name.startsWith(':')) {
                 // Get the bind name
                 const bindName = attr.name.replace(/^(uib-bind:|data-uib-bind:|:)/, '')
@@ -2157,14 +2333,14 @@ export const Uib = class Uib {
                     if (mu.addedNodes.length > 0) {
                         oMu.addedNodes = []
                         mu.addedNodes.forEach( (an, i) => {
-                            oMu.addedNodes.push(_ui.nodeGet(mu.addedNodes[i]))
+                            oMu.addedNodes.push(_ui.nodeGet(mu.addedNodes[i], cssSelector))
                         })
                     }
 
                     if (mu.removedNodes.length > 0) {
                         oMu.removedNodes = []
                         mu.removedNodes.forEach( (an, i) => {
-                            oMu.removedNodes.push(_ui.nodeGet(mu.removedNodes[i]))
+                            oMu.removedNodes.push(_ui.nodeGet(mu.removedNodes[i], cssSelector))
                         })
                     }
 
@@ -3362,7 +3538,7 @@ export const Uib = class Uib {
         // Attempt to get target attributs - can fail for certain target types
         const attribs = this.getElementAttributes(target)
 
-        // Msg.payload
+        /** Msg.payload @type {*} */
         let payload = {}
 
         // If target is embedded in a form, include ALL the form data in the output
@@ -3547,6 +3723,7 @@ export const Uib = class Uib {
 
                 fileName: file.name,
                 type: file.type,
+                // @ts-ignore
                 lastModified: file.lastModifiedDate,
                 size: file.size,
 
@@ -3559,6 +3736,7 @@ export const Uib = class Uib {
 
             // Only send if content not too large
             const maxSize = this.maxHttpBufferSize - 500
+            // @ts-ignore
             if (arrayBuffer.byteLength >= maxSize) {
                 msg.payload = undefined
                 msg.error = `File is too large to send. File size: ${arrayBuffer.byteLength}. Max msg size: ${maxSize}`
@@ -3811,10 +3989,6 @@ export const Uib = class Uib {
             this._socket.offAny()
             this._socket = undefined
             this.set('ioConnected', false)
-        }
-
-        if (this.headers) {
-            console.log('HTTP Headers: ', this.headersReady, this.headers)
         }
 
         // Update the URL path to make sure we have the right one
