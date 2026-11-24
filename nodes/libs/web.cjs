@@ -2,7 +2,7 @@
 /** Manage ExpressJS on behalf of uibuilder
  * Singleton. only 1 instance of this class will ever exist. So it can be used in other modules within Node-RED.
  *
- * Copyright (c) 2017-2025 Julian Knight (Totally Information)
+ * Copyright (c) 2017-2026 Julian Knight (Totally Information)
  * https://it.knightnet.org.uk, https://github.com/TotallyInformation/node-red-contrib-uibuilder
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -34,7 +34,7 @@
 const { /** @type {uibCustomLogger} */ log: clog, } = require('./logger.mjs')
 clog.debug('Loading')
 
-const { join, parse, } = require('path')
+const { join, parse, sep, } = require('path')
 const express = require('express')
 const { accessSync, existsSync, fgSync, mkdirSync, readFile, } = require('./fs.cjs')
 const { urlJoin, } = require('./tilib.cjs') // dumpReq
@@ -52,6 +52,13 @@ const adminRouterV3 = require('./admin-api-v3.cjs')
 
 // Filename for default web page
 const defaultPageName = 'index.html'
+
+// Serialise safely for embedding in a <script> tag
+const safeJson = obj =>
+    JSON.stringify(obj)
+        .replace(/</g, '\\u003c') // stops "</script>" breaking out
+        .replace(/\u2028/g, '\\u2028')
+        .replace(/\u2029/g, '\\u2029')
 
 class UibWeb {
     /** PRIVATE Flag to indicate whether setup() has been run (ignore the false eslint error)
@@ -155,7 +162,7 @@ class UibWeb {
         this._webSetup()
 
         log.trace('🌐[uibuilder:web:setup] Web setup end')
-    } // --- End of setup() --- //
+    }
 
     // #region ==== Setup - these are called AFTER #isConfigured=true ==== //
 
@@ -671,9 +678,7 @@ class UibWeb {
 
         // We don't need all the routes for every case, only for full uibuilder nodes
         let fullRoutes = true
-        if (node.type !== 'uibuilder') {
-            fullRoutes = false
-        }
+        if (node.type !== 'uibuilder') fullRoutes = false
 
         // (1.) Instance log route (./_clientLog)
         if (fullRoutes) this.addBeaconRoute(node)
@@ -719,7 +724,68 @@ class UibWeb {
             return next()
         })
 
-        // (2b) THIS IS THE IMPORTANT ONE - It is the main instance handler
+        // Add pageData header for uibuilder nodes only and only for the early HEAD request from the client
+        const pageDataRequired = true
+        if (fullRoutes && pageDataRequired) this.instanceRouters[node.url].use( async (req, res, next) => {
+            if (req.method === 'HEAD') {
+                const pageData = {
+                    // anything dynamic: user, query params, config, etc.
+                    path: req.path,
+                    query: req.query,
+                    generatedAt: Date.now(),
+                }
+                if (node.title) pageData.title = node.title
+                if (node.descr) pageData.description = node.descr
+                res.set('uibuilder-pagedata', encodeURIComponent(safeJson(pageData)))
+            }
+            return next()
+
+            // WARNING: Experimental. Intercepts ALL .html resources
+            // !          Prevents .html resources falling through to common folder - should be OK, but not certain
+
+            // if (req.method !== 'GET') return next()
+
+            // let rel = req.path
+            // if (rel.endsWith('/')) rel += defaultPageName
+            // if (!rel.endsWith('.html')) return next()
+
+            // const fileFolder = join(node.instanceFolder, node.sourceFolder)
+            // try {
+            //     const fileName = join(fileFolder, decodeURIComponent(rel))
+            //     if (!fileName.startsWith(fileFolder + sep)) return next() // path traversal guard
+
+            //     let html = await readFile(fileName, 'utf8')
+
+            //     const pageData = {
+            //         // anything dynamic: user, query params, config, etc.
+            //         path: req.path,
+            //         query: req.query,
+            //         generatedAt: Date.now(),
+            //     }
+            //     const tag = `<script>window.pageData = ${safeJson(pageData)};</script>`
+
+            //     html = /<head[^>]*>/i.test(html)
+            //         ? html.replace(/<head[^>]*>/i, m => m + tag) // function form avoids `$` replacement quirks
+            //         : tag + html
+
+            //     res
+            //         .set('Cache-Control', 'no-cache').type('html')
+            //         .set(
+            //             'Server-Timing',
+            //             `pagedata;desc="${encodeURIComponent(safeJson(pageData))}"`
+            //         )
+            //         .set(
+            //             'X-UIB-PAGEDATA',
+            //             `pagedata;desc="${encodeURIComponent(safeJson(pageData))}"`
+            //         )
+            //         .send(html)
+            // } catch (err) {
+            //     if (err.code === 'ENOENT' || err.code === 'EISDIR' || err instanceof URIError) return next()
+            //     next(err)
+            // }
+        })
+
+        // (2b) THIS IS THE IMPORTANT ONE - It is the main instance handler serving static files
         this.instanceRouters[node.url].use( handler )
 
         // (3a) & (3b)
@@ -741,7 +807,7 @@ class UibWeb {
 
         // this.dumpUserRoutes(true)
         // this.dumpInstanceRoutes(true, node.url)
-    } // --- End of instanceSetup --- //
+    }
 
     /** (1b) Optional common middleware from a file (same for all instances)
      * @param {uibNode} node Reference to the uibuilder node instance
@@ -814,7 +880,7 @@ class UibWeb {
                     // 'X-Frame-Options': 'SAMEORIGIN',
                     // Tell the client that uibuilder is being used (overides the default "ExpressJS" entry)
                     'x-powered-by': 'uibuilder',
-                    'Access-Control-Expose-Headers': 'uibuilder-namespace, uibuilder-webRoot, uibuilder-client-id, uibuilder-node',
+                    'Access-Control-Expose-Headers': 'uibuilder-namespace, uibuilder-webRoot, uibuilder-client-id, uibuilder-node, uibuilder-pagedata',
                     // Tell the client what Socket.IO namespace to use,
                     'uibuilder-namespace': node.url, // only client accessible from xhr or web worker
                     'uibuilder-webRoot': uib.nodeRoot.replace(/\//g, ''),
