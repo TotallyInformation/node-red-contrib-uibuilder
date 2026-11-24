@@ -33,7 +33,7 @@ const log = uibuilder.log
 // It is used to resolve relative links for SPA navigation.
 // It is also set on page load as window.baseUrl. It does not change.
 const baseUrl = window.baseUrl
-console.info(`🌐🕸️[markweb:client load] Base URL: "${baseUrl}". Client version: ${clientVersion}`)
+uibuilder.log('info', 'markweb:client load', `Base URL: "${baseUrl}". Client version: ${clientVersion}`)
 // console.info('🌐🕸️[markweb:client load] Page Data:', pageData)
 
 // Get references to commonly used elements
@@ -1024,35 +1024,36 @@ function postDataUpdate(data) {
     // const toUrl = data.toUrl || window.location.href
     const toUrl = data.path
 
+    // ! DEPRECATED for v8.0.0
     // Update elements with data-fmvar based on response data
-    document.querySelectorAll('[data-fmvar]').forEach((el) => {
-        // const attr = el.getAttribute('data-fmvar')
-        if (el.dataset.fmvar === undefined) return
-        const fmvar = el.dataset.fmvar
-        // Skip body as it is handled separately
-        if (fmvar === 'body') return
-        // Look for the var in the data - if it exists, update the element
-        if (data[fmvar] !== undefined) {
-            // Optional marker to denote meta tags that should update their 'content' attribute instead of innerHTML/textContent
-            const isContent = !!el.hasAttribute('content')
-            // If el has attribute 'data-replace', switch el to be el's parent element
-            if (el.hasAttribute('data-replace')) {
-                const parent = el.parentElement
-                if (parent) {
-                    el = parent
-                }
-            }
-            // Handle meta tags
-            if (isContent) {
-                el.setAttribute('content', data[fmvar])
-            } else {
-                // ! TODO: Consider whether we want to use textContent or innerHTML here - if the data can contain HTML, we need innerHTML, but this opens up XSS risks if the data is not sanitized. For now, we'll assume the server sends safe HTML in the data.
-                // Everything else
-                // el.textContent = data[fmvar]
-                el.innerHTML = data[fmvar]
-            }
-        }
-    })
+    // document.querySelectorAll('[data-fmvar]').forEach((el) => {
+    //     // const attr = el.getAttribute('data-fmvar')
+    //     if (el.dataset.fmvar === undefined) return
+    //     const fmvar = el.dataset.fmvar
+    //     // Skip body as it is handled separately
+    //     if (fmvar === 'body') return
+    //     // Look for the var in the data - if it exists, update the element
+    //     if (data[fmvar] !== undefined) {
+    //         // Optional marker to denote meta tags that should update their 'content' attribute instead of innerHTML/textContent
+    //         const isContent = !!el.hasAttribute('content')
+    //         // If el has attribute 'data-replace', switch el to be el's parent element
+    //         if (el.hasAttribute('data-replace')) {
+    //             const parent = el.parentElement
+    //             if (parent) {
+    //                 el = parent
+    //             }
+    //         }
+    //         // Handle meta tags
+    //         if (isContent) {
+    //             el.setAttribute('content', data[fmvar])
+    //         } else {
+    //             // ! TODO: Consider whether we want to use textContent or innerHTML here - if the data can contain HTML, we need innerHTML, but this opens up XSS risks if the data is not sanitized. For now, we'll assume the server sends safe HTML in the data.
+    //             // Everything else
+    //             // el.textContent = data[fmvar]
+    //             el.innerHTML = data[fmvar]
+    //         }
+    //     }
+    // })
 }
 
 /** Handle SPA navigation
@@ -1088,7 +1089,7 @@ async function navigate(toUrl, addToHistory = true) {
     const navKey = `${normalizePath(toUrl)}|${hashFragment}|${addToHistory ? '1' : '0'}`
     const now = Date.now()
     if (lastNavigateRequest.key === navKey && (now - lastNavigateRequest.ts) < 500) {
-        console.debug('Skipping duplicate navigate request:', { toUrl, hashFragment, addToHistory, })
+        uibuilder.log('log', 'markweb:navigate', 'Skipping duplicate navigate request:', { toUrl, hashFragment, addToHistory, })
         return
     }
     lastNavigateRequest = { key: navKey, ts: now, }
@@ -1143,7 +1144,7 @@ document.addEventListener('click', (e) => {
 // Handle browser back/forward - Track to avoid pushing state during popstate handling
 let isHandlingPopstate = false
 window.addEventListener('popstate', (evt) => {
-    console.log('popstate', !!evt.state?.hash, evt.state)
+    uibuilder.log('log', 'markweb:popstate', !!evt.state?.hash, evt.state)
     // Handle hash-only navigation (anchor links)
     if (evt.state?.hash) {
         const targetId = evt.state.hash.slice(1)
@@ -1303,7 +1304,7 @@ if (elSearchInput) elSearchInput.addEventListener('input', (e) => {
         if (elSearchCount) elSearchCount.textContent = 'N/A'
         if (elSearchDetails) elSearchDetails.innerHTML = '<p class="no-results">Searching...</p>'
         if (elSearchResults) elSearchResults.hidden = false
-        console.log(`Requesting search for query: "${query}"`)
+        uibuilder.log('log', 'markweb:search:input', `Requesting search for query: "${query}"`)
         uibuilder.sendCtrl({ uibuilderCtrl: 'internal', controlType: 'search', query: query, })
     }, 300)
 })
@@ -1372,7 +1373,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                 // Default: main search results
                 doResults(data, ctrlMsg.query)
             }
-            console.log(`Displayed ${data.length} search results for query "${ctrlMsg.query}"`, data)
+            uibuilder.log('log', 'markweb:ctrlMsg:_search-results', `Displayed ${data.length} search results for query "${ctrlMsg.query}"`, data)
 
             break
         }
@@ -1422,7 +1423,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         case '_source-change': {
             // console.log('Source changed on server.', { ctrlMsg, pageData, })
             if (ctrlMsg.payload?.url === pageData?.toUrl) {
-                console.log('Current page affected by source change, reloading page content.')
+                uibuilder.log('info', 'markweb:ctrlMsg', 'Current page affected by source change, reloading page content.')
                 navigate(window.location.pathname + window.location.search + window.location.hash, false)
             }
             break
@@ -1434,7 +1435,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
             const currentPageUrl = window.location.pathname
 
             if (ctrlMsg.attributes?.error) {
-                console.warn('Error during page navigation:', ctrlMsg.attributes.error)
+                uibuilder.log('warn', 'markweb:ctrlMsg:_page-navigation-result', 'Error during page navigation:', ctrlMsg.attributes.error)
             }
             const data = updatePageData(ctrlMsg.attributes ?? {}, { from: '_page-navigation-result', initialPath: '', topic: ctrlMsg.topic, hashFragment: ctrlMsg.hashFragment, })
             // console.log(
@@ -1477,7 +1478,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                     setTimeout(() => {
                         const scrollContainer = document.querySelector('main > section') || document.documentElement
                         if (hashFragment) {
-                            console.log('Scrolling to hash fragment:', hashFragment)
+                            uibuilder.log('log', 'markweb:ctrlMsg:_page-navigation-result', 'Scrolling to hash fragment:', hashFragment)
                             // If there's a hash fragment, scroll to that element
                             const targetId = hashFragment.slice(1) // Remove leading #
                             const targetElement = document.getElementById(targetId)
@@ -1486,8 +1487,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                             }
                         } else {
                             // Scroll to top on page navigation if no hash fragment
-                            console.log('Scrolling to top of page')
-
+                            // console.log('Scrolling to top of page')
                             scrollContainer.scrollTo({ top: 0, behavior: 'auto', })
                         }
                     }, 100)
