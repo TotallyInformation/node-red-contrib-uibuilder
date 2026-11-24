@@ -1011,9 +1011,9 @@ function createSidebar(key, pageEnv, node, options) {
                         Contents
                     </button>
                 </div>
-                <uib-var id="sidebar-panel-nav" class="sidebar-panel active" role="tabpanel" aria-labelledby="sidebar-tab-nav" variable="sidebar-nav" output="html">
+                <div id="sidebar-panel-nav" class="sidebar-panel active" role="tabpanel" aria-labelledby="sidebar-tab-nav" variable="sidebar-nav" output="html">
                     ${navIndexHtml}
-                </uib-var>
+                </div>
                 <div id="sidebar-panel-toc" class="sidebar-panel" role="tabpanel" aria-labelledby="sidebar-tab-toc" hidden>
                     <nav id="sidebar-toc" aria-label="Table of contents">
                         <!-- TOC generated client-side from page headings -->
