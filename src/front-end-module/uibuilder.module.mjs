@@ -22,15 +22,16 @@
 const perf = new Map()
 perf.set('loading uibuilder client library', performance.now())
 
-// Fastest way to get the http headers - called in constructor
-const __uibHeadersPromise = fetch(location.href, { method: 'HEAD', cache: 'no-store', })
+// Fastest way to get the http headers
+fetch(location.href, { method: 'HEAD', cache: 'no-store', }) // eslint-disable-line promise/catch-or-return
     .then((r) => {
         // console.log('>> >> HEADERS >> >> ', r.headers)
         const h = {}
         r.headers.forEach((v, k) => h[k] = v)
         window.__uibHeaders = h
-        return h
-        // return r.headers
+        perf.set('http headers', performance.now())
+        document.dispatchEvent(new CustomEvent('uibuilder:httpHeadersReady', { detail: h, }))
+        return
     })
 
 // #region --- Type Defs --- //
@@ -544,7 +545,7 @@ export const Uib = class Uib {
             '%c❗ info%c [logLevel]',
             `${log.LOG_STYLES.level} ${log.LOG_STYLES.info.css}`,
             `${log.LOG_STYLES.head} ${log.LOG_STYLES.info.txtCss}`,
-            `Set to ${level} (${log.LOG_STYLES.names[level]})`
+            `Set to ${level} (${log.LOG_STYLES.names[level - 1]})`
         ) /* changeLogLevel(level)*/
     }
     get logLevel() { return log.level }
@@ -643,13 +644,13 @@ export const Uib = class Uib {
         if (hasSubPath) {
             const value = this.getVarNameNestedValue(prop)
             if (value === undefined) {
-                log('info', 'Uib:get', `get() - property "${prop}" is undefined`)()
+                log('log', 'Uib:get', `get() - property "${prop}" is undefined`)()
             }
             return value
         }
 
         if (this[prop] === undefined) {
-            log('info', 'Uib:get', `get() - property "${prop}" is undefined`)()
+            log('log', 'Uib:get', `get() - property "${prop}" is undefined`)()
         }
         return this[prop]
     }
@@ -1939,20 +1940,13 @@ export const Uib = class Uib {
      * NOTE: el._uib contains additional processing details, set by uibuilder for custom attribute process and by <uib-var>
      * @param {HTMLElement} el The element to update
      * @param {string|*} data The input variable to process
-     * param {string} filterName The filter name to apply (must be in global or uibuilder context)
-     * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
-     * param {string=} varName What var we are processing (info only)
      * @return {boolean} True if element was updated, else false
      * @private
      */
-    _processElVarProps(el, data, isIf = false) {
+    _processElVarProps(el, data) {
         if (!_ui.isElement(el)) {
             log('error', 'uibuilder:_processVarProps', 'el is not an HTML element, cannot continue')()
             return false
-        }
-        if (isIf === true) { // data is true/false
-            el.style.display = this.truthy(data) ? 'unset' : 'none'
-            return true
         }
         // Don't show undefined unless wanted
         if (el?._uib && !el?._uib?.showUndefined) el._uib.showUndefined = false
@@ -1967,6 +1961,9 @@ export const Uib = class Uib {
             } else {
                 data = { payload: data, }
             }
+        } else {
+            if (Array.isArray(data)) data = { payload: data, }
+            else if (this.isObject(data) && !data.payload) data = { payload: data, }
         }
         // NB: If data is an object, any slot content HAS to be in data.payload
 
@@ -2038,7 +2035,11 @@ export const Uib = class Uib {
 
                     case 'html':
                     default: {
-                        // TODO: Should we cater for output being an object/array and stringify it?
+                        if (this.isObject(output) || Array.isArray(output)) {
+                            try {
+                                output = JSON.stringify(output)
+                            } catch (e) {}
+                        }
                         out = `${before}${output}${after}`
                         break
                     }
@@ -2153,7 +2154,6 @@ export const Uib = class Uib {
         return true
     }
 
-    // ! TODO: Check if we need to drop the 1st path
     /** Determine if a var name has a sub-path. e.g. a.b or c.d['e'], etc.
      * @param {string} fullVarName var name to check
      * @param {string} from For debugging
@@ -2215,8 +2215,11 @@ export const Uib = class Uib {
             const val = el.getAttribute('report')
             el._uib.sendReport = ['', 'on', 'true', 'report'].includes(val)
         }
-
-        const value = this.getVarNameNestedValue(el?._uib?.uibVarDetails?.fullVarName)
+        // Dig for the actual value
+        let value = this.getVarNameNestedValue(el?._uib?.uibVarDetails?.fullVarName)
+        // If the value is undefined, replace with default if present
+        if (value === undefined && el.dataset.default) value = el.dataset.default
+        // Update the element
         const result = this._processElVarProps(el, value)
         // Report back to Node-RED if requested
         if (el._uib.sendReport === true && result === true) this.send({
@@ -2225,7 +2228,6 @@ export const Uib = class Uib {
             source: el.localName,
             id: el.id,
         })
-
         // console.log('> varChange >', { from, path, value, rootValue, el, })
         return value
     }
@@ -2235,9 +2237,8 @@ export const Uib = class Uib {
      *  Supports deep property paths such as "myvar.aprop" or "myvar['bprop']".
      * @param {HTMLElement} el The element to process
      * @param {string} varName The variable name (optionally with property path) to watch for
-     * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
      */
-    _processUibVar(el, varName, isIf = false) {
+    _processUibVar(el, varName) {
         // Add el._uib to hold element specific uibuilder properties/watchers
         if (!el?._uib) el._uib = {}
         // Determine if varName has a sub-path and the root property
@@ -2261,11 +2262,8 @@ export const Uib = class Uib {
         })
         // and save the watch root var name
         el._uib.varWatchName = rootVarName
-        // and do it now - with retry in case we hit a timing issue with setting the var
-        if (!isIf) {
-            // this.varChange(el, await this.evaluateWithRetry(rootVarName, this, {}), 'initial')
-            this.varChange(el, this.get(rootVarName), 'initial')
-        }
+        // and process it now
+        this.varChange(el, this.get(rootVarName), 'initial')
     }
 
     /** Process a uib-if custom DOM attribute by safely evaluating a JavaScript expression that returns true/false.
@@ -2274,12 +2272,49 @@ export const Uib = class Uib {
      * The expression can reference uibuilder managed variables (e.g. pageData.status) directly
      * as well as global/window variables.
      * @param {HTMLElement} el The element to process
-     * @param {string} expr The JavaScript expression to evaluate
+     * @param {string} varName The uibuilder variable to evaluate
      * @private
      */
-    async _processUibIf(el, expr) {
-        // Evaluate the expression using current managed variables and apply visibility
-        this._processUibVar(el, expr, true)
+    async _processUibIf(el, varName) {
+        // Add el._uib to hold element specific uibuilder properties/watchers
+        if (!el?._uib) el._uib = {}
+        // Determine if varName has a sub-path and the root property
+        // e.g. "myvar.aprop" => rootProp="myvar"
+        // e.g. "myvar['bprop'].x" => rootProp="myvar"
+        const { rootVarName, } = el._uib.uibVarDetails = this.varNameSubPathChk(varName)
+
+        // NB: Watch data is saved to this element because that is unique to this request
+
+        // Cancel any previous watch
+        if (el._uib?.varWatch) {
+            this.cancelChange(el._uib.varWatchName, el._uib.varWatch)
+            delete el._uib.varWatch
+            delete el._uib.varWatchName
+        }
+
+        const changeIf = async (value) => {
+            // Evaluate the expression using current managed variables and apply visibility
+            let result = await this.evaluateWithRetry(varName, this)
+            if (result === undefined) result = false
+            else result = this.truthy(result)
+            if (result === true) {
+                el.style.display = 'initial'
+            } else {
+                el.style.display = 'none'
+            }
+        }
+
+        // Create a uibuilder managed variable watcher on the root property
+        // When the root property changes, resolve the full nested path to get the value
+        el._uib.varWatch = this.onChange(rootVarName, async (rootValue) => {
+            await changeIf(rootValue)
+            // this.varChange(el, rootValue, 'on-change')
+        })
+        // and save the watch root var name
+        el._uib.varWatchName = rootVarName
+        // and process it now
+        await changeIf(this.get(rootVarName))
+        // this.varChange(el, this.get(rootVarName), 'initial')
     }
 
     /** Check a single HTML element for uib custom DOM attributes and add auto-processors as needed.
@@ -2418,7 +2453,7 @@ export const Uib = class Uib {
                 }
                 // Log to info
                 if (showLog === true) {
-                    log('info', 'uibuilder.module.js:uiWatch', `DOM Changes for '${cssSelector}'`, { uiChanges: out, }, { mutationList, })()
+                    log('log', 'uibuilder.module.js:uiWatch', `DOM Changes for '${cssSelector}'`, { uiChanges: out, }, { mutationList, })()
                 }
             } )
 
@@ -2736,7 +2771,7 @@ export const Uib = class Uib {
 
         _ui.notification(config)
             .then( (res) => { // eslint-disable-line promise/always-return
-                log('info', 'Uib:notification', 'Notification completed event', res)()
+                log('log', 'Uib:notification', 'Notification completed event', res)()
                 // if (config.return) return res
             })
             .catch( (err) => {
@@ -3001,7 +3036,7 @@ export const Uib = class Uib {
             /** We are connected to the server - 1st msg from server */
             case 'client connect': {
                 log('trace', `Uib:ioSetup:${this._ioChannels.control}`, 'Received "client connect" from server', receivedCtrlMsg)()
-                log('info', `Uib:ioSetup:${this._ioChannels.control}`, `✅ Server connected. Version: ${receivedCtrlMsg.version}\nServer time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours. Max msg size: ${receivedCtrlMsg.maxHttpBufferSize}`)()
+                log('log', `Uib:ioSetup:${this._ioChannels.control}`, `✅ Server connected. Version: ${receivedCtrlMsg.version}\nServer time: ${receivedCtrlMsg.serverTimestamp}, Sever time offset: ${this.serverTimeOffset} hours. Max msg size: ${receivedCtrlMsg.maxHttpBufferSize}`)()
 
                 if ( !Uib._meta.version.startsWith(receivedCtrlMsg.version.split('-')[0]) ) {
                     log('warn', `Uib:ioSetup:${this._ioChannels.control}`, `Server version (${receivedCtrlMsg.version}) not the same as the client version (${Uib._meta.version})`)()
@@ -3240,7 +3275,7 @@ export const Uib = class Uib {
             this.set('msg', receivedMsg)
         }
 
-        log('info', 'Uib:ioSetup:stdMsgFromServer', `Channel '${this._ioChannels.server}'. Received msg #${this.msgsReceived}.`, receivedMsg)()
+        log('log', 'Uib:ioSetup:stdMsgFromServer', `Channel '${this._ioChannels.server}'. Received msg #${this.msgsReceived}.`, receivedMsg)()
 
         // ! NOTE: Don't try to handle specialist messages here. See _msgRcvdEvents.
     } // -- End of websocket receive DATA msg from Node-RED -- //
@@ -3964,7 +3999,7 @@ export const Uib = class Uib {
 
         // WARNING: You cannot change any of the this._socket.auth settings at this point
         log(
-            'info',
+            'log',
             'Uib:ioSetup',
             `✅ SOCKET CONNECTED.\nConnection count: ${this.connectedNum} (Reconnected: ${this.reconnected}, Initial Connect: ${this.initialConnect}), Is a Recovery?: ${this._socket.recovered}.\nNamespace: ${this.ioNamespace}\nTransport: ${this.currentTransport}`
         )()
@@ -4003,7 +4038,7 @@ export const Uib = class Uib {
         // reason === 'io server disconnect' - redeploy of Node instance
         // reason === 'transport close' - Node-RED terminating
         // reason === 'ping timeout' - didn't receive a pong response?
-        log('info', 'Uib:ioSetup:socket-disconnect', `⛔ Socket Disconnected. Reason: ${reason}`, details)()
+        log('log', 'Uib:ioSetup:socket-disconnect', `⛔ Socket Disconnected. Reason: ${reason}`, details)()
 
         this._dispatchCustomEvent('uibuilder:socket:disconnected', { reason, details, })
 
@@ -4155,7 +4190,7 @@ export const Uib = class Uib {
      */
     connect(reason = 'Manual connect') {
         this.#manualDisconnect = false
-        log('info', `Uib:connect`, reason)()
+        log('log', `Uib:connect`, reason)()
         // Re-enable the Manager's built-in reconnection before connecting
         this._socket.io.reconnection(true)
         if (this._socketGlobal) this._socketGlobal.connect()
@@ -4166,7 +4201,7 @@ export const Uib = class Uib {
      * @param {string} [reason] Optional reason text for manual disconnection, used for logging
      */
     disconnect(reason = 'Manual disconnect') {
-        log('info', `Uib:disconnect`, reason)()
+        log('log', `Uib:disconnect`, reason)()
         // Flag set before disconnecting so that _onDisconnect skips the auto-reconnect workaround
         this.#manualDisconnect = true
         // Disable the Manager's built-in reconnection so it doesn't keep polling after disconnect
@@ -4256,15 +4291,6 @@ export const Uib = class Uib {
     constructor() {
         log('trace', 'Uib:constructor', 'Starting')()
         perf.set('constructor starting', performance.now())
-
-        __uibHeadersPromise.then((headers) => { // eslint-disable-line promise/catch-or-return
-            this.httpHeaders = headers
-            perf.set('http headers', performance.now())
-            // console.log('>> >> HEADERS >> >> ', performance.now(), headers)
-            // trigger a custom event to say that headers are ready
-            this._dispatchCustomEvent('uibuilder:httpHeadersReady', headers)
-            return
-        })
 
         // Track whether the client is online or offline
         window.addEventListener('offline', (e) => {
@@ -4362,7 +4388,7 @@ export const Uib = class Uib {
         if ( this.#MsgHandler ) this.cancelChange('msg', this.#MsgHandler)
 
         if (this.started === true) {
-            log('info', 'Uib:start', 'Start function already called. Resetting Socket.IO and msg handler.')()
+            log('log', 'Uib:start', 'Start function already called. Resetting Socket.IO and msg handler.')()
         }
 
         // if (!document.cookie) log('error', 'uibuilder:start', 'No cookies! There should be some, is this stupid Firefox?')()
@@ -4476,7 +4502,6 @@ export const Uib = class Uib {
 
         this._dispatchCustomEvent('uibuilder:startComplete')
         perf.set('start finished', performance.now())
-        // console.log('Performance: ', perf)
     }
 
     // #endregion -------- ------------ -------- //
@@ -4572,17 +4597,27 @@ export { uibuilder }
 export default uibuilder
 
 // Attempt to run start fn only after HTTP headers are ready
-document.addEventListener('uibuilder:httpHeadersReady', () => {
-    uibuilder.start()
-
-    // Add built-in web component classes as a new Custom Element to the window object
-    customElements.define('uib-var', UibVar)
-    customElements.define('uib-meta', UibMeta)
-    customElements.define('apply-template', ApplyTemplate)
-    customElements.define('uib-control', UibControl)
+document.addEventListener('uibuilder:httpHeadersReady', (evt) => {
+    uibuilder.set('httpHeaders', evt.detail)
+    try {
+        const data = JSON.parse(decodeURIComponent(evt.detail?.['uibuilder-pagedata']))
+        // if (uibuilder.pageData) data = { ...uibuilder.pageData, ...data, }
+        uibuilder.set('pageData', data)
+    } catch (e) {}
+    try {
+        uibuilder.start()
+    } catch (err) {
+        console.error(err)
+    }
 
     perf.set('all done', performance.now())
     log('info', 'uibuider', 'Client performance: ', perf)()
 })
+
+// Add built-in web component classes as a new Custom Element to the window object
+customElements.define('uib-var', UibVar)
+customElements.define('uib-meta', UibMeta)
+customElements.define('apply-template', ApplyTemplate)
+customElements.define('uib-control', UibControl)
 
 // #endregion --- Wrap up ---
