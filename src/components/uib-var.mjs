@@ -144,6 +144,8 @@ class UibVar extends TiBaseComponent {
         showUndefined: false,
         /** Whether to report back to Node-RED on data change @type {boolean} */
         sendReport: false,
+        /** Keep the original slot content so we can put it back if needed. Set in connectedCallback */
+        originalSlot: undefined,
     }
     #topic
     /** Whether to output if the variable is undefined */
@@ -161,6 +163,8 @@ class UibVar extends TiBaseComponent {
 
     /** Set the uibuilder variable name to watch */
     set variable(varName) {
+        // Save the original content - done here and on connect as timing can be tricky
+        if (!this._uib.originalSlot) this._uib.originalSlot = this.innerHTML
         if (varName) {
             this.#fullVarName = varName
             this._uib.uibVarDetails = this.uibuilder.varNameSubPathChk(varName)
@@ -239,6 +243,9 @@ class UibVar extends TiBaseComponent {
     // Runs when an instance is added to the DOM
     connectedCallback() {
         this._connect() // Keep at start.
+
+        // Save the original content - done here and in set variable as timing can be tricky
+        if (!this._uib.originalSlot) this._uib.originalSlot = this.innerHTML
 
         this._ready() // Keep at end. Let everyone know that a new instance of the component has been connected & is ready
     }
