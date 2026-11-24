@@ -5475,7 +5475,9 @@
         /** If true, show undefined variables with the text "undefined", otherwise show slot content @type {boolean} */
         showUndefined: false,
         /** Whether to report back to Node-RED on data change @type {boolean} */
-        sendReport: false
+        sendReport: false,
+        /** Keep the original slot content so we can put it back if needed. Set in connectedCallback */
+        originalSlot: void 0
       });
       __privateAdd(this, _topic);
       /** Whether to output if the variable is undefined */
@@ -5504,6 +5506,7 @@
     }
     /** Set the uibuilder variable name to watch */
     set variable(varName) {
+      if (!this._uib.originalSlot) this._uib.originalSlot = this.innerHTML;
       if (varName) {
         __privateSet(this, _fullVarName, varName);
         this._uib.uibVarDetails = this.uibuilder.varNameSubPathChk(varName);
@@ -5559,6 +5562,7 @@
     // Runs when an instance is added to the DOM
     connectedCallback() {
       this._connect();
+      if (!this._uib.originalSlot) this._uib.originalSlot = this.innerHTML;
       this._ready();
     }
     // Runs when an instance is removed from the DOM
@@ -8393,7 +8397,7 @@
      * @private
      */
     _processElVarProps(el, data) {
-      var _a3, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
+      var _a3, _b, _c, _d, _e, _f, _g, _h, _i;
       if (!_ui.isElement(el)) {
         log("error", "uibuilder:_processVarProps", "el is not an HTML element, cannot continue")();
         return false;
@@ -8420,13 +8424,13 @@
       if (Object.prototype.hasOwnProperty.call(data, "dataset")) this.setDataset(el, data.dataset);
       if (Object.prototype.hasOwnProperty.call(data, "payload")) {
         if (data.payload === void 0 && ((_g = el == null ? void 0 : el._uib) == null ? void 0 : _g.showUndefined) === false) {
+          if ("originalSlot" in el._uib) this.replaceSlot(el, el._uib.originalSlot);
           return true;
         }
-        if (((_h = el == null ? void 0 : el._uib) == null ? void 0 : _h.uibVarDetails.fullVarName) === "myTextInput") console.log(">> type", el.getAttribute("type"), (_i = el == null ? void 0 : el._uib) == null ? void 0 : _i.uibVarDetails.fullVarName, data, el);
         if (el.hasAttribute("content")) {
           el.setAttribute("content", "".concat(before).concat(data.payload).concat(after));
         } else {
-          const outputType = (_k = (_j = el == null ? void 0 : el._uib) == null ? void 0 : _j.outputType) != null ? _k : "html";
+          const outputType = (_i = (_h = el == null ? void 0 : el._uib) == null ? void 0 : _h.outputType) != null ? _i : "html";
           let output = this.applyFilterFn(el == null ? void 0 : el._uib, data.payload);
           let out = "";
           switch (outputType) {
@@ -8684,6 +8688,8 @@
       if (!el || !el.attributes) {
         return;
       }
+      if (!el._uib) el._uib = {};
+      el._uib.originalSlot = el.innerHTML;
       let uibAttribs = [...el.attributes].filter((attr) => this.isUibAttribute(attr.name));
       if (uibAttribs.length === 0) {
         return;
@@ -10262,10 +10268,12 @@
     perf.set("all done", performance.now());
     log("info", "uibuider", "Client performance: ", perf)();
   });
-  customElements.define("uib-var", uib_var_default);
-  customElements.define("uib-meta", uib_meta_default);
-  customElements.define("apply-template", apply_template_default);
-  customElements.define("uib-control", uib_control_default);
+  document.addEventListener("uibuilder:startComplete", (evt) => {
+    customElements.define("uib-var", uib_var_default);
+    customElements.define("uib-meta", uib_meta_default);
+    customElements.define("apply-template", apply_template_default);
+    customElements.define("uib-control", uib_control_default);
+  });
 })();
 /**
  * @description Overlay window for displaying messages and notifications.
