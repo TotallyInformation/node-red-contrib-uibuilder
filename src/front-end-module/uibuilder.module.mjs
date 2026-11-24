@@ -1982,11 +1982,12 @@ export const Uib = class Uib {
 
         // Process content/slot
         if (Object.prototype.hasOwnProperty.call(data, 'payload')) {
-            // If el has data-before/data-after attributes, apply these to the payload
+            // Restore if undefined unless we want to see undefined. Default, if avail, is set above
             if (data.payload === undefined && el?._uib?.showUndefined === false) {
+                // Put back the original slot content
+                if ('originalSlot' in el._uib) this.replaceSlot(el, el._uib.originalSlot)
                 return true
             }
-            if (el?._uib?.uibVarDetails.fullVarName === 'myTextInput') console.log('>> type', el.getAttribute('type'), el?._uib?.uibVarDetails.fullVarName, data, el)
             // If el has a `content` attrib, we must apply as text not html
             if (el.hasAttribute('content')) {
                 el.setAttribute('content', `${before}${data.payload}${after}`)
@@ -2331,6 +2332,9 @@ export const Uib = class Uib {
             // log('warn', 'uibuilder:_uibAttrScanOne', 'No element or no attributes found. Skipping.', el)()
             return
         }
+        // Save the original slot content in case we need to restore it
+        if (!el._uib) el._uib = {}
+        el._uib.originalSlot = el.innerHTML
         // Get all of the element's attributes that are uib-specific
         let uibAttribs = [...el.attributes].filter(attr => this.isUibAttribute(attr.name))
         // If no uib attributes, then skip
@@ -4615,9 +4619,11 @@ document.addEventListener('uibuilder:httpHeadersReady', (evt) => {
 })
 
 // Add built-in web component classes as a new Custom Element to the window object
-customElements.define('uib-var', UibVar)
-customElements.define('uib-meta', UibMeta)
-customElements.define('apply-template', ApplyTemplate)
-customElements.define('uib-control', UibControl)
+document.addEventListener('uibuilder:startComplete', (evt) => {
+    customElements.define('uib-var', UibVar)
+    customElements.define('uib-meta', UibMeta)
+    customElements.define('apply-template', ApplyTemplate)
+    customElements.define('uib-control', UibControl)
+})
 
 // #endregion --- Wrap up ---
