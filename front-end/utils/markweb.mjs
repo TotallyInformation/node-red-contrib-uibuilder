@@ -1019,13 +1019,11 @@ if (document.readyState === 'loading') {
  */
 function postDataUpdate(data) {
     // Pseudo-send updated page data to local uib store
-    // delete data.body // We don't need body in uibuilder store
     uibuilder.set('pageData', data )
-    // const toUrl = data.toUrl || window.location.href
-    const toUrl = data.path
 
     // ! DEPRECATED for v8.0.0
-    // Update elements with data-fmvar based on response data
+    // const toUrl = data.path
+    // // Update elements with data-fmvar based on response data
     // document.querySelectorAll('[data-fmvar]').forEach((el) => {
     //     // const attr = el.getAttribute('data-fmvar')
     //     if (el.dataset.fmvar === undefined) return
@@ -1319,7 +1317,7 @@ if (elSearchInput) elSearchInput.addEventListener('input', (e) => {
 
 // Create a DOM query for all elements with the "data-directive" attribute, and store the data-directive values in a Set for quick lookup
 
-/** On socket reconnection, reload the current page and request fresh nav indexes */
+/** On socket reconnection, reload the current page and request fresh nav indexes - doesn't fire on initial load */
 document.addEventListener('uibuilder:socket:connected', (evt) => {
     // if (evt.detail?.numConnections > 0) {
     if (uibuilder.get('reconnected') > 0) {
@@ -1381,7 +1379,7 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         // Received when server detects an index change (e.g. file added/removed)
         // Used to trigger updates of any indexListings via use of `uib-topic="_indexes-changed"` including sidebar nav
         case '_indexes-changed': {
-            // console.log('🕸️ Indexes changed on server.', ctrlMsg)
+            console.log('🕸️ Indexes changed on server.', ctrlMsg)
             // Request updated sidebar nav index from server
             uibuilder.sendCtrl({
                 uibuilderCtrl: 'internal',
@@ -1397,7 +1395,9 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
         case '_sidebar-nav-result': {
             // console.log('Sidebar nav updated from server.', ctrlMsg)
             if (ctrlMsg.navHtml) {
-                uibuilder.set('sidebar-nav', ctrlMsg.navHtml)
+                // We don't need to make this responsive to local change so don't use <uib-var>
+                const el = document.getElementById('sidebar-panel-nav')
+                el.innerHTML = ctrlMsg.navHtml
                 // Re-highlight current page in updated nav
                 if (sidebarController) {
                     sidebarController.highlightCurrentPage()
@@ -1438,11 +1438,11 @@ uibuilder.onChange('ctrlMsg', (ctrlMsg) => {
                 uibuilder.log('warn', 'markweb:ctrlMsg:_page-navigation-result', 'Error during page navigation:', ctrlMsg.attributes.error)
             }
             const data = updatePageData(ctrlMsg.attributes ?? {}, { from: '_page-navigation-result', initialPath: '', topic: ctrlMsg.topic, hashFragment: ctrlMsg.hashFragment, })
-            // console.log(
-            //     `Page change from ${ctrlMsg.from} (${data.from}):`,
-            //     ` Old url: ${currentPageUrl}, New url: ${data.toUrl}.`,
-            //     ctrlMsg
-            // )
+            uibuilder.log('log',
+                `Page change from ${ctrlMsg.from} (${data.from}):`,
+                ` Old url: ${currentPageUrl}, New url: ${data.toUrl}.`,
+                ctrlMsg
+            )
             // TODO: Sanitize data.body for safety
             // TODO: Should {{...}} replacements be done here? Instead of on server?
             // if (elContent) elContent.innerHTML = data.content || '<p>No content</p>'
