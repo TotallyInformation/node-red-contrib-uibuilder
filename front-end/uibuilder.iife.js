@@ -6704,11 +6704,13 @@
   var import_meta = {};
   var perf = /* @__PURE__ */ new Map();
   perf.set("loading uibuilder client library", performance.now());
-  var __uibHeadersPromise = fetch(location.href, { method: "HEAD", cache: "no-store" }).then((r) => {
+  fetch(location.href, { method: "HEAD", cache: "no-store" }).then((r) => {
     const h = {};
     r.headers.forEach((v, k) => h[k] = v);
     window.__uibHeaders = h;
-    return h;
+    perf.set("http headers", performance.now());
+    document.dispatchEvent(new CustomEvent("uibuilder:httpHeadersReady", { detail: h }));
+    return;
   });
   var version = "8.0.0-iife";
   var isMinified = !/param/.test(function(param) {
@@ -7228,12 +7230,6 @@
       __publicField(this, "isElCheckable", (el) => el.matches('input[type="checkbox"], input[type="radio"]'));
       log("trace", "Uib:constructor", "Starting")();
       perf.set("constructor starting", performance.now());
-      __uibHeadersPromise.then((headers) => {
-        this.httpHeaders = headers;
-        perf.set("http headers", performance.now());
-        this._dispatchCustomEvent("uibuilder:httpHeadersReady", headers);
-        return;
-      });
       window.addEventListener("offline", (e) => {
         this.set("online", false);
         this.set("ioConnected", false);
@@ -7294,7 +7290,7 @@
         "%c\u2757 info%c [logLevel]",
         "".concat(log.LOG_STYLES.level, " ").concat(log.LOG_STYLES.info.css),
         "".concat(log.LOG_STYLES.head, " ").concat(log.LOG_STYLES.info.txtCss),
-        "Set to ".concat(level, " (").concat(log.LOG_STYLES.names[level], ")")
+        "Set to ".concat(level, " (").concat(log.LOG_STYLES.names[level - 1], ")")
       );
     }
     get logLevel() {
@@ -7363,12 +7359,12 @@
       if (hasSubPath) {
         const value2 = this.getVarNameNestedValue(prop);
         if (value2 === void 0) {
-          log("info", "Uib:get", 'get() - property "'.concat(prop, '" is undefined'))();
+          log("log", "Uib:get", 'get() - property "'.concat(prop, '" is undefined'))();
         }
         return value2;
       }
       if (this[prop] === void 0) {
-        log("info", "Uib:get", 'get() - property "'.concat(prop, '" is undefined'))();
+        log("log", "Uib:get", 'get() - property "'.concat(prop, '" is undefined'))();
       }
       return this[prop];
     }
@@ -8393,21 +8389,14 @@
      * NOTE: el._uib contains additional processing details, set by uibuilder for custom attribute process and by <uib-var>
      * @param {HTMLElement} el The element to update
      * @param {string|*} data The input variable to process
-     * param {string} filterName The filter name to apply (must be in global or uibuilder context)
-     * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
-     * param {string=} varName What var we are processing (info only)
      * @return {boolean} True if element was updated, else false
      * @private
      */
-    _processElVarProps(el, data, isIf = false) {
+    _processElVarProps(el, data) {
       var _a3, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
       if (!_ui.isElement(el)) {
         log("error", "uibuilder:_processVarProps", "el is not an HTML element, cannot continue")();
         return false;
-      }
-      if (isIf === true) {
-        el.style.display = this.truthy(data) ? "unset" : "none";
-        return true;
       }
       if ((el == null ? void 0 : el._uib) && !((_a3 = el == null ? void 0 : el._uib) == null ? void 0 : _a3.showUndefined)) el._uib.showUndefined = false;
       if (this.isPrimitive(data)) {
@@ -8418,6 +8407,9 @@
         } else {
           data = { payload: data };
         }
+      } else {
+        if (Array.isArray(data)) data = { payload: data };
+        else if (this.isObject(data) && !data.payload) data = { payload: data };
       }
       const before = (_c = (_b = el == null ? void 0 : el.dataset) == null ? void 0 : _b.before) != null ? _c : "";
       const after = (_e = (_d = el == null ? void 0 : el.dataset) == null ? void 0 : _d.after) != null ? _e : "";
@@ -8471,6 +8463,12 @@
             }
             case "html":
             default: {
+              if (this.isObject(output) || Array.isArray(output)) {
+                try {
+                  output = JSON.stringify(output);
+                } catch (e) {
+                }
+              }
               out = "".concat(before).concat(output).concat(after);
               break;
             }
@@ -8562,7 +8560,6 @@
       current[finalKey] = value2;
       return true;
     }
-    // ! TODO: Check if we need to drop the 1st path
     /** Determine if a var name has a sub-path. e.g. a.b or c.d['e'], etc.
      * @param {string} fullVarName var name to check
      * @param {string} from For debugging
@@ -8610,7 +8607,8 @@
         const val = el.getAttribute("report");
         el._uib.sendReport = ["", "on", "true", "report"].includes(val);
       }
-      const value2 = this.getVarNameNestedValue((_b = (_a3 = el == null ? void 0 : el._uib) == null ? void 0 : _a3.uibVarDetails) == null ? void 0 : _b.fullVarName);
+      let value2 = this.getVarNameNestedValue((_b = (_a3 = el == null ? void 0 : el._uib) == null ? void 0 : _a3.uibVarDetails) == null ? void 0 : _b.fullVarName);
+      if (value2 === void 0 && el.dataset.default) value2 = el.dataset.default;
       const result = this._processElVarProps(el, value2);
       if (el._uib.sendReport === true && result === true) this.send({
         topic: el._uib.uibVarDetails.fullVarName,
@@ -8625,9 +8623,8 @@
      *  Supports deep property paths such as "myvar.aprop" or "myvar['bprop']".
      * @param {HTMLElement} el The element to process
      * @param {string} varName The variable name (optionally with property path) to watch for
-     * @param {boolean=} isIf True if we were originally called via the uib-if handler. Default=false
      */
-    _processUibVar(el, varName, isIf = false) {
+    _processUibVar(el, varName) {
       var _a3;
       if (!(el == null ? void 0 : el._uib)) el._uib = {};
       const { rootVarName } = el._uib.uibVarDetails = this.varNameSubPathChk(varName);
@@ -8640,9 +8637,7 @@
         this.varChange(el, rootValue, "on-change");
       });
       el._uib.varWatchName = rootVarName;
-      if (!isIf) {
-        this.varChange(el, this.get(rootVarName), "initial");
-      }
+      this.varChange(el, this.get(rootVarName), "initial");
     }
     /** Process a uib-if custom DOM attribute by safely evaluating a JavaScript expression that returns true/false.
      * If true (the default), the element's content is visible. If false, the content is hidden.
@@ -8650,11 +8645,33 @@
      * The expression can reference uibuilder managed variables (e.g. pageData.status) directly
      * as well as global/window variables.
      * @param {HTMLElement} el The element to process
-     * @param {string} expr The JavaScript expression to evaluate
+     * @param {string} varName The uibuilder variable to evaluate
      * @private
      */
-    async _processUibIf(el, expr) {
-      this._processUibVar(el, expr, true);
+    async _processUibIf(el, varName) {
+      var _a3;
+      if (!(el == null ? void 0 : el._uib)) el._uib = {};
+      const { rootVarName } = el._uib.uibVarDetails = this.varNameSubPathChk(varName);
+      if ((_a3 = el._uib) == null ? void 0 : _a3.varWatch) {
+        this.cancelChange(el._uib.varWatchName, el._uib.varWatch);
+        delete el._uib.varWatch;
+        delete el._uib.varWatchName;
+      }
+      const changeIf = async (value2) => {
+        let result = await this.evaluateWithRetry(varName, this);
+        if (result === void 0) result = false;
+        else result = this.truthy(result);
+        if (result === true) {
+          el.style.display = "initial";
+        } else {
+          el.style.display = "none";
+        }
+      };
+      el._uib.varWatch = this.onChange(rootVarName, async (rootValue) => {
+        await changeIf(rootValue);
+      });
+      el._uib.varWatchName = rootVarName;
+      await changeIf(this.get(rootVarName));
     }
     /** Check a single HTML element for uib custom DOM attributes and add auto-processors as needed.
      * Understands uib-prefixed attributes (e.g. uib-topic, uib-var, uib-bind:*, uib-if, etc). Msgs received on the topic can have:
@@ -8759,7 +8776,7 @@
             });
           }
           if (showLog === true) {
-            log("info", "uibuilder.module.js:uiWatch", "DOM Changes for '".concat(cssSelector, "'"), { uiChanges: out }, { mutationList })();
+            log("log", "uibuilder.module.js:uiWatch", "DOM Changes for '".concat(cssSelector, "'"), { uiChanges: out }, { mutationList })();
           }
         });
         __privateGet(this, _uiObservers)[cssSelector].observe(targetNode, { attributes: true, childList: true, subtree: true, characterData: true });
@@ -9011,7 +9028,7 @@
     notify(config) {
       if (config.return) return _ui.notification(config);
       _ui.notification(config).then((res) => {
-        log("info", "Uib:notification", "Notification completed event", res)();
+        log("log", "Uib:notification", "Notification completed event", res)();
       }).catch((err) => {
         log("error", "Uib:notification", "Notification error event", err)();
       });
@@ -9236,7 +9253,7 @@
         /** We are connected to the server - 1st msg from server */
         case "client connect": {
           log("trace", "Uib:ioSetup:".concat(this._ioChannels.control), 'Received "client connect" from server', receivedCtrlMsg)();
-          log("info", "Uib:ioSetup:".concat(this._ioChannels.control), "\u2705 Server connected. Version: ".concat(receivedCtrlMsg.version, "\nServer time: ").concat(receivedCtrlMsg.serverTimestamp, ", Sever time offset: ").concat(this.serverTimeOffset, " hours. Max msg size: ").concat(receivedCtrlMsg.maxHttpBufferSize))();
+          log("log", "Uib:ioSetup:".concat(this._ioChannels.control), "\u2705 Server connected. Version: ".concat(receivedCtrlMsg.version, "\nServer time: ").concat(receivedCtrlMsg.serverTimestamp, ", Sever time offset: ").concat(this.serverTimeOffset, " hours. Max msg size: ").concat(receivedCtrlMsg.maxHttpBufferSize))();
           if (!_a2._meta.version.startsWith(receivedCtrlMsg.version.split("-")[0])) {
             log("warn", "Uib:ioSetup:".concat(this._ioChannels.control), "Server version (".concat(receivedCtrlMsg.version, ") not the same as the client version (").concat(_a2._meta.version, ")"))();
           }
@@ -9388,7 +9405,7 @@
       if (!("_ui" in receivedMsg && !("payload" in receivedMsg))) {
         this.set("msg", receivedMsg);
       }
-      log("info", "Uib:ioSetup:stdMsgFromServer", "Channel '".concat(this._ioChannels.server, "'. Received msg #").concat(this.msgsReceived, "."), receivedMsg)();
+      log("log", "Uib:ioSetup:stdMsgFromServer", "Channel '".concat(this._ioChannels.server, "'. Received msg #").concat(this.msgsReceived, "."), receivedMsg)();
     }
     // -- End of websocket receive DATA msg from Node-RED -- //
     /** Process msg._uib.command - Remember to update #extCommands with new allowed commands
@@ -9942,7 +9959,7 @@
       if (this.initialConnect === null) this.initialConnect = true;
       else this.reconnected++;
       log(
-        "info",
+        "log",
         "Uib:ioSetup",
         "\u2705 SOCKET CONNECTED.\nConnection count: ".concat(this.connectedNum, " (Reconnected: ").concat(this.reconnected, ", Initial Connect: ").concat(this.initialConnect, "), Is a Recovery?: ").concat(this._socket.recovered, ".\nNamespace: ").concat(this.ioNamespace, "\nTransport: ").concat(this.currentTransport)
       )();
@@ -9972,7 +9989,7 @@
      * @private
      */
     _onDisconnect(reason, details) {
-      log("info", "Uib:ioSetup:socket-disconnect", "\u26D4 Socket Disconnected. Reason: ".concat(reason), details)();
+      log("log", "Uib:ioSetup:socket-disconnect", "\u26D4 Socket Disconnected. Reason: ".concat(reason), details)();
       this._dispatchCustomEvent("uibuilder:socket:disconnected", { reason, details });
       if (__privateGet(this, _manualDisconnect)) {
         __privateSet(this, _manualDisconnect, false);
@@ -10054,7 +10071,7 @@
      */
     connect(reason = "Manual connect") {
       __privateSet(this, _manualDisconnect, false);
-      log("info", "Uib:connect", reason)();
+      log("log", "Uib:connect", reason)();
       this._socket.io.reconnection(true);
       if (this._socketGlobal) this._socketGlobal.connect();
       this._socket.connect();
@@ -10063,7 +10080,7 @@
      * @param {string} [reason] Optional reason text for manual disconnection, used for logging
      */
     disconnect(reason = "Manual disconnect") {
-      log("info", "Uib:disconnect", reason)();
+      log("log", "Uib:disconnect", reason)();
       __privateSet(this, _manualDisconnect, true);
       this._socket.io.reconnection(false);
       if (this._socketGlobal) this._socketGlobal.disconnect();
@@ -10085,7 +10102,7 @@
       perf.set("start starting", performance.now());
       if (__privateGet(this, _MsgHandler)) this.cancelChange("msg", __privateGet(this, _MsgHandler));
       if (this.started === true) {
-        log("info", "Uib:start", "Start function already called. Resetting Socket.IO and msg handler.")();
+        log("log", "Uib:start", "Start function already called. Resetting Socket.IO and msg handler.")();
       }
       document.cookie.split(";").forEach((c) => {
         const splitC = c.split("=");
@@ -10229,15 +10246,26 @@
   } finally {
   }
   var uibuilder_module_default = uibuilder2;
-  document.addEventListener("uibuilder:httpHeadersReady", () => {
-    uibuilder2.start();
-    customElements.define("uib-var", uib_var_default);
-    customElements.define("uib-meta", uib_meta_default);
-    customElements.define("apply-template", apply_template_default);
-    customElements.define("uib-control", uib_control_default);
+  document.addEventListener("uibuilder:httpHeadersReady", (evt) => {
+    var _a3;
+    uibuilder2.set("httpHeaders", evt.detail);
+    try {
+      const data = JSON.parse(decodeURIComponent((_a3 = evt.detail) == null ? void 0 : _a3["uibuilder-pagedata"]));
+      uibuilder2.set("pageData", data);
+    } catch (e) {
+    }
+    try {
+      uibuilder2.start();
+    } catch (err) {
+      console.error(err);
+    }
     perf.set("all done", performance.now());
     log("info", "uibuider", "Client performance: ", perf)();
   });
+  customElements.define("uib-var", uib_var_default);
+  customElements.define("uib-meta", uib_meta_default);
+  customElements.define("apply-template", apply_template_default);
+  customElements.define("uib-control", uib_control_default);
 })();
 /**
  * @description Overlay window for displaying messages and notifications.
