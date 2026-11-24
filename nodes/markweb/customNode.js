@@ -1120,20 +1120,10 @@ function mdExtension(node) {
      */
     const fmVariablesHandler = (args, pageEnv) => {
         const varName = args.varName
-        let value = pageEnv[varName]
-        let errClass = ''
-        if (value === undefined) {
-            if (args.default !== undefined) {
-                value = args.default
-            } else {
-                value = `[Unknown variable: "${varName}"]`
-                errClass = ' variable-unknown'
-            }
-        }
-        // Only render before/after when we have a real value (not an error placeholder)
-        const hasValue = errClass === ''
-        const before = hasValue ? (args.before ?? args.prefix ?? '') : ''
-        const after = hasValue ? (args.after ?? '') : ''
+        const before = args.before ?? ''
+        const after = args.after ?? ''
+        const deflt = args.default ?? ''
+        const outputType = args.output ?? ''
         // Set data-before/data-after attributes on the element for client-side use (same as uib-var)
         const escAttr = (s) => {
             return s.replace(/&/g, '&amp;')
@@ -1143,8 +1133,10 @@ function mdExtension(node) {
         }
         const dataBefore = before ? ` data-before="${escAttr(before)}"` : ''
         const dataAfter = after ? ` data-after="${escAttr(after)}"` : ''
+        const dataDefault = deflt ? ` data-default="${escAttr(deflt)}"` : ''
+        const opType = outputType ? ` output="${escAttr(outputType)}"` : ''
         // Wrap in dummy element with data attribute for client-side processing
-        return /* html */`<fm-var class="fm-${varName}${errClass}" data-fmvar="${varName}"${dataBefore}${dataAfter}>${before}${value}${after}</fm-var>`
+        return /* html */`<uib-var variable="pageData.${varName}" class="fm-${varName}"${opType}${dataBefore}${dataAfter}${dataDefault}></uib-var>`
     }
     // Extend markdown-it with these plugins
     md
