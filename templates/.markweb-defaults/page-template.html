@@ -19,7 +19,7 @@
     <!-- REQUIRED: Sets window.pageData at load time -->
     %%prescript%%
     <!-- REQUIRED: uibuilder client library (optional logLevel)-->
-    <script type="module" src="../uibuilder/uibuilder.esm.min.js?logLevel=1"></script>
+    <script type="module" src="../uibuilder/uibuilder.esm.min.js?logLevel=2"></script>
     <!-- OPTIONAL: <show-meta> web component to display page metadata for debugging -->
     <script type="module" src="../uibuilder/utils/show-meta.mjs"></script>
     <!-- REQUIRED: The markweb client library -->
@@ -39,7 +39,6 @@
 
             <section>
                 <!-- Optional page status display -->
-                <!-- <blockquote class="visible-status" uib-if="pageData.status !== undefined || pageData.since !== undefined"> -->
                 <blockquote class="visible-status">
                     <uib-var variable="pageData.status" data-before="Status: " data-after=". "></uib-var>
                     <uib-var variable="pageData.since" data-before="Since: " data-after=". "></uib-var>
