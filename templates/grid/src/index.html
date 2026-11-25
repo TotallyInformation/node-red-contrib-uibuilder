@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../uibuilder/images/uib-world.svg" uib-var="pageData.favicon">
+
+    <title uib-var="pageData.title">Grid Layout - Node-RED UIBUILDER</title>
+    <meta name="description" content="Node-RED UIBUILDER - Grid Layout" uib-var="pageData.description">
+
+    <!-- Your own CSS (defaults to loading uibuilders css)-->
+    <link type="text/css" rel="stylesheet" href="./index.css" media="all">
+    <!-- NOTE this MUST be loaded as a MODULE. Imports uibuilder. Contains your custom code -->
+    <script type="module" async src="./index.mjs"></script>
+
+</head><body>
+    <header>
+        <h1  uib-var="pageData.title" class="with-subtitle">Grid Layout</h1>
+        <div uib-var="pageData.subtitle" role="doc-subtitle">Using UIBUILDER for Node-RED</div>
+    </header>
+
+    <main class="grid-2"><!-- grid-3, grid-4, grid-fit - see uib-brand.css  -->
+        <!-- Note the class to span the width -->
+        <div id="more" uib-topic="more" class="grid-span-all-cols"></div>
+
+        <!-- Example "card" content -->
+        <article>
+            <h2>Card 1 Heading</h2>
+            <p>Card 1 content</p>
+        </article>
+        <article>
+            <h2>Card 2 Heading</h2>
+            <p>Card 2 content</p>
+        </article>
+    </main>
+
+    <footer></footer>
+</body></html>

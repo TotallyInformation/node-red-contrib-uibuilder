@@ -1,0 +1,19 @@
+{
+  "name": "uib-grid",
+  "version": "2026-11-25",
+  "private": true,
+  "description": "This is a simple grid layout template for uibuilder. It also shows proper semantic HTML layout.",
+  "browser": "./src/index.js",
+  "scripts": {
+    "build": "echo \"No build process specified\""
+  },
+  "keywords": ["uibuilder", "node-red", "node-red-contrib-uibuilder", "front-end", "web", "app", "grid", "semantic"],
+  "author": "Julian Knight (Totally Information)",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/TotallyInformation/node-red-contrib-uibuilder",
+  "bugs": "https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TotallyInformation/node-red-contrib-uibuilder.git"
+  }
+}

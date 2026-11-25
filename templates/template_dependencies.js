@@ -19,8 +19,19 @@ module.exports = {
         description:
         `Default minimal template. Uses the IIFE client & no front-end framework library.
          The <code>index.js</code> file is commented out because you may not need it at all.
-         Contains a div with the id "<code>more</code>" which is set to automatically show
+         Contains a div with "<code>uib-topic="more"</code> which is set to automatically show
          <code>msg.payload</code> content sent with <code>msg.topic</code> set to "<code>more</code>".`,
+    },
+    'grid': {
+        name: 'Grid layout & semantic HTML',
+        folder: 'grid',
+        dependencies: [],
+        description:
+        `A simple, easily adjusted, grid layout with semantic HTML structure. Uses the ESM client & no front-end framework library.
+         Note the use of <code>index.mjs</code> rather than <code>.js</code> for clarity.
+         Adjust the number of grid columns by changing the class as shown in the html file.
+         Has 2 <code>article</code> example elements, these give a "card" type box that fits the grid.
+         Also has the usual "<code>uib-topic="more"</code>.`,
     },
     'ext-esm-router': {
         name: 'Single-page-app (SPA) Template (external)',
