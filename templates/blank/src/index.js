@@ -9,3 +9,9 @@
 // uibuilder.onChange('msg', (msg) => {
 //     // do stuff with the incoming msg
 // })
+
+// If you have timing issues (uibuilder data not yet ready)
+// Use this event to delay your code.
+// document.addEventListener('uibuilder:startComplete', () => {
+//     console.log('>> pageData?', uibuilder.get('pageData'))
+// })
