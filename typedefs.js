@@ -476,6 +476,7 @@
  * @property {string|undefined}  cacheKey msg property to use to group cached msgs
  * @property {boolean}  newcache Only replay cache if client is actually new, not a reconnection
  * @property {number}  num number of cached msgs to retain
+ * @property {number}  delay number of ms to delay replay
  * @property {string}  storeName Which store to use for the context variable
  * @property {'context'|'flow'|'node'}  storeContext Which store to use for the context variable
  * @property {object}  cache A reference to the actual cache for this node instance

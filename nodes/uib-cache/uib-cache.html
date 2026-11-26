@@ -14,29 +14,32 @@
     limitations under the License.
 -->
 
-
 <script type="text/html" data-template-name="uib-cache">
-    <div id="ti-edit-panel">
-        <div aria-label="Choose what msg property to group cache by" id="cacheKey-row" class="form-row">
-            <label for="node-input-cacheKey"><i class="fa fa-tag"></i> Cache by</label>
-            msg.<input type="text" id="node-input-cacheKey" placeholder="Enter a msg property. " style="width:64%">
-        </div>
+    <div id="ti-edit-panel" style="width:450px;">
         <div aria-label="Cache all or group by" title="Turn off cache by and record all msgs up to #" class="form-row">
             <input type="checkbox" id="node-input-cacheall" style="display: inline-block; width: auto; vertical-align: top;">
-            <label for="node-input-cacheall" style="width: 90%;">Cache all messages individually?<span id="caspan"> (Up to # given below)</span></label>
+            <label for="node-input-cacheall" class="uib-chkbox-label">Cache all messages individually?<span id="caspan"> (Up to # given below)</span></label>
         </div>
-        <div aria-label="Only replay cache if client as actually new" title="A new client comes from a page-load, not a reconnection" class="form-row">
+        <div aria-label="Choose what msg property to group cache by" id="cacheKey-row" class="form-row">
+            <label for="node-input-cacheKey"><i class="fa fa-tag"></i> Cache by</label>
+            msg.<input type="text" id="node-input-cacheKey" placeholder="Enter a msg property. " style="width:69%;">
+        </div>
+        <div aria-label="Only replay cache if client as actually new" title="A new client comes from a page-load only, not a reconnection" class="form-row">
             <input type="checkbox" id="node-input-newcache" style="display: inline-block; width: auto; vertical-align: top;" checked>
-            <label for="node-input-newcache" style="width: 90%;">Only replay cache when client is really new</label>
+            <label for="node-input-newcache" class="uib-chkbox-label">Only replay cache when client is really new</label>
+        </div>
+        <div aria-label="Delay cache replays by a set amount" title="Delay cache replays by a set amount in milliseconds. Default=0. Overridden my msg._uibCacheDelay" class="form-row">
+            <label for="node-input-delay">Delay replays:</label>
+            <input type="number" id="node-input-delay" style="width:6em;" value="0">(ms)
         </div>
         <div aria-label="How many msgs to cache" title="Use 0 for unlimited (up to memory availability)" class="form-row">
             <label for="node-input-num"><i class="fa fa-tag"></i> # msgs</label>
-            <input type="number" id="node-input-num">
+            <input type="number" id="node-input-num" style="width:8em;">
         </div>
-        <div aria-label="Info for cache settings" class="form-row form-tips node-help" style="width:89%">
+        <div aria-label="Info for cache settings" class="form-row form-tips node-help">
             Number of msgs to cache<span id="help-per"> per topic</span>.<br>
-            Messages are dropped off front of queue once limit is reached.<br>
-            Use 0 for unlimited but take care not to run out of memory.
+            Msgs dropped off front of queue once limit reached.<br>
+            Use 0 for unlimited but watch memory use.
         </div>
     
         <div aria-label="Select which context store and variable to use" class="form-row uib-context-select">
@@ -48,16 +51,17 @@
             <input type="text" id="node-input-varName" value="uib_cache" title="Can only change if Type is not 'Node'" placeholder="REQD: Context variable name">
         </div>
     
-        <div aria-label="Info for context store" class="form-row form-tips node-help" style="width:89%">
-            Select a context <b>store</b> to use if you have more than one set up.<br>
-            Use persistent store if you want cache to survive a system reset.<br>
-            If store changed, old one must be manually deleted.
-        </div>
-    
-        <div aria-label="Info for store type" class="form-row form-tips node-help" style="width:89%">
-            Select which <b>type</b> of store to use. The default is "Node".<br>
+        <div aria-label="Info for context store" class="form-row form-tips node-help">
+            <b>Store:</b>
+            Select context <i>store</i> to use.
+            Use persistent store to survive system reset.
+            If store changed, delete old manually.<br>
+            <b>Type:</b>
+            Select which <i>type</i> of store to use. The default is "Node".<br>
             Node = This node's store, only accessible to this node.<br>
-            Flow/Global = Accessible to other nodes. Use with caution.
+            Flow/Global = Accessible to other nodes. Use with caution.<br>
+            <b>Name:</b>
+            Needed if type is not node.
         </div>
     
         <hr>

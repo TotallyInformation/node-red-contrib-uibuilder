@@ -10,10 +10,18 @@
     <p>
         Any msg can be sent into the node.
     </p>
+    <blockquote>
+        Note: In the default settings, to cache a message, it must have a <code>msg.topic</code>.
+    </blockquote>
     <p>
         In addition, the node recognises uibuilder control messages for cache replay and cache clear.<br>
         See <a href="./uibuilder/techdocs/#/pre-defined-msgs" target="_blank">Documentation: pre-defined messages</a> 
         for the structure of those messages.
+    </p>
+    <p>
+        <code>msg._uibCacheDelay</code> will override the <i>Replay Delay</i> setting in the node.
+        This is useful in case you need messages to be replayed in a specific order.
+        For example, sending a no-code page element followed by content data.
     </p>
 
     <h3>Outputs</h3>
@@ -33,11 +41,20 @@
         This can be used in your front-end code if you need to differentiate between original and replayed messages.
     </p>
     <p>
+        Replay is delayed if the <i>Replay Delay</i> is >0 or if <code>msg._uibCacheDelay</code> is included in the cached message.
+    </p>
+    <p>
         If the node receives a CLEAR control message, all of the cached messages are deleted and nothing is sent to the output.
     </p>
 
     <h3>Node Settings</h3>
     <dl class="message-properties">
+        <dt>Cache all messages individually? <span class="property-type">boolean</span></dt>
+        <dd>
+            If selected, the "Cache by" field will be hidden. All messages will be
+            cached as a single group.
+        </dd>
+
         <dt>Cache by <span class="property-type">string</span></dt>
         <dd>
             Enter an incoming message property to group cached entries by.<br>
@@ -46,18 +63,19 @@
             The default entry is "topic".
         </dd>
 
-        <dt>Cache individually? <span class="property-type">boolean</span></dt>
-        <dd>
-            If selected, the "Cache by" field will be hidden. All messages will be
-            cached as a single group.
-        </dd>
-
         <dt>Only replay cache when client is really new <span class="property-type">boolean</span></dt>
         <dd>
             If selected, when a "client connect" control message is received, the cache will only
             be sent if <code>msg.connections</code> is zero. That indicates that the client connection
             is actually a new one and node a reconnection. This is now the default as it reduces the number
             of times the cache is sent and does not send if the client is simply waking up (when it doesn't need the cache.)
+        </dd>
+
+        <dt>Delay replays (ms)<span class="property-type">integer</span></dt>
+        <dd>
+            Delay replays of messages by the given number of milliseconds.
+            Unless a <code>_uibCacheDelay</code> property is set to a number in
+            the cached message, in which case, that number is used instead.
         </dd>
 
         <dt># messages <span class="property-type">integer</span></dt>

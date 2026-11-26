@@ -68,8 +68,8 @@ function trimCacheAll(node) {
     for (const key of Object.keys(node.cache)) {
         const msgs = node.cache[key]
         // See if the array is now too long - if so, slice it down to size
-        if ( msgs.length > node.num ) {
-            node.cache[key] = msgs.slice( msgs.length - node.num )
+        if (msgs.length > node.num) {
+            node.cache[key] = msgs.slice(msgs.length - node.num)
         }
     }
 
@@ -123,12 +123,12 @@ function addToCache(msg, node) {
     const cacheKey = node.cacheKey
 
     // If msg[<cacheKey>] doesn't exist (or is an empty string), do not process
-    if ( !msg[cacheKey] ) return
+    if (!msg[cacheKey]) return
 
     const cacheKeyValue = msg[cacheKey]
 
     // If this is a new property value in the stored variable, create empty array
-    if ( !node.cache[cacheKeyValue] ) node.cache[cacheKeyValue] = []
+    if (!node.cache[cacheKeyValue]) node.cache[cacheKeyValue] = []
 
     // HAS to be a CLONE to avoid downstream changes impacting cache
     // @since v7.6.0 - use structuredClone for better performance
@@ -140,8 +140,8 @@ function addToCache(msg, node) {
     node.cache[cacheKeyValue].push(clone)
 
     // See if the array is now too long - if so, slice it down to size (unless num=0)
-    if ( node.num !== 0 && node.cache[cacheKeyValue].length > node.num ) {
-        node.cache[cacheKeyValue] = node.cache[cacheKeyValue].slice( node.cache[cacheKeyValue].length - node.num )
+    if (node.num !== 0 && node.cache[cacheKeyValue].length > node.num) {
+        node.cache[cacheKeyValue] = node.cache[cacheKeyValue].slice(node.cache[cacheKeyValue].length - node.num)
     }
 
     // Save the cache. @since v7.6.0 - debounced to improve performance under high load
@@ -150,7 +150,7 @@ function addToCache(msg, node) {
 
     // @since v7.6.0 - throttled to improve performance under high load
     throttledStatus(node)
-} // ---- end of addToCache ---- //
+}
 
 /** Clear the cache
  * @param {runtimeNode & cacheNode} node Reference to node instance
@@ -161,7 +161,7 @@ function clearCache(node) {
     node.cache = {}
 
     setNodeStatus(node)
-} // ---- end of clearCache ---- //
+}
 
 /** Send the cache
  * @param {Function} send Reference to the Node's send function
@@ -188,19 +188,75 @@ function sendCache(send, node, msg) {
             // TODO Add flag override
             if (socketId) clone._socketId = socketId
 
-            // send( clone )
-            toSend.push( clone )
+            // Delay cache replay if requested
+            if (cachedMsg?._uibCacheDelay || node.delay) {
+                let dly = 0
+                if (Number(cachedMsg?._uibCacheDelay) > 0) {
+                    dly = Number(cachedMsg._uibCacheDelay)
+                } else if (node.delay > 0) {
+                    dly = node.delay
+                }
+                setTimeout(() => {
+                    send(clone)
+                }, dly)
+            } else {
+                send(clone)
+            }
         }
     }
+}
 
-    send([toSend])
-} // ---- end of sendCache ---- //
+/** Remove the first or last `n` entries from one key, or from every key.
+ * @since v8.0.0
+ * @param {runtimeNode & cacheNode} node Reference to node instance
+ * @param {number} entriesToRemove how many entries to remove per key
+ * @param {object} [opts] Options (default={})
+ * @param {'first'|'last'} [opts.from] which end to remove from (default=first)
+ * @param {string} [opts.key] limit to one key; omit for ALL keys
+ * @param {boolean} [opts.pruneEmpty] delete keys left with no entries (default=true)
+ * @return {number} total number of entries removed
+ */
+function clearCacheEntries(node, entriesToRemove, { from = 'first', key, pruneEmpty = true, } = {}) {
+    const cache = node.cache
+    if (!Number.isInteger(entriesToRemove) || entriesToRemove < 0) {
+        throw new RangeError('n must be a non-negative integer')
+    }
+    if (from !== 'first' && from !== 'last') {
+        throw new TypeError("from must be 'first' or 'last'")
+    }
 
-// TODO: Adjust processes for all msg caching
-// TODO: Add clearF(n) to drop the oldest N msgs from cache, clearL(n) to drop the newest N msgs from the cache
-// TODO: And to the cache control msgs
-// TODO: Editor option to to ignore replay socket id
-// TODO: Editor options to clear the cache, clear first n, clear last n entries
+    let keys
+    if (key === undefined) { // process all keys
+        keys = Object.keys(cache)
+    } else { // one key
+        if (!Object.hasOwn(cache, key)) return 0
+        keys = [key]
+    }
+
+    let removed = 0
+
+    for (const k of keys) {
+        const entries = cache[k]
+        if (!Array.isArray(entries)) continue
+
+        const before = entries.length
+
+        if (from === 'first') {
+            entries.splice(0, entriesToRemove)
+        } else {
+            entries.splice(Math.max(0, entries.length - entriesToRemove), entriesToRemove)
+        }
+
+        removed += before - entries.length
+
+        if (pruneEmpty && entries.length === 0) delete cache[k]
+    }
+
+    debouncedSave(node)
+    return removed
+}
+
+// TODO: See ../../docs/roadmap/nodes/uib-cache.md
 
 /** 1) Complete module definition for our Node. This is where things actually start.
  * @param {runtimeRED} RED The Node-RED runtime object
@@ -238,12 +294,16 @@ function nodeInstance(config) {
     this.cacheKey = config.cacheKey ?? 'topic'
     this.newcache = config.newcache ?? true
     this.num = Number(config.num) // zero is unlimited cache
+    this.delay = Number(config.delay) // zero is no replay delay
     this.storeName = config.storeName ?? 'default'
     this.storeContext = config.storeContext ?? 'context'
     this.varName = config.varName ?? 'uib_cache'
 
-    if (Number.isNaN(this.num) || this.num < 0) {
+    if (Number.isNaN(this.num) || this.num < 1) { // default to 1
         this.num = 1
+    }
+    if (Number.isNaN(this.delay) || this.delay < 0) { // default to 0
+        this.delay = 0
     }
 
     // Show if anything in the cache
@@ -251,7 +311,7 @@ function nodeInstance(config) {
 
     // Get ref to this node's context store or the flow/global stores as needed
     let context = this.context()
-    if ( this.storeContext !== 'context') {
+    if (this.storeContext !== 'context') {
         context = context[this.storeContext]
     }
     this.getC = context.get
@@ -309,24 +369,24 @@ function inputMsgHandler(msg, send, done) {
 
     // Only send if connection is really new (connections=0) - if newcache is selected
     let sendit = true
-    if ( this.newcache === true && msg.connections && msg.connections > 2 ) sendit = false
+    if (this.newcache === true && msg.connections && msg.connections > 2) sendit = false
 
     // Is this a control msg?
-    if ( msg.uibuilderCtrl ) {
-        if ( msg.cacheControl ) {
-            if ( msg.cacheControl === 'REPLAY' && sendit === true ) {
+    if (msg.uibuilderCtrl) {
+        if (msg.cacheControl) {
+            if (msg.cacheControl === 'REPLAY' && sendit === true) {
                 // Send the cache
                 sendCache(send, this, msg)
-            } else if ( msg.cacheControl === 'CLEAR' ) {
+            } else if (msg.cacheControl === 'CLEAR') {
                 // Clear the cache
                 clearCache(this)
             }
-        } else if ( msg.uibuilderCtrl === 'client connect' && sendit === true ) {
+        } else if (msg.uibuilderCtrl === 'client connect' && sendit === true) {
             sendCache(send, this, msg)
         }
     } else {
         // Remove ExpressJS msg.res and msg.req because they are recursive objects and cannot be serialised
-        if ( Object.prototype.hasOwnProperty.call(msg, 'req') || Object.prototype.hasOwnProperty.call(msg, 'res') ) {
+        if (Object.prototype.hasOwnProperty.call(msg, 'req') || Object.prototype.hasOwnProperty.call(msg, 'res')) {
             mod.RED.log.info('🌐📘[uib-cache:inputMsgHandler] msg contains Express res/req. These cannot be serialised so removing them.')
             delete msg.req
             delete msg.res
@@ -340,7 +400,7 @@ function inputMsgHandler(msg, send, done) {
 
     // We are done
     done()
-} // ----- end of inputMsgHandler ----- //
+}
 
 // Export the module definition (1), this is consumed by Node-RED on startup.
 module.exports = UibCache
