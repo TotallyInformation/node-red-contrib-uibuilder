@@ -25,9 +25,9 @@ perf.set('loading uibuilder client library', performance.now())
 // Fastest way to get the http headers
 fetch(location.href, { method: 'HEAD', cache: 'no-store', }) // eslint-disable-line promise/catch-or-return
     .then((r) => {
-        // console.log('>> >> HEADERS >> >> ', r.headers)
         const h = {}
         r.headers.forEach((v, k) => h[k] = v)
+        // console.log('>> >> HEADERS >> >> ', h, r)
         window.__uibHeaders = h
         perf.set('http headers', performance.now())
         document.dispatchEvent(new CustomEvent('uibuilder:httpHeadersReady', { detail: h, }))
@@ -4385,6 +4385,10 @@ export const Uib = class Uib {
      * @return {void}
      */
     start(options) {
+        if (!window.__uibHeaders) {
+            log('error', 'uibuilder:start', 'Cannot run start before headers are ready')
+            return
+        }
         log('trace', 'Uib:start', 'Starting')()
         perf.set('start starting', performance.now())
 
@@ -4411,21 +4415,23 @@ export const Uib = class Uib {
         // console.log('cookies: ', this.cookies, document.cookie)
 
         /** httpNodeRoot (to set path) */
-        if (this.httpHeaders) {
-            this.set('httpNodeRoot', this.httpHeaders['uibuilder-webroot'])
-        } else if ('uibuilder-webRoot' in this.cookies) {
-            this.set('httpNodeRoot', this.cookies['uibuilder-webRoot'])
-            log('trace', 'Uib:constructor', `httpNodeRoot set by cookie to "${this.httpNodeRoot}"`)()
-        } else {
+        let httpNodeRoot = ''
+        if (this.httpHeaders) { // get from headers if possible
+            httpNodeRoot = this.httpHeaders['uibuilder-webroot']
+        } else if ('uibuilder-webRoot' in this.cookies) { // or cookie if possible
+            httpNodeRoot = this.cookies['uibuilder-webRoot']
+            log('trace', 'Uib:constructor', `httpNodeRoot set by cookie to "${httpNodeRoot}"`)()
+        } else { // last resort, try to derive from current URL
             // split current url path, eliminate any blank elements and trailing or double slashes
             const fullPath = window.location.pathname.split('/').filter(function (t) { return t.trim() !== '' }) // eslint-disable-line @stylistic/max-statements-per-line
             /** handle url includes file name - @since v2.0.5 Extra check for 0 length, Issue #73. */
             if (fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith('.html')) fullPath.pop()
             fullPath.pop() // gives the last path section of the url
-            this.set('httpNodeRoot', `/${fullPath.join('/')}`)
-            log('trace', '[Uib:constructor]', `httpNodeRoot set by URL parsing to "${this.httpNodeRoot}". NOTE: This may fail for pages in sub-folders.`)()
+            httpNodeRoot = `/${fullPath.join('/')}`
+            log('trace', '[Uib:constructor]', `httpNodeRoot set by URL parsing to "${httpNodeRoot}". NOTE: This may fail for pages in sub-folders.`)()
         }
-        this.set('ioPath', this.urlJoin(this.httpNodeRoot, Uib._meta.displayName, 'vendor', 'socket.io'))
+        this.set('httpNodeRoot', httpNodeRoot)
+        this.set('ioPath', this.urlJoin(httpNodeRoot, Uib._meta.displayName, 'vendor', 'socket.io'))
         log('trace', 'Uib:constructor', `ioPath: "${this.ioPath}"`)()
 
         // Work out pageName

@@ -10102,6 +10102,10 @@ var Uib = (_a2 = class {
    * @return {void}
    */
   start(options) {
+    if (!window.__uibHeaders) {
+      log("error", "uibuilder:start", "Cannot run start before headers are ready");
+      return;
+    }
     log("trace", "Uib:start", "Starting")();
     perf.set("start starting", performance.now());
     if (__privateGet(this, _MsgHandler)) this.cancelChange("msg", __privateGet(this, _MsgHandler));
@@ -10115,21 +10119,23 @@ var Uib = (_a2 = class {
     this.set("clientId", this.httpHeaders["uibuilder-client-id"] || this.cookies["uibuilder-client-id"] || void 0);
     log("trace", "Uib:constructor", "Client ID: ", this.clientId)();
     this.set("ioNamespace", this._getIOnamespace());
+    let httpNodeRoot = "";
     if (this.httpHeaders) {
-      this.set("httpNodeRoot", this.httpHeaders["uibuilder-webroot"]);
+      httpNodeRoot = this.httpHeaders["uibuilder-webroot"];
     } else if ("uibuilder-webRoot" in this.cookies) {
-      this.set("httpNodeRoot", this.cookies["uibuilder-webRoot"]);
-      log("trace", "Uib:constructor", 'httpNodeRoot set by cookie to "'.concat(this.httpNodeRoot, '"'))();
+      httpNodeRoot = this.cookies["uibuilder-webRoot"];
+      log("trace", "Uib:constructor", 'httpNodeRoot set by cookie to "'.concat(httpNodeRoot, '"'))();
     } else {
       const fullPath = window.location.pathname.split("/").filter(function(t) {
         return t.trim() !== "";
       });
       if (fullPath.length > 0 && fullPath[fullPath.length - 1].endsWith(".html")) fullPath.pop();
       fullPath.pop();
-      this.set("httpNodeRoot", "/".concat(fullPath.join("/")));
-      log("trace", "[Uib:constructor]", 'httpNodeRoot set by URL parsing to "'.concat(this.httpNodeRoot, '". NOTE: This may fail for pages in sub-folders.'))();
+      httpNodeRoot = "/".concat(fullPath.join("/"));
+      log("trace", "[Uib:constructor]", 'httpNodeRoot set by URL parsing to "'.concat(httpNodeRoot, '". NOTE: This may fail for pages in sub-folders.'))();
     }
-    this.set("ioPath", this.urlJoin(this.httpNodeRoot, _a2._meta.displayName, "vendor", "socket.io"));
+    this.set("httpNodeRoot", httpNodeRoot);
+    this.set("ioPath", this.urlJoin(httpNodeRoot, _a2._meta.displayName, "vendor", "socket.io"));
     log("trace", "Uib:constructor", 'ioPath: "'.concat(this.ioPath, '"'))();
     this.set("pageName", window.location.pathname.replace("".concat(this.ioNamespace, "/"), ""));
     if (this.pageName.endsWith("/")) this.set("pageName", "".concat(this.pageName, "index.html"));
