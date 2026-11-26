@@ -1,6 +1,6 @@
 /**
- * CSS Resource file for UIBUILDER
- *
+ * CSS Resource file for UIBUILDER in the Node-RED Editor
+ * Version: 2026-11-25
  * Load as: ./resources/node-red-contrib-uibuilder/editor-common.css
  */
 
@@ -10,6 +10,7 @@
     --uib-red: hsl(0 100% 45% / 70%); /* #8f0000; */
     --min-editor-panel-width: 450px;
     --typedInput-width-adjust: 105px;
+    --uib-margin-bottom: 0.5em;
 }
 
 /* For the UIBUILDER formatted name */
@@ -44,10 +45,19 @@
         sans-serif;
 }
 
+#ti-edit-panel {
+    line-height: 1.5;
+    /* width: 450px; */
+}
+
 #ti-edit-panel .form-tips {
-    margin-bottom: 1rem;
-    margin-left: auto;
-    margin-right: auto;
+    margin-bottom: var(--uib-margin-bottom);
+    /* margin-left: auto; */
+    /* margin-right: auto; */
+    max-width: unset;
+    width: 95%;
+    font-size: smaller;
+    line-height: 1.5;
 }
 
 #ti-edit-panel .red-ui-typedInput-container {
@@ -66,7 +76,10 @@
     width:fit-content;
     padding-left: .2em;
     padding-right: .2em;
-    color: inherit;
+    margin-bottom: 0;
+    font-size: 1rem;
+    line-height: inherit;
+    border-bottom: none;
 }
 #ti-edit-panel input[type="checkbox"] {
     display: inline-block;
@@ -74,12 +87,14 @@
     vertical-align: top;
 }
 
-/* #ti-edit-panel .form-row {
-    width: 100%;
-    display: inline-block
-} */
+#ti-edit-panel .form-row {
+    margin-bottom: var(--uib-margin-bottom);
+}
 #ti-edit-panel .form-row label {
     width: 100px;
+}
+#ti-edit-panel .form-row label.uib-chkbox-label {
+    width: 95%;
 }
 #ti-edit-panel .form-row input:not(.red-ui-typedInput-input), #ti-edit-panel .form-row select {
     width: calc(100% - 105px);
@@ -137,6 +152,7 @@
 
 /* Context selectors () e.g. uib-cache */
 .uib-context-select {
+    max-width: 25em;
     --typedInput-width-adjust: 0px;
     display: grid;
     grid-template-columns: 1fr 1fr 2fr;
