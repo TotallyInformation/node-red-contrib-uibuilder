@@ -3,9 +3,9 @@ title: markweb - Dynamic web sites using Markdown
 description: |
   The `markweb` node gives you the ability to really simply create dynamic web sites using Markdown files.
 created: 2026-01-09 15:10:14
-updated: 2026-04-09 19:17:31
+updated: 2026-11-25 10:46:58
 status: Release
-since: v7.6.0
+since: v7.6.0, updated v8.0.0
 ---
 
 You simply define a source folder containing your Markdown files. An HTML template is used to create the overall layout. Everything else is automated for you.
@@ -43,6 +43,7 @@ Navigation and other index listings are collapsible and have a faint left-hand b
 The search box allows you to search for pages by title, description, tags, and content. Search results are sorted by relevance and show a snippet of the matching content. Navigating to a search result retains the search query and results so that you can easily navigate to the next result if desired. Currently, search links only take you to the relavent page, future updates are likely to also scroll to the relevant section within the page. If a search result points to the current page, it is highlighted in the list.
 
 ## Styling
+
 Markweb comes with its own CSS stylesheet (`../uibuilder/utils/markweb.css`) that extends the default uibuilder brand CSS. The styles are only configured for dark mode currently. But, of course, you can customise and change styles as needed.
 
 
@@ -258,7 +259,7 @@ sequenceDiagram
 > [!NOTE]
 > When processing a file-change, the main Markdown content is rendered to HTML **on the server**. So all fm variables and directives are processed server-side.
 >
-> Variables are referenced in the template HTML using standard uibuilder reactive web components or HMTL attributes and so are automatically updated upon receipt of the new page data. 
+> Variables are referenced in the template HTML using standard uibuilder reactive web components or HMTL attributes and so are automatically updated upon receipt of the new page data.
 
 > [!TIP]
 > Connected clients will only receive updates after the 1 second debounce period. If you make multiple changes within that period, they will be grouped together into a single update.
@@ -285,7 +286,7 @@ The `source` folder specified in the node's Editor config is used as the root fo
 
 > [!TIP]
 > The source folder **must** already exist. The node will not create it for you.
-> 
+>
 > It must have at least a single `index.md`, `_index.md`, or `<foldername>.md` file to serve any content.
 
 The `configFolder` specified in the node config is used to store configuration files such as the HTML wrapper template and global attributes. If a relative path is provided, it is made relative to the Node-RED `userDir` folder.
@@ -294,7 +295,7 @@ The `configFolder` specified in the node config is used to store configuration f
 > The config folder must already exist. The node will not create it for you.
 >
 > It is recommended _not_ to use a sub-folder of the source folder for the config folder to avoid accidental exposure of config files via the web server.
-> 
+>
 > The system will automatically copy default versions of `page-template.html` and `global-attributes.json` to the config folder on Node-RED startup if they are not already present.
 
 
@@ -315,16 +316,16 @@ The HTML wrapper template is stored in the `page-template.html` file in the `con
 > [!NOTE]
 > See [Default Template](#default-page-template) below for the default template and styling details.
 
-This template is used to wrap the rendered HTML content from the markdown files. Variables are referenced in the template HTML using standard uibuilder reactive web components (`<uib-var>`) or HTML reactive attributes (`uib-var`) and so are automatically updated upon receipt of the new page data. 
+This template is used to wrap the rendered HTML content from the markdown files. Variables are referenced in the template HTML using standard uibuilder reactive web components (`<uib-var>`) or HTML reactive attributes (`uib-var`) and so are automatically updated upon receipt of the new page data.
 
 Requirements (see the default template for details):
 
-* Any scripts should be treated as ES Modules.
-* Must include `<uib-var variable="pageData.content" type="html">No content</uib-var>` to indicate where the main content should be inserted.
-* Must include a `<base href="%%url%%/">` tag in the `<head>` section for proper SPA navigation.
-* Must include a `%%prescript%%` before the line that loads the uibuilder client library. This silently inserts a pre-script that sets `window.pageData` to the loaded page's metadata so that it can be processed early in the page display lifecycle.
-* Must include the ESM version of the uibuilder client library. It may include `?logLevel=1` (or some other level) on the URL to set the uibuilder client debugging log level if desired.
-* Must include the `markweb.mjs` front-end processing library _after_ uibuilder client library.
+- Any scripts should be treated as ES Modules.
+- Must include `<uib-var variable="pageData.content" type="html">No content</uib-var>` to indicate where the main content should be inserted.
+- Must include a `<base href="%%url%%/">` tag in the `<head>` section for proper SPA navigation.
+- Must include a `%%prescript%%` before the line that loads the uibuilder client library. This silently inserts a pre-script that sets `window.pageData` to the loaded page's metadata so that it can be processed early in the page display lifecycle.
+- Must include the ESM version of the uibuilder client library. It may include `?logLevel=1` (or some other level) on the URL to set the uibuilder client debugging log level if desired.
+- Must include the `markweb.mjs` front-end processing library _after_ uibuilder client library.
 
 > [!TIP]
 > To get the default template back, simply rename your existing `page-template.html` file in the `configFolder` and restart Node-RED. The default version will be copied back into place. You may wish to keep a copy of it to hand for reference.
@@ -368,8 +369,9 @@ Client updates are controlled by updating HTML elements with specific `data-attr
 > All dependencies for this node are dealt with internally. You do not need to install any additional packages.
 
 The node uses 2 packages from separate sub-workspaces:
-* `@totallyinformation/uib-fs-utils` - Chokidar for file watching.
-* `@totallyinformation/uib-md-utils` - Front-Matter, Markdown-IT & extensions.
+
+- `@totallyinformation/uib-fs-utils` - Chokidar for file watching.
+- `@totallyinformation/uib-md-utils` - Front-Matter, Markdown-IT & extensions.
 
   The original intent was to use the `marked` package as is already used and installed by Node-RED. However, it is not possible to access that library reliably from a custom node due to the way Node-RED manages its dependencies. In addition, it has some significant limitations. So `markdown-it` has been used instead.
 
@@ -399,7 +401,7 @@ This layout uses a vertical navigation menu in a sidebar on the left, with the p
   -- % %body% % is where the main content goes. If you don't include it, you get no content!
   -- <base> is REQUIRED for SPA navigation to work properly.
   -->
-<html lang="en"><head>
+<html lang="en" class="dark"><head>
     <meta charset="UTF-8">
     <base href="%%url%%/">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -414,46 +416,39 @@ This layout uses a vertical navigation menu in a sidebar on the left, with the p
     <!-- REQUIRED: Sets window.pageData at load time -->
     %%prescript%%
     <!-- REQUIRED: uibuilder client library (optional logLevel)-->
-    <script type="module" src="../uibuilder/uibuilder.esm.min.js?logLevel=1"></script>
-    <!-- OPTIONAL show-meta component to display page metadata for debugging -->
+    <script type="module" src="../uibuilder/uibuilder.esm.min.js?logLevel=2"></script>
+    <!-- OPTIONAL: <show-meta> web component to display page metadata for debugging -->
     <script type="module" src="../uibuilder/utils/show-meta.mjs"></script>
-    <!-- Base URL is REQUIRED by the module! The uibuilder client lib is loaded by this module -->
-    <!-- <script type="module" src="../uibuilder/utils/markweb.mjs" data-base-url="%%url%%"></script> -->
+    <!-- REQUIRED: The markweb client library -->
     <script type="module" src="../uibuilder/utils/markweb.mjs"></script>
     <!-- You can add your own scripts after here -->
+</head><body>
+    <div id="markweb">
+        <!-- Adds resizer column, Wraps sidebar in an aside tag -->
+        %%sidebar%%
+        <!-- Main content -->
+        <main>
+            <a class="skip-link" href="#main">Skip to main content</a>
+            <header>
+                <h1><a id="page-title-link" href="#" style="color: inherit; text-decoration: none;"><uib-var variable="pageData.title">No Title</uib-var></a></h1>
+                <div uib-var="pageData.description">No Description for this page.</div>
+            </header>
 
-</head><body><div id="markweb">
+            <section>
+                <!-- Optional page status display -->
+                <blockquote class="visible-status">
+                    <uib-var variable="pageData.status" data-before="Status: " data-after=". "></uib-var>
+                    <uib-var variable="pageData.since" data-before="Since: " data-after=". "></uib-var>
+                </blockquote>
+                <!-- This is where the main content goes. It will be replaced on navigation. -->
+                <uib-var variable="pageData.content" output="html">No content</uib-var>
+            </section>
 
-    <!-- Adds resuzer column, Wraps sidebar in an aside tag -->
-    %%sidebar%%
-
-    <main><!-- Main content -->
-        <a class="skip-link" href="#main">Skip to main content</a>
-        <header>
-            <!-- Nav not needed if sidebar is used (add/remove double %) -->
-            <h1><a id="page-title-link" href="#" style="color: inherit; text-decoration: none;"><uib-var variable="pageData.title">No Title</uib-var></a></h1>
-            
-            <!-- Results not needed if sidebar is used (add/remove double %) -->
-            <!-- search-results -->
-            <!-- Optional page status display -->
-            <blockquote class="visible-status" uib-if="pageData.status !== undefined || pageData.since !== undefined">
-                <uib-var variable="pageData.status" data-before="Status: " data-after=". "></uib-var>
-                <uib-var variable="pageData.since" data-before="Since: " data-after=". "></uib-var>
-            </blockquote>
-            <div uib-var="pageData.description">No Description for this page.</div>
-        </header>
-
-        <!-- This is where the main content goes. It will be replaced on navigation. -->
-        <section><uib-var variable="pageData.content" type="html">No content</uib-var></section>
-
-        <!-- OPTIONAL show-meta component to display page metadata for debugging -->
-        <!-- <show-meta></show-meta> -->
-
-        <footer><!-- Common page footer -->
-            %%copyright%%
-        </footer>
-    </main>
-</div>
+            <footer><!-- Common page footer -->
+                <span data-fmvar="copyright">%%copyright%%</span>
+            </footer>
+        </main>
+    </div>
 </body></html>
 ```
 
