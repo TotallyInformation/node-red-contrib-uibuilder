@@ -26,49 +26,50 @@ author: Julian Knight (Totally Information)
 
 ## To Do
 
-  * [ ] Reduce number of `[info]` log messages (demote to `[debug]`)
-  * [ ] Improve socket.io dis-/re-/connect handling and messaging. 
+* [ ] Reduce number of `[info]` log messages (demote to `[debug]`)
+* [ ] Improve socket.io dis-/re-/connect handling and messaging.
 
-  * [ ] When handling attribute updates from msg, if msg.attributes is a string, attempt to parse it as JSON before giving up. [ref](https://discourse.nodered.org/t/what-am-i-doing-wrong-or-help/99960/3)
+* [ ] When handling attribute updates from msg, if msg.attributes is a string, attempt to parse it as JSON before giving up. [ref](https://discourse.nodered.org/t/what-am-i-doing-wrong-or-help/99960/3)
 
-  * [ ] Check that FE updates allow attributes to be set to `null` to unset them.
+* [ ] Check that FE updates allow attributes to be set to `null` to unset them.
 
-  * [ ] Dialog (modal/non-modal overlay)
-    * [ ] component(?) that can consume a template and display it as a dialog. [ref](https://discourse.nodered.org/t/uibuilder-help-in-developing-a-dashboard/97478/18)
+* [ ] Dialog (modal/non-modal overlay)
+  * [ ] component(?) that can consume a template and display it as a dialog. [ref](https://discourse.nodered.org/t/uibuilder-help-in-developing-a-dashboard/97478/18)
 
-  * [ ] For the `uib-topic` attribute, allow msg.payload to be an array or object. Consider adding a `uib-fmt` attribute to allow output specification:
-    * `uib-fmt="json"` - output as a syntax highlighted JSON object.
-    * `uib-fmt="list"` - output as an HTML list.
-    * `uib-fmt="table"` - output as an HTML table.
+* [ ] For the `uib-topic` attribute, allow msg.payload to be an array or object. Consider adding a `uib-fmt` attribute to allow output specification:
+  * `uib-fmt="json"` - output as a syntax highlighted JSON object.
+  * `uib-fmt="list"` - output as an HTML list.
+  * `uib-fmt="table"` - output as an HTML table.
 
-  * [ ] Reactivity - phase 1
-    * [x] Create a reactive wrapper `uibuilder.reactive()`.
-      * [x] Move to separate class file
-      * [ ] Add `reactive` and `getReactiveClass` to function reference.
-  * [ ] Reactivity - phase 2
-    * [ ] Compare the `uib-topic` attribute processing with the `<uib-var>` processing and see if they can be unified. NB: Can only be partial since `uib-var` consumes the whole variable/msg, whereas `uib-topic` only consumes msg.payload as data.
-      * [ ] At least add the `filter` attribute processing to `uib-topic`?
-      * [ ] Consider adding a specific property for uib-var to allow setting html attributes/properties. e.g. `._data`?
-    * [ ] Extend to allow for a `msg.props` object that automatically updates element properties.
-    * [ ] Supported msg props should be: `topic`, `payload`, `attributes`, `dataset`, `props`, `styles`, and `classes`.
-  * [ ] Reactivity - phase 3
-    * [ ] Create a MutationObserver for any DOM attributes that start with `:` (`uib-bind` - binds an attribute to a variable) or `@` (`uib-on` - binds an event to a function).
-      * [ ] Extend to allow `uib-show` (show/hide elements).
-      * [ ] Extend to allow `uib-text` (innerText).
-      * [ ] Extend to allow `uib-model` (two-way data binding for input elements).
-    * [ ] Add a `uib-repeat` directive to allow easy creation of lists from arrays.
-    * [ ] Add a `uib-if` directive to allow conditional rendering of elements.
-    * [ ] Add a `uib-switch` directive to allow conditional rendering of one-of-many elements.
-    * [ ] Add a `uib-component` directive to allow easy creation of web components.
-    
-  * Toaster improvements
-    * [x] Initial rework
-    * [ ] More work needed - probably delayed now that new showOverlay is available.
-    * [ ] Test
+* [ ] Advanced Reactivity - phase 1
+  * [x] Create a reactive wrapper `uibuilder.reactive()`.
+    * [x] Move to separate class file
+    * [ ] Add `reactive` and `getReactiveClass` to function reference.
+* [ ] Advanced Reactivity - phase 2
+  * [ ] Compare the `uib-topic` attribute processing with the `<uib-var>` processing and see if they can be unified. NB: Can only be partial since `uib-var` consumes the whole variable/msg, whereas `uib-topic` only consumes msg.payload as data.
+    * [ ] At least add the `filter` attribute processing to `uib-topic`?
+    * [ ] Consider adding a specific property for uib-var to allow setting html attributes/properties. e.g. `._data`?
+  * [ ] Extend to allow for a `msg.props` object that automatically updates element properties.
+  * [ ] Supported msg props should be: `topic`, `payload`, `attributes`, `dataset`, `props`, `styles`, and `classes`.
+* [ ] Advanced Reactivity - phase 3
+  * [ ] Create a MutationObserver for any DOM attributes that start with `:` (`uib-bind` - binds an attribute to a variable) or `@` (`uib-on` - binds an event to a function).
+    * [ ] Extend to allow `uib-show` (show/hide elements).
+    * [ ] Extend to allow `uib-text` (innerText).
+    * [ ] Extend to allow `uib-model` (two-way data binding for input elements).
+  * [ ] Add a `uib-repeat` directive to allow easy creation of lists from arrays.
+  * [ ] Add a `uib-if` directive to allow conditional rendering of elements.
+  * [ ] Add a `uib-switch` directive to allow conditional rendering of one-of-many elements.
+  * [ ] Add a `uib-component` directive to allow easy creation of web components.
+
+* Toaster improvements
+  * [x] Initial rework
+  * [ ] More work needed - probably delayed now that new showOverlay is available.
+  * [ ] Test
 
 
 ## Other
 
+* Consider allowing uib-topic/uib-var/onChange/onTopic to take an array of sources?
 * Maybe think about having a control msg from NR to clients that will re-arrange elements on the page. Possibly an array (map?) of element selectors in a set order. Would probably need a "root" element that is the parent of all the elements to be re-arranged. Could also be used to show/hide elements.
 * Sending events from client to server using beacons.
 * FE: Write a template parser capable of parsing `<b>{{myvar}}</b>` into `<b><uib-var variable="myvar"></uib-var></b>`.
