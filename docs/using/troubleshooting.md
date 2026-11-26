@@ -53,15 +53,16 @@ If you are having issues with uibuilder nodes in the Node-RED editor, please ope
 > [!TIP]
 > If you want to see what is happening in the uibuilder client library's startup processing, you can add a `logLevel` attribute to the script tag.
 >
-> For the IIFE client version:
-> 
+> For the IIFE client version (in `index.html`):
+>
 > ```html
 > <script defer src="../uibuilder/uibuilder.iife.min.js" logLevel="5"></script>
 > ```
-> Or for the ESM client version:
-> 
+>
+> Or for the ESM client version (in `index.mjs`):
+>
 > ```javascript
-> import '../uibuilder/uibuilder.iife.min.js?logLevel=5'
+> import { uibuilder } from '../uibuilder/uibuilder.esm.min.js?logLevel=5'
 > ```
 >
 > This will give a lot more information on your browser's developer tools console. This is mostly only useful for debugging the library itself. Note that you can only use numeric settings here.
