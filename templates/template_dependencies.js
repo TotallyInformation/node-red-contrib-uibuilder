@@ -12,12 +12,22 @@
 
 module.exports = {
     // Do not remove this one, it is the default and expected to be there
-    'blank': {
+    'default': {
         name: 'Minimal template (default)',
-        folder: 'blank',
+        folder: 'default',
         dependencies: [],
         description:
         `Default minimal template. Uses the IIFE client & no front-end framework library.
+         The <code>index.js</code> file is commented out because you may not need it at all.
+         Contains a div with "<code>uib-topic="more"</code> which is set to automatically show
+         <code>msg.payload</code> content sent with <code>msg.topic</code> set to "<code>more</code>".`,
+    },
+    'blank-esm': {
+        name: 'Minimal template (ESM)',
+        folder: 'blank-esm',
+        dependencies: [],
+        description:
+        `Minimal template using the ESM client & no front-end framework library.
          The <code>index.js</code> file is commented out because you may not need it at all.
          Contains a div with "<code>uib-topic="more"</code> which is set to automatically show
          <code>msg.payload</code> content sent with <code>msg.topic</code> set to "<code>more</code>".`,
