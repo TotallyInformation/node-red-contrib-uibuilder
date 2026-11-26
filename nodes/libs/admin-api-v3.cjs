@@ -1322,10 +1322,10 @@ v3AdminRouter.route('/:url')
                         return true
                     })
                     .catch( (err) => {
-                        let statusMsg = ''
+                        let statusMsg = '' // eslint-disable-line no-useless-assignment
                         let mystr = ''
                         const data = {}
-                        if ( err.cause.code === 'MISSING_REF' ) {
+                        if ( err?.cause?.code === 'MISSING_REF' ) {
                             statusMsg = `Degit clone error. CHECK External Template Name. Name="${params.extTemplate}", url="${params.url}". ${err.message}`
                         } else {
                             if ( params.template === 'external' ) mystr = `, ${params.extTemplate}`
