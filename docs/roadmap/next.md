@@ -69,10 +69,9 @@ updated: 2026-11-12 12:38:40
 
 ### uib-cache node
 
-* [ ] partial clearing of data.
-* [ ] changing data.
+* [-] [STARTED] partial clearing of data.
 
-### uibuilder library
+### uibuilder client library
 
 * [ ] Re-test running uibuilder.start() in index.js
 
@@ -119,16 +118,6 @@ updated: 2026-11-12 12:38:40
 
 * Client library:
   * Add `uibuilder.dataCheck(<time>)` function to the client library. If set, will check - when the browser indicated that the page is visible - whether data has been received from Node-RED within the specified time. If not, it will reload the page. This is to deal with computers going to sleep and then waking up with stale data.
-* Markweb:
-  * Video.
-  * Allow `readme.md` or `README.md` to be used as folder default pages as well as `index.md`, `.index.md`, and `_index.md`.
-  * Add an editor.
-  * New `markweb-save` node to dynamically convert markdown to HTML and save to the filesystem. Listens for changes and automatically updates. Possibly connect to GIT and allow an upstream to be set for pushing changes to a remote repository. Would need an Internet-facing link to the Mermaid library. Might possibly offer some settings to enable the uibuilder library to connect back to the Node-RED server over the Internet.
-  * Consider addint a meta-library feature allowing a parent folder to hold multiple Markweb folders. And/or, a meta-library JSON file that lists multiple Markweb folders and creates instances for each.
-  * Edit mode
-    * Add a new edit mode to the Markweb node. When enabled, the Markweb node will allow editing of the markdown files directly in the browser. This will require a new editor to be added to the Markweb node. The editor will need to support markdown syntax highlighting and possibly a preview mode. The editor will also need to support saving changes back to the filesystem and possibly pushing changes to a remote repository.
-    * Add new folders with auto-generated `index.md` files.
-    * Add new pages with auto-generated templates.
 * uibuilder node
   * Add links to docs and default page to editor context menu [Ref](https://github.com/node-red/node-red/pull/5332).
 * Editor:
