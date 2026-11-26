@@ -3,7 +3,7 @@ title: Features of the modern, modular front-end client `uibuilder.esm.js` and `
 description: |
   Description of the main features of UIBUILDER's browser client library.
 created: 2022-06-11 14:15:26
-updated: 2025-01-02 17:27:25
+updated: 2026-11-25 11:04:22
 ---
 
 > [!TIP]
@@ -164,7 +164,7 @@ _ui: {
 
 And the button will immediately be able to send data back to Node-RED without the need for any coding.
 
-### Plain html/javascript example.
+### Plain html/javascript example
 
 In index.html
 
@@ -172,7 +172,7 @@ In index.html
 <button id="button1" data-life="42"></button>
 ```
 
-In index.js 
+In index.js
 
 ```javascript
 $('#button1').onclick = (evt) => { uibuilder.eventSend(evt) }
@@ -297,9 +297,17 @@ The log function is also available to your own code as `uibuilder.log(level, pre
 
 > [!TIP]
 > If you want to see what is happening in the uibuilder library's startup processing, you can add a `logLevel` attribute to the script tag. E.g.:
+>
+> ```html
+> <script defer src="../uibuilder/uibuilder.iife.min.js" logLevel="3"></script>
 > ```
-> <script defer src="../uibuilder/uibuilder.iife.min.js" logLevel="2"></script>
+>
+> or, when using the ES Module style:
+>
+> ```javascript
+> import { uibuilder } from "../uibuilder/uibuilder.esm.min.js?logLevel=3"></script>
 > ```
+>
 > This is mostly only useful for debugging the library itself. Note that you can only use numeric settings here.
 
 ## document-level events
@@ -341,8 +349,8 @@ Of particular note are the `_ui` events. These are used by uibuilder-aware web c
 
 `setPing` accesses a special endpoint (URL) provided by uibuilder. That endpoint returns a single value which really isn't of any use to your code. However, it _does_ do several useful things:
 
-1. It tells the server that your browser tab is alive. 
-   
+1. It tells the server that your browser tab is alive.
+
    This may be useful when working either with a reverse Proxy server or with uibuilder's ExpressJS middleware for authentication and/or authorisation.
 
    Because most communication with uibuilder happens over websockets, telling the server whether a client is still active or whether the client's session has expired is challenging. A ping such as this may be sufficient for the proxy or your custom middleware code to continue to refresh any required security tokens, etc.
