@@ -30,12 +30,13 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
   * `<uib-var>` component and `uib-topic`/`uib-var` attributes have been extensively rewritten. See notes below. Notably, for `<uib-var>`, the `type` attribute is now `output` to avoid processing issues on input elements.
   * The old v2 admin API's have been moved to v3 and so their URL's have changed. All admin API calles are now under `./uibuilder/admin/`.
 
+* New & Updated Templates - The new `ESM` internal template is the `Blank` template but using ES Modules. The new `grid` internal template gives you a 2-column grid layout with full semantic HTML, easily amended to more columns. The new `router` external template gives you a basic Single-Page App (SPA). The new templates use ES Module code rather than the older IIFE as part of the migration to modern code. All of the uibuilder templates now use the new `pageData` which includes the Title and Description you can set on the advanced tab of the uibuilder node. These replace the default text in your `index.html` file. The `pageData` is likely to be expanded in the future to allow setting of more data from within the node.
+
+* The `uib-cache` node now has replay delay features. Either set a fixed delay in the config panel or include a `msg._uibCacheDelay` in any cached message. The message overrides the default. Delay is in milliseconds. This is to let you control the order in which messages are replayed and/or to let a complex or dynamic page fully process before sending data.
+
 * Examples:
   * The "basic-uib" example in the import examples library has been updated. It is now better labelled and will show the date/time on the web page when inject is triggered (demonstrating the use of the zero-code `uib-topic` HTML attribute for very simple page updates)
   * There is a new example demonstrating simple sparkline charts that do not need any JavaScript code.
-
-* Templates:
-  * There is a new Single-page-app (SPA) Template to quickly get you started.
 
 * Documentation:
   * The Table of Contents in the sidebar now shows headings from level 2 to level 4 instead of 2-3. This greatly improves navigation on more complex pages.
@@ -84,7 +85,9 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 ### Code templates
 
-* **New** Single-page-app (SPA) Template (external) - Loads example code demonstrating how to use UIBUILDER's SPA Router library. Simply adjust for your own use. Note that there is already an existing example flow in the library as well but this template contains minimal code.
+* **New** ES Module (internal) - This is the same as the default "Blank" template but using the ES Module version of the client library. This will likely become the default in the next major release of UIBUILDER (e.g. v9) as ES Modules are the more modern way to handle scripts.
+* **New** Grid template (internal) - A simple, ready-to-use grid layout with best-practice semantic HTML structure. A 2-column grid easily changed up to 4 columns or an auto-fit all with a single class name. Best practice layout is applied limiting the width of the page and centering it. Two card-style content boxes are included for reference. This layout is great for dashboard-like pages or any information dense page layout. Uses the ES Module version of the client library (in `index.mjs`) as part of the gradual move towards modern JavaScript.
+* **New** Single-page-app (SPA) Template (external) - Loads example code demonstrating how to use UIBUILDER's SPA Router library. Simply adjust for your own use. Note that there is already an existing example flow in the library as well but this template contains minimal code. Uses the ES Module version of the client library (in `index.mjs`) as part of the gradual move towards modern JavaScript.
 * Error handling and notification messages have also been improved when loading templates.
 
 ### Markweb
@@ -101,6 +104,7 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
   * `uib-var` and `uib-topic` now both handle `data-before` and `data-after` HTML attributes. These add pre/post strings to the output. As these are HTML attributes, they can be set in the HTML but also overriden using the appropriate msg or variable object. Since the output supports HTML, these do as well.
   * Some edge-case bugs were also squashed along the way.
   * An updated example flow shows both the simple use and the extended features.
+  * Console logging has been toned down slightly. Some 'info' (2) level outputs are now set to 'log' (3). This leaves 'info' more useful for general information without spamming the console.
 
 * **Improvement** The `uib-topic` and `uib-var` custom HTML attributes now use the same processing and so fully support `attributes`, `dataset`, `checked`, and `value` properties which will update their target HTML element accordingly.
 
@@ -116,7 +120,7 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 * **Improvement** `uibuilder.evaluateWithRetry` gets an extra option `noWarn` (default=false). If set `true`, if the variable is not found, only a trace log is produced instead of a warning. This is used to deal with timing edge-cases where a variable might not be ready early in processing, the evaluation will be tried 3 times with a 300ms delay. Note that even the default warning won't be shown by default since the log output is `error` so warnings are not shown, `uibuilder.set('logLevel', 1)` to see warnings.
 
-### uibuilder
+### uibuilder node
 
 * Now has a button to open a web page (controlled by admin access) that shows _ALL_ uibuilder & Markweb instances with their type, title & description where provided (by the inputs on an instances advanced tab) and the link to the home page.
 * Added a palette category description tooltips for the uibuilder category.
@@ -129,7 +133,18 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
   >
   > You may also need to reload the Node-RED Editor page to see the update button.
 
-### uib-html
+### uib-cache node
+
+* **New** Now has replay delay features. Either set a fixed delay in the config panel or include a `msg._uibCacheDelay` in any cached message.
+  The message overrides the default setting. Delay is in milliseconds.
+
+  This is to let you control the order in which messages are replayed and/or to let a complex or dynamic page fully process before sending data.
+  
+  Particularly useful when creating dyamic page elements using no-code/low-code nodes and also wanting to send data to them. You can delay the data send on replay by adding `msg._uibCacheDelay` so that it is sent after the low-code data.
+
+  The default setting can be useful when working with particularly complex dynamic pages where the time to completely setup the page may be a little slow.
+
+### uib-html node
 
 * The JSDOM library is now lazily loaded on first use in order to reduce the startup time of Node-RED.
 
@@ -174,6 +189,12 @@ On the browser side, UIBUILDER aims to be compatible with over 99% of browsers a
 
 * Editor plugin (`editor-common.js`)
   * Added `uibuilder.sanitiseUrl(urlPath)` function to allow url paths (e.g. the "url" name of a uibuilder node) to be made safe for use in URLs. Returns `null` if path traversal, spaces, %, query params, # fragments, leading /, empty paths, absolute urls are included in the path. Else returns the path.
+
+* Markweb runtime `markweb.cjs`
+  * No longer output `<fm-var>` pseudo-tags, standard `<uib-var>` tags now do everything.
+
+* Markweb front-end `markweb.mjs`
+  * `<fm-var>` pseudo-tags no longer used, standard `<uib-var>` tags now do everything.
 
 * `adminRouterV2.cjs` - this has now been removed completely. Functions have been migrated to the v3 admin router.
 
