@@ -3,11 +3,8 @@ title: Caching front-end data
 description: |
   This details why you may want to cache data and how to use the cache.
 created: 2022-01-07 22:01:49
-updated: 2025-01-02 17:33:58
+updated: 2026-11-26 12:05:58
 ---
-
-> [!NOTE]
-> This page is still a work in progress
 
 > [!TIP]
 > If you want to know how to configure the `uib-cache` node, please see the [uib-cache](nodes/uib-cache.md) documentation.
@@ -33,9 +30,21 @@ Because not all web UI's will need caching and others may need multiple data cac
 >
 > If your cached messages include these properties, any cache replay events will automatically target the correct client or page.
 
+> [!TIP]
+> As of v8.0, There are 2 methods to allow delayed cache replay. This is very useful when dynamically creating a page's UI and wanting to send data to that UI page.
+>
+> The `uib-cache` node has a delay property you can set in the Editor, this delays all messages when replaying the cache by a set amount. Using this along with multiple cache nodes gives you fine-grained control over replay strategies.
+>
+> You can also include a `_uibCacheDelay` property in any cached message, this overrides any node delay. Use this if you want to keep to a single cache node but need to delay some messages on replay.
+
 ## Using caching with a front-end SPA router
 
-To do:
+Normally, a uibuilder node will loop its control output port to the cache node which reacts automatically when a client connects to the server by replaying the cache.
 
-  * [ ] How to send cache on "route change" control msg - use a switch node before the cache
-  * [ ] How to ONLY send cache on "route change" control msg
+When using uibuilder's front-end router to create a single-page app (SPA), you may need to also react to route changes. This would be needed if you have configured the router to unload a route when changing to a new one (to save client resources). But you may also want to simply get the latest set of data when a route becomes active.
+
+The SPA router library sents a "route change" control message back to Node-RED automatically, as with a client connect message, this appears on the 2nd output port of the uibuilder node.
+
+To cause this to do a cache replay, use a `switch` node to look at `msg.uibuilderCtrl` and switch on "route change". Use that to create a new message using a `change` node with `msg.uibuilderCtrl` set to "cache replay" and `msg.cacheControl` set to "REPLAY".
+
+Alternatively, you can simply direct "route change" controls to another switch that separates out the possible route names and directs them to flows that refresh the data.

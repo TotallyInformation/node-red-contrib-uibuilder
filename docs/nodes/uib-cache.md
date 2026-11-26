@@ -3,7 +3,7 @@ title: uib-cache - Cache and replay data
 description: |
   Usage and configuration.
 created: 2023-02-05 16:31:39
-updated: 2024-07-12 11:38:01
+updated: 2026-11-26 15:30:43
 ---
 
 > [!TIP]
@@ -22,10 +22,17 @@ Note that you can use the `uib-cache` node independently of uibuilder if you wis
 
 Otherwise, usage of the node is as simple as adding it to your flow. Typically before a uibuilder node.
 
-Any message sent into the node will be cached according to the settings given.
+Any non-control message sent into the node will be cached according to the settings given.
 
 If you connect the uibuilder node's #2 lower output port to the input, clients will automatically request a
-replay of the cache whenever they connect.
+replay of the cache whenever they connect. If you don't want that to happen on a re-connection (e.g. after the users browser wakes up), make sure the "Only replay cache when client is really new" checkbox is ticked (the default).
+
+You can set a delay on replayed messages. Setting the "Delay replays" to >0 will delay the replay of all messages. You can override that by adding a `_uibCacheDelay` property >0 to any cached message, that will be applied to only that message.
+
+> [!WARN]
+> It is not possible to completely guarentee the order of replay when multiple message groups (e.g. topics by default) are in use. This is a limitation of JavaScript. The replay order within a group _IS_ guarenteed and is oldest-to-newest. A `_uibCacheDelay` property may alter that.
+>
+> To handle more complex replay ordering requirements, you may wish to use multiple cache nodes.
 
 ### Grouping
 
@@ -59,14 +66,13 @@ When you have more than one storage module set up, you can choose between them i
 If you switch to another storage method, you may want to delete the old version of the `uib_cache` context variable
 manually as it will not be deleted automatically at present.
 
-As of v5.1, you can also specify the store type and store variable name to use. By default, the "Node" type is used. That type restricts access to the individual node-instance and means that no variable name clashes can happen. If flow or global types are chosen, access and update is possible from other nodes/flows. In that case, care must be taken not to end up in an invalid situation (e.g. deleting the variable even though the cache node still expects it to exist).
+Since v5.1, you can also specify the store type and store variable name to use. By default, the "Node" type is used. That type restricts access to the individual node-instance and means that no variable name clashes can happen. If flow or global types are chosen, access and update is possible from other nodes/flows. In that case, care must be taken not to end up in an invalid situation (e.g. deleting the variable even though the cache node still expects it to exist).
 
 If using the flow or global stores, you can change the name of the variable that is used in case you need more than one instance of this node or in case the existing name clashes with something else.
 
 ## Limitations
 
-Memory is the biggest limitation, trying to cache too many entries **will** eventually crash Node-RED. This can 
-be hard to predict as it depends on a lot of variables. Caution is advised.
+Memory is the biggest limitation, trying to cache too many entries **will** eventually crash Node-RED. This can be hard to predict as it depends on a lot of variables. Caution is advised.
 
 The "Cache by" (group-by) `msg` property must contain string values, other data types will be handled inconsistently if at all. The string value cannot be an empty string because that is ignored.
 
@@ -88,7 +94,7 @@ To do this, you can send an `sendHtml` command to one of the connected clients. 
 
 Another alternative is to create a UI completely in Node-RED. You can use the `uib-html` node to do this with both no-code and low-code configurations.
 
-The html node has an flag to "Merge HTML Template?" which should be checked. If no `msg.template` is supplied and this flag is set, the node will wrap the resulting HTML in uibuilder's current "Blank" template. Alternatively, you can provide your own template string.
+The html node has an flag to "Merge HTML Template?" which should be checked. If no `msg.template` is supplied and this flag is set, the node will wrap the resulting HTML in uibuilder's current _default_ template. Alternatively, you can provide your own template string.
 
 ### Using a context variable
 
@@ -99,5 +105,3 @@ By connecting the output from uibuilder's port #2 to a switch node to filter on 
 You can set up a manual cache using a context variable.
 
 Obviously, this does have some dangers that need to be managed. Namely that some other flow process could change the cache context variable. But this could also be an advantage since many things could now update the cache if needed.
-
-Of course, since the cache would only be delivered on a page load, you would also need to deal with dynamic updates if needed.
