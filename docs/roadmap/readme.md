@@ -3,7 +3,7 @@ title: uibuilder Roadmap
 description: |
   This page outlines the future direction of uibuilder. Including specific things that will almost certainly happen as well as more speculative ideas.
 created: 2022-02-01 11:15:27
-updated: 2026-06-11 18:44:20
+updated: 2026-11-26 11:25:03
 ---
 
 Is there something in this list you would like to see prioritised? Is there something you could help with? Please get in touch via the [Node-RED forum](https://discourse.nodered.org/). Alternatively, you can start a [discussion on GitHub](https://github.com/TotallyInformation/node-red-contrib-uibuilder/discussions) or [raise a GitHub issue](https://github.com/TotallyInformation/node-red-contrib-uibuilder/issues). Please note that I no longer have the time to monitor the #uibuilder channel in the Node-RED slack.
@@ -15,22 +15,32 @@ Is there something in this list you would like to see prioritised? Is there some
 For more information about the future of UIBUILDER, please see the [Futures page](roadmap/Future.md)
 
 ## Detail pages
+
 * Documentation improvements - [/roadmap/doc-improvements](/roadmap/doc-improvements)
 * Site template improvements - [/roadmap/site-templates](/roadmap/site-templates)
 * Videos to produce - [/roadmap/videos-to-produce](/roadmap/videos-to-produce)
 * Speculative ideas, may never happen - [/roadmap/maybe](/roadmap/maybe)
+
 ### Front-end
+
 * Built-in web components - [/roadmap/front-end/web-components](/roadmap/front-end/web-components)
 * Main client library - [/roadmap/front-end/client-library](/roadmap/front-end/client-library)
 * SPA router library - [/roadmap/front-end/router-library](/roadmap/front-end/router-library)
 * UI library - [/roadmap/front-end/ui-library](/roadmap/front-end/ui-library)
 * Styling (`uib-brand.css`) - [/roadmap/front-end/styling](/roadmap/front-end/styling)
+* json-viewer - TBC
+* Markweb - See the node.
+
 ### Libraries
+
 * `libs/fs.cjs` and front-end - [/roadmap/libs/fs](/roadmap/libs/fs)
 * `libs/package-mgt.cjs` and front-end - [/roadmap/libs/package-mgt](/roadmap/libs/package-mgt)
 * `libs/socket.cjs` and front-end - [/roadmap/libs/socket](/roadmap/libs/socket)
 * `libs/web.cjs` and front-end - [/roadmap/libs/web](/roadmap/libs/web)
+
 ### Nodes
+
+* Markdown websites `markweb` - [/roadmap/nodes/markweb](/roadmap/nodes/markweb.md)
 * Caching with `uib-cache` - [/roadmap/nodes/caching](/roadmap/nodes/caching)
 * No-code `uib-element` - [/roadmap/nodes/uib-element](/roadmap/nodes/uib-element)
 * `uib-file-list` - [/roadmap/nodes/uib-file-list](/roadmap/nodes/uib-file-list)
@@ -42,47 +52,51 @@ For more information about the future of UIBUILDER, please see the [Futures page
 * No-code `uib-update` - [/roadmap/nodes/uib-update](/roadmap/nodes/uib-update)
 * `uibuilder` - [/roadmap/nodes/uibuilder](/roadmap/nodes/uibuilder)
 
+### Other
+
+* Runtime plugin `uib-runtime-plugin` - [/roadmap/other/uib-runtime-plugin](/roadmap/other/uib-runtime-plugin)
+* Editor plugin `uib-editor-plugin` - [/roadmap/other/uib-editor-plugin](/roadmap/other/uib-editor-plugin)
+* Editor Styling `editor-common.css` - [/roadmap/other/editor-common.css](/roadmap/other/editor-common.css)
+
 ## Possible Future Nodes
 
 These are just thoughts about possible future nodes. They may or may-not happen.
 
-#### ⭐`uib-ctrl`
+### ⭐`uib-ctrl`
 
 Route different types of control msgs to different output ports: `cache` ("client connect"), `network` ("client connect", "client disconnect"), `visibilty`, `routing` ("route change"). Maybe link to a uib instance so that it can be separate.
 
-#### `uib-watch`
+### `uib-watch` / `uib-file-change`
 
 Watches a given uibuilder instance folder and reports changes. With option to auto-reload connected clients (remote command).
 
-#### `uib-markdown`
+Watches for changes to files for a specific uibuilder instance. Allow folder choice, filtering (via fast-glob). Triggers an output on-change. Output can be a folder/file list OR a URL list (or maybe both). Could then be used to simply reload any connected clients automatically, trigger backups or something else entirely.
+
+### `uib-markdown`
 
 Renders markdown to html using Markweb's markdown engine. Allow use of Markweb's templating features to allow dynamic content. Maybe with low-code output option as well as direct HTML output option.
 
-#### `uib-file-change`
-
-Watches for changes to files for a specific uibuilder instance. Allow folder choice, filtering (via fast-glob). Triggers an output on-change. Output can be a folder/file list OR a URL list (or maybe both). Could then be used to simply reload any connected clients automatically, trigger backups or something else entirely.
-
-#### `photoweb`
+### `photoweb`
 
 In the same style as `markweb`, a single-node photo library viewer. See designs folder for details.
 
-#### `uib-remote`
+### `uib-remote`
 
 New node to simplify executing remote commands on the front-end
 
-#### `uib-component` (or `uib-custom`?)
+### `uib-component` (or `uib-custom`?)
 
 Like uib-element but auto-installs a web component library. Specify the library name, drop-down prefix for local (e.g. installed using library mgr) or jsdelivr CDN.
 
-#### `uib-meta`
+### `uib-meta`
 
 Links to a uibuilder node and returns the instance metadata including URL's and folder locations and other settings. (e.g. use with [node-red-cleanup-filesystem](https://discourse.nodered.org/t/announce-node-red-cleanup-filesystem-request-for-testing/88135) for example).
 
-#### `uib-template`
+### `uib-template`
 
 New node to take a `msg._ui` template input and update parts of it before sending (e.g. parent, id, ...). Alt. name ideas: `uib-override` or `uib-config`? [Ref](https://discourse.nodered.org/t/an-idea-for-third-party-ui-in-ui-builder/83196/4?u=totallyinformation).
 
-#### `uib-events`
+### `uib-events`
 
 Outputs uibuilder standard messages (or maybe both std and control) but is separate from the uibuilder instance node and can be filtered by user, client, page as well as the instance. May be helpful to some people to simplify flows without using lots of link nodes.
 
@@ -90,43 +104,41 @@ Outputs uibuilder standard messages (or maybe both std and control) but is separ
 
 Captures actual front-end events (e.g. custom events) and forwards them to Node-RED either as std or ctrl (?) messages.
 
-#### Maybe
+### Maybe
 
-##### `uib-file-read`
+#### `uib-file-read`
 
 Reads a file for a specific uibuilder instance. Allows, for example, the file to be passed to the FE for editing.
 
-##### `uib-parse`
+#### `uib-parse`
 
 Use Cheerio or DOMParser to convert HTML to low-code JSON. [Ref](https://blog.apify.com/javascript-parse-html/). Could be extended to form the basis of automated no-/low-code -> HTML -> and back testing. Or for accessibility testing.
 
-##### `uib-extract`
+#### `uib-extract`
 
 A node that uses JSDom to select from HTML and return as html/text/attribs as needed (as per updated `$()` fn). [Ref 1]([GitHub - chishui/JSSoup: JavaScript + BeautifulSoup = JSSoup](https://github.com/chishui/JSSoup)), [Ref 2](https://www.npmjs.com/package/x-ray).
 
-##### `uib-router`
+#### `uib-router`
 
 This would connect a route handler flow to an existing `uibuilder` node. A bit like an `http-in` node but not needing an `http-out` because the out is via the `uibuilder` node. Would allow wildcard routing and ability to restrict by method. The defined path(s) would be added as a new router to the uibuilder routes. Consider whether this needs to be a `uib-router-in`/`uib-router-out` pair instead?
 
-##### `uib-diagrams`
+#### `uib-diagrams`
 
 Consider implementing at Kroki diagram service node - https://kroki.io/ - enables delivery of diagrams from text descriptions using many different libraries.
 
-##### `uib-read-all-front-matter`
+#### `uib-read-all-front-matter`
 
 Reads a folder recursively and compiles all YAML Front-Matter entries into a single return. Use with `uib-file-change` to update when files change. Probably not needed now that Markweb exists.
 
 
 ## Ideas or in-progress
 
-To see what is currently being developed, please look at the "Unreleased" section of the [Changelog](changelog) for the `dev` branch.
+To see what has currently been developed, please look at the [Changelog](changelog) for the `dev` branch. For everything in-train and upcoming, see [Next](/roadmap/next).
 
 ### Misc
 
 * Get node-red to tell connected clients that it is closing/restarting. The client library should then close the connection and attempt to reconnect with a sensible delay. A reconnection should NOT trigger a cache replay. Maybe get the server to tell the client when to start reconnecting by sending a retry period - the client should slightly randomise that period to avoid all clients reconnecting at the same time.
-* Move log reference into the `uibGlobalConfig` object. Remove passed references.
 * Create a [Gridstack](https://gridstackjs.com/) demo.
-* Consider creating templates or examples from flows in my dev instance.
 * Consider adding a `data-initVars` attribute to the client script load. This would automatically take `window.xxxx` variables and `set` them as uibuilder variables as early as possible. This would allow early setting of these variables for use in the client's reactive features. Would also need to be specified as a query parameter on the script src for processing in ESM.
 * Move ti-base-component to a separate package. Publish separately. Include here.
 * Some form of more direct RPC implementation between client and server. What functions might the server be able to do for the client? What might the server want to ask of or control on the client?
@@ -136,7 +148,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * **BIG** How to have a "live" feature. This would be a mix of http-in/-response and uibuilder nodes. It would create a live endpoint that would be pre-populated with the uibuilder default ESM template. Would allow server-side rendering. See [live.md](live.md)
 * Check message sizes. If >limit, split into chunks and use standard msg.parts to allow reassembly - both on the server AND on the client. Allow auto-splitting of messages for large messages and use the msg.parts feature from node-red core to allow easy re-constitution.
 * Allow http responses using transfer encoding chunked. [Ref](https://discourse.nodered.org/t/http-transfer-encoding-chunked/94332/6).
-* Consider adding some telemetry. Idea being to better understand how many instances are in use, which versions and what platforms. Perhaps also detecting which browser types are in use to help steer coding. Would need to be opt-out, transparent and documented. Might use a [non-reversible device id?](https://www.npmjs.com/package/node-machine-id).
+* ~~Consider adding some telemetry~~ Done. Idea being to better understand how many instances are in use, which versions and what platforms. Perhaps also detecting which browser types are in use to help steer coding. Would need to be opt-out, transparent and documented. Might use a [non-reversible device id?](https://www.npmjs.com/package/node-machine-id).
   * An interesting pre-cursor to this might be to create an internal track of front-end client use. E.g. count the max # users connected to an instance and perhaps what browsers they are using (initially this would not be sent anywhere but would be accessible via the info page and written to a json file in each instance root folder).
 
 ### All nodes
@@ -145,7 +157,7 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 * More flexible low-code class attribute handling.
   * In ui.js
     * [ ] Update the low-code schema's with add/remove/replace `classes` property
-    * Update all fns to use the extra property   
+    * Update all fns to use the extra property
   * In nodes - update to allow using array of classes and to have add/remove class arrays
     * In uib-update
     * In uib-element
@@ -153,7 +165,27 @@ To see what is currently being developed, please look at the "Unreleased" sectio
 
 ### Examples
 
-* Update text update example to include new `uib-topic` html attributes
+* (v8) Update text update example to include new `uib-topic` html attributes
+* Add example for sending msg using function node
+* `uib-sender` - remove ref to uibuilderfe and update flows.
+* Navigation **menu** examples. 1x Router, 1x page.
+* Extend SVG example to download and save the svg from the gist
+* Add a "Quick Start" example.
+* Update the uib-element example.
+* Update the remote-commands example.
+* Zero-code example needs better wording for UL/OL example. [ref](https://discourse.nodered.org/t/documents-6-1-0/74885/47)
+* Reproduce the examples from the [pdfmaker website](http://pdfmake.org/playground.html) since that uses a similar-style config-driven approach to uibuilder's low-code, config-driven UI feature. See especially the _tables_ example.
+* Add example for Vue sfc loader.
+* Ticklist
+
+  * Send a list
+  * Attach click handler to switch list type from bullet to ticked & msg node-red
+  * Save changes to cache on click
+* Table
+
+  * Weather example?
+* Telegram web app. [ref1](https://github.com/revenkroz/telegram-web-app-bot-example)
+* [Perspective](https://perspective.finos.org/) - interactive data dashboard
 
 ### New/Improved no-code elements
 
@@ -323,31 +355,6 @@ I will attempt to also trap a new project create to run the install if I can. Ot
 
 * https://flows.nodered.org/flow/bbe6803d9daebda5c991336cf4e5e3e0
 
-## Examples
-
-* Use of `msg._client`
-* Add example for sending msg using function node
-* `uib-sender` - remove ref to uibuilderfe and update flows.
-* Navigation **menu** examples. 1x Router, 1x page.
-* Extend SVG example to download and save the svg from the gist
-* Add a "Quick Start" example.
-* Update the uib-element example.
-* Update the remote-commands example.
-* Zero-code example needs better wording for UL/OL example. [ref](https://discourse.nodered.org/t/documents-6-1-0/74885/47)
-* Reproduce the examples from the [pdfmaker website](http://pdfmake.org/playground.html) since that uses a similar-style config-driven approach to uibuilder's low-code, config-driven UI feature. See especially the _tables_ example.
-* Add example for Vue sfc loader.
-* Ticklist
-
-  * Send a list
-  * Attach click handler to switch list type from bullet to ticked & msg node-red
-  * Save changes to cache on click
-* Table
-
-  * Weather example?
-* Telegram web app. [ref1](https://github.com/revenkroz/telegram-web-app-bot-example)
-* [Perspective](https://perspective.finos.org/) - interactive data dashboard
-
-
 ## Questions that need answers
 
 * How best to allow other nodes to provide zero-code nodes - that allow auto feedback from the front-end? e.g. something like the [node-red-contrib-ui-time-scheduler](https://github.com/fellinga/node-red-contrib-ui-time-scheduler) node.
@@ -382,7 +389,7 @@ Planned release date: To coincide with Node-RED v6.
 * [ ] ``crypto.randomUUID()``
 * Experimental diagnostic reports. https://developer.ibm.com/articles/introducing-report-toolkit-for-nodejs-diagnostic-reports/, https://github.com/IBM/report-toolkit
 
-#### Changes due once Node.js v16 live:
+#### Changes due once Node.js v16 live
 
 * [x] Change style of requiring core node modules: `require('node:os')` instead of `require('os')` - started, ongoing
 * [ ] JSON Modules (experimental in v14, full in 16.15.0)
@@ -469,11 +476,11 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
 
 #### Changes due once Node.js post v20
 
-  * Diagnostic channels (experimental in v14)
+* Diagnostic channels (experimental in v14)
 
-  * AbortController and AbortSignal (experimental in v14)
+* AbortController and AbortSignal (experimental in v14)
 
-  * Permission model (experimental in v20)
+* Permission model (experimental in v20)
 
 
 #### v23
@@ -512,8 +519,8 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
 
 ##### Key Breaking Changes and Major Updates
 
-* **V8 Engine and Native Modules**: The upgrade to **V8 13.6** introduces a **V8-owned CppHeap**, which significantly alters C++ object management and garbage collection. This has caused a reported **57% performance regression** for native modules like `better-sqlite3` that frequently cross the JS/C++ boundary, whereas v22 (V8 12.4) showed only a minor 7-9% regression. Native addons may require rebuilding, and **C++20** support is now recommended where C++17 was previously sufficient. 
-* **Security and OpenSSL**: Pre-built binaries now use **OpenSSL 3.5** with a default security level of **2**. This prohibits **RSA, DSA, and DH keys shorter than 2048 bits** and **ECC keys shorter than 224 bits**, as well as any **RC4** cipher suites. Additionally, Node.js v24 stabilizes a **permission model** (using flags like `--allow-fs-read`) to restrict third-party dependency access, enhancing supply chain security. 
+* **V8 Engine and Native Modules**: The upgrade to **V8 13.6** introduces a **V8-owned CppHeap**, which significantly alters C++ object management and garbage collection. This has caused a reported **57% performance regression** for native modules like `better-sqlite3` that frequently cross the JS/C++ boundary, whereas v22 (V8 12.4) showed only a minor 7-9% regression. Native addons may require rebuilding, and **C++20** support is now recommended where C++17 was previously sufficient.
+* **Security and OpenSSL**: Pre-built binaries now use **OpenSSL 3.5** with a default security level of **2**. This prohibits **RSA, DSA, and DH keys shorter than 2048 bits** and **ECC keys shorter than 224 bits**, as well as any **RC4** cipher suites. Additionally, Node.js v24 stabilizes a **permission model** (using flags like `--allow-fs-read`) to restrict third-party dependency access, enhancing supply chain security.
 * **Deprecated and Removed APIs**:
   * [x] **Crypto**: Legacy methods `crypto.createCipher` and `crypto.createDecipher` are removed; users must migrate to `createCipheriv`/`createDecipheriv`.
   * [x] **File System**: The `dirent.path` property is deprecated in favor of `dirent.parentPath`. Direct access to `fs.F_OK`, `R_OK`, etc., is deprecated in favor of `fs.constants`. `fs.truncate` with a file descriptor is deprecated in favor of `ftruncate`.
@@ -522,18 +529,18 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
 * **Platform and Binary Support**:
   * Pre-built binaries are no longer provided for **32-bit Windows (x86)** or **32-bit Linux on armv7**.
   * macOS pre-built binaries now require a minimum of **macOS 13.5**.
-  * Linux builds continue to require **glibc 2.28+**. 
+  * Linux builds continue to require **glibc 2.28+**.
 * **Developer Experience and Features**:
   * **TypeScript**: Native **type stripping** is stable, allowing direct execution of `.ts` files without a build step for scripts and CLIs.
   * **Web APIs**: `URLPattern` is globally available (enables `new URLPattern({ pathname: '/users/:id' })`), and **Undici 7** is the bundled HTTP client, providing production-ready **HTTP/3** support and improved `require(esm)` compatibility.
-  * **New JavaScript Features**: Support for `Float16Array`, `Error.isError()`, `RegExp.escape()`, and explicit resource management. 
+  * **New JavaScript Features**: Support for `Float16Array`, `Error.isError()`, `RegExp.escape()`, and explicit resource management.
 
 ##### Migration Recommendations
 
-* **Benchmark Native Workloads**: If your application relies heavily on native modules (e.g., SQLite), benchmark performance carefully, as v24 may exhibit significant slowdowns due to V8 heap changes. 
-* **Update Codebases**: Use provided **codemods** (e.g., `@nodejs/crypto-rsa-pss-update`, `@nodejs/dirent-path-to-parent-path`) to automate updates for deprecated APIs. 
-* **Check Security Constraints**: Ensure all cryptographic keys meet the new minimum bit-length requirements (2048-bit RSA/DH/DH, 224-bit ECC). 
-* **Compiler Toolchains**: If building from source, update your toolchain to **gcc 12.2+** (Linux/AIX) or **Xcode 16.1+** (macOS). 
+* **Benchmark Native Workloads**: If your application relies heavily on native modules (e.g., SQLite), benchmark performance carefully, as v24 may exhibit significant slowdowns due to V8 heap changes.
+* **Update Codebases**: Use provided **codemods** (e.g., `@nodejs/crypto-rsa-pss-update`, `@nodejs/dirent-path-to-parent-path`) to automate updates for deprecated APIs.
+* **Check Security Constraints**: Ensure all cryptographic keys meet the new minimum bit-length requirements (2048-bit RSA/DH/DH, 224-bit ECC).
+* **Compiler Toolchains**: If building from source, update your toolchain to **gcc 12.2+** (Linux/AIX) or **Xcode 16.1+** (macOS).
 
 #### v26 (LTS in Oct 2026)
 
@@ -541,17 +548,17 @@ Refs: [release notes](https://nodejs.org/en/blog/release/v16.0.0), [What&#39;s N
 
 * **Temporal API Stabilization**: The Temporal API is now **enabled by default** as a global, replacing the legacy `Date` object with immutable, time-zone-aware date handling. This allows dropping external libraries like `date-fns` or `Luxon` for many use cases.
 * **V8 14.6 Engine**: Node.js 26 ships with **V8 14.6** (from Chromium 146), up from V8 13.6 in Node 24. This brings performance improvements and new JavaScript features like **Float16Array** and **Error.isError()**.
-* **Map Upsert Methods**: New `Map.getOrInsert()` and `Map.getOrInsertComputed()` methods allow atomic check-and-insert operations, simplifying caching and memoization patterns. 
-* **Iterator Concatenation**: The static `Iterator.concat()` method enables lazy composition of multiple iterators without intermediate array allocations. 
-* **Undici 8**: The bundled HTTP client is upgraded to version 8, bringing fetch() performance and compatibility improvements. 
+* **Map Upsert Methods**: New `Map.getOrInsert()` and `Map.getOrInsertComputed()` methods allow atomic check-and-insert operations, simplifying caching and memoization patterns.
+* **Iterator Concatenation**: The static `Iterator.concat()` method enables lazy composition of multiple iterators without intermediate array allocations.
+* **Undici 8**: The bundled HTTP client is upgraded to version 8, bringing fetch() performance and compatibility improvements.
 
 ##### Breaking Changes
 
 * **Removed Internal Stream Modules**: Internal modules like `_stream_readable` are **completely removed**. Code directly requiring these (e.g., `require('_stream_readable')`) will break; it must be replaced with `require('stream').Readable`.
-* **Readable Stream Behavior**: Readable streams now **read one buffer at a time** instead of reading ahead. Applications relying on the old buffering behavior may experience **throughput changes**. 
-* **Removed `writeHeader()`**: `http.Server.prototype.writeHeader()` is removed; use `writeHead()` instead. 
-* **Removed `--experimental-transform-types`**: This flag is gone. **TypeScript type stripping** is now stable and enabled by default, but support for TypeScript enums via this flag is lost (only erasable syntax remains). 
-* **Removed `localStorage`**: The `localStorage` API now returns `undefined` without a backing file, effectively removing browser-like storage support in the core runtime. 
+* **Readable Stream Behavior**: Readable streams now **read one buffer at a time** instead of reading ahead. Applications relying on the old buffering behavior may experience **throughput changes**.
+* **Removed `writeHeader()`**: `http.Server.prototype.writeHeader()` is removed; use `writeHead()` instead.
+* **Removed `--experimental-transform-types`**: This flag is gone. **TypeScript type stripping** is now stable and enabled by default, but support for TypeScript enums via this flag is lost (only erasable syntax remains).
+* **Removed `localStorage`**: The `localStorage` API now returns `undefined` without a backing file, effectively removing browser-like storage support in the core runtime.
 
 
 ### Other Ideas
