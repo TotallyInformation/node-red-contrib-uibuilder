@@ -29,11 +29,12 @@
             "22ccc24e5166142a",
             "63da533e2908bf83",
             "98e4278794cb35ef",
-            "5c473c47668f0ce0"
+            "5c473c47668f0ce0",
+            "dd961b1f473a8635"
         ],
         "x": 34,
         "y": 119,
-        "w": 922,
+        "w": 912,
         "h": 182
     },
     {
@@ -75,7 +76,7 @@
         ],
         "x": 34,
         "y": 323,
-        "w": 802,
+        "w": 752,
         "h": 538
     },
     {
@@ -282,17 +283,17 @@
         "allowScripts": false,
         "allowStyles": false,
         "copyIndex": true,
-        "templateFolder": "blank",
+        "templateFolder": "default",
         "extTemplate": "",
         "showfolder": false,
         "reload": true,
         "sourceFolder": "src",
-        "deployedVersion": "7.5.0",
+        "deployedVersion": "8.0.0",
         "showMsgUib": false,
         "title": "",
         "descr": "",
-        "editurl": "vscode://file/src/uibRoot/spa/?windowId=_blank",
-        "x": 570,
+        "editurl": "vscode://file/D:/src\\nrcleanproj\\data\\projects\\clean1\\uibuilder/spa/?windowId=_blank",
+        "x": 560,
         "y": 200,
         "wires": [
             [
@@ -331,7 +332,8 @@
             "8e2f1374a9a76d76",
             "e98b72181d4d4dd2",
             "2bfaf3b2a46e3887",
-            "b308646d2c1a0c5c"
+            "b308646d2c1a0c5c",
+            "98d2a5b7c591fe4b"
         ],
         "x": 205,
         "y": 240,
@@ -350,7 +352,7 @@
         "cacheKey": "topic",
         "newcache": true,
         "num": 1,
-        "storeName": "default",
+        "storeName": "memory",
         "name": "Cache (by topic)",
         "storeContext": "context",
         "varName": "uib_cache",
@@ -372,7 +374,7 @@
         "links": [
             "3546ce64892a333a"
         ],
-        "x": 765,
+        "x": 755,
         "y": 220,
         "wires": []
     },
@@ -924,9 +926,9 @@
         "id": "aea8f8d0d90b6b31",
         "type": "comment",
         "z": "7a8938150991c681",
-        "name": "Example updated: 2025-08-17 \\n (MAJOR UPDATE in v7.5.0)",
+        "name": "Example updated: 2026-11-26 \\n (MAJOR UPDATE in v7.5.0, Minor in v8.0.0)",
         "info": "",
-        "x": 1020,
+        "x": 1070,
         "y": 60,
         "wires": []
     },
@@ -946,7 +948,7 @@
         "mode": 438,
         "name": "",
         "topic": "",
-        "x": 760,
+        "x": 710,
         "y": 380,
         "wires": []
     },
@@ -982,7 +984,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 4,
-        "x": 705,
+        "x": 675,
         "y": 240,
         "wires": [
             [
@@ -1029,7 +1031,7 @@
         "z": "7a8938150991c681",
         "g": "640ceb641391f9cc",
         "name": "route changes",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": true,
@@ -1037,7 +1039,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "counter",
-        "x": 830,
+        "x": 820,
         "y": 260,
         "wires": []
     },
@@ -1263,7 +1265,7 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "topic": "mark-light",
+        "topic": "mark-light-dark",
         "payload": "{\"class\":\"light\"}",
         "payloadType": "json",
         "x": 970,
@@ -1317,7 +1319,7 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "topic": "mark-dark",
+        "topic": "mark-light-dark",
         "payload": "{\"class\":\"dark\"}",
         "payloadType": "json",
         "x": 970,
@@ -1425,11 +1427,42 @@
         ]
     },
     {
-        "id": "cc354c5bcf0c63de",
+        "id": "dd961b1f473a8635",
+        "type": "inject",
+        "z": "7a8938150991c681",
+        "g": "640ceb641391f9cc",
+        "name": "Replay Cache",
+        "props": [
+            {
+                "p": "uibuilderCtrl",
+                "v": "cache replay",
+                "vt": "str"
+            },
+            {
+                "p": "cacheControl",
+                "v": "REPLAY",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 160,
+        "wires": [
+            [
+                "0e11e8e769a9219a"
+            ]
+        ]
+    },
+    {
+        "id": "b4912c2979c4a8cc",
         "type": "global-config",
         "env": [],
         "modules": {
-            "node-red-contrib-uibuilder": "7.5.0"
+            "node-red-contrib-uibuilder": "8.0.0"
         }
     }
 ]
