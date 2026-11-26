@@ -24,7 +24,7 @@
     /** Track which urls have been used - required for error handling in url validation. Only use for URL tracking */
     const editorInstances = uibuilder.editorUibInstances
     /** Default template name */
-    const defaultTemplate = 'blank'
+    const defaultTemplate = 'default'
     /** List of installed packages - rebuilt when editor is opened, updates by library mgr */
     // let packages = uibuilder.packages
 
