@@ -69,9 +69,10 @@
   },
   "node-red": {
     "version": ">=5",
-        "plugins": {
+    "plugins": {
       "uib-runtime-plugin": "nodes/uib-runtime-plugin.js",
-      "uib-editor-plugin": "nodes/uib-editor-plugin.html"
+      "uib-editor-plugin": "nodes/uib-editor-plugin.html",
+      "uib-runtime-library-store": "nodes/uib-runtime-library-store.js"
     },
     "nodes": {
       "markweb": "nodes/markweb/customNode.js",
