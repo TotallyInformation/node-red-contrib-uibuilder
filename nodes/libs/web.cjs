@@ -113,15 +113,15 @@ class UibWeb {
     /** Track active connections to allow them to be closed on shutdown or redeploy */
     connections = new Set()
 
+    /** Set up a dummy ExpressJS Middleware Function
+     * @param {Express.Request} req x
+     * @param {Express.Response} res x
+     * @param {ExpressNextFunction} next x
+     */
+    dummyMiddleware = function(req, res, next) { next() }
+
     /** Called when class is instantiated */
-    constructor() {
-        /** Set up a dummy ExpressJS Middleware Function
-         * @param {Express.Request} req x
-         * @param {Express.Response} res x
-         * @param {ExpressNextFunction} next x
-         */
-        this.dummyMiddleware = function(req, res, next) { next() }
-    }
+    constructor() {}
 
     /** Assign uibuilder and Node-RED core vars to Class static vars.
      *  This makes them available wherever this MODULE is require'd.
@@ -162,6 +162,18 @@ class UibWeb {
         this._webSetup()
 
         log.trace('🌐[uibuilder:web:setup] Web setup end')
+    }
+
+    /** If we are using a custom server, call this to stop it when closing down
+     * Note that we don't need this if using Node-RED's server.
+     */
+    stopCustomListener() {
+        if ( uib.customServer.isCustom !== true ) return
+        if (!this.server) return
+        const timer = setTimeout(() => this.server.closeAllConnections(), 5000)
+        timer.unref() // don't let this timer keep the process alive
+        this.server.close(() => clearTimeout(timer)) // ignore the error argument
+        this.server.closeIdleConnections()
     }
 
     // #region ==== Setup - these are called AFTER #isConfigured=true ==== //
