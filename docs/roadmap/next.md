@@ -4,7 +4,7 @@ description: |
   What is being worked on for the next release.
 author: Julian Knight (Totally Information)
 created: 2025-01-05 12:34:47
-updated: 2026-11-12 12:38:40
+updated: 2026-11-26 17:20:03
 ---
 
 ## Issues to resolve
@@ -33,6 +33,7 @@ updated: 2026-11-12 12:38:40
 ### Markweb
 
 * [_] Add Markweb instances to the list of uibuilder apps/urls. Started, needs app index page and the listApps function node utility updating to show them along with the new `type` property.
+* [ ] Look at switching Mermaid rendering to [Pele](https://pele.run) (used by Obsidian).
 * [ ] Add ability to turn off collapsible prose. Needs to be an option in the Markweb node and will need to generate slightly different HTML on rendering Markdown.
 * [ ] Reduce the chattiness of the markweb client library.
 * [ ] Add open and vscode shortcuts to the config.
