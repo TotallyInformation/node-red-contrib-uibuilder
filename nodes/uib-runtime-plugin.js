@@ -27,6 +27,7 @@
  */
 
 const path = require('node:path')
+const inspector = require('node:inspector')
 
 // Will auto-enable if TI_ENV environment variable is set to "debug"
 const { /** @type {uibCustomLogger} */ log: clog, } = require('./libs/logger.mjs')
@@ -46,6 +47,20 @@ const { renderToHTML, } = require('../front-end/utils/json-viewer.cjs')
 
 // WARNING: Don't try to deconstruct this, if you do, some things fail because they lose the correct `this` binding
 const uiblib = require('./libs/uiblib.cjs')
+
+/** Close the Node.js inspector (and any attached debugger client)
+ * so that process shutdown isn't held up waiting for the client to detach.
+ */
+function closeInspector() {
+    // inspector.url() returns undefined when the inspector isn't active
+    if ( inspector.url() === undefined ) return
+
+    try {
+        inspector.close()
+    } catch (err) {
+        console.error('[inspector-closer] Failed to close inspector:', err)
+    }
+}
 
 /** Set up the global uibuilder configuration
  * @param {runtimeRED} RED Node-RED's runtime object
@@ -73,7 +88,7 @@ function setupUibGlobalConfig(RED) {
     if ( RED.settings.uibuilder ) {
         const settings = RED.settings.uibuilder
         // Allow control of custom logging
-        if ('logger' in settings) {
+        if (Object.hasOwn(settings, 'logger')) {
             if (settings.logger.enabled) clog.enabled = settings.logger.enabled
             if (settings.logger.level) clog.level = settings.logger.level
             clog.debug('Custom logging settings loaded')
@@ -106,7 +121,7 @@ function setupUibGlobalConfig(RED) {
             uib.customServer.contentSecurityPolicy = settings.contentSecurityPolicy
         }
         // Allow override of the telemetry service
-        if ( 'telemetryEnabled' in settings && typeof settings.telemetryEnabled === 'boolean' ) {
+        if ( Object.hasOwn(settings, 'telemetryEnabled') && typeof settings.telemetryEnabled === 'boolean' ) {
             uib.telemetryEnabled = settings.telemetryEnabled
         }
     }
@@ -211,7 +226,7 @@ function setupUibFs() {
 
 /** Called when the plugin is added to the editor - is passed the RED global object */
 function onAdd() {
-    // clog.debug('onAdd started, uib.RED populated?', uib.RED !== null)
+    // clog.debug('onAdd started')
     if ( uib.RED === null ) return
     const RED = uib.RED
 
@@ -309,8 +324,6 @@ function onAdd() {
  */
 function pluginDefinition(RED) {
     // RED.log.trace('🌐[uibuilder:runtimeSetup] ----------------- global config started -----------------')
-    clog.debug('+ started')
-
     // RED.events.on('runtime-event', function(event) {
     //     console.log(`🌐[uibuilder:runtimeSetup:runtime-event] ID: ${event.id}`)
     // })
@@ -325,32 +338,24 @@ function pluginDefinition(RED) {
     // ! This is SLOW - ~800ms on a clean install with 1 uibuilder, no packages
     packageMgt.setup()
 
-    /** (c) We need an ExpressJS web server to serve the page, socket.io and vendor packages. */
     const web = require('./libs/web.cjs')
+
+    // Clean up the web & socket servers if we are uninstalled
+    RED.hooks.add('postUninstall', (evt) => {
+        // {module, dir}
+        if (evt.module !== 'node-red-contrib-uibuilder') return
+        web.stopCustomListener()
+    })
+
+    // Forcably close any open inspector on process termination - otherwise, Node-RED does not cleanly close
+    process.once('SIGINT', closeInspector)
+    process.once('SIGTERM', closeInspector)
+
+    /** (c) We need an ExpressJS web server to serve the page, socket.io and vendor packages. */
     web.setup()
 
     /** (d) Pass web server reference to the Socket.IO handler module */
     sockets.setup(web.server)
-
-    // For a custom web server only: Catch SIGINT and close the server and any active connections
-    if ( uib.customServer.isCustom === true ) {
-        process.on('SIGINT', () => {
-            RED.log.info(`🌐[uibuilder:runtimeSetup] Caught SIGINT, shutting down custom server and socket.io gracefully...`)
-            sockets.io.sockets.sockets.forEach((socket) => {
-                socket.disconnect(true)
-            })
-            if ( web.connections.size > 0 ) {
-                RED.log.info(`🌐[uibuilder:runtimeSetup] Force-closing active connections: ${web.connections.size}`)
-                for (const socket of web.connections) {
-                    socket.destroy()
-                    web.connections.delete(socket)
-                }
-            }
-            // web.server.close(() => {
-            //     RED.log.info('🌐[uibuilder:runtimeSetup] Custom server closed')
-            // })
-        })
-    }
 
     // May as well register this plugin now.
     RED.plugins.registerPlugin('uib-runtime-plugin', {
@@ -389,7 +394,7 @@ function pluginDefinition(RED) {
         /** Parse the telemetry file to load the telemetry data into the global uib object
          * (ensures the file exists & sends data to cloudflare if needed)
          * NB: Runs every time the flows are (re)started
-         * @since v8.0.0 Only logs an error on fail. Fixes issue #648
+         * Only logs an error on fail. Fixes issue #648 @since v8.0.0
          */
         await uiblib.parseTelemetryFile()
 
